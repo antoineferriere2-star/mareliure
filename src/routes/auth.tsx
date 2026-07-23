@@ -17,10 +17,12 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
+  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -32,6 +34,29 @@ function AuthPage() {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setInfo(null);
+
+    if (mode === "signup") {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { emailRedirectTo: `${window.location.origin}/auth` },
+      });
+      setLoading(false);
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+      if (data.session) {
+        await router.invalidate();
+        navigate({ to: "/build", replace: true });
+      } else {
+        setInfo("Compte créé. Si un email de confirmation est requis, vérifie ta boîte mail, sinon tu peux te connecter directement.");
+        setMode("signin");
+      }
+      return;
+    }
+
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email,
       password,
@@ -51,7 +76,9 @@ function AuthPage() {
         onSubmit={handleSubmit}
         className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-sm"
       >
-        <h1 className="text-xl font-semibold text-foreground">Connexion admin</h1>
+        <h1 className="text-xl font-semibold text-foreground">
+          {mode === "signin" ? "Connexion admin" : "Créer un compte admin"}
+        </h1>
         <p className="mt-1 text-sm text-muted-foreground">
           Accès réservé à l'équipe Métré Build AI.
         </p>
@@ -79,7 +106,8 @@ function AuthPage() {
               id="password"
               type="password"
               required
-              autoComplete="current-password"
+              minLength={8}
+              autoComplete={mode === "signin" ? "current-password" : "new-password"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
@@ -92,13 +120,30 @@ function AuthPage() {
             {error}
           </p>
         ) : null}
+        {info ? (
+          <p className="mt-4 text-sm text-muted-foreground">{info}</p>
+        ) : null}
 
         <button
           type="submit"
           disabled={loading}
           className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
         >
-          {loading ? "Connexion…" : "Se connecter"}
+          {loading ? "…" : mode === "signin" ? "Se connecter" : "Créer le compte"}
+        </button>
+
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setInfo(null);
+            setMode(mode === "signin" ? "signup" : "signin");
+          }}
+          className="mt-4 block w-full text-center text-xs text-muted-foreground hover:text-foreground"
+        >
+          {mode === "signin"
+            ? "Pas encore de compte ? Créer un compte"
+            : "Déjà un compte ? Se connecter"}
         </button>
       </form>
     </div>
