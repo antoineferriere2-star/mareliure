@@ -17,7 +17,9 @@ import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audi
 import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
 import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
+import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
 import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
 
 const TermsRoute = TermsRouteImport.update({
@@ -60,9 +62,19 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const MPublicTokenRoute = MPublicTokenRouteImport.update({
+  id: '/m/$publicToken',
+  path: '/m/$publicToken',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
   id: '/demo/deck-project',
   path: '/demo/deck-project',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBuildRuntimeRoute = ApiPublicBuildRuntimeRouteImport.update({
+  id: '/api/public/build-runtime',
+  path: '/api/public/build-runtime',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicBuildPublicIntakeRoute =
@@ -82,7 +94,9 @@ export interface FileRoutesByFullPath {
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/m/$publicToken': typeof MPublicTokenRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
+  '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -94,7 +108,9 @@ export interface FileRoutesByTo {
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/m/$publicToken': typeof MPublicTokenRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
+  '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -107,7 +123,9 @@ export interface FileRoutesById {
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/m/$publicToken': typeof MPublicTokenRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
+  '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -121,7 +139,9 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/terms'
     | '/demo/deck-project'
+    | '/m/$publicToken'
     | '/api/public/build-public-intake'
+    | '/api/public/build-runtime'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -133,7 +153,9 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/terms'
     | '/demo/deck-project'
+    | '/m/$publicToken'
     | '/api/public/build-public-intake'
+    | '/api/public/build-runtime'
   id:
     | '__root__'
     | '/'
@@ -145,7 +167,9 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/terms'
     | '/demo/deck-project'
+    | '/m/$publicToken'
     | '/api/public/build-public-intake'
+    | '/api/public/build-runtime'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -158,7 +182,9 @@ export interface RootRouteChildren {
   PrivateBetaRoute: typeof PrivateBetaRoute
   TermsRoute: typeof TermsRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
+  MPublicTokenRoute: typeof MPublicTokenRoute
   ApiPublicBuildPublicIntakeRoute: typeof ApiPublicBuildPublicIntakeRoute
+  ApiPublicBuildRuntimeRoute: typeof ApiPublicBuildRuntimeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -219,11 +245,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/m/$publicToken': {
+      id: '/m/$publicToken'
+      path: '/m/$publicToken'
+      fullPath: '/m/$publicToken'
+      preLoaderRoute: typeof MPublicTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/deck-project': {
       id: '/demo/deck-project'
       path: '/demo/deck-project'
       fullPath: '/demo/deck-project'
       preLoaderRoute: typeof DemoDeckProjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/build-runtime': {
+      id: '/api/public/build-runtime'
+      path: '/api/public/build-runtime'
+      fullPath: '/api/public/build-runtime'
+      preLoaderRoute: typeof ApiPublicBuildRuntimeRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/build-public-intake': {
@@ -246,7 +286,9 @@ const rootRouteChildren: RootRouteChildren = {
   PrivateBetaRoute: PrivateBetaRoute,
   TermsRoute: TermsRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
+  MPublicTokenRoute: MPublicTokenRoute,
   ApiPublicBuildPublicIntakeRoute: ApiPublicBuildPublicIntakeRoute,
+  ApiPublicBuildRuntimeRoute: ApiPublicBuildRuntimeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
