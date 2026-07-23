@@ -103,7 +103,7 @@ export function BuildDeckProjectDemoPage() {
             </div>
             <BriefPreview brief={brief} />
             <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/free-inquiry-audit"><Button>Request a Free Inquiry Audit</Button></Link>
+              <Link to="/free-inquiry-audit"><Button>Get a Free Website Inquiry Audit</Button></Link>
               <Link to="/private-beta"><Button variant="outline">Join the private beta</Button></Link>
             </div>
           </div>
