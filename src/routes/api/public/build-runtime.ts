@@ -158,8 +158,12 @@ export const Route = createFileRoute("/api/public/build-runtime")({
           }
 
           if (body.action === "submit_session") {
-            const finalAnswers = body.answers ?? undefined;
-            const update: Record<string, unknown> = {
+            const finalAnswers = body.answers;
+            const update: {
+              status: string;
+              submitted_at: string;
+              answers?: unknown;
+            } = {
               status: "submitted",
               submitted_at: new Date().toISOString(),
             };
@@ -167,7 +171,7 @@ export const Route = createFileRoute("/api/public/build-runtime")({
 
             const { data: session, error: sErr } = await supabaseAdmin
               .from("build_runtime_sessions")
-              .update(update)
+              .update(update as any)
               .eq("id", body.session_id)
               .select("id, mission_id, answers")
               .maybeSingle();
