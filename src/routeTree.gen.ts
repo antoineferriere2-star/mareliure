@@ -16,9 +16,13 @@ import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
 import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
 import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
+import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
+import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
 import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
 import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
 
@@ -57,6 +61,15 @@ const DeckBuildersRoute = DeckBuildersRouteImport.update({
   path: '/deck-builders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
@@ -72,6 +85,16 @@ const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
   path: '/demo/deck-project',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedBuildRouteRoute = AuthenticatedBuildRouteRouteImport.update({
+  id: '/build',
+  path: '/build',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedBuildIndexRoute = AuthenticatedBuildIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedBuildRouteRoute,
+} as any)
 const ApiPublicBuildRuntimeRoute = ApiPublicBuildRuntimeRouteImport.update({
   id: '/api/public/build-runtime',
   path: '/api/public/build-runtime',
@@ -86,6 +109,7 @@ const ApiPublicBuildPublicIntakeRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/deck-builders': typeof DeckBuildersRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
@@ -93,13 +117,16 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
+  '/build': typeof AuthenticatedBuildRouteRouteWithChildren
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
+  '/build/': typeof AuthenticatedBuildIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
   '/deck-builders': typeof DeckBuildersRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
@@ -111,10 +138,13 @@ export interface FileRoutesByTo {
   '/m/$publicToken': typeof MPublicTokenRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
+  '/build': typeof AuthenticatedBuildIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
   '/deck-builders': typeof DeckBuildersRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
@@ -122,15 +152,18 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/build': typeof AuthenticatedBuildRouteRouteWithChildren
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
+  '/_authenticated/build/': typeof AuthenticatedBuildIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/auth'
     | '/deck-builders'
     | '/example-project-brief'
     | '/free-inquiry-audit'
@@ -138,13 +171,16 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/private-beta'
     | '/terms'
+    | '/build'
     | '/demo/deck-project'
     | '/m/$publicToken'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
+    | '/build/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/auth'
     | '/deck-builders'
     | '/example-project-brief'
     | '/free-inquiry-audit'
@@ -156,9 +192,12 @@ export interface FileRouteTypes {
     | '/m/$publicToken'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
+    | '/build'
   id:
     | '__root__'
     | '/'
+    | '/_authenticated'
+    | '/auth'
     | '/deck-builders'
     | '/example-project-brief'
     | '/free-inquiry-audit'
@@ -166,14 +205,18 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/private-beta'
     | '/terms'
+    | '/_authenticated/build'
     | '/demo/deck-project'
     | '/m/$publicToken'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
+    | '/_authenticated/build/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
   DeckBuildersRoute: typeof DeckBuildersRoute
   ExampleProjectBriefRoute: typeof ExampleProjectBriefRoute
   FreeInquiryAuditRoute: typeof FreeInquiryAuditRoute
@@ -238,6 +281,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeckBuildersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -259,6 +316,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoDeckProjectRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/build': {
+      id: '/_authenticated/build'
+      path: '/build'
+      fullPath: '/build'
+      preLoaderRoute: typeof AuthenticatedBuildRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/build/': {
+      id: '/_authenticated/build/'
+      path: '/'
+      fullPath: '/build/'
+      preLoaderRoute: typeof AuthenticatedBuildIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
     '/api/public/build-runtime': {
       id: '/api/public/build-runtime'
       path: '/api/public/build-runtime'
@@ -276,8 +347,35 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedBuildRouteRouteChildren {
+  AuthenticatedBuildIndexRoute: typeof AuthenticatedBuildIndexRoute
+}
+
+const AuthenticatedBuildRouteRouteChildren: AuthenticatedBuildRouteRouteChildren =
+  {
+    AuthenticatedBuildIndexRoute: AuthenticatedBuildIndexRoute,
+  }
+
+const AuthenticatedBuildRouteRouteWithChildren =
+  AuthenticatedBuildRouteRoute._addFileChildren(
+    AuthenticatedBuildRouteRouteChildren,
+  )
+
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedBuildRouteRoute: typeof AuthenticatedBuildRouteRouteWithChildren
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedBuildRouteRoute: AuthenticatedBuildRouteRouteWithChildren,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
   DeckBuildersRoute: DeckBuildersRoute,
   ExampleProjectBriefRoute: ExampleProjectBriefRoute,
   FreeInquiryAuditRoute: FreeInquiryAuditRoute,
