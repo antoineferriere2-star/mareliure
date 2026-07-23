@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
 
-const title = "Métré Build | Sales-ready project briefs for deck builders";
+const title = "Métré Build — Project discovery for project-based businesses";
 const description =
-  "Turn vague website inquiries into sales-ready project briefs with industry Playbooks for project-based businesses.";
+  "Métré Build helps customers explain complex projects and gives sales teams structured, sales-ready Project Briefs. More helpful than a form, simpler than a custom configurator.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
