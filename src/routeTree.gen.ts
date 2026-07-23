@@ -18,6 +18,7 @@ import { Route as ExampleProjectBriefRouteImport } from './routes/example-projec
 import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
+import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -64,6 +65,12 @@ const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
   path: '/demo/deck-project',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicBuildPublicIntakeRoute =
+  ApiPublicBuildPublicIntakeRouteImport.update({
+    id: '/api/public/build-public-intake',
+    path: '/api/public/build-public-intake',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -86,6 +94,7 @@ export interface FileRoutesByTo {
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -98,6 +107,7 @@ export interface FileRoutesById {
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/terms'
     | '/demo/deck-project'
+    | '/api/public/build-public-intake'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/terms'
     | '/demo/deck-project'
+    | '/api/public/build-public-intake'
   id:
     | '__root__'
     | '/'
@@ -133,6 +145,7 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/terms'
     | '/demo/deck-project'
+    | '/api/public/build-public-intake'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -145,6 +158,7 @@ export interface RootRouteChildren {
   PrivateBetaRoute: typeof PrivateBetaRoute
   TermsRoute: typeof TermsRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
+  ApiPublicBuildPublicIntakeRoute: typeof ApiPublicBuildPublicIntakeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -212,6 +226,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoDeckProjectRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/build-public-intake': {
+      id: '/api/public/build-public-intake'
+      path: '/api/public/build-public-intake'
+      fullPath: '/api/public/build-public-intake'
+      preLoaderRoute: typeof ApiPublicBuildPublicIntakeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +246,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivateBetaRoute: PrivateBetaRoute,
   TermsRoute: TermsRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
+  ApiPublicBuildPublicIntakeRoute: ApiPublicBuildPublicIntakeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
