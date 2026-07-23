@@ -74,9 +74,16 @@ function AuthPage() {
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-sm"
+        className="relative w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-sm"
       >
-        <h1 className="text-xl font-semibold text-foreground">
+        <Link
+          to="/"
+          className="absolute left-4 top-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
+        >
+          <span aria-hidden="true">←</span> Retour au site
+        </Link>
+
+        <h1 className="mt-8 text-xl font-semibold text-foreground">
           {mode === "signin" ? "Connexion admin" : "Créer un compte admin"}
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
