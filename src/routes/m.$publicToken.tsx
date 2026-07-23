@@ -30,6 +30,7 @@ type PublicMission = {
 };
 
 type Session = { id: string; answers: Record<string, string>; status: string };
+type SessionAuth = { sessionId: string; secret: string };
 type Dossier = {
   id: string;
   status: string;
@@ -54,6 +55,7 @@ function RuntimePage() {
   const { publicToken } = Route.useParams();
   const [mission, setMission] = useState<PublicMission | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [sessionAuth, setSessionAuth] = useState<SessionAuth | null>(null);
   const [answers, setAnswers] = useState<Record<string, string>>({});
   const [dossier, setDossier] = useState<Dossier | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -64,13 +66,14 @@ function RuntimePage() {
     let cancelled = false;
     (async () => {
       try {
-        const data = await callRuntime<{ mission: PublicMission; session: Session }>({
+        const data = await callRuntime<{ mission: PublicMission; session: Session; session_secret: string }>({
           action: "start_session",
           public_token: publicToken,
         });
         if (cancelled) return;
         setMission(data.mission);
         setSession(data.session);
+        setSessionAuth({ sessionId: data.session.id, secret: data.session_secret });
         setAnswers({});
       } catch (err) {
         if (!cancelled) setError(err instanceof Error ? err.message : "Unable to load mission");
@@ -86,10 +89,15 @@ function RuntimePage() {
   const questions = mission?.proposal?.qualificationQuestions ?? [];
 
   async function save(next: Record<string, string>) {
-    if (!session) return;
+    if (!session || !sessionAuth) return;
     setSaving(true);
     try {
-      await callRuntime({ action: "save_session", session_id: session.id, answers: next });
+      await callRuntime({
+        action: "save_session",
+        session_id: sessionAuth.sessionId,
+        session_secret: sessionAuth.secret,
+        answers: next,
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to save answers");
     } finally {
@@ -98,13 +106,14 @@ function RuntimePage() {
   }
 
   async function submit() {
-    if (!session) return;
+    if (!session || !sessionAuth) return;
     setSaving(true);
     setError(null);
     try {
       const data = await callRuntime<{ dossier: Dossier }>({
         action: "submit_session",
-        session_id: session.id,
+        session_id: sessionAuth.sessionId,
+        session_secret: sessionAuth.secret,
         answers,
       });
       setDossier(data.dossier);
