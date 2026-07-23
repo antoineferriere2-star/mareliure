@@ -21,7 +21,7 @@ export function BuildDeckBuildersPage() {
           description="Métré Build helps deck builders replace vague inquiries with a guided intake that captures scope, site context, photos, budget, timing and contact consent."
           primary="Try the Deck Project Demo"
           primaryTo="/demo/deck-project"
-          secondary="Request a Free Inquiry Audit"
+          secondary="Get a Free Website Inquiry Audit"
           secondaryTo="/free-inquiry-audit"
         />
         <ContentBand
