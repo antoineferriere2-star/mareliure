@@ -68,6 +68,39 @@ export type Database = {
           },
         ]
       }
+      build_knowledge_notes: {
+        Row: {
+          content: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          status: string
+          tags: Json
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          tags?: Json
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          status?: string
+          tags?: Json
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       build_missions: {
         Row: {
           audience: Json
@@ -119,6 +152,45 @@ export type Database = {
           status?: string
           updated_at?: string
           workspace_id?: string | null
+        }
+        Relationships: []
+      }
+      build_playbooks: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          project_type: string | null
+          steps: Json
+          updated_at: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          project_type?: string | null
+          steps?: Json
+          updated_at?: string
+          version?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          project_type?: string | null
+          steps?: Json
+          updated_at?: string
+          version?: string
         }
         Relationships: []
       }
