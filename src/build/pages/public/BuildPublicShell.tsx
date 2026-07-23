@@ -88,7 +88,7 @@ export function SectionHeader({ eyebrow, title, description }: { eyebrow?: strin
     <div className="max-w-3xl">
       {eyebrow && <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">{eyebrow}</p>}
       <h2 className="mt-3 text-3xl font-semibold tracking-normal text-slate-950 md:text-4xl">{title}</h2>
-      {description && <p className="mt-4 text-base leading-7 text-slate-600">{description}</p>}
+      {description && <p className="mt-4 text-[17px] leading-7 text-slate-700">{description}</p>}
     </div>
   );
 }
@@ -99,15 +99,20 @@ export function PublicCtaBand() {
       <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-200">Private beta</p>
-          <h2 className="mt-3 text-3xl font-semibold tracking-normal">See what a better project inquiry looks like.</h2>
+          <h2 className="mt-3 text-3xl font-semibold tracking-normal md:text-4xl">
+            See what your current website form is missing.
+          </h2>
+          <p className="mt-3 max-w-xl text-[16px] leading-7 text-slate-300">
+            Two minutes to review the demo. Free audit of your current inquiry flow on request.
+          </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <Link to="/demo/deck-project"><Button>Try the demo</Button></Link>
-          <Link to="/free-inquiry-audit">
-            <Button variant="outline" className="border-white bg-transparent text-white hover:bg-white hover:text-slate-950">
-              Request a free audit
+          <a href="/free-inquiry-audit"><Button size="lg">Get a free inquiry audit</Button></a>
+          <a href="/demo/deck-project">
+            <Button size="lg" variant="outline" className="border-white bg-transparent text-white hover:bg-white hover:text-slate-950">
+              Try the deck demo
             </Button>
-          </Link>
+          </a>
         </div>
       </div>
     </section>
@@ -119,11 +124,11 @@ export function PageHero({ eyebrow, title, description, primary, primaryTo, seco
     <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">{eyebrow}</p>
-        <h1 className="mt-5 max-w-4xl text-5xl font-semibold tracking-normal text-slate-950">{title}</h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">{description}</p>
+        <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">{title}</h1>
+        <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">{description}</p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <Link to={primaryTo}><Button size="lg">{primary}</Button></Link>
-          <Link to={secondaryTo}><Button size="lg" variant="outline">{secondary}</Button></Link>
+          <a href={primaryTo}><Button size="lg">{primary}</Button></a>
+          <a href={secondaryTo}><Button size="lg" variant="outline">{secondary}</Button></a>
         </div>
       </div>
     </section>
