@@ -14,7 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      build_public_request_rate: {
+        Row: {
+          created_at: string
+          ip_hash: string
+          request_type: Database["public"]["Enums"]["build_public_request_type"]
+        }
+        Insert: {
+          created_at?: string
+          ip_hash: string
+          request_type: Database["public"]["Enums"]["build_public_request_type"]
+        }
+        Update: {
+          created_at?: string
+          ip_hash?: string
+          request_type?: Database["public"]["Enums"]["build_public_request_type"]
+        }
+        Relationships: []
+      }
+      build_public_requests: {
+        Row: {
+          consent: boolean
+          created_at: string
+          id: string
+          ip_hash: string | null
+          payload: Json
+          request_type: Database["public"]["Enums"]["build_public_request_type"]
+          source_path: string
+          status: string
+          updated_at: string
+          user_agent: string | null
+        }
+        Insert: {
+          consent?: boolean
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          payload: Json
+          request_type: Database["public"]["Enums"]["build_public_request_type"]
+          source_path: string
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Update: {
+          consent?: boolean
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          payload?: Json
+          request_type?: Database["public"]["Enums"]["build_public_request_type"]
+          source_path?: string
+          status?: string
+          updated_at?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +79,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      build_public_request_type: "audit" | "private_beta"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +206,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      build_public_request_type: ["audit", "private_beta"],
+    },
   },
 } as const
