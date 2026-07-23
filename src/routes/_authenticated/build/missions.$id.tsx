@@ -1,0 +1,129 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useSuspenseQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { getBuildMission, setMissionStatus } from "@/build/services/admin.data.functions";
+
+export const Route = createFileRoute("/_authenticated/build/missions/$id")({
+  ssr: false,
+  head: () => ({ meta: [{ title: "Mission — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
+  component: MissionDetailPage,
+});
+
+function MissionDetailPage() {
+  const { id } = Route.useParams();
+  const fetchMission = useServerFn(getBuildMission);
+  const key = ["build-admin", "mission", id] as const;
+  const opts = queryOptions({ queryKey: key, queryFn: () => fetchMission({ data: { id } }) });
+  const { data: mission } = useSuspenseQuery(opts);
+  const queryClient = useQueryClient();
+  const patchStatus = useServerFn(setMissionStatus);
+  const [copied, setCopied] = useState(false);
+
+  const mutation = useMutation({
+    mutationFn: (status: "draft" | "active" | "paused" | "archived") =>
+      patchStatus({ data: { id, status } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: key });
+      queryClient.invalidateQueries({ queryKey: ["build-admin", "missions"] });
+    },
+  });
+
+  const publicUrl = mission.public_token && mission.status === "active" && !mission.public_token_revoked_at
+    ? `${typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com"}/m/${mission.public_token}`
+    : null;
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <Link to="/build/missions" className="text-xs text-muted-foreground hover:underline">← Missions</Link>
+        <h1 className="mt-2 text-2xl font-semibold text-foreground">{mission.name}</h1>
+        <p className="mt-1 text-sm text-muted-foreground">{mission.objective ?? "Sans objectif défini."}</p>
+      </div>
+
+      <div className="grid gap-4 md:grid-cols-2">
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold">Statut</h2>
+          <div className="mt-2 text-sm">{mission.status}</div>
+          <div className="mt-3 flex gap-2">
+            {mission.status === "active" ? (
+              <button
+                onClick={() => mutation.mutate("paused")}
+                disabled={mutation.isPending}
+                className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
+              >
+                Pause
+              </button>
+            ) : (
+              <button
+                onClick={() => mutation.mutate("active")}
+                disabled={mutation.isPending}
+                className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-100"
+              >
+                Publier
+              </button>
+            )}
+            {mission.status !== "archived" && (
+              <button
+                onClick={() => mutation.mutate("archived")}
+                disabled={mutation.isPending}
+                className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
+              >
+                Archiver
+              </button>
+            )}
+          </div>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold">Playbook</h2>
+          <div className="mt-2 text-sm text-foreground">{mission.playbook_name ?? "—"}</div>
+          {mission.playbook_id && (
+            <div className="mt-1 text-xs text-muted-foreground">ID: {mission.playbook_id}</div>
+          )}
+        </section>
+      </div>
+
+      <section className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold">Lien public runtime</h2>
+        {publicUrl ? (
+          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
+            <code className="flex-1 truncate rounded bg-muted px-2 py-1 text-xs">{publicUrl}</code>
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(publicUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 1500);
+              }}
+              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
+            >
+              {copied ? "Copié !" : "Copier"}
+            </button>
+            <a
+              href={publicUrl}
+              target="_blank"
+              rel="noreferrer"
+              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
+            >
+              Ouvrir
+            </a>
+          </div>
+        ) : (
+          <p className="mt-2 text-xs text-muted-foreground">
+            Le lien public sera généré lorsque la mission passera en statut « active ».
+          </p>
+        )}
+      </section>
+
+      <section className="rounded-lg border border-border bg-card p-4">
+        <h2 className="text-sm font-semibold">Détails techniques</h2>
+        <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
+          <div><dt className="text-muted-foreground">Créée</dt><dd>{new Date(mission.created_at).toLocaleString()}</dd></div>
+          <div><dt className="text-muted-foreground">Mise à jour</dt><dd>{new Date(mission.updated_at).toLocaleString()}</dd></div>
+          <div><dt className="text-muted-foreground">Publiée</dt><dd>{mission.published_at ? new Date(mission.published_at).toLocaleString() : "—"}</dd></div>
+          <div><dt className="text-muted-foreground">ID</dt><dd className="font-mono">{mission.id}</dd></div>
+        </dl>
+      </section>
+    </div>
+  );
+}
