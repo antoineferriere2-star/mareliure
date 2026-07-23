@@ -156,5 +156,3 @@ function Consent({ checked, onChange }: { checked: boolean; onChange: (checked: 
   );
 }
 
-// Keep effect import used so the linter doesn't complain in strict setups
-void useEffect;
