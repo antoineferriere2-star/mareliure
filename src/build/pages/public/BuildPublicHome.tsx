@@ -31,6 +31,9 @@ export function BuildPublicHome() {
               <p className="mt-4 max-w-2xl text-[15px] font-medium leading-7 text-slate-600">
                 More helpful than a form. Simpler than a custom configurator.
               </p>
+              <p className="mt-4 max-w-2xl text-base font-medium leading-7 text-slate-700">
+                Customers get a simpler way to explain their project. Sales teams get a clearer brief to act on.
+              </p>
               <p className="mt-3 max-w-2xl text-[14px] leading-6 text-slate-500">
                 Built for businesses selling projects that require discovery before quoting: decks, pergolas, pools, windows, kitchens, solar, custom equipment and more.
               </p>
