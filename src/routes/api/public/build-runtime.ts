@@ -147,7 +147,7 @@ export const Route = createFileRoute("/api/public/build-runtime")({
           if (body.action === "save_session") {
             const { data, error } = await supabaseAdmin
               .from("build_runtime_sessions")
-              .update({ answers: body.answers })
+              .update({ answers: body.answers as any })
               .eq("id", body.session_id)
               .eq("status", "in_progress")
               .select("id, answers, status")
