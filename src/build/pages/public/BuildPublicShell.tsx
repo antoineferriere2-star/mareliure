@@ -137,7 +137,7 @@ export function PageHero({ eyebrow, title, description, primary, primaryTo, seco
 
 export function CheckItem({ children }: { children: ReactNode }) {
   return (
-    <div className="flex gap-2 text-sm leading-6 text-slate-700">
+    <div className="flex gap-2 text-[15px] leading-6 text-slate-700">
       <CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-emerald-700" />
       {children}
     </div>
@@ -158,7 +158,7 @@ export function ObjectCard({ icon: Icon, title, text }: { icon: LucideIcon; titl
     <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
       <Icon className="h-6 w-6 text-emerald-700" />
       <h3 className="mt-4 text-lg font-semibold tracking-normal">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+      <p className="mt-2 text-[15px] leading-6 text-slate-700">{text}</p>
     </section>
   );
 }
@@ -168,7 +168,7 @@ export function StepLine({ index, title, text }: { index: number; title: string;
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-sm font-semibold text-emerald-800">{index}</span>
       <h3 className="mt-4 font-semibold tracking-normal text-slate-950">{title}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+      <p className="mt-2 text-[15px] leading-6 text-slate-700">{text}</p>
     </section>
   );
 }
@@ -187,8 +187,8 @@ export function ContentBand({ title, items, muted = false }: { title: string; it
 export function ComparisonRow({ classic, build }: { classic: string; build: string }) {
   return (
     <div className="grid border-b border-slate-200 last:border-b-0 md:grid-cols-2">
-      <div className="p-4 text-sm text-slate-600">{classic}</div>
-      <div className="border-t border-slate-200 bg-emerald-50 p-4 text-sm font-medium text-emerald-950 md:border-l md:border-t-0">{build}</div>
+      <div className="p-4 text-[15px] leading-6 text-slate-700">{classic}</div>
+      <div className="border-t border-slate-200 bg-emerald-50 p-4 text-[15px] font-medium leading-6 text-emerald-950 md:border-l md:border-t-0">{build}</div>
     </div>
   );
 }
