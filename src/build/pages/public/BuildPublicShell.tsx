@@ -5,15 +5,11 @@ import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
 const navItems = [
-  { label: "Deck builders", href: "/deck-builders" },
-  { label: "How it works", href: "/how-it-works" },
-  { label: "Example brief", href: "/example-project-brief" },
-  { label: "Free audit", href: "/free-inquiry-audit" },
+  { label: "Deck builders", to: "/deck-builders" as const },
+  { label: "How it works", to: "/how-it-works" as const },
+  { label: "Example brief", to: "/example-project-brief" as const },
+  { label: "Free audit", to: "/free-inquiry-audit" as const },
 ];
-
-// NOTE: Only "/" is a real TanStack route today. Other Build public routes
-// come in step 2. Use plain <a href> for now so typechecking doesn't require
-// declared routes that don't exist yet.
 
 export function BuildPublicShell({ children }: { children: ReactNode }) {
   return (
@@ -26,14 +22,14 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
           </Link>
           <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
             {navItems.map((item) => (
-              <a key={item.href} href={item.href} className="hover:text-slate-950">
+              <Link key={item.to} to={item.to} className="hover:text-slate-950">
                 {item.label}
-              </a>
+              </Link>
             ))}
           </nav>
-          <a href="/demo/deck-project">
+          <Link to="/demo/deck-project">
             <Button size="sm">Try demo</Button>
-          </a>
+          </Link>
         </div>
       </header>
       {children}
@@ -49,9 +45,20 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
             </p>
           </div>
           <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-3">
-            <FooterLinks title="Product" links={[navItems[0], navItems[1], { label: "Demo", href: "/demo/deck-project" }]} />
-            <FooterLinks title="Conversion" links={[{ label: "Example brief", href: "/example-project-brief" }, { label: "Free audit", href: "/free-inquiry-audit" }, { label: "Private beta", href: "/private-beta" }]} />
-            <FooterLinks title="Legal" links={[{ label: "Privacy", href: "/privacy" }, { label: "Terms", href: "/terms" }]} />
+            <FooterCol title="Product">
+              <FooterLink to="/deck-builders">Deck builders</FooterLink>
+              <FooterLink to="/how-it-works">How it works</FooterLink>
+              <FooterLink to="/demo/deck-project">Demo</FooterLink>
+            </FooterCol>
+            <FooterCol title="Conversion">
+              <FooterLink to="/example-project-brief">Example brief</FooterLink>
+              <FooterLink to="/free-inquiry-audit">Free audit</FooterLink>
+              <FooterLink to="/private-beta">Private beta</FooterLink>
+            </FooterCol>
+            <FooterCol title="Legal">
+              <FooterLink to="/privacy">Privacy</FooterLink>
+              <FooterLink to="/terms">Terms</FooterLink>
+            </FooterCol>
           </div>
         </div>
       </footer>
@@ -59,18 +66,20 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
   );
 }
 
-function FooterLinks({ title, links }: { title: string; links: { label: string; href: string }[] }) {
+function FooterCol({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
       <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-200">{title}</h2>
-      <div className="mt-3 space-y-2">
-        {links.map((link) => (
-          <a key={link.href} href={link.href} className="block hover:text-white">
-            {link.label}
-          </a>
-        ))}
-      </div>
+      <div className="mt-3 space-y-2">{children}</div>
     </div>
+  );
+}
+
+function FooterLink({ to, children }: { to: string; children: ReactNode }) {
+  return (
+    <Link to={to} className="block hover:text-white">
+      {children}
+    </Link>
   );
 }
 
@@ -93,12 +102,28 @@ export function PublicCtaBand() {
           <h2 className="mt-3 text-3xl font-semibold tracking-normal">See what a better project inquiry looks like.</h2>
         </div>
         <div className="flex flex-wrap gap-3">
-          <a href="/demo/deck-project"><Button>Try the demo</Button></a>
-          <a href="/free-inquiry-audit">
+          <Link to="/demo/deck-project"><Button>Try the demo</Button></Link>
+          <Link to="/free-inquiry-audit">
             <Button variant="outline" className="border-white bg-transparent text-white hover:bg-white hover:text-slate-950">
               Request a free audit
             </Button>
-          </a>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+export function PageHero({ eyebrow, title, description, primary, primaryTo, secondary, secondaryTo }: { eyebrow: string; title: string; description: string; primary: string; primaryTo: string; secondary: string; secondaryTo: string }) {
+  return (
+    <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">{eyebrow}</p>
+        <h1 className="mt-5 max-w-4xl text-5xl font-semibold tracking-normal text-slate-950">{title}</h1>
+        <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">{description}</p>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Link to={primaryTo}><Button size="lg">{primary}</Button></Link>
+          <Link to={secondaryTo}><Button size="lg" variant="outline">{secondary}</Button></Link>
         </div>
       </div>
     </section>
@@ -118,9 +143,7 @@ export function InfoPanel({ title, items }: { title: string; items: string[] }) 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
       <h3 className="text-lg font-semibold tracking-normal text-slate-950">{title}</h3>
-      <div className="mt-4 space-y-2">
-        {items.map((item) => <CheckItem key={item}>{item}</CheckItem>)}
-      </div>
+      <div className="mt-4 space-y-2">{items.map((item) => <CheckItem key={item}>{item}</CheckItem>)}</div>
     </section>
   );
 }
@@ -141,6 +164,17 @@ export function StepLine({ index, title, text }: { index: number; title: string;
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-sm font-semibold text-emerald-800">{index}</span>
       <h3 className="mt-4 font-semibold tracking-normal text-slate-950">{title}</h3>
       <p className="mt-2 text-sm leading-6 text-slate-600">{text}</p>
+    </section>
+  );
+}
+
+export function ContentBand({ title, items, muted = false }: { title: string; items: string[]; muted?: boolean }) {
+  return (
+    <section className={`${muted ? "bg-slate-50" : "bg-white"} px-4 py-16 sm:px-6 lg:px-8`}>
+      <div className="mx-auto max-w-7xl">
+        <SectionHeader title={title} />
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{items.map((item) => <CheckItem key={item}>{item}</CheckItem>)}</div>
+      </div>
     </section>
   );
 }

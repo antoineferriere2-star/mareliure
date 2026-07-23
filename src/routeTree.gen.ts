@@ -9,38 +9,195 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as PrivateBetaRouteImport } from './routes/private-beta'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
+import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
+import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
 
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivateBetaRoute = PrivateBetaRouteImport.update({
+  id: '/private-beta',
+  path: '/private-beta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FreeInquiryAuditRoute = FreeInquiryAuditRouteImport.update({
+  id: '/free-inquiry-audit',
+  path: '/free-inquiry-audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExampleProjectBriefRoute = ExampleProjectBriefRouteImport.update({
+  id: '/example-project-brief',
+  path: '/example-project-brief',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeckBuildersRoute = DeckBuildersRouteImport.update({
+  id: '/deck-builders',
+  path: '/deck-builders',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
+  id: '/demo/deck-project',
+  path: '/demo/deck-project',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/deck-builders': typeof DeckBuildersRoute
+  '/example-project-brief': typeof ExampleProjectBriefRoute
+  '/free-inquiry-audit': typeof FreeInquiryAuditRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/privacy': typeof PrivacyRoute
+  '/private-beta': typeof PrivateBetaRoute
+  '/terms': typeof TermsRoute
+  '/demo/deck-project': typeof DemoDeckProjectRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/deck-builders': typeof DeckBuildersRoute
+  '/example-project-brief': typeof ExampleProjectBriefRoute
+  '/free-inquiry-audit': typeof FreeInquiryAuditRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/privacy': typeof PrivacyRoute
+  '/private-beta': typeof PrivateBetaRoute
+  '/terms': typeof TermsRoute
+  '/demo/deck-project': typeof DemoDeckProjectRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/deck-builders': typeof DeckBuildersRoute
+  '/example-project-brief': typeof ExampleProjectBriefRoute
+  '/free-inquiry-audit': typeof FreeInquiryAuditRoute
+  '/how-it-works': typeof HowItWorksRoute
+  '/privacy': typeof PrivacyRoute
+  '/private-beta': typeof PrivateBetaRoute
+  '/terms': typeof TermsRoute
+  '/demo/deck-project': typeof DemoDeckProjectRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths:
+    | '/'
+    | '/deck-builders'
+    | '/example-project-brief'
+    | '/free-inquiry-audit'
+    | '/how-it-works'
+    | '/privacy'
+    | '/private-beta'
+    | '/terms'
+    | '/demo/deck-project'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to:
+    | '/'
+    | '/deck-builders'
+    | '/example-project-brief'
+    | '/free-inquiry-audit'
+    | '/how-it-works'
+    | '/privacy'
+    | '/private-beta'
+    | '/terms'
+    | '/demo/deck-project'
+  id:
+    | '__root__'
+    | '/'
+    | '/deck-builders'
+    | '/example-project-brief'
+    | '/free-inquiry-audit'
+    | '/how-it-works'
+    | '/privacy'
+    | '/private-beta'
+    | '/terms'
+    | '/demo/deck-project'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  DeckBuildersRoute: typeof DeckBuildersRoute
+  ExampleProjectBriefRoute: typeof ExampleProjectBriefRoute
+  FreeInquiryAuditRoute: typeof FreeInquiryAuditRoute
+  HowItWorksRoute: typeof HowItWorksRoute
+  PrivacyRoute: typeof PrivacyRoute
+  PrivateBetaRoute: typeof PrivateBetaRoute
+  TermsRoute: typeof TermsRoute
+  DemoDeckProjectRoute: typeof DemoDeckProjectRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/private-beta': {
+      id: '/private-beta'
+      path: '/private-beta'
+      fullPath: '/private-beta'
+      preLoaderRoute: typeof PrivateBetaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/free-inquiry-audit': {
+      id: '/free-inquiry-audit'
+      path: '/free-inquiry-audit'
+      fullPath: '/free-inquiry-audit'
+      preLoaderRoute: typeof FreeInquiryAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/example-project-brief': {
+      id: '/example-project-brief'
+      path: '/example-project-brief'
+      fullPath: '/example-project-brief'
+      preLoaderRoute: typeof ExampleProjectBriefRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deck-builders': {
+      id: '/deck-builders'
+      path: '/deck-builders'
+      fullPath: '/deck-builders'
+      preLoaderRoute: typeof DeckBuildersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/': {
       id: '/'
       path: '/'
@@ -48,11 +205,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/deck-project': {
+      id: '/demo/deck-project'
+      path: '/demo/deck-project'
+      fullPath: '/demo/deck-project'
+      preLoaderRoute: typeof DemoDeckProjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  DeckBuildersRoute: DeckBuildersRoute,
+  ExampleProjectBriefRoute: ExampleProjectBriefRoute,
+  FreeInquiryAuditRoute: FreeInquiryAuditRoute,
+  HowItWorksRoute: HowItWorksRoute,
+  PrivacyRoute: PrivacyRoute,
+  PrivateBetaRoute: PrivateBetaRoute,
+  TermsRoute: TermsRoute,
+  DemoDeckProjectRoute: DemoDeckProjectRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
