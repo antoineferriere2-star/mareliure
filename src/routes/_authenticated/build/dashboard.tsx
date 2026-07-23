@@ -1,10 +1,20 @@
 import { createFileRoute, useRouter } from "@tanstack/react-router";
-import { useSuspenseQuery } from "@tanstack/react-query";
-import { queryOptions } from "@tanstack/react-query";
+import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBuildDashboardStats } from "@/build/services/admin.data.functions";
+import { callWithFallback } from "@/build/services/buildAdminClient";
 
 const dashboardKey = ["build-admin", "dashboard"] as const;
+
+type Stats = Awaited<ReturnType<typeof getBuildDashboardStats>>;
+type StatsResult = { data: Stats | null; source: "supabase" | "local-fallback" };
+
+const emptyStats: Stats = {
+  dataSource: "supabase",
+  counts: { missions: 0, activeMissions: 0, dossiers: 0, audits: 0, betas: 0, sessions: 0, submittedSessions: 0, conversionRate: 0 },
+  recentDossiers: [],
+  recentRequests: [],
+};
 
 export const Route = createFileRoute("/_authenticated/build/dashboard")({
   ssr: false,
@@ -16,14 +26,23 @@ function DashboardPage() {
   const { admin } = Route.useRouteContext();
   const router = useRouter();
   const fetchStats = useServerFn(getBuildDashboardStats);
-  const opts = queryOptions({ queryKey: dashboardKey, queryFn: () => fetchStats() });
-  const { data } = useSuspenseQuery(opts);
+
+  const opts = queryOptions({
+    queryKey: dashboardKey,
+    queryFn: async (): Promise<StatsResult> => {
+      const res = await callWithFallback<Stats>(() => fetchStats(), () => emptyStats);
+      return { data: res.data, source: res.source };
+    },
+  });
+  const { data: result } = useSuspenseQuery(opts);
+  const stats = result.data ?? emptyStats;
+  const isFallback = result.source === "local-fallback";
 
   const cards = [
-    { label: "Missions", value: data.counts.missions, sub: `${data.counts.activeMissions} actives` },
-    { label: "Dossiers générés", value: data.counts.dossiers, sub: `${data.counts.sessions} sessions` },
-    { label: "Audits reçus", value: data.counts.audits, sub: "demandes /free-inquiry-audit" },
-    { label: "Private beta", value: data.counts.betas, sub: "demandes /private-beta" },
+    { label: "Missions actives", value: stats.counts.activeMissions, sub: `${stats.counts.missions} au total` },
+    { label: "Qualified projects", value: stats.counts.dossiers, sub: `${stats.counts.sessions} sessions` },
+    { label: "Audits + Private beta", value: stats.counts.audits + stats.counts.betas, sub: `${stats.counts.audits} audit · ${stats.counts.betas} beta` },
+    { label: "Conversion rate", value: `${stats.counts.conversionRate}%`, sub: `${stats.counts.submittedSessions}/${stats.counts.sessions} soumises` },
   ];
 
   return (
@@ -33,6 +52,18 @@ function DashboardPage() {
           <h1 className="text-2xl font-semibold text-foreground">Dashboard</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Bienvenue {admin.email ?? admin.userId}. Vue d'ensemble Métré Build AI.
+          </p>
+          <p className="mt-2 text-xs">
+            <span className="text-muted-foreground">Data source: </span>
+            <span
+              className={`rounded-full border px-2 py-0.5 font-medium ${
+                isFallback
+                  ? "border-amber-300 bg-amber-50 text-amber-800"
+                  : "border-emerald-300 bg-emerald-50 text-emerald-800"
+              }`}
+            >
+              {isFallback ? "Local dev fallback" : "Supabase Build admin"}
+            </span>
           </p>
         </div>
         <button
@@ -56,11 +87,11 @@ function DashboardPage() {
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="text-sm font-semibold text-foreground">Derniers dossiers</h2>
-          {data.recentDossiers.length === 0 ? (
+          {stats.recentDossiers.length === 0 ? (
             <p className="mt-3 text-xs text-muted-foreground">Aucun dossier pour le moment.</p>
           ) : (
             <ul className="mt-3 space-y-2 text-sm">
-              {data.recentDossiers.map((d) => (
+              {stats.recentDossiers.map((d) => (
                 <li key={d.id} className="flex items-center justify-between border-b border-border/60 pb-2 last:border-b-0">
                   <div className="min-w-0">
                     <div className="truncate text-foreground">{d.summary ?? d.id.slice(0, 8)}</div>
@@ -77,11 +108,11 @@ function DashboardPage() {
 
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="text-sm font-semibold text-foreground">Dernières demandes publiques</h2>
-          {data.recentRequests.length === 0 ? (
+          {stats.recentRequests.length === 0 ? (
             <p className="mt-3 text-xs text-muted-foreground">Aucune demande pour le moment.</p>
           ) : (
             <ul className="mt-3 space-y-2 text-sm">
-              {data.recentRequests.map((r) => (
+              {stats.recentRequests.map((r) => (
                 <li key={r.id} className="flex items-center justify-between border-b border-border/60 pb-2 last:border-b-0">
                   <div className="min-w-0">
                     <div className="truncate text-foreground">{r.request_type}</div>
