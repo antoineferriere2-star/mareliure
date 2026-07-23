@@ -14,6 +14,114 @@ export type Database = {
   }
   public: {
     Tables: {
+      build_dossiers: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          mission_id: string | null
+          next_questions: Json
+          session_id: string | null
+          status: string
+          summary: string | null
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          mission_id?: string | null
+          next_questions?: Json
+          session_id?: string | null
+          status?: string
+          summary?: string | null
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          mission_id?: string | null
+          next_questions?: Json
+          session_id?: string | null
+          status?: string
+          summary?: string | null
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_dossiers_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "build_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "build_dossiers_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "build_runtime_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      build_missions: {
+        Row: {
+          audience: Json
+          created_at: string
+          id: string
+          name: string
+          objective: string | null
+          playbook_id: string | null
+          playbook_name: string | null
+          project: Json
+          proposal: Json | null
+          public_token: string | null
+          public_token_revoked_at: string | null
+          published_at: string | null
+          status: string
+          updated_at: string
+          workspace_id: string | null
+        }
+        Insert: {
+          audience?: Json
+          created_at?: string
+          id?: string
+          name: string
+          objective?: string | null
+          playbook_id?: string | null
+          playbook_name?: string | null
+          project?: Json
+          proposal?: Json | null
+          public_token?: string | null
+          public_token_revoked_at?: string | null
+          published_at?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Update: {
+          audience?: Json
+          created_at?: string
+          id?: string
+          name?: string
+          objective?: string | null
+          playbook_id?: string | null
+          playbook_name?: string | null
+          project?: Json
+          proposal?: Json | null
+          public_token?: string | null
+          public_token_revoked_at?: string | null
+          published_at?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string | null
+        }
+        Relationships: []
+      }
       build_public_request_rate: {
         Row: {
           created_at: string
@@ -70,6 +178,68 @@ export type Database = {
           user_agent?: string | null
         }
         Relationships: []
+      }
+      build_runtime_rate: {
+        Row: {
+          action: string
+          created_at: string
+          ip_hash: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          ip_hash: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          ip_hash?: string
+        }
+        Relationships: []
+      }
+      build_runtime_sessions: {
+        Row: {
+          answers: Json
+          created_at: string
+          id: string
+          ip_hash: string | null
+          mission_id: string
+          status: string
+          submitted_at: string | null
+          updated_at: string
+          visitor_hash: string | null
+        }
+        Insert: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          mission_id: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          visitor_hash?: string | null
+        }
+        Update: {
+          answers?: Json
+          created_at?: string
+          id?: string
+          ip_hash?: string | null
+          mission_id?: string
+          status?: string
+          submitted_at?: string | null
+          updated_at?: string
+          visitor_hash?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_runtime_sessions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "build_missions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
