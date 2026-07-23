@@ -69,19 +69,32 @@ export function validateBetaRequest(input: BetaRequestInput): string[] {
 export async function submitBuildPublicRequest(
   type: BuildPublicRequestType,
   payload: AuditRequestInput | BetaRequestInput,
-): Promise<{ id: string; stored: "local" }> {
+): Promise<{ id: string }> {
   const errors = type === "audit"
     ? validateAuditRequest(payload as AuditRequestInput)
     : validateBetaRequest(payload as BetaRequestInput);
   if (errors.length > 0) throw new Error(errors[0]);
-  const id = `local_${Date.now()}`;
-  if (typeof window !== "undefined") {
-    const key = "metre_build_public_requests";
-    const current = JSON.parse(window.localStorage.getItem(key) ?? "[]") as unknown[];
-    window.localStorage.setItem(
-      key,
-      JSON.stringify([{ id, type, payload, createdAt: new Date().toISOString() }, ...current]),
-    );
+
+  const { website, ...cleanPayload } = payload as AuditRequestInput & BetaRequestInput;
+  const sourcePath = typeof window !== "undefined"
+    ? window.location.pathname
+    : type === "audit" ? "/free-inquiry-audit" : "/private-beta";
+
+  const response = await fetch("/api/public/build-public-intake", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      type,
+      sourcePath,
+      website: website ?? "",
+      payload: cleanPayload,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? "Unable to submit this request.");
   }
-  return { id, stored: "local" };
+  const body = (await response.json()) as { id: string };
+  return { id: body.id };
 }
