@@ -26,12 +26,12 @@ import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authentic
 import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
 import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
 import { Route as AuthenticatedBuildSettingsRouteImport } from './routes/_authenticated/build/settings'
-import { Route as AuthenticatedBuildPlaybooksRouteImport } from './routes/_authenticated/build/playbooks'
 import { Route as AuthenticatedBuildOnboardingRouteImport } from './routes/_authenticated/build/onboarding'
 import { Route as AuthenticatedBuildMissionsRouteImport } from './routes/_authenticated/build/missions'
 import { Route as AuthenticatedBuildKnowledgeRouteImport } from './routes/_authenticated/build/knowledge'
 import { Route as AuthenticatedBuildDossiersRouteImport } from './routes/_authenticated/build/dossiers'
 import { Route as AuthenticatedBuildDashboardRouteImport } from './routes/_authenticated/build/dashboard'
+import { Route as AuthenticatedBuildPlaybooksIndexRouteImport } from './routes/_authenticated/build/playbooks.index'
 import { Route as AuthenticatedBuildMissionsIndexRouteImport } from './routes/_authenticated/build/missions.index'
 import { Route as AuthenticatedBuildPlaybooksIdRouteImport } from './routes/_authenticated/build/playbooks.$id'
 import { Route as AuthenticatedBuildMissionsNewRouteImport } from './routes/_authenticated/build/missions.new'
@@ -124,12 +124,6 @@ const AuthenticatedBuildSettingsRoute =
     path: '/settings',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedBuildPlaybooksRoute =
-  AuthenticatedBuildPlaybooksRouteImport.update({
-    id: '/playbooks',
-    path: '/playbooks',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
-  } as any)
 const AuthenticatedBuildOnboardingRoute =
   AuthenticatedBuildOnboardingRouteImport.update({
     id: '/onboarding',
@@ -160,6 +154,12 @@ const AuthenticatedBuildDashboardRoute =
     path: '/dashboard',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
+const AuthenticatedBuildPlaybooksIndexRoute =
+  AuthenticatedBuildPlaybooksIndexRouteImport.update({
+    id: '/playbooks/',
+    path: '/playbooks/',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
 const AuthenticatedBuildMissionsIndexRoute =
   AuthenticatedBuildMissionsIndexRouteImport.update({
     id: '/',
@@ -168,9 +168,9 @@ const AuthenticatedBuildMissionsIndexRoute =
   } as any)
 const AuthenticatedBuildPlaybooksIdRoute =
   AuthenticatedBuildPlaybooksIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedBuildPlaybooksRoute,
+    id: '/playbooks/$id',
+    path: '/playbooks/$id',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
 const AuthenticatedBuildMissionsNewRoute =
   AuthenticatedBuildMissionsNewRouteImport.update({
@@ -209,7 +209,6 @@ export interface FileRoutesByFullPath {
   '/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
   '/build/missions': typeof AuthenticatedBuildMissionsRouteWithChildren
   '/build/onboarding': typeof AuthenticatedBuildOnboardingRoute
-  '/build/playbooks': typeof AuthenticatedBuildPlaybooksRouteWithChildren
   '/build/settings': typeof AuthenticatedBuildSettingsRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
@@ -219,6 +218,7 @@ export interface FileRoutesByFullPath {
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
+  '/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -236,7 +236,6 @@ export interface FileRoutesByTo {
   '/build/dossiers': typeof AuthenticatedBuildDossiersRouteWithChildren
   '/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
   '/build/onboarding': typeof AuthenticatedBuildOnboardingRoute
-  '/build/playbooks': typeof AuthenticatedBuildPlaybooksRouteWithChildren
   '/build/settings': typeof AuthenticatedBuildSettingsRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
@@ -246,6 +245,7 @@ export interface FileRoutesByTo {
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/missions': typeof AuthenticatedBuildMissionsIndexRoute
+  '/build/playbooks': typeof AuthenticatedBuildPlaybooksIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -267,7 +267,6 @@ export interface FileRoutesById {
   '/_authenticated/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
   '/_authenticated/build/missions': typeof AuthenticatedBuildMissionsRouteWithChildren
   '/_authenticated/build/onboarding': typeof AuthenticatedBuildOnboardingRoute
-  '/_authenticated/build/playbooks': typeof AuthenticatedBuildPlaybooksRouteWithChildren
   '/_authenticated/build/settings': typeof AuthenticatedBuildSettingsRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
@@ -277,6 +276,7 @@ export interface FileRoutesById {
   '/_authenticated/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/_authenticated/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/_authenticated/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
+  '/_authenticated/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -298,7 +298,6 @@ export interface FileRouteTypes {
     | '/build/knowledge'
     | '/build/missions'
     | '/build/onboarding'
-    | '/build/playbooks'
     | '/build/settings'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
@@ -308,6 +307,7 @@ export interface FileRouteTypes {
     | '/build/missions/new'
     | '/build/playbooks/$id'
     | '/build/missions/'
+    | '/build/playbooks/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -325,7 +325,6 @@ export interface FileRouteTypes {
     | '/build/dossiers'
     | '/build/knowledge'
     | '/build/onboarding'
-    | '/build/playbooks'
     | '/build/settings'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
@@ -335,6 +334,7 @@ export interface FileRouteTypes {
     | '/build/missions/new'
     | '/build/playbooks/$id'
     | '/build/missions'
+    | '/build/playbooks'
   id:
     | '__root__'
     | '/'
@@ -355,7 +355,6 @@ export interface FileRouteTypes {
     | '/_authenticated/build/knowledge'
     | '/_authenticated/build/missions'
     | '/_authenticated/build/onboarding'
-    | '/_authenticated/build/playbooks'
     | '/_authenticated/build/settings'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
@@ -365,6 +364,7 @@ export interface FileRouteTypes {
     | '/_authenticated/build/missions/new'
     | '/_authenticated/build/playbooks/$id'
     | '/_authenticated/build/missions/'
+    | '/_authenticated/build/playbooks/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -505,13 +505,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildSettingsRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/build/playbooks': {
-      id: '/_authenticated/build/playbooks'
-      path: '/playbooks'
-      fullPath: '/build/playbooks'
-      preLoaderRoute: typeof AuthenticatedBuildPlaybooksRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
     '/_authenticated/build/onboarding': {
       id: '/_authenticated/build/onboarding'
       path: '/onboarding'
@@ -547,6 +540,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildDashboardRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
+    '/_authenticated/build/playbooks/': {
+      id: '/_authenticated/build/playbooks/'
+      path: '/playbooks'
+      fullPath: '/build/playbooks/'
+      preLoaderRoute: typeof AuthenticatedBuildPlaybooksIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
     '/_authenticated/build/missions/': {
       id: '/_authenticated/build/missions/'
       path: '/'
@@ -556,10 +556,10 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/build/playbooks/$id': {
       id: '/_authenticated/build/playbooks/$id'
-      path: '/$id'
+      path: '/playbooks/$id'
       fullPath: '/build/playbooks/$id'
       preLoaderRoute: typeof AuthenticatedBuildPlaybooksIdRouteImport
-      parentRoute: typeof AuthenticatedBuildPlaybooksRoute
+      parentRoute: typeof AuthenticatedBuildRouteRoute
     }
     '/_authenticated/build/missions/new': {
       id: '/_authenticated/build/missions/new'
@@ -617,29 +617,16 @@ const AuthenticatedBuildMissionsRouteWithChildren =
     AuthenticatedBuildMissionsRouteChildren,
   )
 
-interface AuthenticatedBuildPlaybooksRouteChildren {
-  AuthenticatedBuildPlaybooksIdRoute: typeof AuthenticatedBuildPlaybooksIdRoute
-}
-
-const AuthenticatedBuildPlaybooksRouteChildren: AuthenticatedBuildPlaybooksRouteChildren =
-  {
-    AuthenticatedBuildPlaybooksIdRoute: AuthenticatedBuildPlaybooksIdRoute,
-  }
-
-const AuthenticatedBuildPlaybooksRouteWithChildren =
-  AuthenticatedBuildPlaybooksRoute._addFileChildren(
-    AuthenticatedBuildPlaybooksRouteChildren,
-  )
-
 interface AuthenticatedBuildRouteRouteChildren {
   AuthenticatedBuildDashboardRoute: typeof AuthenticatedBuildDashboardRoute
   AuthenticatedBuildDossiersRoute: typeof AuthenticatedBuildDossiersRouteWithChildren
   AuthenticatedBuildKnowledgeRoute: typeof AuthenticatedBuildKnowledgeRoute
   AuthenticatedBuildMissionsRoute: typeof AuthenticatedBuildMissionsRouteWithChildren
   AuthenticatedBuildOnboardingRoute: typeof AuthenticatedBuildOnboardingRoute
-  AuthenticatedBuildPlaybooksRoute: typeof AuthenticatedBuildPlaybooksRouteWithChildren
   AuthenticatedBuildSettingsRoute: typeof AuthenticatedBuildSettingsRoute
   AuthenticatedBuildIndexRoute: typeof AuthenticatedBuildIndexRoute
+  AuthenticatedBuildPlaybooksIdRoute: typeof AuthenticatedBuildPlaybooksIdRoute
+  AuthenticatedBuildPlaybooksIndexRoute: typeof AuthenticatedBuildPlaybooksIndexRoute
 }
 
 const AuthenticatedBuildRouteRouteChildren: AuthenticatedBuildRouteRouteChildren =
@@ -651,10 +638,11 @@ const AuthenticatedBuildRouteRouteChildren: AuthenticatedBuildRouteRouteChildren
     AuthenticatedBuildMissionsRoute:
       AuthenticatedBuildMissionsRouteWithChildren,
     AuthenticatedBuildOnboardingRoute: AuthenticatedBuildOnboardingRoute,
-    AuthenticatedBuildPlaybooksRoute:
-      AuthenticatedBuildPlaybooksRouteWithChildren,
     AuthenticatedBuildSettingsRoute: AuthenticatedBuildSettingsRoute,
     AuthenticatedBuildIndexRoute: AuthenticatedBuildIndexRoute,
+    AuthenticatedBuildPlaybooksIdRoute: AuthenticatedBuildPlaybooksIdRoute,
+    AuthenticatedBuildPlaybooksIndexRoute:
+      AuthenticatedBuildPlaybooksIndexRoute,
   }
 
 const AuthenticatedBuildRouteRouteWithChildren =
@@ -692,13 +680,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
