@@ -110,7 +110,6 @@ export type Database = {
           objective: string | null
           playbook_id: string | null
           playbook_name: string | null
-          playbook_version_id: string | null
           project: Json
           proposal: Json | null
           public_token: string | null
@@ -128,7 +127,6 @@ export type Database = {
           objective?: string | null
           playbook_id?: string | null
           playbook_name?: string | null
-          playbook_version_id?: string | null
           project?: Json
           proposal?: Json | null
           public_token?: string | null
@@ -146,7 +144,6 @@ export type Database = {
           objective?: string | null
           playbook_id?: string | null
           playbook_name?: string | null
-          playbook_version_id?: string | null
           project?: Json
           proposal?: Json | null
           public_token?: string | null
@@ -156,100 +153,46 @@ export type Database = {
           updated_at?: string
           workspace_id?: string | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "build_missions_playbook_version_id_fkey"
-            columns: ["playbook_version_id"]
-            isOneToOne: false
-            referencedRelation: "build_playbook_versions"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      build_playbook_versions: {
-        Row: {
-          created_at: string
-          id: string
-          playbook_id: string
-          published_at: string
-          published_by: string | null
-          schema: Json
-          version_number: number
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          playbook_id: string
-          published_at?: string
-          published_by?: string | null
-          schema: Json
-          version_number: number
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          playbook_id?: string
-          published_at?: string
-          published_by?: string | null
-          schema?: Json
-          version_number?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "build_playbook_versions_playbook_id_fkey"
-            columns: ["playbook_id"]
-            isOneToOne: false
-            referencedRelation: "build_playbooks"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       build_playbooks: {
         Row: {
           created_at: string
           created_by: string | null
           description: string | null
-          draft_schema: Json
           id: string
           is_active: boolean
           name: string
           project_type: string | null
-          published_version_id: string | null
+          steps: Json
           updated_at: string
+          version: string
         }
         Insert: {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          draft_schema?: Json
           id?: string
           is_active?: boolean
           name: string
           project_type?: string | null
-          published_version_id?: string | null
+          steps?: Json
           updated_at?: string
+          version?: string
         }
         Update: {
           created_at?: string
           created_by?: string | null
           description?: string | null
-          draft_schema?: Json
           id?: string
           is_active?: boolean
           name?: string
           project_type?: string | null
-          published_version_id?: string | null
+          steps?: Json
           updated_at?: string
+          version?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "build_playbooks_published_version_id_fkey"
-            columns: ["published_version_id"]
-            isOneToOne: false
-            referencedRelation: "build_playbook_versions"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       build_public_request_rate: {
         Row: {
