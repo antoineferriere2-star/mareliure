@@ -27,9 +27,17 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
           </nav>
-          <Link to="/demo/deck-project">
-            <Button size="sm">Try demo</Button>
-          </Link>
+          <div className="flex items-center gap-2">
+            <Link
+              to="/auth"
+              className="hidden text-sm font-medium text-slate-600 hover:text-slate-950 sm:inline-flex"
+            >
+              Connexion
+            </Link>
+            <Link to="/demo/deck-project">
+              <Button size="sm">Try demo</Button>
+            </Link>
+          </div>
         </div>
       </header>
       {children}
