@@ -1,6 +1,8 @@
-// Small shared badge so every onboarding screen visually distinguishes
-// detected-automatically / confirmed / not-found — an explicit requirement
-// of the feature (never let a detected value look like a confirmed one).
+// Small shared badge distinguishing detected-automatically / confirmed /
+// not-found — used by the onboarding wizard (admin) and the
+// inspiration_photo field (public runtime), so it lives outside both
+// pages/admin and pages/public. Never let a detected value look like a
+// confirmed one — that distinction is a hard requirement in both places.
 export type DetectionState = "detected" | "confirmed" | "notFound";
 
 const STYLES: Record<DetectionState, string> = {

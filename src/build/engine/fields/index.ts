@@ -4,6 +4,7 @@ import { AddressField } from "./AddressField";
 import { BudgetField } from "./BudgetField";
 import { ConsentField } from "./ConsentField";
 import { CoordinatesField } from "./CoordinatesField";
+import { InspirationPhotoField } from "./InspirationPhotoField";
 import { MeasurementField } from "./MeasurementField";
 import { MultiChoiceField } from "./MultiChoiceField";
 import { NumberField } from "./NumberField";
@@ -32,6 +33,7 @@ export const FIELD_COMPONENTS: Record<PlaybookFieldType, ComponentType<FieldComp
   photo: PhotoField as ComponentType<FieldComponentProps>,
   coordinates: CoordinatesField as ComponentType<FieldComponentProps>,
   consent: ConsentField as ComponentType<FieldComponentProps>,
+  inspiration_photo: InspirationPhotoField as ComponentType<FieldComponentProps>,
 };
 
-export type { FieldComponentProps } from "./types";
+export type { FieldComponentProps, InspirationPhotoAnalysis } from "./types";

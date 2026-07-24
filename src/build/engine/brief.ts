@@ -6,7 +6,13 @@
  * every Deck-specific rule becomes playbook DATA (derivedLines,
  * calculatedFields, alwaysIncludeLines...), interpreted here generically.
  */
-import { NOT_SURE_VALUE, type AnswerValue, type Answers } from "../schema/answers";
+import {
+  NOT_SURE_VALUE,
+  type AnswerValue,
+  type Answers,
+  type InspirationHypothesisKey,
+  type InspirationPhotoAnswer,
+} from "../schema/answers";
 import type { BriefLine, BriefLineSource, ConfidenceLabel, ProjectBrief } from "../schema/brief";
 import type { BriefSectionKey, PlaybookField, PlaybookSchema } from "../schema/playbook";
 import { evaluateConditionGroup } from "./conditions";
@@ -160,26 +166,75 @@ export function generateProjectBrief(
     });
   }
 
-  // 3. Derived lines: playbook-authored conditional business rules.
+  // 3. Inspiration-photo hypotheses: one BriefLine per non-empty dimension.
+  // A dimension the visitor explicitly confirmed reads as a normal
+  // visitor_answer in confirmedInformation; anything left unconfirmed stays
+  // an image_hypothesis in assumptionsAndCalculated — never silently
+  // promoted to a certainty (CLAUDE.md: the AI proposes, it never decides).
+  for (const field of allVisibleFields) {
+    if (field.type !== "inspiration_photo") continue;
+    const value = answers[field.key];
+    if (!value || typeof value !== "object" || !("hypotheses" in value)) continue;
+    const answer = value as InspirationPhotoAnswer;
+    const confirmed = answer.confirmed ?? {};
+
+    const dimensions: { key: InspirationHypothesisKey; label: string; text?: string }[] = [
+      { key: "style", label: "Style", text: answer.hypotheses.style },
+      {
+        key: "materials",
+        label: "Materials",
+        text: answer.hypotheses.materials.length > 0 ? answer.hypotheses.materials.join(", ") : undefined,
+      },
+      { key: "shape", label: "Shape", text: answer.hypotheses.shape },
+      {
+        key: "elements",
+        label: "Elements",
+        text: answer.hypotheses.elements.length > 0 ? answer.hypotheses.elements.join(", ") : undefined,
+      },
+    ];
+
+    for (const dimension of dimensions) {
+      if (!dimension.text) continue;
+      const isConfirmed = confirmed[dimension.key] === true;
+      sections[isConfirmed ? "confirmedInformation" : "assumptionsAndCalculated"].push({
+        label: dimension.label,
+        value: dimension.text,
+        source: isConfirmed ? "visitor_answer" : "image_hypothesis",
+        category: "Inspiration",
+        fieldKey: field.key,
+      });
+    }
+
+    if (answer.suggestedQuestions.length > 0) {
+      sections.missingInformation.push({
+        label: "Questions to explore (from the inspiration photo)",
+        value: answer.suggestedQuestions.join(" · "),
+        source: "image_hypothesis",
+        fieldKey: field.key,
+      });
+    }
+  }
+
+  // 4. Derived lines: playbook-authored conditional business rules.
   for (const rule of schema.briefConfig.derivedLines) {
     if (evaluateConditionGroup(rule.when, answers)) {
       sections[rule.section].push({ label: rule.label, value: interpolate(rule.value, tokens), source: rule.source });
     }
   }
 
-  // 4. Always-injected caveats (e.g. "Permits not assessed").
+  // 5. Always-injected caveats (e.g. "Permits not assessed").
   for (const line of schema.briefConfig.alwaysIncludeLines) {
     sections[line.section].push({ label: line.label, value: line.value, source: "assumed_default", category: line.category });
   }
 
-  // 5. Project summary.
+  // 6. Project summary.
   const summaryParts = schema.briefConfig.summaryFragments
     .filter((f) => evaluateConditionGroup(f.when, answers))
     .map((f) => interpolate(f.template, tokens).trim())
     .filter(Boolean);
   const projectSummary = summaryParts.length > 0 ? summaryParts.join(" ") : schema.briefConfig.emptySummaryFallback;
 
-  // 6. Confidence — a generic, engine-level heuristic (not playbook-configurable).
+  // 7. Confidence — a generic, engine-level heuristic (not playbook-configurable).
   const recommendedFields = allVisibleFields.filter((f) => f.desirability === "recommended");
   const requiredFields = allVisibleFields.filter((f) => f.desirability === "required");
   const emptyRecommendedCount = recommendedFields.filter((f) => isBlank(answers[f.key]) || answers[f.key] === NOT_SURE_VALUE).length;
@@ -197,7 +252,7 @@ export function generateProjectBrief(
   if (notSureRequiredCount > 0) reasons.push(`${notSureRequiredCount} required field(s) answered "not sure".`);
   if (triggeredWarnings > 0) reasons.push(`${triggeredWarnings} consistency warning(s) triggered.`);
 
-  // 7. Suggested next action: first conditional match wins, the unconditional entry is the default.
+  // 8. Suggested next action: first conditional match wins, the unconditional entry is the default.
   const matchedAction =
     schema.briefConfig.suggestedNextActions.find((a) => a.when && evaluateConditionGroup(a.when, answers)) ??
     schema.briefConfig.suggestedNextActions.find((a) => !a.when);

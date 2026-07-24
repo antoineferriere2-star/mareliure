@@ -1,9 +1,18 @@
 import { randomUUID } from "crypto";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { playbookSchema, type PlaybookSchema } from "@/build/schema/playbook";
+import type { AgentResult } from "@/build/ai/schema";
+import type { ImageAnalysisOutput } from "@/build/ai/imageAnalysis";
+
+const runImageAnalysisMock = vi.fn<() => Promise<AgentResult<ImageAnalysisOutput>>>();
+vi.mock("@/build/ai/imageAnalysis", () => ({
+  runImageAnalysis: (...args: unknown[]) => runImageAnalysisMock(...(args as [])),
+}));
+
 import {
   bodySchema,
   findPublishedMission,
+  handleAnalyzeInspirationPhoto,
   handleGetMission,
   handleResumeSession,
   handleSaveSession,
@@ -106,17 +115,58 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: unknown }> {
   }
 }
 
-function createFakeSupabase(seed: Record<string, Row[]> = {}) {
+function createFakeSupabase(seed: Record<string, Row[]> = {}, options: { uploadError?: { message: string } } = {}) {
   const store = new Map<string, Row[]>(Object.entries(seed).map(([k, v]) => [k, [...v]]));
+  const uploadedPaths: string[] = [];
   return {
     store,
+    uploadedPaths,
     // Cast to keep call sites (written against SupabaseClient<Database>) simple in tests.
     client: {
       from(table: string) {
         return new FakeQuery(store, table);
       },
+      storage: {
+        from(_bucket: string) {
+          return {
+            async upload(path: string) {
+              if (options.uploadError) return { data: null, error: options.uploadError };
+              uploadedPaths.push(path);
+              return { data: { path }, error: null };
+            },
+          };
+        },
+      },
     } as unknown as Parameters<typeof findPublishedMission>[0],
   };
+}
+
+function inspirationPhotoSchema(): PlaybookSchema {
+  return playbookSchema.parse({
+    schemaVersion: 1,
+    sections: [
+      {
+        id: "s1",
+        title: "Section",
+        steps: [
+          {
+            id: "step1",
+            title: "Step",
+            fields: [
+              {
+                key: "inspiration",
+                label: "Photo d'inspiration",
+                type: "inspiration_photo",
+                maxFileSizeMb: 1,
+                acceptMimeTypes: ["image/jpeg", "image/png"],
+              },
+            ],
+          },
+        ],
+      },
+    ],
+    briefConfig: { suggestedNextActions: [{ label: "Next", value: "Follow up." }] },
+  });
 }
 
 function minimalSchema(fieldDesirability: "optional" | "required" = "optional"): PlaybookSchema {
@@ -329,5 +379,122 @@ describe("soumission", () => {
 
     const res = await handleSubmitSession(client, session.id, "wrong-secret-wrong-secret-wrong", { note: "x" });
     expect(res.status).toBe(404);
+  });
+});
+
+describe("analyze_inspiration_photo", () => {
+  const smallImage = Buffer.from("a-small-fake-image").toString("base64");
+
+  it("refuse avec le mauvais secret", async () => {
+    const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session } = await started.json();
+
+    const res = await handleAnalyzeInspirationPhoto(
+      client,
+      session.id,
+      "wrong-secret-wrong-secret-wrong",
+      "inspiration",
+      smallImage,
+      "image/jpeg",
+    );
+    expect(res.status).toBe(404);
+  });
+
+  it("refuse une clé de champ inconnue ou d'un autre type", async () => {
+    const { mission, versionRow } = seedActiveMission({}, minimalSchema());
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session, session_secret } = await started.json();
+
+    const res = await handleAnalyzeInspirationPhoto(client, session.id, session_secret, "note", smallImage, "image/jpeg");
+    expect(res.status).toBe(400);
+  });
+
+  it("refuse un type MIME non autorisé par le champ", async () => {
+    const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session, session_secret } = await started.json();
+
+    const res = await handleAnalyzeInspirationPhoto(
+      client,
+      session.id,
+      session_secret,
+      "inspiration",
+      smallImage,
+      "application/pdf",
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("refuse une image dépassant maxFileSizeMb", async () => {
+    const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session, session_secret } = await started.json();
+
+    const oversized = Buffer.alloc(1024 * 1024 + 1, "a").toString("base64"); // > 1 MB limit
+    const res = await handleAnalyzeInspirationPhoto(
+      client,
+      session.id,
+      session_secret,
+      "inspiration",
+      oversized,
+      "image/jpeg",
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it("upload l'image et retourne les hypothèses en cas de succès", async () => {
+    runImageAnalysisMock.mockResolvedValue({
+      status: "ok",
+      data: { materials: ["Composite"], elements: ["Garde-corps"], suggestedQuestions: ["Quelle surface ?"] },
+    });
+    const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
+    const { client, uploadedPaths } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session, session_secret } = await started.json();
+
+    const res = await handleAnalyzeInspirationPhoto(
+      client,
+      session.id,
+      session_secret,
+      "inspiration",
+      smallImage,
+      "image/jpeg",
+    );
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.photoPath).toContain(session.id);
+    expect(body.hypotheses.materials).toEqual(["Composite"]);
+    expect(uploadedPaths).toHaveLength(1);
+  });
+
+  it("retourne quand même photoPath si l'analyse IA échoue, pour permettre un nouvel essai sans ré-upload", async () => {
+    runImageAnalysisMock.mockResolvedValue({ status: "error", error: "Réponse IA non structurée." });
+    const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session, session_secret } = await started.json();
+
+    const res = await handleAnalyzeInspirationPhoto(
+      client,
+      session.id,
+      session_secret,
+      "inspiration",
+      smallImage,
+      "image/jpeg",
+    );
+    expect(res.status).toBe(502);
+    const body = await res.json();
+    expect(body.photoPath).toBeTruthy();
   });
 });

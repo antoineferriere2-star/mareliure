@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createHash, randomBytes, timingSafeEqual } from "crypto";
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
@@ -10,7 +10,9 @@ import { playbookSchema, type PlaybookField, type PlaybookSchema } from "@/build
 
 type Supa = SupabaseClient<Database>;
 
-const MAX_BODY_BYTES = 32 * 1024; // 32 KB
+const MAX_BODY_BYTES = 32 * 1024; // 32 KB — every action except photo analysis
+const MAX_PHOTO_BODY_BYTES = 12 * 1024 * 1024; // 12 MB — base64-encoded inspiration photo
+const INSPIRATION_PHOTOS_BUCKET = "build-inspiration-photos";
 const RATE_LIMIT_WINDOW_MIN = 60;
 const RATE_LIMIT_MAX = 60;
 const PUBLISHED_STATUS = "active";
@@ -38,6 +40,14 @@ export const bodySchema = z.union([
     session_id: z.string().uuid(),
     session_secret: z.string().min(32).max(256),
     answers: z.record(z.string(), z.unknown()).optional(),
+  }),
+  z.object({
+    action: z.literal("analyze_inspiration_photo"),
+    session_id: z.string().uuid(),
+    session_secret: z.string().min(32).max(256),
+    field_key: z.string().min(1),
+    image_base64: z.string().min(1),
+    media_type: z.string().min(1),
   }),
 ]);
 
@@ -363,12 +373,73 @@ export async function handleSubmitSession(
   return json(200, { dossier });
 }
 
+// Stateless: uploads the image to Storage and returns the vision agent's
+// hypotheses. Never writes to build_runtime_sessions — the visitor confirms
+// or corrects the hypotheses client-side, and the resulting
+// InspirationPhotoAnswer is persisted like any other field via the ordinary
+// save_session/submit_session actions above.
+export async function handleAnalyzeInspirationPhoto(
+  supabase: Supa,
+  sessionId: string,
+  secret: string,
+  fieldKey: string,
+  imageBase64: string,
+  mediaType: string,
+) {
+  const session = await verifySessionSecret(supabase, sessionId, secret);
+  if (!session) return json(404, { error: "Session not found" });
+  if (session.status !== "in_progress") return json(409, { error: "Session already submitted" });
+
+  const { data: mission, error: mErr } = await supabase
+    .from("build_missions")
+    .select("playbook_version_id")
+    .eq("id", session.mission_id)
+    .maybeSingle();
+  if (mErr) throw mErr;
+  if (!mission?.playbook_version_id) return json(500, { error: "Mission has no published playbook" });
+  const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
+  if (!schema) return json(500, { error: "Playbook schema unavailable" });
+
+  const field = findFieldByKey(schema, fieldKey);
+  if (!field || field.type !== "inspiration_photo") {
+    return json(400, { error: "Unknown or invalid field for photo analysis." });
+  }
+  if (!field.acceptMimeTypes.includes(mediaType)) {
+    return json(400, { error: "Unsupported image type." });
+  }
+
+  const buffer = Buffer.from(imageBase64, "base64");
+  const maxBytes = field.maxFileSizeMb * 1024 * 1024;
+  if (buffer.length === 0 || buffer.length > maxBytes) {
+    return json(400, { error: `Image must be under ${field.maxFileSizeMb} MB.` });
+  }
+
+  const extension = mediaType === "image/png" ? "png" : mediaType === "image/webp" ? "webp" : "jpg";
+  const photoPath = `sessions/${sessionId}/${randomUUID()}.${extension}`;
+  const { error: uploadError } = await supabase.storage
+    .from(INSPIRATION_PHOTOS_BUCKET)
+    .upload(photoPath, buffer, { contentType: mediaType, upsert: false });
+  if (uploadError) {
+    console.error("[build-runtime] inspiration photo upload failed", uploadError);
+    return json(500, { error: "Unable to store the image." });
+  }
+
+  const { runImageAnalysis } = await import("@/build/ai/imageAnalysis");
+  const result = await runImageAnalysis({ base64: imageBase64, mediaType });
+  if (result.status === "error" || !result.data) {
+    // Still return the stored path so the client can retry analysis without re-uploading.
+    return json(502, { error: result.error ?? "Image analysis unavailable.", photoPath });
+  }
+
+  return json(200, { photoPath, hypotheses: result.data });
+}
+
 export const Route = createFileRoute("/api/public/build-runtime")({
   server: {
     handlers: {
       POST: async ({ request }) => {
         const raw = await request.text();
-        if (raw.length > MAX_BODY_BYTES) return json(413, { error: "Payload too large" });
+        if (raw.length > MAX_PHOTO_BODY_BYTES) return json(413, { error: "Payload too large" });
 
         let parsed;
         try {
@@ -380,6 +451,10 @@ export const Route = createFileRoute("/api/public/build-runtime")({
           return json(400, { error: "Invalid body", details: parsed.error.flatten() });
         }
         const body = parsed.data;
+        // Only the photo-analysis action may exceed the ordinary 32 KB cap.
+        if (body.action !== "analyze_inspiration_photo" && raw.length > MAX_BODY_BYTES) {
+          return json(413, { error: "Payload too large" });
+        }
 
         const ipHash = hashIp(clientIp(request));
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -410,6 +485,15 @@ export const Route = createFileRoute("/api/public/build-runtime")({
               return await handleSaveSession(supabaseAdmin, body.session_id, body.session_secret, body.answers);
             case "submit_session":
               return await handleSubmitSession(supabaseAdmin, body.session_id, body.session_secret, body.answers);
+            case "analyze_inspiration_photo":
+              return await handleAnalyzeInspirationPhoto(
+                supabaseAdmin,
+                body.session_id,
+                body.session_secret,
+                body.field_key,
+                body.image_base64,
+                body.media_type,
+              );
             default:
               return json(400, { error: "Unknown action" });
           }

@@ -109,6 +109,11 @@ export function validateFieldFormat(field: PlaybookField, value: AnswerValue): s
     }
     case "consent":
       return value === true ? null : `"${field.label}" must be accepted.`;
+    case "inspiration_photo": {
+      const v = value as { photoPath?: unknown; hypotheses?: unknown };
+      if (typeof v.photoPath !== "string" || v.photoPath.length === 0) return `"${field.label}" is invalid.`;
+      return null;
+    }
     default:
       return null;
   }

@@ -1,24 +1,18 @@
-// Shared low-level call to a single structured-output AI agent, through the
-// Lovable AI Gateway (Vercel AI SDK). Used by both the Dossier AI Agents
-// (runAnalysis.ts) and the onboarding site-analysis extraction — the failure
-// handling below is identical for both, so it lives in one place.
+// Shared low-level calls to a single structured-output AI agent, through the
+// Lovable AI Gateway (Vercel AI SDK). Used by the Dossier AI Agents
+// (runAnalysis.ts), the onboarding site-analysis extraction, and the
+// inspiration-photo vision analysis — the failure handling below is
+// identical for all three, so it lives in one place.
 import { generateText, Output, NoObjectGeneratedError } from "ai";
 import type { z, ZodType } from "zod";
 import { getGatewayModel } from "./client.server";
 import type { AgentResult } from "./schema";
 
-export async function runAgent<Schema extends ZodType>(
-  systemPrompt: string,
-  userMessage: string,
-  outputSchema: Schema,
+async function toAgentResult<Schema extends ZodType>(
+  run: () => Promise<{ output: unknown }>,
 ): Promise<AgentResult<z.infer<Schema>>> {
   try {
-    const { output } = await generateText({
-      model: getGatewayModel(),
-      system: systemPrompt,
-      prompt: userMessage,
-      output: Output.object({ schema: outputSchema }),
-    });
+    const { output } = await run();
     return { status: "ok", data: output as z.infer<Schema> };
   } catch (err) {
     if (NoObjectGeneratedError.isInstance(err)) {
@@ -44,4 +38,44 @@ export async function runAgent<Schema extends ZodType>(
     // the most common; the caller renders err.message directly.
     return { status: "error", error: err instanceof Error ? err.message : "Erreur IA inconnue." };
   }
+}
+
+export async function runAgent<Schema extends ZodType>(
+  systemPrompt: string,
+  userMessage: string,
+  outputSchema: Schema,
+): Promise<AgentResult<z.infer<Schema>>> {
+  return toAgentResult<Schema>(() =>
+    generateText({
+      model: getGatewayModel(),
+      system: systemPrompt,
+      prompt: userMessage,
+      output: Output.object({ schema: outputSchema }),
+    }),
+  );
+}
+
+/** Same as runAgent, but attaches an image to the user message for vision-capable models. */
+export async function runVisionAgent<Schema extends ZodType>(
+  systemPrompt: string,
+  textPrompt: string,
+  image: { base64: string; mediaType: string },
+  outputSchema: Schema,
+): Promise<AgentResult<z.infer<Schema>>> {
+  return toAgentResult<Schema>(() =>
+    generateText({
+      model: getGatewayModel(),
+      system: systemPrompt,
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: textPrompt },
+            { type: "image", image: image.base64, mediaType: image.mediaType },
+          ],
+        },
+      ],
+      output: Output.object({ schema: outputSchema }),
+    }),
+  );
 }

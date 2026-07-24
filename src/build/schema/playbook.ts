@@ -167,6 +167,22 @@ export const coordinatesField = z.object({
   type: z.literal("coordinates"),
 });
 
+/**
+ * "Start from a photo" intake: the visitor uploads an inspiration image
+ * (their own photo, a Pinterest/Instagram screenshot...), the vision AI
+ * agent proposes hypotheses (style, materials, shape, elements) and the
+ * visitor confirms or corrects each one — see AnswerValue's
+ * InspirationPhotoAnswer for the resulting answer shape. Unlike `photo`,
+ * this type always uploads to Supabase Storage (there is no filename-only
+ * mode): the image must reach the server for the AI to analyze it.
+ */
+export const inspirationPhotoField = z.object({
+  ...fieldBase,
+  type: z.literal("inspiration_photo"),
+  maxFileSizeMb: z.number().positive().default(8),
+  acceptMimeTypes: z.array(z.string().min(1)).min(1).default(["image/jpeg", "image/png", "image/webp"]),
+});
+
 export const consentField = z.object({
   ...fieldBase,
   type: z.literal("consent"),
@@ -186,6 +202,7 @@ export const playbookField = z.discriminatedUnion("type", [
   photoField,
   coordinatesField,
   consentField,
+  inspirationPhotoField,
 ]);
 export type PlaybookField = z.infer<typeof playbookField>;
 export type PlaybookFieldType = PlaybookField["type"];
@@ -201,6 +218,7 @@ export type AddressField = z.infer<typeof addressField>;
 export type PhotoField = z.infer<typeof photoField>;
 export type CoordinatesField = z.infer<typeof coordinatesField>;
 export type ConsentField = z.infer<typeof consentField>;
+export type InspirationPhotoField = z.infer<typeof inspirationPhotoField>;
 
 // ---------- Steps / sections ----------
 

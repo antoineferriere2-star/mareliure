@@ -1,4 +1,4 @@
-import { DetectionBadge } from "./DetectionBadge";
+import { DetectionBadge } from "@/build/components/DetectionBadge";
 
 /**
  * Shared "confirm a detected value, or correct it" interaction, used for

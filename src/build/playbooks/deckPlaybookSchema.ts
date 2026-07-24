@@ -22,6 +22,42 @@ export const deckPlaybookSchema: PlaybookSchema = {
       title: "Deck project intake",
       steps: [
         {
+          id: "entryMode",
+          title: "How would you like to start?",
+          why: "Some visitors already know exactly what they want; others prefer to start from an inspiration photo.",
+          fields: [
+            {
+              key: "entryMode",
+              label: "How would you like to start?",
+              type: "single_choice",
+              desirability: "optional",
+              options: [
+                { value: "project_type_known", label: "I know what I want" },
+                { value: "inspiration_photo", label: "Start from a photo" },
+                { value: "not_sure", label: "I'm not sure yet" },
+              ],
+            },
+          ],
+        },
+        {
+          id: "inspiration",
+          title: "Show us what inspired your project",
+          why: "We'll help you turn that inspiration into a project your contractor can understand.",
+          displayWhen: { all: [{ fieldKey: "entryMode", operator: "equals", value: "inspiration_photo" }] },
+          fields: [
+            {
+              key: "inspirationPhoto",
+              label: "Upload an inspiration photo",
+              type: "inspiration_photo",
+              desirability: "optional",
+              helpText:
+                "A photo of your own space, a Pinterest/Instagram screenshot, or a catalog picture — whatever inspired your project.",
+              maxFileSizeMb: 8,
+              acceptMimeTypes: ["image/jpeg", "image/png", "image/webp"],
+            },
+          ],
+        },
+        {
           id: "projectType",
           title: "What kind of deck project is this?",
           why: "The project type changes the questions a builder needs before the first call.",

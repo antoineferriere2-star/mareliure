@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FIELD_COMPONENTS } from "@/build/engine/fields";
+import { FIELD_COMPONENTS, type InspirationPhotoAnalysis } from "@/build/engine/fields";
 import { computeVisibleSteps, validateField, type VisibleStep } from "@/build/engine/validation";
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import type { ProjectBrief } from "@/build/schema/brief";
@@ -201,6 +201,21 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
     setStepIndex((i) => Math.max(0, i - 1));
   }
 
+  async function analyzeInspirationPhoto(
+    fieldKey: string,
+    image: { base64: string; mediaType: string },
+  ): Promise<InspirationPhotoAnalysis> {
+    if (!sessionAuth) throw new Error("Session not ready.");
+    return callRuntime<InspirationPhotoAnalysis>({
+      action: "analyze_inspiration_photo",
+      session_id: sessionAuth.sessionId,
+      session_secret: sessionAuth.secret,
+      field_key: fieldKey,
+      image_base64: image.base64,
+      media_type: image.mediaType,
+    });
+  }
+
   async function submit() {
     if (!sessionAuth) return;
     setSaving(true);
@@ -269,6 +284,7 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
                         value={answers[field.key]}
                         onChange={(value) => setAnswer(field.key, value)}
                         error={fieldErrors[field.key]}
+                        analyzeInspirationPhoto={(image) => analyzeInspirationPhoto(field.key, image)}
                       />
                     );
                   })}

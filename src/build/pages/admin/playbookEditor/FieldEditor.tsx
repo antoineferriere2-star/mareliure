@@ -21,6 +21,7 @@ const FIELD_TYPES: PlaybookFieldType[] = [
   "photo",
   "coordinates",
   "consent",
+  "inspiration_photo",
 ];
 
 const makeOption = (value: string, label: string) => ({ value, label });
@@ -246,6 +247,30 @@ export function FieldEditor({
         </div>
       )}
 
+      {field.type === "inspiration_photo" && (
+        <div className="mt-2 grid gap-2 sm:grid-cols-2">
+          <input
+            type="number"
+            value={field.maxFileSizeMb}
+            onChange={(e) => onPatch({ maxFileSizeMb: Number(e.target.value) })}
+            placeholder="Taille max (Mo)"
+            className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+          />
+          <input
+            defaultValue={field.acceptMimeTypes.join(",")}
+            onBlur={(e) =>
+              onPatch({ acceptMimeTypes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })
+            }
+            placeholder="image/jpeg,image/png,image/webp"
+            className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+          />
+          <p className="text-xs text-muted-foreground sm:col-span-2">
+            Le visiteur dépose une image ; l'IA propose des hypothèses (style, matériaux, forme, éléments) que le
+            visiteur confirme ou corrige. Toujours présenté comme une hypothèse, jamais comme une certitude.
+          </p>
+        </div>
+      )}
+
       {field.type === "consent" && (
         <textarea
           value={field.consentText}
@@ -269,6 +294,7 @@ export function FieldEditor({
         </div>
       </details>
 
+      {field.type !== "inspiration_photo" && (
       <details className="mt-2 rounded-md border border-border bg-muted/20 p-2">
         <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
           Mapping vers le Dossier Commercial
@@ -338,6 +364,7 @@ export function FieldEditor({
           )}
         </div>
       </details>
+      )}
     </div>
   );
 }

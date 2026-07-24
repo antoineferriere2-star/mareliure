@@ -60,6 +60,13 @@ function newFieldOfType(type: PlaybookFieldType, key: string): PlaybookField {
       return { ...base, type };
     case "consent":
       return { ...base, type, consentText: "I consent to sharing this request for review.", desirability: "required" };
+    case "inspiration_photo":
+      return {
+        ...base,
+        type,
+        maxFileSizeMb: 8,
+        acceptMimeTypes: ["image/jpeg", "image/png", "image/webp"],
+      };
   }
 }
 

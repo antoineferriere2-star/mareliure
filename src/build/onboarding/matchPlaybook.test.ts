@@ -25,14 +25,32 @@ describe("matchPlaybookForProduct", () => {
     expect(match).toBeNull();
   });
 
-  it("ignores playbooks without a project_type", () => {
+  it("returns null when neither the name nor project_type overlap the query, even without a project_type", () => {
     const match = matchPlaybookForProduct("Deck Builder", "New Deck", [noTypePlaybook]);
     expect(match).toBeNull();
   });
 
   it("picks the highest-scoring playbook when several could match", () => {
-    const strongerDeck: PlaybookCandidate = { id: "deck-2", name: "Deck complet", project_type: "deck terrasse" };
-    const match = matchPlaybookForProduct("Deck Builder", "Deck Terrasse", [deckPlaybook, strongerDeck]);
+    const strongerDeck: PlaybookCandidate = {
+      id: "deck-2",
+      name: "Deck complet",
+      project_type: "deck terrasse extension",
+    };
+    const match = matchPlaybookForProduct("Deck Builder", "Deck Terrasse Extension", [deckPlaybook, strongerDeck]);
     expect(match?.playbook.id).toBe("deck-2");
+  });
+
+  it("matches via the Playbook's display name when project_type alone would miss (real validation case: French site content vs English project_type)", () => {
+    const match = matchPlaybookForProduct("Fabricant de bois composite", "Terrasse en bois composite", [
+      deckPlaybook,
+      roofingPlaybook,
+    ]);
+    expect(match?.playbook.id).toBe("deck-1");
+  });
+
+  it("still matches by name alone when project_type is null", () => {
+    const frenchNamedOnly: PlaybookCandidate = { id: "fence-1", name: "Clôture composite — v1", project_type: null };
+    const match = matchPlaybookForProduct("Fabricant de clôtures", "Clôture composite", [frenchNamedOnly]);
+    expect(match?.playbook.id).toBe("fence-1");
   });
 });

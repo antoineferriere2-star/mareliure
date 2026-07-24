@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import type { BriefLine } from "@/build/schema/brief";
 import { defaultDeckBrief } from "@/build/pages/public/defaultDeckBrief";
 import { deckPlaybookSchema } from "@/build/playbooks/deckPlaybookSchema";
-import type { Answers } from "@/build/schema/answers";
+import { playbookSchema, type PlaybookSchema } from "@/build/schema/playbook";
+import type { Answers, InspirationPhotoAnswer } from "@/build/schema/answers";
 import { generateProjectBrief } from "./brief";
 
 function findLine(lines: BriefLine[], label: string): BriefLine | undefined {
@@ -100,5 +101,90 @@ describe("Deck playbook — brief generation reproduces the original business ru
     const brief = generateProjectBrief(deckPlaybookSchema, answers, { name: "Deck Project Intake Demo" });
     expect(findLine(brief.missingInformation, "Exact dimensions")?.value).toBe("Approximate dimensions were not confirmed.");
     expect(brief.projectSummary).toBe("New deck for a single-family home with dimensions still unclear with interest in composite");
+  });
+});
+
+function inspirationSchema(): PlaybookSchema {
+  return playbookSchema.parse({
+    schemaVersion: 1,
+    sections: [
+      {
+        id: "s1",
+        title: "Section",
+        steps: [
+          {
+            id: "step1",
+            title: "Step",
+            fields: [
+              { key: "inspiration", label: "Photo d'inspiration", type: "inspiration_photo" },
+            ],
+          },
+        ],
+      },
+    ],
+    briefConfig: { suggestedNextActions: [{ label: "Next", value: "Follow up." }] },
+  });
+}
+
+describe("Inspiration-photo hypotheses in the Brief", () => {
+  it("puts a confirmed dimension in confirmedInformation as a visitor_answer", () => {
+    const answer: InspirationPhotoAnswer = {
+      photoPath: "sessions/abc/photo.jpg",
+      hypotheses: { style: "Moderne", materials: ["Composite"], elements: [] },
+      confirmed: { style: true },
+      suggestedQuestions: [],
+    };
+    const brief = generateProjectBrief(inspirationSchema(), { inspiration: answer } as unknown as Answers, { name: "Test" });
+
+    const style = findLine(brief.confirmedInformation, "Style");
+    expect(style).toEqual({ label: "Style", value: "Moderne", source: "visitor_answer", category: "Inspiration", fieldKey: "inspiration" });
+  });
+
+  it("leaves an unconfirmed dimension as an image_hypothesis in assumptionsAndCalculated", () => {
+    const answer: InspirationPhotoAnswer = {
+      photoPath: "sessions/abc/photo.jpg",
+      hypotheses: { style: "Moderne", materials: ["Composite", "Bois"], elements: [] },
+      confirmed: { style: true }, // materials left unconfirmed
+      suggestedQuestions: [],
+    };
+    const brief = generateProjectBrief(inspirationSchema(), { inspiration: answer } as unknown as Answers, { name: "Test" });
+
+    const materials = findLine(brief.assumptionsAndCalculated, "Materials");
+    expect(materials).toEqual({
+      label: "Materials",
+      value: "Composite, Bois",
+      source: "image_hypothesis",
+      category: "Inspiration",
+      fieldKey: "inspiration",
+    });
+    expect(findLine(brief.confirmedInformation, "Materials")).toBeUndefined();
+  });
+
+  it("adds the suggested follow-up questions to missingInformation as an image_hypothesis", () => {
+    const answer: InspirationPhotoAnswer = {
+      photoPath: "sessions/abc/photo.jpg",
+      hypotheses: { materials: [], elements: [] },
+      confirmed: {},
+      suggestedQuestions: ["Quelle surface envisagez-vous ?", "Avez-vous une terrasse existante ?"],
+    };
+    const brief = generateProjectBrief(inspirationSchema(), { inspiration: answer } as unknown as Answers, { name: "Test" });
+
+    const line = findLine(brief.missingInformation, "Questions to explore (from the inspiration photo)");
+    expect(line?.source).toBe("image_hypothesis");
+    expect(line?.value).toContain("Quelle surface envisagez-vous ?");
+  });
+
+  it("skips empty hypothesis dimensions entirely rather than emitting blank lines", () => {
+    const answer: InspirationPhotoAnswer = {
+      photoPath: "sessions/abc/photo.jpg",
+      hypotheses: { materials: [], elements: [] },
+      confirmed: {},
+      suggestedQuestions: [],
+    };
+    const brief = generateProjectBrief(inspirationSchema(), { inspiration: answer } as unknown as Answers, { name: "Test" });
+
+    expect(findLine(brief.confirmedInformation, "Style")).toBeUndefined();
+    expect(findLine(brief.assumptionsAndCalculated, "Style")).toBeUndefined();
+    expect(findLine(brief.assumptionsAndCalculated, "Materials")).toBeUndefined();
   });
 });

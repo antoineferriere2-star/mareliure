@@ -9,7 +9,9 @@ export type BriefLineSource =
   | "visitor_answer"
   | "calculated_value"
   | "deterministic_rule"
-  | "assumed_default";
+  | "assumed_default"
+  /** Proposed by the vision AI agent from an inspiration photo, not yet confirmed by the visitor — always a hypothesis, never presented as fact. */
+  | "image_hypothesis";
 
 export interface BriefLine {
   label: string;

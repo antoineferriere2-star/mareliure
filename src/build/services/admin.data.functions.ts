@@ -216,6 +216,22 @@ export const getBuildDossier = createServerFn({ method: "GET" })
     return { dossier, mission, session };
   });
 
+const INSPIRATION_PHOTOS_BUCKET = "build-inspiration-photos";
+
+/** Signed URL (1h) for an inspiration photo stored during a public session — the bucket is private, admin-only access. */
+export const getInspirationPhotoUrl = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ path: z.string().min(1) }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: signed, error } = await sb.storage
+      .from(INSPIRATION_PHOTOS_BUCKET)
+      .createSignedUrl(data.path, 3600);
+    if (error) throw new Response(error.message, { status: 500 });
+    return { url: signed.signedUrl };
+  });
+
 /**
  * Admin-triggered AI Engine analysis. Always additive: writes ai_insights +
  * ai_analyzed_at alongside the existing deterministic `content`, never edits

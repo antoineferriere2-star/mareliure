@@ -26,6 +26,25 @@ export interface CoordinatesAnswerValue {
   accuracyM?: number;
 }
 
+/** Dimensions the vision AI agent can propose for an inspiration photo — see schema/playbook.ts's inspirationPhotoField. */
+export interface InspirationPhotoHypotheses {
+  style?: string;
+  materials: string[];
+  shape?: string;
+  elements: string[];
+}
+
+export type InspirationHypothesisKey = "style" | "materials" | "shape" | "elements";
+
+export interface InspirationPhotoAnswer {
+  /** Path in the build-inspiration-photos Storage bucket — never a raw URL, resolved to a signed URL on read. */
+  photoPath: string;
+  hypotheses: InspirationPhotoHypotheses;
+  /** Which hypothesis dimensions the visitor explicitly confirmed or edited (vs. left as an unverified AI guess). */
+  confirmed: Partial<Record<InspirationHypothesisKey, boolean>>;
+  suggestedQuestions: string[];
+}
+
 export type AnswerValue =
   | string
   | number
@@ -34,6 +53,7 @@ export type AnswerValue =
   | PhotoAnswerEntry[]
   | AddressAnswerValue
   | CoordinatesAnswerValue
+  | InspirationPhotoAnswer
   | NotSure;
 
 export type Answers = Record<string, AnswerValue>;
