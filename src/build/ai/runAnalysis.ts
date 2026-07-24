@@ -78,7 +78,23 @@ export async function runAgent<Schema extends ZodType>(
     return { status: "ok", data: output as z.infer<Schema> };
   } catch (err) {
     if (NoObjectGeneratedError.isInstance(err)) {
-      return { status: "error", error: "Réponse IA non structurée (parsing échoué)." };
+      // NoObjectGeneratedError swallows the actual failure reason by default
+      // (truncated output, model refusal, markdown-fenced JSON the parser
+      // rejected...). Surface finishReason + a snippet of the raw text so a
+      // real cause shows up instead of a dead-end generic message.
+      const detail = [
+        err.finishReason ? `finishReason=${err.finishReason}` : null,
+        err.text ? `raw="${err.text.slice(0, 300)}"` : null,
+        err.cause instanceof Error ? `cause=${err.cause.message}` : null,
+      ]
+        .filter(Boolean)
+        .join(" — ");
+      return {
+        status: "error",
+        error: detail
+          ? `Réponse IA non structurée (parsing échoué) : ${detail}`
+          : "Réponse IA non structurée (parsing échoué).",
+      };
     }
     // Surface gateway errors verbatim — 429 (rate limit) and 402 (credits) are
     // the most common; the caller renders err.message directly.

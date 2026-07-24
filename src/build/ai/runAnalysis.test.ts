@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NoObjectGeneratedError } from "ai";
 import type { ProjectBrief } from "@/build/schema/brief";
 
 const generateTextMock = vi.fn();
@@ -84,6 +85,31 @@ describe("runAiAnalysis", () => {
     expect(insights.analyste.status).toBe("ok");
     expect(insights.verificateur.status).toBe("ok");
     expect(insights.redacteur.status).toBe("ok");
+  });
+
+  it("surfaces finishReason and a raw text snippet when structured output parsing fails", async () => {
+    generateTextMock.mockImplementation(async ({ system }: { system: string }) => {
+      if (system === ANALYSTE_SYSTEM_PROMPT) {
+        throw new NoObjectGeneratedError({
+          message: "No object generated.",
+          text: "```json\n{\"summary\": \"tronqué",
+          finishReason: "length",
+          response: { id: "mock", timestamp: new Date(), modelId: "mock-model" },
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          usage: {} as any,
+        });
+      }
+      if (system === TECHNICIEN_SYSTEM_PROMPT) return { output: { summary: "ok", findings: [], knowledgeNoteTitlesUsed: [] } };
+      if (system === VERIFICATEUR_SYSTEM_PROMPT) return { output: { summary: "ok", findings: [] } };
+      if (system === REDACTEUR_SYSTEM_PROMPT) return { output: { narrative: "ok" } };
+      throw new Error("unexpected system prompt");
+    });
+
+    const insights = await runAiAnalysis(mission, brief, []);
+
+    expect(insights.analyste.status).toBe("error");
+    expect(insights.analyste.error).toContain("finishReason=length");
+    expect(insights.analyste.error).toContain("tronqué");
   });
 
   it("shares the Dossier context with every agent but only sends knowledge notes to the Technicien", async () => {
