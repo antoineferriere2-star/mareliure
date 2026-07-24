@@ -5,7 +5,7 @@ import { listBuildDossiers } from "@/build/services/admin.data.functions";
 
 const dossiersKey = ["build-admin", "dossiers"] as const;
 
-export const Route = createFileRoute("/_authenticated/build/dossiers")({
+export const Route = createFileRoute("/_authenticated/build/dossiers/")({
   ssr: false,
   head: () => ({ meta: [{ title: "Dossiers — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: DossiersPage,
