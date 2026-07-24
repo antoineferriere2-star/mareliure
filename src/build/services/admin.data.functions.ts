@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import { playbookSchema } from "@/build/schema/playbook";
+import type { ProjectBrief } from "@/build/schema/brief";
 
 type Supa = SupabaseClient<Database>;
 
@@ -234,6 +235,62 @@ export const getBuildDossier = createServerFn({ method: "GET" })
       session = s;
     }
     return { dossier, mission, session };
+  });
+
+/**
+ * Admin-triggered AI Engine analysis. Always additive: writes ai_insights +
+ * ai_analyzed_at alongside the existing deterministic `content`, never edits
+ * or replaces it (CLAUDE.md: "L'IA propose, ne décide jamais"). Never called
+ * automatically from the public runtime.
+ */
+export const analyzeDossierWithAI = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+
+    const { data: dossier, error } = await sb
+      .from("build_dossiers")
+      .select("id, mission_id, content")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    if (!dossier) throw new Response("Not found", { status: 404 });
+    if (!dossier.content) {
+      throw new Response("This Dossier has no content to analyze yet.", { status: 400 });
+    }
+
+    let mission: { name: string; objective: string | null } = { name: "Mission", objective: null };
+    if (dossier.mission_id) {
+      const { data: m } = await sb
+        .from("build_missions")
+        .select("name, objective")
+        .eq("id", dossier.mission_id)
+        .maybeSingle();
+      if (m) mission = m;
+    }
+
+    const { data: notes } = await sb
+      .from("build_knowledge_notes")
+      .select("title, content")
+      .eq("status", "approved");
+
+    const { runAiAnalysis } = await import("@/build/ai/runAnalysis");
+    const insights = await runAiAnalysis(mission, dossier.content as unknown as ProjectBrief, notes ?? []);
+
+    const { data: updated, error: uErr } = await sb
+      .from("build_dossiers")
+      .update({
+        ai_insights: insights as unknown as Json,
+        ai_analyzed_at: insights.generatedAt,
+      })
+      .eq("id", data.id)
+      .select("*")
+      .maybeSingle();
+    if (uErr) throw new Response(uErr.message, { status: 500 });
+    if (!updated) throw new Response("Not found", { status: 404 });
+    return updated;
   });
 
 // ---------- Playbooks ----------
