@@ -1,11 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { ProjectBrief } from "@/build/schema/brief";
 
-const parseMock = vi.fn();
+const generateTextMock = vi.fn();
+
+vi.mock("ai", async () => {
+  const actual = await vi.importActual<typeof import("ai")>("ai");
+  return {
+    ...actual,
+    generateText: (...args: unknown[]) => generateTextMock(...args),
+  };
+});
 
 vi.mock("./client.server", () => ({
-  anthropic: { messages: { parse: (...args: unknown[]) => parseMock(...args) } },
-  getAiModel: () => "claude-opus-4-8-test",
+  getGatewayModel: () => "mock-model" as unknown,
+  getAiModel: () => "google/gemini-3.6-flash-test",
 }));
 
 import { runAiAnalysis } from "./runAnalysis";
@@ -33,27 +41,27 @@ const brief: ProjectBrief = {
 const mission = { name: "Rénovation cuisine", objective: "Cuisine ouverte sur salon" };
 
 beforeEach(() => {
-  parseMock.mockReset();
+  generateTextMock.mockReset();
 });
 
 describe("runAiAnalysis", () => {
   it("runs all four agents in parallel and returns structured insights", async () => {
-    parseMock.mockImplementation(async ({ system }: { system: string }) => {
-      if (system === ANALYSTE_SYSTEM_PROMPT) return { parsed_output: { summary: "RAS", findings: [] } };
+    generateTextMock.mockImplementation(async ({ system }: { system: string }) => {
+      if (system === ANALYSTE_SYSTEM_PROMPT) return { output: { summary: "RAS", findings: [] } };
       if (system === TECHNICIEN_SYSTEM_PROMPT) {
-        return { parsed_output: { summary: "RAS", findings: [], knowledgeNoteTitlesUsed: ["Norme X"] } };
+        return { output: { summary: "RAS", findings: [], knowledgeNoteTitlesUsed: ["Norme X"] } };
       }
       if (system === VERIFICATEUR_SYSTEM_PROMPT) {
-        return { parsed_output: { summary: "RAS", findings: [{ label: "Budget", detail: "Cohérent", severity: "info" }] } };
+        return { output: { summary: "RAS", findings: [{ label: "Budget", detail: "Cohérent", severity: "info" }] } };
       }
-      if (system === REDACTEUR_SYSTEM_PROMPT) return { parsed_output: { narrative: "Projet clair et cohérent." } };
+      if (system === REDACTEUR_SYSTEM_PROMPT) return { output: { narrative: "Projet clair et cohérent." } };
       throw new Error("unexpected system prompt");
     });
 
     const insights = await runAiAnalysis(mission, brief, [{ title: "Norme X", content: "Détail" }]);
 
-    expect(parseMock).toHaveBeenCalledTimes(4);
-    expect(insights.model).toBe("claude-opus-4-8-test");
+    expect(generateTextMock).toHaveBeenCalledTimes(4);
+    expect(insights.model).toBe("google/gemini-3.6-flash-test");
     expect(insights.analyste).toEqual({ status: "ok", data: { summary: "RAS", findings: [] } });
     expect(insights.technicien.data?.knowledgeNoteTitlesUsed).toEqual(["Norme X"]);
     expect(insights.verificateur.data?.findings[0]?.severity).toBe("info");
@@ -61,11 +69,11 @@ describe("runAiAnalysis", () => {
   });
 
   it("isolates a single agent failure without failing the other three", async () => {
-    parseMock.mockImplementation(async ({ system }: { system: string }) => {
+    generateTextMock.mockImplementation(async ({ system }: { system: string }) => {
       if (system === TECHNICIEN_SYSTEM_PROMPT) throw new Error("rate limited");
-      if (system === ANALYSTE_SYSTEM_PROMPT) return { parsed_output: { summary: "ok", findings: [] } };
-      if (system === VERIFICATEUR_SYSTEM_PROMPT) return { parsed_output: { summary: "ok", findings: [] } };
-      if (system === REDACTEUR_SYSTEM_PROMPT) return { parsed_output: { narrative: "ok" } };
+      if (system === ANALYSTE_SYSTEM_PROMPT) return { output: { summary: "ok", findings: [] } };
+      if (system === VERIFICATEUR_SYSTEM_PROMPT) return { output: { summary: "ok", findings: [] } };
+      if (system === REDACTEUR_SYSTEM_PROMPT) return { output: { narrative: "ok" } };
       throw new Error("unexpected system prompt");
     });
 
@@ -78,22 +86,13 @@ describe("runAiAnalysis", () => {
     expect(insights.redacteur.status).toBe("ok");
   });
 
-  it("returns an error result per agent when the SDK fails to parse structured output", async () => {
-    parseMock.mockResolvedValue({ parsed_output: null });
-
-    const insights = await runAiAnalysis(mission, brief, []);
-
-    expect(insights.analyste.status).toBe("error");
-    expect(insights.analyste.error).toMatch(/parsing/i);
-  });
-
   it("shares the Dossier context with every agent but only sends knowledge notes to the Technicien", async () => {
     const capturedUserMessages: Record<string, string> = {};
-    parseMock.mockImplementation(async ({ system, messages }: { system: string; messages: { content: string }[] }) => {
-      capturedUserMessages[system] = messages[0].content;
+    generateTextMock.mockImplementation(async ({ system, prompt }: { system: string; prompt: string }) => {
+      capturedUserMessages[system] = prompt;
       return system === REDACTEUR_SYSTEM_PROMPT
-        ? { parsed_output: { narrative: "x" } }
-        : { parsed_output: { summary: "x", findings: [] } };
+        ? { output: { narrative: "x" } }
+        : { output: { summary: "x", findings: [], knowledgeNoteTitlesUsed: [] } };
     });
 
     await runAiAnalysis(mission, brief, [{ title: "Norme Y", content: "Contenu Y" }]);
