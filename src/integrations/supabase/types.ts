@@ -16,6 +16,8 @@ export type Database = {
     Tables: {
       build_dossiers: {
         Row: {
+          ai_analyzed_at: string | null
+          ai_insights: Json | null
           content: Json
           created_at: string
           id: string
@@ -28,6 +30,8 @@ export type Database = {
           workspace_id: string | null
         }
         Insert: {
+          ai_analyzed_at?: string | null
+          ai_insights?: Json | null
           content?: Json
           created_at?: string
           id?: string
@@ -40,6 +44,8 @@ export type Database = {
           workspace_id?: string | null
         }
         Update: {
+          ai_analyzed_at?: string | null
+          ai_insights?: Json | null
           content?: Json
           created_at?: string
           id?: string
