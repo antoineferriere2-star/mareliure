@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "test": "vitest run",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "seed:deck": "tsx scripts/seedDeckPlaybook.ts"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
@@ -84,6 +85,7 @@
     "nitro": "3.0.260603-beta",
     "prettier": "^3.7.3",
     "typescript": "^5.8.3",
+    "tsx": "^4.19.2",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.16",
     "vitest": "^3.2.4"

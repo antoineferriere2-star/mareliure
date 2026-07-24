@@ -3,6 +3,10 @@ import { createHash, randomBytes, timingSafeEqual } from "crypto";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
+import { generateProjectBrief } from "@/build/engine/brief";
+import { computeVisibleSteps, validateField, validateFieldFormat } from "@/build/engine/validation";
+import type { Answers, AnswerValue } from "@/build/schema/answers";
+import { playbookSchema, type PlaybookField, type PlaybookSchema } from "@/build/schema/playbook";
 
 type Supa = SupabaseClient<Database>;
 
@@ -18,6 +22,11 @@ const SESSION_SECRET_BYTES = 32;
 export const bodySchema = z.union([
   z.object({ action: z.literal("get_mission"), public_token: z.string().min(16).max(160) }),
   z.object({ action: z.literal("start_session"), public_token: z.string().min(16).max(160) }),
+  z.object({
+    action: z.literal("resume_session"),
+    session_id: z.string().uuid(),
+    session_secret: z.string().min(32).max(256),
+  }),
   z.object({
     action: z.literal("save_session"),
     session_id: z.string().uuid(),
@@ -83,16 +92,14 @@ function publicMission(m: Record<string, unknown>) {
   };
 }
 
-function nextQuestions(mission: unknown, answers: Record<string, unknown>): string[] {
-  const proposal = (mission as { proposal?: { qualificationQuestions?: unknown } } | null)?.proposal;
-  const qs = Array.isArray(proposal?.qualificationQuestions)
-    ? (proposal!.qualificationQuestions as unknown[]).filter((v): v is string => typeof v === "string")
-    : [];
-  return qs.filter((_, i) => {
-    const key = `q${i}`;
-    const v = answers?.[key];
-    return v === undefined || v === null || String(v).trim() === "";
-  });
+function findFieldByKey(schema: PlaybookSchema, key: string): PlaybookField | undefined {
+  for (const section of schema.sections) {
+    for (const step of section.steps) {
+      const field = step.fields.find((f) => f.key === key);
+      if (field) return field;
+    }
+  }
+  return undefined;
 }
 
 // Sole public lookup path: must always require an unrevoked token on an
@@ -107,17 +114,35 @@ export async function findPublishedMission(supabase: Supa, publicToken: string) 
     .maybeSingle();
 }
 
+async function loadPlaybookSchema(supabase: Supa, playbookVersionId: string): Promise<PlaybookSchema | null> {
+  const { data, error } = await supabase
+    .from("build_playbook_versions")
+    .select("schema")
+    .eq("id", playbookVersionId)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data) return null;
+  const parsed = playbookSchema.safeParse(data.schema);
+  return parsed.success ? parsed.data : null;
+}
+
 export async function handleGetMission(supabase: Supa, publicToken: string) {
   const { data, error } = await findPublishedMission(supabase, publicToken);
   if (error) throw error;
   if (!data) return json(404, { error: "Mission not found or not published" });
-  return json(200, { mission: publicMission(data) });
+  if (!data.playbook_version_id) return json(404, { error: "Mission has no published playbook" });
+  const schema = await loadPlaybookSchema(supabase, data.playbook_version_id as string);
+  if (!schema) return json(500, { error: "Playbook schema unavailable" });
+  return json(200, { mission: publicMission(data), playbook_schema: schema });
 }
 
 export async function handleStartSession(supabase: Supa, publicToken: string, ipHash: string) {
   const { data: mission, error: mErr } = await findPublishedMission(supabase, publicToken);
   if (mErr) throw mErr;
   if (!mission) return json(404, { error: "Mission not available" });
+  if (!mission.playbook_version_id) return json(404, { error: "Mission has no published playbook" });
+  const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
+  if (!schema) return json(500, { error: "Playbook schema unavailable" });
 
   const secret = generateSessionSecret();
   const { data, error } = await supabase
@@ -131,7 +156,7 @@ export async function handleStartSession(supabase: Supa, publicToken: string, ip
     .select("id, mission_id, status, answers, created_at")
     .single();
   if (error) throw error;
-  return json(200, { mission: publicMission(mission), session: data, session_secret: secret });
+  return json(200, { mission: publicMission(mission), session: data, session_secret: secret, playbook_schema: schema });
 }
 
 async function loadSessionSecretHash(supabase: Supa, sessionId: string) {
@@ -157,11 +182,37 @@ async function verifySessionSecret(supabase: Supa, sessionId: string, secret: st
 async function findExistingDossier(supabase: Supa, sessionId: string) {
   const { data, error } = await supabase
     .from("build_dossiers")
-    .select("id, status, summary, next_questions")
+    .select("id, status, summary, content, next_questions")
     .eq("session_id", sessionId)
     .maybeSingle();
   if (error) throw error;
   return data;
+}
+
+export async function handleResumeSession(supabase: Supa, sessionId: string, secret: string) {
+  const session = await verifySessionSecret(supabase, sessionId, secret);
+  if (!session) return json(404, { error: "Session not found" });
+
+  const { data: mission, error: mErr } = await supabase
+    .from("build_missions")
+    .select("*")
+    .eq("id", session.mission_id)
+    .maybeSingle();
+  if (mErr) throw mErr;
+  if (!mission || !mission.playbook_version_id) return json(404, { error: "Mission not available" });
+  const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
+  if (!schema) return json(500, { error: "Playbook schema unavailable" });
+
+  const sessionPayload = { id: session.id, answers: session.answers, status: session.status };
+
+  if (session.status !== "in_progress") {
+    const existing = await findExistingDossier(supabase, sessionId);
+    if (existing) {
+      return json(200, { mission: publicMission(mission), playbook_schema: schema, session: sessionPayload, dossier: existing });
+    }
+  }
+
+  return json(200, { mission: publicMission(mission), playbook_schema: schema, session: sessionPayload });
 }
 
 export async function handleSaveSession(
@@ -172,6 +223,35 @@ export async function handleSaveSession(
 ) {
   const session = await verifySessionSecret(supabase, sessionId, secret);
   if (!session) return json(404, { error: "Session not found" });
+
+  const { data: mission, error: mErr } = await supabase
+    .from("build_missions")
+    .select("playbook_version_id")
+    .eq("id", session.mission_id)
+    .maybeSingle();
+  if (mErr) throw mErr;
+  if (!mission?.playbook_version_id) return json(500, { error: "Mission has no published playbook" });
+  const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
+  if (!schema) return json(500, { error: "Playbook schema unavailable" });
+
+  // Partial validation: unknown keys are rejected outright; known keys with a
+  // non-empty value must match their field's type/format. Required-ness is a
+  // submit-time concern only (an interim autosave may legitimately be blank).
+  const fieldErrors: Record<string, string> = {};
+  for (const [key, value] of Object.entries(answers)) {
+    const field = findFieldByKey(schema, key);
+    if (!field) {
+      fieldErrors[key] = "Unknown field.";
+      continue;
+    }
+    const blank = value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
+    if (blank) continue;
+    const error = validateFieldFormat(field, value as AnswerValue);
+    if (error) fieldErrors[key] = error;
+  }
+  if (Object.keys(fieldErrors).length > 0) {
+    return json(400, { error: "Invalid answers", fieldErrors });
+  }
 
   const { data, error } = await supabase
     .from("build_runtime_sessions")
@@ -203,11 +283,36 @@ export async function handleSubmitSession(
     return json(409, { error: "Session already submitted" });
   }
 
+  const { data: mission, error: missionErr } = await supabase
+    .from("build_missions")
+    .select("*")
+    .eq("id", session.mission_id)
+    .maybeSingle();
+  if (missionErr) throw missionErr;
+  if (!mission?.playbook_version_id) return json(500, { error: "Mission has no published playbook" });
+  const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
+  if (!schema) return json(500, { error: "Playbook schema unavailable" });
+
+  const finalAnswers = (answers ?? (session.answers as Record<string, unknown>) ?? {}) as Answers;
+
+  // Full validation: every currently-visible field must satisfy its own
+  // rules (required, not-sure, format) before a Dossier can be created.
+  const fieldErrors: Record<string, string> = {};
+  for (const { visibleFields } of computeVisibleSteps(schema, finalAnswers)) {
+    for (const field of visibleFields) {
+      const error = validateField(field, finalAnswers[field.key]);
+      if (error) fieldErrors[field.key] = error;
+    }
+  }
+  if (Object.keys(fieldErrors).length > 0) {
+    return json(422, { error: "Some required information is missing or invalid.", fieldErrors });
+  }
+
   const update: { status: string; submitted_at: string; answers?: Json } = {
     status: "submitted",
     submitted_at: new Date().toISOString(),
   };
-  if (answers) update.answers = answers as unknown as Json;
+  if (answers) update.answers = finalAnswers as unknown as Json;
 
   const { data: updatedSession, error: sErr } = await supabase
     .from("build_runtime_sessions")
@@ -224,34 +329,26 @@ export async function handleSubmitSession(
     return json(409, { error: "Session already submitted" });
   }
 
-  const { data: mission } = await supabase
-    .from("build_missions")
-    .select("*")
-    .eq("id", updatedSession.mission_id)
-    .maybeSingle();
-
-  const missing = nextQuestions(mission, updatedSession.answers as Record<string, unknown>);
-  const dossierStatus = missing.length ? "draft" : "ready";
-  const summary = missing.length
-    ? `Draft dossier — ${missing.length} follow-up question${missing.length > 1 ? "s" : ""} pending.`
-    : "Complete dossier ready for commercial review.";
+  const brief = generateProjectBrief(schema, updatedSession.answers as Answers, mission);
+  const missingCount = brief.missingInformation.length;
+  const dossierStatus = missingCount > 0 ? "draft" : "ready";
+  const summary =
+    missingCount > 0
+      ? `Draft dossier — ${missingCount} follow-up item${missingCount > 1 ? "s" : ""} pending.`
+      : "Complete dossier ready for commercial review.";
 
   const { data: dossier, error: dErr } = await supabase
     .from("build_dossiers")
     .insert({
-      workspace_id: mission?.workspace_id ?? null,
+      workspace_id: mission.workspace_id ?? null,
       mission_id: updatedSession.mission_id,
       session_id: updatedSession.id,
       status: dossierStatus,
       summary,
-      content: {
-        mission_name: mission?.name,
-        objective: mission?.objective,
-        answers: updatedSession.answers,
-      },
-      next_questions: missing,
+      content: brief as unknown as Json,
+      next_questions: brief.missingInformation.map((line) => line.label),
     })
-    .select("id, status, summary, next_questions")
+    .select("id, status, summary, content, next_questions")
     .single();
   if (dErr) {
     // Idempotency guard #2 (belt-and-braces): the unique index on
@@ -307,6 +404,8 @@ export const Route = createFileRoute("/api/public/build-runtime")({
               return await handleGetMission(supabaseAdmin, body.public_token);
             case "start_session":
               return await handleStartSession(supabaseAdmin, body.public_token, ipHash);
+            case "resume_session":
+              return await handleResumeSession(supabaseAdmin, body.session_id, body.session_secret);
             case "save_session":
               return await handleSaveSession(supabaseAdmin, body.session_id, body.session_secret, body.answers);
             case "submit_session":

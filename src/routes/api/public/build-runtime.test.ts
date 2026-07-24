@@ -1,9 +1,11 @@
 import { randomUUID } from "crypto";
 import { describe, expect, it } from "vitest";
+import { playbookSchema, type PlaybookSchema } from "@/build/schema/playbook";
 import {
   bodySchema,
   findPublishedMission,
   handleGetMission,
+  handleResumeSession,
   handleSaveSession,
   handleStartSession,
   handleSubmitSession,
@@ -117,20 +119,57 @@ function createFakeSupabase(seed: Record<string, Row[]> = {}) {
   };
 }
 
-function seedActiveMission(overrides: Partial<Row> = {}) {
-  return {
+function minimalSchema(fieldDesirability: "optional" | "required" = "optional"): PlaybookSchema {
+  return playbookSchema.parse({
+    schemaVersion: 1,
+    sections: [
+      {
+        id: "s1",
+        title: "Section",
+        steps: [
+          {
+            id: "step1",
+            title: "Step",
+            fields: [{ key: "note", label: "Note", type: "text", desirability: fieldDesirability }],
+          },
+        ],
+      },
+    ],
+    briefConfig: {
+      suggestedNextActions: [{ label: "Next", value: "Follow up." }],
+    },
+  });
+}
+
+function seedPlaybookVersion(schema: PlaybookSchema = minimalSchema()) {
+  const row: Row = {
+    id: randomUUID(),
+    playbook_id: randomUUID(),
+    version_number: 1,
+    schema,
+    published_at: new Date().toISOString(),
+    created_at: new Date().toISOString(),
+  };
+  return row;
+}
+
+function seedActiveMission(overrides: Partial<Row> = {}, schema?: PlaybookSchema) {
+  const versionRow = seedPlaybookVersion(schema);
+  const mission: Row = {
     id: randomUUID(),
     name: "Refonte site vitrine",
     status: "active",
     objective: "Qualifier le besoin",
     playbook_id: null,
     playbook_name: null,
+    playbook_version_id: versionRow.id,
     public_token: "tok_" + randomUUID().replace(/-/g, ""),
     public_token_revoked_at: null,
-    proposal: { qualificationQuestions: ["Quel est votre budget ?"] },
+    proposal: null,
     workspace_id: null,
     ...overrides,
   };
+  return { mission, versionRow };
 }
 
 describe("bodySchema", () => {
@@ -152,69 +191,128 @@ describe("bodySchema", () => {
 
 describe("findPublishedMission / handleGetMission", () => {
   it("refuse une mission dont le lien public a été révoqué", async () => {
-    const mission = seedActiveMission({ public_token_revoked_at: new Date().toISOString() });
-    const { client } = createFakeSupabase({ build_missions: [mission] });
+    const { mission, versionRow } = seedActiveMission({ public_token_revoked_at: new Date().toISOString() });
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
 
     const res = await handleGetMission(client, mission.public_token as string);
     expect(res.status).toBe(404);
   });
 
   it("refuse une mission qui n'est pas active (draft)", async () => {
-    const mission = seedActiveMission({ status: "draft" });
+    const { mission, versionRow } = seedActiveMission({ status: "draft" });
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const res = await handleGetMission(client, mission.public_token as string);
+    expect(res.status).toBe(404);
+  });
+
+  it("refuse une mission active sans playbook publié", async () => {
+    const { mission } = seedActiveMission({ playbook_version_id: null });
     const { client } = createFakeSupabase({ build_missions: [mission] });
 
     const res = await handleGetMission(client, mission.public_token as string);
     expect(res.status).toBe(404);
   });
 
-  it("retourne la mission quand elle est active et non révoquée", async () => {
-    const mission = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission] });
+  it("retourne la mission et son schéma quand elle est active et non révoquée", async () => {
+    const { mission, versionRow } = seedActiveMission();
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
 
     const res = await handleGetMission(client, mission.public_token as string);
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.mission.id).toBe(mission.id);
+    expect(body.playbook_schema.sections).toHaveLength(1);
   });
 });
 
 describe("possession de session (session_id + session_secret)", () => {
   it("refuse save_session avec le mauvais secret", async () => {
-    const mission = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission] });
+    const { mission, versionRow } = seedActiveMission();
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session } = await started.json();
 
-    const res = await handleSaveSession(client, session.id, "wrong-secret-wrong-secret-wrong", { q0: "hello" });
+    const res = await handleSaveSession(client, session.id, "wrong-secret-wrong-secret-wrong", { note: "hello" });
     expect(res.status).toBe(404);
   });
 
   it("accepte save_session avec le bon secret", async () => {
-    const mission = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission] });
+    const { mission, versionRow } = seedActiveMission();
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
 
-    const res = await handleSaveSession(client, session.id, session_secret, { q0: "hello" });
+    const res = await handleSaveSession(client, session.id, session_secret, { note: "hello" });
     expect(res.status).toBe(200);
+  });
+
+  it("refuse save_session avec une clé de réponse inconnue du schéma", async () => {
+    const { mission, versionRow } = seedActiveMission();
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session, session_secret } = await started.json();
+
+    const res = await handleSaveSession(client, session.id, session_secret, { not_a_real_field: "hello" });
+    expect(res.status).toBe(400);
   });
 });
 
-describe("soumission idempotente", () => {
-  it("une double soumission ne crée pas deux dossiers et renvoie le même dossier", async () => {
-    const mission = seedActiveMission();
-    const { client, store } = createFakeSupabase({ build_missions: [mission] });
+describe("reprise de session (resume_session)", () => {
+  it("restaure les réponses déjà sauvegardées avec le bon secret", async () => {
+    const { mission, versionRow } = seedActiveMission();
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session, session_secret } = await started.json();
+    await handleSaveSession(client, session.id, session_secret, { note: "in progress" });
+
+    const resumed = await handleResumeSession(client, session.id, session_secret);
+    expect(resumed.status).toBe(200);
+    const body = await resumed.json();
+    expect(body.session.answers.note).toBe("in progress");
+    expect(body.playbook_schema.sections).toHaveLength(1);
+  });
+
+  it("refuse resume_session avec le mauvais secret", async () => {
+    const { mission, versionRow } = seedActiveMission();
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session } = await started.json();
+
+    const res = await handleResumeSession(client, session.id, "wrong-secret-wrong-secret-wrong");
+    expect(res.status).toBe(404);
+  });
+});
+
+describe("soumission", () => {
+  it("refuse la soumission (422) quand un champ requis visible est manquant", async () => {
+    const { mission, versionRow } = seedActiveMission({}, minimalSchema("required"));
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
 
-    const first = await handleSubmitSession(client, session.id, session_secret, { q0: "answer" });
+    const res = await handleSubmitSession(client, session.id, session_secret, { note: "" });
+    expect(res.status).toBe(422);
+  });
+
+  it("une double soumission ne crée pas deux dossiers et renvoie le même dossier", async () => {
+    const { mission, versionRow } = seedActiveMission();
+    const { client, store } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session, session_secret } = await started.json();
+
+    const first = await handleSubmitSession(client, session.id, session_secret, { note: "answer" });
     expect(first.status).toBe(200);
     const firstBody = await first.json();
 
-    const second = await handleSubmitSession(client, session.id, session_secret, { q0: "answer" });
+    const second = await handleSubmitSession(client, session.id, session_secret, { note: "answer" });
     expect(second.status).toBe(200);
     const secondBody = await second.json();
 
@@ -223,13 +321,13 @@ describe("soumission idempotente", () => {
   });
 
   it("refuse submit_session avec le mauvais secret", async () => {
-    const mission = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission] });
+    const { mission, versionRow } = seedActiveMission();
+    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session } = await started.json();
 
-    const res = await handleSubmitSession(client, session.id, "wrong-secret-wrong-secret-wrong", { q0: "x" });
+    const res = await handleSubmitSession(client, session.id, "wrong-secret-wrong-secret-wrong", { note: "x" });
     expect(res.status).toBe(404);
   });
 });

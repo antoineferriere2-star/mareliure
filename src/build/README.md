@@ -27,40 +27,56 @@ l'app (site public, marketing) et sécurisé sous `/build/*`.
 > gating admin) est implémenté dans
 > `src/build/services/admin.data.functions.ts`.
 
+## Moteur de Playbook générique
+
+Le vrai Playbook (schéma versionné : sections/étapes/champs typés, options,
+logique conditionnelle, règles de cohérence, mapping vers le Dossier
+Commercial) vit dans `src/build/schema/playbook.ts` (Zod). Il est interprété
+par des modules purs dans `src/build/engine/` (`conditions.ts`,
+`validation.ts`, `brief.ts`) et rendu par un composant générique par type de
+champ dans `src/build/engine/fields/*` — **aucun de ces composants ne connaît
+de règle métier** ; tout vient de la donnée Playbook, jamais du code.
+
+Une Mission pointe vers une **version publiée immuable** d'un Playbook
+(`build_playbook_versions`) : éditer le brouillon d'un Playbook n'affecte
+jamais une Mission déjà active.
+
+Le Playbook Deck (`src/build/playbooks/deckPlaybookSchema.ts`) est un exemple
+complet de Playbook exprimé en donnée — il remplace l'ancien
+`deckProjectBrief.ts` codé en dur. Il est publié via
+`scripts/seedDeckPlaybook.ts` (idempotent, à exécuter après migration DB) qui
+crée la Mission Deck toujours publique (`/demo/deck-project`, token fixe
+`DECK_DEMO_PUBLIC_TOKEN` dans `src/build/constants.ts`).
+
 ## Runtime public
 
 - La seule surface publique est `/m/:publicToken` (voir
-  `src/routes/m.$publicToken.tsx`), servie par la route API publique
-  `src/routes/api/public/build-runtime.ts`.
+  `src/build/pages/public/MissionRuntime.tsx`, servie par la route API
+  publique `src/routes/api/public/build-runtime.ts`) — `/demo/deck-project`
+  est une Mission ordinaire rendue par ce même composant, pas une route
+  parallèle.
 - Aucune route `/build/run/:id` n'existe et ne doit être ré-introduite.
 
 ## Client admin (remote-first, fallback local)
 
-`src/build/services/buildAdminClient.ts` expose des helpers
-`callWithFallback` + les fallbacks localStorage pour Knowledge et
-Playbooks. Comportement :
-
-- Si la server fn répond → `dataSource: "supabase"` (badge vert
-  "Supabase Build admin").
-- Si la server fn échoue (réseau, permission, backend down) → l'UI passe
-  automatiquement sur `localStorage` et affiche le badge orange
-  "Local dev fallback". L'admin reste fonctionnel en dev.
-
-Les mutations (create/update/delete) suivent la même règle : elles
-écrivent en DB si la source est Supabase, sinon dans le localStorage
-correspondant.
+`src/build/services/buildAdminClient.ts` expose `callWithFallback` + un
+fallback localStorage, utilisé uniquement pour **Knowledge notes**. Les
+Playbooks (schéma riche, versionné) ne passent plus par ce mécanisme — ils
+exigent Supabase, comme Missions et Dossiers.
 
 ## Structure
 
 ```
 src/build/
-├── pages/               # Composants publics (marketing, runtime, démo)
+├── schema/               # Zod : PlaybookSchema, Answers, ProjectBrief
+├── engine/                # conditions/validation/brief (purs) + fields/*
+├── playbooks/             # Playbooks exprimés en donnée (ex. Deck)
+├── pages/                 # Composants publics (marketing, MissionRuntime)
 ├── services/
 │   ├── admin.functions.ts        # requireBuildAdmin (gate)
 │   ├── admin.data.functions.ts   # server fns admin (missions, dossiers,
 │   │                             #                   playbooks, knowledge)
-│   ├── buildAdminClient.ts       # facade + fallback localStorage
-│   ├── buildPublicForms.ts       # audit / private beta (public)
-│   └── deckProjectBrief.ts       # playbook intégré (deck v1)
+│   ├── buildAdminClient.ts       # facade + fallback localStorage (knowledge)
+│   └── buildPublicForms.ts       # audit / private beta (public)
 └── types/index.ts                # types partagés Build AI
 ```

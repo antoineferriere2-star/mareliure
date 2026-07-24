@@ -1,8 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { createBuildMission } from "@/build/services/admin.data.functions";
+import { createBuildMission, listPublishablePlaybooks } from "@/build/services/admin.data.functions";
 
 export const Route = createFileRoute("/_authenticated/build/missions/new")({
   ssr: false,
@@ -10,23 +10,33 @@ export const Route = createFileRoute("/_authenticated/build/missions/new")({
   component: NewMissionPage,
 });
 
+const playbooksKey = ["build-admin", "publishable-playbooks"] as const;
+
 function NewMissionPage() {
   const navigate = useNavigate();
   const create = useServerFn(createBuildMission);
+  const listPlaybooks = useServerFn(listPublishablePlaybooks);
+  const opts = queryOptions({ queryKey: playbooksKey, queryFn: () => listPlaybooks() });
+  const { data: playbooks } = useSuspenseQuery(opts);
+
   const [name, setName] = useState("");
   const [objective, setObjective] = useState("");
-  const [playbookName, setPlaybookName] = useState("Terrasse / Deck — v1");
+  const [playbookId, setPlaybookId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
-    mutationFn: async () =>
-      create({
+    mutationFn: async () => {
+      const selected = playbooks.find((p) => p.id === playbookId);
+      return create({
         data: {
           name: name.trim(),
           objective: objective.trim() || null,
-          playbook_name: playbookName.trim() || null,
+          playbook_id: selected?.id ?? null,
+          playbook_version_id: selected?.published_version_id ?? null,
+          playbook_name: selected?.name ?? null,
         },
-      }),
+      });
+    },
     onSuccess: (m) => {
       if (m?.id) navigate({ to: "/build/missions/$id", params: { id: m.id } });
       else navigate({ to: "/build/missions" });
@@ -80,12 +90,23 @@ function NewMissionPage() {
 
         <div>
           <label className="block text-xs font-medium text-muted-foreground">Playbook</label>
-          <input
-            value={playbookName}
-            onChange={(e) => setPlaybookName(e.target.value)}
+          <select
+            value={playbookId}
+            onChange={(e) => setPlaybookId(e.target.value)}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            placeholder="Nom du playbook (Terrasse / Deck — v1)"
-          />
+          >
+            <option value="">Aucun (à définir plus tard)</option>
+            {playbooks.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </select>
+          {playbooks.length === 0 && (
+            <p className="mt-1 text-xs text-muted-foreground">
+              Aucun Playbook publié pour l'instant. La mission ne pourra pas être activée sans en choisir un.
+            </p>
+          )}
         </div>
 
         {error && <p className="text-xs text-destructive">{error}</p>}

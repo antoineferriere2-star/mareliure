@@ -3,6 +3,7 @@
  * Types mirror the shape returned by `admin.data.functions.ts` and consumed
  * by `buildAdminClient` + `/build/*` pages.
  */
+import type { PlaybookSchema } from "@/build/schema/playbook";
 
 export type MissionStatus = "draft" | "active" | "paused" | "archived";
 
@@ -13,6 +14,7 @@ export interface BuildMissionSummary {
   objective: string | null;
   playbook_id: string | null;
   playbook_name: string | null;
+  playbook_version_id: string | null;
   /** Public runtime token exposed as `/m/:publicToken` */
   public_token: string | null;
   /** Revocation timestamp for the public token */
@@ -44,24 +46,26 @@ export interface BuildKnowledgeNote {
   updated_at: string;
 }
 
-export interface BuildPlaybookStep {
-  id: string;
-  title: string;
-  why?: string;
-}
-
-export interface BuildPlaybook {
+export interface BuildPlaybookSummary {
   id: string;
   name: string;
   description: string | null;
   project_type: string | null;
-  version: string;
-  playbookVersionId?: string;
-  playbookVersionLabel?: string;
   is_active: boolean;
-  steps: BuildPlaybookStep[];
+  published_version_id: string | null;
   created_at: string;
   updated_at: string;
+}
+
+export interface BuildPlaybookVersionSummary {
+  id: string;
+  version_number: number;
+  published_at: string;
+}
+
+export interface BuildPlaybookDetail extends BuildPlaybookSummary {
+  draft_schema: PlaybookSchema;
+  versions: BuildPlaybookVersionSummary[];
 }
 
 export type BuildDataSource = "supabase" | "local-fallback";

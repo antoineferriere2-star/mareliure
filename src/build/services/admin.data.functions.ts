@@ -2,7 +2,9 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
+import { getPlaybookPublishIssues } from "@/build/engine/validation";
+import { playbookSchema } from "@/build/schema/playbook";
 
 type Supa = SupabaseClient<Database>;
 
@@ -86,7 +88,7 @@ export const listBuildMissions = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data, error } = await sb
       .from("build_missions")
-      .select("id, name, status, playbook_name, playbook_id, public_token, public_token_revoked_at, published_at, created_at, updated_at, objective")
+      .select("id, name, status, playbook_name, playbook_id, playbook_version_id, public_token, public_token_revoked_at, published_at, created_at, updated_at, objective")
       .order("created_at", { ascending: false });
     if (error) throw new Response(error.message, { status: 500 });
     return data ?? [];
@@ -115,6 +117,7 @@ export const createBuildMission = createServerFn({ method: "POST" })
       name: z.string().min(2).max(200),
       objective: z.string().max(1000).optional().nullable(),
       playbook_id: z.string().uuid().optional().nullable(),
+      playbook_version_id: z.string().uuid().optional().nullable(),
       playbook_name: z.string().max(200).optional().nullable(),
     }).parse(data),
   )
@@ -127,6 +130,7 @@ export const createBuildMission = createServerFn({ method: "POST" })
         name: data.name,
         objective: data.objective ?? null,
         playbook_id: data.playbook_id ?? null,
+        playbook_version_id: data.playbook_version_id ?? null,
         playbook_name: data.playbook_name ?? null,
         status: "draft",
       })
@@ -151,9 +155,12 @@ export const setMissionStatus = createServerFn({ method: "POST" })
     if (data.status === "active") {
       const { data: existing } = await sb
         .from("build_missions")
-        .select("public_token, published_at")
+        .select("public_token, published_at, playbook_version_id")
         .eq("id", data.id)
         .maybeSingle();
+      if (!existing?.playbook_version_id) {
+        throw new Response("Cannot activate a mission without a published Playbook version.", { status: 400 });
+      }
       if (!existing?.public_token) patch.public_token = crypto.randomUUID().replace(/-/g, "");
       if (!existing?.published_at) patch.published_at = new Date().toISOString();
     }
@@ -229,36 +236,73 @@ export const getBuildDossier = createServerFn({ method: "GET" })
     return { dossier, mission, session };
   });
 
-// ---------- Playbooks (custom) ----------
+// ---------- Playbooks ----------
+//
+// A Playbook has a mutable `draft_schema` (edited freely) and an immutable
+// `published_version_id` pointer into `build_playbook_versions`. Missions
+// pin to one specific published version so editing a draft never changes a
+// live Mission's behavior — see supabase/migrations/20260724060000_*.sql.
 
-const playbookStepSchema = z.object({
-  id: z.string().min(1).max(100),
-  title: z.string().min(1).max(200),
-  why: z.string().max(500).optional().default(""),
-});
-
-export const listCustomPlaybooks = createServerFn({ method: "GET" })
+export const listBuildPlaybooks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const { data, error } = await sb
       .from("build_playbooks")
-      .select("*")
+      .select("id, name, description, project_type, is_active, published_version_id, created_at, updated_at")
       .order("created_at", { ascending: false });
     if (error) throw new Response(error.message, { status: 500 });
     return data ?? [];
   });
 
-export const createCustomPlaybook = createServerFn({ method: "POST" })
+/** Playbooks with a published version, for the Mission-creation picker. */
+export const listPublishablePlaybooks = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data, error } = await sb
+      .from("build_playbooks")
+      .select("id, name, published_version_id")
+      .not("published_version_id", "is", null)
+      .eq("is_active", true)
+      .order("name", { ascending: true });
+    if (error) throw new Response(error.message, { status: 500 });
+    return data ?? [];
+  });
+
+export const getBuildPlaybook = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: playbook, error } = await sb
+      .from("build_playbooks")
+      .select("*")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    if (!playbook) throw new Response("Not found", { status: 404 });
+
+    const { data: versions, error: vErr } = await sb
+      .from("build_playbook_versions")
+      .select("id, version_number, published_at")
+      .eq("playbook_id", data.id)
+      .order("version_number", { ascending: false });
+    if (vErr) throw new Response(vErr.message, { status: 500 });
+
+    return { ...playbook, versions: versions ?? [] };
+  });
+
+export const createBuildPlaybook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z.object({
       name: z.string().min(2).max(200),
       description: z.string().max(1000).optional().nullable(),
       project_type: z.string().max(100).optional().nullable(),
-      version: z.string().max(30).optional(),
-      steps: z.array(playbookStepSchema).max(50).optional(),
     }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -270,8 +314,6 @@ export const createCustomPlaybook = createServerFn({ method: "POST" })
         name: data.name,
         description: data.description ?? null,
         project_type: data.project_type ?? null,
-        version: data.version ?? "v1",
-        steps: data.steps ?? [],
         created_by: context.userId,
       })
       .select()
@@ -280,14 +322,111 @@ export const createCustomPlaybook = createServerFn({ method: "POST" })
     return inserted;
   });
 
-export const deleteCustomPlaybook = createServerFn({ method: "POST" })
+export const updatePlaybookDraft = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({
+      id: z.string().uuid(),
+      name: z.string().min(2).max(200).optional(),
+      description: z.string().max(1000).optional().nullable(),
+      project_type: z.string().max(100).optional().nullable(),
+      is_active: z.boolean().optional(),
+      draft_schema: z.unknown(),
+    }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const parsedSchema = playbookSchema.safeParse(data.draft_schema);
+    if (!parsedSchema.success) {
+      throw new Response(`Invalid playbook schema: ${parsedSchema.error.issues[0]?.message ?? "malformed"}`, { status: 400 });
+    }
+    const sb = await admin();
+    const { data: updated, error } = await sb
+      .from("build_playbooks")
+      .update({
+        ...(data.name !== undefined ? { name: data.name } : {}),
+        ...(data.description !== undefined ? { description: data.description } : {}),
+        ...(data.project_type !== undefined ? { project_type: data.project_type } : {}),
+        ...(data.is_active !== undefined ? { is_active: data.is_active } : {}),
+        draft_schema: parsedSchema.data as unknown as Json,
+      })
+      .eq("id", data.id)
+      .select()
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    if (!updated) throw new Response("Not found", { status: 404 });
+    return updated;
+  });
+
+export const publishPlaybookVersion = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+
+    const { data: playbook, error } = await sb
+      .from("build_playbooks")
+      .select("draft_schema")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    if (!playbook) throw new Response("Not found", { status: 404 });
+
+    const parsedSchema = playbookSchema.safeParse(playbook.draft_schema);
+    if (!parsedSchema.success) {
+      throw new Response("The draft schema is malformed and cannot be published.", { status: 400 });
+    }
+    const issues = getPlaybookPublishIssues(parsedSchema.data);
+    if (issues.length > 0) {
+      throw new Response(`Playbook is not ready to publish: ${issues.join(" ")}`, { status: 400 });
+    }
+
+    const { data: lastVersion } = await sb
+      .from("build_playbook_versions")
+      .select("version_number")
+      .eq("playbook_id", data.id)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const nextVersionNumber = (lastVersion?.version_number ?? 0) + 1;
+
+    const { data: version, error: vErr } = await sb
+      .from("build_playbook_versions")
+      .insert({
+        playbook_id: data.id,
+        version_number: nextVersionNumber,
+        schema: parsedSchema.data as unknown as Json,
+        published_by: context.userId,
+      })
+      .select("id, version_number, published_at")
+      .single();
+    if (vErr) throw new Response(vErr.message, { status: 500 });
+
+    const { data: updated, error: pErr } = await sb
+      .from("build_playbooks")
+      .update({ published_version_id: version.id })
+      .eq("id", data.id)
+      .select()
+      .maybeSingle();
+    if (pErr) throw new Response(pErr.message, { status: 500 });
+
+    return { playbook: updated, version };
+  });
+
+export const deleteBuildPlaybook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const { error } = await sb.from("build_playbooks").delete().eq("id", data.id);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) {
+      if (error.code === "23503") {
+        throw new Response("This playbook has live Missions attached and cannot be deleted.", { status: 409 });
+      }
+      throw new Response(error.message, { status: 500 });
+    }
     return { ok: true as const };
   });
 

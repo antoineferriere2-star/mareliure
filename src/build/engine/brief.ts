@@ -1,0 +1,226 @@
+/**
+ * Generic Project Brief (Dossier Commercial) generator. Walks a
+ * PlaybookSchema's briefConfig + per-field briefMapping against a set of
+ * answers and produces the canonical 9-part ProjectBrief. This is what
+ * replaces `deckProjectBrief.ts`'s hand-written `generateDeckProjectBrief`:
+ * every Deck-specific rule becomes playbook DATA (derivedLines,
+ * calculatedFields, alwaysIncludeLines...), interpreted here generically.
+ */
+import { NOT_SURE_VALUE, type AnswerValue, type Answers } from "../schema/answers";
+import type { BriefLine, BriefLineSource, ConfidenceLabel, ProjectBrief } from "../schema/brief";
+import type { BriefSectionKey, PlaybookField, PlaybookSchema } from "../schema/playbook";
+import { evaluateConditionGroup } from "./conditions";
+import { computeVisibleSteps, validateField } from "./validation";
+
+export interface MissionLike {
+  name: string;
+  objective?: string | null;
+}
+
+function isBlank(value: AnswerValue | undefined): boolean {
+  return (
+    value === undefined ||
+    value === "" ||
+    (Array.isArray(value) && value.length === 0)
+  );
+}
+
+function optionLabel(field: PlaybookField, raw: string): string {
+  if ("options" in field) {
+    const opt = field.options.find((o) => o.value === raw);
+    if (opt) return opt.label;
+  }
+  return raw;
+}
+
+function formatValue(field: PlaybookField, value: AnswerValue, format: "raw" | "join_comma" | "option_label"): string {
+  if (Array.isArray(value)) {
+    const parts = value.map((v) => {
+      if (typeof v === "string") return format === "join_comma" ? optionLabel(field, v) : v;
+      if (v && typeof v === "object" && "filename" in v) return String((v as { filename: unknown }).filename);
+      return String(v);
+    });
+    return parts.join(", ");
+  }
+  if (format === "option_label" && typeof value === "string") return optionLabel(field, value);
+  if (typeof value === "object" && value !== null) {
+    return Object.values(value as Record<string, unknown>)
+      .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
+      .join(" ");
+  }
+  return String(value);
+}
+
+function interpolate(template: string, tokens: Record<string, string>): string {
+  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)(\|lower)?\s*\}\}/g, (_match, key: string, lowerFlag?: string) => {
+    const raw = tokens[key] ?? "";
+    return lowerFlag ? raw.toLowerCase() : raw;
+  });
+}
+
+function buildTokens(allFields: PlaybookField[], answers: Answers, calculated: Record<string, string>): Record<string, string> {
+  const tokens: Record<string, string> = { ...calculated };
+  for (const field of allFields) {
+    const value = answers[field.key];
+    if (value === undefined || value === NOT_SURE_VALUE) continue;
+    tokens[field.key] = formatValue(field, value, "raw");
+  }
+  return tokens;
+}
+
+export function generateProjectBrief(
+  schema: PlaybookSchema,
+  answers: Answers,
+  mission: MissionLike,
+  generatedAt: string = new Date().toISOString(),
+): ProjectBrief {
+  const sections: Record<BriefSectionKey, BriefLine[]> = {
+    confirmedInformation: [],
+    assumptionsAndCalculated: [],
+    constraints: [],
+    missingInformation: [],
+    budgetAndTiming: [],
+  };
+
+  const visibleSteps = computeVisibleSteps(schema, answers);
+  const allVisibleFields = visibleSteps.flatMap((s) => s.visibleFields);
+
+  // 1. Calculated fields (e.g. area = length * width), with fallback to a raw answer.
+  const calculatedTokens: Record<string, string> = {};
+  for (const calc of schema.briefConfig.calculatedFields) {
+    let value: string | null = null;
+    let source: BriefLineSource = "calculated_value";
+    let targetSection = calc.section;
+
+    if (calc.compute.op === "multiply") {
+      const [aKey, bKey] = calc.compute.inputs;
+      const a = Number.parseFloat(String(answers[aKey] ?? ""));
+      const b = Number.parseFloat(String(answers[bKey] ?? ""));
+      if (Number.isFinite(a) && Number.isFinite(b) && a > 0 && b > 0) {
+        const rounded = Math.round(a * b);
+        value = calc.compute.unit ? `${rounded} ${calc.compute.unit}` : String(rounded);
+      }
+    } else {
+      const parts = calc.compute.inputs
+        .map((k) => answers[k])
+        .filter((v): v is Exclude<AnswerValue, typeof NOT_SURE_VALUE> => v !== undefined && v !== NOT_SURE_VALUE && String(v).trim() !== "");
+      if (parts.length > 0) value = parts.map(String).join(calc.compute.separator ?? " ");
+    }
+
+    if (value === null && calc.fallbackFieldKey) {
+      const fallback = answers[calc.fallbackFieldKey];
+      if (fallback !== undefined && fallback !== NOT_SURE_VALUE && String(fallback).trim() !== "") {
+        value = String(fallback);
+        source = "visitor_answer";
+        targetSection = "confirmedInformation";
+      }
+    }
+
+    if (value !== null) {
+      calculatedTokens[calc.key] = value;
+      sections[targetSection].push({ label: calc.label, value, source, category: calc.category, fieldKey: calc.key });
+    } else if (calc.onMissingLabel) {
+      sections.missingInformation.push({
+        label: calc.onMissingLabel,
+        value: calc.onMissingValue ?? "Not confirmed.",
+        source: "deterministic_rule",
+        fieldKey: calc.key,
+      });
+    }
+  }
+
+  const tokens = buildTokens(allVisibleFields, answers, calculatedTokens);
+
+  // 2. Per-field brief mapping, plus "recommended but empty" -> missingInformation.
+  for (const field of allVisibleFields) {
+    const value = answers[field.key];
+    const isNotSure = value === NOT_SURE_VALUE;
+    const blank = isBlank(value);
+
+    if ((blank || isNotSure) && field.desirability === "recommended") {
+      sections.missingInformation.push({
+        label: field.label,
+        value: field.missingMessage ?? `${field.label} was not provided.`,
+        source: "deterministic_rule",
+        fieldKey: field.key,
+      });
+      continue;
+    }
+    if (blank || isNotSure || !field.briefMapping) continue;
+
+    const mapping = field.briefMapping;
+    const formatted = formatValue(field, value, mapping.format);
+    if (!formatted && !mapping.includeIfEmpty) continue;
+    sections[mapping.section].push({
+      label: mapping.label,
+      value: formatted,
+      source: "visitor_answer",
+      category: mapping.category,
+      fieldKey: field.key,
+    });
+  }
+
+  // 3. Derived lines: playbook-authored conditional business rules.
+  for (const rule of schema.briefConfig.derivedLines) {
+    if (evaluateConditionGroup(rule.when, answers)) {
+      sections[rule.section].push({ label: rule.label, value: interpolate(rule.value, tokens), source: rule.source });
+    }
+  }
+
+  // 4. Always-injected caveats (e.g. "Permits not assessed").
+  for (const line of schema.briefConfig.alwaysIncludeLines) {
+    sections[line.section].push({ label: line.label, value: line.value, source: "assumed_default", category: line.category });
+  }
+
+  // 5. Project summary.
+  const summaryParts = schema.briefConfig.summaryFragments
+    .filter((f) => evaluateConditionGroup(f.when, answers))
+    .map((f) => interpolate(f.template, tokens).trim())
+    .filter(Boolean);
+  const projectSummary = summaryParts.length > 0 ? summaryParts.join(" ") : schema.briefConfig.emptySummaryFallback;
+
+  // 6. Confidence — a generic, engine-level heuristic (not playbook-configurable).
+  const recommendedFields = allVisibleFields.filter((f) => f.desirability === "recommended");
+  const requiredFields = allVisibleFields.filter((f) => f.desirability === "required");
+  const emptyRecommendedCount = recommendedFields.filter((f) => isBlank(answers[f.key]) || answers[f.key] === NOT_SURE_VALUE).length;
+  const notSureRequiredCount = requiredFields.filter((f) => answers[f.key] === NOT_SURE_VALUE).length;
+  const triggeredWarnings = schema.validationRules.filter(
+    (r) => r.severity === "warning" && evaluateConditionGroup(r.when, answers),
+  ).length;
+  const score = Math.max(
+    0,
+    Math.min(100, 100 - emptyRecommendedCount * 10 - notSureRequiredCount * 15 - triggeredWarnings * 15),
+  );
+  const label: ConfidenceLabel = score >= 80 ? "high" : score >= 50 ? "medium" : "low";
+  const reasons: string[] = [];
+  if (emptyRecommendedCount > 0) reasons.push(`${emptyRecommendedCount} recommended field(s) not answered.`);
+  if (notSureRequiredCount > 0) reasons.push(`${notSureRequiredCount} required field(s) answered "not sure".`);
+  if (triggeredWarnings > 0) reasons.push(`${triggeredWarnings} consistency warning(s) triggered.`);
+
+  // 7. Suggested next action: first conditional match wins, the unconditional entry is the default.
+  const matchedAction =
+    schema.briefConfig.suggestedNextActions.find((a) => a.when && evaluateConditionGroup(a.when, answers)) ??
+    schema.briefConfig.suggestedNextActions.find((a) => !a.when);
+  const suggestedNextAction: BriefLine = {
+    label: "Suggested next action",
+    value: matchedAction?.value ?? "Review this project with the visitor directly.",
+    source: "assumed_default",
+  };
+
+  return {
+    generatedAt,
+    missionName: schema.briefConfig.missionNameTemplate ? interpolate(schema.briefConfig.missionNameTemplate, tokens) : mission.name,
+    status: schema.briefConfig.statusLabel ?? "ready",
+    projectSummary,
+    confirmedInformation: sections.confirmedInformation,
+    assumptionsAndCalculated: sections.assumptionsAndCalculated,
+    constraints: sections.constraints,
+    missingInformation: sections.missingInformation,
+    budgetAndTiming: sections.budgetAndTiming,
+    confidence: { score, label, reasons },
+    suggestedNextAction,
+  };
+}
+
+// Re-exported for callers that need to validate a full answer set before submit.
+export { validateField };

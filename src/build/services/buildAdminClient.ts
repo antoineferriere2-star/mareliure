@@ -12,10 +12,9 @@
  * contract — implemented as `createServerFn` because this stack does not
  * allow new Supabase edge functions.
  */
-import type { BuildDataSource, BuildKnowledgeNote, BuildPlaybook, KnowledgeStatus } from "@/build/types";
+import type { BuildDataSource, BuildKnowledgeNote, KnowledgeStatus } from "@/build/types";
 
 const LS_KNOWLEDGE = "metre_build_knowledge_items_v1";
-const LS_PLAYBOOKS = "metre_build_playbooks_v1";
 
 function safeParseArray<T>(raw: string | null): T[] {
   if (!raw) return [];
@@ -91,36 +90,4 @@ export function localUpdateKnowledgeStatus(id: string, status: KnowledgeStatus):
 
 export function localDeleteKnowledge(id: string): void {
   writeLS(LS_KNOWLEDGE, localListKnowledge().filter((n) => n.id !== id));
-}
-
-// ---------- Playbooks (local fallback) ----------
-
-export function localListPlaybooks(): BuildPlaybook[] {
-  return readLS<BuildPlaybook>(LS_PLAYBOOKS);
-}
-
-export function localCreatePlaybook(input: {
-  name: string;
-  description?: string | null;
-  project_type?: string | null;
-  version?: string;
-  steps?: { id: string; title: string; why?: string }[];
-}): BuildPlaybook {
-  const p: BuildPlaybook = {
-    id: crypto.randomUUID(),
-    name: input.name,
-    description: input.description ?? null,
-    project_type: input.project_type ?? null,
-    version: input.version ?? "v1",
-    steps: input.steps ?? [],
-    is_active: true,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-  };
-  writeLS(LS_PLAYBOOKS, [p, ...localListPlaybooks()]);
-  return p;
-}
-
-export function localDeletePlaybook(id: string): void {
-  writeLS(LS_PLAYBOOKS, localListPlaybooks().filter((p) => p.id !== id));
 }

@@ -1,6 +1,8 @@
 import { BriefPreview } from "@/build/pages/public/BriefPreview";
 import { defaultDeckBrief } from "@/build/pages/public/defaultDeckBrief";
-import { deckDemoSteps } from "@/build/services/deckProjectBrief";
+import { deckPlaybookSchema } from "@/build/playbooks/deckPlaybookSchema";
+
+const deckDemoSteps = deckPlaybookSchema.sections.flatMap((section) => section.steps);
 import {
   BuildPublicShell,
   ContentBand,
@@ -58,7 +60,7 @@ export function BuildDeckBuildersPage() {
             />
             <div className="space-y-3">
               {deckDemoSteps.slice(0, 6).map((step, index) => (
-                <StepLine key={step.id} index={index + 1} title={step.title} text={step.why} />
+                <StepLine key={step.id} index={index + 1} title={step.title} text={step.why ?? ""} />
               ))}
             </div>
           </div>

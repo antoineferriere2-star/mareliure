@@ -1,8 +1,8 @@
 import { ShieldCheck, ArrowRight } from "lucide-react";
 import { Link } from "@tanstack/react-router";
-import type { DeckProjectBrief } from "@/build/services/deckProjectBrief";
+import type { ProjectBrief } from "@/build/schema/brief";
 
-export function BriefSummary({ brief }: { brief: DeckProjectBrief }) {
+export function BriefSummary({ brief }: { brief: ProjectBrief }) {
   const confirmed = brief.confirmedInformation.slice(0, 4);
   const constraints = brief.constraints.slice(0, 3);
   const missing = brief.missingInformation.slice(0, 3);
@@ -12,7 +12,7 @@ export function BriefSummary({ brief }: { brief: DeckProjectBrief }) {
       <div className="flex items-start justify-between gap-4">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-            {brief.demoStatus}
+            {brief.status}
           </p>
           <h3 className="mt-2 text-xl font-semibold tracking-normal text-slate-950">
             Example Project Brief

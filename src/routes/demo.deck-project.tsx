@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BuildDeckProjectDemoPage } from "@/build/pages/public/BuildDeckProjectDemoPage";
+import { DECK_DEMO_PUBLIC_TOKEN } from "@/build/constants";
+import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
 
 const title = "Deck Project Demo — Métré Build";
 const description =
@@ -22,5 +23,5 @@ export const Route = createFileRoute("/demo/deck-project")({
     ],
     links: [{ rel: "canonical", href: "/demo/deck-project" }],
   }),
-  component: BuildDeckProjectDemoPage,
+  component: () => <MissionRuntime publicToken={DECK_DEMO_PUBLIC_TOKEN} />,
 });
