@@ -1,9 +1,10 @@
 // Orchestrates the four AI Engine agents against an already-generated
 // ProjectBrief. Additive only — this module never touches or recomputes the
 // deterministic Dossier content, it only produces AiInsights alongside it.
-import { z, type ZodType } from "zod/v4";
-import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
-import { anthropic, getAiModel } from "./client.server";
+// Runs through Lovable AI Gateway via the Vercel AI SDK.
+import { generateText, Output, NoObjectGeneratedError } from "ai";
+import type { z, ZodType } from "zod";
+import { getGatewayModel, getAiModel } from "./client.server";
 import type { BriefLine, ProjectBrief } from "@/build/schema/brief";
 import type { BuildKnowledgeNote, BuildMissionSummary } from "@/build/types";
 import {
@@ -62,28 +63,25 @@ function renderKnowledgeNotes(notes: KnowledgeNoteLike[]): string {
   return notes.map((n) => `### ${n.title}\n${n.content ?? "(sans contenu)"}`).join("\n\n");
 }
 
-async function runAgent<Schema extends ZodType>(
+export async function runAgent<Schema extends ZodType>(
   systemPrompt: string,
   userMessage: string,
   outputSchema: Schema,
 ): Promise<AgentResult<z.infer<Schema>>> {
   try {
-    const response = await anthropic.messages.parse({
-      model: getAiModel(),
-      max_tokens: 4096,
+    const { output } = await generateText({
+      model: getGatewayModel(),
       system: systemPrompt,
-      thinking: { type: "adaptive" },
-      output_config: {
-        effort: "medium",
-        format: zodOutputFormat(outputSchema),
-      },
-      messages: [{ role: "user", content: userMessage }],
+      prompt: userMessage,
+      output: Output.object({ schema: outputSchema }),
     });
-    if (response.parsed_output == null) {
+    return { status: "ok", data: output as z.infer<Schema> };
+  } catch (err) {
+    if (NoObjectGeneratedError.isInstance(err)) {
       return { status: "error", error: "Réponse IA non structurée (parsing échoué)." };
     }
-    return { status: "ok", data: response.parsed_output };
-  } catch (err) {
+    // Surface gateway errors verbatim — 429 (rate limit) and 402 (credits) are
+    // the most common; the caller renders err.message directly.
     return { status: "error", error: err instanceof Error ? err.message : "Erreur IA inconnue." };
   }
 }

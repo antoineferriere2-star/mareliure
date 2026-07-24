@@ -1,7 +1,7 @@
-// Zod output schemas for the AI Engine's four agents. Uses the zod/v4 subpath
-// required by @anthropic-ai/sdk's zodOutputFormat helper — kept local to this
-// module; the rest of the app continues to use the plain "zod" v3 namespace.
-import { z } from "zod/v4";
+// Zod output schemas for the AI Engine's four agents. Kept small and flat
+// (no .min/.max/pattern) so structured output works reliably across Gateway
+// models — limits are stated in the prompts, not encoded in the schema.
+import { z } from "zod";
 
 export const findingSeverity = z.enum(["info", "warning", "critical"]);
 export type FindingSeverity = z.infer<typeof findingSeverity>;
