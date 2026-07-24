@@ -1,32 +1,11 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
-import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database, Json } from "@/integrations/supabase/types";
+import type { Json } from "@/integrations/supabase/types";
 import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import { playbookSchema } from "@/build/schema/playbook";
 import type { ProjectBrief } from "@/build/schema/brief";
-
-type Supa = SupabaseClient<Database>;
-
-/**
- * Verify the caller is admin using their own RLS-scoped client. Never uses
- * the service-role client for authorization.
- */
-async function assertAdmin(supabase: Supa, userId: string) {
-  const { data, error } = await supabase
-    .from("user_roles")
-    .select("role")
-    .eq("user_id", userId)
-    .eq("role", "admin")
-    .maybeSingle();
-  if (error || !data) throw new Response("Forbidden", { status: 403 });
-}
-
-async function admin() {
-  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-  return supabaseAdmin;
-}
+import { admin, assertAdmin } from "./adminAuth.server";
 
 // ---------- Dashboard ----------
 
@@ -321,7 +300,7 @@ export const listPublishablePlaybooks = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data, error } = await sb
       .from("build_playbooks")
-      .select("id, name, published_version_id")
+      .select("id, name, project_type, published_version_id")
       .not("published_version_id", "is", null)
       .eq("is_active", true)
       .order("name", { ascending: true });
