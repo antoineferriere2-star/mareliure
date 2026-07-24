@@ -6,7 +6,7 @@ import { createBuildPlaybook, listBuildPlaybooks } from "@/build/services/admin.
 
 const playbooksKey = ["build-admin", "playbooks"] as const;
 
-export const Route = createFileRoute("/_authenticated/build/playbooks")({
+export const Route = createFileRoute("/_authenticated/build/playbooks/")({
   ssr: false,
   head: () => ({ meta: [{ title: "Playbooks — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: PlaybooksPage,
