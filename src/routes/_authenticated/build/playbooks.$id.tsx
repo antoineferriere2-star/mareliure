@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   getBuildPlaybook,
   publishPlaybookVersion,
@@ -15,26 +15,18 @@ import {
   type PlaybookSection,
   type PlaybookStep,
 } from "@/build/schema/playbook";
+import { getPlaybookPublishIssues } from "@/build/engine/validation";
+import { ConditionGroupEditor } from "@/build/pages/admin/playbookEditor/ConditionGroupEditor";
+import { FieldEditor } from "@/build/pages/admin/playbookEditor/FieldEditor";
+import { ValidationRulesEditor, type StepSummary } from "@/build/pages/admin/playbookEditor/ValidationRulesEditor";
+import { BriefConfigEditor } from "@/build/pages/admin/playbookEditor/BriefConfigEditor";
+import { collectFieldSummaries } from "@/build/pages/admin/playbookEditor/fieldSummaries";
 
 export const Route = createFileRoute("/_authenticated/build/playbooks/$id")({
   ssr: false,
   head: () => ({ meta: [{ title: "Playbook — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
   component: PlaybookDetailPage,
 });
-
-const FIELD_TYPES: PlaybookFieldType[] = [
-  "single_choice",
-  "multi_choice",
-  "text",
-  "number",
-  "measurement",
-  "budget",
-  "timeline",
-  "address",
-  "photo",
-  "coordinates",
-  "consent",
-];
 
 function newFieldOfType(type: PlaybookFieldType, key: string): PlaybookField {
   const base = { key, label: "New field", desirability: "optional" as const };
@@ -71,27 +63,21 @@ function newFieldOfType(type: PlaybookFieldType, key: string): PlaybookField {
   }
 }
 
-function optionsToText(field: PlaybookField): string {
-  if (field.type === "single_choice" || field.type === "multi_choice" || field.type === "timeline") {
-    return field.options.map((o) => `${o.value}|${o.label}`).join("\n");
-  }
-  if (field.type === "budget" && field.mode === "ranges") {
-    return (field.ranges ?? []).map((r) => `${r.value}|${r.label}`).join("\n");
-  }
-  return "";
+function moveItem<T>(arr: T[], index: number, dir: -1 | 1): T[] {
+  const target = index + dir;
+  if (target < 0 || target >= arr.length) return arr;
+  const next = [...arr];
+  [next[index], next[target]] = [next[target], next[index]];
+  return next;
 }
 
-function parseOptionsText(text: string): { value: string; label: string }[] {
-  return text
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const [value, label] = line.split("|");
-      return { value: (value ?? "").trim(), label: (label ?? value ?? "").trim() };
-    })
-    .filter((o) => o.value.length > 0);
-}
+type Tab = "content" | "rules" | "brief" | "json";
+const TAB_LABELS: Record<Tab, string> = {
+  content: "Contenu",
+  rules: "Règles de cohérence",
+  brief: "Dossier Commercial",
+  json: "JSON avancé",
+};
 
 function PlaybookDetailPage() {
   const { id } = Route.useParams();
@@ -112,12 +98,19 @@ function PlaybookDetailPage() {
     const parsed = playbookSchema.safeParse(playbook.draft_schema);
     return parsed.success ? parsed.data : playbookSchema.parse({ schemaVersion: 1 });
   });
-  const [jsonMode, setJsonMode] = useState(false);
+  const [tab, setTab] = useState<Tab>("content");
   const [jsonText, setJsonText] = useState(() => JSON.stringify(draft, null, 2));
   const [jsonError, setJsonError] = useState<string | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishSuccess, setPublishSuccess] = useState<number | null>(null);
+
+  const fieldSummaries = useMemo(() => collectFieldSummaries(draft), [draft]);
+  const stepSummaries: StepSummary[] = useMemo(
+    () => draft.sections.flatMap((s) => s.steps.map((st) => ({ id: st.id, title: st.title, sectionTitle: s.title }))),
+    [draft],
+  );
+  const issues = useMemo(() => getPlaybookPublishIssues(draft), [draft]);
 
   function updateDraftState(mutator: (d: PlaybookSchema) => PlaybookSchema) {
     setDraft((prev) => {
@@ -179,6 +172,9 @@ function PlaybookDetailPage() {
   function updateSection(sectionId: string, patch: Partial<PlaybookSection>) {
     updateDraftState((d) => ({ ...d, sections: d.sections.map((s) => (s.id === sectionId ? { ...s, ...patch } : s)) }));
   }
+  function moveSection(index: number, dir: -1 | 1) {
+    updateDraftState((d) => ({ ...d, sections: moveItem(d.sections, index, dir) }));
+  }
   function addStep(sectionId: string) {
     updateDraftState((d) => ({
       ...d,
@@ -199,6 +195,12 @@ function PlaybookDetailPage() {
       sections: d.sections.map((s) =>
         s.id === sectionId ? { ...s, steps: s.steps.map((st) => (st.id === stepId ? { ...st, ...patch } : st)) } : s,
       ),
+    }));
+  }
+  function moveStep(sectionId: string, index: number, dir: -1 | 1) {
+    updateDraftState((d) => ({
+      ...d,
+      sections: d.sections.map((s) => (s.id === sectionId ? { ...s, steps: moveItem(s.steps, index, dir) } : s)),
     }));
   }
   function addField(sectionId: string, stepId: string) {
@@ -223,6 +225,16 @@ function PlaybookDetailPage() {
                 st.id === stepId ? { ...st, fields: st.fields.filter((f) => f.key !== fieldKey) } : st,
               ),
             }
+          : s,
+      ),
+    }));
+  }
+  function moveField(sectionId: string, stepId: string, index: number, dir: -1 | 1) {
+    updateDraftState((d) => ({
+      ...d,
+      sections: d.sections.map((s) =>
+        s.id === sectionId
+          ? { ...s, steps: s.steps.map((st) => (st.id === stepId ? { ...st, fields: moveItem(st.fields, index, dir) } : st)) }
           : s,
       ),
     }));
@@ -317,36 +329,39 @@ function PlaybookDetailPage() {
         </div>
       </section>
 
-      <section className="rounded-lg border border-border bg-card p-4">
-        <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold">Structure du Playbook</h2>
-          <button
-            type="button"
-            onClick={() => setJsonMode((v) => !v)}
-            className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
-          >
-            {jsonMode ? "Éditeur structuré" : "Éditer en JSON"}
-          </button>
-        </div>
-
-        {jsonMode ? (
-          <div className="mt-3 space-y-2">
-            <textarea
-              value={jsonText}
-              onChange={(e) => setJsonText(e.target.value)}
-              rows={24}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs"
-            />
-            {jsonError && <p className="text-xs text-destructive">{jsonError}</p>}
-            <button
-              type="button"
-              onClick={applyJson}
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
-            >
-              Appliquer le JSON
-            </button>
-          </div>
+      <section
+        className={`rounded-lg border p-4 ${issues.length > 0 ? "border-amber-300 bg-amber-50" : "border-emerald-300 bg-emerald-50"}`}
+      >
+        <h2 className="text-sm font-semibold">État de publication</h2>
+        {issues.length === 0 ? (
+          <p className="mt-1 text-xs text-emerald-800">Aucun problème détecté — ce Playbook est prêt à être publié.</p>
         ) : (
+          <ul className="mt-1 list-disc pl-5 text-xs text-amber-800">
+            {issues.map((issue, i) => (
+              <li key={i}>{issue}</li>
+            ))}
+          </ul>
+        )}
+      </section>
+
+      <div className="flex flex-wrap gap-2 border-b border-border pb-2">
+        {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
+          <button
+            key={t}
+            type="button"
+            onClick={() => setTab(t)}
+            className={`rounded-md px-3 py-1.5 text-xs font-medium ${
+              tab === t ? "bg-primary text-primary-foreground" : "border border-input bg-background hover:bg-accent"
+            }`}
+          >
+            {TAB_LABELS[t]}
+          </button>
+        ))}
+      </div>
+
+      {tab === "content" && (
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold">Structure du Playbook</h2>
           <div className="mt-3 space-y-4">
             {draft.sections.map((section, sIdx) => (
               <div key={section.id} className="rounded-md border border-border p-3">
@@ -357,6 +372,22 @@ function PlaybookDetailPage() {
                     className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm font-medium"
                   />
                   <span className="text-xs text-muted-foreground">Section {sIdx + 1}</span>
+                  <button
+                    type="button"
+                    onClick={() => moveSection(sIdx, -1)}
+                    disabled={sIdx === 0}
+                    className="rounded-md border border-input bg-background px-1.5 py-1 text-xs disabled:opacity-30"
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => moveSection(sIdx, 1)}
+                    disabled={sIdx === draft.sections.length - 1}
+                    className="rounded-md border border-input bg-background px-1.5 py-1 text-xs disabled:opacity-30"
+                  >
+                    ↓
+                  </button>
                   <button
                     type="button"
                     onClick={() => removeSection(section.id)}
@@ -378,6 +409,22 @@ function PlaybookDetailPage() {
                         <span className="text-xs text-muted-foreground">Étape {stIdx + 1}</span>
                         <button
                           type="button"
+                          onClick={() => moveStep(section.id, stIdx, -1)}
+                          disabled={stIdx === 0}
+                          className="rounded-md border border-input bg-background px-1.5 py-1 text-xs disabled:opacity-30"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveStep(section.id, stIdx, 1)}
+                          disabled={stIdx === section.steps.length - 1}
+                          className="rounded-md border border-input bg-background px-1.5 py-1 text-xs disabled:opacity-30"
+                        >
+                          ↓
+                        </button>
+                        <button
+                          type="button"
                           onClick={() => removeStep(section.id, step.id)}
                           className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
                         >
@@ -392,15 +439,49 @@ function PlaybookDetailPage() {
                         className="mt-2 w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
                       />
 
-                      <div className="mt-3 space-y-2 pl-3">
-                        {step.fields.map((field) => (
-                          <FieldEditor
-                            key={field.key}
-                            field={field}
-                            onChangeType={(type) => changeFieldType(section.id, step.id, field.key, type)}
-                            onPatch={(patch) => updateField(section.id, step.id, field.key, patch)}
-                            onRemove={() => removeField(section.id, step.id, field.key)}
+                      <details className="mt-2 rounded-md border border-border bg-background p-2">
+                        <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                          Condition d'affichage de l'étape
+                        </summary>
+                        <div className="mt-2">
+                          <ConditionGroupEditor
+                            group={step.displayWhen}
+                            onChange={(next) => updateStep(section.id, step.id, { displayWhen: next })}
+                            fields={fieldSummaries.filter((f) => !step.fields.some((sf) => sf.key === f.key))}
+                            emptyHint="Cette étape est toujours affichée (aucune condition)."
                           />
+                        </div>
+                      </details>
+
+                      <div className="mt-3 space-y-2 pl-3">
+                        {step.fields.map((field, fIdx) => (
+                          <div key={field.key}>
+                            <div className="flex justify-end gap-1 pb-1">
+                              <button
+                                type="button"
+                                onClick={() => moveField(section.id, step.id, fIdx, -1)}
+                                disabled={fIdx === 0}
+                                className="rounded-md border border-input bg-background px-1.5 py-0.5 text-xs disabled:opacity-30"
+                              >
+                                ↑
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => moveField(section.id, step.id, fIdx, 1)}
+                                disabled={fIdx === step.fields.length - 1}
+                                className="rounded-md border border-input bg-background px-1.5 py-0.5 text-xs disabled:opacity-30"
+                              >
+                                ↓
+                              </button>
+                            </div>
+                            <FieldEditor
+                              field={field}
+                              fields={fieldSummaries}
+                              onChangeType={(type) => changeFieldType(section.id, step.id, field.key, type)}
+                              onPatch={(patch) => updateField(section.id, step.id, field.key, patch)}
+                              onRemove={() => removeField(section.id, step.id, field.key)}
+                            />
+                          </div>
                         ))}
                         <button
                           type="button"
@@ -429,12 +510,58 @@ function PlaybookDetailPage() {
             >
               + Section
             </button>
-            <p className="text-xs text-muted-foreground">
-              Logique conditionnelle, mapping vers le Dossier et règles de cohérence : utilisez « Éditer en JSON » pour l'instant.
-            </p>
           </div>
-        )}
-      </section>
+        </section>
+      )}
+
+      {tab === "rules" && (
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold">Règles de cohérence</h2>
+          <div className="mt-3">
+            <ValidationRulesEditor
+              rules={draft.validationRules}
+              onChange={(next) => updateDraftState((d) => ({ ...d, validationRules: next }))}
+              fields={fieldSummaries}
+              steps={stepSummaries}
+            />
+          </div>
+        </section>
+      )}
+
+      {tab === "brief" && (
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold">Dossier Commercial</h2>
+          <div className="mt-3">
+            <BriefConfigEditor
+              briefConfig={draft.briefConfig}
+              onChange={(next) => updateDraftState((d) => ({ ...d, briefConfig: next }))}
+              fields={fieldSummaries}
+            />
+          </div>
+        </section>
+      )}
+
+      {tab === "json" && (
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold">JSON avancé</h2>
+          <div className="mt-3 space-y-2">
+            <textarea
+              value={jsonText}
+              onChange={(e) => setJsonText(e.target.value)}
+              rows={24}
+              className="w-full rounded-md border border-input bg-background px-3 py-2 font-mono text-xs"
+            />
+            {jsonError && <p className="text-xs text-destructive">{jsonError}</p>}
+            <button
+              type="button"
+              onClick={applyJson}
+              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
+            >
+              Appliquer le JSON
+            </button>
+          </div>
+        </section>
+      )}
 
       <div className="flex flex-wrap items-center gap-3">
         <button
@@ -457,170 +584,6 @@ function PlaybookDetailPage() {
         {publishError && <p className="text-xs text-destructive">{publishError}</p>}
         {publishSuccess !== null && <p className="text-xs text-emerald-700">Version {publishSuccess} publiée.</p>}
       </div>
-    </div>
-  );
-}
-
-function FieldEditor({
-  field,
-  onChangeType,
-  onPatch,
-  onRemove,
-}: {
-  field: PlaybookField;
-  onChangeType: (type: PlaybookFieldType) => void;
-  onPatch: (patch: Record<string, unknown>) => void;
-  onRemove: () => void;
-}) {
-  return (
-    <div className="rounded-md border border-border bg-background p-3">
-      <div className="grid gap-2 sm:grid-cols-4">
-        <input
-          value={field.key}
-          onChange={(e) => onPatch({ key: e.target.value })}
-          placeholder="key"
-          className="rounded-md border border-input bg-background px-2 py-1 text-xs font-mono"
-        />
-        <input
-          value={field.label}
-          onChange={(e) => onPatch({ label: e.target.value })}
-          placeholder="Label"
-          className="rounded-md border border-input bg-background px-2 py-1 text-xs sm:col-span-2"
-        />
-        <select
-          value={field.type}
-          onChange={(e) => onChangeType(e.target.value as PlaybookFieldType)}
-          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-        >
-          {FIELD_TYPES.map((t) => (
-            <option key={t} value={t}>
-              {t}
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div className="mt-2 grid gap-2 sm:grid-cols-3">
-        <select
-          value={field.desirability}
-          onChange={(e) => onPatch({ desirability: e.target.value })}
-          className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-        >
-          <option value="required">Obligatoire</option>
-          <option value="recommended">Recommandé</option>
-          <option value="optional">Optionnel</option>
-        </select>
-        <label className="flex items-center gap-2 text-xs">
-          <input
-            type="checkbox"
-            checked={field.allowNotSure ?? false}
-            onChange={(e) => onPatch({ allowNotSure: e.target.checked })}
-          />
-          "Pas sûr" autorisé
-        </label>
-        <button
-          type="button"
-          onClick={onRemove}
-          className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
-        >
-          Supprimer le champ
-        </button>
-      </div>
-
-      <input
-        value={field.helpText ?? ""}
-        onChange={(e) => onPatch({ helpText: e.target.value })}
-        placeholder="Texte d'aide"
-        className="mt-2 w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
-      />
-
-      {(field.type === "single_choice" || field.type === "multi_choice" || field.type === "timeline") && (
-        <div className="mt-2">
-          <label className="text-xs text-muted-foreground">Options (une par ligne, "valeur|libellé")</label>
-          <textarea
-            defaultValue={optionsToText(field)}
-            onBlur={(e) => onPatch({ options: parseOptionsText(e.target.value) })}
-            rows={3}
-            className="mt-1 w-full rounded-md border border-input bg-background px-2 py-1 font-mono text-xs"
-          />
-        </div>
-      )}
-
-      {field.type === "measurement" && (
-        <select
-          value={field.unit}
-          onChange={(e) => onPatch({ unit: e.target.value })}
-          className="mt-2 rounded-md border border-input bg-background px-2 py-1 text-xs"
-        >
-          {["ft", "in", "m", "cm", "sqft", "sqm"].map((u) => (
-            <option key={u} value={u}>
-              {u}
-            </option>
-          ))}
-        </select>
-      )}
-
-      {field.type === "budget" && (
-        <div className="mt-2 grid gap-2 sm:grid-cols-2">
-          <select
-            value={field.mode}
-            onChange={(e) => onPatch({ mode: e.target.value })}
-            className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-          >
-            <option value="ranges">Fourchettes</option>
-            <option value="numeric">Montant libre</option>
-          </select>
-          {field.mode === "ranges" ? (
-            <textarea
-              defaultValue={optionsToText(field)}
-              onBlur={(e) => onPatch({ ranges: parseOptionsText(e.target.value) })}
-              rows={3}
-              className="rounded-md border border-input bg-background px-2 py-1 font-mono text-xs sm:col-span-2"
-            />
-          ) : (
-            <input
-              value={field.currency}
-              onChange={(e) => onPatch({ currency: e.target.value })}
-              placeholder="Devise"
-              className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-            />
-          )}
-        </div>
-      )}
-
-      {field.type === "photo" && (
-        <div className="mt-2 grid gap-2 sm:grid-cols-3">
-          <input
-            type="number"
-            value={field.maxFiles}
-            onChange={(e) => onPatch({ maxFiles: Number(e.target.value) })}
-            placeholder="Nb max de photos"
-            className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-          />
-          <input
-            type="number"
-            value={field.maxFileSizeMb}
-            onChange={(e) => onPatch({ maxFileSizeMb: Number(e.target.value) })}
-            placeholder="Taille max (Mo)"
-            className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-          />
-          <input
-            defaultValue={field.acceptMimeTypes.join(",")}
-            onBlur={(e) => onPatch({ acceptMimeTypes: e.target.value.split(",").map((s) => s.trim()).filter(Boolean) })}
-            placeholder="image/jpeg,image/png"
-            className="rounded-md border border-input bg-background px-2 py-1 text-xs"
-          />
-        </div>
-      )}
-
-      {field.type === "consent" && (
-        <textarea
-          value={field.consentText}
-          onChange={(e) => onPatch({ consentText: e.target.value })}
-          rows={2}
-          className="mt-2 w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
-        />
-      )}
     </div>
   );
 }
