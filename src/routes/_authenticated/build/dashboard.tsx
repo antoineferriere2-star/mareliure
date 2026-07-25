@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBuildDashboardStats } from "@/build/services/admin.data.functions";
@@ -114,12 +114,12 @@ function DashboardPage() {
             <ul className="mt-3 space-y-2 text-sm">
               {stats.recentRequests.map((r) => (
                 <li key={r.id} className="flex items-center justify-between border-b border-border/60 pb-2 last:border-b-0">
-                  <div className="min-w-0">
+                  <Link to="/build/requests/$id" params={{ id: r.id }} className="min-w-0 hover:underline">
                     <div className="truncate text-foreground">{r.request_type}</div>
                     <div className="text-xs text-muted-foreground">
                       {r.source_path} · {new Date(r.created_at).toLocaleString()}
                     </div>
-                  </div>
+                  </Link>
                   <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase text-muted-foreground">
                     {r.status}
                   </span>

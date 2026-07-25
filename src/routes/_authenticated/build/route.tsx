@@ -11,6 +11,7 @@ import {
   FolderKanban,
   Brain,
   Settings,
+  Inbox,
 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
@@ -29,7 +30,7 @@ export const Route = createFileRoute("/_authenticated/build")({
 });
 
 type NavItem = {
-  to: "/build/dashboard" | "/build/missions" | "/build/playbooks" | "/build/dossiers" | "/build/knowledge" | "/build/settings" | "/build/onboarding";
+  to: "/build/dashboard" | "/build/missions" | "/build/playbooks" | "/build/dossiers" | "/build/knowledge" | "/build/settings" | "/build/onboarding" | "/build/requests";
   label: string;
   icon: LucideIcon;
   exact?: boolean;
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   { to: "/build/missions", label: "Missions", icon: ClipboardList },
   { to: "/build/playbooks", label: "Playbooks", icon: BookOpen },
   { to: "/build/dossiers", label: "Dossiers", icon: FolderKanban },
+  { to: "/build/requests", label: "Requests", icon: Inbox },
   { to: "/build/knowledge", label: "Knowledge", icon: Brain },
   { to: "/build/settings", label: "Settings", icon: Settings },
 ];
