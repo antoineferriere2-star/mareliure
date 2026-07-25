@@ -277,6 +277,8 @@ export type Database = {
       }
       build_public_requests: {
         Row: {
+          audit_analyzed_at: string | null
+          audit_result: Json | null
           consent: boolean
           created_at: string
           id: string
@@ -289,6 +291,8 @@ export type Database = {
           user_agent: string | null
         }
         Insert: {
+          audit_analyzed_at?: string | null
+          audit_result?: Json | null
           consent?: boolean
           created_at?: string
           id?: string
@@ -301,6 +305,8 @@ export type Database = {
           user_agent?: string | null
         }
         Update: {
+          audit_analyzed_at?: string | null
+          audit_result?: Json | null
           consent?: boolean
           created_at?: string
           id?: string
