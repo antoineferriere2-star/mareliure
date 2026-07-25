@@ -13,6 +13,7 @@ import { fetchSitePublicHtml } from "@/build/onboarding/safeFetch.server";
 import { extractSiteText } from "@/build/onboarding/extractText";
 import { missionProposalSchema } from "@/build/schema/missionProposal";
 import { playbookSchema } from "@/build/schema/playbook";
+import { expandPlaybookDraft } from "@/build/onboarding/expandPlaybookDraft";
 
 export const analyzeOnboardingSite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -71,6 +72,47 @@ export const getPublishedPlaybookSchema = createServerFn({ method: "GET" })
     const parsed = playbookSchema.safeParse(version.schema);
     if (!parsed.success) throw new Response("Schéma de Playbook invalide.", { status: 500 });
     return parsed.data;
+  });
+
+/**
+ * When no published Playbook matches the detected business type/product,
+ * generate a draft one instead of leaving the admin stuck. Always saved
+ * unpublished (published_version_id stays null) — the admin must review,
+ * adjust and publish it via the ordinary Playbook editor before it can ever
+ * be matched to a real Mission (CLAUDE.md: the AI proposes, it never
+ * decides for the commercial).
+ */
+export const generatePlaybookFromAI = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ businessType: z.string().min(1), product: z.string().min(1) }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+
+    const { runPlaybookDraftGeneration } = await import("@/build/ai/playbookDraftGeneration");
+    const result = await runPlaybookDraftGeneration(data.businessType, data.product);
+    if (result.status === "error" || !result.data) {
+      throw new Response(result.error ?? "Génération IA impossible.", { status: 502 });
+    }
+
+    const draftSchema = expandPlaybookDraft(result.data, data.businessType, data.product);
+
+    const sb = await admin();
+    const { data: playbook, error } = await sb
+      .from("build_playbooks")
+      .insert({
+        name: `${data.product} — v1`,
+        description: `Brouillon généré par IA pour ${data.businessType} / ${data.product}.`,
+        project_type: `${data.businessType} ${data.product}`,
+        draft_schema: draftSchema as unknown as Json,
+        created_by: context.userId,
+      })
+      .select()
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    if (!playbook) throw new Response("Playbook creation failed.", { status: 500 });
+    return playbook;
   });
 
 export const createAndPublishMissionFromOnboarding = createServerFn({ method: "POST" })

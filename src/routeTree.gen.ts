@@ -37,6 +37,8 @@ import { Route as AuthenticatedBuildMissionsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedBuildMissionsNewRouteImport } from './routes/_authenticated/build/missions.new'
 import { Route as AuthenticatedBuildPlaybooksIndexRouteImport } from './routes/_authenticated/build/playbooks.index'
 import { Route as AuthenticatedBuildPlaybooksIdRouteImport } from './routes/_authenticated/build/playbooks.$id'
+import { Route as AuthenticatedBuildRequestsIndexRouteImport } from './routes/_authenticated/build/requests.index'
+import { Route as AuthenticatedBuildRequestsIdRouteImport } from './routes/_authenticated/build/requests.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -190,6 +192,18 @@ const AuthenticatedBuildPlaybooksIdRoute =
     path: '/playbooks/$id',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
+const AuthenticatedBuildRequestsIndexRoute =
+  AuthenticatedBuildRequestsIndexRouteImport.update({
+    id: '/requests/',
+    path: '/requests/',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedBuildRequestsIdRoute =
+  AuthenticatedBuildRequestsIdRouteImport.update({
+    id: '/requests/$id',
+    path: '/requests/$id',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -216,9 +230,11 @@ export interface FileRoutesByFullPath {
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
+  '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
   '/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
+  '/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -243,9 +259,11 @@ export interface FileRoutesByTo {
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
+  '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/build/dossiers': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions': typeof AuthenticatedBuildMissionsIndexRoute
   '/build/playbooks': typeof AuthenticatedBuildPlaybooksIndexRoute
+  '/build/requests': typeof AuthenticatedBuildRequestsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -274,9 +292,11 @@ export interface FileRoutesById {
   '/_authenticated/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/_authenticated/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/_authenticated/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
+  '/_authenticated/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/_authenticated/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/_authenticated/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
   '/_authenticated/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
+  '/_authenticated/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -305,9 +325,11 @@ export interface FileRouteTypes {
     | '/build/missions/$id'
     | '/build/missions/new'
     | '/build/playbooks/$id'
+    | '/build/requests/$id'
     | '/build/dossiers/'
     | '/build/missions/'
     | '/build/playbooks/'
+    | '/build/requests/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -332,9 +354,11 @@ export interface FileRouteTypes {
     | '/build/missions/$id'
     | '/build/missions/new'
     | '/build/playbooks/$id'
+    | '/build/requests/$id'
     | '/build/dossiers'
     | '/build/missions'
     | '/build/playbooks'
+    | '/build/requests'
   id:
     | '__root__'
     | '/'
@@ -362,9 +386,11 @@ export interface FileRouteTypes {
     | '/_authenticated/build/missions/$id'
     | '/_authenticated/build/missions/new'
     | '/_authenticated/build/playbooks/$id'
+    | '/_authenticated/build/requests/$id'
     | '/_authenticated/build/dossiers/'
     | '/_authenticated/build/missions/'
     | '/_authenticated/build/playbooks/'
+    | '/_authenticated/build/requests/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -582,6 +608,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildPlaybooksIdRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
+    '/_authenticated/build/requests/': {
+      id: '/_authenticated/build/requests/'
+      path: '/requests'
+      fullPath: '/build/requests/'
+      preLoaderRoute: typeof AuthenticatedBuildRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/requests/$id': {
+      id: '/_authenticated/build/requests/$id'
+      path: '/requests/$id'
+      fullPath: '/build/requests/$id'
+      preLoaderRoute: typeof AuthenticatedBuildRequestsIdRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
   }
 }
 
@@ -612,8 +652,10 @@ interface AuthenticatedBuildRouteRouteChildren {
   AuthenticatedBuildIndexRoute: typeof AuthenticatedBuildIndexRoute
   AuthenticatedBuildDossiersIdRoute: typeof AuthenticatedBuildDossiersIdRoute
   AuthenticatedBuildPlaybooksIdRoute: typeof AuthenticatedBuildPlaybooksIdRoute
+  AuthenticatedBuildRequestsIdRoute: typeof AuthenticatedBuildRequestsIdRoute
   AuthenticatedBuildDossiersIndexRoute: typeof AuthenticatedBuildDossiersIndexRoute
   AuthenticatedBuildPlaybooksIndexRoute: typeof AuthenticatedBuildPlaybooksIndexRoute
+  AuthenticatedBuildRequestsIndexRoute: typeof AuthenticatedBuildRequestsIndexRoute
 }
 
 const AuthenticatedBuildRouteRouteChildren: AuthenticatedBuildRouteRouteChildren =
@@ -627,9 +669,11 @@ const AuthenticatedBuildRouteRouteChildren: AuthenticatedBuildRouteRouteChildren
     AuthenticatedBuildIndexRoute: AuthenticatedBuildIndexRoute,
     AuthenticatedBuildDossiersIdRoute: AuthenticatedBuildDossiersIdRoute,
     AuthenticatedBuildPlaybooksIdRoute: AuthenticatedBuildPlaybooksIdRoute,
+    AuthenticatedBuildRequestsIdRoute: AuthenticatedBuildRequestsIdRoute,
     AuthenticatedBuildDossiersIndexRoute: AuthenticatedBuildDossiersIndexRoute,
     AuthenticatedBuildPlaybooksIndexRoute:
       AuthenticatedBuildPlaybooksIndexRoute,
+    AuthenticatedBuildRequestsIndexRoute: AuthenticatedBuildRequestsIndexRoute,
   }
 
 const AuthenticatedBuildRouteRouteWithChildren =
@@ -667,3 +711,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
