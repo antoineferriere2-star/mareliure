@@ -37,6 +37,8 @@ import { Route as AuthenticatedBuildRequestsIndexRouteImport } from './routes/_a
 import { Route as AuthenticatedBuildPlaybooksIndexRouteImport } from './routes/_authenticated/build/playbooks.index'
 import { Route as AuthenticatedBuildMissionsIndexRouteImport } from './routes/_authenticated/build/missions.index'
 import { Route as AuthenticatedBuildDossiersIndexRouteImport } from './routes/_authenticated/build/dossiers.index'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
 import { Route as AuthenticatedBuildRequestsIdRouteImport } from './routes/_authenticated/build/requests.$id'
 import { Route as AuthenticatedBuildPlaybooksIdRouteImport } from './routes/_authenticated/build/playbooks.$id'
@@ -196,6 +198,16 @@ const AuthenticatedBuildDossiersIndexRoute =
     path: '/dossiers/',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedPortalDossiersIdRoute =
   AuthenticatedPortalDossiersIdRouteImport.update({
     id: '/dossiers/$id',
@@ -262,6 +274,8 @@ export interface FileRoutesByFullPath {
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
   '/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
@@ -294,6 +308,8 @@ export interface FileRoutesByTo {
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/build/dossiers': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions': typeof AuthenticatedBuildMissionsIndexRoute
   '/build/playbooks': typeof AuthenticatedBuildPlaybooksIndexRoute
@@ -331,6 +347,8 @@ export interface FileRoutesById {
   '/_authenticated/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/_authenticated/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/_authenticated/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
+  '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
+  '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/_authenticated/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/_authenticated/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
   '/_authenticated/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
@@ -368,6 +386,8 @@ export interface FileRouteTypes {
     | '/build/playbooks/$id'
     | '/build/requests/$id'
     | '/portal/dossiers/$id'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/build/dossiers/'
     | '/build/missions/'
     | '/build/playbooks/'
@@ -400,6 +420,8 @@ export interface FileRouteTypes {
     | '/build/playbooks/$id'
     | '/build/requests/$id'
     | '/portal/dossiers/$id'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/build/dossiers'
     | '/build/missions'
     | '/build/playbooks'
@@ -436,6 +458,8 @@ export interface FileRouteTypes {
     | '/_authenticated/build/playbooks/$id'
     | '/_authenticated/build/requests/$id'
     | '/_authenticated/portal/dossiers/$id'
+    | '/lovable/email/auth/preview'
+    | '/lovable/email/auth/webhook'
     | '/_authenticated/build/dossiers/'
     | '/_authenticated/build/missions/'
     | '/_authenticated/build/playbooks/'
@@ -458,6 +482,8 @@ export interface RootRouteChildren {
   MPublicTokenRoute: typeof MPublicTokenRoute
   ApiPublicBuildPublicIntakeRoute: typeof ApiPublicBuildPublicIntakeRoute
   ApiPublicBuildRuntimeRoute: typeof ApiPublicBuildRuntimeRoute
+  LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
+  LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -658,6 +684,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildDossiersIndexRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/portal/dossiers/$id': {
       id: '/_authenticated/portal/dossiers/$id'
       path: '/dossiers/$id'
@@ -806,6 +846,8 @@ const rootRouteChildren: RootRouteChildren = {
   MPublicTokenRoute: MPublicTokenRoute,
   ApiPublicBuildPublicIntakeRoute: ApiPublicBuildPublicIntakeRoute,
   ApiPublicBuildRuntimeRoute: ApiPublicBuildRuntimeRoute,
+  LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
+  LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
