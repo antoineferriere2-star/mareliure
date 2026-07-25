@@ -8,6 +8,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { admin } from "./adminAuth.server";
 import { assertWorkspaceMember } from "./workspaceAuth.server";
+import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
 
 const COMMERCIAL_STATUSES = ["nouveau", "contacte", "devise", "gagne", "perdu"] as const;
 export type CommercialStatus = (typeof COMMERCIAL_STATUSES)[number];
@@ -51,6 +52,15 @@ export const listWorkspaceDossiers = createServerFn({ method: "GET" })
       .limit(200);
     if (error) throw new Response(error.message, { status: 500 });
     return dossiers ?? [];
+  });
+
+/** Non-blocking usage display for the portal's own workspace — never gates submission. */
+export const getMyWorkspaceUsage = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
+    return getWorkspaceUsageInternal(data.workspaceId);
   });
 
 export const getWorkspaceDossier = createServerFn({ method: "GET" })

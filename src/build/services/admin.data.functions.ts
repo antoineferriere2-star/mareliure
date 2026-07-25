@@ -6,6 +6,9 @@ import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import { playbookSchema } from "@/build/schema/playbook";
 import type { ProjectBrief } from "@/build/schema/brief";
 import { admin, assertAdmin } from "./adminAuth.server";
+import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
+import { PLAN_IDS, getPlanDefaults } from "@/build/billing/plans";
+import { wouldExceedActiveMissions } from "@/build/billing/quota";
 
 // ---------- Dashboard ----------
 
@@ -178,13 +181,36 @@ export const setMissionStatus = createServerFn({ method: "POST" })
     if (data.status === "active") {
       const { data: existing } = await sb
         .from("build_missions")
-        .select("public_token, published_at, playbook_version_id")
+        .select("public_token, published_at, playbook_version_id, workspace_id, status")
         .eq("id", data.id)
         .maybeSingle();
       if (!existing?.playbook_version_id) {
         throw new Response("Cannot activate a mission without a published Playbook version.", {
           status: 400,
         });
+      }
+      if (existing.workspace_id && existing.status !== "active") {
+        const { count: activeCount, error: countError } = await sb
+          .from("build_missions")
+          .select("id", { count: "exact", head: true })
+          .eq("workspace_id", existing.workspace_id)
+          .eq("status", "active");
+        if (countError) throw new Response(countError.message, { status: 500 });
+        const { data: workspace, error: wErr } = await sb
+          .from("build_workspaces")
+          .select("max_active_missions")
+          .eq("id", existing.workspace_id)
+          .maybeSingle();
+        if (wErr) throw new Response(wErr.message, { status: 500 });
+        if (
+          workspace &&
+          wouldExceedActiveMissions(activeCount ?? 0, workspace.max_active_missions)
+        ) {
+          throw new Response(
+            `This workspace has reached its plan's active Mission limit (${workspace.max_active_missions}). Increase the limit or pause another Mission first.`,
+            { status: 400 },
+          );
+        }
       }
       if (!existing?.public_token) patch.public_token = crypto.randomUUID().replace(/-/g, "");
       if (!existing?.published_at) patch.published_at = new Date().toISOString();
@@ -632,7 +658,7 @@ export const listWorkspaces = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data: workspaces, error } = await sb
       .from("build_workspaces")
-      .select("id, name, is_active, created_at")
+      .select("id, name, is_active, plan, max_active_missions, monthly_brief_quota, created_at")
       .order("created_at", { ascending: false });
     if (error) throw new Response(error.message, { status: 500 });
 
@@ -649,17 +675,67 @@ export const listWorkspaces = createServerFn({ method: "GET" })
 
 export const createWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ name: z.string().min(2).max(200) }).parse(data))
+  .inputValidator((data: unknown) =>
+    z.object({ name: z.string().min(2).max(200), plan: z.enum(PLAN_IDS).optional() }).parse(data),
+  )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
+    const plan = data.plan ?? "launch";
+    const defaults = getPlanDefaults(plan);
     const { data: inserted, error } = await sb
       .from("build_workspaces")
-      .insert({ name: data.name, created_by: context.userId })
+      .insert({
+        name: data.name,
+        created_by: context.userId,
+        plan,
+        max_active_missions: defaults.maxActiveMissions ?? 1,
+        monthly_brief_quota: defaults.monthlyBriefQuota ?? 50,
+      })
       .select()
       .maybeSingle();
     if (error) throw new Response(error.message, { status: 500 });
     return inserted;
+  });
+
+export const updateWorkspacePlan = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        plan: z.enum(PLAN_IDS),
+        max_active_missions: z.number().int().min(0).optional(),
+        monthly_brief_quota: z.number().int().min(0).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const defaults = getPlanDefaults(data.plan);
+    const { data: updated, error } = await sb
+      .from("build_workspaces")
+      .update({
+        plan: data.plan,
+        max_active_missions: data.max_active_missions ?? defaults.maxActiveMissions ?? 1,
+        monthly_brief_quota: data.monthly_brief_quota ?? defaults.monthlyBriefQuota ?? 50,
+      })
+      .eq("id", data.workspaceId)
+      .select()
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    if (!updated) throw new Response("Not found", { status: 404 });
+    return updated;
+  });
+
+/** Active-Mission and monthly-Project-Brief usage for a workspace, for the admin usage display. */
+export const getWorkspaceUsage = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    return getWorkspaceUsageInternal(data.workspaceId);
   });
 
 export const addWorkspaceMember = createServerFn({ method: "POST" })

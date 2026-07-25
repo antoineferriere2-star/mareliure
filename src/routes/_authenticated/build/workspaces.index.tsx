@@ -1,13 +1,23 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMutation, useQueryClient, useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+  useQuery,
+  queryOptions,
+} from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
   listWorkspaces,
   createWorkspace,
+  updateWorkspacePlan,
+  getWorkspaceUsage,
   addWorkspaceMember,
   removeWorkspaceMember,
 } from "@/build/services/admin.data.functions";
+import { PLAN_IDS, PLAN_DEFAULTS, type PlanId } from "@/build/billing/plans";
+import { usageLevel } from "@/build/billing/quota";
 
 export const Route = createFileRoute("/_authenticated/build/workspaces/")({
   ssr: false,
@@ -22,6 +32,46 @@ export const Route = createFileRoute("/_authenticated/build/workspaces/")({
 
 const workspacesKey = ["build-admin", "workspaces"] as const;
 
+const USAGE_STYLES = {
+  ok: "text-muted-foreground",
+  warning: "text-amber-700",
+  over: "text-destructive",
+} as const;
+
+function UsageLine({ label, used, quota }: { label: string; used: number; quota: number }) {
+  const level = usageLevel(used, quota);
+  return (
+    <p className={`text-xs ${USAGE_STYLES[level]}`}>
+      {label} : {used} / {quota}
+      {level === "warning" && " · approche de la limite"}
+      {level === "over" && " · limite atteinte"}
+    </p>
+  );
+}
+
+function WorkspaceUsage({ workspaceId }: { workspaceId: string }) {
+  const fetchUsage = useServerFn(getWorkspaceUsage);
+  const { data } = useQuery({
+    queryKey: ["build-admin", "workspace-usage", workspaceId] as const,
+    queryFn: () => fetchUsage({ data: { workspaceId } }),
+  });
+  if (!data) return null;
+  return (
+    <div className="mt-2 space-y-0.5">
+      <UsageLine
+        label="Missions actives"
+        used={data.activeMissions}
+        quota={data.maxActiveMissions}
+      />
+      <UsageLine
+        label="Project Briefs ce mois-ci"
+        used={data.monthlyBriefs}
+        quota={data.monthlyBriefQuota}
+      />
+    </div>
+  );
+}
+
 function WorkspacesPage() {
   const fetchWorkspaces = useServerFn(listWorkspaces);
   const opts = queryOptions({ queryKey: workspacesKey, queryFn: () => fetchWorkspaces() });
@@ -30,12 +80,27 @@ function WorkspacesPage() {
 
   const create = useServerFn(createWorkspace);
   const [newName, setNewName] = useState("");
+  const [newPlan, setNewPlan] = useState<PlanId>("launch");
   const createMutation = useMutation({
-    mutationFn: () => create({ data: { name: newName.trim() } }),
+    mutationFn: () => create({ data: { name: newName.trim(), plan: newPlan } }),
     onSuccess: () => {
       setNewName("");
       queryClient.invalidateQueries({ queryKey: workspacesKey });
     },
+  });
+
+  const updatePlan = useServerFn(updateWorkspacePlan);
+  const [limitDrafts, setLimitDrafts] = useState<
+    Record<string, { max_active_missions: string; monthly_brief_quota: string }>
+  >({});
+  const updatePlanMutation = useMutation({
+    mutationFn: (vars: {
+      workspaceId: string;
+      plan: PlanId;
+      max_active_missions?: number;
+      monthly_brief_quota?: number;
+    }) => updatePlan({ data: vars }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: workspacesKey }),
   });
 
   const addMember = useServerFn(addWorkspaceMember);
@@ -92,6 +157,20 @@ function WorkspacesPage() {
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground">Plan</label>
+          <select
+            value={newPlan}
+            onChange={(e) => setNewPlan(e.target.value as PlanId)}
+            className="mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            {PLAN_IDS.map((p) => (
+              <option key={p} value={p}>
+                {PLAN_DEFAULTS[p].label}
+              </option>
+            ))}
+          </select>
+        </div>
         <button
           type="submit"
           disabled={createMutation.isPending || newName.trim().length < 2}
@@ -107,62 +186,149 @@ function WorkspacesPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {workspaces.map((w) => (
-            <section key={w.id} className="rounded-lg border border-border bg-card p-4">
-              <div className="flex items-center justify-between">
-                <h2 className="text-sm font-semibold text-foreground">{w.name}</h2>
-                <span className="text-[10px] uppercase text-muted-foreground">
-                  {new Date(w.created_at).toLocaleDateString()}
-                </span>
-              </div>
+          {workspaces.map((w) => {
+            const draft = limitDrafts[w.id] ?? {
+              max_active_missions: String(w.max_active_missions),
+              monthly_brief_quota: String(w.monthly_brief_quota),
+            };
+            return (
+              <section key={w.id} className="rounded-lg border border-border bg-card p-4">
+                <div className="flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-foreground">{w.name}</h2>
+                  <span className="text-[10px] uppercase text-muted-foreground">
+                    {new Date(w.created_at).toLocaleDateString()}
+                  </span>
+                </div>
 
-              <ul className="mt-3 space-y-1">
-                {w.members.length === 0 && (
-                  <li className="text-xs text-muted-foreground">
-                    Aucun membre — le portail n'est accessible à personne.
-                  </li>
-                )}
-                {w.members.map((m) => (
-                  <li key={m.id} className="flex items-center justify-between text-xs">
-                    <span className="text-foreground">{m.email}</span>
-                    <button
-                      onClick={() => removeMemberMutation.mutate(m.id)}
-                      className="text-destructive hover:underline"
+                <WorkspaceUsage workspaceId={w.id} />
+
+                <div className="mt-3 flex flex-wrap items-end gap-2 rounded-md bg-muted/40 p-2.5">
+                  <div>
+                    <label className="block text-[10px] font-medium text-muted-foreground">
+                      Plan
+                    </label>
+                    <select
+                      value={w.plan}
+                      onChange={(e) => {
+                        const plan = e.target.value as PlanId;
+                        const defaults = PLAN_DEFAULTS[plan];
+                        updatePlanMutation.mutate({
+                          workspaceId: w.id,
+                          plan,
+                          max_active_missions: defaults.maxActiveMissions ?? w.max_active_missions,
+                          monthly_brief_quota: defaults.monthlyBriefQuota ?? w.monthly_brief_quota,
+                        });
+                      }}
+                      className="mt-1 rounded-md border border-input bg-background px-2 py-1 text-xs"
                     >
-                      Retirer
-                    </button>
-                  </li>
-                ))}
-              </ul>
+                      {PLAN_IDS.map((p) => (
+                        <option key={p} value={p}>
+                          {PLAN_DEFAULTS[p].label}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-medium text-muted-foreground">
+                      Missions actives max
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={draft.max_active_missions}
+                      onChange={(e) =>
+                        setLimitDrafts((prev) => ({
+                          ...prev,
+                          [w.id]: { ...draft, max_active_missions: e.target.value },
+                        }))
+                      }
+                      className="mt-1 w-24 rounded-md border border-input bg-background px-2 py-1 text-xs"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[10px] font-medium text-muted-foreground">
+                      Project Briefs / mois
+                    </label>
+                    <input
+                      type="number"
+                      min={0}
+                      value={draft.monthly_brief_quota}
+                      onChange={(e) =>
+                        setLimitDrafts((prev) => ({
+                          ...prev,
+                          [w.id]: { ...draft, monthly_brief_quota: e.target.value },
+                        }))
+                      }
+                      className="mt-1 w-24 rounded-md border border-input bg-background px-2 py-1 text-xs"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={updatePlanMutation.isPending}
+                    onClick={() =>
+                      updatePlanMutation.mutate({
+                        workspaceId: w.id,
+                        plan: w.plan as PlanId,
+                        max_active_missions: Number(draft.max_active_missions),
+                        monthly_brief_quota: Number(draft.monthly_brief_quota),
+                      })
+                    }
+                    className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+                  >
+                    Enregistrer les limites
+                  </button>
+                </div>
 
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const email = memberEmail[w.id]?.trim();
-                  if (email) addMemberMutation.mutate({ workspaceId: w.id, email });
-                }}
-                className="mt-3 flex flex-wrap items-center gap-2"
-              >
-                <input
-                  type="email"
-                  value={memberEmail[w.id] ?? ""}
-                  onChange={(e) => setMemberEmail((prev) => ({ ...prev, [w.id]: e.target.value }))}
-                  placeholder="email@client.com"
-                  className="flex-1 min-w-[200px] rounded-md border border-input bg-background px-3 py-1.5 text-xs"
-                />
-                <button
-                  type="submit"
-                  disabled={addMemberMutation.isPending}
-                  className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+                <ul className="mt-3 space-y-1">
+                  {w.members.length === 0 && (
+                    <li className="text-xs text-muted-foreground">
+                      Aucun membre — le portail n'est accessible à personne.
+                    </li>
+                  )}
+                  {w.members.map((m) => (
+                    <li key={m.id} className="flex items-center justify-between text-xs">
+                      <span className="text-foreground">{m.email}</span>
+                      <button
+                        onClick={() => removeMemberMutation.mutate(m.id)}
+                        className="text-destructive hover:underline"
+                      >
+                        Retirer
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const email = memberEmail[w.id]?.trim();
+                    if (email) addMemberMutation.mutate({ workspaceId: w.id, email });
+                  }}
+                  className="mt-3 flex flex-wrap items-center gap-2"
                 >
-                  Ajouter un membre
-                </button>
-              </form>
-              {memberError[w.id] && (
-                <p className="mt-1 text-xs text-destructive">{memberError[w.id]}</p>
-              )}
-            </section>
-          ))}
+                  <input
+                    type="email"
+                    value={memberEmail[w.id] ?? ""}
+                    onChange={(e) =>
+                      setMemberEmail((prev) => ({ ...prev, [w.id]: e.target.value }))
+                    }
+                    placeholder="email@client.com"
+                    className="flex-1 min-w-[200px] rounded-md border border-input bg-background px-3 py-1.5 text-xs"
+                  />
+                  <button
+                    type="submit"
+                    disabled={addMemberMutation.isPending}
+                    className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+                  >
+                    Ajouter un membre
+                  </button>
+                </form>
+                {memberError[w.id] && (
+                  <p className="mt-1 text-xs text-destructive">{memberError[w.id]}</p>
+                )}
+              </section>
+            );
+          })}
         </div>
       )}
     </div>

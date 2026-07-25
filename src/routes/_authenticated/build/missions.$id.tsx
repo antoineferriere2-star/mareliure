@@ -12,7 +12,9 @@ import {
 
 export const Route = createFileRoute("/_authenticated/build/missions/$id")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Mission — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({
+    meta: [{ title: "Mission — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }],
+  }),
   component: MissionDetailPage,
 });
 
@@ -30,7 +32,10 @@ function MissionDetailPage() {
   const [copied, setCopied] = useState(false);
 
   const listWs = useServerFn(listWorkspaces);
-  const wsOpts = queryOptions({ queryKey: ["build-admin", "workspaces"] as const, queryFn: () => listWs() });
+  const wsOpts = queryOptions({
+    queryKey: ["build-admin", "workspaces"] as const,
+    queryFn: () => listWs(),
+  });
   const { data: workspaces } = useSuspenseQuery(wsOpts);
 
   const statusMutation = useMutation({
@@ -56,16 +61,21 @@ function MissionDetailPage() {
     },
   });
 
-  const publicUrl = mission.public_token && mission.status === "active" && !mission.public_token_revoked_at
-    ? `${typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com"}/m/${mission.public_token}`
-    : null;
+  const publicUrl =
+    mission.public_token && mission.status === "active" && !mission.public_token_revoked_at
+      ? `${typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com"}/m/${mission.public_token}`
+      : null;
 
   return (
     <div className="space-y-6">
       <div>
-        <Link to="/build/missions" className="text-xs text-muted-foreground hover:underline">← Missions</Link>
+        <Link to="/build/missions" className="text-xs text-muted-foreground hover:underline">
+          ← Missions
+        </Link>
         <h1 className="mt-2 text-2xl font-semibold text-foreground">{mission.name}</h1>
-        <p className="mt-1 text-sm text-muted-foreground">{mission.objective ?? "Sans objectif défini."}</p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {mission.objective ?? "Sans objectif défini."}
+        </p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2">
@@ -101,7 +111,9 @@ function MissionDetailPage() {
             )}
             <button
               onClick={() => {
-                if (confirm("Supprimer définitivement cette mission ? Cette action est irréversible.")) {
+                if (
+                  confirm("Supprimer définitivement cette mission ? Cette action est irréversible.")
+                ) {
                   deleteMutation.mutate();
                 }
               }}
@@ -111,6 +123,13 @@ function MissionDetailPage() {
               Supprimer
             </button>
           </div>
+          {statusMutation.isError && (
+            <p className="mt-2 text-xs text-destructive">
+              {statusMutation.error instanceof Error
+                ? statusMutation.error.message
+                : "Le changement de statut a échoué."}
+            </p>
+          )}
         </section>
 
         <section className="rounded-lg border border-border bg-card p-4">
@@ -137,7 +156,8 @@ function MissionDetailPage() {
             ))}
           </select>
           <p className="mt-1 text-xs text-muted-foreground">
-            Les Dossiers produits par cette mission apparaissent dans le portail de cet Espace Client.
+            Les Dossiers produits par cette mission apparaissent dans le portail de cet Espace
+            Client.
           </p>
         </section>
       </div>
@@ -176,10 +196,22 @@ function MissionDetailPage() {
       <section className="rounded-lg border border-border bg-card p-4">
         <h2 className="text-sm font-semibold">Détails techniques</h2>
         <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
-          <div><dt className="text-muted-foreground">Créée</dt><dd>{new Date(mission.created_at).toLocaleString()}</dd></div>
-          <div><dt className="text-muted-foreground">Mise à jour</dt><dd>{new Date(mission.updated_at).toLocaleString()}</dd></div>
-          <div><dt className="text-muted-foreground">Publiée</dt><dd>{mission.published_at ? new Date(mission.published_at).toLocaleString() : "—"}</dd></div>
-          <div><dt className="text-muted-foreground">ID</dt><dd className="font-mono">{mission.id}</dd></div>
+          <div>
+            <dt className="text-muted-foreground">Créée</dt>
+            <dd>{new Date(mission.created_at).toLocaleString()}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Mise à jour</dt>
+            <dd>{new Date(mission.updated_at).toLocaleString()}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">Publiée</dt>
+            <dd>{mission.published_at ? new Date(mission.published_at).toLocaleString() : "—"}</dd>
+          </div>
+          <div>
+            <dt className="text-muted-foreground">ID</dt>
+            <dd className="font-mono">{mission.id}</dd>
+          </div>
         </dl>
       </section>
     </div>

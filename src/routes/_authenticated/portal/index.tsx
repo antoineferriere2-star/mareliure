@@ -5,8 +5,10 @@ import { useMemo, useState } from "react";
 import {
   listMyWorkspaces,
   listWorkspaceDossiers,
+  getMyWorkspaceUsage,
   type CommercialStatus,
 } from "@/build/services/portal.data.functions";
+import { usageLevel } from "@/build/billing/quota";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
   ssr: false,
@@ -46,6 +48,31 @@ function StatusBadge({ status }: { status: string }) {
     >
       {label}
     </span>
+  );
+}
+
+const USAGE_BANNER_STYLES = {
+  ok: "border-border bg-card text-muted-foreground",
+  warning: "border-amber-300 bg-amber-50 text-amber-900",
+  over: "border-destructive/40 bg-destructive/5 text-destructive",
+} as const;
+
+function UsageBanner({ workspaceId }: { workspaceId: string }) {
+  const fetchUsage = useServerFn(getMyWorkspaceUsage);
+  const { data } = useQuery({
+    queryKey: ["portal", "workspace-usage", workspaceId] as const,
+    queryFn: () => fetchUsage({ data: { workspaceId } }),
+    enabled: workspaceId.length > 0,
+  });
+  if (!data) return null;
+  const level = usageLevel(data.monthlyBriefs, data.monthlyBriefQuota);
+  if (level === "ok") return null;
+  return (
+    <div className={`rounded-lg border px-4 py-2.5 text-sm ${USAGE_BANNER_STYLES[level]}`}>
+      {level === "over" ? "Quota mensuel atteint : " : "Vous approchez de votre quota mensuel : "}
+      {data.monthlyBriefs} / {data.monthlyBriefQuota} Project Briefs ce mois-ci. Aucune demande
+      n'est refusée pour autant — contactez l'équipe Métré Build pour ajuster votre plan si besoin.
+    </div>
   );
 }
 
@@ -117,6 +144,8 @@ function PortalHomePage() {
           </select>
         )}
       </header>
+
+      {workspaceId && <UsageBanner workspaceId={workspaceId} />}
 
       <div className="flex flex-wrap items-center gap-2">
         {STATUS_TABS.map((t) => (
