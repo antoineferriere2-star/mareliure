@@ -16,19 +16,33 @@ export const getBuildDashboardStats = createServerFn({ method: "GET" })
     await assertAdmin(supabase, userId);
     const sb = await admin();
 
-    const [missions, activeMissions, dossiers, audits, betas, sessions, submitted] = await Promise.all([
-      sb.from("build_missions").select("id", { count: "exact", head: true }),
-      sb.from("build_missions").select("id", { count: "exact", head: true }).eq("status", "active"),
-      sb.from("build_dossiers").select("id", { count: "exact", head: true }),
-      sb.from("build_public_requests").select("id", { count: "exact", head: true }).eq("request_type", "audit"),
-      sb.from("build_public_requests").select("id", { count: "exact", head: true }).eq("request_type", "private_beta"),
-      sb.from("build_runtime_sessions").select("id", { count: "exact", head: true }),
-      sb.from("build_runtime_sessions").select("id", { count: "exact", head: true }).eq("status", "submitted"),
-    ]);
+    const [missions, activeMissions, dossiers, audits, betas, sessions, submitted] =
+      await Promise.all([
+        sb.from("build_missions").select("id", { count: "exact", head: true }),
+        sb
+          .from("build_missions")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "active"),
+        sb.from("build_dossiers").select("id", { count: "exact", head: true }),
+        sb
+          .from("build_public_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("request_type", "audit"),
+        sb
+          .from("build_public_requests")
+          .select("id", { count: "exact", head: true })
+          .eq("request_type", "private_beta"),
+        sb.from("build_runtime_sessions").select("id", { count: "exact", head: true }),
+        sb
+          .from("build_runtime_sessions")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "submitted"),
+      ]);
 
     const totalSessions = sessions.count ?? 0;
     const submittedCount = submitted.count ?? 0;
-    const conversionRate = totalSessions > 0 ? Math.round((submittedCount / totalSessions) * 100) : 0;
+    const conversionRate =
+      totalSessions > 0 ? Math.round((submittedCount / totalSessions) * 100) : 0;
 
     const { data: recentDossiers } = await sb
       .from("build_dossiers")
@@ -68,7 +82,9 @@ export const listBuildMissions = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data, error } = await sb
       .from("build_missions")
-      .select("id, name, status, playbook_name, playbook_id, playbook_version_id, public_token, public_token_revoked_at, published_at, created_at, updated_at, objective")
+      .select(
+        "id, name, status, playbook_name, playbook_id, playbook_version_id, public_token, public_token_revoked_at, published_at, created_at, updated_at, objective",
+      )
       .order("created_at", { ascending: false });
     if (error) throw new Response(error.message, { status: 500 });
     return data ?? [];
@@ -93,14 +109,16 @@ export const getBuildMission = createServerFn({ method: "GET" })
 export const createBuildMission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({
-      name: z.string().min(2).max(200),
-      objective: z.string().max(1000).optional().nullable(),
-      playbook_id: z.string().uuid().optional().nullable(),
-      playbook_version_id: z.string().uuid().optional().nullable(),
-      playbook_name: z.string().max(200).optional().nullable(),
-      workspace_id: z.string().uuid().optional().nullable(),
-    }).parse(data),
+    z
+      .object({
+        name: z.string().min(2).max(200),
+        objective: z.string().max(1000).optional().nullable(),
+        playbook_id: z.string().uuid().optional().nullable(),
+        playbook_version_id: z.string().uuid().optional().nullable(),
+        playbook_name: z.string().max(200).optional().nullable(),
+        workspace_id: z.string().uuid().optional().nullable(),
+      })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -144,15 +162,19 @@ export const setMissionWorkspace = createServerFn({ method: "POST" })
 export const setMissionStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({
-      id: z.string().uuid(),
-      status: z.enum(["draft", "active", "paused", "archived"]),
-    }).parse(data),
+    z
+      .object({
+        id: z.string().uuid(),
+        status: z.enum(["draft", "active", "paused", "archived"]),
+      })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
-    const patch: { status: string; published_at?: string | null; public_token?: string } = { status: data.status };
+    const patch: { status: string; published_at?: string | null; public_token?: string } = {
+      status: data.status,
+    };
     if (data.status === "active") {
       const { data: existing } = await sb
         .from("build_missions")
@@ -160,7 +182,9 @@ export const setMissionStatus = createServerFn({ method: "POST" })
         .eq("id", data.id)
         .maybeSingle();
       if (!existing?.playbook_version_id) {
-        throw new Response("Cannot activate a mission without a published Playbook version.", { status: 400 });
+        throw new Response("Cannot activate a mission without a published Playbook version.", {
+          status: 400,
+        });
       }
       if (!existing?.public_token) patch.public_token = crypto.randomUUID().replace(/-/g, "");
       if (!existing?.published_at) patch.published_at = new Date().toISOString();
@@ -293,7 +317,11 @@ export const analyzeDossierWithAI = createServerFn({ method: "POST" })
       .eq("status", "approved");
 
     const { runAiAnalysis } = await import("@/build/ai/runAnalysis");
-    const insights = await runAiAnalysis(mission, dossier.content as unknown as ProjectBrief, notes ?? []);
+    const insights = await runAiAnalysis(
+      mission,
+      dossier.content as unknown as ProjectBrief,
+      notes ?? [],
+    );
 
     const { data: updated, error: uErr } = await sb
       .from("build_dossiers")
@@ -323,7 +351,9 @@ export const listBuildPlaybooks = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data, error } = await sb
       .from("build_playbooks")
-      .select("id, name, description, project_type, is_active, published_version_id, created_at, updated_at")
+      .select(
+        "id, name, description, project_type, is_active, published_version_id, created_at, updated_at",
+      )
       .order("created_at", { ascending: false });
     if (error) throw new Response(error.message, { status: 500 });
     return data ?? [];
@@ -372,11 +402,13 @@ export const getBuildPlaybook = createServerFn({ method: "GET" })
 export const createBuildPlaybook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({
-      name: z.string().min(2).max(200),
-      description: z.string().max(1000).optional().nullable(),
-      project_type: z.string().max(100).optional().nullable(),
-    }).parse(data),
+    z
+      .object({
+        name: z.string().min(2).max(200),
+        description: z.string().max(1000).optional().nullable(),
+        project_type: z.string().max(100).optional().nullable(),
+      })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -398,20 +430,25 @@ export const createBuildPlaybook = createServerFn({ method: "POST" })
 export const updatePlaybookDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({
-      id: z.string().uuid(),
-      name: z.string().min(2).max(200).optional(),
-      description: z.string().max(1000).optional().nullable(),
-      project_type: z.string().max(100).optional().nullable(),
-      is_active: z.boolean().optional(),
-      draft_schema: z.unknown(),
-    }).parse(data),
+    z
+      .object({
+        id: z.string().uuid(),
+        name: z.string().min(2).max(200).optional(),
+        description: z.string().max(1000).optional().nullable(),
+        project_type: z.string().max(100).optional().nullable(),
+        is_active: z.boolean().optional(),
+        draft_schema: z.unknown(),
+      })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const parsedSchema = playbookSchema.safeParse(data.draft_schema);
     if (!parsedSchema.success) {
-      throw new Response(`Invalid playbook schema: ${parsedSchema.error.issues[0]?.message ?? "malformed"}`, { status: 400 });
+      throw new Response(
+        `Invalid playbook schema: ${parsedSchema.error.issues[0]?.message ?? "malformed"}`,
+        { status: 400 },
+      );
     }
     const sb = await admin();
     const { data: updated, error } = await sb
@@ -496,7 +533,9 @@ export const deleteBuildPlaybook = createServerFn({ method: "POST" })
     const { error } = await sb.from("build_playbooks").delete().eq("id", data.id);
     if (error) {
       if (error.code === "23503") {
-        throw new Response("This playbook has live Missions attached and cannot be deleted.", { status: 409 });
+        throw new Response("This playbook has live Missions attached and cannot be deleted.", {
+          status: 409,
+        });
       }
       throw new Response(error.message, { status: 500 });
     }
@@ -523,11 +562,13 @@ export const listKnowledgeNotes = createServerFn({ method: "GET" })
 export const createKnowledgeNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({
-      title: z.string().min(1).max(200),
-      content: z.string().max(5000).optional().nullable(),
-      tags: z.array(z.string().max(60)).max(20).optional(),
-    }).parse(data),
+    z
+      .object({
+        title: z.string().min(1).max(200),
+        content: z.string().max(5000).optional().nullable(),
+        tags: z.array(z.string().max(60)).max(20).optional(),
+      })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -579,8 +620,10 @@ export const deleteKnowledgeNote = createServerFn({ method: "POST" })
 //
 // A workspace is a client business account for the /portal/* portal.
 // Provisioning is admin-only: no self-signup. Membership is looked up by
-// email against Supabase Auth (never created ad hoc) — an unknown email is
-// invited via the Auth admin API instead of silently failing.
+// email against Supabase Auth; an unknown email gets a fresh account
+// (email pre-confirmed, no password). Clients never set or use a password —
+// they sign in on /auth via a magic link / one-time code (signInWithOtp),
+// so there is nothing to invite them to click through here.
 
 export const listWorkspaces = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -629,16 +672,23 @@ export const addWorkspaceMember = createServerFn({ method: "POST" })
     const sb = await admin();
     const normalizedEmail = data.email.trim().toLowerCase();
 
-    const { data: existingUsers, error: listError } = await sb.auth.admin.listUsers({ perPage: 1000 });
+    const { data: existingUsers, error: listError } = await sb.auth.admin.listUsers({
+      perPage: 1000,
+    });
     if (listError) throw new Response(listError.message, { status: 500 });
     let userId = existingUsers.users.find((u) => u.email?.toLowerCase() === normalizedEmail)?.id;
 
     if (!userId) {
-      const { data: invited, error: inviteError } = await sb.auth.admin.inviteUserByEmail(normalizedEmail);
-      if (inviteError || !invited.user) {
-        throw new Response(inviteError?.message ?? "Impossible d'inviter cet email.", { status: 500 });
+      const { data: created, error: createError } = await sb.auth.admin.createUser({
+        email: normalizedEmail,
+        email_confirm: true,
+      });
+      if (createError || !created.user) {
+        throw new Response(createError?.message ?? "Impossible de créer ce compte.", {
+          status: 500,
+        });
       }
-      userId = invited.user.id;
+      userId = created.user.id;
     }
 
     const { data: inserted, error } = await sb
