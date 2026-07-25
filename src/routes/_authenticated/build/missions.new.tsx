@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMutation, useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { createBuildMission, listPublishablePlaybooks } from "@/build/services/admin.data.functions";
+import { createBuildMission, listPublishablePlaybooks, listWorkspaces } from "@/build/services/admin.data.functions";
 
 export const Route = createFileRoute("/_authenticated/build/missions/new")({
   ssr: false,
@@ -11,6 +11,7 @@ export const Route = createFileRoute("/_authenticated/build/missions/new")({
 });
 
 const playbooksKey = ["build-admin", "publishable-playbooks"] as const;
+const workspacesKey = ["build-admin", "workspaces"] as const;
 
 function NewMissionPage() {
   const navigate = useNavigate();
@@ -18,10 +19,14 @@ function NewMissionPage() {
   const listPlaybooks = useServerFn(listPublishablePlaybooks);
   const opts = queryOptions({ queryKey: playbooksKey, queryFn: () => listPlaybooks() });
   const { data: playbooks } = useSuspenseQuery(opts);
+  const listWs = useServerFn(listWorkspaces);
+  const wsOpts = queryOptions({ queryKey: workspacesKey, queryFn: () => listWs() });
+  const { data: workspaces } = useSuspenseQuery(wsOpts);
 
   const [name, setName] = useState("");
   const [objective, setObjective] = useState("");
   const [playbookId, setPlaybookId] = useState<string>("");
+  const [workspaceId, setWorkspaceId] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
 
   const mutation = useMutation({
@@ -34,6 +39,7 @@ function NewMissionPage() {
           playbook_id: selected?.id ?? null,
           playbook_version_id: selected?.published_version_id ?? null,
           playbook_name: selected?.name ?? null,
+          workspace_id: workspaceId || null,
         },
       });
     },
@@ -107,6 +113,25 @@ function NewMissionPage() {
               Aucun Playbook publié pour l'instant. La mission ne pourra pas être activée sans en choisir un.
             </p>
           )}
+        </div>
+
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground">Espace Client</label>
+          <select
+            value={workspaceId}
+            onChange={(e) => setWorkspaceId(e.target.value)}
+            className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Aucun (mission interne / démo)</option>
+            {workspaces.map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Les Dossiers produits par cette mission apparaîtront dans le portail de cet Espace Client.
+          </p>
         </div>
 
         {error && <p className="text-xs text-destructive">{error}</p>}

@@ -20,6 +20,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
+import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
@@ -28,6 +29,7 @@ import { Route as AuthenticatedBuildKnowledgeRouteImport } from './routes/_authe
 import { Route as AuthenticatedBuildMissionsRouteImport } from './routes/_authenticated/build/missions'
 import { Route as AuthenticatedBuildOnboardingRouteImport } from './routes/_authenticated/build/onboarding'
 import { Route as AuthenticatedBuildSettingsRouteImport } from './routes/_authenticated/build/settings'
+import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
 import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
 import { Route as AuthenticatedBuildDossiersIndexRouteImport } from './routes/_authenticated/build/dossiers.index'
@@ -39,6 +41,8 @@ import { Route as AuthenticatedBuildPlaybooksIndexRouteImport } from './routes/_
 import { Route as AuthenticatedBuildPlaybooksIdRouteImport } from './routes/_authenticated/build/playbooks.$id'
 import { Route as AuthenticatedBuildRequestsIndexRouteImport } from './routes/_authenticated/build/requests.index'
 import { Route as AuthenticatedBuildRequestsIdRouteImport } from './routes/_authenticated/build/requests.$id'
+import { Route as AuthenticatedBuildWorkspacesIndexRouteImport } from './routes/_authenticated/build/workspaces.index'
+import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -94,6 +98,12 @@ const AuthenticatedBuildRouteRoute = AuthenticatedBuildRouteRouteImport.update({
   path: '/build',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedPortalRouteRoute =
+  AuthenticatedPortalRouteRouteImport.update({
+    id: '/portal',
+    path: '/portal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
   id: '/demo/deck-project',
   path: '/demo/deck-project',
@@ -138,6 +148,12 @@ const AuthenticatedBuildSettingsRoute =
     id: '/settings',
     path: '/settings',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedPortalIndexRoute =
+  AuthenticatedPortalIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
 const ApiPublicBuildPublicIntakeRoute =
   ApiPublicBuildPublicIntakeRouteImport.update({
@@ -204,6 +220,18 @@ const AuthenticatedBuildRequestsIdRoute =
     path: '/requests/$id',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
+const AuthenticatedBuildWorkspacesIndexRoute =
+  AuthenticatedBuildWorkspacesIndexRouteImport.update({
+    id: '/workspaces/',
+    path: '/workspaces/',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedPortalDossiersIdRoute =
+  AuthenticatedPortalDossiersIdRouteImport.update({
+    id: '/dossiers/$id',
+    path: '/dossiers/$id',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -216,6 +244,7 @@ export interface FileRoutesByFullPath {
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
   '/build': typeof AuthenticatedBuildRouteRouteWithChildren
+  '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/build/dashboard': typeof AuthenticatedBuildDashboardRoute
@@ -226,15 +255,18 @@ export interface FileRoutesByFullPath {
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
   '/build/': typeof AuthenticatedBuildIndexRoute
+  '/portal/': typeof AuthenticatedPortalIndexRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
+  '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
   '/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
   '/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
+  '/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -255,15 +287,18 @@ export interface FileRoutesByTo {
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
   '/build': typeof AuthenticatedBuildIndexRoute
+  '/portal': typeof AuthenticatedPortalIndexRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
+  '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/build/dossiers': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions': typeof AuthenticatedBuildMissionsIndexRoute
   '/build/playbooks': typeof AuthenticatedBuildPlaybooksIndexRoute
   '/build/requests': typeof AuthenticatedBuildRequestsIndexRoute
+  '/build/workspaces': typeof AuthenticatedBuildWorkspacesIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -278,6 +313,7 @@ export interface FileRoutesById {
   '/private-beta': typeof PrivateBetaRoute
   '/terms': typeof TermsRoute
   '/_authenticated/build': typeof AuthenticatedBuildRouteRouteWithChildren
+  '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/_authenticated/build/dashboard': typeof AuthenticatedBuildDashboardRoute
@@ -288,15 +324,18 @@ export interface FileRoutesById {
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
   '/_authenticated/build/': typeof AuthenticatedBuildIndexRoute
+  '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
   '/_authenticated/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/_authenticated/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/_authenticated/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/_authenticated/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/_authenticated/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
+  '/_authenticated/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/_authenticated/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/_authenticated/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
   '/_authenticated/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
   '/_authenticated/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
+  '/_authenticated/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -311,6 +350,7 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/terms'
     | '/build'
+    | '/portal'
     | '/demo/deck-project'
     | '/m/$publicToken'
     | '/build/dashboard'
@@ -321,15 +361,18 @@ export interface FileRouteTypes {
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
     | '/build/'
+    | '/portal/'
     | '/build/dossiers/$id'
     | '/build/missions/$id'
     | '/build/missions/new'
     | '/build/playbooks/$id'
     | '/build/requests/$id'
+    | '/portal/dossiers/$id'
     | '/build/dossiers/'
     | '/build/missions/'
     | '/build/playbooks/'
     | '/build/requests/'
+    | '/build/workspaces/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -350,15 +393,18 @@ export interface FileRouteTypes {
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
     | '/build'
+    | '/portal'
     | '/build/dossiers/$id'
     | '/build/missions/$id'
     | '/build/missions/new'
     | '/build/playbooks/$id'
     | '/build/requests/$id'
+    | '/portal/dossiers/$id'
     | '/build/dossiers'
     | '/build/missions'
     | '/build/playbooks'
     | '/build/requests'
+    | '/build/workspaces'
   id:
     | '__root__'
     | '/'
@@ -372,6 +418,7 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/terms'
     | '/_authenticated/build'
+    | '/_authenticated/portal'
     | '/demo/deck-project'
     | '/m/$publicToken'
     | '/_authenticated/build/dashboard'
@@ -382,15 +429,18 @@ export interface FileRouteTypes {
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
     | '/_authenticated/build/'
+    | '/_authenticated/portal/'
     | '/_authenticated/build/dossiers/$id'
     | '/_authenticated/build/missions/$id'
     | '/_authenticated/build/missions/new'
     | '/_authenticated/build/playbooks/$id'
     | '/_authenticated/build/requests/$id'
+    | '/_authenticated/portal/dossiers/$id'
     | '/_authenticated/build/dossiers/'
     | '/_authenticated/build/missions/'
     | '/_authenticated/build/playbooks/'
     | '/_authenticated/build/requests/'
+    | '/_authenticated/build/workspaces/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -489,6 +539,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/portal': {
+      id: '/_authenticated/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/demo/deck-project': {
       id: '/demo/deck-project'
       path: '/demo/deck-project'
@@ -544,6 +601,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/build/settings'
       preLoaderRoute: typeof AuthenticatedBuildSettingsRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/portal/': {
+      id: '/_authenticated/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof AuthenticatedPortalIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
     '/api/public/build-public-intake': {
       id: '/api/public/build-public-intake'
@@ -622,6 +686,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildRequestsIdRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
+    '/_authenticated/build/workspaces/': {
+      id: '/_authenticated/build/workspaces/'
+      path: '/workspaces'
+      fullPath: '/build/workspaces/'
+      preLoaderRoute: typeof AuthenticatedBuildWorkspacesIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/portal/dossiers/$id': {
+      id: '/_authenticated/portal/dossiers/$id'
+      path: '/dossiers/$id'
+      fullPath: '/portal/dossiers/$id'
+      preLoaderRoute: typeof AuthenticatedPortalDossiersIdRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
   }
 }
 
@@ -656,6 +734,7 @@ interface AuthenticatedBuildRouteRouteChildren {
   AuthenticatedBuildDossiersIndexRoute: typeof AuthenticatedBuildDossiersIndexRoute
   AuthenticatedBuildPlaybooksIndexRoute: typeof AuthenticatedBuildPlaybooksIndexRoute
   AuthenticatedBuildRequestsIndexRoute: typeof AuthenticatedBuildRequestsIndexRoute
+  AuthenticatedBuildWorkspacesIndexRoute: typeof AuthenticatedBuildWorkspacesIndexRoute
 }
 
 const AuthenticatedBuildRouteRouteChildren: AuthenticatedBuildRouteRouteChildren =
@@ -674,6 +753,8 @@ const AuthenticatedBuildRouteRouteChildren: AuthenticatedBuildRouteRouteChildren
     AuthenticatedBuildPlaybooksIndexRoute:
       AuthenticatedBuildPlaybooksIndexRoute,
     AuthenticatedBuildRequestsIndexRoute: AuthenticatedBuildRequestsIndexRoute,
+    AuthenticatedBuildWorkspacesIndexRoute:
+      AuthenticatedBuildWorkspacesIndexRoute,
   }
 
 const AuthenticatedBuildRouteRouteWithChildren =
@@ -681,12 +762,30 @@ const AuthenticatedBuildRouteRouteWithChildren =
     AuthenticatedBuildRouteRouteChildren,
   )
 
+interface AuthenticatedPortalRouteRouteChildren {
+  AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
+  AuthenticatedPortalDossiersIdRoute: typeof AuthenticatedPortalDossiersIdRoute
+}
+
+const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildren =
+  {
+    AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
+    AuthenticatedPortalDossiersIdRoute: AuthenticatedPortalDossiersIdRoute,
+  }
+
+const AuthenticatedPortalRouteRouteWithChildren =
+  AuthenticatedPortalRouteRoute._addFileChildren(
+    AuthenticatedPortalRouteRouteChildren,
+  )
+
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedBuildRouteRoute: typeof AuthenticatedBuildRouteRouteWithChildren
+  AuthenticatedPortalRouteRoute: typeof AuthenticatedPortalRouteRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedBuildRouteRoute: AuthenticatedBuildRouteRouteWithChildren,
+  AuthenticatedPortalRouteRoute: AuthenticatedPortalRouteRouteWithChildren,
 }
 
 const AuthenticatedRouteRouteWithChildren =

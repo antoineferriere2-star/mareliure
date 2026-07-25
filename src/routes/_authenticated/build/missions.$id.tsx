@@ -2,7 +2,13 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { getBuildMission, setMissionStatus, deleteBuildMission } from "@/build/services/admin.data.functions";
+import {
+  getBuildMission,
+  setMissionStatus,
+  setMissionWorkspace,
+  deleteBuildMission,
+  listWorkspaces,
+} from "@/build/services/admin.data.functions";
 
 export const Route = createFileRoute("/_authenticated/build/missions/$id")({
   ssr: false,
@@ -19,8 +25,13 @@ function MissionDetailPage() {
   const { data: mission } = useSuspenseQuery(opts);
   const queryClient = useQueryClient();
   const patchStatus = useServerFn(setMissionStatus);
+  const patchWorkspace = useServerFn(setMissionWorkspace);
   const removeMission = useServerFn(deleteBuildMission);
   const [copied, setCopied] = useState(false);
+
+  const listWs = useServerFn(listWorkspaces);
+  const wsOpts = queryOptions({ queryKey: ["build-admin", "workspaces"] as const, queryFn: () => listWs() });
+  const { data: workspaces } = useSuspenseQuery(wsOpts);
 
   const statusMutation = useMutation({
     mutationFn: (status: "draft" | "active" | "paused" | "archived") =>
@@ -29,6 +40,12 @@ function MissionDetailPage() {
       queryClient.invalidateQueries({ queryKey: key });
       queryClient.invalidateQueries({ queryKey: ["build-admin", "missions"] });
     },
+  });
+
+  const workspaceMutation = useMutation({
+    mutationFn: (workspaceId: string) =>
+      patchWorkspace({ data: { id, workspace_id: workspaceId || null } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: key }),
   });
 
   const deleteMutation = useMutation({
@@ -102,6 +119,26 @@ function MissionDetailPage() {
           {mission.playbook_id && (
             <div className="mt-1 text-xs text-muted-foreground">ID: {mission.playbook_id}</div>
           )}
+        </section>
+
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold">Espace Client</h2>
+          <select
+            value={mission.workspace_id ?? ""}
+            onChange={(e) => workspaceMutation.mutate(e.target.value)}
+            disabled={workspaceMutation.isPending}
+            className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="">Aucun (mission interne / démo)</option>
+            {workspaces.map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.name}
+              </option>
+            ))}
+          </select>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Les Dossiers produits par cette mission apparaissent dans le portail de cet Espace Client.
+          </p>
         </section>
       </div>
 

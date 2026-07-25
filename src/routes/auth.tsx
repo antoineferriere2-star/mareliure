@@ -1,6 +1,9 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { requireBuildAdmin } from "@/build/services/admin.functions";
+import { requireWorkspaceAccess } from "@/build/services/workspace.functions";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -23,12 +26,35 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [info, setInfo] = useState<string | null>(null);
+  const checkAdmin = useServerFn(requireBuildAdmin);
+  const checkWorkspace = useServerFn(requireWorkspaceAccess);
+
+  // Admin and workspace-member are mutually exclusive roles in this app —
+  // check admin first since the internal team is the more privileged case.
+  async function goToHomeRoute() {
+    try {
+      await checkAdmin();
+      navigate({ to: "/build", replace: true });
+      return;
+    } catch {
+      // not admin — fall through to workspace check
+    }
+    try {
+      await checkWorkspace();
+      navigate({ to: "/portal", replace: true });
+      return;
+    } catch {
+      // not a workspace member either
+    }
+    setError("Ce compte n'a accès ni à l'admin ni à un Espace Client. Contacte l'équipe Métré Build AI.");
+  }
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) navigate({ to: "/build", replace: true });
+      if (data.session) void goToHomeRoute();
     });
-  }, [navigate]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -49,7 +75,7 @@ function AuthPage() {
       }
       if (data.session) {
         await router.invalidate();
-        navigate({ to: "/build", replace: true });
+        await goToHomeRoute();
       } else {
         setInfo("Compte créé. Si un email de confirmation est requis, vérifie ta boîte mail, sinon tu peux te connecter directement.");
         setMode("signin");
@@ -67,7 +93,7 @@ function AuthPage() {
       return;
     }
     await router.invalidate();
-    navigate({ to: "/build", replace: true });
+    await goToHomeRoute();
   }
 
   return (

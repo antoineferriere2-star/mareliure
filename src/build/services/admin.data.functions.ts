@@ -99,6 +99,7 @@ export const createBuildMission = createServerFn({ method: "POST" })
       playbook_id: z.string().uuid().optional().nullable(),
       playbook_version_id: z.string().uuid().optional().nullable(),
       playbook_name: z.string().max(200).optional().nullable(),
+      workspace_id: z.string().uuid().optional().nullable(),
     }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -112,12 +113,32 @@ export const createBuildMission = createServerFn({ method: "POST" })
         playbook_id: data.playbook_id ?? null,
         playbook_version_id: data.playbook_version_id ?? null,
         playbook_name: data.playbook_name ?? null,
+        workspace_id: data.workspace_id ?? null,
         status: "draft",
       })
       .select()
       .maybeSingle();
     if (error) throw new Response(error.message, { status: 500 });
     return inserted;
+  });
+
+export const setMissionWorkspace = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ id: z.string().uuid(), workspace_id: z.string().uuid().nullable() }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: updated, error } = await sb
+      .from("build_missions")
+      .update({ workspace_id: data.workspace_id })
+      .eq("id", data.id)
+      .select()
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    if (!updated) throw new Response("Not found", { status: 404 });
+    return updated;
   });
 
 export const setMissionStatus = createServerFn({ method: "POST" })
@@ -550,6 +571,97 @@ export const deleteKnowledgeNote = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const { error } = await sb.from("build_knowledge_notes").delete().eq("id", data.id);
+    if (error) throw new Response(error.message, { status: 500 });
+    return { ok: true as const };
+  });
+
+// ---------- Workspaces (Espace Client) ----------
+//
+// A workspace is a client business account for the /portal/* portal.
+// Provisioning is admin-only: no self-signup. Membership is looked up by
+// email against Supabase Auth (never created ad hoc) — an unknown email is
+// invited via the Auth admin API instead of silently failing.
+
+export const listWorkspaces = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: workspaces, error } = await sb
+      .from("build_workspaces")
+      .select("id, name, is_active, created_at")
+      .order("created_at", { ascending: false });
+    if (error) throw new Response(error.message, { status: 500 });
+
+    const { data: members, error: mErr } = await sb
+      .from("build_workspace_members")
+      .select("id, workspace_id, email, role");
+    if (mErr) throw new Response(mErr.message, { status: 500 });
+
+    return (workspaces ?? []).map((w) => ({
+      ...w,
+      members: (members ?? []).filter((m) => m.workspace_id === w.id),
+    }));
+  });
+
+export const createWorkspace = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ name: z.string().min(2).max(200) }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: inserted, error } = await sb
+      .from("build_workspaces")
+      .insert({ name: data.name, created_by: context.userId })
+      .select()
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    return inserted;
+  });
+
+export const addWorkspaceMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ workspaceId: z.string().uuid(), email: z.string().email() }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const normalizedEmail = data.email.trim().toLowerCase();
+
+    const { data: existingUsers, error: listError } = await sb.auth.admin.listUsers({ perPage: 1000 });
+    if (listError) throw new Response(listError.message, { status: 500 });
+    let userId = existingUsers.users.find((u) => u.email?.toLowerCase() === normalizedEmail)?.id;
+
+    if (!userId) {
+      const { data: invited, error: inviteError } = await sb.auth.admin.inviteUserByEmail(normalizedEmail);
+      if (inviteError || !invited.user) {
+        throw new Response(inviteError?.message ?? "Impossible d'inviter cet email.", { status: 500 });
+      }
+      userId = invited.user.id;
+    }
+
+    const { data: inserted, error } = await sb
+      .from("build_workspace_members")
+      .insert({ workspace_id: data.workspaceId, user_id: userId, email: normalizedEmail })
+      .select()
+      .maybeSingle();
+    if (error) {
+      if (error.code === "23505") {
+        throw new Response("Cette personne est déjà membre de cet Espace Client.", { status: 409 });
+      }
+      throw new Response(error.message, { status: 500 });
+    }
+    return inserted;
+  });
+
+export const removeWorkspaceMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { error } = await sb.from("build_workspace_members").delete().eq("id", data.id);
     if (error) throw new Response(error.message, { status: 500 });
     return { ok: true as const };
   });
