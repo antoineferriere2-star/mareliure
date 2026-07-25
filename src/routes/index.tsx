@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
 
 const title = "Métré Build — Project discovery for project-based businesses";
@@ -32,5 +33,20 @@ export const Route = createFileRoute("/")({
       },
     ],
   }),
-  component: BuildPublicHome,
+  component: HomeRoute,
 });
+
+// Supabase's configured Site URL sends magic-link / email-confirmation
+// redirects here instead of the app page we requested via `emailRedirectTo`
+// (its Redirect URLs allowlist needs that page added — a dashboard config
+// fix, not something this code can control). Until then, catch a stray
+// unprocessed session token in the hash and hand it to /auth, which already
+// knows how to detect the session and route to /build or /portal.
+function HomeRoute() {
+  useEffect(() => {
+    if (window.location.hash.includes("access_token")) {
+      window.location.replace(`/auth${window.location.hash}`);
+    }
+  }, []);
+  return <BuildPublicHome />;
+}
