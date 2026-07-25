@@ -455,6 +455,7 @@ export type Database = {
           max_active_missions: number
           monthly_brief_quota: number
           name: string
+          plan: string
           updated_at: string
         }
         Insert: {
@@ -465,6 +466,7 @@ export type Database = {
           max_active_missions?: number
           monthly_brief_quota?: number
           name: string
+          plan?: string
           updated_at?: string
         }
         Update: {
@@ -475,6 +477,7 @@ export type Database = {
           max_active_missions?: number
           monthly_brief_quota?: number
           name?: string
+          plan?: string
           updated_at?: string
         }
         Relationships: []
