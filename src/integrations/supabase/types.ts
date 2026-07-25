@@ -18,9 +18,13 @@ export type Database = {
         Row: {
           ai_analyzed_at: string | null
           ai_insights: Json | null
+          assigned_to_user_id: string | null
+          commercial_notes: string | null
+          commercial_status: string
           content: Json
           created_at: string
           id: string
+          last_activity_at: string
           mission_id: string | null
           next_questions: Json
           session_id: string | null
@@ -32,9 +36,13 @@ export type Database = {
         Insert: {
           ai_analyzed_at?: string | null
           ai_insights?: Json | null
+          assigned_to_user_id?: string | null
+          commercial_notes?: string | null
+          commercial_status?: string
           content?: Json
           created_at?: string
           id?: string
+          last_activity_at?: string
           mission_id?: string | null
           next_questions?: Json
           session_id?: string | null
@@ -46,9 +54,13 @@ export type Database = {
         Update: {
           ai_analyzed_at?: string | null
           ai_insights?: Json | null
+          assigned_to_user_id?: string | null
+          commercial_notes?: string | null
+          commercial_status?: string
           content?: Json
           created_at?: string
           id?: string
+          last_activity_at?: string
           mission_id?: string | null
           next_questions?: Json
           session_id?: string | null
@@ -70,6 +82,13 @@ export type Database = {
             columns: ["session_id"]
             isOneToOne: false
             referencedRelation: "build_runtime_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "build_dossiers_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "build_workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -168,6 +187,13 @@ export type Database = {
             columns: ["playbook_version_id"]
             isOneToOne: false
             referencedRelation: "build_playbook_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "build_missions_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "build_workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -384,6 +410,68 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      build_workspace_members: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          role: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          role?: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          role?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_workspace_members_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "build_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      build_workspaces: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       user_roles: {
         Row: {
