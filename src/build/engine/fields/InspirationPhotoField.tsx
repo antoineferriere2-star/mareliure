@@ -60,7 +60,7 @@ function HypothesisRow({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder="Not detected — add details if needed"
-        className="mt-2 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
+        className="mt-2 w-full min-w-0 rounded-md border border-slate-200 px-2 py-1 text-sm"
       />
     </div>
   );
@@ -140,7 +140,7 @@ export function InspirationPhotoField({
           id={field.key}
           type="file"
           accept={field.acceptMimeTypes.join(",")}
-          className="mt-4"
+          className="mt-4 w-full min-w-0"
           disabled={analyzing}
           onChange={(event) => onFileSelected(event.target.files)}
         />

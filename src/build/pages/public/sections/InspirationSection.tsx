@@ -65,12 +65,16 @@ export function InspirationPreview() {
   const [answer, setAnswer] = useState<AnswerValue>(demoInspirationAnswer);
   return (
     <div className="grid min-w-0 gap-4 sm:grid-cols-2 sm:items-start">
-      <InspirationIllustration />
-      <InspirationPhotoField
-        field={demoInspirationPhotoField}
-        value={answer}
-        onChange={setAnswer}
-      />
+      <div className="min-w-0">
+        <InspirationIllustration />
+      </div>
+      <div className="min-w-0">
+        <InspirationPhotoField
+          field={demoInspirationPhotoField}
+          value={answer}
+          onChange={setAnswer}
+        />
+      </div>
     </div>
   );
 }
