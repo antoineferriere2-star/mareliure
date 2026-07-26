@@ -8,6 +8,7 @@ import {
   createWorkspaceBillingPortalSession,
 } from "@/build/services/billing.data.functions";
 import { PLAN_DEFAULTS, type PlanId } from "@/build/billing/plans";
+import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 
 export const Route = createFileRoute("/_authenticated/portal/billing")({
   ssr: false,
@@ -17,6 +18,8 @@ export const Route = createFileRoute("/_authenticated/portal/billing")({
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
+  pendingComponent: PortalPending,
+  errorComponent: PortalError,
   component: PortalBillingPage,
 });
 
@@ -29,7 +32,9 @@ function PortalBillingPage() {
     queryFn: () => fetchWorkspaces(),
   });
   const { data: workspaces } = useSuspenseQuery(wsOpts);
-  const [workspaceId] = useState<string>(workspaces[0]?.id ?? "");
+  const [workspaceId, setWorkspaceId] = useState<string>(workspaces[0]?.id ?? "");
+  const currentWorkspace = workspaces.find((w) => w.id === workspaceId);
+  const canManageBilling = currentWorkspace?.role === "owner";
 
   const checkoutResult =
     typeof window !== "undefined"
@@ -37,7 +42,11 @@ function PortalBillingPage() {
       : null;
 
   const fetchBilling = useServerFn(getMyWorkspaceBilling);
-  const { data: billing } = useQuery({
+  const {
+    data: billing,
+    isPending: billingPending,
+    error: billingError,
+  } = useQuery({
     queryKey: ["portal", "billing", workspaceId] as const,
     queryFn: () => fetchBilling({ data: { workspaceId } }),
     enabled: workspaceId.length > 0,
@@ -72,12 +81,34 @@ function PortalBillingPage() {
 
   return (
     <div className="space-y-6">
-      <header>
-        <h1 className="text-2xl font-semibold text-foreground">Facturation</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Choisissez ou changez votre plan. Le paiement est géré par Stripe.
-        </p>
+      <header className="flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Facturation</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Choisissez ou changez votre plan. Le paiement est géré par Stripe.
+          </p>
+        </div>
+        {workspaces.length > 1 && (
+          <select
+            value={workspaceId}
+            onChange={(e) => setWorkspaceId(e.target.value)}
+            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            {workspaces.map((w) => (
+              <option key={w.id} value={w.id}>
+                {w.name}
+              </option>
+            ))}
+          </select>
+        )}
       </header>
+
+      {!canManageBilling && (
+        <div className="rounded-lg border border-border bg-muted/40 px-4 py-2.5 text-sm text-muted-foreground">
+          Consultation seule : seul le propriétaire de cet Espace Client peut changer de plan ou
+          gérer l'abonnement.
+        </div>
+      )}
 
       {checkoutResult === "success" && (
         <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900">
@@ -89,6 +120,15 @@ function PortalBillingPage() {
           Paiement annulé — aucun changement n'a été effectué.
         </div>
       )}
+
+      {billingError && (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {billingError instanceof Error
+            ? billingError.message
+            : "Impossible de charger votre facturation."}
+        </p>
+      )}
+      {billingPending && !billingError && <PortalPending />}
 
       {billing && (
         <div className="rounded-lg border border-border bg-card p-4">
@@ -103,7 +143,7 @@ function PortalBillingPage() {
               </span>
             )}
           </p>
-          {billing.hasStripeCustomer && (
+          {billing.hasStripeCustomer && canManageBilling && (
             <button
               type="button"
               onClick={() => portalMutation.mutate()}
@@ -137,7 +177,7 @@ function PortalBillingPage() {
               <button
                 type="button"
                 onClick={() => checkoutMutation.mutate(plan)}
-                disabled={isCurrent || checkoutMutation.isPending}
+                disabled={isCurrent || !canManageBilling || checkoutMutation.isPending}
                 className="mt-3 w-full rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
               >
                 {isCurrent
