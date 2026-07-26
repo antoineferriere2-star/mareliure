@@ -60,7 +60,7 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
                 >
                   {index === 0 ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : index + 1}
                 </span>
-                <span className="min-w-0 truncate">{title}</span>
+                <span className="min-w-0 line-clamp-2">{title}</span>
               </li>
             ))}
           </ol>
@@ -90,7 +90,7 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
               <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
               Project Brief
             </p>
-            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-800">
+            <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-800 whitespace-nowrap">
               Confidence: {brief.confidence.label}
             </span>
           </div>
