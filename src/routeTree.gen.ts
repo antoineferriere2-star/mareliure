@@ -24,6 +24,7 @@ import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenti
 import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
+import { Route as AuthenticatedBuildActivityRouteImport } from './routes/_authenticated/build/activity'
 import { Route as AuthenticatedBuildDashboardRouteImport } from './routes/_authenticated/build/dashboard'
 import { Route as AuthenticatedBuildKnowledgeRouteImport } from './routes/_authenticated/build/knowledge'
 import { Route as AuthenticatedBuildMissionsRouteImport } from './routes/_authenticated/build/missions'
@@ -125,6 +126,12 @@ const AuthenticatedBuildIndexRoute = AuthenticatedBuildIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedBuildRouteRoute,
 } as any)
+const AuthenticatedBuildActivityRoute =
+  AuthenticatedBuildActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
 const AuthenticatedBuildDashboardRoute =
   AuthenticatedBuildDashboardRouteImport.update({
     id: '/dashboard',
@@ -287,6 +294,7 @@ export interface FileRoutesByFullPath {
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
+  '/build/activity': typeof AuthenticatedBuildActivityRoute
   '/build/dashboard': typeof AuthenticatedBuildDashboardRoute
   '/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
   '/build/missions': typeof AuthenticatedBuildMissionsRouteWithChildren
@@ -326,6 +334,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
+  '/build/activity': typeof AuthenticatedBuildActivityRoute
   '/build/dashboard': typeof AuthenticatedBuildDashboardRoute
   '/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
   '/build/onboarding': typeof AuthenticatedBuildOnboardingRoute
@@ -368,6 +377,7 @@ export interface FileRoutesById {
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
+  '/_authenticated/build/activity': typeof AuthenticatedBuildActivityRoute
   '/_authenticated/build/dashboard': typeof AuthenticatedBuildDashboardRoute
   '/_authenticated/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
   '/_authenticated/build/missions': typeof AuthenticatedBuildMissionsRouteWithChildren
@@ -411,6 +421,7 @@ export interface FileRouteTypes {
     | '/portal'
     | '/demo/deck-project'
     | '/m/$publicToken'
+    | '/build/activity'
     | '/build/dashboard'
     | '/build/knowledge'
     | '/build/missions'
@@ -450,6 +461,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/demo/deck-project'
     | '/m/$publicToken'
+    | '/build/activity'
     | '/build/dashboard'
     | '/build/knowledge'
     | '/build/onboarding'
@@ -491,6 +503,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal'
     | '/demo/deck-project'
     | '/m/$publicToken'
+    | '/_authenticated/build/activity'
     | '/_authenticated/build/dashboard'
     | '/_authenticated/build/knowledge'
     | '/_authenticated/build/missions'
@@ -645,6 +658,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/build/'
       preLoaderRoute: typeof AuthenticatedBuildIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/activity': {
+      id: '/_authenticated/build/activity'
+      path: '/activity'
+      fullPath: '/build/activity'
+      preLoaderRoute: typeof AuthenticatedBuildActivityRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
     '/_authenticated/build/dashboard': {
@@ -844,6 +864,7 @@ const AuthenticatedBuildMissionsRouteWithChildren =
   )
 
 interface AuthenticatedBuildRouteRouteChildren {
+  AuthenticatedBuildActivityRoute: typeof AuthenticatedBuildActivityRoute
   AuthenticatedBuildDashboardRoute: typeof AuthenticatedBuildDashboardRoute
   AuthenticatedBuildKnowledgeRoute: typeof AuthenticatedBuildKnowledgeRoute
   AuthenticatedBuildMissionsRoute: typeof AuthenticatedBuildMissionsRouteWithChildren
@@ -861,6 +882,7 @@ interface AuthenticatedBuildRouteRouteChildren {
 
 const AuthenticatedBuildRouteRouteChildren: AuthenticatedBuildRouteRouteChildren =
   {
+    AuthenticatedBuildActivityRoute: AuthenticatedBuildActivityRoute,
     AuthenticatedBuildDashboardRoute: AuthenticatedBuildDashboardRoute,
     AuthenticatedBuildKnowledgeRoute: AuthenticatedBuildKnowledgeRoute,
     AuthenticatedBuildMissionsRoute:
