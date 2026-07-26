@@ -184,7 +184,20 @@ export function BuildPublicHome() {
           </div>
         </section>
 
+        {/* FULL BRIEF EXAMPLE */}
+        <section className="px-4 py-12 sm:px-6 lg:px-8">
+          <div className="mx-auto grid max-w-7xl items-start gap-8 lg:grid-cols-[minmax(0,1fr)_560px]">
+            <SectionHeader
+              eyebrow="The output"
+              title="What the sales team receives"
+              description="A Project Brief separates confirmed visitor answers from assumptions, flags what is still missing and suggests the next commercial action."
+            />
+            <BriefSummary brief={demoJaneMillerBrief} />
+          </div>
+        </section>
+
         <InspirationSection />
+
 
         {/* PRODUCT OBJECTS */}
         <section className="px-4 py-16 sm:px-6 lg:px-8">
