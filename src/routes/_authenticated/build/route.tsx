@@ -4,6 +4,7 @@ import { requireBuildAdmin } from "@/build/services/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Activity,
   LayoutDashboard,
   Rocket,
   ClipboardList,
