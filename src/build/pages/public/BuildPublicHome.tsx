@@ -101,7 +101,7 @@ export function BuildPublicHome() {
 
 
         {/* PROBLEM */}
-        <section className="px-4 py-16 sm:px-6 lg:px-8">
+        <section className="px-4 py-12 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <SectionHeader
               title="Your sales team should not have to rediscover the entire project on the first call."
@@ -129,7 +129,7 @@ export function BuildPublicHome() {
         </section>
 
         {/* DUAL VALUE — CUSTOMER + SALES */}
-        <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
+        <section className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <SectionHeader
               eyebrow="Two sides of the same journey"
