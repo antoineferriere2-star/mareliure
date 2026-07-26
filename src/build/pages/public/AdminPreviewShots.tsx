@@ -31,8 +31,8 @@ function MissionStatusBadge({ status }: { status: DemoMissionRow["status"] }) {
 
 export function MissionsListPreview({ rows }: { rows: DemoMissionRow[] }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <table className="w-full min-w-[26rem] text-sm">
         <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
             <th className="px-4 py-2 text-left">Name</th>
@@ -81,8 +81,8 @@ const DOSSIER_STATUS_LABELS: Record<string, string> = {
 
 export function DossiersListPreview({ rows }: { rows: DemoDossierRow[] }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <table className="w-full text-sm">
+    <div className="overflow-x-auto rounded-lg border border-slate-200 bg-white">
+      <table className="w-full min-w-[26rem] text-sm">
         <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
             <th className="px-4 py-2 text-left">Summary</th>
