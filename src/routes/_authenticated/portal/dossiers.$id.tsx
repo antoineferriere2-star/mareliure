@@ -8,15 +8,66 @@ import {
   type CommercialStatus,
 } from "@/build/services/portal.data.functions";
 import type { ProjectBrief } from "@/build/schema/brief";
+import type { AiInsights } from "@/build/ai/schema";
 import { ProjectBriefView } from "@/build/components/ProjectBriefView";
+import { AgentBlock } from "@/build/components/AgentFindings";
+import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 
 export const Route = createFileRoute("/_authenticated/portal/dossiers/$id")({
   ssr: false,
   head: () => ({
     meta: [{ title: "Dossier — Espace Client" }, { name: "robots", content: "noindex,nofollow" }],
   }),
+  pendingComponent: PortalPending,
+  errorComponent: PortalError,
   component: PortalDossierDetailPage,
 });
+
+type QuestionItem = { question?: string; label?: string; text?: string } | string;
+
+function questionText(q: QuestionItem): string {
+  if (typeof q === "string") return q;
+  return q.question ?? q.label ?? q.text ?? "";
+}
+
+/** Read-only view of what the AI agents suggested. The team always decides. */
+function PortalAiInsights({ insights }: { insights: AiInsights }) {
+  return (
+    <section className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h2 className="text-sm font-semibold">Ce que l'IA suggère — à valider par votre équipe</h2>
+        <span className="text-[11px] text-muted-foreground">
+          {new Date(insights.generatedAt).toLocaleString()}
+        </span>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">
+        Des pistes proposées à partir du Dossier. Elles ne modifient jamais les informations
+        confirmées ci-dessous.
+      </p>
+      <div className="mt-3 grid gap-3 md:grid-cols-2">
+        <AgentBlock title="Analyse du projet" result={insights.analyste} />
+        <AgentBlock
+          title="Lecture technique"
+          result={insights.technicien}
+          extra={insights.technicien.data?.knowledgeNoteTitlesUsed}
+        />
+        <AgentBlock title="Points à vérifier" result={insights.verificateur} />
+        <div className="rounded-md border border-border bg-background p-3">
+          <h3 className="text-xs font-semibold text-foreground">Synthèse</h3>
+          {insights.redacteur.status === "error" ? (
+            <p className="mt-1 text-xs text-destructive">
+              Synthèse indisponible : {insights.redacteur.error}
+            </p>
+          ) : (
+            <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
+              {insights.redacteur.data?.narrative}
+            </p>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
 
 const STATUS_OPTIONS: { id: CommercialStatus; label: string }[] = [
   { id: "nouveau", label: "Nouveau" },
@@ -54,6 +105,10 @@ function PortalDossierDetailPage() {
   });
 
   const brief = dossier.content as unknown as ProjectBrief;
+  const aiInsights = dossier.ai_insights as unknown as AiInsights | null;
+  const nextQuestions = ((dossier.next_questions ?? []) as QuestionItem[])
+    .map(questionText)
+    .filter((q) => q.length > 0);
 
   return (
     <div className="space-y-6">
@@ -69,6 +124,19 @@ function PortalDossierDetailPage() {
           {mission?.name ? ` · via ${mission.name}` : ""}
         </p>
       </div>
+
+      {nextQuestions.length > 0 && (
+        <section className="rounded-lg border border-amber-300 bg-amber-50 p-4">
+          <h2 className="text-sm font-semibold text-amber-900">À demander au prochain contact</h2>
+          <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-900">
+            {nextQuestions.map((q, i) => (
+              <li key={i}>{q}</li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {aiInsights && <PortalAiInsights insights={aiInsights} />}
 
       <section className="rounded-lg border border-border bg-card p-4">
         <h2 className="text-sm font-semibold">Suivi</h2>
@@ -105,6 +173,11 @@ function PortalDossierDetailPage() {
           >
             {notesMutation.isPending ? "Enregistrement…" : "Enregistrer les notes"}
           </button>
+          {(statusMutation.isError || notesMutation.isError) && (
+            <p className="mt-2 text-xs text-destructive">
+              L'enregistrement a échoué. Réessayez dans un instant.
+            </p>
+          )}
         </div>
       </section>
 

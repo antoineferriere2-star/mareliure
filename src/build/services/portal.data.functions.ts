@@ -54,6 +54,39 @@ export const listWorkspaceDossiers = createServerFn({ method: "GET" })
     return dossiers ?? [];
   });
 
+/**
+ * Missions belonging to the workspace, with the number of Dossiers each one
+ * has produced. Read-only: publishing/editing a Mission stays admin-only.
+ */
+export const listWorkspaceMissions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
+    const sb = await admin();
+    const { data: missions, error } = await sb
+      .from("build_missions")
+      .select("id, name, status, playbook_name, public_token, published_at, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .order("created_at", { ascending: false })
+      .limit(200);
+    if (error) throw new Response(error.message, { status: 500 });
+
+    const { data: dossiers, error: dErr } = await sb
+      .from("build_dossiers")
+      .select("mission_id")
+      .eq("workspace_id", data.workspaceId)
+      .limit(2000);
+    if (dErr) throw new Response(dErr.message, { status: 500 });
+
+    const counts = new Map<string, number>();
+    for (const d of dossiers ?? []) {
+      if (d.mission_id) counts.set(d.mission_id, (counts.get(d.mission_id) ?? 0) + 1);
+    }
+    return (missions ?? []).map((m) => ({ ...m, dossierCount: counts.get(m.id) ?? 0 }));
+  });
+
+
 /** Non-blocking usage display for the portal's own workspace — never gates submission. */
 export const getMyWorkspaceUsage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

@@ -6,7 +6,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
-import { assertWorkspaceMember } from "./workspaceAuth.server";
+import { assertWorkspaceOwner } from "./workspaceAuth.server";
 import { admin } from "./adminAuth.server";
 import { createStripeClient, getStripeEnv } from "@/lib/stripe.server";
 import { PLAN_IDS, getPlanDefaults } from "@/build/billing/plans";
@@ -23,7 +23,7 @@ export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(async ({ context, data }) => {
-    await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
+    await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
 
     if (data.plan === "enterprise") {
       throw new Response("Enterprise has no self-service price — contact the team.", {
@@ -69,7 +69,7 @@ export const createWorkspaceBillingPortalSession = createServerFn({ method: "POS
     z.object({ workspaceId: z.string().uuid(), origin: z.string().url() }).parse(data),
   )
   .handler(async ({ context, data }) => {
-    await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
+    await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
 
     const sb = await admin();
     const { data: workspace, error } = await sb

@@ -9,6 +9,7 @@ import {
   type CommercialStatus,
 } from "@/build/services/portal.data.functions";
 import { usageLevel } from "@/build/billing/quota";
+import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 
 export const Route = createFileRoute("/_authenticated/portal/")({
   ssr: false,
@@ -18,8 +19,46 @@ export const Route = createFileRoute("/_authenticated/portal/")({
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
+  pendingComponent: PortalPending,
+  errorComponent: PortalError,
   component: PortalHomePage,
 });
+
+const PAGE_SIZE = 25;
+
+type DossierRow = {
+  id: string;
+  summary: string | null;
+  commercial_status: string;
+  created_at: string;
+  last_activity_at: string;
+};
+
+function toCsv(rows: DossierRow[]): string {
+  const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
+  const header = ["Résumé", "Statut", "Reçu le", "Dernière activité"].map(escape).join(",");
+  const body = rows.map((r) =>
+    [
+      r.summary ?? `Dossier ${r.id.slice(0, 8)}`,
+      r.commercial_status,
+      new Date(r.created_at).toISOString(),
+      new Date(r.last_activity_at).toISOString(),
+    ]
+      .map(escape)
+      .join(","),
+  );
+  return [header, ...body].join("\n");
+}
+
+function downloadCsv(rows: DossierRow[]) {
+  const blob = new Blob(["\uFEFF" + toCsv(rows)], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `dossiers-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
 
 const STATUS_TABS: { id: CommercialStatus | "all"; label: string }[] = [
   { id: "all", label: "Tous" },
@@ -87,9 +126,14 @@ function PortalHomePage() {
   const [workspaceId, setWorkspaceId] = useState<string>(workspaces[0]?.id ?? "");
   const [tab, setTab] = useState<CommercialStatus | "all">("all");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   const fetchDossiers = useServerFn(listWorkspaceDossiers);
-  const { data: dossiers } = useQuery({
+  const {
+    data: dossiers,
+    isPending: dossiersPending,
+    error: dossiersError,
+  } = useQuery({
     queryKey: ["portal", "dossiers", workspaceId] as const,
     queryFn: () => fetchDossiers({ data: { workspaceId } }),
     enabled: workspaceId.length > 0,
@@ -111,6 +155,10 @@ function PortalHomePage() {
     return res;
   }, [dossiers, tab, search]);
 
+  const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pageRows = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
   if (workspaces.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
@@ -130,10 +178,22 @@ function PortalHomePage() {
             Les demandes reçues via vos Missions, à suivre jusqu'à la clôture.
           </p>
         </div>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => downloadCsv(filtered as DossierRow[])}
+            disabled={filtered.length === 0}
+            className="rounded-md border border-input bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-accent disabled:opacity-50"
+          >
+            Exporter en CSV
+          </button>
         {workspaces.length > 1 && (
           <select
             value={workspaceId}
-            onChange={(e) => setWorkspaceId(e.target.value)}
+            onChange={(e) => {
+              setWorkspaceId(e.target.value);
+              setPage(1);
+            }}
             className="rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
             {workspaces.map((w) => (
@@ -143,6 +203,7 @@ function PortalHomePage() {
             ))}
           </select>
         )}
+        </div>
       </header>
 
       {workspaceId && <UsageBanner workspaceId={workspaceId} />}
@@ -151,7 +212,10 @@ function PortalHomePage() {
         {STATUS_TABS.map((t) => (
           <button
             key={t.id}
-            onClick={() => setTab(t.id)}
+            onClick={() => {
+              setTab(t.id);
+              setPage(1);
+            }}
             className={`rounded-full border px-3 py-1 text-xs font-medium ${
               tab === t.id
                 ? "border-primary bg-primary/10 text-primary"
@@ -163,13 +227,24 @@ function PortalHomePage() {
         ))}
         <input
           value={search}
-          onChange={(e) => setSearch(e.target.value)}
+          onChange={(e) => {
+            setSearch(e.target.value);
+            setPage(1);
+          }}
           placeholder="Rechercher…"
           className="ml-auto w-full max-w-[220px] rounded-md border border-input bg-background px-3 py-1.5 text-xs"
         />
       </div>
 
-      {filtered.length === 0 ? (
+      {dossiersError ? (
+        <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {dossiersError instanceof Error
+            ? dossiersError.message
+            : "Impossible de charger vos Dossiers."}
+        </p>
+      ) : dossiersPending ? (
+        <PortalPending />
+      ) : filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
           <p className="text-sm text-muted-foreground">
             Aucun Dossier ne correspond pour l'instant.
@@ -186,7 +261,7 @@ function PortalHomePage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map((d) => (
+              {pageRows.map((d) => (
                 <tr
                   key={d.id}
                   className="border-b border-border/60 last:border-b-0 hover:bg-accent/30"
@@ -210,6 +285,32 @@ function PortalHomePage() {
               ))}
             </tbody>
           </table>
+        </div>
+      )}
+
+      {pageCount > 1 && (
+        <div className="flex items-center justify-between text-xs text-muted-foreground">
+          <span>
+            Page {currentPage} sur {pageCount} · {filtered.length} Dossiers
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="rounded-md border border-input bg-background px-3 py-1.5 hover:bg-accent disabled:opacity-50"
+            >
+              Précédent
+            </button>
+            <button
+              type="button"
+              onClick={() => setPage((p) => Math.min(pageCount, p + 1))}
+              disabled={currentPage === pageCount}
+              className="rounded-md border border-input bg-background px-3 py-1.5 hover:bg-accent disabled:opacity-50"
+            >
+              Suivant
+            </button>
+          </div>
         </div>
       )}
     </div>
