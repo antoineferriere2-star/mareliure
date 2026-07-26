@@ -106,7 +106,7 @@ function PublicFormPage<T extends FormShape>({
     <BuildPublicShell>
       <main className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[420px_1fr]">
-          <SectionHeader eyebrow={eyebrow} title={title} description={description} />
+          <SectionHeader as="h1" eyebrow={eyebrow} title={title} description={description} />
           <form
             onSubmit={submit}
             className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm"

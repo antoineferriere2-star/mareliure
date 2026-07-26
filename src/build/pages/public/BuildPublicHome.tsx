@@ -101,7 +101,7 @@ export function BuildPublicHome() {
               title="Easier for your customers. More useful for your sales team."
             />
             <div className="mt-8 grid gap-4 md:grid-cols-2">
-              <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="min-w-0 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                 <Users className="h-6 w-6 text-emerald-700" />
                 <h3 className="mt-4 text-lg font-semibold tracking-normal text-slate-950">
                   For your customers
@@ -124,7 +124,7 @@ export function BuildPublicHome() {
                   <InspirationPreview />
                 </div>
               </div>
-              <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+              <div className="min-w-0 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                 <Briefcase className="h-6 w-6 text-emerald-700" />
                 <h3 className="mt-4 text-lg font-semibold tracking-normal text-slate-950">
                   For your sales team

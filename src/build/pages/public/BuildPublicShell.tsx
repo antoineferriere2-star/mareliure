@@ -101,10 +101,12 @@ export function SectionHeader({
   eyebrow,
   title,
   description,
+  as: Heading = "h2",
 }: {
   eyebrow?: string;
   title: string;
   description?: string;
+  as?: "h1" | "h2";
 }) {
   return (
     <div className="max-w-3xl">
@@ -113,13 +115,14 @@ export function SectionHeader({
           {eyebrow}
         </p>
       )}
-      <h2 className="mt-3 text-3xl font-semibold tracking-normal text-slate-950 md:text-4xl">
+      <Heading className="mt-3 text-3xl font-semibold tracking-normal text-slate-950 md:text-4xl">
         {title}
-      </h2>
+      </Heading>
       {description && <p className="mt-4 text-[17px] leading-7 text-slate-700">{description}</p>}
     </div>
   );
 }
+
 
 export function PublicCtaBand() {
   return (
