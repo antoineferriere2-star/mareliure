@@ -6,6 +6,7 @@ import {
   CheckItem,
   InfoPanel,
   ObjectCard,
+  PublicCtaBand,
   SectionHeader,
   StepLine,
 } from "@/build/pages/public/BuildPublicShell";
@@ -40,7 +41,7 @@ export function BuildPublicHome() {
               <p className="mt-2 max-w-2xl text-[13px] leading-5 text-slate-500">
                 Starting with our ready-to-use Deck Project Playbook.
               </p>
-              <div className="mt-6 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap items-center gap-4">
                 <a href="/demo/deck-project">
                   <Button size="lg">
                     Try the Live Deck Intake
@@ -48,7 +49,7 @@ export function BuildPublicHome() {
                   </Button>
                 </a>
                 <a href="/free-inquiry-audit">
-                  <Button size="lg" variant="outline">
+                  <Button variant="link" className="h-auto p-0 text-base">
                     Get a Free Website Inquiry Audit
                   </Button>
                 </a>
@@ -293,36 +294,7 @@ export function BuildPublicHome() {
         </section>
 
         {/* OFFER / CTA */}
-        <section className="bg-slate-950 px-4 py-16 text-white sm:px-6 lg:px-8">
-          <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
-            <div>
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-200">
-                Get started
-              </p>
-              <h2 className="mt-3 max-w-2xl text-3xl font-semibold tracking-normal md:text-4xl">
-                See what your current website form is missing.
-              </h2>
-              <p className="mt-3 max-w-xl text-[16px] leading-7 text-slate-300">
-                Give customers a better way to explain their project and give your sales team a
-                better place to start.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <a href="/free-inquiry-audit">
-                <Button size="lg">Get a Free Website Inquiry Audit</Button>
-              </a>
-              <a href="/demo/deck-project">
-                <Button
-                  size="lg"
-                  variant="outline"
-                  className="border-white bg-transparent text-white hover:bg-white hover:text-slate-950"
-                >
-                  Try the Live Deck Intake
-                </Button>
-              </a>
-            </div>
-          </div>
-        </section>
+        <PublicCtaBand />
       </main>
     </BuildPublicShell>
   );

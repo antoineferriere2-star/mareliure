@@ -22,10 +22,11 @@ export function BuildDeckBuildersPage() {
           eyebrow="Deck Builders"
           title="Qualify deck projects before the first sales call."
           description="Métré Build helps deck builders replace vague inquiries with a guided intake that captures scope, site context, photos, budget, timing and contact consent."
-          primary="Try the Live Deck Intake"
-          primaryTo="/demo/deck-project"
-          secondary="Get a Free Website Inquiry Audit"
-          secondaryTo="/free-inquiry-audit"
+          primary="Get a Free Website Inquiry Audit"
+          primaryTo="/free-inquiry-audit"
+          secondary="Try the Live Deck Intake"
+          secondaryTo="/demo/deck-project"
+          secondaryVariant="link"
         />
         <ContentBand
           title="Frequent inquiry gaps"
@@ -85,12 +86,14 @@ export function BuildDeckBuildersPage() {
             <h2 className="text-2xl font-semibold tracking-normal text-slate-950">
               See what this could look like on your website.
             </h2>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-4">
               <a href="/free-inquiry-audit">
-                <Button>Audit My Website Form</Button>
+                <Button>Get a Free Website Inquiry Audit</Button>
               </a>
               <a href="/demo/deck-project">
-                <Button variant="outline">Try the Deck Project Intake</Button>
+                <Button variant="link" className="h-auto p-0 text-base">
+                  Try the Live Deck Intake
+                </Button>
               </a>
             </div>
           </div>
@@ -126,7 +129,7 @@ export function BuildDeckBuildersPage() {
               <InfoPanel
                 title="Is this self-service?"
                 items={[
-                  "Setup is currently guided — we configure your first Playbook with you, then it runs on your site automatically.",
+                  "Setup is currently guided — we configure your first Playbook with you, and once published it runs on your site for every visitor.",
                 ]}
               />
             </div>
@@ -168,6 +171,7 @@ export function BuildHowItWorksPage() {
           primaryTo="/demo/deck-project"
           secondary="See an example brief"
           secondaryTo="/example-project-brief"
+          secondaryVariant="link"
         />
         <section className="px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
@@ -223,12 +227,14 @@ export function BuildExampleProjectBriefPage() {
               Start with a ready-to-use industry journey, adapt it to your business and add it to
               your website with a link or simple snippet.
             </p>
-            <div className="flex flex-wrap gap-3">
+            <div className="flex flex-wrap items-center gap-4">
               <a href="/free-inquiry-audit">
                 <Button>Get a Free Website Inquiry Audit</Button>
               </a>
               <a href="/demo/deck-project">
-                <Button variant="outline">Try the Live Deck Intake</Button>
+                <Button variant="link" className="h-auto p-0 text-base">
+                  Try the Live Deck Intake
+                </Button>
               </a>
             </div>
           </div>

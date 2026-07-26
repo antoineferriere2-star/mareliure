@@ -136,16 +136,12 @@ export function PublicCtaBand() {
             Two minutes to review the demo. Free audit of your current inquiry flow on request.
           </p>
         </div>
-        <div className="flex flex-wrap gap-3">
+        <div className="flex flex-wrap items-center gap-4">
           <a href="/free-inquiry-audit">
             <Button size="lg">Get a Free Website Inquiry Audit</Button>
           </a>
           <a href="/demo/deck-project">
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white bg-transparent text-white hover:bg-white hover:text-slate-950"
-            >
+            <Button variant="link" className="h-auto p-0 text-base text-white hover:text-white">
               Try the Live Deck Intake
             </Button>
           </a>
@@ -163,6 +159,7 @@ export function PageHero({
   primaryTo,
   secondary,
   secondaryTo,
+  secondaryVariant = "outline",
 }: {
   eyebrow: string;
   title: string;
@@ -171,6 +168,10 @@ export function PageHero({
   primaryTo: string;
   secondary: string;
   secondaryTo: string;
+  /** A single filled button per section is the rule — the secondary CTA is
+   * always demoted to either an outline button or a plain text link, never
+   * a second button of equal visual weight. */
+  secondaryVariant?: "outline" | "link";
 }) {
   return (
     <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
@@ -182,14 +183,20 @@ export function PageHero({
           {title}
         </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">{description}</p>
-        <div className="mt-8 flex flex-wrap gap-3">
+        <div className="mt-8 flex flex-wrap items-center gap-4">
           <a href={primaryTo}>
             <Button size="lg">{primary}</Button>
           </a>
           <a href={secondaryTo}>
-            <Button size="lg" variant="outline">
-              {secondary}
-            </Button>
+            {secondaryVariant === "link" ? (
+              <Button variant="link" className="h-auto p-0 text-base">
+                {secondary}
+              </Button>
+            ) : (
+              <Button size="lg" variant="outline">
+                {secondary}
+              </Button>
+            )}
           </a>
         </div>
       </div>
