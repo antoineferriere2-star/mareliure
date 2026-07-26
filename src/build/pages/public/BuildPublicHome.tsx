@@ -211,7 +211,7 @@ export function BuildPublicHome() {
                 text="The structured, actionable output received by the sales team."
               />
             </div>
-            <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <div className="mt-6 grid gap-4 md:grid-cols-2">
               <p className="rounded-md border border-slate-200 bg-slate-50 p-5 text-[15px] leading-7 text-slate-700">
                 Typeform organizes questions. Métré Build organizes the understanding of a project.
               </p>
@@ -220,6 +220,50 @@ export function BuildPublicHome() {
                 project context to move toward that solution.
               </p>
             </div>
+            <h3 className="mt-10 text-xl font-semibold tracking-normal text-slate-950">
+              The missing layer between forms and configurators
+            </h3>
+            <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
+              <div className="grid grid-cols-1 border-b border-slate-200 bg-slate-100 text-xs font-semibold uppercase tracking-[0.14em] text-slate-600 md:grid-cols-3">
+                <div className="p-4">Generic form</div>
+                <div className="border-t border-slate-200 bg-emerald-100 p-4 text-emerald-900 md:border-l md:border-t-0">
+                  Métré Build
+                </div>
+                <div className="border-t border-slate-200 p-4 md:border-l md:border-t-0">
+                  Custom configurator
+                </div>
+              </div>
+              {[
+                ["Collects answers", "Guides project discovery", "Configures a technical solution"],
+                ["Generic questions", "Industry Playbooks", "Product-specific rules"],
+                [
+                  "Customer must know what to write",
+                  "Customer can answer approximately",
+                  "Customer makes technical choices",
+                ],
+                ["Form submission", "Sales-ready Project Brief", "Configuration or quote"],
+                ["Fast but often vague", "Fast and structured", "Powerful but complex"],
+                ["Low setup", "Accessible SaaS", "Custom software project"],
+              ].map(([a, b, c]) => (
+                <div
+                  key={b}
+                  className="grid border-b border-slate-200 last:border-b-0 md:grid-cols-3"
+                >
+                  <div className="p-4 text-[15px] leading-6 text-slate-700">{a}</div>
+                  <div className="border-t border-slate-200 bg-emerald-50 p-4 text-[15px] font-medium leading-6 text-emerald-950 md:border-l md:border-t-0">
+                    {b}
+                  </div>
+                  <div className="border-t border-slate-200 p-4 text-[15px] leading-6 text-slate-700 md:border-l md:border-t-0">
+                    {c}
+                  </div>
+                </div>
+              ))}
+            </div>
+            <p className="mt-5 text-[15px] leading-7 text-slate-700">
+              Métré Build helps customers clarify their project without forcing your business to
+              build a custom configurator.
+            </p>
+
           </div>
         </section>
 
