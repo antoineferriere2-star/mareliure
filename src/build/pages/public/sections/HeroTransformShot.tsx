@@ -37,7 +37,7 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
         <div className="p-5">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
             <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
-            Project Mission
+            Guided Project Intake
           </p>
           <ol className="mt-4 space-y-2">
             {missionSteps.map((title, index) => (
@@ -91,12 +91,16 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
               Project Brief
             </p>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-800 whitespace-nowrap">
-              Confidence: {brief.confidence.label}
+              Confidence:{" "}
+              {brief.confidence.label.charAt(0).toUpperCase() + brief.confidence.label.slice(1)}
             </span>
           </div>
           <dl className="mt-4 space-y-2">
             {briefBlocks.map((block) => (
-              <div key={block.label} className="rounded-md border border-slate-200 bg-slate-50 p-2.5">
+              <div
+                key={block.label}
+                className="rounded-md border border-slate-200 bg-slate-50 p-2.5"
+              >
                 <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
                   {block.label}
                 </dt>

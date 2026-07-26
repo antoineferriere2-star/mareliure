@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BuildLegalPage } from "@/build/pages/public/BuildMarketingPages";
 
 const title = "Privacy — Métré Build";
-const description = "Métré Build private beta privacy summary.";
+const description = "Métré Build privacy summary.";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
@@ -20,9 +20,10 @@ export const Route = createFileRoute("/privacy")({
     <BuildLegalPage
       title="Privacy"
       paragraphs={[
-        "Métré Build collects information submitted through public beta and audit forms so the team can review requests and respond.",
-        "Demo Project Brief data is fictional or stored locally in your browser unless you submit a production request.",
+        "Métré Build collects information submitted through website audit and setup request forms so the team can review requests and respond.",
+        "Demo Project Brief data is fictional or stored locally in your browser unless you submit a real request.",
         "Real customer responses, runtime sessions and project briefs are not intended to be indexed or exposed publicly.",
+        "Categories of data collected: contact details (name, email), website URL, and any information you provide in a request form. Questions about this policy can be sent to contact@oppe.fr.",
       ]}
     />
   ),

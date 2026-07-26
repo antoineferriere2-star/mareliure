@@ -60,9 +60,22 @@ function InspirationIllustration() {
   );
 }
 
-export function InspirationSection() {
+/** Bare illustration + field, no heading/section wrapper — for embedding compactly inside another section. */
+export function InspirationPreview() {
   const [answer, setAnswer] = useState<AnswerValue>(demoInspirationAnswer);
+  return (
+    <div className="grid gap-4 sm:grid-cols-2">
+      <InspirationIllustration />
+      <InspirationPhotoField
+        field={demoInspirationPhotoField}
+        value={answer}
+        onChange={setAnswer}
+      />
+    </div>
+  );
+}
 
+export function InspirationSection() {
   return (
     <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
@@ -71,13 +84,8 @@ export function InspirationSection() {
           title="Customers who don't have the words can start from a picture instead."
           description="An inspiration photo — their own yard, a screenshot, a catalog picture — is analyzed and turned into hypotheses the visitor confirms or corrects. Nothing is presented as fact until they say so."
         />
-        <div className="mt-8 grid gap-6 lg:grid-cols-2">
-          <InspirationIllustration />
-          <InspirationPhotoField
-            field={demoInspirationPhotoField}
-            value={answer}
-            onChange={setAnswer}
-          />
+        <div className="mt-8">
+          <InspirationPreview />
         </div>
       </div>
     </section>

@@ -1,10 +1,15 @@
-import { DetectionBadge } from "@/build/components/DetectionBadge";
+import { DetectionBadge, type DetectionState } from "@/build/components/DetectionBadge";
 
 /**
  * Shared "confirm a detected value, or correct it" interaction, used for
  * both the business-type and product steps of the onboarding wizard — the
  * pattern is identical (candidates the client can pick from, plus a free
- * text "Autre" that always wins if filled in), only the copy differs.
+ * text override that always wins if filled in), only the copy differs.
+ *
+ * Reused as-is on the public marketing page (InsideMetreBuildSection) with
+ * English defaults; the real French admin onboarding wizard
+ * (routes/_authenticated/build/onboarding.tsx) overrides the chrome labels
+ * below to keep its UI unchanged.
  */
 export function SingleChoiceConfirmStep({
   title,
@@ -15,7 +20,11 @@ export function SingleChoiceConfirmStep({
   onConfirm,
   onBack,
   noneDetectedMessage,
-  confirmButtonLabel = "Confirmer",
+  confirmButtonLabel = "Confirm",
+  backLabel = "Back",
+  otherLabel = "Other — please specify",
+  otherOnlyLabel = "Please specify",
+  detectionLabels,
 }: {
   title: string;
   description: string;
@@ -26,6 +35,10 @@ export function SingleChoiceConfirmStep({
   onBack: () => void;
   noneDetectedMessage: string;
   confirmButtonLabel?: string;
+  backLabel?: string;
+  otherLabel?: string;
+  otherOnlyLabel?: string;
+  detectionLabels?: Partial<Record<DetectionState, string>>;
 }) {
   const customValue = candidates.includes(value) ? "" : value;
 
@@ -33,7 +46,10 @@ export function SingleChoiceConfirmStep({
     <div className="space-y-4">
       <div className="flex items-center gap-2">
         <h2 className="text-lg font-semibold text-foreground">{title}</h2>
-        <DetectionBadge state={candidates.length > 0 ? "detected" : "notFound"} />
+        <DetectionBadge
+          state={candidates.length > 0 ? "detected" : "notFound"}
+          labels={detectionLabels}
+        />
       </div>
       <p className="text-sm text-muted-foreground">{description}</p>
 
@@ -44,16 +60,22 @@ export function SingleChoiceConfirmStep({
           <label
             key={candidate}
             className={`flex cursor-pointer items-center gap-3 rounded-md border p-3 text-sm ${
-              value === candidate ? "border-emerald-500 bg-emerald-50" : "border-input bg-background"
+              value === candidate
+                ? "border-emerald-500 bg-emerald-50"
+                : "border-input bg-background"
             }`}
           >
-            <input type="radio" checked={value === candidate} onChange={() => onValueChange(candidate)} />
+            <input
+              type="radio"
+              checked={value === candidate}
+              onChange={() => onValueChange(candidate)}
+            />
             {candidate}
           </label>
         ))}
         <div>
           <label className="block text-xs font-medium text-muted-foreground">
-            {candidates.length > 0 ? "Autre (préciser)" : "Préciser"}
+            {candidates.length > 0 ? otherLabel : otherOnlyLabel}
           </label>
           <input
             value={customValue}
@@ -69,7 +91,7 @@ export function SingleChoiceConfirmStep({
           onClick={onBack}
           className="rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent"
         >
-          Retour
+          {backLabel}
         </button>
         <button
           type="button"

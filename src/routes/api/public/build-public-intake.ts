@@ -8,12 +8,15 @@ const RATE_LIMIT_MAX_PER_TYPE = 5;
 
 const auditSchema = z.object({
   firstName: z.string().trim().min(1).max(120),
-  lastName: z.string().trim().min(1).max(120),
-  company: z.string().trim().min(1).max(200),
+  // Optional — no longer collected on the first screen, kept for backward
+  // compatibility with historical submissions and later admin enrichment.
+  lastName: z.string().trim().max(120).optional().default(""),
+  company: z.string().trim().max(200).optional().default(""),
   websiteUrl: z.string().trim().url().max(500),
   email: z.string().trim().email().max(255),
   role: z.string().trim().max(200).optional().default(""),
   message: z.string().trim().max(4000).optional().default(""),
+  biggestIssue: z.string().trim().max(1000).optional().default(""),
   consent: z.literal(true),
 });
 

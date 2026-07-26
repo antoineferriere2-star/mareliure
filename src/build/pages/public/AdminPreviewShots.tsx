@@ -69,6 +69,16 @@ const CONFIDENCE_STYLES: Record<DemoDossierRow["confidence"], string> = {
   low: "border-rose-300 bg-rose-50 text-rose-800",
 };
 
+// Internal commercial_status values (French, matching the real domain data) are
+// never shown raw on the public page — this maps them to public-facing English labels.
+const DOSSIER_STATUS_LABELS: Record<string, string> = {
+  nouveau: "New",
+  contacte: "Contacted",
+  devise: "Quoted",
+  gagne: "Won",
+  perdu: "Lost",
+};
+
 export function DossiersListPreview({ rows }: { rows: DemoDossierRow[] }) {
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
@@ -78,7 +88,7 @@ export function DossiersListPreview({ rows }: { rows: DemoDossierRow[] }) {
             <th className="px-4 py-2 text-left">Summary</th>
             <th className="px-4 py-2 text-left">Status</th>
             <th className="px-4 py-2 text-left">Confidence</th>
-            <th className="px-4 py-2 text-left">Mission</th>
+            <th className="px-4 py-2 text-left">Project Intake</th>
           </tr>
         </thead>
         <tbody>
@@ -87,7 +97,7 @@ export function DossiersListPreview({ rows }: { rows: DemoDossierRow[] }) {
               <td className="px-4 py-3 font-medium text-slate-950">{d.summary}</td>
               <td className="px-4 py-3">
                 <span className="rounded-full border border-slate-300 px-2 py-0.5 text-[10px] uppercase text-slate-600">
-                  {d.status}
+                  {DOSSIER_STATUS_LABELS[d.status] ?? d.status}
                 </span>
               </td>
               <td className="px-4 py-3">

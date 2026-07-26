@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BuildLegalPage } from "@/build/pages/public/BuildMarketingPages";
 
 const title = "Terms — Métré Build";
-const description = "Métré Build private beta terms summary.";
+const description = "Métré Build terms summary.";
 
 export const Route = createFileRoute("/terms")({
   head: () => ({
@@ -20,9 +20,9 @@ export const Route = createFileRoute("/terms")({
     <BuildLegalPage
       title="Terms"
       paragraphs={[
-        "The public MVP is provided for evaluation and pilot discussions only.",
+        "Métré Build is provided for project discovery and qualification purposes only.",
         "The Deck Project Demo does not produce a guaranteed quote, engineering assessment or regulatory review.",
-        "Pilot access is invitation-based and may change while the product is in private beta.",
+        "Access and available features may change as the product evolves. Contact contact@oppe.fr with any questions.",
       ]}
     />
   ),

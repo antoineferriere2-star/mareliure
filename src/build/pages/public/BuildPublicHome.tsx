@@ -1,16 +1,5 @@
 import { useState } from "react";
-import {
-  ArrowRight,
-  CheckCircle2,
-  FileText,
-  Layers3,
-  Sparkles,
-  Link2,
-  ShieldCheck,
-  HardHat,
-  Users,
-  Briefcase,
-} from "lucide-react";
+import { ArrowRight, FileText, Layers3, Sparkles, Users, Briefcase } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   BuildPublicShell,
@@ -20,34 +9,12 @@ import {
   SectionHeader,
   StepLine,
 } from "@/build/pages/public/BuildPublicShell";
-import { TimelineField } from "@/build/engine/fields/TimelineField";
-import { BriefSummary } from "@/build/pages/public/BriefSummary";
 import { HeroTransformShot } from "@/build/pages/public/sections/HeroTransformShot";
 import { DossiersListPreview } from "@/build/pages/public/AdminPreviewShots";
-import { InspirationSection } from "@/build/pages/public/sections/InspirationSection";
+import { InspirationPreview } from "@/build/pages/public/sections/InspirationSection";
 import { BeforeAfterSection } from "@/build/pages/public/sections/BeforeAfterSection";
 import { InsideMetreBuildSection } from "@/build/pages/public/sections/InsideMetreBuildSection";
-import {
-  demoTimelineField,
-  demoJaneMillerBrief,
-  demoDossiersRows,
-} from "@/build/content/demoProductData";
-import type { AnswerValue } from "@/build/schema/answers";
-
-function DualValueTimelinePreview() {
-  const [value, setValue] = useState<AnswerValue | undefined>(undefined);
-  return (
-    <div className="mt-4">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
-        Live example
-      </p>
-      <div className="mt-2">
-        <TimelineField field={demoTimelineField} value={value} onChange={setValue} />
-      </div>
-    </div>
-  );
-}
-
+import { demoJaneMillerBrief, demoDossiersRows } from "@/build/content/demoProductData";
 
 export function BuildPublicHome() {
   return (
@@ -58,30 +25,25 @@ export function BuildPublicHome() {
           <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_1.05fr] lg:gap-10">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
-                Project discovery for project-based businesses
+                Guided project intake for project-based businesses
               </p>
               <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl lg:text-5xl">
                 Turn vague website inquiries into sales-ready project briefs.
               </h1>
               <p className="mt-4 max-w-2xl text-[17px] leading-7 text-slate-700">
-                Métré Build guides customers through the details they know, helps them clarify what
-                they do not, and gives your sales team the context they need before the first call.
+                Métré Build guides customers through project scope, photos, dimensions, constraints,
+                budget and timing — so your sales team has useful context before the first call.
               </p>
               <p className="mt-3 max-w-2xl text-[15px] font-medium leading-6 text-slate-600">
                 More helpful than a form. Simpler than a custom configurator.
               </p>
-              <p className="mt-2 max-w-2xl text-[15px] font-medium leading-6 text-slate-700">
-                Customers get a simpler way to explain their project. Sales teams get a clearer
-                brief to act on.
-              </p>
               <p className="mt-2 max-w-2xl text-[13px] leading-5 text-slate-500">
-                Built for businesses selling projects that require discovery before quoting: decks,
-                pergolas, pools, windows, kitchens, solar, custom equipment and more.
+                Starting with our ready-to-use Deck Project Playbook.
               </p>
               <div className="mt-6 flex flex-wrap gap-3">
                 <a href="/demo/deck-project">
                   <Button size="lg">
-                    Try the Deck Project Demo
+                    Try the Live Deck Intake
                     <ArrowRight className="ml-2 h-4 w-4" />
                   </Button>
                 </a>
@@ -91,14 +53,14 @@ export function BuildPublicHome() {
                   </Button>
                 </a>
               </div>
-              <p className="mt-4 text-[13px] font-medium text-slate-500">
-                No credit card. Add it to your website with a link or a simple snippet.
+              <p className="mt-4 max-w-2xl text-[13px] leading-5 text-slate-500">
+                Sales-ready means ready for a productive first conversation — not a final quote or
+                technical approval.
               </p>
             </div>
             <HeroTransformShot brief={demoJaneMillerBrief} />
           </div>
         </section>
-
 
         {/* PROBLEM */}
         <section className="px-4 py-12 sm:px-6 lg:px-8">
@@ -128,7 +90,10 @@ export function BuildPublicHome() {
           </div>
         </section>
 
-        {/* DUAL VALUE — CUSTOMER + SALES */}
+        {/* BEFORE / AFTER (incl. honest-discovery proof points) */}
+        <BeforeAfterSection />
+
+        {/* EASIER FOR CUSTOMERS, MORE USEFUL FOR SALES (incl. inspiration photo) */}
         <section className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <SectionHeader
@@ -145,14 +110,19 @@ export function BuildPublicHome() {
                   {[
                     "No technical vocabulary required",
                     "Guided questions and visual choices",
-                    "\u201CNot sure\u201D options when details are unknown",
+                    "“Not sure” options when details are unknown",
                     "Photos instead of long explanations",
                     "A clear recap before submission",
                   ].map((item) => (
                     <CheckItem key={item}>{item}</CheckItem>
                   ))}
                 </div>
-                <DualValueTimelinePreview />
+                <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+                  Live example — start from a photo
+                </p>
+                <div className="mt-2">
+                  <InspirationPreview />
+                </div>
               </div>
               <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
                 <Briefcase className="h-6 w-6 text-emerald-700" />
@@ -184,23 +154,42 @@ export function BuildPublicHome() {
           </div>
         </section>
 
-        {/* FULL BRIEF EXAMPLE */}
-        <section className="px-4 py-12 sm:px-6 lg:px-8">
-          <div className="mx-auto grid max-w-7xl items-start gap-8 lg:grid-cols-[minmax(0,1fr)_560px]">
+        {/* HOW IT WORKS */}
+        <section className="px-4 py-16 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl">
             <SectionHeader
-              eyebrow="The output"
-              title="What the sales team receives"
-              description="A Project Brief separates confirmed visitor answers from assumptions, flags what is still missing and suggests the next commercial action."
+              eyebrow="How it works"
+              title="A simple path from inquiry to commercial context."
             />
-            <BriefSummary brief={demoJaneMillerBrief} />
+            <div className="mt-8 grid gap-3 md:grid-cols-3">
+              {[
+                {
+                  title: "Choose or confirm the right Project Intake.",
+                  text: "Start with an industry-specific discovery method, or let us match one from your website.",
+                },
+                {
+                  title: "Add it to your website.",
+                  text: "Publish it with a link or a small website snippet.",
+                },
+                {
+                  title: "Receive structured Project Briefs.",
+                  text: "Review a structured brief before the first call.",
+                },
+              ].map((step, index) => (
+                <StepLine key={step.title} index={index + 1} title={step.title} text={step.text} />
+              ))}
+            </div>
+            <p className="mt-4 text-[14px] leading-6 text-slate-600">
+              Every Project Brief carries its own qualification confidence and lists exactly what is
+              still missing — never a fake certainty.
+            </p>
           </div>
         </section>
 
-        <InspirationSection />
+        <InsideMetreBuildSection />
 
-
-        {/* PRODUCT OBJECTS */}
-        <section className="px-4 py-16 sm:px-6 lg:px-8">
+        {/* POSITIONING */}
+        <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
           <div className="mx-auto max-w-7xl">
             <SectionHeader
               eyebrow="Product"
@@ -215,7 +204,7 @@ export function BuildPublicHome() {
               />
               <ObjectCard
                 icon={Sparkles}
-                title="Project Mission"
+                title="Guided Project Intake"
                 text="The guided experience completed by the customer."
               />
               <ObjectCard
@@ -223,15 +212,6 @@ export function BuildPublicHome() {
                 title="Project Brief"
                 text="The structured, actionable output received by the sales team."
               />
-            </div>
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <p className="rounded-md border border-slate-200 bg-slate-50 p-5 text-[15px] leading-7 text-slate-700">
-                Typeform organizes questions. Métré Build organizes the understanding of a project.
-              </p>
-              <p className="rounded-md border border-slate-200 bg-slate-50 p-5 text-[15px] leading-7 text-slate-700">
-                A custom configurator produces a technical solution. Métré Build produces the right
-                project context to move toward that solution.
-              </p>
             </div>
             <h3 className="mt-10 text-xl font-semibold tracking-normal text-slate-950">
               The missing layer between forms and configurators
@@ -276,145 +256,43 @@ export function BuildPublicHome() {
               Métré Build helps customers clarify their project without forcing your business to
               build a custom configurator.
             </p>
-
           </div>
         </section>
 
-        {/* HOW IT WORKS */}
-        <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionHeader
-              eyebrow="How it works"
-              title="A simple path from inquiry to commercial context."
-            />
-            <div className="mt-8 grid gap-3 md:grid-cols-4">
-              {[
-                "Choose a Playbook",
-                "Customize the project journey",
-                "Add it to your website",
-                "Receive structured Project Briefs",
-              ].map((step, index) => (
-                <StepLine
-                  key={step}
-                  index={index + 1}
-                  title={step}
-                  text={
-                    [
-                      "Start with an industry-specific discovery method.",
-                      "Tune the guided journey for your process.",
-                      "Add it with a link or a small website snippet.",
-                      "Review a structured brief before the first call.",
-                    ][index]
-                  }
-                />
-              ))}
-            </div>
-            <p className="mt-4 text-[14px] leading-6 text-slate-600">
-              Every Project Brief carries its own confidence level (
-              {demoJaneMillerBrief.confidence.label}) and lists exactly what is still missing —
-              never a fake certainty.
-            </p>
-            <div className="mt-6 flex flex-wrap gap-3">
-              <a href="/demo/deck-project">
-                <Button>
-                  Try the Deck Project Demo
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </a>
-            </div>
-          </div>
-        </section>
-
-        <BeforeAfterSection />
-        <InsideMetreBuildSection />
-
-        {/* MULTI-VERTICAL */}
-        <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionHeader
-              eyebrow="Horizontal by design"
-              title="Built for projects that cannot be explained in one text box"
-              description="Métré Build is designed for businesses where every inquiry requires context, constraints and project discovery before a useful quote or sales conversation can happen."
-            />
-            <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {[
-                "Decks and outdoor living",
-                "Pools and spas",
-                "Windows and doors",
-                "Kitchens and remodeling",
-                "Solar and energy projects",
-                "Custom industrial equipment",
-              ].map((item) => (
-                <div
-                  key={item}
-                  className="rounded-md border border-slate-200 bg-white p-4 text-[15px] font-medium leading-6 text-slate-800"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-            <p className="mt-6 text-[14px] leading-6 text-slate-600">
-              Deck Projects is the first live Playbook. Other industries will follow based on real
-              customer demand.
-            </p>
-          </div>
-        </section>
-
-
-        {/* HONEST DISCOVERY */}
+        {/* TRUST / FOUNDER */}
         <section className="px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl">
-            <SectionHeader
-              eyebrow="Honest by design"
-              title="Built for real project discovery."
-              description="Customers rarely know exact dimensions. That is fine — the goal is a useful brief, not a fake certainty."
-            />
-            <div className="mt-8 grid gap-4 md:grid-cols-3">
-              <ObjectCard
-                icon={CheckCircle2}
-                title="Customers can answer approximately"
-                text="Ranges, 'not sure' and 'need to check' are first-class answers."
-              />
-              <ObjectCard
-                icon={ShieldCheck}
-                title="Missing information is clearly identified"
-                text="Gaps are flagged in the brief so sales can prepare the right questions."
-              />
-              <ObjectCard
-                icon={FileText}
-                title="Assumptions are never presented as facts"
-                text="Every line shows its source: visitor answer, rule, or calculated value."
-              />
+          <div className="mx-auto max-w-3xl">
+            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
+              Built from field experience
+            </p>
+            <h2 className="mt-3 text-2xl font-semibold tracking-normal text-slate-950 md:text-3xl">
+              Built by a construction entrepreneur who got tired of starting every sales call from
+              scratch.
+            </h2>
+            <p className="mt-4 text-[16px] leading-7 text-slate-700">
+              Métré Build was founded by Antoine Ferrière, a construction entrepreneur with more
+              than 15 years of experience across timber construction, renovation and project
+              delivery.
+            </p>
+            <div className="mt-6 flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
+                AF
+              </div>
+              <div>
+                <p className="text-sm font-semibold text-slate-950">Antoine Ferrière</p>
+                <p className="text-xs text-slate-500">Founder, Métré Build</p>
+                <a
+                  href="mailto:contact@oppe.fr"
+                  className="text-xs text-emerald-700 hover:underline"
+                >
+                  contact@oppe.fr
+                </a>
+              </div>
             </div>
           </div>
         </section>
 
-        {/* INSTALL + FOUNDER PROOF */}
-        <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-2">
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-              <Link2 className="h-6 w-6 text-emerald-700" />
-              <h3 className="mt-4 text-lg font-semibold tracking-normal text-slate-950">
-                Easy to add to your site
-              </h3>
-              <p className="mt-2 text-[15px] leading-6 text-slate-700">
-                Add it with a link or a small website snippet. No rebuild of your existing site
-                required.
-              </p>
-            </div>
-            <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
-              <HardHat className="h-6 w-6 text-emerald-700" />
-              <h3 className="mt-4 text-lg font-semibold tracking-normal text-slate-950">
-                Built by a builder, not a form vendor
-              </h3>
-              <p className="mt-2 text-[15px] leading-6 text-slate-700">
-                Built by a construction entrepreneur with 15+ years of field experience.
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* FINAL CTA */}
+        {/* OFFER / CTA */}
         <section className="bg-slate-950 px-4 py-16 text-white sm:px-6 lg:px-8">
           <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
             <div>
@@ -439,7 +317,7 @@ export function BuildPublicHome() {
                   variant="outline"
                   className="border-white bg-transparent text-white hover:bg-white hover:text-slate-950"
                 >
-                  Try the Deck Project Demo
+                  Try the Live Deck Intake
                 </Button>
               </a>
             </div>

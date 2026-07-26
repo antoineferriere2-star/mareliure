@@ -20,13 +20,27 @@ import { PublishStep } from "@/build/pages/admin/onboarding/PublishStep";
 
 export const Route = createFileRoute("/_authenticated/build/onboarding")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Onboarding — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({
+    meta: [
+      { title: "Onboarding — Métré Build AI" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: OnboardingPage,
 });
 
-type Step = "url" | "businessType" | "product" | "playbookMatch" | "customize" | "preview" | "publish";
+type Step =
+  "url" | "businessType" | "product" | "playbookMatch" | "customize" | "preview" | "publish";
 
-const STEP_ORDER: Step[] = ["url", "businessType", "product", "playbookMatch", "customize", "preview", "publish"];
+const STEP_ORDER: Step[] = [
+  "url",
+  "businessType",
+  "product",
+  "playbookMatch",
+  "customize",
+  "preview",
+  "publish",
+];
 const STEP_LABELS: Record<Step, string> = {
   url: "URL",
   businessType: "Métier",
@@ -58,7 +72,10 @@ function OnboardingPage() {
   const publishFn = useServerFn(createAndPublishMissionFromOnboarding);
   const listPlaybooksFn = useServerFn(listPublishablePlaybooks);
 
-  const playbooksQuery = useQuery({ queryKey: ["build-admin", "playbooks", "publishable"], queryFn: () => listPlaybooksFn() });
+  const playbooksQuery = useQuery({
+    queryKey: ["build-admin", "playbooks", "publishable"],
+    queryFn: () => listPlaybooksFn(),
+  });
 
   const analyzeMutation = useMutation({
     mutationFn: () => analyzeFn({ data: { url } }),
@@ -68,11 +85,14 @@ function OnboardingPage() {
       setAnalyzeError(null);
       setStep("businessType");
     },
-    onError: (err: unknown) => setAnalyzeError(err instanceof Error ? err.message : "Analyse impossible."),
+    onError: (err: unknown) =>
+      setAnalyzeError(err instanceof Error ? err.message : "Analyse impossible."),
   });
 
   const match: PlaybookMatch | null =
-    businessType && product ? matchPlaybookForProduct(businessType, product, playbooksQuery.data ?? []) : null;
+    businessType && product
+      ? matchPlaybookForProduct(businessType, product, playbooksQuery.data ?? [])
+      : null;
 
   const schemaMutation = useMutation({
     mutationFn: (playbookId: string) => schemaFn({ data: { playbookId } }),
@@ -101,11 +121,13 @@ function OnboardingPage() {
         setPublishError("La Mission n'a pas pu être créée.");
         return;
       }
-      const origin = typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com";
+      const origin =
+        typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com";
       setPublicUrl(`${origin}/m/${mission.public_token}`);
       setPublishError(null);
     },
-    onError: (err: unknown) => setPublishError(err instanceof Error ? err.message : "Publication impossible."),
+    onError: (err: unknown) =>
+      setPublishError(err instanceof Error ? err.message : "Publication impossible."),
   });
 
   return (
@@ -151,6 +173,11 @@ function OnboardingPage() {
             onBack={() => setStep("url")}
             onConfirm={() => setStep("product")}
             noneDetectedMessage="Aucun métier n'a pu être détecté automatiquement sur ce site — merci de le préciser."
+            confirmButtonLabel="Confirmer"
+            backLabel="Retour"
+            otherLabel="Autre (préciser)"
+            otherOnlyLabel="Préciser"
+            detectionLabels={{ detected: "Détecté automatiquement", notFound: "Non trouvé" }}
           />
         )}
 
@@ -167,6 +194,11 @@ function OnboardingPage() {
             onBack={() => setStep("businessType")}
             onConfirm={() => setStep("playbookMatch")}
             noneDetectedMessage="Aucun produit n'a pu être détecté automatiquement sur ce site — merci de le préciser."
+            confirmButtonLabel="Confirmer"
+            backLabel="Retour"
+            otherLabel="Autre (préciser)"
+            otherOnlyLabel="Préciser"
+            detectionLabels={{ detected: "Détecté automatiquement", notFound: "Non trouvé" }}
           />
         )}
 
@@ -177,6 +209,12 @@ function OnboardingPage() {
             match={match}
             onBack={() => setStep("product")}
             onContinue={() => setStep("customize")}
+            title="Playbook associé"
+            businessTypeLabel="Métier"
+            productLabel="Produit"
+            matchedLabel="Playbook proposé"
+            backLabel="Retour"
+            continueLabel="Continuer"
           />
         )}
 

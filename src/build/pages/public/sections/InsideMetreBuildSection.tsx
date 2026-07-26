@@ -51,19 +51,19 @@ export function InsideMetreBuildSection() {
         />
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
           <ProductShot
-            title="Missions at a glance"
+            title="Project Intakes at a glance"
             description="Every guided journey, its status and its Playbook in one list."
           >
             <MissionsListPreview rows={demoMissionsRows} />
           </ProductShot>
           <ProductShot
-            title="Dossiers ready to work"
+            title="Project Briefs ready to work"
             description="Confidence and missing information surfaced before the first call."
           >
             <DossiersListPreview rows={demoDossiersRows} />
           </ProductShot>
           <ProductShot
-            title="Set up from a website in minutes"
+            title="Website setup in minutes"
             description="Point it at a business's website — the business type and a matching Playbook are proposed automatically."
           >
             <OnboardingPreview />

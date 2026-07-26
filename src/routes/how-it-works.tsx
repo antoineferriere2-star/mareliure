@@ -3,7 +3,7 @@ import { BuildHowItWorksPage } from "@/build/pages/public/BuildMarketingPages";
 
 const title = "How Métré Build works";
 const description =
-  "Learn how Playbooks, Project Missions and Project Briefs turn website inquiries into sales-ready context.";
+  "Learn how Playbooks, Project Intakes and Project Briefs turn website inquiries into sales-ready context.";
 
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({

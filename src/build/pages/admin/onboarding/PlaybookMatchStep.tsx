@@ -10,12 +10,24 @@ export function PlaybookMatchStep({
   match,
   onBack,
   onContinue,
+  title = "Matched Playbook",
+  businessTypeLabel = "Business type",
+  productLabel = "Product",
+  matchedLabel = "Suggested Playbook",
+  backLabel = "Back",
+  continueLabel = "Continue",
 }: {
   businessType: string;
   product: string;
   match: PlaybookMatch | null;
   onBack: () => void;
   onContinue: () => void;
+  title?: string;
+  businessTypeLabel?: string;
+  productLabel?: string;
+  matchedLabel?: string;
+  backLabel?: string;
+  continueLabel?: string;
 }) {
   const queryClient = useQueryClient();
   const generateFn = useServerFn(generatePlaybookFromAI);
@@ -31,25 +43,31 @@ export function PlaybookMatchStep({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Playbook associé</h2>
+        <h2 className="text-lg font-semibold text-foreground">{title}</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Métier : <span className="font-medium text-foreground">{businessType}</span> · Produit :{" "}
-          <span className="font-medium text-foreground">{product}</span>
+          {businessTypeLabel}: <span className="font-medium text-foreground">{businessType}</span> ·{" "}
+          {productLabel}: <span className="font-medium text-foreground">{product}</span>
         </p>
       </div>
 
       {match ? (
         <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4">
-          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">Playbook proposé</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-emerald-800">
+            {matchedLabel}
+          </p>
           <p className="mt-1 text-lg font-semibold text-emerald-950">{match.playbook.name}</p>
         </div>
       ) : (
         <div className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4">
-          <p className="text-sm text-amber-900">Aucun Playbook publié ne correspond encore à ce métier.</p>
+          <p className="text-sm text-amber-900">
+            Aucun Playbook publié ne correspond encore à ce métier.
+          </p>
 
           {generateMutation.data ? (
             <div className="rounded-md border border-emerald-300 bg-white p-3 text-sm">
-              <p className="font-medium text-emerald-900">Brouillon généré : {generateMutation.data.name}</p>
+              <p className="font-medium text-emerald-900">
+                Brouillon généré : {generateMutation.data.name}
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">
                 Relis-le, ajuste-le et publie-le dans l'éditeur, puis reviens ici pour continuer.
               </p>
@@ -78,18 +96,23 @@ export function PlaybookMatchStep({
               disabled={generateMutation.isPending}
               className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
             >
-              {generateMutation.isPending ? "Génération en cours…" : "Générer un Playbook avec l'IA (brouillon)"}
+              {generateMutation.isPending
+                ? "Génération en cours…"
+                : "Générer un Playbook avec l'IA (brouillon)"}
             </button>
           )}
 
           {generateMutation.isError && (
             <p className="text-xs text-destructive">
-              {generateMutation.error instanceof Error ? generateMutation.error.message : "La génération a échoué."}
+              {generateMutation.error instanceof Error
+                ? generateMutation.error.message
+                : "La génération a échoué."}
             </p>
           )}
 
           <p className="text-xs text-amber-800">
-            Ou publie toi-même un Playbook avec un <span className="font-mono">project_type</span> adapté (
+            Ou publie toi-même un Playbook avec un <span className="font-mono">project_type</span>{" "}
+            adapté (
             <Link to="/build/playbooks" className="underline">
               gérer les Playbooks
             </Link>
@@ -104,7 +127,7 @@ export function PlaybookMatchStep({
           onClick={onBack}
           className="rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent"
         >
-          Retour
+          {backLabel}
         </button>
         <button
           type="button"
@@ -112,7 +135,7 @@ export function PlaybookMatchStep({
           disabled={!match}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          Continuer
+          {continueLabel}
         </button>
       </div>
     </div>

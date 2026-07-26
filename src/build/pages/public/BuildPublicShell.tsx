@@ -16,7 +16,10 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
     <div className="min-h-screen bg-white text-slate-950">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-          <Link to="/" className="flex items-center gap-3 font-semibold tracking-normal text-slate-950">
+          <Link
+            to="/"
+            className="flex items-center gap-3 font-semibold tracking-normal text-slate-950"
+          >
             <img src="/metre-icon.svg" alt="Métré Build" className="h-8 w-8" />
             <span>Métré Build</span>
           </Link>
@@ -32,7 +35,7 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
               to="/auth"
               className="hidden text-sm font-medium text-slate-600 hover:text-slate-950 sm:inline-flex"
             >
-              Connexion
+              Log in
             </Link>
             <Link to="/demo/deck-project">
               <Button size="sm">Try demo</Button>
@@ -49,7 +52,8 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
               Métré Build
             </div>
             <p className="mt-4 max-w-sm text-sm leading-6 text-slate-300">
-              Private beta for US project-based businesses. Built to turn incomplete website inquiries into structured project briefs.
+              Now available for US project-based businesses. Built to turn incomplete website
+              inquiries into structured project briefs.
             </p>
           </div>
           <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-3">
@@ -61,7 +65,7 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
             <FooterCol title="Conversion">
               <FooterLink to="/example-project-brief">Example brief</FooterLink>
               <FooterLink to="/free-inquiry-audit">Free audit</FooterLink>
-              <FooterLink to="/private-beta">Private beta</FooterLink>
+              <FooterLink to="/private-beta">Request a setup review</FooterLink>
             </FooterCol>
             <FooterCol title="Legal">
               <FooterLink to="/privacy">Privacy</FooterLink>
@@ -77,7 +81,9 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
 function FooterCol({ title, children }: { title: string; children: ReactNode }) {
   return (
     <div>
-      <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-200">{title}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-200">
+        {title}
+      </h2>
       <div className="mt-3 space-y-2">{children}</div>
     </div>
   );
@@ -91,11 +97,25 @@ function FooterLink({ to, children }: { to: string; children: ReactNode }) {
   );
 }
 
-export function SectionHeader({ eyebrow, title, description }: { eyebrow?: string; title: string; description?: string }) {
+export function SectionHeader({
+  eyebrow,
+  title,
+  description,
+}: {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+}) {
   return (
     <div className="max-w-3xl">
-      {eyebrow && <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">{eyebrow}</p>}
-      <h2 className="mt-3 text-3xl font-semibold tracking-normal text-slate-950 md:text-4xl">{title}</h2>
+      {eyebrow && (
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
+          {eyebrow}
+        </p>
+      )}
+      <h2 className="mt-3 text-3xl font-semibold tracking-normal text-slate-950 md:text-4xl">
+        {title}
+      </h2>
       {description && <p className="mt-4 text-[17px] leading-7 text-slate-700">{description}</p>}
     </div>
   );
@@ -106,7 +126,9 @@ export function PublicCtaBand() {
     <section className="bg-slate-950 px-4 py-16 text-white sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-200">Private beta</p>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-200">
+            Get started
+          </p>
           <h2 className="mt-3 text-3xl font-semibold tracking-normal md:text-4xl">
             See what your current website form is missing.
           </h2>
@@ -115,10 +137,16 @@ export function PublicCtaBand() {
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
-          <a href="/free-inquiry-audit"><Button size="lg">Get a free inquiry audit</Button></a>
+          <a href="/free-inquiry-audit">
+            <Button size="lg">Get a Free Website Inquiry Audit</Button>
+          </a>
           <a href="/demo/deck-project">
-            <Button size="lg" variant="outline" className="border-white bg-transparent text-white hover:bg-white hover:text-slate-950">
-              Try the deck demo
+            <Button
+              size="lg"
+              variant="outline"
+              className="border-white bg-transparent text-white hover:bg-white hover:text-slate-950"
+            >
+              Try the Live Deck Intake
             </Button>
           </a>
         </div>
@@ -127,16 +155,42 @@ export function PublicCtaBand() {
   );
 }
 
-export function PageHero({ eyebrow, title, description, primary, primaryTo, secondary, secondaryTo }: { eyebrow: string; title: string; description: string; primary: string; primaryTo: string; secondary: string; secondaryTo: string }) {
+export function PageHero({
+  eyebrow,
+  title,
+  description,
+  primary,
+  primaryTo,
+  secondary,
+  secondaryTo,
+}: {
+  eyebrow: string;
+  title: string;
+  description: string;
+  primary: string;
+  primaryTo: string;
+  secondary: string;
+  secondaryTo: string;
+}) {
   return (
     <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
-        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">{eyebrow}</p>
-        <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">{title}</h1>
+        <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
+          {eyebrow}
+        </p>
+        <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
+          {title}
+        </h1>
         <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">{description}</p>
         <div className="mt-8 flex flex-wrap gap-3">
-          <a href={primaryTo}><Button size="lg">{primary}</Button></a>
-          <a href={secondaryTo}><Button size="lg" variant="outline">{secondary}</Button></a>
+          <a href={primaryTo}>
+            <Button size="lg">{primary}</Button>
+          </a>
+          <a href={secondaryTo}>
+            <Button size="lg" variant="outline">
+              {secondary}
+            </Button>
+          </a>
         </div>
       </div>
     </section>
@@ -156,12 +210,24 @@ export function InfoPanel({ title, items }: { title: string; items: string[] }) 
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
       <h3 className="text-lg font-semibold tracking-normal text-slate-950">{title}</h3>
-      <div className="mt-4 space-y-2">{items.map((item) => <CheckItem key={item}>{item}</CheckItem>)}</div>
+      <div className="mt-4 space-y-2">
+        {items.map((item) => (
+          <CheckItem key={item}>{item}</CheckItem>
+        ))}
+      </div>
     </section>
   );
 }
 
-export function ObjectCard({ icon: Icon, title, text }: { icon: LucideIcon; title: string; text: string }) {
+export function ObjectCard({
+  icon: Icon,
+  title,
+  text,
+}: {
+  icon: LucideIcon;
+  title: string;
+  text: string;
+}) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
       <Icon className="h-6 w-6 text-emerald-700" />
@@ -174,19 +240,33 @@ export function ObjectCard({ icon: Icon, title, text }: { icon: LucideIcon; titl
 export function StepLine({ index, title, text }: { index: number; title: string; text: string }) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-sm font-semibold text-emerald-800">{index}</span>
+      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-sm font-semibold text-emerald-800">
+        {index}
+      </span>
       <h3 className="mt-4 font-semibold tracking-normal text-slate-950">{title}</h3>
       <p className="mt-2 text-[15px] leading-6 text-slate-700">{text}</p>
     </section>
   );
 }
 
-export function ContentBand({ title, items, muted = false }: { title: string; items: string[]; muted?: boolean }) {
+export function ContentBand({
+  title,
+  items,
+  muted = false,
+}: {
+  title: string;
+  items: string[];
+  muted?: boolean;
+}) {
   return (
     <section className={`${muted ? "bg-slate-50" : "bg-white"} px-4 py-16 sm:px-6 lg:px-8`}>
       <div className="mx-auto max-w-7xl">
         <SectionHeader title={title} />
-        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{items.map((item) => <CheckItem key={item}>{item}</CheckItem>)}</div>
+        <div className="mt-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+          {items.map((item) => (
+            <CheckItem key={item}>{item}</CheckItem>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -196,7 +276,9 @@ export function ComparisonRow({ classic, build }: { classic: string; build: stri
   return (
     <div className="grid border-b border-slate-200 last:border-b-0 md:grid-cols-2">
       <div className="p-4 text-[15px] leading-6 text-slate-700">{classic}</div>
-      <div className="border-t border-slate-200 bg-emerald-50 p-4 text-[15px] font-medium leading-6 text-emerald-950 md:border-l md:border-t-0">{build}</div>
+      <div className="border-t border-slate-200 bg-emerald-50 p-4 text-[15px] font-medium leading-6 text-emerald-950 md:border-l md:border-t-0">
+        {build}
+      </div>
     </div>
   );
 }

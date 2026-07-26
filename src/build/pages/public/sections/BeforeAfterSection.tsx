@@ -1,6 +1,25 @@
+import { CheckCircle2, ShieldCheck, FileText } from "lucide-react";
 import { SectionHeader } from "@/build/pages/public/BuildPublicShell";
 import { BriefPreview } from "@/build/pages/public/BriefPreview";
 import { demoJaneMillerBrief } from "@/build/content/demoProductData";
+
+const HONEST_DISCOVERY_POINTS = [
+  {
+    icon: CheckCircle2,
+    title: "Customers can answer approximately",
+    text: "Ranges, 'not sure' and 'need to check' are first-class answers.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Missing information is clearly identified",
+    text: "Gaps are flagged in the brief so sales can prepare the right questions.",
+  },
+  {
+    icon: FileText,
+    title: "Assumptions are never presented as facts",
+    text: "Every line shows its source: customer answer, business rule, or calculated value.",
+  },
+];
 
 function GenericFormMockup() {
   return (
@@ -49,6 +68,15 @@ export function BeforeAfterSection() {
         <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:items-start">
           <GenericFormMockup />
           <BriefPreview brief={demoJaneMillerBrief} compact />
+        </div>
+        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+          {HONEST_DISCOVERY_POINTS.map(({ icon: Icon, title, text }) => (
+            <div key={title} className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+              <Icon className="h-5 w-5 text-emerald-700" />
+              <h3 className="mt-3 text-sm font-semibold tracking-normal text-slate-950">{title}</h3>
+              <p className="mt-1.5 text-[13px] leading-5 text-slate-600">{text}</p>
+            </div>
+          ))}
         </div>
       </div>
     </section>

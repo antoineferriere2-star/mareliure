@@ -7,7 +7,11 @@ import { Label } from "@/components/ui/label";
 import { DetectionBadge } from "@/build/components/DetectionBadge";
 import type { FieldComponentProps } from "./types";
 
-function resizeToBase64(file: File, maxDimension = 1600, quality = 0.75): Promise<{ base64: string; mediaType: string }> {
+function resizeToBase64(
+  file: File,
+  maxDimension = 1600,
+  quality = 0.75,
+): Promise<{ base64: string; mediaType: string }> {
   return new Promise((resolve, reject) => {
     const objectUrl = URL.createObjectURL(file);
     const img = new Image();
@@ -55,7 +59,7 @@ function HypothesisRow({
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Non détecté — précisez si besoin"
+        placeholder="Not detected — add details if needed"
         className="mt-2 w-full rounded-md border border-slate-200 px-2 py-1 text-sm"
       />
     </div>
@@ -70,7 +74,9 @@ export function InspirationPhotoField({
   analyzeInspirationPhoto,
 }: FieldComponentProps<InspirationPhotoFieldDef>) {
   const answer =
-    value && typeof value === "object" && "photoPath" in value ? (value as InspirationPhotoAnswer) : null;
+    value && typeof value === "object" && "photoPath" in value
+      ? (value as InspirationPhotoAnswer)
+      : null;
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
@@ -79,7 +85,7 @@ export function InspirationPhotoField({
     const file = files?.[0];
     if (!file || !analyzeInspirationPhoto) return;
     if (file.size > field.maxFileSizeMb * 1024 * 1024) {
-      setAnalyzeError(`L'image doit faire moins de ${field.maxFileSizeMb} Mo.`);
+      setAnalyzeError(`The image must be smaller than ${field.maxFileSizeMb} MB.`);
       return;
     }
     setAnalyzeError(null);
@@ -101,7 +107,7 @@ export function InspirationPhotoField({
       };
       onChange(nextAnswer);
     } catch (err) {
-      setAnalyzeError(err instanceof Error ? err.message : "Analyse impossible.");
+      setAnalyzeError(err instanceof Error ? err.message : "Unable to analyze the image.");
     } finally {
       setAnalyzing(false);
     }
@@ -114,7 +120,11 @@ export function InspirationPhotoField({
     if (!answer) return;
     const nextConfirmed = { ...answer.confirmed };
     for (const key of confirmedKeys) nextConfirmed[key] = true;
-    onChange({ ...answer, hypotheses: { ...answer.hypotheses, ...patch }, confirmed: nextConfirmed });
+    onChange({
+      ...answer,
+      hypotheses: { ...answer.hypotheses, ...patch },
+      confirmed: nextConfirmed,
+    });
   }
 
   return (
@@ -136,17 +146,23 @@ export function InspirationPhotoField({
         />
       )}
 
-      {analyzing && <p className="mt-3 text-sm text-slate-600">Analyse de l'image en cours…</p>}
-      {(error || analyzeError) && <p className="mt-2 text-sm text-rose-700">{error ?? analyzeError}</p>}
+      {analyzing && <p className="mt-3 text-sm text-slate-600">Analyzing the image…</p>}
+      {(error || analyzeError) && (
+        <p className="mt-2 text-sm text-rose-700">{error ?? analyzeError}</p>
+      )}
 
       {previewUrl && (
-        <img src={previewUrl} alt="" className="mt-4 max-h-48 rounded-md border border-slate-200 object-cover" />
+        <img
+          src={previewUrl}
+          alt=""
+          className="mt-4 max-h-48 rounded-md border border-slate-200 object-cover"
+        />
       )}
 
       {answer && !analyzing && (
         <div className="mt-4 space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
-            Hypothèses de l'IA — à confirmer ou corriger
+            AI observations — review and confirm
           </p>
 
           <HypothesisRow
@@ -156,34 +172,47 @@ export function InspirationPhotoField({
             onChange={(v) => updateHypothesis({ style: v || undefined }, ["style"])}
           />
           <HypothesisRow
-            label="Matériaux"
+            label="Materials"
             confirmed={answer.confirmed.materials === true}
             value={answer.hypotheses.materials.join(", ")}
             onChange={(v) =>
               updateHypothesis(
-                { materials: v.split(",").map((s) => s.trim()).filter(Boolean) },
+                {
+                  materials: v
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                },
                 ["materials"],
               )
             }
           />
           <HypothesisRow
-            label="Forme"
+            label="Shape"
             confirmed={answer.confirmed.shape === true}
             value={answer.hypotheses.shape ?? ""}
             onChange={(v) => updateHypothesis({ shape: v || undefined }, ["shape"])}
           />
           <HypothesisRow
-            label="Éléments"
+            label="Elements"
             confirmed={answer.confirmed.elements === true}
             value={answer.hypotheses.elements.join(", ")}
             onChange={(v) =>
-              updateHypothesis({ elements: v.split(",").map((s) => s.trim()).filter(Boolean) }, ["elements"])
+              updateHypothesis(
+                {
+                  elements: v
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean),
+                },
+                ["elements"],
+              )
             }
           />
 
           {answer.suggestedQuestions.length > 0 && (
             <div className="rounded-md bg-white p-3 text-xs text-slate-600">
-              <p className="font-medium text-slate-700">Pistes à explorer avec le commercial :</p>
+              <p className="font-medium text-slate-700">Topics to review with the sales team:</p>
               <ul className="mt-1 list-disc pl-4">
                 {answer.suggestedQuestions.map((q) => (
                   <li key={q}>{q}</li>

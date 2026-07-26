@@ -3,7 +3,7 @@ import { BuildDeckBuildersPage } from "@/build/pages/public/BuildMarketingPages"
 
 const title = "Deck builders — Métré Build";
 const description =
-  "Qualify deck projects before the first sales call with a guided Deck Project Mission.";
+  "Qualify deck projects before the first sales call with a guided Deck Project Intake.";
 
 export const Route = createFileRoute("/deck-builders")({
   head: () => ({

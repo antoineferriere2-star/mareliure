@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildPrivateBetaPage } from "@/build/pages/public/BuildPublicFormPages";
 
-const title = "Private beta — Métré Build";
+const title = "Request a setup review — Métré Build";
 const description =
-  "Apply to become an early pilot partner in the Métré Build private beta.";
+  "Tell us about your business — we'll help you set up a guided Project Intake for your website.";
 
 export const Route = createFileRoute("/private-beta")({
   head: () => ({
