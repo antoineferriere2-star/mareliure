@@ -17,7 +17,7 @@ export function ProductShot({
   children: ReactNode;
 }) {
   return (
-    <figure className="m-0">
+    <figure className="m-0 min-w-0">
       <figcaption className="max-w-2xl">
         {eyebrow && (
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
