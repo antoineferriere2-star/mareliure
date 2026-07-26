@@ -14,6 +14,7 @@ import { InspirationPreview } from "@/build/pages/public/sections/InspirationSec
 import { BeforeAfterSection } from "@/build/pages/public/sections/BeforeAfterSection";
 import { InsideMetreBuildSection } from "@/build/pages/public/sections/InsideMetreBuildSection";
 import { demoJaneMillerBrief, demoDossiersRows } from "@/build/content/demoProductData";
+import founderPhoto from "@/assets/antoine-ferriere.jpg.asset.json";
 
 export function BuildPublicHome() {
   return (
