@@ -26,7 +26,7 @@ export function createStripeClient(env: StripeEnv): Stripe {
   }
 
   return new Stripe(connectionApiKey, {
-    apiVersion: "2026-03-25.dahlia",
+    apiVersion: "2026-06-24.dahlia",
     httpClient: Stripe.createFetchHttpClient((input, init) => {
       const url = (input instanceof Request ? input.url : input.toString()).replace(
         "https://api.stripe.com",
