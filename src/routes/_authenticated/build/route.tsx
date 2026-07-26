@@ -4,6 +4,7 @@ import { requireBuildAdmin } from "@/build/services/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
 import { useQueryClient } from "@tanstack/react-query";
 import {
+  Activity,
   LayoutDashboard,
   Rocket,
   ClipboardList,
@@ -31,7 +32,7 @@ export const Route = createFileRoute("/_authenticated/build")({
 });
 
 type NavItem = {
-  to: "/build/dashboard" | "/build/missions" | "/build/playbooks" | "/build/dossiers" | "/build/knowledge" | "/build/settings" | "/build/onboarding" | "/build/requests" | "/build/workspaces";
+  to: "/build/dashboard" | "/build/activity" | "/build/missions" | "/build/playbooks" | "/build/dossiers" | "/build/knowledge" | "/build/settings" | "/build/onboarding" | "/build/requests" | "/build/workspaces";
   label: string;
   icon: LucideIcon;
   exact?: boolean;
@@ -39,6 +40,7 @@ type NavItem = {
 
 const navItems: NavItem[] = [
   { to: "/build/dashboard", label: "Dashboard", icon: LayoutDashboard },
+  { to: "/build/activity", label: "Activité", icon: Activity },
   { to: "/build/onboarding", label: "Onboarding", icon: Rocket },
   { to: "/build/missions", label: "Missions", icon: ClipboardList },
   { to: "/build/playbooks", label: "Playbooks", icon: BookOpen },
