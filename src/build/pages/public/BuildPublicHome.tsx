@@ -71,31 +71,31 @@ export function BuildPublicHome() {
     <BuildPublicShell>
       <main>
         {/* HERO */}
-        <section className="overflow-hidden bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,1fr)_1.15fr] lg:items-center">
+        <section className="overflow-hidden bg-slate-50 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+          <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_1.05fr] lg:gap-10">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
                 Project discovery for project-based businesses
               </p>
-              <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl md:text-6xl">
+              <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl lg:text-5xl">
                 Turn vague website inquiries into sales-ready project briefs.
               </h1>
-              <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-700">
+              <p className="mt-4 max-w-2xl text-[17px] leading-7 text-slate-700">
                 Métré Build guides customers through the details they know, helps them clarify what
                 they do not, and gives your sales team the context they need before the first call.
               </p>
-              <p className="mt-4 max-w-2xl text-[15px] font-medium leading-7 text-slate-600">
+              <p className="mt-3 max-w-2xl text-[15px] font-medium leading-6 text-slate-600">
                 More helpful than a form. Simpler than a custom configurator.
               </p>
-              <p className="mt-4 max-w-2xl text-base font-medium leading-7 text-slate-700">
+              <p className="mt-2 max-w-2xl text-[15px] font-medium leading-6 text-slate-700">
                 Customers get a simpler way to explain their project. Sales teams get a clearer
                 brief to act on.
               </p>
-              <p className="mt-3 max-w-2xl text-[14px] leading-6 text-slate-500">
+              <p className="mt-2 max-w-2xl text-[13px] leading-5 text-slate-500">
                 Built for businesses selling projects that require discovery before quoting: decks,
                 pergolas, pools, windows, kitchens, solar, custom equipment and more.
               </p>
-              <div className="mt-8 flex flex-wrap gap-3">
+              <div className="mt-6 flex flex-wrap gap-3">
                 <a href="/demo/deck-project">
                   <Button size="lg">
                     Try the Deck Project Demo
@@ -108,16 +108,14 @@ export function BuildPublicHome() {
                   </Button>
                 </a>
               </div>
-              <p className="mt-5 text-[13px] font-medium text-slate-500">
+              <p className="mt-4 text-[13px] font-medium text-slate-500">
                 No credit card. Add it to your website with a link or a simple snippet.
               </p>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
-              <HeroMissionStepPreview />
-              <BriefPreview brief={demoJaneMillerBrief} compact />
-            </div>
+            <HeroTransformShot brief={demoJaneMillerBrief} />
           </div>
         </section>
+
 
         {/* PROBLEM */}
         <section className="px-4 py-16 sm:px-6 lg:px-8">
