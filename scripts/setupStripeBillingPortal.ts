@@ -64,6 +64,8 @@ async function main() {
   const configuration = await stripe.billingPortal.configurations.create({
     business_profile: { headline: "Métré Build — manage your subscription" },
     features: {
+      // Stripe requires payment_method_update when subscription_update is on.
+      payment_method_update: { enabled: true },
       subscription_update: {
         enabled: true,
         default_allowed_updates: ["price"],
