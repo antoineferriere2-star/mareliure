@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { ArrowRight, FileText, Layers3, Sparkles, Users, Briefcase } from "lucide-react";
+import { ArrowRight, FileText, Layers3, Sparkles, Users, Briefcase, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   BuildPublicShell,
@@ -274,21 +273,24 @@ export function BuildPublicHome() {
               than 15 years of experience across timber construction, renovation and project
               delivery.
             </p>
-            <div className="mt-6 flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
+            <a
+              href="https://www.linkedin.com/in/antoine-ferriere-53113048/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-6 flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:shadow-md"
+            >
               <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
                 AF
               </div>
               <div>
                 <p className="text-sm font-semibold text-slate-950">Antoine Ferrière</p>
                 <p className="text-xs text-slate-500">Founder, Métré Build</p>
-                <a
-                  href="mailto:contact@oppe.fr"
-                  className="text-xs text-emerald-700 hover:underline"
-                >
-                  contact@oppe.fr
-                </a>
+                <span className="inline-flex items-center gap-1 text-xs font-medium text-emerald-700 hover:underline">
+                  <Linkedin className="h-3 w-3" />
+                  View on LinkedIn
+                </span>
               </div>
-            </div>
+            </a>
           </div>
         </section>
 
