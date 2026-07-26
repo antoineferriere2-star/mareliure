@@ -16,6 +16,18 @@ export const BRIEF_SOURCE_LABELS: Record<BriefLineSource, string> = {
   image_hypothesis: "Image-based observation",
 };
 
+export const CONFIDENCE_STYLE: Record<ProjectBrief["confidence"]["label"], string> = {
+  high: "border-emerald-300 bg-emerald-50 text-emerald-800",
+  medium: "border-amber-300 bg-amber-50 text-amber-800",
+  low: "border-rose-300 bg-rose-50 text-rose-800",
+};
+
+export const CONFIDENCE_LABEL_TEXT: Record<ProjectBrief["confidence"]["label"], string> = {
+  high: "High",
+  medium: "Medium",
+  low: "Low",
+};
+
 /**
  * Share of the intake that's confirmed vs. still missing. Derived purely
  * from existing ProjectBrief fields — never added to the schema itself.

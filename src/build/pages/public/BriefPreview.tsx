@@ -2,6 +2,8 @@ import { ShieldCheck } from "lucide-react";
 import type { BriefLine, ProjectBrief } from "@/build/schema/brief";
 import {
   BRIEF_SOURCE_LABELS,
+  CONFIDENCE_LABEL_TEXT,
+  CONFIDENCE_STYLE,
   computeCompletionPercent,
   computeItemsToVerify,
 } from "@/build/schema/briefLabels";
@@ -23,18 +25,6 @@ const SECTION_TITLES: Record<
   constraints: "Constraints",
   missingInformation: "Missing information",
   budgetAndTiming: "Budget and timing",
-};
-
-const CONFIDENCE_STYLE: Record<ProjectBrief["confidence"]["label"], string> = {
-  high: "border-emerald-300 bg-emerald-50 text-emerald-800",
-  medium: "border-amber-300 bg-amber-50 text-amber-800",
-  low: "border-rose-300 bg-rose-50 text-rose-800",
-};
-
-const CONFIDENCE_LABEL_TEXT: Record<ProjectBrief["confidence"]["label"], string> = {
-  high: "High",
-  medium: "Medium",
-  low: "Low",
 };
 
 export function BriefPreview({
@@ -78,7 +68,7 @@ export function BriefPreview({
       <p className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
         {brief.projectSummary}
       </p>
-      <div className={`mt-5 grid gap-4 ${compact ? "" : "md:grid-cols-2"}`}>
+      <div className={`mt-5 grid gap-4 ${compact ? "" : "md:grid-cols-2 md:items-start"}`}>
         {sections.map(([key, title]) => (
           <BriefGroup key={key} title={title} lines={brief[key]} />
         ))}
@@ -90,6 +80,67 @@ export function BriefPreview({
           Source: {BRIEF_SOURCE_LABELS[brief.suggestedNextAction.source]}
         </p>
       </div>
+    </article>
+  );
+}
+
+/**
+ * Condensed Brief card for side-by-side comparisons (e.g. before/after a
+ * generic contact form) where the full multi-section BriefPreview would
+ * dwarf the other column. Shows a handful of real confirmed facts — never
+ * a hand-written summary — plus the same Completion/Confidence/Items-to-
+ * verify indicators, with a link to the full brief for anyone who wants it.
+ */
+export function CompactBriefCard({ brief }: { brief: ProjectBrief }) {
+  const completionPercent = computeCompletionPercent(brief);
+  const itemsToVerify = computeItemsToVerify(brief);
+  const keyLines = [
+    ...brief.confirmedInformation.slice(0, 3),
+    ...brief.budgetAndTiming.slice(0, 1),
+  ];
+
+  return (
+    <article className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
+            Project Brief
+          </p>
+          <h3 className="mt-1 text-lg font-semibold tracking-normal text-slate-950">
+            {brief.missionName}
+          </h3>
+        </div>
+        <ShieldCheck className="h-5 w-5 shrink-0 text-emerald-700" />
+      </div>
+      <div className="mt-3 flex flex-wrap gap-2 text-[11px]">
+        <span
+          className={`rounded-full border px-2.5 py-0.5 font-semibold ${CONFIDENCE_STYLE[brief.confidence.label]}`}
+        >
+          {CONFIDENCE_LABEL_TEXT[brief.confidence.label]} confidence
+        </span>
+        <span className="rounded-full border border-slate-300 bg-slate-50 px-2.5 py-0.5 font-semibold text-slate-700">
+          {completionPercent}% complete
+        </span>
+      </div>
+      <p className="mt-4 text-sm leading-6 text-slate-700">{brief.projectSummary}</p>
+      <dl className="mt-4 space-y-2">
+        {keyLines.map((line) => (
+          <div key={`${line.label}-${line.value}`} className="text-sm">
+            <dt className="inline font-medium text-slate-950">{line.label}: </dt>
+            <dd className="inline text-slate-700">{line.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <p className="mt-4 rounded-md border border-amber-200 bg-amber-50 p-3 text-xs leading-5 text-amber-900">
+        {itemsToVerify} item{itemsToVerify === 1 ? "" : "s"} to verify before the first call —
+        nothing here is a final quote.
+      </p>
+      <a
+        href="/example-project-brief"
+        className="mt-4 inline-block text-xs font-medium text-emerald-700 hover:underline"
+      >
+        View the full example brief →
+      </a>
     </article>
   );
 }

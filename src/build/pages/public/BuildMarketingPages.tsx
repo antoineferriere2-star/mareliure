@@ -66,7 +66,7 @@ export function BuildDeckBuildersPage() {
           ]}
         />
         <section className="px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2">
+          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-2 lg:items-start">
             <SectionHeader
               title="A guided project journey, not a longer contact form."
               description="Each screen asks for one important decision and explains why it matters. Visitors can choose Not sure when dimensions, materials or scope are not ready yet."
@@ -84,7 +84,7 @@ export function BuildDeckBuildersPage() {
           </div>
         </section>
         <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
-          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_460px]">
+          <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_460px] lg:items-start">
             <SectionHeader
               title="What the sales team receives"
               description="A Project Brief separates confirmed visitor answers from deterministic checks, missing information and suggested next action."
