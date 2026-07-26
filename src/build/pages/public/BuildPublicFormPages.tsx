@@ -1,12 +1,15 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BuildPublicShell, SectionHeader } from "@/build/pages/public/BuildPublicShell";
+import { CHOICE_BUTTON_CLASS } from "@/build/engine/fields/types";
 import {
   submitBuildPublicRequest,
+  isValidEmail,
+  isValidWebsiteUrl,
   type AuditRequestInput,
   type BetaRequestInput,
 } from "@/build/services/buildPublicForms";
@@ -26,7 +29,6 @@ export function BuildFreeInquiryAuditPage() {
   });
   return (
     <PublicFormPage
-      kind="audit"
       eyebrow="Free audit"
       title="Free Website Inquiry Audit for Deck Builders"
       description="Send us your website. We'll review how your current inquiry flow captures project details and identify the biggest gaps before the first sales call."
@@ -38,37 +40,7 @@ export function BuildFreeInquiryAuditPage() {
   );
 }
 
-export function BuildPrivateBetaPage() {
-  const [form, setForm] = useState<BetaRequestInput>({
-    name: "",
-    company: "",
-    websiteUrl: "",
-    role: "",
-    businessType: "Deck builder",
-    monthlyInquiries: "",
-    currentTools: "",
-    mainQualificationProblem: "",
-    email: "",
-    consent: false,
-    website: "",
-  });
-  return (
-    <PublicFormPage
-      kind="private_beta"
-      eyebrow="Setup review"
-      title="Request a setup review"
-      description="Tell us about your business and we'll get back to you about setting up a guided Project Intake for your website."
-      submitLabel="Submit request"
-      form={form}
-      setForm={setForm}
-    />
-  );
-}
-
-type FormShape = AuditRequestInput | BetaRequestInput;
-
-function PublicFormPage<T extends FormShape>({
-  kind,
+function PublicFormPage({
   eyebrow,
   title,
   description,
@@ -77,14 +49,13 @@ function PublicFormPage<T extends FormShape>({
   form,
   setForm,
 }: {
-  kind: "audit" | "private_beta";
   eyebrow: string;
   title: string;
   description: string;
   submitLabel: string;
   reassurance?: string;
-  form: T;
-  setForm: Dispatch<SetStateAction<T>>;
+  form: AuditRequestInput;
+  setForm: Dispatch<SetStateAction<AuditRequestInput>>;
 }) {
   const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
   const [error, setError] = useState<string | null>(null);
@@ -94,7 +65,7 @@ function PublicFormPage<T extends FormShape>({
     setStatus("submitting");
     setError(null);
     try {
-      await submitBuildPublicRequest(kind, form);
+      await submitBuildPublicRequest("audit", form);
       setStatus("success");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to submit this request.");
@@ -116,19 +87,9 @@ function PublicFormPage<T extends FormShape>({
               tabIndex={-1}
               autoComplete="off"
               value={form.website ?? ""}
-              onChange={(event) => setForm({ ...form, website: event.target.value } as T)}
+              onChange={(event) => setForm({ ...form, website: event.target.value })}
             />
-            {kind === "audit" ? (
-              <AuditFields
-                form={form as AuditRequestInput}
-                setForm={setForm as unknown as Dispatch<SetStateAction<AuditRequestInput>>}
-              />
-            ) : (
-              <BetaFields
-                form={form as BetaRequestInput}
-                setForm={setForm as unknown as Dispatch<SetStateAction<BetaRequestInput>>}
-              />
-            )}
+            <AuditFields form={form} setForm={setForm} />
             {error && (
               <p className="mt-4 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
                 {error}
@@ -187,70 +148,11 @@ function AuditFields({
           onChange={(event) => setForm({ ...form, biggestIssue: event.target.value })}
         />
       </div>
-      <Consent checked={form.consent} onChange={(consent) => setForm({ ...form, consent })} />
-    </div>
-  );
-}
-
-function BetaFields({
-  form,
-  setForm,
-}: {
-  form: BetaRequestInput;
-  setForm: Dispatch<SetStateAction<BetaRequestInput>>;
-}) {
-  return (
-    <div className="grid gap-4 md:grid-cols-2">
-      <Field
-        label="Name"
-        value={form.name}
-        onChange={(value) => setForm({ ...form, name: value })}
+      <Consent
+        checked={form.consent}
+        onChange={(consent) => setForm({ ...form, consent })}
+        className="md:col-span-2"
       />
-      <Field
-        label="Company"
-        value={form.company}
-        onChange={(value) => setForm({ ...form, company: value })}
-      />
-      <Field
-        label="Website URL"
-        value={form.websiteUrl}
-        onChange={(value) => setForm({ ...form, websiteUrl: value })}
-      />
-      <Field
-        label="Role"
-        value={form.role}
-        onChange={(value) => setForm({ ...form, role: value })}
-      />
-      <Field
-        label="Business type"
-        value={form.businessType}
-        onChange={(value) => setForm({ ...form, businessType: value })}
-      />
-      <Field
-        label="Monthly website inquiries"
-        value={form.monthlyInquiries}
-        onChange={(value) => setForm({ ...form, monthlyInquiries: value })}
-        placeholder="0-10, 11-50, 51-200..."
-      />
-      <Field
-        label="Current tools"
-        value={form.currentTools}
-        onChange={(value) => setForm({ ...form, currentTools: value })}
-      />
-      <Field
-        label="Email"
-        value={form.email}
-        onChange={(value) => setForm({ ...form, email: value })}
-      />
-      <div className="md:col-span-2">
-        <Label>Main qualification problem</Label>
-        <Textarea
-          className="mt-1"
-          value={form.mainQualificationProblem}
-          onChange={(event) => setForm({ ...form, mainQualificationProblem: event.target.value })}
-        />
-      </div>
-      <Consent checked={form.consent} onChange={(consent) => setForm({ ...form, consent })} />
     </div>
   );
 }
@@ -284,12 +186,16 @@ function Field({
 function Consent({
   checked,
   onChange,
+  className = "",
 }: {
   checked: boolean;
   onChange: (checked: boolean) => void;
+  className?: string;
 }) {
   return (
-    <label className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm md:col-span-2">
+    <label
+      className={`flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm ${className}`}
+    >
       <input
         type="checkbox"
         checked={checked}
@@ -297,5 +203,257 @@ function Consent({
       />
       <span>I consent to Métré Build processing this request for review and follow-up.</span>
     </label>
+  );
+}
+
+/**
+ * `/private-beta`: a 4-screen Guided Project Intake, deliberately mirroring
+ * the real product it sells — one decision per screen instead of a 9-field
+ * contact form. Only websiteUrl and email are free-text; business type and
+ * monthly inquiries are clickable choices, styled with the same
+ * CHOICE_BUTTON_CLASS used by the real runtime's SingleChoiceField, so the
+ * page demonstrates the product rather than contradicting it.
+ */
+const BETA_STEP_LABELS = ["Website", "Business type", "Monthly inquiries", "Contact"] as const;
+const BUSINESS_TYPE_OPTIONS = ["Deck builder", "General contractor", "Other"] as const;
+const MONTHLY_INQUIRY_OPTIONS = ["Not sure", "0-10", "11-50", "51-200", "200+"] as const;
+const BETA_DRAFT_KEY = "metre_private_beta_draft";
+
+function emptyBetaForm(): BetaRequestInput {
+  return {
+    name: "",
+    company: "",
+    websiteUrl: "",
+    role: "",
+    businessType: "",
+    monthlyInquiries: "",
+    currentTools: "",
+    mainQualificationProblem: "",
+    email: "",
+    consent: false,
+    website: "",
+  };
+}
+
+function loadBetaDraft(): BetaRequestInput | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = window.sessionStorage.getItem(BETA_DRAFT_KEY);
+    if (!raw) return null;
+    return { ...emptyBetaForm(), ...(JSON.parse(raw) as Partial<BetaRequestInput>) };
+  } catch {
+    return null;
+  }
+}
+
+function businessChoiceFor(value: string): (typeof BUSINESS_TYPE_OPTIONS)[number] | null {
+  if (value === "Deck builder" || value === "General contractor") return value;
+  if (value.trim().length > 0) return "Other";
+  return null;
+}
+
+export function BuildPrivateBetaPage() {
+  const initialDraft = loadBetaDraft();
+  const [form, setForm] = useState<BetaRequestInput>(() => initialDraft ?? emptyBetaForm());
+  const [step, setStep] = useState(0);
+  const [businessTypeChoice, setBusinessTypeChoice] = useState<
+    (typeof BUSINESS_TYPE_OPTIONS)[number] | null
+  >(() => businessChoiceFor(initialDraft?.businessType ?? ""));
+  const [businessTypeOther, setBusinessTypeOther] = useState(() =>
+    businessChoiceFor(initialDraft?.businessType ?? "") === "Other"
+      ? (initialDraft?.businessType ?? "")
+      : "",
+  );
+  const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || status === "success") return;
+    window.sessionStorage.setItem(BETA_DRAFT_KEY, JSON.stringify(form));
+  }, [form, status]);
+
+  function updateForm(patch: Partial<BetaRequestInput>) {
+    setForm((prev) => ({ ...prev, ...patch }));
+  }
+
+  function selectBusinessType(option: (typeof BUSINESS_TYPE_OPTIONS)[number]) {
+    setBusinessTypeChoice(option);
+    updateForm({ businessType: option === "Other" ? businessTypeOther : option });
+  }
+
+  function canContinue(): boolean {
+    if (step === 0) return isValidWebsiteUrl(form.websiteUrl);
+    if (step === 1) return businessTypeChoice !== null && form.businessType.trim().length > 0;
+    if (step === 2) return form.monthlyInquiries.trim().length > 0;
+    return true;
+  }
+
+  const canSubmit = isValidEmail(form.email) && form.consent && status !== "submitting";
+
+  async function submit() {
+    setStatus("submitting");
+    setError(null);
+    try {
+      await submitBuildPublicRequest("private_beta", form);
+      setStatus("success");
+      if (typeof window !== "undefined") window.sessionStorage.removeItem(BETA_DRAFT_KEY);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to submit this request.");
+      setStatus("idle");
+    }
+  }
+
+  const progress = Math.round(((step + 1) / BETA_STEP_LABELS.length) * 100);
+
+  return (
+    <BuildPublicShell>
+      <main className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[420px_1fr]">
+          <SectionHeader
+            eyebrow="Setup review"
+            title="Request a setup review"
+            description="Tell us about your business and we'll get back to you about setting up a guided Project Intake for your website."
+          />
+          <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <input
+              className="hidden"
+              tabIndex={-1}
+              autoComplete="off"
+              value={form.website ?? ""}
+              onChange={(event) => updateForm({ website: event.target.value })}
+            />
+            {status === "success" ? (
+              <div className="rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+                Request received. We will review it internally before any follow-up.
+              </div>
+            ) : (
+              <>
+                <div className="mb-6">
+                  <div className="h-2 rounded-full bg-slate-100">
+                    <div
+                      className="h-2 rounded-full bg-emerald-600"
+                      style={{ width: `${progress}%` }}
+                    />
+                  </div>
+                  <p className="mt-2 text-xs font-medium text-slate-500">
+                    Step {step + 1} of {BETA_STEP_LABELS.length} · {BETA_STEP_LABELS[step]}
+                  </p>
+                </div>
+
+                {step === 0 && (
+                  <div>
+                    <Label htmlFor="beta-website">Website URL</Label>
+                    <Input
+                      id="beta-website"
+                      className="mt-1"
+                      value={form.websiteUrl}
+                      onChange={(event) => updateForm({ websiteUrl: event.target.value })}
+                      placeholder="https://yourbusiness.com"
+                    />
+                  </div>
+                )}
+
+                {step === 1 && (
+                  <div>
+                    <Label>What best describes your business?</Label>
+                    <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                      {BUSINESS_TYPE_OPTIONS.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className={CHOICE_BUTTON_CLASS(businessTypeChoice === option)}
+                          onClick={() => selectBusinessType(option)}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                    {businessTypeChoice === "Other" && (
+                      <Input
+                        className="mt-3"
+                        placeholder="Tell us what your business does"
+                        value={businessTypeOther}
+                        onChange={(event) => {
+                          setBusinessTypeOther(event.target.value);
+                          updateForm({ businessType: event.target.value });
+                        }}
+                      />
+                    )}
+                  </div>
+                )}
+
+                {step === 2 && (
+                  <div>
+                    <Label>How many website inquiries do you get per month?</Label>
+                    <div className="mt-2 grid gap-3 sm:grid-cols-2">
+                      {MONTHLY_INQUIRY_OPTIONS.map((option) => (
+                        <button
+                          key={option}
+                          type="button"
+                          className={CHOICE_BUTTON_CLASS(form.monthlyInquiries === option)}
+                          onClick={() => updateForm({ monthlyInquiries: option })}
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {step === 3 && (
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="beta-email">Email</Label>
+                      <Input
+                        id="beta-email"
+                        type="email"
+                        className="mt-1"
+                        value={form.email}
+                        onChange={(event) => updateForm({ email: event.target.value })}
+                        placeholder="you@yourbusiness.com"
+                      />
+                    </div>
+                    <Consent
+                      checked={form.consent}
+                      onChange={(consent) => updateForm({ consent })}
+                    />
+                  </div>
+                )}
+
+                {error && (
+                  <p className="mt-4 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+                    {error}
+                  </p>
+                )}
+
+                <div className="mt-6 flex items-center justify-between gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={step === 0}
+                    onClick={() => setStep((s) => Math.max(0, s - 1))}
+                  >
+                    Back
+                  </Button>
+                  {step < BETA_STEP_LABELS.length - 1 ? (
+                    <Button
+                      type="button"
+                      disabled={!canContinue()}
+                      onClick={() => setStep((s) => s + 1)}
+                    >
+                      Continue
+                    </Button>
+                  ) : (
+                    <Button type="button" disabled={!canSubmit} onClick={submit}>
+                      {status === "submitting" ? "Submitting" : "Submit request"}
+                    </Button>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </main>
+    </BuildPublicShell>
   );
 }

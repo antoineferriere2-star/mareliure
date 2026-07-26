@@ -21,14 +21,17 @@ const auditSchema = z.object({
 });
 
 const betaSchema = z.object({
-  name: z.string().trim().min(1).max(200),
-  company: z.string().trim().min(1).max(200),
+  // Optional — no longer collected in the 4-screen guided intake (website
+  // URL / business type / monthly inquiries / email), kept for backward
+  // compatibility with historical submissions and later admin/call enrichment.
+  name: z.string().trim().max(200).optional().default(""),
+  company: z.string().trim().max(200).optional().default(""),
   websiteUrl: z.string().trim().url().max(500),
-  role: z.string().trim().min(1).max(200),
+  role: z.string().trim().max(200).optional().default(""),
   businessType: z.string().trim().min(1).max(200),
   monthlyInquiries: z.string().trim().min(1).max(100),
   currentTools: z.string().trim().max(1000).optional().default(""),
-  mainQualificationProblem: z.string().trim().min(1).max(4000),
+  mainQualificationProblem: z.string().trim().max(4000).optional().default(""),
   email: z.string().trim().email().max(255),
   consent: z.literal(true),
 });
