@@ -370,6 +370,19 @@ export async function handleSubmitSession(
     }
     throw dErr;
   }
+  // Fire-and-forget notification to the Espace Client members. Never blocks
+  // or fails the visitor's submission.
+  const { notifyWorkspaceOfNewDossier } = await import(
+    "@/build/services/dossierNotification.server"
+  );
+  await notifyWorkspaceOfNewDossier(supabase, {
+    workspaceId: (mission.workspace_id as string | null) ?? null,
+    dossierId: dossier.id,
+    missionName: (mission.name as string | null) ?? null,
+    summary: dossier.summary,
+    nextQuestions: (dossier.next_questions as string[] | null) ?? [],
+  });
+
   return json(200, { dossier });
 }
 
