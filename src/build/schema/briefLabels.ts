@@ -53,3 +53,25 @@ export function computeItemsToVerify(brief: ProjectBrief): number {
   }
   return seen.size;
 }
+
+const DEFAULT_HERO_SOURCE_ORDER: BriefLineSource[] = [
+  "visitor_answer",
+  "calculated_value",
+  "deterministic_rule",
+  "assumed_default",
+];
+
+/**
+ * Picks at most one real line per source type, in the given order — never a
+ * fabricated line. Used by the marketing hero shot to show the brief's
+ * annotated-source differentiator without the density of a full brief.
+ */
+export function pickOneLinePerSource(
+  brief: ProjectBrief,
+  sourceOrder: BriefLineSource[] = DEFAULT_HERO_SOURCE_ORDER,
+): BriefLine[] {
+  const lines = allBriefLines(brief);
+  return sourceOrder
+    .map((source) => lines.find((line) => line.source === source))
+    .filter((line): line is BriefLine => Boolean(line));
+}

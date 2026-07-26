@@ -23,7 +23,7 @@ export function BuildPublicHome() {
       <main>
         {/* HERO */}
         <section className="overflow-hidden bg-slate-50 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
-          <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,1fr)_1.05fr] lg:gap-10">
+          <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,0.85fr)_1.25fr] lg:gap-10">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
                 Guided project intake for project-based businesses

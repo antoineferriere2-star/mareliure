@@ -1,40 +1,28 @@
 import { ArrowRight, Check, FileText, Sparkles } from "lucide-react";
 import type { ProjectBrief } from "@/build/schema/brief";
 import { deckPlaybookSchema } from "@/build/playbooks/deckPlaybookSchema";
+import { BRIEF_SOURCE_LABELS, pickOneLinePerSource } from "@/build/schema/briefLabels";
 
 const missionSteps = deckPlaybookSchema.sections
   .flatMap((section) => section.steps)
-  .slice(0, 4)
+  .slice(0, 3)
   .map((step) => step.title);
 
 /**
  * Compact, horizontal hero product shot. Shows the Mission → Project Brief
- * transformation at a glance: 4 Mission steps on the left, 5 Project Brief
- * blocks on the right. Secondary details are intentionally hidden — the full
- * brief lives further down the page.
+ * transformation at a glance: a handful of Mission steps on the left, up to
+ * 4 annotated Project Brief lines (one per source type) on the right, which
+ * is the product's actual differentiator. The full brief lives further down
+ * the page.
  */
 export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
-  const briefBlocks = [
-    { label: "Project summary", value: brief.projectSummary },
-    ...brief.confirmedInformation.slice(0, 2).map((line) => ({
-      label: line.label,
-      value: line.value,
-    })),
-    brief.budgetAndTiming[0]
-      ? { label: brief.budgetAndTiming[0].label, value: brief.budgetAndTiming[0].value }
-      : null,
-    brief.missingInformation[0]
-      ? { label: "Missing", value: brief.missingInformation[0].label }
-      : null,
-  ]
-    .filter((block): block is { label: string; value: string } => Boolean(block))
-    .slice(0, 5);
+  const heroLines = pickOneLinePerSource(brief);
 
   return (
     <figure className="m-0 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-      <div className="grid gap-0 md:grid-cols-[minmax(0,1fr)_auto_minmax(0,1.1fr)]">
+      <div className="grid gap-0 md:grid-cols-[minmax(0,0.8fr)_auto_minmax(0,1.3fr)]">
         {/* MISSION */}
-        <div className="p-5">
+        <div className="bg-slate-50 p-5">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
             <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
             Guided Project Intake
@@ -46,7 +34,7 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
                 className={`flex items-center gap-3 rounded-md border p-2.5 text-[14px] leading-5 ${
                   index === 1
                     ? "border-emerald-300 bg-emerald-50 font-medium text-emerald-950"
-                    : "border-slate-200 bg-slate-50 text-slate-700"
+                    : "border-slate-200 bg-white text-slate-700"
                 }`}
               >
                 <span
@@ -64,16 +52,6 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
               </li>
             ))}
           </ol>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {["Guided", "\u201CNot sure\u201D allowed", "Photos"].map((chip) => (
-              <span
-                key={chip}
-                className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-[12px] font-medium text-slate-600"
-              >
-                {chip}
-              </span>
-            ))}
-          </div>
         </div>
 
         {/* ARROW */}
@@ -84,7 +62,7 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
         </div>
 
         {/* BRIEF */}
-        <div className="border-t border-slate-200 bg-white p-5 md:border-t-0">
+        <div className="border-t border-slate-200 bg-white p-6 md:border-t-0">
           <div className="flex items-center justify-between gap-3">
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
               <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
@@ -95,17 +73,20 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
               {brief.confidence.label.charAt(0).toUpperCase() + brief.confidence.label.slice(1)}
             </span>
           </div>
-          <dl className="mt-4 space-y-2">
-            {briefBlocks.map((block) => (
+          <dl className="mt-4 space-y-3">
+            {heroLines.map((line) => (
               <div
-                key={block.label}
-                className="rounded-md border border-slate-200 bg-slate-50 p-2.5"
+                key={`${line.label}-${line.value}`}
+                className="rounded-md border border-slate-200 bg-slate-50 p-3"
               >
-                <dt className="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">
-                  {block.label}
-                </dt>
-                <dd className="mt-0.5 line-clamp-2 text-[14px] leading-5 text-slate-800">
-                  {block.value}
+                <div className="flex items-baseline justify-between gap-2">
+                  <dt className="text-[13px] font-semibold text-slate-950">{line.label}</dt>
+                  <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
+                    {BRIEF_SOURCE_LABELS[line.source]}
+                  </span>
+                </div>
+                <dd className="mt-1 line-clamp-2 text-[14px] leading-5 text-slate-700">
+                  {line.value}
                 </dd>
               </div>
             ))}
