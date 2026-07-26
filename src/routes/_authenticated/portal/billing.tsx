@@ -1,0 +1,162 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { useSuspenseQuery, useQuery, useMutation, queryOptions } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { useState } from "react";
+import { listMyWorkspaces, getMyWorkspaceBilling } from "@/build/services/portal.data.functions";
+import {
+  createWorkspaceCheckoutSession,
+  createWorkspaceBillingPortalSession,
+} from "@/build/services/billing.data.functions";
+import { PLAN_DEFAULTS, type PlanId } from "@/build/billing/plans";
+
+export const Route = createFileRoute("/_authenticated/portal/billing")({
+  ssr: false,
+  head: () => ({
+    meta: [
+      { title: "Facturation — Espace Client" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
+  component: PortalBillingPage,
+});
+
+const SELF_SERVICE_PLANS: PlanId[] = ["launch", "growth", "pro", "business"];
+
+function PortalBillingPage() {
+  const fetchWorkspaces = useServerFn(listMyWorkspaces);
+  const wsOpts = queryOptions({
+    queryKey: ["portal", "workspaces"] as const,
+    queryFn: () => fetchWorkspaces(),
+  });
+  const { data: workspaces } = useSuspenseQuery(wsOpts);
+  const [workspaceId] = useState<string>(workspaces[0]?.id ?? "");
+
+  const checkoutResult =
+    typeof window !== "undefined"
+      ? new URLSearchParams(window.location.search).get("checkout")
+      : null;
+
+  const fetchBilling = useServerFn(getMyWorkspaceBilling);
+  const { data: billing } = useQuery({
+    queryKey: ["portal", "billing", workspaceId] as const,
+    queryFn: () => fetchBilling({ data: { workspaceId } }),
+    enabled: workspaceId.length > 0,
+  });
+
+  const checkout = useServerFn(createWorkspaceCheckoutSession);
+  const checkoutMutation = useMutation({
+    mutationFn: (plan: PlanId) =>
+      checkout({ data: { workspaceId, plan, origin: window.location.origin } }),
+    onSuccess: ({ url }) => {
+      window.location.href = url;
+    },
+  });
+
+  const portal = useServerFn(createWorkspaceBillingPortalSession);
+  const portalMutation = useMutation({
+    mutationFn: () => portal({ data: { workspaceId, origin: window.location.origin } }),
+    onSuccess: ({ url }) => {
+      window.location.href = url;
+    },
+  });
+
+  if (workspaces.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
+        <p className="text-sm text-muted-foreground">
+          Aucun Espace Client associé à ce compte pour le moment.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="text-2xl font-semibold text-foreground">Facturation</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Choisissez ou changez votre plan. Le paiement est géré par Stripe.
+        </p>
+      </header>
+
+      {checkoutResult === "success" && (
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-2.5 text-sm text-emerald-900">
+          Paiement confirmé. La mise à jour de votre plan peut prendre quelques secondes.
+        </div>
+      )}
+      {checkoutResult === "cancel" && (
+        <div className="rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-muted-foreground">
+          Paiement annulé — aucun changement n'a été effectué.
+        </div>
+      )}
+
+      {billing && (
+        <div className="rounded-lg border border-border bg-card p-4">
+          <p className="text-sm text-foreground">
+            Plan actuel :{" "}
+            <span className="font-semibold">
+              {PLAN_DEFAULTS[billing.plan as PlanId]?.label ?? billing.plan}
+            </span>
+            {billing.subscriptionStatus && (
+              <span className="ml-2 text-xs uppercase text-muted-foreground">
+                ({billing.subscriptionStatus})
+              </span>
+            )}
+          </p>
+          {billing.hasStripeCustomer && (
+            <button
+              type="button"
+              onClick={() => portalMutation.mutate()}
+              disabled={portalMutation.isPending}
+              className="mt-3 rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
+            >
+              {portalMutation.isPending ? "Ouverture…" : "Gérer mon abonnement"}
+            </button>
+          )}
+          {portalMutation.isError && (
+            <p className="mt-2 text-xs text-destructive">
+              {portalMutation.error instanceof Error
+                ? portalMutation.error.message
+                : "Une erreur est survenue."}
+            </p>
+          )}
+        </div>
+      )}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {SELF_SERVICE_PLANS.map((plan) => {
+          const defaults = PLAN_DEFAULTS[plan];
+          const isCurrent = billing?.plan === plan;
+          return (
+            <div key={plan} className="rounded-lg border border-border bg-card p-4">
+              <h2 className="text-sm font-semibold text-foreground">{defaults.label}</h2>
+              <p className="mt-1 text-xs text-muted-foreground">
+                {defaults.maxActiveMissions} Mission(s) active(s) · {defaults.monthlyBriefQuota}{" "}
+                Briefs/mois
+              </p>
+              <button
+                type="button"
+                onClick={() => checkoutMutation.mutate(plan)}
+                disabled={isCurrent || checkoutMutation.isPending}
+                className="mt-3 w-full rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
+              >
+                {isCurrent
+                  ? "Plan actuel"
+                  : checkoutMutation.isPending
+                    ? "Redirection…"
+                    : "Choisir ce plan"}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+      {checkoutMutation.isError && (
+        <p className="text-xs text-destructive">
+          {checkoutMutation.error instanceof Error
+            ? checkoutMutation.error.message
+            : "Une erreur est survenue."}
+        </p>
+      )}
+    </div>
+  );
+}

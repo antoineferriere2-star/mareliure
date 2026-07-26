@@ -58,6 +58,25 @@ function PortalLayout() {
           </div>
         </div>
       </header>
+      <nav className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-5xl gap-4 px-4 text-sm">
+          <Link
+            to="/portal"
+            activeOptions={{ exact: true }}
+            activeProps={{ className: "border-primary text-foreground font-medium" }}
+            className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
+          >
+            Mes Dossiers
+          </Link>
+          <Link
+            to="/portal/billing"
+            activeProps={{ className: "border-primary text-foreground font-medium" }}
+            className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
+          >
+            Facturation
+          </Link>
+        </div>
+      </nav>
       <main className="mx-auto max-w-5xl px-4 py-8">
         <Outlet />
       </main>

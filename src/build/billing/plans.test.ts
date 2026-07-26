@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { PLAN_DEFAULTS, getPlanDefaults, isPlanId } from "./plans";
+import { PLAN_DEFAULTS, getPlanByStripeLookupKey, getPlanDefaults, isPlanId } from "./plans";
 
 describe("plans", () => {
   it("has numeric defaults for every plan except enterprise", () => {
@@ -35,5 +35,14 @@ describe("plans", () => {
 
   it("returns the matching plan's defaults", () => {
     expect(getPlanDefaults("pro")).toEqual(PLAN_DEFAULTS.pro);
+  });
+
+  it("maps a Stripe Price lookup_key back to its plan id", () => {
+    expect(getPlanByStripeLookupKey("growth_monthly")).toBe("growth");
+    expect(getPlanByStripeLookupKey("unknown_lookup_key")).toBeNull();
+  });
+
+  it("has no Stripe lookup_key for enterprise (negotiated, no self-serve price)", () => {
+    expect(PLAN_DEFAULTS.enterprise.stripeLookupKey).toBeNull();
   });
 });

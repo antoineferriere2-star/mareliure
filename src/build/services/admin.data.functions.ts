@@ -9,6 +9,7 @@ import { admin, assertAdmin } from "./adminAuth.server";
 import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
 import { PLAN_IDS, getPlanDefaults } from "@/build/billing/plans";
 import { wouldExceedActiveMissions } from "@/build/billing/quota";
+import { resolvePlanColumnsUpdate } from "@/build/billing/planSync";
 
 // ---------- Dashboard ----------
 
@@ -713,14 +714,14 @@ export const updateWorkspacePlan = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
-    const defaults = getPlanDefaults(data.plan);
     const { data: updated, error } = await sb
       .from("build_workspaces")
-      .update({
-        plan: data.plan,
-        max_active_missions: data.max_active_missions ?? defaults.maxActiveMissions ?? 1,
-        monthly_brief_quota: data.monthly_brief_quota ?? defaults.monthlyBriefQuota ?? 50,
-      })
+      .update(
+        resolvePlanColumnsUpdate(data.plan, {
+          max_active_missions: data.max_active_missions,
+          monthly_brief_quota: data.monthly_brief_quota,
+        }),
+      )
       .eq("id", data.workspaceId)
       .select()
       .maybeSingle();

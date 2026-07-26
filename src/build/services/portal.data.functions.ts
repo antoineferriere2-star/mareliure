@@ -63,6 +63,27 @@ export const getMyWorkspaceUsage = createServerFn({ method: "GET" })
     return getWorkspaceUsageInternal(data.workspaceId);
   });
 
+/** Billing summary for /portal/billing — never returns the raw Stripe customer id, just whether one exists. */
+export const getMyWorkspaceBilling = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
+    const sb = await admin();
+    const { data: workspace, error } = await sb
+      .from("build_workspaces")
+      .select("plan, subscription_status, stripe_customer_id")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    if (!workspace) throw new Response("Not found", { status: 404 });
+    return {
+      plan: workspace.plan,
+      subscriptionStatus: workspace.subscription_status,
+      hasStripeCustomer: workspace.stripe_customer_id !== null,
+    };
+  });
+
 export const getWorkspaceDossier = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))

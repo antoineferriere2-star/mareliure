@@ -12,14 +12,41 @@ export interface PlanDefaults {
   /** null = no numeric default; Enterprise limits are negotiated per deal. */
   maxActiveMissions: number | null;
   monthlyBriefQuota: number | null;
+  /** Stripe Price lookup_key (stable across test/live) — null for Enterprise, which has no self-serve price. */
+  stripeLookupKey: string | null;
 }
 
 export const PLAN_DEFAULTS: Record<PlanId, PlanDefaults> = {
-  launch: { label: "Launch", maxActiveMissions: 1, monthlyBriefQuota: 50 },
-  growth: { label: "Growth", maxActiveMissions: 3, monthlyBriefQuota: 250 },
-  pro: { label: "Pro", maxActiveMissions: 8, monthlyBriefQuota: 1000 },
-  business: { label: "Business", maxActiveMissions: 20, monthlyBriefQuota: 5000 },
-  enterprise: { label: "Enterprise", maxActiveMissions: null, monthlyBriefQuota: null },
+  launch: {
+    label: "Launch",
+    maxActiveMissions: 1,
+    monthlyBriefQuota: 50,
+    stripeLookupKey: "launch_monthly",
+  },
+  growth: {
+    label: "Growth",
+    maxActiveMissions: 3,
+    monthlyBriefQuota: 250,
+    stripeLookupKey: "growth_monthly",
+  },
+  pro: {
+    label: "Pro",
+    maxActiveMissions: 8,
+    monthlyBriefQuota: 1000,
+    stripeLookupKey: "pro_monthly",
+  },
+  business: {
+    label: "Business",
+    maxActiveMissions: 20,
+    monthlyBriefQuota: 5000,
+    stripeLookupKey: "business_monthly",
+  },
+  enterprise: {
+    label: "Enterprise",
+    maxActiveMissions: null,
+    monthlyBriefQuota: null,
+    stripeLookupKey: null,
+  },
 };
 
 export function isPlanId(value: string): value is PlanId {
@@ -28,4 +55,12 @@ export function isPlanId(value: string): value is PlanId {
 
 export function getPlanDefaults(plan: string): PlanDefaults {
   return isPlanId(plan) ? PLAN_DEFAULTS[plan] : PLAN_DEFAULTS.launch;
+}
+
+/** Reverse lookup used by the Stripe webhook handler to map a Price lookup_key back to a PlanId. */
+export function getPlanByStripeLookupKey(lookupKey: string): PlanId | null {
+  const entry = (Object.entries(PLAN_DEFAULTS) as [PlanId, PlanDefaults][]).find(
+    ([, defaults]) => defaults.stripeLookupKey === lookupKey,
+  );
+  return entry ? entry[0] : null;
 }
