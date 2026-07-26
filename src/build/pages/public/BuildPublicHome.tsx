@@ -20,15 +20,14 @@ import {
   SectionHeader,
   StepLine,
 } from "@/build/pages/public/BuildPublicShell";
-import { SingleChoiceField } from "@/build/engine/fields/SingleChoiceField";
 import { TimelineField } from "@/build/engine/fields/TimelineField";
-import { BriefPreview } from "@/build/pages/public/BriefPreview";
+import { BriefSummary } from "@/build/pages/public/BriefSummary";
+import { HeroTransformShot } from "@/build/pages/public/sections/HeroTransformShot";
 import { DossiersListPreview } from "@/build/pages/public/AdminPreviewShots";
 import { InspirationSection } from "@/build/pages/public/sections/InspirationSection";
 import { BeforeAfterSection } from "@/build/pages/public/sections/BeforeAfterSection";
 import { InsideMetreBuildSection } from "@/build/pages/public/sections/InsideMetreBuildSection";
 import {
-  demoProjectTypeField,
   demoTimelineField,
   demoJaneMillerBrief,
   demoDossiersRows,
@@ -49,22 +48,6 @@ function DualValueTimelinePreview() {
   );
 }
 
-function HeroMissionStepPreview() {
-  const [value, setValue] = useState<AnswerValue | undefined>(undefined);
-  return (
-    <div className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
-        Live example — Mission step
-      </p>
-      <h2 className="mt-2 text-lg font-semibold tracking-normal text-slate-950">
-        {demoProjectTypeField.label}
-      </h2>
-      <div className="mt-4">
-        <SingleChoiceField field={demoProjectTypeField} value={value} onChange={setValue} />
-      </div>
-    </div>
-  );
-}
 
 export function BuildPublicHome() {
   return (
