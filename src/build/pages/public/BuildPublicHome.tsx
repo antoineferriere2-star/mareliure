@@ -280,9 +280,13 @@ export function BuildPublicHome() {
               rel="noopener noreferrer"
               className="mt-6 flex items-center gap-4 rounded-lg border border-slate-200 bg-white p-4 shadow-sm transition hover:border-emerald-200 hover:shadow-md"
             >
-              <div className="grid h-12 w-12 shrink-0 place-items-center rounded-full bg-slate-100 text-sm font-semibold text-slate-600">
-                AF
-              </div>
+              <img
+                src={founderPhoto.url}
+                alt="Antoine Ferrière, founder of Métré Build"
+                loading="lazy"
+                className="h-12 w-12 shrink-0 rounded-full object-cover"
+              />
+
               <div>
                 <p className="text-sm font-semibold text-slate-950">Antoine Ferrière</p>
                 <p className="text-xs text-slate-500">Founder, Métré Build</p>
