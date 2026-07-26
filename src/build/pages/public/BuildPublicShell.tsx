@@ -4,8 +4,20 @@ import { CheckCircle2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+/**
+ * One entry per industry vertical Métré Build can serve. Only "published"
+ * verticals appear in the nav — Pool & Spa and Windows & Doors exist today
+ * only as fictional demo data (src/build/content/demoProductData.ts), not
+ * as real Playbooks, so they stay out of this list until an actual Playbook
+ * is ready to publish. Adding a real vertical later is a one-line change
+ * here, not a nav redesign.
+ */
+const VERTICAL_NAV_ITEMS = [
+  { label: "Deck builders", to: "/deck-builders" as const, status: "published" as const },
+];
+
 const navItems = [
-  { label: "Deck builders", to: "/deck-builders" as const },
+  ...VERTICAL_NAV_ITEMS.filter((item) => item.status === "published"),
   { label: "How it works", to: "/how-it-works" as const },
   { label: "Example brief", to: "/example-project-brief" as const },
   { label: "Free audit", to: "/free-inquiry-audit" as const },
@@ -103,7 +115,7 @@ export function SectionHeader({
   description,
 }: {
   eyebrow?: string;
-  title: string;
+  title: ReactNode;
   description?: string;
 }) {
   return (
@@ -244,7 +256,15 @@ export function ObjectCard({
   );
 }
 
-export function StepLine({ index, title, text }: { index: number; title: string; text: string }) {
+export function StepLine({
+  index,
+  title,
+  text,
+}: {
+  index: number;
+  title: ReactNode;
+  text: string;
+}) {
   return (
     <section className="rounded-lg border border-slate-200 bg-white p-5 shadow-sm">
       <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-50 text-sm font-semibold text-emerald-800">
@@ -261,7 +281,7 @@ export function ContentBand({
   items,
   muted = false,
 }: {
-  title: string;
+  title: ReactNode;
   items: string[];
   muted?: boolean;
 }) {

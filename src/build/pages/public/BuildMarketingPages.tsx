@@ -41,7 +41,18 @@ export function BuildDeckBuildersPage() {
         />
         <ContentBand
           muted
-          title="What the Deck Playbook collects"
+          title={
+            <>
+              What the Deck{" "}
+              <span
+                className="cursor-help underline decoration-dotted decoration-slate-400 underline-offset-4"
+                title="A reusable industry-specific project discovery method."
+              >
+                Playbook
+              </span>{" "}
+              collects
+            </>
+          }
           items={[
             "New deck, replacement, extension or resurfacing",
             "Property and existing site condition",

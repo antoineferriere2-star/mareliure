@@ -1,12 +1,12 @@
 import { CheckCircle2, ShieldCheck, FileText } from "lucide-react";
 import { SectionHeader } from "@/build/pages/public/BuildPublicShell";
-import { BriefPreview } from "@/build/pages/public/BriefPreview";
+import { CompactBriefCard } from "@/build/pages/public/BriefPreview";
 import { demoJaneMillerBrief } from "@/build/content/demoProductData";
 
 const HONEST_DISCOVERY_POINTS = [
   {
     icon: CheckCircle2,
-    title: "Customers can answer approximately",
+    title: "Approximate answers are welcome",
     text: "Ranges, 'not sure' and 'need to check' are first-class answers.",
   },
   {
@@ -67,7 +67,7 @@ export function BeforeAfterSection() {
         />
         <div className="mt-8 grid gap-6 lg:grid-cols-2 lg:items-start">
           <GenericFormMockup />
-          <BriefPreview brief={demoJaneMillerBrief} compact />
+          <CompactBriefCard brief={demoJaneMillerBrief} />
         </div>
         <div className="mt-8 grid gap-4 sm:grid-cols-3">
           {HONEST_DISCOVERY_POINTS.map(({ icon: Icon, title, text }) => (

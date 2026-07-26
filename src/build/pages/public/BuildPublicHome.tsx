@@ -39,7 +39,14 @@ export function BuildPublicHome() {
                 More helpful than a form. Simpler than a custom configurator.
               </p>
               <p className="mt-2 max-w-2xl text-[13px] leading-5 text-slate-500">
-                Starting with our ready-to-use Deck Project Playbook.
+                Starting with our ready-to-use Deck Project{" "}
+                <span
+                  className="cursor-help underline decoration-dotted decoration-slate-400 underline-offset-4"
+                  title="A reusable industry-specific project discovery method."
+                >
+                  Playbook
+                </span>
+                .
               </p>
               <div className="mt-6 flex flex-wrap items-center gap-4">
                 <a href="/demo/deck-project">
@@ -165,7 +172,18 @@ export function BuildPublicHome() {
             <div className="mt-8 grid gap-3 md:grid-cols-3">
               {[
                 {
-                  title: "Choose or confirm the right Project Intake.",
+                  title: (
+                    <>
+                      Choose or confirm the right{" "}
+                      <span
+                        className="cursor-help underline decoration-dotted decoration-slate-400 underline-offset-4"
+                        title="The guided experience completed by the customer."
+                      >
+                        Project Intake
+                      </span>
+                      .
+                    </>
+                  ),
                   text: "Start with an industry-specific discovery method, or let us match one from your website.",
                 },
                 {
@@ -177,7 +195,7 @@ export function BuildPublicHome() {
                   text: "Review a structured brief before the first call.",
                 },
               ].map((step, index) => (
-                <StepLine key={step.title} index={index + 1} title={step.title} text={step.text} />
+                <StepLine key={step.text} index={index + 1} title={step.title} text={step.text} />
               ))}
             </div>
             <p className="mt-4 text-[14px] leading-6 text-slate-600">
