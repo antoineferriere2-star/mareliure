@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { ArrowRight, FileText, Layers3, Sparkles, Users, Briefcase, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
