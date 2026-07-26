@@ -9,82 +9,48 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
-import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
-import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
-import { Route as HowItWorksRouteImport } from './routes/how-it-works'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PrivateBetaRouteImport } from './routes/private-beta'
 import { Route as TermsRouteImport } from './routes/terms'
-import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
-import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
-import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
+import { Route as PrivateBetaRouteImport } from './routes/private-beta'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
+import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
+import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as IndexRouteImport } from './routes/index'
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
-import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
-import { Route as AuthenticatedBuildDashboardRouteImport } from './routes/_authenticated/build/dashboard'
-import { Route as AuthenticatedBuildKnowledgeRouteImport } from './routes/_authenticated/build/knowledge'
-import { Route as AuthenticatedBuildMissionsRouteImport } from './routes/_authenticated/build/missions'
-import { Route as AuthenticatedBuildOnboardingRouteImport } from './routes/_authenticated/build/onboarding'
-import { Route as AuthenticatedBuildSettingsRouteImport } from './routes/_authenticated/build/settings'
+import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
+import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
+import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
-import { Route as AuthenticatedPortalBillingRouteImport } from './routes/_authenticated/portal/billing'
-import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
+import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
 import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
-import { Route as AuthenticatedBuildDossiersIndexRouteImport } from './routes/_authenticated/build/dossiers.index'
-import { Route as AuthenticatedBuildDossiersIdRouteImport } from './routes/_authenticated/build/dossiers.$id'
-import { Route as AuthenticatedBuildMissionsIndexRouteImport } from './routes/_authenticated/build/missions.index'
-import { Route as AuthenticatedBuildMissionsIdRouteImport } from './routes/_authenticated/build/missions.$id'
-import { Route as AuthenticatedBuildMissionsNewRouteImport } from './routes/_authenticated/build/missions.new'
-import { Route as AuthenticatedBuildPlaybooksIndexRouteImport } from './routes/_authenticated/build/playbooks.index'
-import { Route as AuthenticatedBuildPlaybooksIdRouteImport } from './routes/_authenticated/build/playbooks.$id'
-import { Route as AuthenticatedBuildRequestsIndexRouteImport } from './routes/_authenticated/build/requests.index'
-import { Route as AuthenticatedBuildRequestsIdRouteImport } from './routes/_authenticated/build/requests.$id'
+import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
+import { Route as AuthenticatedPortalBillingRouteImport } from './routes/_authenticated/portal/billing'
+import { Route as AuthenticatedBuildSettingsRouteImport } from './routes/_authenticated/build/settings'
+import { Route as AuthenticatedBuildOnboardingRouteImport } from './routes/_authenticated/build/onboarding'
+import { Route as AuthenticatedBuildMissionsRouteImport } from './routes/_authenticated/build/missions'
+import { Route as AuthenticatedBuildKnowledgeRouteImport } from './routes/_authenticated/build/knowledge'
+import { Route as AuthenticatedBuildDashboardRouteImport } from './routes/_authenticated/build/dashboard'
 import { Route as AuthenticatedBuildWorkspacesIndexRouteImport } from './routes/_authenticated/build/workspaces.index'
-import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as AuthenticatedBuildRequestsIndexRouteImport } from './routes/_authenticated/build/requests.index'
+import { Route as AuthenticatedBuildPlaybooksIndexRouteImport } from './routes/_authenticated/build/playbooks.index'
+import { Route as AuthenticatedBuildMissionsIndexRouteImport } from './routes/_authenticated/build/missions.index'
+import { Route as AuthenticatedBuildDossiersIndexRouteImport } from './routes/_authenticated/build/dossiers.index'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
+import { Route as AuthenticatedBuildRequestsIdRouteImport } from './routes/_authenticated/build/requests.$id'
+import { Route as AuthenticatedBuildPlaybooksIdRouteImport } from './routes/_authenticated/build/playbooks.$id'
+import { Route as AuthenticatedBuildMissionsNewRouteImport } from './routes/_authenticated/build/missions.new'
+import { Route as AuthenticatedBuildMissionsIdRouteImport } from './routes/_authenticated/build/missions.$id'
+import { Route as AuthenticatedBuildDossiersIdRouteImport } from './routes/_authenticated/build/dossiers.$id'
 
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeckBuildersRoute = DeckBuildersRouteImport.update({
-  id: '/deck-builders',
-  path: '/deck-builders',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExampleProjectBriefRoute = ExampleProjectBriefRouteImport.update({
-  id: '/example-project-brief',
-  path: '/example-project-brief',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FreeInquiryAuditRoute = FreeInquiryAuditRouteImport.update({
-  id: '/free-inquiry-audit',
-  path: '/free-inquiry-audit',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HowItWorksRoute = HowItWorksRouteImport.update({
-  id: '/how-it-works',
-  path: '/how-it-works',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivateBetaRoute = PrivateBetaRouteImport.update({
@@ -92,25 +58,43 @@ const PrivateBetaRoute = PrivateBetaRouteImport.update({
   path: '/private-beta',
   getParentRoute: () => rootRouteImport,
 } as any)
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedBuildRouteRoute = AuthenticatedBuildRouteRouteImport.update({
-  id: '/build',
-  path: '/build',
-  getParentRoute: () => AuthenticatedRouteRoute,
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedPortalRouteRoute =
-  AuthenticatedPortalRouteRouteImport.update({
-    id: '/portal',
-    path: '/portal',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
-  id: '/demo/deck-project',
-  path: '/demo/deck-project',
+const FreeInquiryAuditRoute = FreeInquiryAuditRouteImport.update({
+  id: '/free-inquiry-audit',
+  path: '/free-inquiry-audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExampleProjectBriefRoute = ExampleProjectBriefRouteImport.update({
+  id: '/example-project-brief',
+  path: '/example-project-brief',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeckBuildersRoute = DeckBuildersRouteImport.update({
+  id: '/deck-builders',
+  path: '/deck-builders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MPublicTokenRoute = MPublicTokenRouteImport.update({
@@ -118,27 +102,54 @@ const MPublicTokenRoute = MPublicTokenRouteImport.update({
   path: '/m/$publicToken',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
+  id: '/demo/deck-project',
+  path: '/demo/deck-project',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPortalRouteRoute =
+  AuthenticatedPortalRouteRouteImport.update({
+    id: '/portal',
+    path: '/portal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBuildRouteRoute = AuthenticatedBuildRouteRouteImport.update({
+  id: '/build',
+  path: '/build',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedPortalIndexRoute =
+  AuthenticatedPortalIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
 const AuthenticatedBuildIndexRoute = AuthenticatedBuildIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedBuildRouteRoute,
 } as any)
-const AuthenticatedBuildDashboardRoute =
-  AuthenticatedBuildDashboardRouteImport.update({
-    id: '/dashboard',
-    path: '/dashboard',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
+const ApiPublicBuildRuntimeRoute = ApiPublicBuildRuntimeRouteImport.update({
+  id: '/api/public/build-runtime',
+  path: '/api/public/build-runtime',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBuildPublicIntakeRoute =
+  ApiPublicBuildPublicIntakeRouteImport.update({
+    id: '/api/public/build-public-intake',
+    path: '/api/public/build-public-intake',
+    getParentRoute: () => rootRouteImport,
   } as any)
-const AuthenticatedBuildKnowledgeRoute =
-  AuthenticatedBuildKnowledgeRouteImport.update({
-    id: '/knowledge',
-    path: '/knowledge',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
+const AuthenticatedPortalBillingRoute =
+  AuthenticatedPortalBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
-const AuthenticatedBuildMissionsRoute =
-  AuthenticatedBuildMissionsRouteImport.update({
-    id: '/missions',
-    path: '/missions',
+const AuthenticatedBuildSettingsRoute =
+  AuthenticatedBuildSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
 const AuthenticatedBuildOnboardingRoute =
@@ -147,87 +158,22 @@ const AuthenticatedBuildOnboardingRoute =
     path: '/onboarding',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedBuildSettingsRoute =
-  AuthenticatedBuildSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
+const AuthenticatedBuildMissionsRoute =
+  AuthenticatedBuildMissionsRouteImport.update({
+    id: '/missions',
+    path: '/missions',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedPortalIndexRoute =
-  AuthenticatedPortalIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalBillingRoute =
-  AuthenticatedPortalBillingRouteImport.update({
-    id: '/billing',
-    path: '/billing',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const ApiPublicBuildPublicIntakeRoute =
-  ApiPublicBuildPublicIntakeRouteImport.update({
-    id: '/api/public/build-public-intake',
-    path: '/api/public/build-public-intake',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicBuildRuntimeRoute = ApiPublicBuildRuntimeRouteImport.update({
-  id: '/api/public/build-runtime',
-  path: '/api/public/build-runtime',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedBuildDossiersIndexRoute =
-  AuthenticatedBuildDossiersIndexRouteImport.update({
-    id: '/dossiers/',
-    path: '/dossiers/',
+const AuthenticatedBuildKnowledgeRoute =
+  AuthenticatedBuildKnowledgeRouteImport.update({
+    id: '/knowledge',
+    path: '/knowledge',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedBuildDossiersIdRoute =
-  AuthenticatedBuildDossiersIdRouteImport.update({
-    id: '/dossiers/$id',
-    path: '/dossiers/$id',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
-  } as any)
-const AuthenticatedBuildMissionsIndexRoute =
-  AuthenticatedBuildMissionsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedBuildMissionsRoute,
-  } as any)
-const AuthenticatedBuildMissionsIdRoute =
-  AuthenticatedBuildMissionsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedBuildMissionsRoute,
-  } as any)
-const AuthenticatedBuildMissionsNewRoute =
-  AuthenticatedBuildMissionsNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedBuildMissionsRoute,
-  } as any)
-const AuthenticatedBuildPlaybooksIndexRoute =
-  AuthenticatedBuildPlaybooksIndexRouteImport.update({
-    id: '/playbooks/',
-    path: '/playbooks/',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
-  } as any)
-const AuthenticatedBuildPlaybooksIdRoute =
-  AuthenticatedBuildPlaybooksIdRouteImport.update({
-    id: '/playbooks/$id',
-    path: '/playbooks/$id',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
-  } as any)
-const AuthenticatedBuildRequestsIndexRoute =
-  AuthenticatedBuildRequestsIndexRouteImport.update({
-    id: '/requests/',
-    path: '/requests/',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
-  } as any)
-const AuthenticatedBuildRequestsIdRoute =
-  AuthenticatedBuildRequestsIdRouteImport.update({
-    id: '/requests/$id',
-    path: '/requests/$id',
+const AuthenticatedBuildDashboardRoute =
+  AuthenticatedBuildDashboardRouteImport.update({
+    id: '/dashboard',
+    path: '/dashboard',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
 const AuthenticatedBuildWorkspacesIndexRoute =
@@ -236,28 +182,82 @@ const AuthenticatedBuildWorkspacesIndexRoute =
     path: '/workspaces/',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedPortalDossiersIdRoute =
-  AuthenticatedPortalDossiersIdRouteImport.update({
-    id: '/dossiers/$id',
-    path: '/dossiers/$id',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
+const AuthenticatedBuildRequestsIndexRoute =
+  AuthenticatedBuildRequestsIndexRouteImport.update({
+    id: '/requests/',
+    path: '/requests/',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
+const AuthenticatedBuildPlaybooksIndexRoute =
+  AuthenticatedBuildPlaybooksIndexRouteImport.update({
+    id: '/playbooks/',
+    path: '/playbooks/',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedBuildMissionsIndexRoute =
+  AuthenticatedBuildMissionsIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedBuildMissionsRoute,
+  } as any)
+const AuthenticatedBuildDossiersIndexRoute =
+  AuthenticatedBuildDossiersIndexRouteImport.update({
+    id: '/dossiers/',
+    path: '/dossiers/',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
     path: '/api/public/payments/webhook',
     getParentRoute: () => rootRouteImport,
   } as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
+const AuthenticatedPortalDossiersIdRoute =
+  AuthenticatedPortalDossiersIdRouteImport.update({
+    id: '/dossiers/$id',
+    path: '/dossiers/$id',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedBuildRequestsIdRoute =
+  AuthenticatedBuildRequestsIdRouteImport.update({
+    id: '/requests/$id',
+    path: '/requests/$id',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedBuildPlaybooksIdRoute =
+  AuthenticatedBuildPlaybooksIdRouteImport.update({
+    id: '/playbooks/$id',
+    path: '/playbooks/$id',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedBuildMissionsNewRoute =
+  AuthenticatedBuildMissionsNewRouteImport.update({
+    id: '/new',
+    path: '/new',
+    getParentRoute: () => AuthenticatedBuildMissionsRoute,
+  } as any)
+const AuthenticatedBuildMissionsIdRoute =
+  AuthenticatedBuildMissionsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedBuildMissionsRoute,
+  } as any)
+const AuthenticatedBuildDossiersIdRoute =
+  AuthenticatedBuildDossiersIdRouteImport.update({
+    id: '/dossiers/$id',
+    path: '/dossiers/$id',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -515,60 +515,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/deck-builders': {
-      id: '/deck-builders'
-      path: '/deck-builders'
-      fullPath: '/deck-builders'
-      preLoaderRoute: typeof DeckBuildersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/example-project-brief': {
-      id: '/example-project-brief'
-      path: '/example-project-brief'
-      fullPath: '/example-project-brief'
-      preLoaderRoute: typeof ExampleProjectBriefRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/free-inquiry-audit': {
-      id: '/free-inquiry-audit'
-      path: '/free-inquiry-audit'
-      fullPath: '/free-inquiry-audit'
-      preLoaderRoute: typeof FreeInquiryAuditRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/how-it-works': {
-      id: '/how-it-works'
-      path: '/how-it-works'
-      fullPath: '/how-it-works'
-      preLoaderRoute: typeof HowItWorksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/private-beta': {
@@ -578,32 +529,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivateBetaRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/build': {
-      id: '/_authenticated/build'
-      path: '/build'
-      fullPath: '/build'
-      preLoaderRoute: typeof AuthenticatedBuildRouteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/portal': {
-      id: '/_authenticated/portal'
-      path: '/portal'
-      fullPath: '/portal'
-      preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
-      parentRoute: typeof AuthenticatedRouteRoute
+    '/free-inquiry-audit': {
+      id: '/free-inquiry-audit'
+      path: '/free-inquiry-audit'
+      fullPath: '/free-inquiry-audit'
+      preLoaderRoute: typeof FreeInquiryAuditRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/demo/deck-project': {
-      id: '/demo/deck-project'
-      path: '/demo/deck-project'
-      fullPath: '/demo/deck-project'
-      preLoaderRoute: typeof DemoDeckProjectRouteImport
+    '/example-project-brief': {
+      id: '/example-project-brief'
+      path: '/example-project-brief'
+      fullPath: '/example-project-brief'
+      preLoaderRoute: typeof ExampleProjectBriefRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/deck-builders': {
+      id: '/deck-builders'
+      path: '/deck-builders'
+      fullPath: '/deck-builders'
+      preLoaderRoute: typeof DeckBuildersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/m/$publicToken': {
@@ -613,6 +592,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof MPublicTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/deck-project': {
+      id: '/demo/deck-project'
+      path: '/demo/deck-project'
+      fullPath: '/demo/deck-project'
+      preLoaderRoute: typeof DemoDeckProjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/portal': {
+      id: '/_authenticated/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/build': {
+      id: '/_authenticated/build'
+      path: '/build'
+      fullPath: '/build'
+      preLoaderRoute: typeof AuthenticatedBuildRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/portal/': {
+      id: '/_authenticated/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof AuthenticatedPortalIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
     '/_authenticated/build/': {
       id: '/_authenticated/build/'
       path: '/'
@@ -620,25 +627,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildIndexRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/build/dashboard': {
-      id: '/_authenticated/build/dashboard'
-      path: '/dashboard'
-      fullPath: '/build/dashboard'
-      preLoaderRoute: typeof AuthenticatedBuildDashboardRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
+    '/api/public/build-runtime': {
+      id: '/api/public/build-runtime'
+      path: '/api/public/build-runtime'
+      fullPath: '/api/public/build-runtime'
+      preLoaderRoute: typeof ApiPublicBuildRuntimeRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/build/knowledge': {
-      id: '/_authenticated/build/knowledge'
-      path: '/knowledge'
-      fullPath: '/build/knowledge'
-      preLoaderRoute: typeof AuthenticatedBuildKnowledgeRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
+    '/api/public/build-public-intake': {
+      id: '/api/public/build-public-intake'
+      path: '/api/public/build-public-intake'
+      fullPath: '/api/public/build-public-intake'
+      preLoaderRoute: typeof ApiPublicBuildPublicIntakeRouteImport
+      parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/build/missions': {
-      id: '/_authenticated/build/missions'
-      path: '/missions'
-      fullPath: '/build/missions'
-      preLoaderRoute: typeof AuthenticatedBuildMissionsRouteImport
+    '/_authenticated/portal/billing': {
+      id: '/_authenticated/portal/billing'
+      path: '/billing'
+      fullPath: '/portal/billing'
+      preLoaderRoute: typeof AuthenticatedPortalBillingRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/build/settings': {
+      id: '/_authenticated/build/settings'
+      path: '/settings'
+      fullPath: '/build/settings'
+      preLoaderRoute: typeof AuthenticatedBuildSettingsRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
     '/_authenticated/build/onboarding': {
@@ -648,102 +662,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildOnboardingRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/build/settings': {
-      id: '/_authenticated/build/settings'
-      path: '/settings'
-      fullPath: '/build/settings'
-      preLoaderRoute: typeof AuthenticatedBuildSettingsRouteImport
+    '/_authenticated/build/missions': {
+      id: '/_authenticated/build/missions'
+      path: '/missions'
+      fullPath: '/build/missions'
+      preLoaderRoute: typeof AuthenticatedBuildMissionsRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/portal/': {
-      id: '/_authenticated/portal/'
-      path: '/'
-      fullPath: '/portal/'
-      preLoaderRoute: typeof AuthenticatedPortalIndexRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/billing': {
-      id: '/_authenticated/portal/billing'
-      path: '/billing'
-      fullPath: '/portal/billing'
-      preLoaderRoute: typeof AuthenticatedPortalBillingRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/api/public/build-public-intake': {
-      id: '/api/public/build-public-intake'
-      path: '/api/public/build-public-intake'
-      fullPath: '/api/public/build-public-intake'
-      preLoaderRoute: typeof ApiPublicBuildPublicIntakeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/build-runtime': {
-      id: '/api/public/build-runtime'
-      path: '/api/public/build-runtime'
-      fullPath: '/api/public/build-runtime'
-      preLoaderRoute: typeof ApiPublicBuildRuntimeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/build/dossiers/': {
-      id: '/_authenticated/build/dossiers/'
-      path: '/dossiers'
-      fullPath: '/build/dossiers/'
-      preLoaderRoute: typeof AuthenticatedBuildDossiersIndexRouteImport
+    '/_authenticated/build/knowledge': {
+      id: '/_authenticated/build/knowledge'
+      path: '/knowledge'
+      fullPath: '/build/knowledge'
+      preLoaderRoute: typeof AuthenticatedBuildKnowledgeRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/build/dossiers/$id': {
-      id: '/_authenticated/build/dossiers/$id'
-      path: '/dossiers/$id'
-      fullPath: '/build/dossiers/$id'
-      preLoaderRoute: typeof AuthenticatedBuildDossiersIdRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
-    '/_authenticated/build/missions/': {
-      id: '/_authenticated/build/missions/'
-      path: '/'
-      fullPath: '/build/missions/'
-      preLoaderRoute: typeof AuthenticatedBuildMissionsIndexRouteImport
-      parentRoute: typeof AuthenticatedBuildMissionsRoute
-    }
-    '/_authenticated/build/missions/$id': {
-      id: '/_authenticated/build/missions/$id'
-      path: '/$id'
-      fullPath: '/build/missions/$id'
-      preLoaderRoute: typeof AuthenticatedBuildMissionsIdRouteImport
-      parentRoute: typeof AuthenticatedBuildMissionsRoute
-    }
-    '/_authenticated/build/missions/new': {
-      id: '/_authenticated/build/missions/new'
-      path: '/new'
-      fullPath: '/build/missions/new'
-      preLoaderRoute: typeof AuthenticatedBuildMissionsNewRouteImport
-      parentRoute: typeof AuthenticatedBuildMissionsRoute
-    }
-    '/_authenticated/build/playbooks/': {
-      id: '/_authenticated/build/playbooks/'
-      path: '/playbooks'
-      fullPath: '/build/playbooks/'
-      preLoaderRoute: typeof AuthenticatedBuildPlaybooksIndexRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
-    '/_authenticated/build/playbooks/$id': {
-      id: '/_authenticated/build/playbooks/$id'
-      path: '/playbooks/$id'
-      fullPath: '/build/playbooks/$id'
-      preLoaderRoute: typeof AuthenticatedBuildPlaybooksIdRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
-    '/_authenticated/build/requests/': {
-      id: '/_authenticated/build/requests/'
-      path: '/requests'
-      fullPath: '/build/requests/'
-      preLoaderRoute: typeof AuthenticatedBuildRequestsIndexRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
-    '/_authenticated/build/requests/$id': {
-      id: '/_authenticated/build/requests/$id'
-      path: '/requests/$id'
-      fullPath: '/build/requests/$id'
-      preLoaderRoute: typeof AuthenticatedBuildRequestsIdRouteImport
+    '/_authenticated/build/dashboard': {
+      id: '/_authenticated/build/dashboard'
+      path: '/dashboard'
+      fullPath: '/build/dashboard'
+      preLoaderRoute: typeof AuthenticatedBuildDashboardRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
     '/_authenticated/build/workspaces/': {
@@ -753,18 +690,39 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildWorkspacesIndexRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/portal/dossiers/$id': {
-      id: '/_authenticated/portal/dossiers/$id'
-      path: '/dossiers/$id'
-      fullPath: '/portal/dossiers/$id'
-      preLoaderRoute: typeof AuthenticatedPortalDossiersIdRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
+    '/_authenticated/build/requests/': {
+      id: '/_authenticated/build/requests/'
+      path: '/requests'
+      fullPath: '/build/requests/'
+      preLoaderRoute: typeof AuthenticatedBuildRequestsIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+    '/_authenticated/build/playbooks/': {
+      id: '/_authenticated/build/playbooks/'
+      path: '/playbooks'
+      fullPath: '/build/playbooks/'
+      preLoaderRoute: typeof AuthenticatedBuildPlaybooksIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/missions/': {
+      id: '/_authenticated/build/missions/'
+      path: '/'
+      fullPath: '/build/missions/'
+      preLoaderRoute: typeof AuthenticatedBuildMissionsIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildMissionsRoute
+    }
+    '/_authenticated/build/dossiers/': {
+      id: '/_authenticated/build/dossiers/'
+      path: '/dossiers'
+      fullPath: '/build/dossiers/'
+      preLoaderRoute: typeof AuthenticatedBuildDossiersIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/lovable/email/auth/preview': {
@@ -774,12 +732,54 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/portal/dossiers/$id': {
+      id: '/_authenticated/portal/dossiers/$id'
+      path: '/dossiers/$id'
+      fullPath: '/portal/dossiers/$id'
+      preLoaderRoute: typeof AuthenticatedPortalDossiersIdRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/build/requests/$id': {
+      id: '/_authenticated/build/requests/$id'
+      path: '/requests/$id'
+      fullPath: '/build/requests/$id'
+      preLoaderRoute: typeof AuthenticatedBuildRequestsIdRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/playbooks/$id': {
+      id: '/_authenticated/build/playbooks/$id'
+      path: '/playbooks/$id'
+      fullPath: '/build/playbooks/$id'
+      preLoaderRoute: typeof AuthenticatedBuildPlaybooksIdRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/missions/new': {
+      id: '/_authenticated/build/missions/new'
+      path: '/new'
+      fullPath: '/build/missions/new'
+      preLoaderRoute: typeof AuthenticatedBuildMissionsNewRouteImport
+      parentRoute: typeof AuthenticatedBuildMissionsRoute
+    }
+    '/_authenticated/build/missions/$id': {
+      id: '/_authenticated/build/missions/$id'
+      path: '/$id'
+      fullPath: '/build/missions/$id'
+      preLoaderRoute: typeof AuthenticatedBuildMissionsIdRouteImport
+      parentRoute: typeof AuthenticatedBuildMissionsRoute
+    }
+    '/_authenticated/build/dossiers/$id': {
+      id: '/_authenticated/build/dossiers/$id'
+      path: '/dossiers/$id'
+      fullPath: '/build/dossiers/$id'
+      preLoaderRoute: typeof AuthenticatedBuildDossiersIdRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
     }
   }
 }
@@ -896,13 +896,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
