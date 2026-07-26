@@ -31,8 +31,24 @@ function MissionStatusBadge({ status }: { status: DemoMissionRow["status"] }) {
 
 export function MissionsListPreview({ rows }: { rows: DemoMissionRow[] }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <table className="w-full text-sm">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+      {/* Below 640px: stacked cards, never a horizontally-scrolling table. */}
+      <div className="divide-y divide-slate-100 sm:hidden">
+        {rows.map((m) => (
+          <div key={m.id} className="p-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="font-medium text-slate-950">{m.name}</div>
+              <MissionStatusBadge status={m.status} />
+            </div>
+            {m.objective && <div className="mt-1 text-xs text-slate-500">{m.objective}</div>}
+            <div className="mt-2 flex items-center justify-between text-xs text-slate-500">
+              <span>{m.playbook_name ?? "—"}</span>
+              <span>{new Date(m.created_at).toLocaleDateString("en-US")}</span>
+            </div>
+          </div>
+        ))}
+      </div>
+      <table className="hidden w-full text-sm sm:table">
         <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
             <th className="px-4 py-2 text-left">Name</th>
@@ -81,8 +97,28 @@ const DOSSIER_STATUS_LABELS: Record<string, string> = {
 
 export function DossiersListPreview({ rows }: { rows: DemoDossierRow[] }) {
   return (
-    <div className="overflow-hidden rounded-lg border border-slate-200 bg-white">
-      <table className="w-full text-sm">
+    <div className="min-w-0 overflow-hidden rounded-lg border border-slate-200 bg-white">
+      {/* Below 640px: stacked cards, never a horizontally-scrolling table. */}
+      <div className="divide-y divide-slate-100 sm:hidden">
+        {rows.map((d) => (
+          <div key={d.id} className="p-4">
+            <div className="font-medium text-slate-950">{d.summary}</div>
+            <div className="mt-2 flex flex-wrap items-center gap-2">
+              <span className="rounded-full border border-slate-300 px-2 py-0.5 text-[10px] uppercase text-slate-600">
+                {DOSSIER_STATUS_LABELS[d.status] ?? d.status}
+              </span>
+              <span
+                className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase ${CONFIDENCE_STYLES[d.confidence]}`}
+              >
+                {d.confidence}
+              </span>
+              <span className="text-xs text-slate-500">{d.missing_count} missing</span>
+            </div>
+            <div className="mt-2 text-xs text-slate-500">{d.mission_name}</div>
+          </div>
+        ))}
+      </div>
+      <table className="hidden w-full text-sm sm:table">
         <thead className="border-b border-slate-200 bg-slate-50 text-xs uppercase tracking-wide text-slate-500">
           <tr>
             <th className="px-4 py-2 text-left">Summary</th>

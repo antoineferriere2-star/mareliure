@@ -15,7 +15,7 @@ function InspirationIllustration() {
       viewBox="0 0 400 300"
       role="img"
       aria-label="Schematic illustration of a backyard deck with railing and stairs"
-      className="w-full rounded-md border border-slate-200 bg-slate-50"
+      className="w-full min-w-0 rounded-md border border-slate-200 bg-slate-50"
     >
       <rect x="0" y="0" width="400" height="300" fill="#f8fafc" />
       <rect
@@ -64,7 +64,7 @@ function InspirationIllustration() {
 export function InspirationPreview() {
   const [answer, setAnswer] = useState<AnswerValue>(demoInspirationAnswer);
   return (
-    <div className="grid gap-4 sm:grid-cols-2">
+    <div className="grid min-w-0 gap-4 sm:grid-cols-2 sm:items-start">
       <InspirationIllustration />
       <InspirationPhotoField
         field={demoInspirationPhotoField}

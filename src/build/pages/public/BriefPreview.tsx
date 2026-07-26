@@ -111,7 +111,7 @@ function BriefGroup({ title, lines }: { title: string; lines: BriefLine[] }) {
           {Array.from(byCategory.entries()).map(([category, categoryLines]) => (
             <div key={category ?? "_"}>
               {category && (
-                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.1em] text-slate-500">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-[0.1em] text-slate-600">
                   {category}
                 </p>
               )}
@@ -120,7 +120,7 @@ function BriefGroup({ title, lines }: { title: string; lines: BriefLine[] }) {
                   <div key={`${line.label}-${line.value}`} className="text-sm leading-6">
                     <span className="font-medium text-slate-950">{line.label}: </span>
                     <span className="text-slate-700">{line.value}</span>
-                    <span className="mt-1 block text-xs uppercase tracking-[0.12em] text-slate-400">
+                    <span className="mt-1 block text-xs uppercase tracking-[0.12em] text-slate-600">
                       {BRIEF_SOURCE_LABELS[line.source]}
                     </span>
                   </div>
