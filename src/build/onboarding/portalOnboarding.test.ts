@@ -25,7 +25,9 @@ describe("checkSiteUrl", () => {
 
   it.each([
     ["", "Enter your website address."],
-    ["not a url", "Enter a full domain, for example yourcompany.com."],
+    ["not a url", "That does not look like a valid website address."],
+    ["https://no-tld-here", "Enter a full domain, for example yourcompany.com."],
+
     ["ftp://example.com", "Only http:// and https:// addresses are supported."],
     ["file:///etc/passwd", "Only http:// and https:// addresses are supported."],
     ["http://localhost:8080", "Enter your public website address."],
