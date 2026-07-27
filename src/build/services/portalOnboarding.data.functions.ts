@@ -23,12 +23,14 @@ import { fetchSitePublicHtml } from "@/build/onboarding/safeFetch.server";
 import { extractSiteText } from "@/build/onboarding/extractText";
 import { expandPlaybookDraft } from "@/build/onboarding/expandPlaybookDraft";
 import { playbookSchema, type PlaybookSchema } from "@/build/schema/playbook";
+import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import {
   checkAiRun,
   checkBranding,
   checkSiteUrl,
   defaultBranding,
   isAcceptableProduct,
+  isPublished,
   resolveDeckEligibility,
   type Branding,
   type OnboardingStatus,
@@ -47,8 +49,9 @@ export interface PortalOnboardingState {
   confirmedProduct: string | null;
   draftPlaybookId: string | null;
   draftVersion: number;
-  /** Always false in this lot: this flow cannot publish. */
   draftPublished: boolean;
+  missionId: string | null;
+  publicUrl: string | null;
   branding: Branding | null;
   isOwner: boolean;
 }
@@ -64,30 +67,49 @@ async function loadRow(sb: Supa, workspaceId: string) {
 }
 
 async function workspaceName(sb: Supa, workspaceId: string): Promise<string> {
-  const { data } = await sb.from("build_workspaces").select("name").eq("id", workspaceId).maybeSingle();
+  const { data } = await sb
+    .from("build_workspaces")
+    .select("name")
+    .eq("id", workspaceId)
+    .maybeSingle();
   return data?.name ?? "My business";
 }
 
-function toState(
+async function publicUrlForMission(sb: Supa, missionId: string | null): Promise<string | null> {
+  if (!missionId) return null;
+  const { data } = await sb
+    .from("build_missions")
+    .select("public_token")
+    .eq("id", missionId)
+    .maybeSingle();
+  return data?.public_token ? `/m/${data.public_token}` : null;
+}
+
+async function toState(
+  sb: Supa,
   row: Awaited<ReturnType<typeof loadRow>>,
   workspaceId: string,
   name: string,
   isOwner: boolean,
-): PortalOnboardingState {
+): Promise<PortalOnboardingState> {
+  const status = (row?.status as OnboardingStatus | undefined) ?? "started";
   return {
     workspaceId,
     workspaceName: name,
-    status: (row?.status as OnboardingStatus | undefined) ?? "started",
+    status,
     siteUrl: row?.final_url ?? row?.site_url ?? null,
     analysis: (row?.analysis as SiteAnalysis | null) ?? null,
     confirmedBusinessType: row?.confirmed_business_type ?? null,
     confirmedProduct: row?.confirmed_product ?? null,
     draftPlaybookId: row?.playbook_id ?? null,
     draftVersion: row?.draft_version ?? 0,
-    draftPublished: false,
-    branding: row && row.branding && Object.keys(row.branding).length > 0
-      ? (row.branding as unknown as Branding)
-      : null,
+    draftPublished: isPublished(status),
+    missionId: row?.mission_id ?? null,
+    publicUrl: await publicUrlForMission(sb, row?.mission_id ?? null),
+    branding:
+      row && row.branding && Object.keys(row.branding).length > 0
+        ? (row.branding as unknown as Branding)
+        : null,
     isOwner,
   };
 }
@@ -97,10 +119,20 @@ export const getMySetup = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => workspaceInput.parse(data))
   .handler(async ({ context, data }) => {
-    const { role } = await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
+    const { role } = await assertWorkspaceMember(
+      context.supabase,
+      context.userId,
+      data.workspaceId,
+    );
     const sb = await admin();
     const row = await loadRow(sb, data.workspaceId);
-    return toState(row, data.workspaceId, await workspaceName(sb, data.workspaceId), role === "owner");
+    return toState(
+      sb,
+      row,
+      data.workspaceId,
+      await workspaceName(sb, data.workspaceId),
+      role === "owner",
+    );
   });
 
 // ------------------------------------------------------------ AI accounting
@@ -151,7 +183,9 @@ async function logAiRun(
 export const analyzeMySite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    workspaceInput.extend({ url: z.string().min(1).max(2048), requestId: z.string().min(8).max(64) }).parse(data),
+    workspaceInput
+      .extend({ url: z.string().min(1).max(2048), requestId: z.string().min(8).max(64) })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
@@ -167,9 +201,17 @@ export const analyzeMySite = createServerFn({ method: "POST" })
         // instead of paying for a second analysis.
         const row = await loadRow(sb, data.workspaceId);
         if (row?.analysis) {
-          return toState(row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
+          return toState(
+            sb,
+            row,
+            data.workspaceId,
+            await workspaceName(sb, data.workspaceId),
+            true,
+          );
         }
-        throw new Response("That analysis is already running. Please wait a moment.", { status: 409 });
+        throw new Response("That analysis is already running. Please wait a moment.", {
+          status: 409,
+        });
       }
       throw new Response(
         `You have run several website analyses in the last hour. Try again in ${decision.retryAfterMinutes} minutes.`,
@@ -259,7 +301,7 @@ export const analyzeMySite = createServerFn({ method: "POST" })
     if (upsertError) throw new Response(upsertError.message, { status: 500 });
 
     const row = await loadRow(sb, data.workspaceId);
-    return toState(row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
+    return toState(sb, row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
   });
 
 // --------------------------------------------------------------- Step 3 + 4
@@ -297,7 +339,7 @@ export const confirmMyDeckProduct = createServerFn({ method: "POST" })
     if (error) throw new Response(error.message, { status: 500 });
 
     const updated = await loadRow(sb, data.workspaceId);
-    return toState(updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
+    return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
   });
 
 export const generateMyDeckDraft = createServerFn({ method: "POST" })
@@ -317,10 +359,12 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
     const decision = await guardAiRun(sb, data.workspaceId, "generate_draft", data.requestId);
     if (!decision.allow) {
       if (decision.reason === "duplicate" && row.playbook_id) {
-        return toState(row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
+        return toState(sb, row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
       }
       if (decision.reason === "duplicate") {
-        throw new Response("Your intake is already being generated. Please wait a moment.", { status: 409 });
+        throw new Response("Your intake is already being generated. Please wait a moment.", {
+          status: 409,
+        });
       }
       throw new Response(
         `You have generated several drafts in the last hour. Try again in ${decision.retryAfterMinutes} minutes.`,
@@ -330,7 +374,10 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
 
     const startedAt = Date.now();
     const { runPlaybookDraftGeneration } = await import("@/build/ai/playbookDraftGeneration");
-    const result = await runPlaybookDraftGeneration(row.confirmed_business_type, row.confirmed_product);
+    const result = await runPlaybookDraftGeneration(
+      row.confirmed_business_type,
+      row.confirmed_product,
+    );
     const latencyMs = Date.now() - startedAt;
 
     if (result.status === "error" || !result.data) {
@@ -415,7 +462,7 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
     if (updateError) throw new Response(updateError.message, { status: 500 });
 
     const updated = await loadRow(sb, data.workspaceId);
-    return toState(updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
+    return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
   });
 
 // ------------------------------------------------------------------- Step 5
@@ -458,7 +505,7 @@ export const updateMyBranding = createServerFn({ method: "POST" })
     if (error) throw new Response(error.message, { status: 500 });
 
     const updated = await loadRow(sb, data.workspaceId);
-    return toState(updated, data.workspaceId, name, true);
+    return toState(sb, updated, data.workspaceId, name, true);
   });
 
 /** Read-only preview of the draft intake. Members can look, nothing is published. */
@@ -486,4 +533,117 @@ export const getMyDraftPreview = createServerFn({ method: "GET" })
     const parsed = playbookSchema.safeParse(playbook.draft_schema);
     if (!parsed.success) throw new Response("This draft is not readable yet.", { status: 500 });
     return { schema: parsed.data, published: false };
+  });
+
+// ------------------------------------------------------------------- LOT 3
+//
+// Explicit, owner-only, self-service publish: turns the private draft into
+// a live Mission. Idempotent — publishing twice (double click, retried
+// request) returns the same already-published Mission instead of creating
+// a second one. Every write here is scoped to data.workspaceId, verified by
+// assertWorkspaceOwner before any table is touched, and every Playbook row
+// read back is re-checked against workspace_id (defence in depth, same
+// pattern as getMyDraftPreview) so a workspace can never publish a draft
+// that belongs to someone else.
+
+export const publishMyDraft = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => workspaceInput.parse(data))
+  .handler(async ({ context, data }) => {
+    await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
+    const sb = await admin();
+
+    const row = await loadRow(sb, data.workspaceId);
+    if (!row) throw new Response("Start your setup first.", { status: 400 });
+
+    // Already published: return the existing Mission rather than publishing
+    // a second one (double click / retried request).
+    if (row.status === "published" && row.mission_id) {
+      return toState(sb, row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
+    }
+
+    if (!row.playbook_id) {
+      throw new Response("Generate your project intake draft first.", { status: 400 });
+    }
+
+    const { data: playbook, error: playbookError } = await sb
+      .from("build_playbooks")
+      .select("draft_schema, name, workspace_id")
+      .eq("id", row.playbook_id)
+      .maybeSingle();
+    if (playbookError) throw new Response(playbookError.message, { status: 500 });
+    if (!playbook || playbook.workspace_id !== data.workspaceId) {
+      throw new Response("No draft to publish.", { status: 404 });
+    }
+
+    const parsedSchema = playbookSchema.safeParse(playbook.draft_schema);
+    if (!parsedSchema.success) {
+      throw new Response("This draft is not valid and cannot be published yet.", { status: 400 });
+    }
+    const issues = getPlaybookPublishIssues(parsedSchema.data);
+    if (issues.length > 0) {
+      throw new Response(`This draft is not ready to publish yet: ${issues.join(" ")}`, {
+        status: 400,
+      });
+    }
+
+    const { data: lastVersion } = await sb
+      .from("build_playbook_versions")
+      .select("version_number")
+      .eq("playbook_id", row.playbook_id)
+      .order("version_number", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const nextVersionNumber = (lastVersion?.version_number ?? 0) + 1;
+
+    const { data: version, error: versionError } = await sb
+      .from("build_playbook_versions")
+      .insert({
+        playbook_id: row.playbook_id,
+        version_number: nextVersionNumber,
+        schema: parsedSchema.data as unknown as Json,
+        published_by: context.userId,
+      })
+      .select("id")
+      .single();
+    if (versionError) throw new Response(versionError.message, { status: 500 });
+
+    const { error: playbookUpdateError } = await sb
+      .from("build_playbooks")
+      .update({ published_version_id: version.id, is_active: true })
+      .eq("id", row.playbook_id);
+    if (playbookUpdateError) throw new Response(playbookUpdateError.message, { status: 500 });
+
+    const branding =
+      row.branding && Object.keys(row.branding).length > 0
+        ? (row.branding as unknown as Branding)
+        : defaultBranding(
+            await workspaceName(sb, data.workspaceId),
+            row.confirmed_product ?? "Deck",
+          );
+
+    const { data: mission, error: missionError } = await sb
+      .from("build_missions")
+      .insert({
+        name: `${branding.displayName} — ${row.confirmed_product ?? "Deck"} Intake`,
+        workspace_id: data.workspaceId,
+        playbook_id: row.playbook_id,
+        playbook_version_id: version.id,
+        playbook_name: playbook.name,
+        status: "active",
+        public_token: crypto.randomUUID().replace(/-/g, ""),
+        published_at: new Date().toISOString(),
+      })
+      .select("id")
+      .single();
+    if (missionError) throw new Response(missionError.message, { status: 500 });
+
+    const { error: onboardingUpdateError } = await sb
+      .from("build_workspace_onboarding")
+      .update({ status: "published", mission_id: mission.id })
+      .eq("workspace_id", data.workspaceId);
+    if (onboardingUpdateError) throw new Response(onboardingUpdateError.message, { status: 500 });
+
+    const updated = await loadRow(sb, data.workspaceId);
+    return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
   });

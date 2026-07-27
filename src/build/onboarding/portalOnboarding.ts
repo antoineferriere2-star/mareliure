@@ -15,6 +15,7 @@ export const ONBOARDING_STATUSES = [
   "analyzed",
   "confirmed",
   "draft_ready",
+  "published",
 ] as const;
 export type OnboardingStatus = (typeof ONBOARDING_STATUSES)[number];
 
@@ -40,9 +41,7 @@ export interface SiteAnalysis {
 
 // ---------------------------------------------------------------- URL input
 
-export type UrlCheck =
-  | { ok: true; url: string }
-  | { ok: false; error: string };
+export type UrlCheck = { ok: true; url: string } | { ok: false; error: string };
 
 /**
  * Client-side admissibility of the website address. This is NOT the security
@@ -85,7 +84,6 @@ export function checkSiteUrl(raw: string): UrlCheck {
     return { ok: false, error: "Enter a full domain, for example yourcompany.com." };
   }
 
-
   return { ok: true, url: parsed.toString() };
 }
 
@@ -113,8 +111,7 @@ export function hasDeckSignal(text: string): boolean {
 }
 
 export type DeckEligibility =
-  | { eligible: true; suggestedProducts: string[] }
-  | { eligible: false; reason: string };
+  { eligible: true; suggestedProducts: string[] } | { eligible: false; reason: string };
 
 /**
  * The V1 lock. When the analysed site is not a deck business we say so
@@ -154,7 +151,14 @@ export function isAcceptableProduct(product: string): boolean {
 
 // ------------------------------------------------------------- Step machine
 
-export const SETUP_STEPS = ["website", "review", "product", "customize", "preview"] as const;
+export const SETUP_STEPS = [
+  "website",
+  "review",
+  "product",
+  "customize",
+  "preview",
+  "publish",
+] as const;
 export type SetupStep = (typeof SETUP_STEPS)[number];
 
 export interface OnboardingState {
@@ -167,15 +171,16 @@ export interface OnboardingState {
 /** Where a returning client resumes — the wizard is fully resumable. */
 export function resumeStep(state: OnboardingState | null): SetupStep {
   if (!state) return "website";
+  if (state.status === "published") return "publish";
   if (state.hasDraft) return "preview";
   if (state.hasConfirmedProduct) return "customize";
   if (state.hasAnalysis) return "review";
   return "website";
 }
 
-/** A draft produced by this flow is never publishable from here. */
-export function isPublished(): false {
-  return false;
+/** True once publishMyDraft has actually created a live Mission — never inferred, only the stored status. */
+export function isPublished(status: OnboardingStatus): boolean {
+  return status === "published";
 }
 
 // ----------------------------------------------------------------- Branding
@@ -211,27 +216,39 @@ export type BrandingCheck = { ok: true; branding: Branding } | { ok: false; erro
 export function checkBranding(input: Partial<Branding>, fallback: Branding): BrandingCheck {
   const displayName = (input.displayName ?? fallback.displayName).trim();
   if (displayName.length === 0) return { ok: false, error: "Business name cannot be empty." };
-  if (displayName.length > 80) return { ok: false, error: "Business name is too long (80 characters max)." };
+  if (displayName.length > 80)
+    return { ok: false, error: "Business name is too long (80 characters max)." };
 
   const accentColor = (input.accentColor ?? fallback.accentColor).trim();
-  if (!HEX.test(accentColor)) return { ok: false, error: "Accent color must be a hex value such as #0F172A." };
+  if (!HEX.test(accentColor))
+    return { ok: false, error: "Accent color must be a hex value such as #0F172A." };
 
   const introTitle = (input.introTitle ?? fallback.introTitle).trim();
   if (introTitle.length === 0) return { ok: false, error: "Title cannot be empty." };
-  if (introTitle.length > 120) return { ok: false, error: "Title is too long (120 characters max)." };
+  if (introTitle.length > 120)
+    return { ok: false, error: "Title is too long (120 characters max)." };
 
   const introText = (input.introText ?? fallback.introText).trim();
-  if (introText.length > 400) return { ok: false, error: "Introduction is too long (400 characters max)." };
+  if (introText.length > 400)
+    return { ok: false, error: "Introduction is too long (400 characters max)." };
 
   const ctaLabel = (input.ctaLabel ?? fallback.ctaLabel).trim();
   if (ctaLabel.length === 0) return { ok: false, error: "Button label cannot be empty." };
-  if (ctaLabel.length > 40) return { ok: false, error: "Button label is too long (40 characters max)." };
+  if (ctaLabel.length > 40)
+    return { ok: false, error: "Button label is too long (40 characters max)." };
 
   const logoPath = input.logoPath === undefined ? fallback.logoPath : input.logoPath;
 
   return {
     ok: true,
-    branding: { displayName, accentColor, introTitle, introText, ctaLabel, logoPath: logoPath ?? null },
+    branding: {
+      displayName,
+      accentColor,
+      introTitle,
+      introText,
+      ctaLabel,
+      logoPath: logoPath ?? null,
+    },
   };
 }
 
@@ -270,7 +287,10 @@ export function checkAiRun(
     const oldest = inWindow
       .map((run) => new Date(run.createdAt).getTime())
       .sort((a, b) => a - b)[0];
-    const retryAfterMinutes = Math.max(1, Math.ceil((oldest + 60 * 60 * 1000 - now.getTime()) / 60000));
+    const retryAfterMinutes = Math.max(
+      1,
+      Math.ceil((oldest + 60 * 60 * 1000 - now.getTime()) / 60000),
+    );
     return { allow: false, reason: "rate_limited", retryAfterMinutes };
   }
   return { allow: true };

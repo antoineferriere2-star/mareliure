@@ -17,6 +17,7 @@ import {
   generateMyDeckDraft,
   getMyDraftPreview,
   getMySetup,
+  publishMyDraft,
   updateMyBranding,
   type PortalOnboardingState,
 } from "@/build/services/portalOnboarding.data.functions";
@@ -49,8 +50,9 @@ const STEP_LABELS: Record<SetupStep, string> = {
   product: "Your product",
   customize: "Customize",
   preview: "Preview",
+  publish: "Publish",
 };
-const STEP_ORDER: SetupStep[] = ["website", "review", "product", "customize", "preview"];
+const STEP_ORDER: SetupStep[] = ["website", "review", "product", "customize", "preview", "publish"];
 
 function newRequestId(): string {
   return crypto.randomUUID().replace(/-/g, "");
@@ -94,7 +96,11 @@ function SetupFlow({ workspaceId }: { workspaceId: string }) {
   const fetchSetup = useServerFn(getMySetup);
   const setupKey = ["portal", "setup", workspaceId] as const;
 
-  const { data: setup, isPending, error } = useQuery({
+  const {
+    data: setup,
+    isPending,
+    error,
+  } = useQuery({
     queryKey: setupKey,
     queryFn: () => fetchSetup({ data: { workspaceId } }),
   });
@@ -146,7 +152,10 @@ function SetupFlow({ workspaceId }: { workspaceId: string }) {
       <StepBar current={step} setup={setup} onNavigate={setStep} />
 
       {banner ? (
-        <p className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-2.5 text-sm text-destructive" role="alert">
+        <p
+          className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-2.5 text-sm text-destructive"
+          role="alert"
+        >
           {banner}
         </p>
       ) : null}
@@ -196,6 +205,18 @@ function SetupFlow({ workspaceId }: { workspaceId: string }) {
           workspaceId={workspaceId}
           setup={setup}
           onBack={() => setStep("customize")}
+          onContinue={() => setStep("publish")}
+        />
+      ) : null}
+
+      {step === "publish" ? (
+        <PublishStep
+          workspaceId={workspaceId}
+          setup={setup}
+          readOnly={readOnly}
+          onError={setBanner}
+          onBack={() => setStep("preview")}
+          onDone={(next) => applyState(next, "publish")}
         />
       ) : null}
     </div>
@@ -217,6 +238,7 @@ function StepBar({
     product: setup.analysis !== null,
     customize: setup.confirmedProduct !== null,
     preview: setup.draftPlaybookId !== null,
+    publish: setup.draftPlaybookId !== null,
   };
   return (
     <ol className="flex flex-wrap gap-2 text-xs">
@@ -247,7 +269,9 @@ function StepBar({
 }
 
 function Card({ children }: { children: React.ReactNode }) {
-  return <section className="rounded-lg border border-border bg-card p-4 sm:p-6">{children}</section>;
+  return (
+    <section className="rounded-lg border border-border bg-card p-4 sm:p-6">{children}</section>
+  );
 }
 
 // ------------------------------------------------------------------ Step 1
@@ -381,8 +405,8 @@ function ReviewStep({
       <Card>
         <h2 className="text-base font-semibold text-foreground">What we found</h2>
         <p className="mt-1 break-all text-xs text-muted-foreground">
-          Source: <span className="font-medium text-foreground">{analysis.finalUrl}</span> · analyzed{" "}
-          {new Date(analysis.analyzedAt).toLocaleString("en-US")}
+          Source: <span className="font-medium text-foreground">{analysis.finalUrl}</span> ·
+          analyzed {new Date(analysis.analyzedAt).toLocaleString("en-US")}
         </p>
 
         <dl className="mt-4 grid gap-4 sm:grid-cols-2">
@@ -410,12 +434,10 @@ function ReviewStep({
           </div>
         </dl>
 
-        <h3 className="mt-6 text-sm font-semibold text-foreground">
-          Proved vs assumed
-        </h3>
+        <h3 className="mt-6 text-sm font-semibold text-foreground">Proved vs assumed</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          Proved means we found it word for word on your page. Assumed means we inferred it — correct
-          us if it is wrong.
+          Proved means we found it word for word on your page. Assumed means we inferred it —
+          correct us if it is wrong.
         </p>
         <ul className="mt-3 space-y-2">
           {analysis.facts.length === 0 ? (
@@ -467,9 +489,7 @@ function ReviewStep({
         </div>
       ) : (
         <Card>
-          <h3 className="text-sm font-semibold text-foreground">
-            We can&apos;t set this up yet
-          </h3>
+          <h3 className="text-sm font-semibold text-foreground">We can&apos;t set this up yet</h3>
           <p className="mt-1 text-sm text-muted-foreground">{eligibility.reason}</p>
           <div className="mt-4 flex flex-col gap-2 sm:flex-row">
             <button
@@ -755,10 +775,12 @@ function PreviewStep({
   workspaceId,
   setup,
   onBack,
+  onContinue,
 }: {
   workspaceId: string;
   setup: PortalOnboardingState;
   onBack: () => void;
+  onContinue: () => void;
 }) {
   const fetchPreview = useServerFn(getMyDraftPreview);
   const { data, isPending, error } = useQuery({
@@ -767,7 +789,8 @@ function PreviewStep({
     enabled: setup.draftPlaybookId !== null,
   });
 
-  const branding = setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Deck");
+  const branding =
+    setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Deck");
 
   return (
     <div className="space-y-4">
@@ -776,9 +799,9 @@ function PreviewStep({
           Draft ready — version {setup.draftVersion}
         </p>
         <p className="mt-1 text-sm text-emerald-900/80">
-          This intake is a private draft in your workspace. It is not live, no visitor can reach it,
-          and no payment is involved. Next step: our team reviews it with you and publishes it once
-          you approve the questions.
+          This intake is a private draft in your workspace. It is not live and no visitor can reach
+          it yet. When you're happy with the questions, you can publish it yourself on the next
+          screen — no one else needs to approve it.
         </p>
       </div>
 
@@ -789,7 +812,10 @@ function PreviewStep({
         </p>
 
         <div className="mt-4 overflow-hidden rounded-lg border border-border">
-          <div className="px-4 py-4 text-white sm:px-6" style={{ backgroundColor: branding.accentColor }}>
+          <div
+            className="px-4 py-4 text-white sm:px-6"
+            style={{ backgroundColor: branding.accentColor }}
+          >
             <p className="text-xs uppercase tracking-wide opacity-80">{branding.displayName}</p>
             <p className="mt-1 text-lg font-semibold">{branding.introTitle}</p>
             {branding.introText ? (
@@ -801,7 +827,9 @@ function PreviewStep({
           </div>
 
           <div className="divide-y divide-border bg-background">
-            {isPending ? <p className="px-4 py-4 text-sm text-muted-foreground">Loading the draft…</p> : null}
+            {isPending ? (
+              <p className="px-4 py-4 text-sm text-muted-foreground">Loading the draft…</p>
+            ) : null}
             {error ? (
               <p className="px-4 py-4 text-sm text-destructive" role="alert">
                 We could not load this draft. Go back and generate it again.
@@ -814,7 +842,9 @@ function PreviewStep({
                     Step {index + 1}
                   </p>
                   <p className="mt-0.5 text-sm font-semibold text-foreground">{step.title}</p>
-                  {step.why ? <p className="mt-0.5 text-xs text-muted-foreground">{step.why}</p> : null}
+                  {step.why ? (
+                    <p className="mt-0.5 text-xs text-muted-foreground">{step.why}</p>
+                  ) : null}
                   <ul className="mt-2 space-y-1">
                     {step.fields.map((field) => (
                       <li key={field.key} className="text-sm text-foreground">
@@ -836,6 +866,13 @@ function PreviewStep({
       <div className="flex flex-col gap-2 sm:flex-row">
         <button
           type="button"
+          onClick={onContinue}
+          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Continue to publish
+        </button>
+        <button
+          type="button"
           onClick={onBack}
           className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
         >
@@ -849,5 +886,177 @@ function PreviewStep({
         </Link>
       </div>
     </div>
+  );
+}
+
+// ------------------------------------------------------------------ Step 6
+
+function SnippetBlock({ publicUrl }: { publicUrl: string }) {
+  const [copied, setCopied] = useState<"link" | "snippet" | null>(null);
+  const fullUrl =
+    typeof window !== "undefined" ? `${window.location.origin}${publicUrl}` : publicUrl;
+  const snippet = `<a href="${fullUrl}" target="_blank" rel="noopener">Get a project estimate</a>`;
+
+  async function copy(text: string, which: "link" | "snippet") {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(which);
+      setTimeout(() => setCopied(null), 2000);
+    } catch {
+      // Clipboard access can be denied by the browser; the text is still
+      // selectable manually, so this is not a hard failure.
+    }
+  }
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <label className="mb-1 block text-xs font-medium text-foreground">Direct link</label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <input
+            readOnly
+            value={fullUrl}
+            className="w-full flex-1 rounded-md border border-input bg-muted/40 px-3 py-2 text-sm text-foreground"
+          />
+          <button
+            type="button"
+            onClick={() => copy(fullUrl, "link")}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+          >
+            {copied === "link" ? "Copied" : "Copy"}
+          </button>
+        </div>
+      </div>
+      <div>
+        <label className="mb-1 block text-xs font-medium text-foreground">
+          Snippet for your website
+        </label>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <textarea
+            readOnly
+            rows={2}
+            value={snippet}
+            className="w-full flex-1 rounded-md border border-input bg-muted/40 px-3 py-2 font-mono text-xs text-foreground"
+          />
+          <button
+            type="button"
+            onClick={() => copy(snippet, "snippet")}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+          >
+            {copied === "snippet" ? "Copied" : "Copy"}
+          </button>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Paste this anywhere in your site's HTML — a button, a menu item, a page footer. It opens
+          your project intake in a new tab and won't affect your site's styling.
+        </p>
+      </div>
+    </div>
+  );
+}
+
+function PublishStep({
+  workspaceId,
+  setup,
+  readOnly,
+  onError,
+  onBack,
+  onDone,
+}: {
+  workspaceId: string;
+  setup: PortalOnboardingState;
+  readOnly: boolean;
+  onError: (message: string | null) => void;
+  onBack: () => void;
+  onDone: (next: PortalOnboardingState) => void;
+}) {
+  const publish = useServerFn(publishMyDraft);
+  const [publishing, setPublishing] = useState(false);
+  const branding =
+    setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Deck");
+
+  async function handlePublish() {
+    if (publishing) return;
+    onError(null);
+    setPublishing(true);
+    try {
+      const next = await publish({ data: { workspaceId } });
+      onDone(next);
+    } catch (err) {
+      onError(await readError(err));
+    } finally {
+      setPublishing(false);
+    }
+  }
+
+  if (setup.draftPublished && setup.publicUrl) {
+    return (
+      <Card>
+        <div className="rounded-lg border border-emerald-300 bg-emerald-50 px-4 py-3">
+          <p className="text-sm font-semibold text-emerald-900">Published</p>
+          <p className="mt-1 text-sm text-emerald-900/80">
+            Your project intake is live. Anyone who follows the link below can submit a project —
+            you'll see it in your Missions as soon as they do.
+          </p>
+        </div>
+        <div className="mt-4">
+          <SnippetBlock publicUrl={setup.publicUrl} />
+        </div>
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+          <Link
+            to="/portal/missions"
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Manage my Missions
+          </Link>
+        </div>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <h2 className="text-base font-semibold text-foreground">Ready to publish</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        This makes your project intake live on the web. Anyone with the link can submit a project.
+        You can pause it again at any time from your Missions — pausing never deletes the project
+        briefs you've already received.
+      </p>
+
+      <dl className="mt-4 grid gap-3 rounded-md border border-border bg-muted/20 p-4 text-sm sm:grid-cols-2">
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-muted-foreground">Business name</dt>
+          <dd className="text-foreground">{branding.displayName}</dd>
+        </div>
+        <div>
+          <dt className="text-xs uppercase tracking-wide text-muted-foreground">Product</dt>
+          <dd className="text-foreground">{setup.confirmedProduct ?? "Deck"}</dd>
+        </div>
+      </dl>
+
+      {readOnly ? (
+        <p className="mt-4 text-sm text-muted-foreground">
+          Only the workspace owner can publish this intake.
+        </p>
+      ) : (
+        <div className="mt-5 flex flex-col gap-2 sm:flex-row">
+          <button
+            type="button"
+            onClick={handlePublish}
+            disabled={publishing}
+            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-60"
+          >
+            {publishing ? "Publishing…" : "Publish my project intake"}
+          </button>
+          <button
+            type="button"
+            onClick={onBack}
+            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+          >
+            Back to preview
+          </button>
+        </div>
+      )}
+    </Card>
   );
 }

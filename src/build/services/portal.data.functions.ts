@@ -7,7 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { admin } from "./adminAuth.server";
-import { assertWorkspaceMember } from "./workspaceAuth.server";
+import { assertWorkspaceMember, assertWorkspaceOwner } from "./workspaceAuth.server";
 import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
 
 const COMMERCIAL_STATUSES = ["nouveau", "contacte", "devise", "gagne", "perdu"] as const;
@@ -56,7 +56,9 @@ export const listWorkspaceDossiers = createServerFn({ method: "GET" })
 
 /**
  * Missions belonging to the workspace, with the number of Dossiers each one
- * has produced. Read-only: publishing/editing a Mission stays admin-only.
+ * has produced. Reading is open to any member; pausing/reactivating below is
+ * owner-only. Editing the Playbook itself still requires the technical
+ * editor and stays admin-only — this is only the on/off switch.
  */
 export const listWorkspaceMissions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -86,6 +88,48 @@ export const listWorkspaceMissions = createServerFn({ method: "GET" })
     return (missions ?? []).map((m) => ({ ...m, dossierCount: counts.get(m.id) ?? 0 }));
   });
 
+/**
+ * Toggles a Mission between active and paused. Never touches build_dossiers
+ * — historical Project Briefs stay exactly as they are, this only changes
+ * whether the public intake link still accepts new submissions
+ * (build-runtime.ts's session-creation path checks Mission status).
+ * Owner-only, and the Mission id is always re-verified against
+ * workspaceId before any write, so a workspace can never toggle a Mission
+ * that belongs to someone else even if it guessed the id.
+ */
+export const setMissionPaused = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({ workspaceId: z.string().uuid(), missionId: z.string().uuid(), paused: z.boolean() })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
+    const sb = await admin();
+
+    const { data: mission, error: findError } = await sb
+      .from("build_missions")
+      .select("id, status, workspace_id")
+      .eq("id", data.missionId)
+      .maybeSingle();
+    if (findError) throw new Response(findError.message, { status: 500 });
+    if (!mission || mission.workspace_id !== data.workspaceId) {
+      throw new Response("Mission not found.", { status: 404 });
+    }
+    if (mission.status !== "active" && mission.status !== "paused") {
+      throw new Response("Only a published Mission can be paused or reactivated.", { status: 400 });
+    }
+
+    const { data: updated, error } = await sb
+      .from("build_missions")
+      .update({ status: data.paused ? "paused" : "active" })
+      .eq("id", data.missionId)
+      .select("id, status")
+      .maybeSingle();
+    if (error) throw new Response(error.message, { status: 500 });
+    return updated;
+  });
 
 /** Non-blocking usage display for the portal's own workspace — never gates submission. */
 export const getMyWorkspaceUsage = createServerFn({ method: "GET" })

@@ -113,20 +113,48 @@ describe("resumeStep", () => {
 
   it("resumes exactly where the client stopped", () => {
     expect(
-      resumeStep({ status: "analyzed", hasAnalysis: true, hasConfirmedProduct: false, hasDraft: false }),
+      resumeStep({
+        status: "analyzed",
+        hasAnalysis: true,
+        hasConfirmedProduct: false,
+        hasDraft: false,
+      }),
     ).toBe("review");
     expect(
-      resumeStep({ status: "confirmed", hasAnalysis: true, hasConfirmedProduct: true, hasDraft: false }),
+      resumeStep({
+        status: "confirmed",
+        hasAnalysis: true,
+        hasConfirmedProduct: true,
+        hasDraft: false,
+      }),
     ).toBe("customize");
     expect(
-      resumeStep({ status: "draft_ready", hasAnalysis: true, hasConfirmedProduct: true, hasDraft: true }),
+      resumeStep({
+        status: "draft_ready",
+        hasAnalysis: true,
+        hasConfirmedProduct: true,
+        hasDraft: true,
+      }),
     ).toBe("preview");
+  });
+
+  it("resumes to the publish screen once published, even with a stale draft flag", () => {
+    expect(
+      resumeStep({
+        status: "published",
+        hasAnalysis: true,
+        hasConfirmedProduct: true,
+        hasDraft: true,
+      }),
+    ).toBe("publish");
   });
 });
 
-describe("draft publication", () => {
-  it("never reports a draft produced by this flow as published", () => {
-    expect(isPublished()).toBe(false);
+describe("isPublished", () => {
+  it("is true only for the published status", () => {
+    expect(isPublished("published")).toBe(true);
+    expect(isPublished("draft_ready")).toBe(false);
+    expect(isPublished("started")).toBe(false);
   });
 });
 
