@@ -49,6 +49,11 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
             >
               Log in
             </Link>
+            <Link to="/auth">
+              <Button size="sm" variant="outline" className="hidden sm:inline-flex">
+                Create account
+              </Button>
+            </Link>
             <Link to="/demo/deck-project">
               <Button size="sm">Try demo</Button>
             </Link>
