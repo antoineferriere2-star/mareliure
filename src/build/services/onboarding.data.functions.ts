@@ -14,6 +14,7 @@ import { extractSiteText } from "@/build/onboarding/extractText";
 import { missionProposalSchema } from "@/build/schema/missionProposal";
 import { playbookSchema } from "@/build/schema/playbook";
 import { expandPlaybookDraft } from "@/build/onboarding/expandPlaybookDraft";
+import { fail } from "./serverError";
 
 export const analyzeOnboardingSite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -25,7 +26,7 @@ export const analyzeOnboardingSite = createServerFn({ method: "POST" })
     try {
       fetched = await fetchSitePublicHtml(data.url);
     } catch (err) {
-      throw new Response(err instanceof Error ? err.message : "Impossible de récupérer ce site.", { status: 400 });
+      fail(400, err instanceof Error ? err.message : "Impossible de récupérer ce site.");
     }
 
     const extracted = extractSiteText(fetched.html);
@@ -33,7 +34,7 @@ export const analyzeOnboardingSite = createServerFn({ method: "POST" })
     const result = await runOnboardingExtraction(extracted);
 
     if (result.status === "error" || !result.data) {
-      throw new Response(result.error ?? "Extraction IA impossible.", { status: 502 });
+      fail(502, result.error ?? "Extraction IA impossible.");
     }
 
     return {
@@ -56,9 +57,9 @@ export const getPublishedPlaybookSchema = createServerFn({ method: "GET" })
       .select("published_version_id")
       .eq("id", data.playbookId)
       .maybeSingle();
-    if (playbookError) throw new Response(playbookError.message, { status: 500 });
+    if (playbookError) fail(500, playbookError.message);
     if (!playbook?.published_version_id) {
-      throw new Response("Ce Playbook n'a pas de version publiée.", { status: 400 });
+      fail(400, "Ce Playbook n'a pas de version publiée.");
     }
 
     const { data: version, error: versionError } = await sb
@@ -66,11 +67,11 @@ export const getPublishedPlaybookSchema = createServerFn({ method: "GET" })
       .select("schema")
       .eq("id", playbook.published_version_id)
       .maybeSingle();
-    if (versionError) throw new Response(versionError.message, { status: 500 });
-    if (!version) throw new Response("Version publiée introuvable.", { status: 404 });
+    if (versionError) fail(500, versionError.message);
+    if (!version) fail(404, "Version publiée introuvable.");
 
     const parsed = playbookSchema.safeParse(version.schema);
-    if (!parsed.success) throw new Response("Schéma de Playbook invalide.", { status: 500 });
+    if (!parsed.success) fail(500, "Schéma de Playbook invalide.");
     return parsed.data;
   });
 
@@ -93,7 +94,7 @@ export const generatePlaybookFromAI = createServerFn({ method: "POST" })
     const { runPlaybookDraftGeneration } = await import("@/build/ai/playbookDraftGeneration");
     const result = await runPlaybookDraftGeneration(data.businessType, data.product);
     if (result.status === "error" || !result.data) {
-      throw new Response(result.error ?? "Génération IA impossible.", { status: 502 });
+      fail(502, result.error ?? "Génération IA impossible.");
     }
 
     const draftSchema = expandPlaybookDraft(result.data, data.businessType, data.product);
@@ -110,8 +111,8 @@ export const generatePlaybookFromAI = createServerFn({ method: "POST" })
       })
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!playbook) throw new Response("Playbook creation failed.", { status: 500 });
+    if (error) fail(500, error.message);
+    if (!playbook) fail(500, "Playbook creation failed.");
     return playbook;
   });
 
@@ -136,9 +137,9 @@ export const createAndPublishMissionFromOnboarding = createServerFn({ method: "P
       .select("id, name, published_version_id, is_active")
       .eq("id", data.playbookId)
       .maybeSingle();
-    if (playbookError) throw new Response(playbookError.message, { status: 500 });
+    if (playbookError) fail(500, playbookError.message);
     if (!playbook || !playbook.is_active || !playbook.published_version_id) {
-      throw new Response("Ce Playbook n'a pas de version publiée active.", { status: 400 });
+      fail(400, "Ce Playbook n'a pas de version publiée active.");
     }
 
     const { data: mission, error } = await sb
@@ -156,6 +157,6 @@ export const createAndPublishMissionFromOnboarding = createServerFn({ method: "P
       })
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return mission;
   });

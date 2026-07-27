@@ -10,6 +10,7 @@ import { assertWorkspaceOwner } from "./workspaceAuth.server";
 import { admin } from "./adminAuth.server";
 import { createStripeClient, getStripeEnv } from "@/lib/stripe.server";
 import { PLAN_IDS, getPlanDefaults } from "@/build/billing/plans";
+import { fail } from "./serverError";
 
 export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -26,14 +27,12 @@ export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
 
     if (data.plan === "enterprise") {
-      throw new Response("Enterprise has no self-service price — contact the team.", {
-        status: 400,
-      });
+      fail(400, "Enterprise has no self-service price — contact the team.");
     }
 
     const lookupKey = getPlanDefaults(data.plan).stripeLookupKey;
     if (!lookupKey) {
-      throw new Response("This plan has no Stripe price configured.", { status: 400 });
+      fail(400, "This plan has no Stripe price configured.");
     }
 
     const stripe = createStripeClient(getStripeEnv());
@@ -44,7 +43,7 @@ export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
     });
     const price = prices[0];
     if (!price) {
-      throw new Response(`No active Stripe price found for "${lookupKey}".`, { status: 500 });
+      fail(500, `No active Stripe price found for "${lookupKey}".`);
     }
 
     const email = typeof context.claims.email === "string" ? context.claims.email : undefined;
@@ -59,7 +58,7 @@ export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
       subscription_data: { metadata: { workspace_id: data.workspaceId } },
     });
 
-    if (!session.url) throw new Response("Stripe did not return a checkout URL.", { status: 500 });
+    if (!session.url) fail(500, "Stripe did not return a checkout URL.");
     return { url: session.url };
   });
 
@@ -77,9 +76,9 @@ export const createWorkspaceBillingPortalSession = createServerFn({ method: "POS
       .select("stripe_customer_id")
       .eq("id", data.workspaceId)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     if (!workspace?.stripe_customer_id) {
-      throw new Response("No active subscription yet for this workspace.", { status: 400 });
+      fail(400, "No active subscription yet for this workspace.");
     }
 
     const stripe = createStripeClient(getStripeEnv());

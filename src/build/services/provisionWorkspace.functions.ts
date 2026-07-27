@@ -11,6 +11,7 @@ import {
   provisionInputSchema,
   type ProvisionDeps,
 } from "./provisionWorkspace";
+import { fail } from "./serverError";
 
 export const ensureMyWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -45,7 +46,7 @@ export const ensureMyWorkspace = createServerFn({ method: "POST" })
           .order("created_at", { ascending: true })
           .limit(1)
           .maybeSingle();
-        if (error) throw new Response(error.message, { status: 500 });
+        if (error) fail(500, error.message);
         return member?.workspace_id ?? null;
       },
       provision: async (uid, mail, name) => {
@@ -56,7 +57,7 @@ export const ensureMyWorkspace = createServerFn({ method: "POST" })
         });
         if (error) {
           console.error("[provisioning] failed for user", uid, error.message);
-          throw new Response("Workspace provisioning failed", { status: 500 });
+          fail(500, "Workspace provisioning failed");
         }
         return workspaceId as string;
       },

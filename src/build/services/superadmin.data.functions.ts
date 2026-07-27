@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { admin, assertAdmin } from "./adminAuth.server";
+import { fail } from "./serverError";
 
 /**
  * Super admin observability: inscriptions (comptes créés), activité
@@ -65,7 +66,7 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
     }[] = [];
     for (let page = 1; page <= 5; page++) {
       const { data: list, error } = await sb.auth.admin.listUsers({ page, perPage: 200 });
-      if (error) throw new Response(error.message, { status: 500 });
+      if (error) fail(500, error.message);
       for (const u of list.users) {
         accounts.push({
           id: u.id,
@@ -79,30 +80,37 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
     }
     accounts.sort((a, b) => (a.created_at < b.created_at ? 1 : -1));
 
-    const [sessionsRes, dossiersRes, requestsRes, missionsRes, membersRes, workspacesRes, rolesRes] =
-      await Promise.all([
-        sb
-          .from("build_runtime_sessions")
-          .select("id, mission_id, status, created_at, submitted_at, visitor_hash")
-          .gte("created_at", sinceIso)
-          .order("created_at", { ascending: false })
-          .limit(5000),
-        sb
-          .from("build_dossiers")
-          .select("id, mission_id, workspace_id, created_at")
-          .gte("created_at", sinceIso)
-          .limit(5000),
-        sb
-          .from("build_public_requests")
-          .select("id, request_type, source_path, status, created_at")
-          .gte("created_at", sinceIso)
-          .order("created_at", { ascending: false })
-          .limit(5000),
-        sb.from("build_missions").select("id, name, status, workspace_id"),
-        sb.from("build_workspace_members").select("user_id, email, workspace_id, role"),
-        sb.from("build_workspaces").select("id, name, plan, subscription_status, created_at"),
-        sb.from("user_roles").select("user_id, role"),
-      ]);
+    const [
+      sessionsRes,
+      dossiersRes,
+      requestsRes,
+      missionsRes,
+      membersRes,
+      workspacesRes,
+      rolesRes,
+    ] = await Promise.all([
+      sb
+        .from("build_runtime_sessions")
+        .select("id, mission_id, status, created_at, submitted_at, visitor_hash")
+        .gte("created_at", sinceIso)
+        .order("created_at", { ascending: false })
+        .limit(5000),
+      sb
+        .from("build_dossiers")
+        .select("id, mission_id, workspace_id, created_at")
+        .gte("created_at", sinceIso)
+        .limit(5000),
+      sb
+        .from("build_public_requests")
+        .select("id, request_type, source_path, status, created_at")
+        .gte("created_at", sinceIso)
+        .order("created_at", { ascending: false })
+        .limit(5000),
+      sb.from("build_missions").select("id, name, status, workspace_id"),
+      sb.from("build_workspace_members").select("user_id, email, workspace_id, role"),
+      sb.from("build_workspaces").select("id, name, plan, subscription_status, created_at"),
+      sb.from("user_roles").select("user_id, role"),
+    ]);
 
     const err =
       sessionsRes.error ||
@@ -112,7 +120,7 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
       membersRes.error ||
       workspacesRes.error ||
       rolesRes.error;
-    if (err) throw new Response(err.message, { status: 500 });
+    if (err) fail(500, err.message);
 
     const sessions = sessionsRes.data ?? [];
     const dossiers = dossiersRes.data ?? [];

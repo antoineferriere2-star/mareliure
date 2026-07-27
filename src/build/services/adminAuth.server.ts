@@ -2,6 +2,7 @@
 // Never import from client code.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { fail } from "./serverError";
 
 export type Supa = SupabaseClient<Database>;
 
@@ -16,7 +17,7 @@ export async function assertAdmin(supabase: Supa, userId: string) {
     .eq("user_id", userId)
     .eq("role", "admin")
     .maybeSingle();
-  if (error || !data) throw new Response("Forbidden", { status: 403 });
+  if (error || !data) fail(403, "Forbidden");
 }
 
 export async function admin(): Promise<Supa> {

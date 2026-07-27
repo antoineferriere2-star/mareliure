@@ -10,6 +10,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { admin, assertAdmin } from "./adminAuth.server";
 import { fetchSitePublicHtml } from "@/build/onboarding/safeFetch.server";
 import { extractSiteText } from "@/build/onboarding/extractText";
+import { fail } from "./serverError";
 
 export const REQUEST_STATUSES = ["new", "reviewing", "contacted", "closed"] as const;
 
@@ -26,11 +27,14 @@ export const listBuildPublicRequests = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
-    let query = sb.from("build_public_requests").select("*").order("created_at", { ascending: false });
+    let query = sb
+      .from("build_public_requests")
+      .select("*")
+      .order("created_at", { ascending: false });
     if (data.type) query = query.eq("request_type", data.type);
     if (data.status) query = query.eq("status", data.status);
     const { data: rows, error } = await query;
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return rows ?? [];
   });
 
@@ -45,8 +49,8 @@ export const getBuildPublicRequest = createServerFn({ method: "GET" })
       .select("*")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!row) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!row) fail(404, "Not found");
     return row;
   });
 
@@ -64,8 +68,8 @@ export const updateBuildPublicRequestStatus = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!updated) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!updated) fail(404, "Not found");
     return updated;
   });
 
@@ -87,18 +91,18 @@ export const runSiteAuditForRequest = createServerFn({ method: "POST" })
       .select("id, payload")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!row) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!row) fail(404, "Not found");
 
     const payload = row.payload as Record<string, unknown>;
     const websiteUrl = typeof payload.websiteUrl === "string" ? payload.websiteUrl : null;
-    if (!websiteUrl) throw new Response("This request has no website URL to audit.", { status: 400 });
+    if (!websiteUrl) fail(400, "This request has no website URL to audit.");
 
     let fetched: { finalUrl: string; html: string };
     try {
       fetched = await fetchSitePublicHtml(websiteUrl);
     } catch (err) {
-      throw new Response(err instanceof Error ? err.message : "Impossible de récupérer ce site.", { status: 400 });
+      fail(400, err instanceof Error ? err.message : "Impossible de récupérer ce site.");
     }
     const extracted = extractSiteText(fetched.html);
 
@@ -114,7 +118,7 @@ export const runSiteAuditForRequest = createServerFn({ method: "POST" })
     const { runSiteAudit } = await import("@/build/ai/siteAudit");
     const result = await runSiteAudit(extracted, requesterContext);
     if (result.status === "error" || !result.data) {
-      throw new Response(result.error ?? "Audit IA impossible.", { status: 502 });
+      fail(502, result.error ?? "Audit IA impossible.");
     }
 
     const { data: updated, error: updateError } = await sb
@@ -126,6 +130,6 @@ export const runSiteAuditForRequest = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select()
       .maybeSingle();
-    if (updateError) throw new Response(updateError.message, { status: 500 });
+    if (updateError) fail(500, updateError.message);
     return updated;
   });

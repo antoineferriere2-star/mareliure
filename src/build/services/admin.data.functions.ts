@@ -10,6 +10,7 @@ import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
 import { PLAN_IDS, getPlanDefaults } from "@/build/billing/plans";
 import { wouldExceedActiveMissions } from "@/build/billing/quota";
 import { resolvePlanColumnsUpdate } from "@/build/billing/planSync";
+import { fail } from "./serverError";
 
 // ---------- Dashboard ----------
 
@@ -90,7 +91,7 @@ export const listBuildMissions = createServerFn({ method: "GET" })
         "id, name, status, playbook_name, playbook_id, playbook_version_id, public_token, public_token_revoked_at, published_at, created_at, updated_at, objective",
       )
       .order("created_at", { ascending: false });
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return data ?? [];
   });
 
@@ -105,8 +106,8 @@ export const getBuildMission = createServerFn({ method: "GET" })
       .select("*")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!mission) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!mission) fail(404, "Not found");
     return mission;
   });
 
@@ -140,7 +141,7 @@ export const createBuildMission = createServerFn({ method: "POST" })
       })
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return inserted;
   });
 
@@ -158,8 +159,8 @@ export const setMissionWorkspace = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!updated) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!updated) fail(404, "Not found");
     return updated;
   });
 
@@ -186,9 +187,7 @@ export const setMissionStatus = createServerFn({ method: "POST" })
         .eq("id", data.id)
         .maybeSingle();
       if (!existing?.playbook_version_id) {
-        throw new Response("Cannot activate a mission without a published Playbook version.", {
-          status: 400,
-        });
+        fail(400, "Cannot activate a mission without a published Playbook version.");
       }
       if (existing.workspace_id && existing.status !== "active") {
         const { count: activeCount, error: countError } = await sb
@@ -196,20 +195,20 @@ export const setMissionStatus = createServerFn({ method: "POST" })
           .select("id", { count: "exact", head: true })
           .eq("workspace_id", existing.workspace_id)
           .eq("status", "active");
-        if (countError) throw new Response(countError.message, { status: 500 });
+        if (countError) fail(500, countError.message);
         const { data: workspace, error: wErr } = await sb
           .from("build_workspaces")
           .select("max_active_missions")
           .eq("id", existing.workspace_id)
           .maybeSingle();
-        if (wErr) throw new Response(wErr.message, { status: 500 });
+        if (wErr) fail(500, wErr.message);
         if (
           workspace &&
           wouldExceedActiveMissions(activeCount ?? 0, workspace.max_active_missions)
         ) {
-          throw new Response(
+          fail(
+            400,
             `This workspace has reached its plan's active Mission limit (${workspace.max_active_missions}). Increase the limit or pause another Mission first.`,
-            { status: 400 },
           );
         }
       }
@@ -222,7 +221,7 @@ export const setMissionStatus = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return updated;
   });
 
@@ -233,7 +232,7 @@ export const deleteBuildMission = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const { error } = await sb.from("build_missions").delete().eq("id", data.id);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return { ok: true as const };
   });
 
@@ -249,7 +248,7 @@ export const listBuildDossiers = createServerFn({ method: "GET" })
       .select("id, status, summary, mission_id, session_id, created_at, updated_at")
       .order("created_at", { ascending: false })
       .limit(200);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return data ?? [];
   });
 
@@ -264,8 +263,8 @@ export const getBuildDossier = createServerFn({ method: "GET" })
       .select("*")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!dossier) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!dossier) fail(404, "Not found");
 
     let mission = null;
     if (dossier.mission_id) {
@@ -300,7 +299,7 @@ export const getInspirationPhotoUrl = createServerFn({ method: "GET" })
     const { data: signed, error } = await sb.storage
       .from(INSPIRATION_PHOTOS_BUCKET)
       .createSignedUrl(data.path, 3600);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return { url: signed.signedUrl };
   });
 
@@ -322,10 +321,10 @@ export const analyzeDossierWithAI = createServerFn({ method: "POST" })
       .select("id, mission_id, content")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!dossier) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!dossier) fail(404, "Not found");
     if (!dossier.content) {
-      throw new Response("This Dossier has no content to analyze yet.", { status: 400 });
+      fail(400, "This Dossier has no content to analyze yet.");
     }
 
     let mission: { name: string; objective: string | null } = { name: "Mission", objective: null };
@@ -359,8 +358,8 @@ export const analyzeDossierWithAI = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select("*")
       .maybeSingle();
-    if (uErr) throw new Response(uErr.message, { status: 500 });
-    if (!updated) throw new Response("Not found", { status: 404 });
+    if (uErr) fail(500, uErr.message);
+    if (!updated) fail(404, "Not found");
     return updated;
   });
 
@@ -382,7 +381,7 @@ export const listBuildPlaybooks = createServerFn({ method: "GET" })
         "id, name, description, project_type, is_active, published_version_id, created_at, updated_at",
       )
       .order("created_at", { ascending: false });
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return data ?? [];
   });
 
@@ -398,7 +397,7 @@ export const listPublishablePlaybooks = createServerFn({ method: "GET" })
       .not("published_version_id", "is", null)
       .eq("is_active", true)
       .order("name", { ascending: true });
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return data ?? [];
   });
 
@@ -413,15 +412,15 @@ export const getBuildPlaybook = createServerFn({ method: "GET" })
       .select("*")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!playbook) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!playbook) fail(404, "Not found");
 
     const { data: versions, error: vErr } = await sb
       .from("build_playbook_versions")
       .select("id, version_number, published_at")
       .eq("playbook_id", data.id)
       .order("version_number", { ascending: false });
-    if (vErr) throw new Response(vErr.message, { status: 500 });
+    if (vErr) fail(500, vErr.message);
 
     return { ...playbook, versions: versions ?? [] };
   });
@@ -450,7 +449,7 @@ export const createBuildPlaybook = createServerFn({ method: "POST" })
       })
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return inserted;
   });
 
@@ -472,10 +471,7 @@ export const updatePlaybookDraft = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const parsedSchema = playbookSchema.safeParse(data.draft_schema);
     if (!parsedSchema.success) {
-      throw new Response(
-        `Invalid playbook schema: ${parsedSchema.error.issues[0]?.message ?? "malformed"}`,
-        { status: 400 },
-      );
+      fail(400, `Invalid playbook schema: ${parsedSchema.error.issues[0]?.message ?? "malformed"}`);
     }
     const sb = await admin();
     const { data: updated, error } = await sb
@@ -490,8 +486,8 @@ export const updatePlaybookDraft = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!updated) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!updated) fail(404, "Not found");
     return updated;
   });
 
@@ -507,16 +503,16 @@ export const publishPlaybookVersion = createServerFn({ method: "POST" })
       .select("draft_schema")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!playbook) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!playbook) fail(404, "Not found");
 
     const parsedSchema = playbookSchema.safeParse(playbook.draft_schema);
     if (!parsedSchema.success) {
-      throw new Response("The draft schema is malformed and cannot be published.", { status: 400 });
+      fail(400, "The draft schema is malformed and cannot be published.");
     }
     const issues = getPlaybookPublishIssues(parsedSchema.data);
     if (issues.length > 0) {
-      throw new Response(`Playbook is not ready to publish: ${issues.join(" ")}`, { status: 400 });
+      fail(400, `Playbook is not ready to publish: ${issues.join(" ")}`);
     }
 
     const { data: lastVersion } = await sb
@@ -538,7 +534,7 @@ export const publishPlaybookVersion = createServerFn({ method: "POST" })
       })
       .select("id, version_number, published_at")
       .single();
-    if (vErr) throw new Response(vErr.message, { status: 500 });
+    if (vErr) fail(500, vErr.message);
 
     const { data: updated, error: pErr } = await sb
       .from("build_playbooks")
@@ -546,7 +542,7 @@ export const publishPlaybookVersion = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select()
       .maybeSingle();
-    if (pErr) throw new Response(pErr.message, { status: 500 });
+    if (pErr) fail(500, pErr.message);
 
     return { playbook: updated, version };
   });
@@ -560,11 +556,9 @@ export const deleteBuildPlaybook = createServerFn({ method: "POST" })
     const { error } = await sb.from("build_playbooks").delete().eq("id", data.id);
     if (error) {
       if (error.code === "23503") {
-        throw new Response("This playbook has live Missions attached and cannot be deleted.", {
-          status: 409,
-        });
+        fail(409, "This playbook has live Missions attached and cannot be deleted.");
       }
-      throw new Response(error.message, { status: 500 });
+      fail(500, error.message);
     }
     return { ok: true as const };
   });
@@ -582,7 +576,7 @@ export const listKnowledgeNotes = createServerFn({ method: "GET" })
       .from("build_knowledge_notes")
       .select("*")
       .order("created_at", { ascending: false });
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return data ?? [];
   });
 
@@ -610,7 +604,7 @@ export const createKnowledgeNote = createServerFn({ method: "POST" })
       })
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return inserted;
   });
 
@@ -628,7 +622,7 @@ export const updateKnowledgeNoteStatus = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return updated;
   });
 
@@ -639,7 +633,7 @@ export const deleteKnowledgeNote = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const { error } = await sb.from("build_knowledge_notes").delete().eq("id", data.id);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return { ok: true as const };
   });
 
@@ -661,12 +655,12 @@ export const listWorkspaces = createServerFn({ method: "GET" })
       .from("build_workspaces")
       .select("id, name, is_active, plan, max_active_missions, monthly_brief_quota, created_at")
       .order("created_at", { ascending: false });
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
 
     const { data: members, error: mErr } = await sb
       .from("build_workspace_members")
       .select("id, workspace_id, email, role");
-    if (mErr) throw new Response(mErr.message, { status: 500 });
+    if (mErr) fail(500, mErr.message);
 
     return (workspaces ?? []).map((w) => ({
       ...w,
@@ -695,7 +689,7 @@ export const createWorkspace = createServerFn({ method: "POST" })
       })
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return inserted;
   });
 
@@ -725,8 +719,8 @@ export const updateWorkspacePlan = createServerFn({ method: "POST" })
       .eq("id", data.workspaceId)
       .select()
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!updated) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!updated) fail(404, "Not found");
     return updated;
   });
 
@@ -752,7 +746,7 @@ export const addWorkspaceMember = createServerFn({ method: "POST" })
     const { data: existingUsers, error: listError } = await sb.auth.admin.listUsers({
       perPage: 1000,
     });
-    if (listError) throw new Response(listError.message, { status: 500 });
+    if (listError) fail(500, listError.message);
     let userId = existingUsers.users.find((u) => u.email?.toLowerCase() === normalizedEmail)?.id;
 
     if (!userId) {
@@ -761,9 +755,7 @@ export const addWorkspaceMember = createServerFn({ method: "POST" })
         email_confirm: true,
       });
       if (createError || !created.user) {
-        throw new Response(createError?.message ?? "Impossible de créer ce compte.", {
-          status: 500,
-        });
+        fail(500, createError?.message ?? "Impossible de créer ce compte.");
       }
       userId = created.user.id;
     }
@@ -775,9 +767,9 @@ export const addWorkspaceMember = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) {
       if (error.code === "23505") {
-        throw new Response("Cette personne est déjà membre de cet Espace Client.", { status: 409 });
+        fail(409, "Cette personne est déjà membre de cet Espace Client.");
       }
-      throw new Response(error.message, { status: 500 });
+      fail(500, error.message);
     }
     return inserted;
   });
@@ -789,6 +781,6 @@ export const removeWorkspaceMember = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const { error } = await sb.from("build_workspace_members").delete().eq("id", data.id);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return { ok: true as const };
   });

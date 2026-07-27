@@ -3,6 +3,7 @@
 // workspace's own view). Never blocks anything itself — Project Brief
 // volume is a soft/informational limit only (see plans.ts).
 import { admin } from "./adminAuth.server";
+import { fail } from "./serverError";
 
 export interface WorkspaceUsage {
   activeMissions: number;
@@ -19,15 +20,15 @@ export async function getWorkspaceUsageInternal(workspaceId: string): Promise<Wo
     .select("max_active_missions, monthly_brief_quota")
     .eq("id", workspaceId)
     .maybeSingle();
-  if (wErr) throw new Response(wErr.message, { status: 500 });
-  if (!workspace) throw new Response("Not found", { status: 404 });
+  if (wErr) fail(500, wErr.message);
+  if (!workspace) fail(404, "Not found");
 
   const { count: activeMissions, error: mErr } = await sb
     .from("build_missions")
     .select("id", { count: "exact", head: true })
     .eq("workspace_id", workspaceId)
     .eq("status", "active");
-  if (mErr) throw new Response(mErr.message, { status: 500 });
+  if (mErr) fail(500, mErr.message);
 
   const startOfMonth = new Date();
   startOfMonth.setDate(1);
@@ -38,7 +39,7 @@ export async function getWorkspaceUsageInternal(workspaceId: string): Promise<Wo
     .select("id", { count: "exact", head: true })
     .eq("workspace_id", workspaceId)
     .gte("created_at", startOfMonth.toISOString());
-  if (dErr) throw new Response(dErr.message, { status: 500 });
+  if (dErr) fail(500, dErr.message);
 
   return {
     activeMissions: activeMissions ?? 0,
