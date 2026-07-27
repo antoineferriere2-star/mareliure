@@ -150,7 +150,7 @@ export const getMyWorkspaceBilling = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data: workspace, error } = await sb
       .from("build_workspaces")
-      .select("plan, subscription_status, stripe_customer_id")
+      .select("plan, subscription_status, stripe_customer_id, stripe_subscription_id")
       .eq("id", data.workspaceId)
       .maybeSingle();
     if (error) fail(500, error.message);
@@ -159,6 +159,8 @@ export const getMyWorkspaceBilling = createServerFn({ method: "GET" })
       plan: workspace.plan,
       subscriptionStatus: workspace.subscription_status,
       hasStripeCustomer: workspace.stripe_customer_id !== null,
+      hasStripeBilling:
+        workspace.stripe_customer_id !== null || workspace.stripe_subscription_id !== null,
     };
   });
 
