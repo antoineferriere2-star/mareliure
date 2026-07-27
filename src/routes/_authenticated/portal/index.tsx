@@ -8,6 +8,7 @@ import {
   getMyWorkspaceUsage,
   type CommercialStatus,
 } from "@/build/services/portal.data.functions";
+import { getMySetup } from "@/build/services/portalOnboarding.data.functions";
 import { usageLevel } from "@/build/billing/quota";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 
