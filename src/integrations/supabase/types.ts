@@ -141,6 +141,7 @@ export type Database = {
           public_token: string | null
           public_token_revoked_at: string | null
           published_at: string | null
+          source_onboarding_id: string | null
           status: string
           updated_at: string
           workspace_id: string | null
@@ -159,6 +160,7 @@ export type Database = {
           public_token?: string | null
           public_token_revoked_at?: string | null
           published_at?: string | null
+          source_onboarding_id?: string | null
           status?: string
           updated_at?: string
           workspace_id?: string | null
@@ -177,6 +179,7 @@ export type Database = {
           public_token?: string | null
           public_token_revoked_at?: string | null
           published_at?: string | null
+          source_onboarding_id?: string | null
           status?: string
           updated_at?: string
           workspace_id?: string | null
@@ -187,6 +190,13 @@ export type Database = {
             columns: ["playbook_version_id"]
             isOneToOne: false
             referencedRelation: "build_playbook_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "build_missions_source_onboarding_id_fkey"
+            columns: ["source_onboarding_id"]
+            isOneToOne: false
+            referencedRelation: "build_workspace_onboarding"
             referencedColumns: ["id"]
           },
           {
@@ -669,6 +679,20 @@ export type Database = {
       provision_owner_workspace: {
         Args: { _email: string; _user_id: string; _workspace_name: string }
         Returns: string
+      }
+      publish_workspace_onboarding: {
+        Args: {
+          p_mission_name: string
+          p_playbook_id: string
+          p_published_by: string
+          p_validated_draft_schema: Json
+          p_workspace_id: string
+        }
+        Returns: {
+          mission_id: string
+          playbook_version_id: string
+          reused_existing: boolean
+        }[]
       }
     }
     Enums: {
