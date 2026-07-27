@@ -195,7 +195,7 @@ export type Database = {
           {
             foreignKeyName: "build_missions_source_onboarding_id_fkey"
             columns: ["source_onboarding_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "build_workspace_onboarding"
             referencedColumns: ["id"]
           },
@@ -676,6 +676,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      provision_owner_workspace: {
+        Args: { _email: string; _user_id: string; _workspace_name: string }
+        Returns: string
+      }
       publish_workspace_onboarding: {
         Args: {
           p_mission_name: string
@@ -686,13 +690,9 @@ export type Database = {
         }
         Returns: {
           mission_id: string
-          playbook_version_id: string | null
+          playbook_version_id: string
           reused_existing: boolean
         }[]
-      }
-      provision_owner_workspace: {
-        Args: { _email: string; _user_id: string; _workspace_name: string }
-        Returns: string
       }
     }
     Enums: {

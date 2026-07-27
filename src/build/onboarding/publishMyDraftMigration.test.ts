@@ -3,13 +3,16 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const migration = readFileSync(
-  join(process.cwd(), "supabase/migrations/20260727123000_onboarding_publish_atomic.sql"),
+  join(
+    process.cwd(),
+    "supabase/migrations/20260727111547_b5127f5f-6fdb-4332-9514-87a5189de389.sql",
+  ),
   "utf8",
-);
+).replace(/\r\n/g, "\n");
 const server = readFileSync(
   join(process.cwd(), "src/build/services/portalOnboarding.data.functions.ts"),
   "utf8",
-);
+).replace(/\r\n/g, "\n");
 
 function indexOfSql(fragment: string): number {
   const index = migration.indexOf(fragment);
