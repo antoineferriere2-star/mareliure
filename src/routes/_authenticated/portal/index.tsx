@@ -206,7 +206,10 @@ function PortalHomePage() {
         </div>
       </header>
 
+      {workspaceId && <SetupNextStep workspaceId={workspaceId} />}
+
       {workspaceId && <UsageBanner workspaceId={workspaceId} />}
+
 
       <div className="flex flex-wrap items-center gap-2">
         {STATUS_TABS.map((t) => (
