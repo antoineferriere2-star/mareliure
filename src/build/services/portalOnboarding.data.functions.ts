@@ -191,7 +191,7 @@ export const analyzeMySite = createServerFn({ method: "POST" })
     if (!checked.ok) fail(400, checked.error);
 
     const sb = await admin();
-    const decision = await guardAiRun(sb, data.workspaceId, "analyze_site", data.requestId);
+    const decision = await guardAiRun(sb, data.workspaceId, context.userId, "analyze_site", data.requestId);
     if (!decision.allow) {
       if (decision.reason === "duplicate") {
         // Double click / retry of the same submit: return what we already have
@@ -333,7 +333,7 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
       fail(400, "Confirm your deck product first.");
     }
 
-    const decision = await guardAiRun(sb, data.workspaceId, "generate_draft", data.requestId);
+    const decision = await guardAiRun(sb, data.workspaceId, context.userId, "generate_draft", data.requestId);
     if (!decision.allow) {
       if (decision.reason === "duplicate" && row.playbook_id) {
         return toState(row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
