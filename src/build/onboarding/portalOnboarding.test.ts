@@ -1,0 +1,199 @@
+import { describe, expect, it } from "vitest";
+import {
+  AI_RUNS_PER_HOUR,
+  checkAiRun,
+  checkBranding,
+  checkSiteUrl,
+  defaultBranding,
+  hasDeckSignal,
+  isAcceptableProduct,
+  isPublished,
+  resolveDeckEligibility,
+  resumeStep,
+} from "./portalOnboarding";
+
+describe("checkSiteUrl", () => {
+  it("accepts a bare domain and normalizes it to https", () => {
+    const result = checkSiteUrl("  sanibeldecks.com ");
+    expect(result).toEqual({ ok: true, url: "https://sanibeldecks.com/" });
+  });
+
+  it("accepts explicit http and https", () => {
+    expect(checkSiteUrl("http://example.com").ok).toBe(true);
+    expect(checkSiteUrl("https://example.com/decks").ok).toBe(true);
+  });
+
+  it.each([
+    ["", "Enter your website address."],
+    ["not a url", "That does not look like a valid website address."],
+    ["https://no-tld-here", "Enter a full domain, for example yourcompany.com."],
+
+    ["ftp://example.com", "Only http:// and https:// addresses are supported."],
+    ["file:///etc/passwd", "Only http:// and https:// addresses are supported."],
+    ["http://localhost:8080", "Enter your public website address."],
+    ["http://router.local", "Enter your public website address."],
+    ["http://127.0.0.1", "Enter a domain name rather than an IP address."],
+    ["http://169.254.169.254/latest/meta-data", "Enter a domain name rather than an IP address."],
+    ["http://10.0.0.5", "Enter a domain name rather than an IP address."],
+    ["http://[::1]/", "Enter a domain name rather than an IP address."],
+    ["https://user:pass@example.com", "Remove the credentials from the address."],
+  ])("rejects %s", (input, error) => {
+    expect(checkSiteUrl(input)).toEqual({ ok: false, error });
+  });
+
+  it("rejects an absurdly long address", () => {
+    expect(checkSiteUrl(`https://example.com/${"a".repeat(3000)}`).ok).toBe(false);
+  });
+});
+
+describe("hasDeckSignal", () => {
+  it("matches deck words at word level", () => {
+    expect(hasDeckSignal("Custom deck building")).toBe(true);
+    expect(hasDeckSignal("Composite decking")).toBe(true);
+    expect(hasDeckSignal("Terrasse bois")).toBe(true);
+  });
+
+  it("does not match unrelated words that merely contain the letters", () => {
+    expect(hasDeckSignal("Decker Roofing")).toBe(false);
+    expect(hasDeckSignal("Swimming pools")).toBe(false);
+  });
+});
+
+describe("resolveDeckEligibility", () => {
+  it("accepts a deck business and suggests the site's own wording", () => {
+    const result = resolveDeckEligibility({
+      businessType: "Deck builder",
+      isDeckBusiness: true,
+      products: ["Composite decking", "Pergolas"],
+    });
+    expect(result.eligible).toBe(true);
+    if (result.eligible) {
+      expect(result.suggestedProducts).toContain("Deck");
+      expect(result.suggestedProducts).toContain("Composite decking");
+      expect(result.suggestedProducts).not.toContain("Pergolas");
+    }
+  });
+
+  it("blocks a non-deck site with an explicit explanation and no alternative funnel", () => {
+    const result = resolveDeckEligibility({
+      businessType: "Swimming pool installer",
+      isDeckBusiness: false,
+      products: ["Pool installation", "Pool maintenance"],
+    });
+    expect(result.eligible).toBe(false);
+    if (!result.eligible) {
+      expect(result.reason).toContain("deck businesses only");
+      expect(result.reason.toLowerCase()).not.toContain("pool");
+    }
+  });
+
+  it("still accepts a site whose products mention decks even if the model said false", () => {
+    const result = resolveDeckEligibility({
+      businessType: "General contractor",
+      isDeckBusiness: false,
+      products: ["Deck replacement"],
+    });
+    expect(result.eligible).toBe(true);
+  });
+});
+
+describe("isAcceptableProduct", () => {
+  it("keeps free-text confirmation inside the deck vertical", () => {
+    expect(isAcceptableProduct("Composite deck")).toBe(true);
+    expect(isAcceptableProduct("Pergola")).toBe(false);
+    expect(isAcceptableProduct("   ")).toBe(false);
+    expect(isAcceptableProduct(`deck ${"x".repeat(200)}`)).toBe(false);
+  });
+});
+
+describe("resumeStep", () => {
+  it("starts at the website step for a brand new workspace", () => {
+    expect(resumeStep(null)).toBe("website");
+  });
+
+  it("resumes exactly where the client stopped", () => {
+    expect(
+      resumeStep({ status: "analyzed", hasAnalysis: true, hasConfirmedProduct: false, hasDraft: false }),
+    ).toBe("review");
+    expect(
+      resumeStep({ status: "confirmed", hasAnalysis: true, hasConfirmedProduct: true, hasDraft: false }),
+    ).toBe("customize");
+    expect(
+      resumeStep({ status: "draft_ready", hasAnalysis: true, hasConfirmedProduct: true, hasDraft: true }),
+    ).toBe("preview");
+  });
+});
+
+describe("draft publication", () => {
+  it("never reports a draft produced by this flow as published", () => {
+    expect(isPublished()).toBe(false);
+  });
+});
+
+describe("checkBranding", () => {
+  const fallback = defaultBranding("Sanibel Decks", "Deck");
+
+  it("builds sane defaults from the workspace name", () => {
+    expect(fallback.displayName).toBe("Sanibel Decks");
+    expect(fallback.introTitle).toContain("deck");
+    expect(fallback.logoPath).toBeNull();
+  });
+
+  it("trims and accepts a valid customization", () => {
+    const result = checkBranding(
+      { displayName: "  Sanibel Decks LLC ", accentColor: "#B45309", ctaLabel: "Start my project" },
+      fallback,
+    );
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.branding.displayName).toBe("Sanibel Decks LLC");
+      expect(result.branding.accentColor).toBe("#B45309");
+      expect(result.branding.introTitle).toBe(fallback.introTitle);
+    }
+  });
+
+  it.each([
+    [{ displayName: "" }, "Business name cannot be empty."],
+    [{ accentColor: "red" }, "Accent color must be a hex value such as #0F172A."],
+    [{ accentColor: "#FFF" }, "Accent color must be a hex value such as #0F172A."],
+    [{ introTitle: "" }, "Title cannot be empty."],
+    [{ ctaLabel: "" }, "Button label cannot be empty."],
+    [{ introText: "x".repeat(401) }, "Introduction is too long (400 characters max)."],
+  ])("rejects invalid customization %o", (input, error) => {
+    expect(checkBranding(input, fallback)).toEqual({ ok: false, error });
+  });
+});
+
+describe("checkAiRun", () => {
+  const now = new Date("2026-07-27T12:00:00Z");
+
+  it("allows a first run", () => {
+    expect(checkAiRun([], "req-1", now)).toEqual({ allow: true });
+  });
+
+  it("treats a repeated request id as a duplicate submit, not a new run", () => {
+    const runs = [{ requestId: "req-1", createdAt: "2026-07-27T11:59:58Z" }];
+    expect(checkAiRun(runs, "req-1", now)).toEqual({ allow: false, reason: "duplicate" });
+    expect(checkAiRun(runs, "req-2", now)).toEqual({ allow: true });
+  });
+
+  it("rate limits per hour and tells the client when to retry", () => {
+    const runs = Array.from({ length: AI_RUNS_PER_HOUR }, (_, i) => ({
+      requestId: `req-${i}`,
+      createdAt: "2026-07-27T11:30:00Z",
+    }));
+    const decision = checkAiRun(runs, "req-new", now);
+    expect(decision.allow).toBe(false);
+    if (!decision.allow && decision.reason === "rate_limited") {
+      expect(decision.retryAfterMinutes).toBe(30);
+    }
+  });
+
+  it("ignores runs older than the window", () => {
+    const runs = Array.from({ length: AI_RUNS_PER_HOUR }, (_, i) => ({
+      requestId: `old-${i}`,
+      createdAt: "2026-07-27T09:00:00Z",
+    }));
+    expect(checkAiRun(runs, "req-new", now)).toEqual({ allow: true });
+  });
+});

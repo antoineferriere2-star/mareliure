@@ -248,6 +248,7 @@ export type Database = {
           project_type: string | null
           published_version_id: string | null
           updated_at: string
+          workspace_id: string | null
         }
         Insert: {
           created_at?: string
@@ -260,6 +261,7 @@ export type Database = {
           project_type?: string | null
           published_version_id?: string | null
           updated_at?: string
+          workspace_id?: string | null
         }
         Update: {
           created_at?: string
@@ -272,6 +274,7 @@ export type Database = {
           project_type?: string | null
           published_version_id?: string | null
           updated_at?: string
+          workspace_id?: string | null
         }
         Relationships: [
           {
@@ -279,6 +282,13 @@ export type Database = {
             columns: ["published_version_id"]
             isOneToOne: false
             referencedRelation: "build_playbook_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "build_playbooks_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "build_workspaces"
             referencedColumns: ["id"]
           },
         ]
@@ -411,6 +421,50 @@ export type Database = {
           },
         ]
       }
+      build_workspace_ai_runs: {
+        Row: {
+          action: string
+          created_at: string
+          error: string | null
+          id: string
+          latency_ms: number | null
+          request_id: string | null
+          status: string
+          user_id: string
+          workspace_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          latency_ms?: number | null
+          request_id?: string | null
+          status: string
+          user_id: string
+          workspace_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          error?: string | null
+          id?: string
+          latency_ms?: number | null
+          request_id?: string | null
+          status?: string
+          user_id?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_workspace_ai_runs_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: false
+            referencedRelation: "build_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       build_workspace_members: {
         Row: {
           created_at: string
@@ -441,6 +495,81 @@ export type Database = {
             foreignKeyName: "build_workspace_members_workspace_id_fkey"
             columns: ["workspace_id"]
             isOneToOne: false
+            referencedRelation: "build_workspaces"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      build_workspace_onboarding: {
+        Row: {
+          analysis: Json | null
+          analyzed_at: string | null
+          branding: Json
+          confirmed_business_type: string | null
+          confirmed_product: string | null
+          created_at: string
+          created_by: string
+          draft_version: number
+          final_url: string | null
+          id: string
+          last_analyze_request_id: string | null
+          last_generate_request_id: string | null
+          playbook_id: string | null
+          site_url: string | null
+          status: string
+          updated_at: string
+          workspace_id: string
+        }
+        Insert: {
+          analysis?: Json | null
+          analyzed_at?: string | null
+          branding?: Json
+          confirmed_business_type?: string | null
+          confirmed_product?: string | null
+          created_at?: string
+          created_by: string
+          draft_version?: number
+          final_url?: string | null
+          id?: string
+          last_analyze_request_id?: string | null
+          last_generate_request_id?: string | null
+          playbook_id?: string | null
+          site_url?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id: string
+        }
+        Update: {
+          analysis?: Json | null
+          analyzed_at?: string | null
+          branding?: Json
+          confirmed_business_type?: string | null
+          confirmed_product?: string | null
+          created_at?: string
+          created_by?: string
+          draft_version?: number
+          final_url?: string | null
+          id?: string
+          last_analyze_request_id?: string | null
+          last_generate_request_id?: string | null
+          playbook_id?: string | null
+          site_url?: string | null
+          status?: string
+          updated_at?: string
+          workspace_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_workspace_onboarding_playbook_id_fkey"
+            columns: ["playbook_id"]
+            isOneToOne: false
+            referencedRelation: "build_playbooks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "build_workspace_onboarding_workspace_id_fkey"
+            columns: ["workspace_id"]
+            isOneToOne: true
             referencedRelation: "build_workspaces"
             referencedColumns: ["id"]
           },

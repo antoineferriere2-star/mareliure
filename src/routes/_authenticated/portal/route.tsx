@@ -87,6 +87,14 @@ function PortalLayout() {
           >
             Mes Missions
           </Link>
+          <Link
+            to="/portal/setup"
+            activeProps={{ className: "border-primary text-foreground font-medium" }}
+            className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
+          >
+            Setup
+          </Link>
+
 
           <Link
             to="/portal/billing"

@@ -27,6 +27,7 @@ import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenti
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
 import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
 import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
+import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
 import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authenticated/portal/missions'
 import { Route as AuthenticatedPortalBillingRouteImport } from './routes/_authenticated/portal/billing'
 import { Route as AuthenticatedBuildSettingsRouteImport } from './routes/_authenticated/build/settings'
@@ -142,6 +143,12 @@ const ApiPublicBuildPublicIntakeRoute =
     id: '/api/public/build-public-intake',
     path: '/api/public/build-public-intake',
     getParentRoute: () => rootRouteImport,
+  } as any)
+const AuthenticatedPortalSetupRoute =
+  AuthenticatedPortalSetupRouteImport.update({
+    id: '/setup',
+    path: '/setup',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
 const AuthenticatedPortalMissionsRoute =
   AuthenticatedPortalMissionsRouteImport.update({
@@ -302,6 +309,7 @@ export interface FileRoutesByFullPath {
   '/build/settings': typeof AuthenticatedBuildSettingsRoute
   '/portal/billing': typeof AuthenticatedPortalBillingRoute
   '/portal/missions': typeof AuthenticatedPortalMissionsRoute
+  '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
   '/build/': typeof AuthenticatedBuildIndexRoute
@@ -341,6 +349,7 @@ export interface FileRoutesByTo {
   '/build/settings': typeof AuthenticatedBuildSettingsRoute
   '/portal/billing': typeof AuthenticatedPortalBillingRoute
   '/portal/missions': typeof AuthenticatedPortalMissionsRoute
+  '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
   '/build': typeof AuthenticatedBuildIndexRoute
@@ -385,6 +394,7 @@ export interface FileRoutesById {
   '/_authenticated/build/settings': typeof AuthenticatedBuildSettingsRoute
   '/_authenticated/portal/billing': typeof AuthenticatedPortalBillingRoute
   '/_authenticated/portal/missions': typeof AuthenticatedPortalMissionsRoute
+  '/_authenticated/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
   '/_authenticated/build/': typeof AuthenticatedBuildIndexRoute
@@ -429,6 +439,7 @@ export interface FileRouteTypes {
     | '/build/settings'
     | '/portal/billing'
     | '/portal/missions'
+    | '/portal/setup'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
     | '/build/'
@@ -468,6 +479,7 @@ export interface FileRouteTypes {
     | '/build/settings'
     | '/portal/billing'
     | '/portal/missions'
+    | '/portal/setup'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
     | '/build'
@@ -511,6 +523,7 @@ export interface FileRouteTypes {
     | '/_authenticated/build/settings'
     | '/_authenticated/portal/billing'
     | '/_authenticated/portal/missions'
+    | '/_authenticated/portal/setup'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
     | '/_authenticated/build/'
@@ -680,6 +693,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/public/build-public-intake'
       preLoaderRoute: typeof ApiPublicBuildPublicIntakeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/portal/setup': {
+      id: '/_authenticated/portal/setup'
+      path: '/setup'
+      fullPath: '/portal/setup'
+      preLoaderRoute: typeof AuthenticatedPortalSetupRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
     }
     '/_authenticated/portal/missions': {
       id: '/_authenticated/portal/missions'
@@ -909,6 +929,7 @@ const AuthenticatedBuildRouteRouteWithChildren =
 interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalBillingRoute: typeof AuthenticatedPortalBillingRoute
   AuthenticatedPortalMissionsRoute: typeof AuthenticatedPortalMissionsRoute
+  AuthenticatedPortalSetupRoute: typeof AuthenticatedPortalSetupRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
   AuthenticatedPortalDossiersIdRoute: typeof AuthenticatedPortalDossiersIdRoute
 }
@@ -917,6 +938,7 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
   {
     AuthenticatedPortalBillingRoute: AuthenticatedPortalBillingRoute,
     AuthenticatedPortalMissionsRoute: AuthenticatedPortalMissionsRoute,
+    AuthenticatedPortalSetupRoute: AuthenticatedPortalSetupRoute,
     AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
     AuthenticatedPortalDossiersIdRoute: AuthenticatedPortalDossiersIdRoute,
   }
