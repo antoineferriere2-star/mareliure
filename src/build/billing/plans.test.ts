@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { PLAN_DEFAULTS, getPlanByStripeLookupKey, getPlanDefaults, isPlanId } from "./plans";
+import {
+  PLAN_DEFAULTS,
+  formatMonthlyUsdPrice,
+  getPlanByStripeLookupKey,
+  getPlanDefaults,
+  isPlanId,
+} from "./plans";
 
 describe("plans", () => {
   it("has numeric defaults for every plan except enterprise", () => {
@@ -44,5 +50,41 @@ describe("plans", () => {
 
   it("has no Stripe lookup_key for enterprise (negotiated, no self-serve price)", () => {
     expect(PLAN_DEFAULTS.enterprise.stripeLookupKey).toBeNull();
+  });
+
+  it("stores the LOT5 self-serve Stripe price catalog next to lookup keys and quotas", () => {
+    expect(PLAN_DEFAULTS.launch).toMatchObject({
+      maxActiveMissions: 1,
+      monthlyBriefQuota: 50,
+      stripeLookupKey: "launch_monthly",
+      monthlyUsdPrice: { currency: "USD", amountCents: 1999 },
+    });
+    expect(PLAN_DEFAULTS.growth).toMatchObject({
+      maxActiveMissions: 3,
+      monthlyBriefQuota: 250,
+      stripeLookupKey: "growth_monthly",
+      monthlyUsdPrice: { currency: "USD", amountCents: 5900 },
+    });
+    expect(PLAN_DEFAULTS.pro).toMatchObject({
+      maxActiveMissions: 8,
+      monthlyBriefQuota: 1000,
+      stripeLookupKey: "pro_monthly",
+      monthlyUsdPrice: { currency: "USD", amountCents: 14900 },
+    });
+    expect(PLAN_DEFAULTS.business).toMatchObject({
+      maxActiveMissions: 20,
+      monthlyBriefQuota: 5000,
+      stripeLookupKey: "business_monthly",
+      monthlyUsdPrice: { currency: "USD", amountCents: 29900 },
+    });
+    expect(PLAN_DEFAULTS.enterprise.monthlyUsdPrice).toBeNull();
+  });
+
+  it("formats monthly USD prices for the portal without component-level constants", () => {
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.launch.monthlyUsdPrice)).toBe("19,99 $/mois");
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.growth.monthlyUsdPrice)).toBe("59 $/mois");
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.pro.monthlyUsdPrice)).toBe("149 $/mois");
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.business.monthlyUsdPrice)).toBe("299 $/mois");
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.enterprise.monthlyUsdPrice)).toBe("Sur devis");
   });
 });

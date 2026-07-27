@@ -10,6 +10,7 @@ import { assertWorkspaceOwner } from "./workspaceAuth.server";
 import { admin } from "./adminAuth.server";
 import { createStripeClient, getStripeEnv } from "@/lib/stripe.server";
 import { PLAN_IDS, getPlanDefaults } from "@/build/billing/plans";
+import { canCreateCheckout } from "@/build/billing/checkoutDecision";
 import { fail } from "./serverError";
 
 export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
@@ -25,6 +26,7 @@ export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
+    const sb = await admin();
 
     if (data.plan === "enterprise") {
       fail(400, "Enterprise has no self-service price — contact the team.");
@@ -33,6 +35,20 @@ export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
     const lookupKey = getPlanDefaults(data.plan).stripeLookupKey;
     if (!lookupKey) {
       fail(400, "This plan has no Stripe price configured.");
+    }
+
+    const { data: workspace, error: workspaceError } = await sb
+      .from("build_workspaces")
+      .select("stripe_customer_id, stripe_subscription_id")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    if (workspaceError) fail(500, workspaceError.message);
+    if (!workspace) fail(404, "Workspace not found.");
+    if (!canCreateCheckout(workspace)) {
+      fail(
+        409,
+        "This workspace already has Stripe billing. Open the billing portal to change plan.",
+      );
     }
 
     const stripe = createStripeClient(getStripeEnv());
@@ -73,7 +89,7 @@ export const createWorkspaceBillingPortalSession = createServerFn({ method: "POS
     const sb = await admin();
     const { data: workspace, error } = await sb
       .from("build_workspaces")
-      .select("stripe_customer_id")
+      .select("stripe_customer_id, stripe_subscription_id")
       .eq("id", data.workspaceId)
       .maybeSingle();
     if (error) fail(500, error.message);

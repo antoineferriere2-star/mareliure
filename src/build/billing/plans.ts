@@ -7,6 +7,11 @@
 export const PLAN_IDS = ["launch", "growth", "pro", "business", "enterprise"] as const;
 export type PlanId = (typeof PLAN_IDS)[number];
 
+export interface MonthlyUsdPrice {
+  currency: "USD";
+  amountCents: number;
+}
+
 export interface PlanDefaults {
   label: string;
   /** null = no numeric default; Enterprise limits are negotiated per deal. */
@@ -14,38 +19,46 @@ export interface PlanDefaults {
   monthlyBriefQuota: number | null;
   /** Stripe Price lookup_key (stable across test/live) — null for Enterprise, which has no self-serve price. */
   stripeLookupKey: string | null;
+  monthlyUsdPrice: MonthlyUsdPrice | null;
 }
 
+// LOT5B: paid extra-Mission add-ons are not implemented yet. Until then,
+// negotiated limits continue to use the existing admin quota overrides.
 export const PLAN_DEFAULTS: Record<PlanId, PlanDefaults> = {
   launch: {
     label: "Launch",
     maxActiveMissions: 1,
     monthlyBriefQuota: 50,
     stripeLookupKey: "launch_monthly",
+    monthlyUsdPrice: { currency: "USD", amountCents: 1999 },
   },
   growth: {
     label: "Growth",
     maxActiveMissions: 3,
     monthlyBriefQuota: 250,
     stripeLookupKey: "growth_monthly",
+    monthlyUsdPrice: { currency: "USD", amountCents: 5900 },
   },
   pro: {
     label: "Pro",
     maxActiveMissions: 8,
     monthlyBriefQuota: 1000,
     stripeLookupKey: "pro_monthly",
+    monthlyUsdPrice: { currency: "USD", amountCents: 14900 },
   },
   business: {
     label: "Business",
     maxActiveMissions: 20,
     monthlyBriefQuota: 5000,
     stripeLookupKey: "business_monthly",
+    monthlyUsdPrice: { currency: "USD", amountCents: 29900 },
   },
   enterprise: {
     label: "Enterprise",
     maxActiveMissions: null,
     monthlyBriefQuota: null,
     stripeLookupKey: null,
+    monthlyUsdPrice: null,
   },
 };
 
@@ -63,4 +76,14 @@ export function getPlanByStripeLookupKey(lookupKey: string): PlanId | null {
     ([, defaults]) => defaults.stripeLookupKey === lookupKey,
   );
   return entry ? entry[0] : null;
+}
+
+export function formatMonthlyUsdPrice(price: MonthlyUsdPrice | null): string {
+  if (!price) return "Sur devis";
+  const dollars = price.amountCents / 100;
+  const hasCents = price.amountCents % 100 !== 0;
+  return `${new Intl.NumberFormat("fr-FR", {
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(dollars)} $/mois`;
 }

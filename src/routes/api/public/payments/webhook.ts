@@ -5,7 +5,7 @@
 // selected by the `env` query param the endpoint is registered with.
 import { createFileRoute } from "@tanstack/react-router";
 import Stripe from "stripe";
-import { createStripeClient, getWebhookSecret, type StripeEnv } from "@/lib/stripe.server";
+import { createStripeClient, getWebhookSecret, parseStripeEnv } from "@/lib/stripe.server";
 import { mapLookupKeyToPlan, resolveWorkspaceId } from "@/build/billing/stripeSync";
 import { resolvePlanColumnsUpdate } from "@/build/billing/planSync";
 import type { Database } from "@/integrations/supabase/types";
@@ -106,7 +106,11 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
   server: {
     handlers: {
       POST: async ({ request }) => {
-        const env = (new URL(request.url).searchParams.get("env") ?? "sandbox") as StripeEnv;
+        const rawEnv = new URL(request.url).searchParams.get("env");
+        const env = parseStripeEnv(rawEnv);
+        if (!env) {
+          return jsonResponse(400, { error: "Invalid Stripe environment." });
+        }
         const signature = request.headers.get("stripe-signature");
         if (!signature) return jsonResponse(400, { error: "Missing stripe-signature header." });
 

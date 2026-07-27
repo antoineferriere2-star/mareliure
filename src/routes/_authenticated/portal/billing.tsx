@@ -7,7 +7,7 @@ import {
   createWorkspaceCheckoutSession,
   createWorkspaceBillingPortalSession,
 } from "@/build/services/billing.data.functions";
-import { PLAN_DEFAULTS, type PlanId } from "@/build/billing/plans";
+import { PLAN_DEFAULTS, formatMonthlyUsdPrice, type PlanId } from "@/build/billing/plans";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 
 export const Route = createFileRoute("/_authenticated/portal/billing")({
@@ -65,6 +65,14 @@ function PortalBillingPage() {
       window.location.href = url;
     },
   });
+
+  const startPlanChange = (plan: PlanId) => {
+    if (billing?.hasStripeBilling) {
+      portalMutation.mutate();
+      return;
+    }
+    checkoutMutation.mutate(plan);
+  };
 
   if (workspaces.length === 0) {
     return (
@@ -135,7 +143,7 @@ function PortalBillingPage() {
               </span>
             )}
           </p>
-          {billing.hasStripeCustomer && canManageBilling && (
+          {billing.hasStripeBilling && canManageBilling && (
             <button
               type="button"
               onClick={() => portalMutation.mutate()}
@@ -162,21 +170,31 @@ function PortalBillingPage() {
           return (
             <div key={plan} className="rounded-lg border border-border bg-card p-4">
               <h2 className="text-sm font-semibold text-foreground">{defaults.label}</h2>
+              <p className="mt-2 text-2xl font-semibold text-foreground">
+                {formatMonthlyUsdPrice(defaults.monthlyUsdPrice)}
+              </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {defaults.maxActiveMissions} active Mission(s) · {defaults.monthlyBriefQuota}{" "}
-                Briefs/month
+                {defaults.maxActiveMissions} Missions actives ·{" "}
+                {defaults.monthlyBriefQuota?.toLocaleString("fr-FR")} Briefs/mois
               </p>
               <button
                 type="button"
-                onClick={() => checkoutMutation.mutate(plan)}
-                disabled={isCurrent || !canManageBilling || checkoutMutation.isPending}
+                onClick={() => startPlanChange(plan)}
+                disabled={
+                  isCurrent ||
+                  !canManageBilling ||
+                  checkoutMutation.isPending ||
+                  portalMutation.isPending
+                }
                 className="mt-3 w-full rounded-md bg-primary px-3 py-1.5 text-xs font-medium text-primary-foreground disabled:opacity-50"
               >
                 {isCurrent
                   ? "Current plan"
-                  : checkoutMutation.isPending
+                  : checkoutMutation.isPending || portalMutation.isPending
                     ? "Redirecting…"
-                    : "Choose this plan"}
+                    : billing?.hasStripeBilling
+                      ? "Change in portal"
+                      : "Choose this plan"}
               </button>
             </div>
           );

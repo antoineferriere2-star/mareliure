@@ -11,6 +11,11 @@ const GATEWAY = "https://connector-gateway.lovable.dev/stripe";
 
 export type StripeEnv = "sandbox" | "live";
 
+export function parseStripeEnv(value: string | null): StripeEnv | null {
+  if (value === "sandbox" || value === "live") return value;
+  return null;
+}
+
 export function getStripeEnv(): StripeEnv {
   return process.env.NODE_ENV === "production" ? "live" : "sandbox";
 }
