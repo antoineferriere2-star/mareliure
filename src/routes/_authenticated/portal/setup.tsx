@@ -972,6 +972,7 @@ function PublishStep({
 }) {
   const publish = useServerFn(publishMyDraft);
   const [publishing, setPublishing] = useState(false);
+  const requestId = useRef(newRequestId());
   const branding =
     setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Deck");
 
@@ -980,10 +981,12 @@ function PublishStep({
     onError(null);
     setPublishing(true);
     try {
-      const next = await publish({ data: { workspaceId } });
+      const next = await publish({ data: { workspaceId, requestId: requestId.current } });
+      requestId.current = newRequestId();
       onDone(next);
     } catch (err) {
       onError(await readError(err));
+      requestId.current = newRequestId();
     } finally {
       setPublishing(false);
     }

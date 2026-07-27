@@ -37,6 +37,7 @@ import {
   type OnboardingStatus,
   type SiteAnalysis,
 } from "@/build/onboarding/portalOnboarding";
+import { wouldExceedActiveMissions } from "@/build/billing/quota";
 
 const workspaceInput = z.object({ workspaceId: z.string().uuid() });
 
@@ -573,17 +574,24 @@ export const getMyDraftPreview = createServerFn({ method: "GET" })
 // ------------------------------------------------------------------- LOT 3
 //
 // Explicit, owner-only, self-service publish: turns the private draft into
-// a live Mission. Idempotent — publishing twice (double click, retried
-// request) returns the same already-published Mission instead of creating
-// a second one. Every write here is scoped to data.workspaceId, verified by
-// assertWorkspaceOwner before any table is touched, and every Playbook row
-// read back is re-checked against workspace_id (defence in depth, same
-// pattern as getMyDraftPreview) so a workspace can never publish a draft
-// that belongs to someone else.
+// a live Mission. Idempotent against real concurrency (not just a
+// read-then-write check): two overlapping publish calls (double click,
+// retried request) race on the unique (workspace_id, action, request_id)
+// index in build_workspace_ai_runs via guardAiRun, the same reservation
+// pattern already used for analyze_site/generate_draft — the loser is
+// reported as a duplicate and never creates a second Mission. Every write
+// here is scoped to data.workspaceId, verified by assertWorkspaceOwner
+// before any table is touched, and every Playbook row read back is
+// re-checked against workspace_id (defence in depth, same pattern as
+// getMyDraftPreview) so a workspace can never publish a draft that belongs
+// to someone else. Also enforces the plan's active-Mission quota, same
+// check as the admin activation path in admin.data.functions.ts.
 
 export const publishMyDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => workspaceInput.parse(data))
+  .inputValidator((data: unknown) =>
+    workspaceInput.extend({ requestId: z.string().min(8).max(64) }).parse(data),
+  )
   .handler(async ({ context, data }) => {
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
@@ -599,6 +607,58 @@ export const publishMyDraft = createServerFn({ method: "POST" })
 
     if (!row.playbook_id) {
       fail(400, "Generate your project intake draft first.");
+    }
+
+    const decision = await guardAiRun(
+      sb,
+      data.workspaceId,
+      context.userId,
+      "publish",
+      data.requestId,
+    );
+    if (!decision.allow) {
+      if (decision.reason === "duplicate") {
+        const latest = await loadRow(sb, data.workspaceId);
+        if (latest?.status === "published" && latest.mission_id) {
+          return toState(
+            sb,
+            latest,
+            data.workspaceId,
+            await workspaceName(sb, data.workspaceId),
+            true,
+          );
+        }
+        fail(409, "This draft is already being published. Please wait a moment.");
+      }
+      fail(429, `Too many publish attempts. Try again in ${decision.retryAfterMinutes} minutes.`);
+    }
+
+    const { count: activeCount, error: countError } = await sb
+      .from("build_missions")
+      .select("id", { count: "exact", head: true })
+      .eq("workspace_id", data.workspaceId)
+      .eq("status", "active");
+    if (countError) fail(500, countError.message);
+    const { data: workspace, error: workspaceError } = await sb
+      .from("build_workspaces")
+      .select("max_active_missions")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    if (workspaceError) fail(500, workspaceError.message);
+    if (workspace && wouldExceedActiveMissions(activeCount ?? 0, workspace.max_active_missions)) {
+      await logAiRun(sb, {
+        workspaceId: data.workspaceId,
+        userId: context.userId,
+        action: "publish",
+        requestId: data.requestId,
+        status: "error",
+        latencyMs: 0,
+        error: "quota",
+      });
+      fail(
+        400,
+        `Your plan's active Mission limit (${workspace.max_active_missions}) is already reached. Pause another Mission first, or upgrade your plan.`,
+      );
     }
 
     const { data: playbook, error: playbookError } = await sb
@@ -676,6 +736,15 @@ export const publishMyDraft = createServerFn({ method: "POST" })
       .update({ status: "published", mission_id: mission.id })
       .eq("workspace_id", data.workspaceId);
     if (onboardingUpdateError) fail(500, onboardingUpdateError.message);
+
+    await logAiRun(sb, {
+      workspaceId: data.workspaceId,
+      userId: context.userId,
+      action: "publish",
+      requestId: data.requestId,
+      status: "ok",
+      latencyMs: 0,
+    });
 
     const updated = await loadRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
