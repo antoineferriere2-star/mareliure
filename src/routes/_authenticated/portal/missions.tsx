@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/portal/missions")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Mes Missions — Espace Client" },
+      { title: "My Missions — Client Portal" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -30,10 +30,10 @@ export const Route = createFileRoute("/_authenticated/portal/missions")({
 });
 
 const STATUS_LABELS: Record<string, string> = {
-  draft: "Brouillon",
+  draft: "Draft",
   active: "Active",
-  paused: "En pause",
-  archived: "Archivée",
+  paused: "Paused",
+  archived: "Archived",
 };
 
 function PortalMissionsPage() {
@@ -81,9 +81,7 @@ function PortalMissionsPage() {
   if (workspaces.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          Aucun Espace Client associé à ce compte pour le moment.
-        </p>
+        <p className="text-sm text-muted-foreground">No workspace is linked to this account yet.</p>
       </div>
     );
   }
@@ -92,9 +90,9 @@ function PortalMissionsPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Mes Missions</h1>
+          <h1 className="text-2xl font-semibold text-foreground">My Missions</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Les parcours publiés pour votre Espace Client et les Dossiers qu'ils produisent.
+            The journeys published for your workspace and the Dossiers they produce.
           </p>
         </div>
         {workspaces.length > 1 && (
@@ -114,8 +112,8 @@ function PortalMissionsPage() {
 
       {usage && (
         <div className="rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-muted-foreground">
-          {usage.activeMissions} / {usage.maxActiveMissions} Mission(s) active(s) sur votre plan ·{" "}
-          {usage.monthlyBriefs} / {usage.monthlyBriefQuota} Project Briefs ce mois-ci.
+          {usage.activeMissions} / {usage.maxActiveMissions} active Mission(s) on your plan ·{" "}
+          {usage.monthlyBriefs} / {usage.monthlyBriefQuota} Project Briefs this month.
         </div>
       )}
 
@@ -127,14 +125,14 @@ function PortalMissionsPage() {
 
       {error ? (
         <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {error instanceof Error ? error.message : "Impossible de charger vos Missions."}
+          {error instanceof Error ? error.message : "Unable to load your Missions."}
         </p>
       ) : isPending ? (
         <PortalPending />
       ) : missions.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            Aucune Mission n'est encore rattachée à cet Espace Client.
+            No Mission is linked to this workspace yet.
           </p>
         </div>
       ) : (
@@ -144,9 +142,9 @@ function PortalMissionsPage() {
               <tr>
                 <th className="px-4 py-2 text-left">Mission</th>
                 <th className="px-4 py-2 text-left">Playbook</th>
-                <th className="px-4 py-2 text-left">Statut</th>
+                <th className="px-4 py-2 text-left">Status</th>
                 <th className="px-4 py-2 text-right">Dossiers</th>
-                <th className="px-4 py-2 text-left">Lien public</th>
+                <th className="px-4 py-2 text-left">Public link</th>
                 {isOwner && <th className="px-4 py-2 text-left">Actions</th>}
               </tr>
             </thead>
@@ -169,10 +167,10 @@ function PortalMissionsPage() {
                         rel="noreferrer"
                         className="text-primary hover:underline"
                       >
-                        Ouvrir
+                        Open
                       </a>
                     ) : (
-                      <span className="text-muted-foreground">Non publiée</span>
+                      <span className="text-muted-foreground">Not published</span>
                     )}
                   </td>
                   {isOwner && (
@@ -189,7 +187,7 @@ function PortalMissionsPage() {
                           disabled={toggleMutation.isPending}
                           className="rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium text-foreground hover:bg-accent disabled:opacity-50"
                         >
-                          {m.status === "active" ? "Mettre en pause" : "Réactiver"}
+                          {m.status === "active" ? "Pause" : "Reactivate"}
                         </button>
                       ) : (
                         <span className="text-muted-foreground">—</span>

@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/portal/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Mes Dossiers — Espace Client" },
+      { title: "My Dossiers — Client Portal" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -37,7 +37,7 @@ type DossierRow = {
 
 function toCsv(rows: DossierRow[]): string {
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
-  const header = ["Résumé", "Statut", "Reçu le", "Dernière activité"].map(escape).join(",");
+  const header = ["Summary", "Status", "Received", "Last activity"].map(escape).join(",");
   const body = rows.map((r) =>
     [
       r.summary ?? `Dossier ${r.id.slice(0, 8)}`,
@@ -62,12 +62,12 @@ function downloadCsv(rows: DossierRow[]) {
 }
 
 const STATUS_TABS: { id: CommercialStatus | "all"; label: string }[] = [
-  { id: "all", label: "Tous" },
-  { id: "nouveau", label: "Nouveaux" },
-  { id: "contacte", label: "Contactés" },
-  { id: "devise", label: "Devisés" },
-  { id: "gagne", label: "Gagnés" },
-  { id: "perdu", label: "Perdus" },
+  { id: "all", label: "All" },
+  { id: "nouveau", label: "New" },
+  { id: "contacte", label: "Contacted" },
+  { id: "devise", label: "Quoted" },
+  { id: "gagne", label: "Won" },
+  { id: "perdu", label: "Lost" },
 ];
 
 const STATUS_STYLES: Record<CommercialStatus, string> = {
@@ -109,9 +109,9 @@ function UsageBanner({ workspaceId }: { workspaceId: string }) {
   if (level === "ok") return null;
   return (
     <div className={`rounded-lg border px-4 py-2.5 text-sm ${USAGE_BANNER_STYLES[level]}`}>
-      {level === "over" ? "Quota mensuel atteint : " : "Vous approchez de votre quota mensuel : "}
-      {data.monthlyBriefs} / {data.monthlyBriefQuota} Project Briefs ce mois-ci. Aucune demande
-      n'est refusée pour autant — contactez l'équipe Métré Build pour ajuster votre plan si besoin.
+      {level === "over" ? "Monthly quota reached: " : "You are approaching your monthly quota: "}
+      {data.monthlyBriefs} / {data.monthlyBriefQuota} Project Briefs this month. No request is
+      turned away because of this — contact the Métré Build team to adjust your plan if needed.
     </div>
   );
 }
@@ -136,7 +136,9 @@ function SetupNextStep({ workspaceId }: { workspaceId: string }) {
     <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
       <div>
         <p className="text-sm font-semibold text-foreground">
-          {started ? "Finish setting up your project intake" : "Next step: set up your project intake"}
+          {started
+            ? "Finish setting up your project intake"
+            : "Next step: set up your project intake"}
         </p>
         <p className="mt-0.5 text-sm text-muted-foreground">
           {started
@@ -201,9 +203,7 @@ function PortalHomePage() {
   if (workspaces.length === 0) {
     return (
       <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-        <p className="text-sm text-muted-foreground">
-          Aucun Espace Client associé à ce compte pour le moment.
-        </p>
+        <p className="text-sm text-muted-foreground">No workspace is linked to this account yet.</p>
       </div>
     );
   }
@@ -212,9 +212,9 @@ function PortalHomePage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">Mes Dossiers</h1>
+          <h1 className="text-2xl font-semibold text-foreground">My Dossiers</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Les demandes reçues via vos Missions, à suivre jusqu'à la clôture.
+            Requests received through your Missions, to follow up until closed.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -224,31 +224,30 @@ function PortalHomePage() {
             disabled={filtered.length === 0}
             className="rounded-md border border-input bg-background px-3 py-2 text-xs font-medium text-foreground hover:bg-accent disabled:opacity-50"
           >
-            Exporter en CSV
+            Export CSV
           </button>
-        {workspaces.length > 1 && (
-          <select
-            value={workspaceId}
-            onChange={(e) => {
-              setWorkspaceId(e.target.value);
-              setPage(1);
-            }}
-            className="rounded-md border border-input bg-background px-3 py-2 text-sm"
-          >
-            {workspaces.map((w) => (
-              <option key={w.id} value={w.id}>
-                {w.name}
-              </option>
-            ))}
-          </select>
-        )}
+          {workspaces.length > 1 && (
+            <select
+              value={workspaceId}
+              onChange={(e) => {
+                setWorkspaceId(e.target.value);
+                setPage(1);
+              }}
+              className="rounded-md border border-input bg-background px-3 py-2 text-sm"
+            >
+              {workspaces.map((w) => (
+                <option key={w.id} value={w.id}>
+                  {w.name}
+                </option>
+              ))}
+            </select>
+          )}
         </div>
       </header>
 
       {workspaceId && <SetupNextStep workspaceId={workspaceId} />}
 
       {workspaceId && <UsageBanner workspaceId={workspaceId} />}
-
 
       <div className="flex flex-wrap items-center gap-2">
         {STATUS_TABS.map((t) => (
@@ -273,33 +272,29 @@ function PortalHomePage() {
             setSearch(e.target.value);
             setPage(1);
           }}
-          placeholder="Rechercher…"
+          placeholder="Search…"
           className="ml-auto w-full max-w-[220px] rounded-md border border-input bg-background px-3 py-1.5 text-xs"
         />
       </div>
 
       {dossiersError ? (
         <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {dossiersError instanceof Error
-            ? dossiersError.message
-            : "Impossible de charger vos Dossiers."}
+          {dossiersError instanceof Error ? dossiersError.message : "Unable to load your Dossiers."}
         </p>
       ) : dossiersPending ? (
         <PortalPending />
       ) : filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">
-            Aucun Dossier ne correspond pour l'instant.
-          </p>
+          <p className="text-sm text-muted-foreground">No Dossier matches right now.</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="px-4 py-2 text-left">Résumé</th>
-                <th className="px-4 py-2 text-left">Statut</th>
-                <th className="px-4 py-2 text-left">Dernière activité</th>
+                <th className="px-4 py-2 text-left">Summary</th>
+                <th className="px-4 py-2 text-left">Status</th>
+                <th className="px-4 py-2 text-left">Last activity</th>
               </tr>
             </thead>
             <tbody>
@@ -333,7 +328,7 @@ function PortalHomePage() {
       {pageCount > 1 && (
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            Page {currentPage} sur {pageCount} · {filtered.length} Dossiers
+            Page {currentPage} of {pageCount} · {filtered.length} Dossiers
           </span>
           <div className="flex gap-2">
             <button
@@ -342,7 +337,7 @@ function PortalHomePage() {
               disabled={currentPage === 1}
               className="rounded-md border border-input bg-background px-3 py-1.5 hover:bg-accent disabled:opacity-50"
             >
-              Précédent
+              Previous
             </button>
             <button
               type="button"
@@ -350,7 +345,7 @@ function PortalHomePage() {
               disabled={currentPage === pageCount}
               className="rounded-md border border-input bg-background px-3 py-1.5 hover:bg-accent disabled:opacity-50"
             >
-              Suivant
+              Next
             </button>
           </div>
         </div>

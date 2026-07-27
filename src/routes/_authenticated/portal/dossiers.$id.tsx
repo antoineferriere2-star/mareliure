@@ -16,7 +16,7 @@ import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 export const Route = createFileRoute("/_authenticated/portal/dossiers/$id")({
   ssr: false,
   head: () => ({
-    meta: [{ title: "Dossier — Espace Client" }, { name: "robots", content: "noindex,nofollow" }],
+    meta: [{ title: "Dossier — Client Portal" }, { name: "robots", content: "noindex,nofollow" }],
   }),
   pendingComponent: PortalPending,
   errorComponent: PortalError,
@@ -35,28 +35,27 @@ function PortalAiInsights({ insights }: { insights: AiInsights }) {
   return (
     <section className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 className="text-sm font-semibold">Ce que l'IA suggère — à valider par votre équipe</h2>
+        <h2 className="text-sm font-semibold">What the AI suggests — for your team to confirm</h2>
         <span className="text-[11px] text-muted-foreground">
           {new Date(insights.generatedAt).toLocaleString()}
         </span>
       </div>
       <p className="mt-1 text-xs text-muted-foreground">
-        Des pistes proposées à partir du Dossier. Elles ne modifient jamais les informations
-        confirmées ci-dessous.
+        Suggestions drawn from the Dossier. They never change the confirmed information below.
       </p>
       <div className="mt-3 grid gap-3 md:grid-cols-2">
-        <AgentBlock title="Analyse du projet" result={insights.analyste} />
+        <AgentBlock title="Project analysis" result={insights.analyste} />
         <AgentBlock
-          title="Lecture technique"
+          title="Technical read"
           result={insights.technicien}
           extra={insights.technicien.data?.knowledgeNoteTitlesUsed}
         />
-        <AgentBlock title="Points à vérifier" result={insights.verificateur} />
+        <AgentBlock title="Points to verify" result={insights.verificateur} />
         <div className="rounded-md border border-border bg-background p-3">
-          <h3 className="text-xs font-semibold text-foreground">Synthèse</h3>
+          <h3 className="text-xs font-semibold text-foreground">Summary</h3>
           {insights.redacteur.status === "error" ? (
             <p className="mt-1 text-xs text-destructive">
-              Synthèse indisponible : {insights.redacteur.error}
+              Summary unavailable: {insights.redacteur.error}
             </p>
           ) : (
             <p className="mt-1 whitespace-pre-wrap text-sm text-foreground">
@@ -70,11 +69,11 @@ function PortalAiInsights({ insights }: { insights: AiInsights }) {
 }
 
 const STATUS_OPTIONS: { id: CommercialStatus; label: string }[] = [
-  { id: "nouveau", label: "Nouveau" },
-  { id: "contacte", label: "Contacté" },
-  { id: "devise", label: "Devisé" },
-  { id: "gagne", label: "Gagné" },
-  { id: "perdu", label: "Perdu" },
+  { id: "nouveau", label: "New" },
+  { id: "contacte", label: "Contacted" },
+  { id: "devise", label: "Quoted" },
+  { id: "gagne", label: "Won" },
+  { id: "perdu", label: "Lost" },
 ];
 
 function PortalDossierDetailPage() {
@@ -114,20 +113,20 @@ function PortalDossierDetailPage() {
     <div className="space-y-6">
       <div>
         <Link to="/portal" className="text-xs text-muted-foreground hover:underline">
-          ← Mes Dossiers
+          ← My Dossiers
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-foreground">
           {dossier.summary ?? `Dossier ${dossier.id.slice(0, 8)}`}
         </h1>
         <p className="mt-1 text-xs text-muted-foreground">
-          Reçu {new Date(dossier.created_at).toLocaleString()}
+          Received {new Date(dossier.created_at).toLocaleString()}
           {mission?.name ? ` · via ${mission.name}` : ""}
         </p>
       </div>
 
       {nextQuestions.length > 0 && (
         <section className="rounded-lg border border-amber-300 bg-amber-50 p-4">
-          <h2 className="text-sm font-semibold text-amber-900">À demander au prochain contact</h2>
+          <h2 className="text-sm font-semibold text-amber-900">Ask at the next contact</h2>
           <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-amber-900">
             {nextQuestions.map((q, i) => (
               <li key={i}>{q}</li>
@@ -139,7 +138,7 @@ function PortalDossierDetailPage() {
       {aiInsights && <PortalAiInsights insights={aiInsights} />}
 
       <section className="rounded-lg border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold">Suivi</h2>
+        <h2 className="text-sm font-semibold">Follow-up</h2>
         <div className="mt-2 flex flex-wrap gap-2">
           {STATUS_OPTIONS.map((s) => (
             <button
@@ -158,31 +157,31 @@ function PortalDossierDetailPage() {
         </div>
 
         <div className="mt-4">
-          <label className="block text-xs font-medium text-muted-foreground">Notes internes</label>
+          <label className="block text-xs font-medium text-muted-foreground">Internal notes</label>
           <textarea
             value={notes}
             onChange={(e) => setNotes(e.target.value)}
             rows={4}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            placeholder="Notes visibles uniquement par votre équipe."
+            placeholder="Notes visible only to your team."
           />
           <button
             onClick={() => notesMutation.mutate()}
             disabled={notesMutation.isPending || notes === (dossier.commercial_notes ?? "")}
             className="mt-2 rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
           >
-            {notesMutation.isPending ? "Enregistrement…" : "Enregistrer les notes"}
+            {notesMutation.isPending ? "Saving…" : "Save notes"}
           </button>
           {(statusMutation.isError || notesMutation.isError) && (
             <p className="mt-2 text-xs text-destructive">
-              L'enregistrement a échoué. Réessayez dans un instant.
+              Saving failed. Please try again in a moment.
             </p>
           )}
         </div>
       </section>
 
       <section className="rounded-lg border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold">Détail du projet</h2>
+        <h2 className="text-sm font-semibold">Project details</h2>
         <div className="mt-3">
           <ProjectBriefView brief={brief} />
         </div>

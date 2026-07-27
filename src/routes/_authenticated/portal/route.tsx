@@ -56,7 +56,7 @@ function PortalLayout() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link to="/portal" className="text-sm font-semibold">
-            Espace Client · Métré Build
+            Client Portal · Métré Build
           </Link>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span>{access.email ?? access.userId.slice(0, 8)}</span>
@@ -65,7 +65,7 @@ function PortalLayout() {
               onClick={handleSignOut}
               className="rounded-md border border-input bg-background px-3 py-1.5 text-xs font-medium text-foreground hover:bg-accent"
             >
-              Se déconnecter
+              Sign out
             </button>
           </div>
         </div>
@@ -78,14 +78,14 @@ function PortalLayout() {
             activeProps={{ className: "border-primary text-foreground font-medium" }}
             className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
           >
-            Mes Dossiers
+            My Dossiers
           </Link>
           <Link
             to="/portal/missions"
             activeProps={{ className: "border-primary text-foreground font-medium" }}
             className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
           >
-            Mes Missions
+            My Missions
           </Link>
           <Link
             to="/portal/setup"
@@ -95,13 +95,12 @@ function PortalLayout() {
             Setup
           </Link>
 
-
           <Link
             to="/portal/billing"
             activeProps={{ className: "border-primary text-foreground font-medium" }}
             className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
           >
-            Facturation
+            Billing
           </Link>
         </div>
       </nav>
