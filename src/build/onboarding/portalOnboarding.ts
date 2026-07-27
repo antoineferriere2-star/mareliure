@@ -72,18 +72,19 @@ export function checkSiteUrl(raw: string): UrlCheck {
     return { ok: false, error: "Remove the credentials from the address." };
   }
   const host = parsed.hostname.toLowerCase();
-  if (!host.includes(".") || host.endsWith(".")) {
-    return { ok: false, error: "Enter a full domain, for example yourcompany.com." };
-  }
   if (host === "localhost" || host.endsWith(".localhost") || host.endsWith(".local")) {
     return { ok: false, error: "Enter your public website address." };
   }
   // Literal IP addresses are never a real customer website here, and they are
   // the usual shape of an SSRF probe. safeFetch blocks private ranges anyway;
   // this rejects the whole class earlier with a clearer message.
-  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.startsWith("[")) {
+  if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.includes(":") || host.startsWith("[")) {
     return { ok: false, error: "Enter a domain name rather than an IP address." };
   }
+  if (!host.includes(".") || host.endsWith(".")) {
+    return { ok: false, error: "Enter a full domain, for example yourcompany.com." };
+  }
+
 
   return { ok: true, url: parsed.toString() };
 }
