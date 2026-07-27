@@ -514,6 +514,7 @@ export type Database = {
           id: string
           last_analyze_request_id: string | null
           last_generate_request_id: string | null
+          mission_id: string | null
           playbook_id: string | null
           site_url: string | null
           status: string
@@ -533,6 +534,7 @@ export type Database = {
           id?: string
           last_analyze_request_id?: string | null
           last_generate_request_id?: string | null
+          mission_id?: string | null
           playbook_id?: string | null
           site_url?: string | null
           status?: string
@@ -552,6 +554,7 @@ export type Database = {
           id?: string
           last_analyze_request_id?: string | null
           last_generate_request_id?: string | null
+          mission_id?: string | null
           playbook_id?: string | null
           site_url?: string | null
           status?: string
@@ -559,6 +562,13 @@ export type Database = {
           workspace_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "build_workspace_onboarding_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "build_missions"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "build_workspace_onboarding_playbook_id_fkey"
             columns: ["playbook_id"]
