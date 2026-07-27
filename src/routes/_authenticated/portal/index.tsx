@@ -115,6 +115,44 @@ function UsageBanner({ workspaceId }: { workspaceId: string }) {
   );
 }
 
+/**
+ * Entry point into the self-service setup (/portal/setup) for a workspace
+ * that has no draft intake yet — a brand new workspace lands on this list
+ * with nothing in it, so this is its explicit next step.
+ */
+function SetupNextStep({ workspaceId }: { workspaceId: string }) {
+  const fetchSetup = useServerFn(getMySetup);
+  const { data } = useQuery({
+    queryKey: ["portal", "setup", workspaceId] as const,
+    queryFn: () => fetchSetup({ data: { workspaceId } }),
+    enabled: workspaceId.length > 0,
+    retry: false,
+  });
+  if (!data || data.status === "draft_ready") return null;
+
+  const started = data.analysis !== null;
+  return (
+    <div className="rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 sm:flex sm:items-center sm:justify-between sm:gap-4">
+      <div>
+        <p className="text-sm font-semibold text-foreground">
+          {started ? "Finish setting up your project intake" : "Next step: set up your project intake"}
+        </p>
+        <p className="mt-0.5 text-sm text-muted-foreground">
+          {started
+            ? "You started the setup — pick up where you left off."
+            : "Give us your website and we will propose a deck project intake you can review. Nothing goes live automatically."}
+        </p>
+      </div>
+      <Link
+        to="/portal/setup"
+        className="mt-3 inline-flex shrink-0 items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 sm:mt-0"
+      >
+        {started ? "Continue setup" : "Start setup"}
+      </Link>
+    </div>
+  );
+}
+
 function PortalHomePage() {
   const fetchWorkspaces = useServerFn(listMyWorkspaces);
   const wsOpts = queryOptions({
