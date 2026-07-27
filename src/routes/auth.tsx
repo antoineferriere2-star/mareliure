@@ -1,51 +1,67 @@
 import { createFileRoute, Link, useNavigate, useRouter } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
 import { requireBuildAdmin } from "@/build/services/admin.functions";
 import { requireWorkspaceAccess } from "@/build/services/workspace.functions";
+import { ensureMyWorkspace } from "@/build/services/provisionWorkspace.functions";
+import { resolvePostAuthDestination } from "@/build/services/postAuthRoute";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Connexion — Métré Build AI" },
-      { name: "description", content: "Connexion Métré Build AI." },
+      { title: "Sign in or create your account — Métré Build" },
+      {
+        name: "description",
+        content:
+          "Create your Métré Build account and get your own workspace to turn website visitors into qualified deck project briefs.",
+      },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
   component: AuthPage,
 });
 
+const inputClass =
+  "w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring";
+const labelClass = "mb-1 block text-xs font-medium text-foreground";
+const primaryButtonClass =
+  "inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60";
+
+type Audience = "client" | "team";
+
 function AuthPage() {
   const navigate = useNavigate();
   const router = useRouter();
-  const [audience, setAudience] = useState<"team" | "client">("team");
+  const [audience, setAudience] = useState<Audience>("client");
+  const [accessError, setAccessError] = useState<string | null>(null);
+  const [routing, setRouting] = useState(false);
+
   const checkAdmin = useServerFn(requireBuildAdmin);
   const checkWorkspace = useServerFn(requireWorkspaceAccess);
-  const [accessError, setAccessError] = useState<string | null>(null);
+  const provision = useServerFn(ensureMyWorkspace);
 
-  // Admin and workspace-member are mutually exclusive roles in this app —
-  // check admin first since the internal team is the more privileged case.
-  async function goToHomeRoute() {
-    try {
-      await checkAdmin();
-      navigate({ to: "/build", replace: true });
-      return;
-    } catch {
-      // not admin — fall through to workspace check
-    }
-    try {
-      await checkWorkspace();
-      navigate({ to: "/portal", replace: true });
-      return;
-    } catch {
-      // not a workspace member either
-    }
-    setAccessError(
-      "Ce compte n'a accès ni à l'admin ni à un Espace Client. Contacte l'équipe Métré Build AI.",
-    );
-  }
+  // Privileges are always decided server-side: admin check, then workspace
+  // membership, then safe idempotent provisioning. Nothing from the browser.
+  const goToHomeRoute = useCallback(
+    async (company?: string) => {
+      setRouting(true);
+      setAccessError(null);
+      const destination = await resolvePostAuthDestination({
+        checkAdmin: () => checkAdmin(),
+        checkWorkspace: () => checkWorkspace(),
+        provision: () => provision({ data: { company } }),
+      });
+      setRouting(false);
+      if (destination.to === null) {
+        setAccessError(destination.error);
+        return;
+      }
+      navigate({ to: destination.to, replace: true });
+    },
+    [checkAdmin, checkWorkspace, provision, navigate],
+  );
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -55,59 +71,227 @@ function AuthPage() {
   }, []);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="relative w-full max-w-sm rounded-lg border border-border bg-card p-6 shadow-sm">
+    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">
+      <div className="relative w-full max-w-md rounded-lg border border-border bg-card p-6 shadow-sm">
         <Link
           to="/"
           className="absolute left-4 top-4 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
         >
-          <span aria-hidden="true">←</span> Retour au site
+          <span aria-hidden="true">←</span> Back to site
         </Link>
 
-        <div className="mt-8 flex rounded-md border border-input bg-muted/40 p-1 text-xs">
-          <button
-            type="button"
-            onClick={() => {
-              setAudience("team");
-              setAccessError(null);
-            }}
-            className={`flex-1 rounded px-2 py-1.5 font-medium transition-colors ${
-              audience === "team"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground"
-            }`}
-          >
-            Équipe Métré Build AI
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setAudience("client");
-              setAccessError(null);
-            }}
-            className={`flex-1 rounded px-2 py-1.5 font-medium transition-colors ${
-              audience === "client"
-                ? "bg-background text-foreground shadow-sm"
-                : "text-muted-foreground"
-            }`}
-          >
-            Espace Client
-          </button>
+        <div className="mt-10">
+          {accessError && (
+            <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+              {accessError}
+            </p>
+          )}
+          {routing && (
+            <p className="mb-4 text-sm text-muted-foreground" role="status">
+              Setting up your workspace…
+            </p>
+          )}
+
+          {audience === "client" ? (
+            <ClientAuth
+              onSignedIn={goToHomeRoute}
+              onRouterInvalidate={() => router.invalidate()}
+              onError={setAccessError}
+            />
+          ) : (
+            <TeamSignIn
+              onSignedIn={() => goToHomeRoute()}
+              onRouterInvalidate={() => router.invalidate()}
+            />
+          )}
         </div>
 
-        {accessError && (
-          <p className="mt-4 text-sm text-destructive" role="alert">
-            {accessError}
-          </p>
-        )}
-
-        {audience === "team" ? (
-          <TeamSignIn onSignedIn={goToHomeRoute} onRouterInvalidate={() => router.invalidate()} />
-        ) : (
-          <ClientSignIn onSignedIn={goToHomeRoute} onRouterInvalidate={() => router.invalidate()} />
-        )}
+        <div className="mt-8 border-t border-border pt-4 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setAudience(audience === "client" ? "team" : "client");
+              setAccessError(null);
+            }}
+            className="text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+          >
+            {audience === "client" ? "Métré team access" : "Back to customer sign in"}
+          </button>
+        </div>
       </div>
     </div>
+  );
+}
+
+function ClientAuth({
+  onSignedIn,
+  onRouterInvalidate,
+  onError,
+}: {
+  onSignedIn: (company?: string) => Promise<void>;
+  onRouterInvalidate: () => Promise<unknown>;
+  onError: (msg: string | null) => void;
+}) {
+  const [mode, setMode] = useState<"signup" | "signin">("signup");
+  const [company, setCompany] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmSent, setConfirmSent] = useState(false);
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    setLoading(true);
+    setError(null);
+    onError(null);
+
+    if (mode === "signup") {
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth`,
+          data: { company: company.trim() || undefined },
+        },
+      });
+      setLoading(false);
+      if (signUpError) {
+        setError(signUpError.message);
+        return;
+      }
+      if (data.session) {
+        await onRouterInvalidate();
+        await onSignedIn(company.trim() || undefined);
+      } else {
+        setConfirmSent(true);
+      }
+      return;
+    }
+
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
+    setLoading(false);
+    if (signInError) {
+      setError("We couldn't sign you in. Check your email and password and try again.");
+      return;
+    }
+    await onRouterInvalidate();
+    await onSignedIn();
+  }
+
+  if (confirmSent) {
+    return (
+      <div>
+        <h1 className="text-xl font-semibold text-foreground">Confirm your email</h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          We sent a confirmation link to <span className="font-medium text-foreground">{email}</span>
+          . Click it to activate your account, then come back here to sign in — your workspace is
+          created automatically.
+        </p>
+        <button
+          type="button"
+          onClick={() => {
+            setConfirmSent(false);
+            setMode("signin");
+          }}
+          className="mt-6 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+        >
+          I already confirmed — sign in
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} noValidate={false}>
+      <h1 className="text-xl font-semibold text-foreground">
+        {mode === "signup" ? "Create your account" : "Sign in"}
+      </h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        {mode === "signup"
+          ? "For deck builders. You get your own workspace right away — no setup call needed."
+          : "Welcome back. Sign in to your workspace."}
+      </p>
+
+      <div className="mt-6 space-y-4">
+        {mode === "signup" && (
+          <div>
+            <label className={labelClass} htmlFor="client-company">
+              Company name <span className="text-muted-foreground">(optional)</span>
+            </label>
+            <input
+              id="client-company"
+              type="text"
+              autoComplete="organization"
+              placeholder="Sunrise Decks"
+              value={company}
+              onChange={(e) => setCompany(e.target.value)}
+              className={inputClass}
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Used to name your workspace. You can rename it later.
+            </p>
+          </div>
+        )}
+        <div>
+          <label className={labelClass} htmlFor="client-email">
+            Work email
+          </label>
+          <input
+            id="client-email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label className={labelClass} htmlFor="client-password">
+            Password
+          </label>
+          <input
+            id="client-password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete={mode === "signup" ? "new-password" : "current-password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={inputClass}
+            aria-describedby={mode === "signup" ? "client-password-hint" : undefined}
+          />
+          {mode === "signup" && (
+            <p id="client-password-hint" className="mt-1 text-xs text-muted-foreground">
+              At least 8 characters.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {error ? (
+        <p className="mt-4 text-sm text-destructive" role="alert">
+          {error}
+        </p>
+      ) : null}
+
+      <button type="submit" disabled={loading} className={`mt-6 ${primaryButtonClass}`}>
+        {loading ? "Please wait…" : mode === "signup" ? "Create account" : "Sign in"}
+      </button>
+
+      <button
+        type="button"
+        onClick={() => {
+          setError(null);
+          onError(null);
+          setMode(mode === "signup" ? "signin" : "signup");
+        }}
+        className="mt-4 block w-full text-center text-xs text-muted-foreground hover:text-foreground"
+      >
+        {mode === "signup" ? "Already have an account? Sign in" : "New here? Create an account"}
+      </button>
+    </form>
   );
 }
 
@@ -118,46 +302,19 @@ function TeamSignIn({
   onSignedIn: () => Promise<void>;
   onRouterInvalidate: () => Promise<unknown>;
 }) {
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [info, setInfo] = useState<string | null>(null);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setInfo(null);
-
-    if (mode === "signup") {
-      const { data, error: signUpError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: { emailRedirectTo: `${window.location.origin}/auth` },
-      });
-      setLoading(false);
-      if (signUpError) {
-        setError(signUpError.message);
-        return;
-      }
-      if (data.session) {
-        await onRouterInvalidate();
-        await onSignedIn();
-      } else {
-        setInfo(
-          "Compte créé. Si un email de confirmation est requis, vérifie ta boîte mail, sinon tu peux te connecter directement.",
-        );
-        setMode("signin");
-      }
-      return;
-    }
-
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
     setLoading(false);
     if (signInError) {
-      setError(signInError.message);
+      setError("We couldn't sign you in. Check your credentials and try again.");
       return;
     }
     await onRouterInvalidate();
@@ -166,14 +323,14 @@ function TeamSignIn({
 
   return (
     <form onSubmit={handleSubmit}>
-      <h1 className="mt-4 text-xl font-semibold text-foreground">
-        {mode === "signin" ? "Connexion" : "Créer un compte"}
-      </h1>
-      <p className="mt-1 text-sm text-muted-foreground">Accès réservé à l'équipe Métré Build AI.</p>
+      <h1 className="text-xl font-semibold text-foreground">Métré team access</h1>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Internal sign in for the Métré Build team.
+      </p>
 
       <div className="mt-6 space-y-4">
         <div>
-          <label className="mb-1 block text-xs font-medium text-foreground" htmlFor="team-email">
+          <label className={labelClass} htmlFor="team-email">
             Email
           </label>
           <input
@@ -183,22 +340,21 @@ function TeamSignIn({
             autoComplete="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className={inputClass}
           />
         </div>
         <div>
-          <label className="mb-1 block text-xs font-medium text-foreground" htmlFor="team-password">
-            Mot de passe
+          <label className={labelClass} htmlFor="team-password">
+            Password
           </label>
           <input
             id="team-password"
             type="password"
             required
-            minLength={8}
-            autoComplete={mode === "signin" ? "current-password" : "new-password"}
+            autoComplete="current-password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
+            className={inputClass}
           />
         </div>
       </div>
@@ -208,171 +364,9 @@ function TeamSignIn({
           {error}
         </p>
       ) : null}
-      {info ? <p className="mt-4 text-sm text-muted-foreground">{info}</p> : null}
 
-      <button
-        type="submit"
-        disabled={loading}
-        className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
-      >
-        {loading ? "…" : mode === "signin" ? "Se connecter" : "Créer le compte"}
-      </button>
-
-      <button
-        type="button"
-        onClick={() => {
-          setError(null);
-          setInfo(null);
-          setMode(mode === "signin" ? "signup" : "signin");
-        }}
-        className="mt-4 block w-full text-center text-xs text-muted-foreground hover:text-foreground"
-      >
-        {mode === "signin"
-          ? "Pas encore de compte ? Créer un compte"
-          : "Déjà un compte ? Se connecter"}
-      </button>
-    </form>
-  );
-}
-
-function ClientSignIn({
-  onSignedIn,
-  onRouterInvalidate,
-}: {
-  onSignedIn: () => Promise<void>;
-  onRouterInvalidate: () => Promise<unknown>;
-}) {
-  const [step, setStep] = useState<"request" | "sent">("request");
-  const [email, setEmail] = useState("");
-  const [code, setCode] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function handleRequestLink(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    const { error: otpError } = await supabase.auth.signInWithOtp({
-      email,
-      options: {
-        shouldCreateUser: false,
-        emailRedirectTo: `${window.location.origin}/auth`,
-      },
-    });
-    setLoading(false);
-    if (otpError) {
-      setError(
-        "Aucun Espace Client n'est associé à cet email, ou l'envoi a échoué. Contacte l'équipe Métré Build AI si tu penses que c'est une erreur.",
-      );
-      return;
-    }
-    setStep("sent");
-  }
-
-  async function handleVerifyCode(e: React.FormEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setError(null);
-    const { error: verifyError } = await supabase.auth.verifyOtp({
-      email,
-      token: code,
-      type: "email",
-    });
-    setLoading(false);
-    if (verifyError) {
-      setError("Code invalide ou expiré.");
-      return;
-    }
-    await onRouterInvalidate();
-    await onSignedIn();
-  }
-
-  if (step === "sent") {
-    return (
-      <div>
-        <h1 className="mt-4 text-xl font-semibold text-foreground">Vérifie ta boîte mail</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Un lien de connexion a été envoyé à{" "}
-          <span className="font-medium text-foreground">{email}</span>. Clique dessus pour accéder à
-          ton Espace Client, ou saisis le code reçu ci-dessous.
-        </p>
-
-        <form onSubmit={handleVerifyCode} className="mt-6 space-y-4">
-          <div>
-            <label className="mb-1 block text-xs font-medium text-foreground" htmlFor="client-code">
-              Code reçu par email (optionnel)
-            </label>
-            <input
-              id="client-code"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              value={code}
-              onChange={(e) => setCode(e.target.value)}
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-            />
-          </div>
-          {error ? (
-            <p className="text-sm text-destructive" role="alert">
-              {error}
-            </p>
-          ) : null}
-          <button
-            type="submit"
-            disabled={loading || code.length === 0}
-            className="inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
-          >
-            {loading ? "…" : "Se connecter avec le code"}
-          </button>
-        </form>
-
-        <button
-          type="button"
-          onClick={() => {
-            setStep("request");
-            setError(null);
-          }}
-          className="mt-4 block w-full text-center text-xs text-muted-foreground hover:text-foreground"
-        >
-          Renvoyer à une autre adresse
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <form onSubmit={handleRequestLink}>
-      <h1 className="mt-4 text-xl font-semibold text-foreground">Espace Client</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Reçois un lien de connexion par email — aucun mot de passe nécessaire.
-      </p>
-
-      <div className="mt-6">
-        <label className="mb-1 block text-xs font-medium text-foreground" htmlFor="client-email">
-          Email
-        </label>
-        <input
-          id="client-email"
-          type="email"
-          required
-          autoComplete="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
-
-      {error ? (
-        <p className="mt-4 text-sm text-destructive" role="alert">
-          {error}
-        </p>
-      ) : null}
-
-      <button
-        type="submit"
-        disabled={loading}
-        className="mt-6 inline-flex w-full items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
-      >
-        {loading ? "…" : "Recevoir un lien de connexion"}
+      <button type="submit" disabled={loading} className={`mt-6 ${primaryButtonClass}`}>
+        {loading ? "Please wait…" : "Sign in"}
       </button>
     </form>
   );

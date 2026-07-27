@@ -456,6 +456,7 @@ export type Database = {
           monthly_brief_quota: number
           name: string
           plan: string
+          provisioned_for_user_id: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
           subscription_status: string | null
@@ -470,6 +471,7 @@ export type Database = {
           monthly_brief_quota?: number
           name: string
           plan?: string
+          provisioned_for_user_id?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
@@ -484,6 +486,7 @@ export type Database = {
           monthly_brief_quota?: number
           name?: string
           plan?: string
+          provisioned_for_user_id?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
           subscription_status?: string | null
@@ -523,6 +526,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      provision_owner_workspace: {
+        Args: { _email: string; _user_id: string; _workspace_name: string }
+        Returns: string
       }
     }
     Enums: {

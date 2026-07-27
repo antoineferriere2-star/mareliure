@@ -10,6 +10,7 @@ import {
 import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { requireWorkspaceAccess } from "@/build/services/workspace.functions";
+import { ensureMyWorkspace } from "@/build/services/provisionWorkspace.functions";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   ssr: false,
@@ -19,7 +20,18 @@ export const Route = createFileRoute("/_authenticated/portal")({
       return { access };
     } catch (err) {
       if (isRedirect(err)) throw err;
-      throw redirect({ to: "/auth" });
+      // Authenticated but no workspace yet (legacy account, race after
+      // sign-up). Provision once — the routine is idempotent server-side —
+      // then retry exactly once. Never loops.
+      try {
+        const result = await ensureMyWorkspace({ data: {} });
+        if (result.status === "admin") throw redirect({ to: "/build" });
+        const access = await requireWorkspaceAccess();
+        return { access };
+      } catch (retryErr) {
+        if (isRedirect(retryErr)) throw retryErr;
+        throw redirect({ to: "/auth" });
+      }
     }
   },
   component: PortalLayout,
