@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { fail } from "./serverError";
 
 /**
  * Server function used to gate `/portal/*` routes. Returns basic identity
@@ -22,7 +23,7 @@ export const requireWorkspaceAccess = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (error || !data) {
-      throw new Response("Forbidden", { status: 403 });
+      fail(403, "Forbidden");
     }
 
     return {

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { fail } from "./serverError";
 
 /**
  * Server function used to gate `/build/*` routes. Returns basic identity
@@ -20,10 +21,10 @@ export const requireBuildAdmin = createServerFn({ method: "GET" })
       .maybeSingle();
 
     if (error) {
-      throw new Response("Forbidden", { status: 403 });
+      fail(403, "Forbidden");
     }
     if (!data) {
-      throw new Response("Forbidden", { status: 403 });
+      fail(403, "Forbidden");
     }
 
     return {
