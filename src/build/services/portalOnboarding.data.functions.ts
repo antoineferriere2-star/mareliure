@@ -106,7 +106,19 @@ export const getMySetup = createServerFn({ method: "GET" })
 
 // ------------------------------------------------------------ AI accounting
 
-async function guardAiRun(sb: Supa, workspaceId: string, action: string, requestId: string) {
+/**
+ * Reserves one AI run. The reservation is the row insert itself, protected by
+ * the unique index on (workspace_id, action, request_id): two concurrent
+ * double-click submits race on the database, not on a read-then-write window,
+ * so the loser is reported as a duplicate and never pays for a second run.
+ */
+async function guardAiRun(
+  sb: Supa,
+  workspaceId: string,
+  userId: string,
+  action: string,
+  requestId: string,
+) {
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { data: runs, error } = await sb
     .from("build_workspace_ai_runs")
@@ -116,11 +128,26 @@ async function guardAiRun(sb: Supa, workspaceId: string, action: string, request
     .gte("created_at", since);
   if (error) fail(500, error.message);
 
-  return checkAiRun(
+  const decision = checkAiRun(
     (runs ?? []).map((r) => ({ requestId: r.request_id, createdAt: r.created_at })),
     requestId,
     new Date(),
   );
+  if (!decision.allow) return decision;
+
+  const { error: claimError } = await sb.from("build_workspace_ai_runs").insert({
+    workspace_id: workspaceId,
+    user_id: userId,
+    action,
+    request_id: requestId,
+    status: "running",
+  });
+  // 23505 = unique violation: a concurrent call already claimed this requestId.
+  if (claimError) {
+    if (claimError.code === "23505") return { allow: false, reason: "duplicate" } as const;
+    fail(500, claimError.message);
+  }
+  return decision;
 }
 
 async function logAiRun(
@@ -136,16 +163,19 @@ async function logAiRun(
   },
 ) {
   // Observability only — a logging failure must never lose the client's result.
-  await sb.from("build_workspace_ai_runs").insert({
-    workspace_id: fields.workspaceId,
-    user_id: fields.userId,
-    action: fields.action,
-    request_id: fields.requestId,
-    status: fields.status,
-    latency_ms: fields.latencyMs,
-    error: fields.error?.slice(0, 500) ?? null,
-  });
+  // Closes the reservation row opened by guardAiRun.
+  await sb
+    .from("build_workspace_ai_runs")
+    .update({
+      status: fields.status,
+      latency_ms: fields.latencyMs,
+      error: fields.error?.slice(0, 500) ?? null,
+    })
+    .eq("workspace_id", fields.workspaceId)
+    .eq("action", fields.action)
+    .eq("request_id", fields.requestId);
 }
+
 
 // ------------------------------------------------------------- Step 1 and 2
 
