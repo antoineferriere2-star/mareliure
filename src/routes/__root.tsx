@@ -77,21 +77,29 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "Lovable App" },
-      { name: "description", content: "Lovable Generated Project" },
-      { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Lovable App" },
-      { property: "og:description", content: "Lovable Generated Project" },
+      { title: "Métré Build" },
+      {
+        name: "description",
+        content:
+          "Métré Build turns vague website inquiries into sales-ready project briefs.",
+      },
+      { name: "author", content: "Métré Build" },
+      { property: "og:title", content: "Métré Build" },
+      {
+        property: "og:description",
+        content:
+          "Métré Build turns vague website inquiries into sales-ready project briefs.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:site", content: "@Lovable" },
     ],
     links: [
       {
         rel: "stylesheet",
         href: appCss,
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      { rel: "icon", href: "/metre-icon.svg?v=20260727", type: "image/svg+xml" },
+      { rel: "shortcut icon", href: "/metre-icon.svg?v=20260727", type: "image/svg+xml" },
     ],
   }),
   shellComponent: RootShell,
