@@ -7,6 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import { admin } from "./adminAuth.server";
+import { fail } from "./serverError";
 import { assertWorkspaceMember, assertWorkspaceOwner } from "./workspaceAuth.server";
 import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
 
@@ -21,7 +22,7 @@ export const listMyWorkspaces = createServerFn({ method: "GET" })
       .from("build_workspace_members")
       .select("workspace_id, role")
       .eq("user_id", context.userId);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     if (!memberships || memberships.length === 0) return [];
 
     const { data: workspaces, error: wErr } = await sb
@@ -32,7 +33,7 @@ export const listMyWorkspaces = createServerFn({ method: "GET" })
         memberships.map((m) => m.workspace_id),
       )
       .eq("is_active", true);
-    if (wErr) throw new Response(wErr.message, { status: 500 });
+    if (wErr) fail(500, wErr.message);
 
     const roleByWorkspace = new Map(memberships.map((m) => [m.workspace_id, m.role]));
     return (workspaces ?? []).map((w) => ({ ...w, role: roleByWorkspace.get(w.id) ?? "member" }));
@@ -50,7 +51,7 @@ export const listWorkspaceDossiers = createServerFn({ method: "GET" })
       .eq("workspace_id", data.workspaceId)
       .order("last_activity_at", { ascending: false })
       .limit(200);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return dossiers ?? [];
   });
 
@@ -72,14 +73,14 @@ export const listWorkspaceMissions = createServerFn({ method: "GET" })
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false })
       .limit(200);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
 
     const { data: dossiers, error: dErr } = await sb
       .from("build_dossiers")
       .select("mission_id")
       .eq("workspace_id", data.workspaceId)
       .limit(2000);
-    if (dErr) throw new Response(dErr.message, { status: 500 });
+    if (dErr) fail(500, dErr.message);
 
     const counts = new Map<string, number>();
     for (const d of dossiers ?? []) {
@@ -113,12 +114,12 @@ export const setMissionPaused = createServerFn({ method: "POST" })
       .select("id, status, workspace_id")
       .eq("id", data.missionId)
       .maybeSingle();
-    if (findError) throw new Response(findError.message, { status: 500 });
+    if (findError) fail(500, findError.message);
     if (!mission || mission.workspace_id !== data.workspaceId) {
-      throw new Response("Mission not found.", { status: 404 });
+      fail(404, "Mission not found.");
     }
     if (mission.status !== "active" && mission.status !== "paused") {
-      throw new Response("Only a published Mission can be paused or reactivated.", { status: 400 });
+      fail(400, "Only a published Mission can be paused or reactivated.");
     }
 
     const { data: updated, error } = await sb
@@ -127,7 +128,7 @@ export const setMissionPaused = createServerFn({ method: "POST" })
       .eq("id", data.missionId)
       .select("id, status")
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     return updated;
   });
 
@@ -152,8 +153,8 @@ export const getMyWorkspaceBilling = createServerFn({ method: "GET" })
       .select("plan, subscription_status, stripe_customer_id")
       .eq("id", data.workspaceId)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!workspace) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!workspace) fail(404, "Not found");
     return {
       plan: workspace.plan,
       subscriptionStatus: workspace.subscription_status,
@@ -171,8 +172,8 @@ export const getWorkspaceDossier = createServerFn({ method: "GET" })
       .select("*")
       .eq("id", data.id)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!dossier || !dossier.workspace_id) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!dossier || !dossier.workspace_id) fail(404, "Not found");
     await assertWorkspaceMember(context.supabase, context.userId, dossier.workspace_id);
 
     let mission: { name: string; playbook_name: string | null } | null = null;
@@ -205,8 +206,8 @@ export const updateDossierFollowUp = createServerFn({ method: "POST" })
       .select("workspace_id")
       .eq("id", data.id)
       .maybeSingle();
-    if (fetchError) throw new Response(fetchError.message, { status: 500 });
-    if (!existing || !existing.workspace_id) throw new Response("Not found", { status: 404 });
+    if (fetchError) fail(500, fetchError.message);
+    if (!existing || !existing.workspace_id) fail(404, "Not found");
     await assertWorkspaceMember(context.supabase, context.userId, existing.workspace_id);
 
     const { data: updated, error } = await sb
@@ -221,7 +222,7 @@ export const updateDossierFollowUp = createServerFn({ method: "POST" })
       .eq("id", data.id)
       .select("*")
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
-    if (!updated) throw new Response("Not found", { status: 404 });
+    if (error) fail(500, error.message);
+    if (!updated) fail(404, "Not found");
     return updated;
   });

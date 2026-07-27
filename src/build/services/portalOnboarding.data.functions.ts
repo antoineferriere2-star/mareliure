@@ -18,6 +18,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { z } from "zod";
 import type { Json } from "@/integrations/supabase/types";
 import { admin, type Supa } from "./adminAuth.server";
+import { fail } from "./serverError";
 import { assertWorkspaceMember, assertWorkspaceOwner } from "./workspaceAuth.server";
 import { fetchSitePublicHtml } from "@/build/onboarding/safeFetch.server";
 import { extractSiteText } from "@/build/onboarding/extractText";
@@ -62,7 +63,7 @@ async function loadRow(sb: Supa, workspaceId: string) {
     .select("*")
     .eq("workspace_id", workspaceId)
     .maybeSingle();
-  if (error) throw new Response(error.message, { status: 500 });
+  if (error) fail(500, error.message);
   return data;
 }
 
@@ -137,7 +138,19 @@ export const getMySetup = createServerFn({ method: "GET" })
 
 // ------------------------------------------------------------ AI accounting
 
-async function guardAiRun(sb: Supa, workspaceId: string, action: string, requestId: string) {
+/**
+ * Reserves one AI run. The reservation is the row insert itself, protected by
+ * the unique index on (workspace_id, action, request_id): two concurrent
+ * double-click submits race on the database, not on a read-then-write window,
+ * so the loser is reported as a duplicate and never pays for a second run.
+ */
+async function guardAiRun(
+  sb: Supa,
+  workspaceId: string,
+  userId: string,
+  action: string,
+  requestId: string,
+) {
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { data: runs, error } = await sb
     .from("build_workspace_ai_runs")
@@ -145,13 +158,28 @@ async function guardAiRun(sb: Supa, workspaceId: string, action: string, request
     .eq("workspace_id", workspaceId)
     .eq("action", action)
     .gte("created_at", since);
-  if (error) throw new Response(error.message, { status: 500 });
+  if (error) fail(500, error.message);
 
-  return checkAiRun(
+  const decision = checkAiRun(
     (runs ?? []).map((r) => ({ requestId: r.request_id, createdAt: r.created_at })),
     requestId,
     new Date(),
   );
+  if (!decision.allow) return decision;
+
+  const { error: claimError } = await sb.from("build_workspace_ai_runs").insert({
+    workspace_id: workspaceId,
+    user_id: userId,
+    action,
+    request_id: requestId,
+    status: "running",
+  });
+  // 23505 = unique violation: a concurrent call already claimed this requestId.
+  if (claimError) {
+    if (claimError.code === "23505") return { allow: false, reason: "duplicate" } as const;
+    fail(500, claimError.message);
+  }
+  return decision;
 }
 
 async function logAiRun(
@@ -167,15 +195,17 @@ async function logAiRun(
   },
 ) {
   // Observability only — a logging failure must never lose the client's result.
-  await sb.from("build_workspace_ai_runs").insert({
-    workspace_id: fields.workspaceId,
-    user_id: fields.userId,
-    action: fields.action,
-    request_id: fields.requestId,
-    status: fields.status,
-    latency_ms: fields.latencyMs,
-    error: fields.error?.slice(0, 500) ?? null,
-  });
+  // Closes the reservation row opened by guardAiRun.
+  await sb
+    .from("build_workspace_ai_runs")
+    .update({
+      status: fields.status,
+      latency_ms: fields.latencyMs,
+      error: fields.error?.slice(0, 500) ?? null,
+    })
+    .eq("workspace_id", fields.workspaceId)
+    .eq("action", fields.action)
+    .eq("request_id", fields.requestId);
 }
 
 // ------------------------------------------------------------- Step 1 and 2
@@ -191,10 +221,16 @@ export const analyzeMySite = createServerFn({ method: "POST" })
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
 
     const checked = checkSiteUrl(data.url);
-    if (!checked.ok) throw new Response(checked.error, { status: 400 });
+    if (!checked.ok) fail(400, checked.error);
 
     const sb = await admin();
-    const decision = await guardAiRun(sb, data.workspaceId, "analyze_site", data.requestId);
+    const decision = await guardAiRun(
+      sb,
+      data.workspaceId,
+      context.userId,
+      "analyze_site",
+      data.requestId,
+    );
     if (!decision.allow) {
       if (decision.reason === "duplicate") {
         // Double click / retry of the same submit: return what we already have
@@ -209,13 +245,11 @@ export const analyzeMySite = createServerFn({ method: "POST" })
             true,
           );
         }
-        throw new Response("That analysis is already running. Please wait a moment.", {
-          status: 409,
-        });
+        fail(409, "That analysis is already running. Please wait a moment.");
       }
-      throw new Response(
+      fail(
+        429,
         `You have run several website analyses in the last hour. Try again in ${decision.retryAfterMinutes} minutes.`,
-        { status: 429 },
       );
     }
 
@@ -236,9 +270,9 @@ export const analyzeMySite = createServerFn({ method: "POST" })
         latencyMs: Date.now() - startedAt,
         error: `fetch: ${message}`,
       });
-      throw new Response(
+      fail(
+        400,
         "We could not reach that website. Check the address and try again — nothing has been saved.",
-        { status: 400 },
       );
     }
 
@@ -257,10 +291,7 @@ export const analyzeMySite = createServerFn({ method: "POST" })
         error: result.error ?? "unknown",
       });
       // Never a mocked fallback: an AI failure is reported as a failure.
-      throw new Response(
-        "The website analysis did not complete. Nothing was saved — you can run it again.",
-        { status: 502 },
-      );
+      fail(502, "The website analysis did not complete. Nothing was saved — you can run it again.");
     }
 
     await logAiRun(sb, {
@@ -298,7 +329,7 @@ export const analyzeMySite = createServerFn({ method: "POST" })
       },
       { onConflict: "workspace_id" },
     );
-    if (upsertError) throw new Response(upsertError.message, { status: 500 });
+    if (upsertError) fail(500, upsertError.message);
 
     const row = await loadRow(sb, data.workspaceId);
     return toState(sb, row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
@@ -317,14 +348,14 @@ export const confirmMyDeckProduct = createServerFn({ method: "POST" })
 
     const row = await loadRow(sb, data.workspaceId);
     const analysis = row?.analysis as SiteAnalysis | null;
-    if (!analysis) throw new Response("Analyze your website first.", { status: 400 });
+    if (!analysis) fail(400, "Analyze your website first.");
 
     const eligibility = resolveDeckEligibility(analysis);
-    if (!eligibility.eligible) throw new Response(eligibility.reason, { status: 400 });
+    if (!eligibility.eligible) fail(400, eligibility.reason);
     if (!isAcceptableProduct(data.product)) {
-      throw new Response(
+      fail(
+        400,
         "The current version of Métré Build supports deck projects only. Pick one of the suggested deck products.",
-        { status: 400 },
       );
     }
 
@@ -336,7 +367,7 @@ export const confirmMyDeckProduct = createServerFn({ method: "POST" })
         confirmed_product: data.product.trim(),
       })
       .eq("workspace_id", data.workspaceId);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
 
     const updated = await loadRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
@@ -353,22 +384,26 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
 
     const row = await loadRow(sb, data.workspaceId);
     if (!row?.confirmed_product || !row.confirmed_business_type) {
-      throw new Response("Confirm your deck product first.", { status: 400 });
+      fail(400, "Confirm your deck product first.");
     }
 
-    const decision = await guardAiRun(sb, data.workspaceId, "generate_draft", data.requestId);
+    const decision = await guardAiRun(
+      sb,
+      data.workspaceId,
+      context.userId,
+      "generate_draft",
+      data.requestId,
+    );
     if (!decision.allow) {
       if (decision.reason === "duplicate" && row.playbook_id) {
         return toState(sb, row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
       }
       if (decision.reason === "duplicate") {
-        throw new Response("Your intake is already being generated. Please wait a moment.", {
-          status: 409,
-        });
+        fail(409, "Your intake is already being generated. Please wait a moment.");
       }
-      throw new Response(
+      fail(
+        429,
         `You have generated several drafts in the last hour. Try again in ${decision.retryAfterMinutes} minutes.`,
-        { status: 429 },
       );
     }
 
@@ -390,9 +425,9 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
         latencyMs,
         error: result.error ?? "unknown",
       });
-      throw new Response(
+      fail(
+        502,
         "We could not generate your project intake. Nothing was saved — you can try again.",
-        { status: 502 },
       );
     }
 
@@ -422,7 +457,7 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
         .update({ name, draft_schema: draftSchema as unknown as Json })
         .eq("id", playbookId)
         .eq("workspace_id", data.workspaceId);
-      if (error) throw new Response(error.message, { status: 500 });
+      if (error) fail(500, error.message);
     } else {
       const { data: created, error } = await sb
         .from("build_playbooks")
@@ -439,8 +474,8 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
         })
         .select("id")
         .maybeSingle();
-      if (error) throw new Response(error.message, { status: 500 });
-      if (!created) throw new Response("Draft creation failed.", { status: 500 });
+      if (error) fail(500, error.message);
+      if (!created) fail(500, "Draft creation failed.");
       playbookId = created.id;
     }
 
@@ -459,7 +494,7 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
         last_generate_request_id: data.requestId,
       })
       .eq("workspace_id", data.workspaceId);
-    if (updateError) throw new Response(updateError.message, { status: 500 });
+    if (updateError) fail(500, updateError.message);
 
     const updated = await loadRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
@@ -486,7 +521,7 @@ export const updateMyBranding = createServerFn({ method: "POST" })
     const sb = await admin();
 
     const row = await loadRow(sb, data.workspaceId);
-    if (!row) throw new Response("Start your setup first.", { status: 400 });
+    if (!row) fail(400, "Start your setup first.");
 
     const name = await workspaceName(sb, data.workspaceId);
     const fallback =
@@ -496,13 +531,13 @@ export const updateMyBranding = createServerFn({ method: "POST" })
 
     const { workspaceId: _ws, ...fields } = data;
     const checked = checkBranding(fields, fallback);
-    if (!checked.ok) throw new Response(checked.error, { status: 400 });
+    if (!checked.ok) fail(400, checked.error);
 
     const { error } = await sb
       .from("build_workspace_onboarding")
       .update({ branding: checked.branding as unknown as Json })
       .eq("workspace_id", data.workspaceId);
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
 
     const updated = await loadRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, name, true);
@@ -517,21 +552,21 @@ export const getMyDraftPreview = createServerFn({ method: "GET" })
     const sb = await admin();
 
     const row = await loadRow(sb, data.workspaceId);
-    if (!row?.playbook_id) throw new Response("No draft yet.", { status: 404 });
+    if (!row?.playbook_id) fail(404, "No draft yet.");
 
     const { data: playbook, error } = await sb
       .from("build_playbooks")
       .select("draft_schema, published_version_id, workspace_id")
       .eq("id", row.playbook_id)
       .maybeSingle();
-    if (error) throw new Response(error.message, { status: 500 });
+    if (error) fail(500, error.message);
     // Defence in depth: never serve a Playbook that is not this workspace's.
     if (!playbook || playbook.workspace_id !== data.workspaceId) {
-      throw new Response("No draft yet.", { status: 404 });
+      fail(404, "No draft yet.");
     }
 
     const parsed = playbookSchema.safeParse(playbook.draft_schema);
-    if (!parsed.success) throw new Response("This draft is not readable yet.", { status: 500 });
+    if (!parsed.success) fail(500, "This draft is not readable yet.");
     return { schema: parsed.data, published: false };
   });
 
@@ -554,7 +589,7 @@ export const publishMyDraft = createServerFn({ method: "POST" })
     const sb = await admin();
 
     const row = await loadRow(sb, data.workspaceId);
-    if (!row) throw new Response("Start your setup first.", { status: 400 });
+    if (!row) fail(400, "Start your setup first.");
 
     // Already published: return the existing Mission rather than publishing
     // a second one (double click / retried request).
@@ -563,7 +598,7 @@ export const publishMyDraft = createServerFn({ method: "POST" })
     }
 
     if (!row.playbook_id) {
-      throw new Response("Generate your project intake draft first.", { status: 400 });
+      fail(400, "Generate your project intake draft first.");
     }
 
     const { data: playbook, error: playbookError } = await sb
@@ -571,20 +606,18 @@ export const publishMyDraft = createServerFn({ method: "POST" })
       .select("draft_schema, name, workspace_id")
       .eq("id", row.playbook_id)
       .maybeSingle();
-    if (playbookError) throw new Response(playbookError.message, { status: 500 });
+    if (playbookError) fail(500, playbookError.message);
     if (!playbook || playbook.workspace_id !== data.workspaceId) {
-      throw new Response("No draft to publish.", { status: 404 });
+      fail(404, "No draft to publish.");
     }
 
     const parsedSchema = playbookSchema.safeParse(playbook.draft_schema);
     if (!parsedSchema.success) {
-      throw new Response("This draft is not valid and cannot be published yet.", { status: 400 });
+      fail(400, "This draft is not valid and cannot be published yet.");
     }
     const issues = getPlaybookPublishIssues(parsedSchema.data);
     if (issues.length > 0) {
-      throw new Response(`This draft is not ready to publish yet: ${issues.join(" ")}`, {
-        status: 400,
-      });
+      fail(400, `This draft is not ready to publish yet: ${issues.join(" ")}`);
     }
 
     const { data: lastVersion } = await sb
@@ -606,13 +639,13 @@ export const publishMyDraft = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (versionError) throw new Response(versionError.message, { status: 500 });
+    if (versionError) fail(500, versionError.message);
 
     const { error: playbookUpdateError } = await sb
       .from("build_playbooks")
       .update({ published_version_id: version.id, is_active: true })
       .eq("id", row.playbook_id);
-    if (playbookUpdateError) throw new Response(playbookUpdateError.message, { status: 500 });
+    if (playbookUpdateError) fail(500, playbookUpdateError.message);
 
     const branding =
       row.branding && Object.keys(row.branding).length > 0
@@ -636,13 +669,13 @@ export const publishMyDraft = createServerFn({ method: "POST" })
       })
       .select("id")
       .single();
-    if (missionError) throw new Response(missionError.message, { status: 500 });
+    if (missionError) fail(500, missionError.message);
 
     const { error: onboardingUpdateError } = await sb
       .from("build_workspace_onboarding")
       .update({ status: "published", mission_id: mission.id })
       .eq("workspace_id", data.workspaceId);
-    if (onboardingUpdateError) throw new Response(onboardingUpdateError.message, { status: 500 });
+    if (onboardingUpdateError) fail(500, onboardingUpdateError.message);
 
     const updated = await loadRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);

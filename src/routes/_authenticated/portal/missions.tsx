@@ -66,12 +66,8 @@ function PortalMissionsPage() {
       setToggleError(null);
       queryClient.invalidateQueries({ queryKey: missionsKey });
     },
-    onError: async (err: unknown) => {
-      if (err instanceof Response) {
-        setToggleError(await err.text());
-      } else {
-        setToggleError(err instanceof Error ? err.message : "Unable to update this Mission.");
-      }
+    onError: (err: unknown) => {
+      setToggleError(err instanceof Error ? err.message : "Unable to update this Mission.");
     },
   });
 

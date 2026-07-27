@@ -3,6 +3,7 @@
 // scopes access to a single build_workspaces row instead of the whole app.
 // Never imports from client code.
 import type { Supa } from "./adminAuth.server";
+import { fail } from "./serverError";
 
 /**
  * Verify the caller belongs to the given workspace using their own
@@ -15,7 +16,7 @@ export async function assertWorkspaceMember(supabase: Supa, userId: string, work
     .eq("user_id", userId)
     .eq("workspace_id", workspaceId)
     .maybeSingle();
-  if (error || !data) throw new Response("Forbidden", { status: 403 });
+  if (error || !data) fail(403, "Forbidden");
   return { role: data.role as string };
 }
 
@@ -26,9 +27,7 @@ export async function assertWorkspaceMember(supabase: Supa, userId: string, work
 export async function assertWorkspaceOwner(supabase: Supa, userId: string, workspaceId: string) {
   const { role } = await assertWorkspaceMember(supabase, userId, workspaceId);
   if (role !== "owner") {
-    throw new Response("Seul le propriétaire de cet Espace Client peut gérer la facturation.", {
-      status: 403,
-    });
+    fail(403, "Only the workspace owner can do this.");
   }
 }
 
