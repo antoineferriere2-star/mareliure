@@ -4,4 +4,4 @@
 -- runs; existing rows (analyzed/confirmed/draft_ready, not yet published)
 -- are unaffected.
 ALTER TABLE public.build_workspace_onboarding
-  ADD COLUMN mission_id UUID REFERENCES public.build_missions(id) ON DELETE SET NULL;
+  ADD COLUMN IF NOT EXISTS mission_id UUID REFERENCES public.build_missions(id) ON DELETE SET NULL;
