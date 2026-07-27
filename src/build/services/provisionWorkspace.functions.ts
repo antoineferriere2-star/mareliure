@@ -18,6 +18,12 @@ export const ensureMyWorkspace = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { supabase, userId, claims } = context;
     const email = (claims.email as string | undefined) ?? null;
+    // Company typed at sign-up is kept in the user's metadata: when the
+    // account needs email confirmation, the sign-in that finally provisions
+    // the workspace no longer carries it in the request body.
+    const metadata = (claims.user_metadata ?? {}) as { company?: unknown };
+    const metadataCompany = typeof metadata.company === "string" ? metadata.company : null;
+
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const deps: ProvisionDeps = {
@@ -59,7 +65,7 @@ export const ensureMyWorkspace = createServerFn({ method: "POST" })
     const result = await ensureOwnerWorkspace(deps, {
       userId,
       email,
-      company: data.company ?? null,
+      company: data.company ?? metadataCompany,
     });
     return result;
   });
