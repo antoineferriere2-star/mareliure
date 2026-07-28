@@ -7,6 +7,7 @@ import { generateProjectBrief } from "@/build/engine/brief";
 import { computeVisibleSteps, validateField, validateFieldFormat } from "@/build/engine/validation";
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import { playbookSchema, type PlaybookField, type PlaybookSchema } from "@/build/schema/playbook";
+import { logOperationalError } from "@/build/services/operationalLog.server";
 
 type Supa = SupabaseClient<Database>;
 
@@ -61,11 +62,7 @@ function json(status: number, data: unknown) {
 function clientIp(request: Request): string {
   const fwd = request.headers.get("x-forwarded-for");
   if (fwd) return fwd.split(",")[0]!.trim();
-  return (
-    request.headers.get("x-real-ip") ??
-    request.headers.get("cf-connecting-ip") ??
-    "unknown"
-  );
+  return request.headers.get("x-real-ip") ?? request.headers.get("cf-connecting-ip") ?? "unknown";
 }
 
 function hashIp(ip: string): string {
@@ -124,7 +121,10 @@ export async function findPublishedMission(supabase: Supa, publicToken: string) 
     .maybeSingle();
 }
 
-async function loadPlaybookSchema(supabase: Supa, playbookVersionId: string): Promise<PlaybookSchema | null> {
+async function loadPlaybookSchema(
+  supabase: Supa,
+  playbookVersionId: string,
+): Promise<PlaybookSchema | null> {
   const { data, error } = await supabase
     .from("build_playbook_versions")
     .select("schema")
@@ -150,7 +150,8 @@ export async function handleStartSession(supabase: Supa, publicToken: string, ip
   const { data: mission, error: mErr } = await findPublishedMission(supabase, publicToken);
   if (mErr) throw mErr;
   if (!mission) return json(404, { error: "Mission not available" });
-  if (!mission.playbook_version_id) return json(404, { error: "Mission has no published playbook" });
+  if (!mission.playbook_version_id)
+    return json(404, { error: "Mission has no published playbook" });
   const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
   if (!schema) return json(500, { error: "Playbook schema unavailable" });
 
@@ -166,7 +167,12 @@ export async function handleStartSession(supabase: Supa, publicToken: string, ip
     .select("id, mission_id, status, answers, created_at")
     .single();
   if (error) throw error;
-  return json(200, { mission: publicMission(mission), session: data, session_secret: secret, playbook_schema: schema });
+  return json(200, {
+    mission: publicMission(mission),
+    session: data,
+    session_secret: secret,
+    playbook_schema: schema,
+  });
 }
 
 async function loadSessionSecretHash(supabase: Supa, sessionId: string) {
@@ -209,7 +215,8 @@ export async function handleResumeSession(supabase: Supa, sessionId: string, sec
     .eq("id", session.mission_id)
     .maybeSingle();
   if (mErr) throw mErr;
-  if (!mission || !mission.playbook_version_id) return json(404, { error: "Mission not available" });
+  if (!mission || !mission.playbook_version_id)
+    return json(404, { error: "Mission not available" });
   const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
   if (!schema) return json(500, { error: "Playbook schema unavailable" });
 
@@ -218,11 +225,20 @@ export async function handleResumeSession(supabase: Supa, sessionId: string, sec
   if (session.status !== "in_progress") {
     const existing = await findExistingDossier(supabase, sessionId);
     if (existing) {
-      return json(200, { mission: publicMission(mission), playbook_schema: schema, session: sessionPayload, dossier: existing });
+      return json(200, {
+        mission: publicMission(mission),
+        playbook_schema: schema,
+        session: sessionPayload,
+        dossier: existing,
+      });
     }
   }
 
-  return json(200, { mission: publicMission(mission), playbook_schema: schema, session: sessionPayload });
+  return json(200, {
+    mission: publicMission(mission),
+    playbook_schema: schema,
+    session: sessionPayload,
+  });
 }
 
 export async function handleSaveSession(
@@ -240,7 +256,8 @@ export async function handleSaveSession(
     .eq("id", session.mission_id)
     .maybeSingle();
   if (mErr) throw mErr;
-  if (!mission?.playbook_version_id) return json(500, { error: "Mission has no published playbook" });
+  if (!mission?.playbook_version_id)
+    return json(500, { error: "Mission has no published playbook" });
   const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
   if (!schema) return json(500, { error: "Playbook schema unavailable" });
 
@@ -254,7 +271,11 @@ export async function handleSaveSession(
       fieldErrors[key] = "Unknown field.";
       continue;
     }
-    const blank = value === undefined || value === null || value === "" || (Array.isArray(value) && value.length === 0);
+    const blank =
+      value === undefined ||
+      value === null ||
+      value === "" ||
+      (Array.isArray(value) && value.length === 0);
     if (blank) continue;
     const error = validateFieldFormat(field, value as AnswerValue);
     if (error) fieldErrors[key] = error;
@@ -299,7 +320,8 @@ export async function handleSubmitSession(
     .eq("id", session.mission_id)
     .maybeSingle();
   if (missionErr) throw missionErr;
-  if (!mission?.playbook_version_id) return json(500, { error: "Mission has no published playbook" });
+  if (!mission?.playbook_version_id)
+    return json(500, { error: "Mission has no published playbook" });
   const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
   if (!schema) return json(500, { error: "Playbook schema unavailable" });
 
@@ -372,9 +394,8 @@ export async function handleSubmitSession(
   }
   // Fire-and-forget notification to the Espace Client members. Never blocks
   // or fails the visitor's submission.
-  const { notifyWorkspaceOfNewDossier } = await import(
-    "@/build/services/dossierNotification.server"
-  );
+  const { notifyWorkspaceOfNewDossier } =
+    await import("@/build/services/dossierNotification.server");
   await notifyWorkspaceOfNewDossier(supabase, {
     workspaceId: (mission.workspace_id as string | null) ?? null,
     dossierId: dossier.id,
@@ -409,7 +430,8 @@ export async function handleAnalyzeInspirationPhoto(
     .eq("id", session.mission_id)
     .maybeSingle();
   if (mErr) throw mErr;
-  if (!mission?.playbook_version_id) return json(500, { error: "Mission has no published playbook" });
+  if (!mission?.playbook_version_id)
+    return json(500, { error: "Mission has no published playbook" });
   const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
   if (!schema) return json(500, { error: "Playbook schema unavailable" });
 
@@ -433,7 +455,12 @@ export async function handleAnalyzeInspirationPhoto(
     .from(INSPIRATION_PHOTOS_BUCKET)
     .upload(photoPath, buffer, { contentType: mediaType, upsert: false });
   if (uploadError) {
-    console.error("[build-runtime] inspiration photo upload failed", uploadError);
+    logOperationalError("build-runtime.inspiration-photo-upload-failed", uploadError, {
+      sessionId,
+      fieldKey,
+      mediaType,
+      photoPath,
+    });
     return json(500, { error: "Unable to store the image." });
   }
 
@@ -495,9 +522,19 @@ export const Route = createFileRoute("/api/public/build-runtime")({
             case "resume_session":
               return await handleResumeSession(supabaseAdmin, body.session_id, body.session_secret);
             case "save_session":
-              return await handleSaveSession(supabaseAdmin, body.session_id, body.session_secret, body.answers);
+              return await handleSaveSession(
+                supabaseAdmin,
+                body.session_id,
+                body.session_secret,
+                body.answers,
+              );
             case "submit_session":
-              return await handleSubmitSession(supabaseAdmin, body.session_id, body.session_secret, body.answers);
+              return await handleSubmitSession(
+                supabaseAdmin,
+                body.session_id,
+                body.session_secret,
+                body.answers,
+              );
             case "analyze_inspiration_photo":
               return await handleAnalyzeInspirationPhoto(
                 supabaseAdmin,
@@ -511,7 +548,9 @@ export const Route = createFileRoute("/api/public/build-runtime")({
               return json(400, { error: "Unknown action" });
           }
         } catch (err) {
-          console.error("[build-runtime]", err);
+          logOperationalError("build-runtime.unhandled-error", err, {
+            action: body.action,
+          });
           return json(500, {
             error: err instanceof Error ? err.message : "Internal error",
           });
