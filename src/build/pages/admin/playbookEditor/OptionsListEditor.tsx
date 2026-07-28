@@ -1,4 +1,4 @@
-// Replaces the old "valeur|libellé" pipe-syntax textarea with a real
+// Replaces the old "value|label" pipe-syntax textarea with a real
 // add/remove/reorder list. Generic over any row shaped like {value, label}
 // (FieldOption for choice/timeline fields, plain {value,label} for budget
 // ranges) — per-type extra fields (reassurance, isNotSure, urgency) are
@@ -58,13 +58,13 @@ export function OptionsListEditor<T extends BaseOptionRow>({
                   ...(wasAutoSlug ? { value: uniqueSlug(nextLabel, otherValues) } : {}),
                 } as Partial<T>);
               }}
-              placeholder="Libellé"
+              placeholder="Label"
               className="min-w-32 flex-1 rounded-md border border-input bg-background px-2 py-1"
             />
             <input
               value={o.value}
               onChange={(e) => updateRow(i, { value: e.target.value } as Partial<T>)}
-              placeholder="valeur"
+              placeholder="value"
               className="w-28 rounded-md border border-input bg-background px-2 py-1 font-mono"
             />
             <div className="ml-auto flex items-center gap-1">
@@ -89,7 +89,7 @@ export function OptionsListEditor<T extends BaseOptionRow>({
                 onClick={() => removeRow(i)}
                 className="rounded-md border border-destructive/40 px-2 py-1 text-destructive hover:bg-destructive/10"
               >
-                Supprimer
+                Remove
               </button>
             </div>
           </div>

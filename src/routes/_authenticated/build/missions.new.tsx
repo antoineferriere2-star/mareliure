@@ -91,7 +91,7 @@ function NewMissionPage() {
             onChange={(e) => setName(e.target.value)}
             required
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            placeholder="Ex : Deck qualification — East Coast builders"
+            placeholder="E.g.: Deck qualification — East Coast builders"
           />
         </div>
 

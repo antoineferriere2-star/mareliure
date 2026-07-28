@@ -17,7 +17,7 @@ export function AdminStub({
       </div>
       <div className="rounded-lg border border-dashed border-border bg-card p-6">
         <p className="text-sm text-muted-foreground">
-          {children ?? "Module en cours de préparation. Le contenu sera branché ici."}
+          {children ?? "Module in progress. The content will be connected here."}
         </p>
       </div>
     </div>

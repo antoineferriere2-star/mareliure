@@ -46,7 +46,7 @@ function PlaybooksPage() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Playbooks</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            L'expertise métier — sections, étapes, champs, règles et mapping vers le Dossier Commercial.
+            Business expertise — sections, steps, fields, rules, and mapping to the Commercial Dossier.
           </p>
         </div>
         <button
@@ -54,7 +54,7 @@ function PlaybooksPage() {
           onClick={() => setShowForm((v) => !v)}
           className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground"
         >
-          + Nouveau Playbook
+          + New Playbook
         </button>
       </div>
 
@@ -68,17 +68,17 @@ function PlaybooksPage() {
           className="space-y-3 rounded-lg border border-border bg-card p-4"
         >
           <div>
-            <label className="block text-xs font-medium text-muted-foreground">Nom *</label>
+            <label className="block text-xs font-medium text-muted-foreground">Name *</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              placeholder="Ex : Terrasse / Deck — v1"
+              placeholder="E.g.: Deck / Patio — v1"
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground">Type de projet</label>
+            <label className="block text-xs font-medium text-muted-foreground">Project type</label>
             <input
               value={projectType}
               onChange={(e) => setProjectType(e.target.value)}
@@ -101,14 +101,14 @@ function PlaybooksPage() {
               onClick={() => setShowForm(false)}
               className="rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-accent"
             >
-              Annuler
+              Cancel
             </button>
             <button
               type="submit"
               disabled={createMut.isPending}
               className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
             >
-              {createMut.isPending ? "Création…" : "Créer le brouillon"}
+              {createMut.isPending ? "Creating…" : "Create draft"}
             </button>
           </div>
         </form>
@@ -118,17 +118,17 @@ function PlaybooksPage() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50 text-xs uppercase tracking-wide text-muted-foreground">
             <tr>
-              <th className="px-4 py-2 text-left">Nom</th>
+              <th className="px-4 py-2 text-left">Name</th>
               <th className="px-4 py-2 text-left">Type</th>
-              <th className="px-4 py-2 text-left">Statut</th>
-              <th className="px-4 py-2 text-left">Actif</th>
+              <th className="px-4 py-2 text-left">Status</th>
+              <th className="px-4 py-2 text-left">Active</th>
             </tr>
           </thead>
           <tbody>
             {playbooks.length === 0 && (
               <tr>
                 <td colSpan={4} className="px-4 py-6 text-center text-muted-foreground">
-                  Aucun Playbook pour l'instant.
+                  No Playbooks yet.
                 </td>
               </tr>
             )}
@@ -143,15 +143,15 @@ function PlaybooksPage() {
                 <td className="px-4 py-2">
                   {playbook.published_version_id ? (
                     <span className="rounded-full border border-emerald-300 bg-emerald-50 px-2 py-0.5 text-xs font-medium text-emerald-800">
-                      Publié
+                      Published
                     </span>
                   ) : (
                     <span className="rounded-full border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800">
-                      Brouillon non publié
+                      Unpublished draft
                     </span>
                   )}
                 </td>
-                <td className="px-4 py-2 text-muted-foreground">{playbook.is_active ? "Oui" : "Non"}</td>
+                <td className="px-4 py-2 text-muted-foreground">{playbook.is_active ? "Yes" : "No"}</td>
               </tr>
             ))}
           </tbody>

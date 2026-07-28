@@ -54,16 +54,16 @@ function RequestDetailPage() {
         <h1 className="mt-2 text-2xl font-semibold text-foreground">
           {typeof payload.firstName === "string"
             ? `${payload.firstName} ${payload.lastName ?? ""}`
-            : (payload.name as string | undefined) ?? "Demande"}
+            : (payload.name as string | undefined) ?? "Request"}
         </h1>
         <p className="mt-1 text-xs text-muted-foreground">
-          {request.request_type} · reçue le {new Date(request.created_at).toLocaleString()} via {request.source_path}
+          {request.request_type} · received on {new Date(request.created_at).toLocaleString()} via {request.source_path}
         </p>
       </div>
 
       <section className="rounded-lg border border-border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <h2 className="text-sm font-semibold">Statut</h2>
+          <h2 className="text-sm font-semibold">Status</h2>
           <select
             value={request.status}
             onChange={(e) => statusMutation.mutate(e.target.value as (typeof REQUEST_STATUSES)[number])}
@@ -80,7 +80,7 @@ function RequestDetailPage() {
       </section>
 
       <section className="rounded-lg border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold">Détails de la demande</h2>
+        <h2 className="text-sm font-semibold">Request details</h2>
         <dl className="mt-3 grid gap-3 sm:grid-cols-2">
           {Object.entries(payload).map(([field, value]) => (
             <div key={field}>
@@ -102,13 +102,13 @@ function RequestDetailPage() {
       <section className="rounded-lg border border-border bg-card p-4">
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
-            <h2 className="text-sm font-semibold">Audit du site</h2>
+            <h2 className="text-sm font-semibold">Site audit</h2>
             <p className="mt-1 text-xs text-muted-foreground">
               {request.audit_analyzed_at
-                ? `Dernier audit : ${new Date(request.audit_analyzed_at).toLocaleString()}`
+                ? `Last audit: ${new Date(request.audit_analyzed_at).toLocaleString()}`
                 : websiteUrl
-                  ? "Aucun audit lancé pour l'instant."
-                  : "Cette demande n'a pas d'URL de site."}
+                  ? "No audit run yet."
+                  : "This request has no site URL."}
             </p>
           </div>
           <button
@@ -116,28 +116,28 @@ function RequestDetailPage() {
             disabled={auditMutation.isPending || !websiteUrl}
             className="rounded-md border border-primary/40 bg-primary/10 px-3 py-1.5 text-xs text-primary hover:bg-primary/20 disabled:opacity-50"
           >
-            {auditMutation.isPending ? "Audit en cours…" : request.audit_analyzed_at ? "Relancer l'audit" : "Lancer l'audit du site"}
+            {auditMutation.isPending ? "Audit in progress…" : request.audit_analyzed_at ? "Re-run audit" : "Run site audit"}
           </button>
         </div>
         {auditMutation.isError && (
           <p className="mt-2 text-xs text-destructive">
-            {auditMutation.error instanceof Error ? auditMutation.error.message : "L'audit a échoué."}
+            {auditMutation.error instanceof Error ? auditMutation.error.message : "The audit failed."}
           </p>
         )}
       </section>
 
       {auditResult && (
         <section className="rounded-lg border border-dashed border-primary/40 bg-primary/5 p-4">
-          <h2 className="text-sm font-semibold">Suggestions de l'audit — à valider</h2>
+          <h2 className="text-sm font-semibold">Audit suggestions — to validate</h2>
           <p className="mt-1 text-xs text-muted-foreground">
-            Pistes proposées par l'IA sur le parcours de contact actuel du site. Le commercial garde toujours la
-            décision finale.
+            Leads suggested by AI on the site's current contact journey. The salesperson always keeps the
+            final decision.
           </p>
           <p className="mt-3 text-sm text-foreground">{auditResult.summary}</p>
 
           {auditResult.strengths.length > 0 && (
             <div className="mt-3">
-              <h3 className="text-xs font-semibold text-foreground">Points forts</h3>
+              <h3 className="text-xs font-semibold text-foreground">Strengths</h3>
               <ul className="mt-1 list-disc pl-5 text-sm text-foreground">
                 {auditResult.strengths.map((s) => (
                   <li key={s}>{s}</li>
@@ -148,14 +148,14 @@ function RequestDetailPage() {
 
           {auditResult.gaps.length > 0 && (
             <div className="mt-3">
-              <h3 className="text-xs font-semibold text-foreground">Manques</h3>
+              <h3 className="text-xs font-semibold text-foreground">Gaps</h3>
               <FindingsList findings={auditResult.gaps} />
             </div>
           )}
 
           {auditResult.suggestedNextSteps.length > 0 && (
             <div className="mt-3">
-              <h3 className="text-xs font-semibold text-foreground">Prochaines étapes suggérées</h3>
+              <h3 className="text-xs font-semibold text-foreground">Suggested next steps</h3>
               <ul className="mt-1 list-disc pl-5 text-sm text-foreground">
                 {auditResult.suggestedNextSteps.map((s) => (
                   <li key={s}>{s}</li>

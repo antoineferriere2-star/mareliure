@@ -22,15 +22,15 @@ export function CustomizeStep({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Personnalisation</h2>
+        <h2 className="text-lg font-semibold text-foreground">Customization</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Quelques réglages simples avant de prévisualiser — rien ici ne change les questions du Playbook.
+          A few simple settings before previewing — nothing here changes the Playbook questions.
         </p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-muted-foreground">Titre</label>
+          <label className="block text-xs font-medium text-muted-foreground">Title</label>
           <input
             value={missionName}
             onChange={(e) => onMissionNameChange(e.target.value)}
@@ -38,7 +38,7 @@ export function CustomizeStep({
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-muted-foreground">Objectif (interne, optionnel)</label>
+          <label className="block text-xs font-medium text-muted-foreground">Objective (internal, optional)</label>
           <input
             value={objective}
             onChange={(e) => onObjectiveChange(e.target.value)}
@@ -46,7 +46,7 @@ export function CustomizeStep({
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-muted-foreground">Introduction affichée au visiteur</label>
+          <label className="block text-xs font-medium text-muted-foreground">Introduction shown to the visitor</label>
           <textarea
             value={proposal.intro ?? ""}
             onChange={(e) => onProposalChange({ intro: e.target.value })}
@@ -64,7 +64,7 @@ export function CustomizeStep({
           />
         </div>
         <div>
-          <label className="block text-xs font-medium text-muted-foreground">Couleur</label>
+          <label className="block text-xs font-medium text-muted-foreground">Color</label>
           <div className="mt-1 flex items-center gap-2">
             <input
               type="color"
@@ -81,12 +81,12 @@ export function CustomizeStep({
           </div>
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-xs font-medium text-muted-foreground">Texte de confirmation</label>
+          <label className="block text-xs font-medium text-muted-foreground">Confirmation text</label>
           <textarea
             value={proposal.confirmationText ?? ""}
             onChange={(e) => onProposalChange({ confirmationText: e.target.value })}
             rows={2}
-            placeholder="Merci ! Nous revenons vers vous sous 24h."
+            placeholder="Thank you! We'll get back to you within 24 hours."
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
@@ -96,7 +96,7 @@ export function CustomizeStep({
             checked={proposal.hideOptionalFields ?? false}
             onChange={(e) => onProposalChange({ hideOptionalFields: e.target.checked })}
           />
-          Masquer les questions facultatives au visiteur
+          Hide optional questions from the visitor
         </label>
       </div>
 
@@ -106,7 +106,7 @@ export function CustomizeStep({
           onClick={onBack}
           className="rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent"
         >
-          Retour
+          Back
         </button>
         <button
           type="button"
@@ -114,7 +114,7 @@ export function CustomizeStep({
           disabled={missionName.trim().length < 2}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          Prévisualiser
+          Preview
         </button>
       </div>
     </div>

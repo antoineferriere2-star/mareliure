@@ -97,10 +97,10 @@ function moveItem<T>(arr: T[], index: number, dir: -1 | 1): T[] {
 
 type Tab = "content" | "rules" | "brief" | "json";
 const TAB_LABELS: Record<Tab, string> = {
-  content: "Contenu",
-  rules: "Règles de cohérence",
+  content: "Content",
+  rules: "Consistency rules",
   brief: "Dossier Commercial",
-  json: "JSON avancé",
+  json: "Advanced JSON",
 };
 
 function PlaybookDetailPage() {
@@ -370,16 +370,16 @@ function PlaybookDetailPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-foreground">{playbook.name}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {playbook.published_version_id ? "Publié" : "Brouillon non publié"} ·{" "}
+          {playbook.published_version_id ? "Published" : "Unpublished draft"} ·{" "}
           {playbook.versions.length} version(s)
         </p>
       </div>
 
       <section className="rounded-lg border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold">Informations générales</h2>
+        <h2 className="text-sm font-semibold">General information</h2>
         <div className="mt-3 grid gap-3 sm:grid-cols-2">
           <div>
-            <label className="block text-xs font-medium text-muted-foreground">Nom</label>
+            <label className="block text-xs font-medium text-muted-foreground">Name</label>
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
@@ -388,7 +388,7 @@ function PlaybookDetailPage() {
           </div>
           <div>
             <label className="block text-xs font-medium text-muted-foreground">
-              Type de projet
+              Project type
             </label>
             <input
               value={projectType}
@@ -411,7 +411,7 @@ function PlaybookDetailPage() {
               checked={isActive}
               onChange={(e) => setIsActive(e.target.checked)}
             />
-            Actif
+            Active
           </label>
         </div>
       </section>
@@ -419,10 +419,10 @@ function PlaybookDetailPage() {
       <section
         className={`rounded-lg border p-4 ${issues.length > 0 ? "border-amber-300 bg-amber-50" : "border-emerald-300 bg-emerald-50"}`}
       >
-        <h2 className="text-sm font-semibold">État de publication</h2>
+        <h2 className="text-sm font-semibold">Publishing status</h2>
         {issues.length === 0 ? (
           <p className="mt-1 text-xs text-emerald-800">
-            Aucun problème détecté — ce Playbook est prêt à être publié.
+            No issues detected — this Playbook is ready to be published.
           </p>
         ) : (
           <ul className="mt-1 list-disc pl-5 text-xs text-amber-800">
@@ -452,7 +452,7 @@ function PlaybookDetailPage() {
 
       {tab === "content" && (
         <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold">Structure du Playbook</h2>
+          <h2 className="text-sm font-semibold">Playbook structure</h2>
           <div className="mt-3 space-y-4">
             {draft.sections.map((section, sIdx) => (
               <div key={section.id} className="rounded-md border border-border p-3">
@@ -484,7 +484,7 @@ function PlaybookDetailPage() {
                     onClick={() => removeSection(section.id)}
                     className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
                   >
-                    Supprimer
+                    Delete
                   </button>
                 </div>
 
@@ -499,7 +499,7 @@ function PlaybookDetailPage() {
                           }
                           className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm"
                         />
-                        <span className="text-xs text-muted-foreground">Étape {stIdx + 1}</span>
+                        <span className="text-xs text-muted-foreground">Step {stIdx + 1}</span>
                         <button
                           type="button"
                           onClick={() => moveStep(section.id, stIdx, -1)}
@@ -521,20 +521,20 @@ function PlaybookDetailPage() {
                           onClick={() => removeStep(section.id, step.id)}
                           className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
                         >
-                          Supprimer
+                          Delete
                         </button>
                       </div>
                       <textarea
                         value={step.why ?? ""}
                         onChange={(e) => updateStep(section.id, step.id, { why: e.target.value })}
-                        placeholder="Pourquoi cette étape (aide au commercial)"
+                        placeholder="Why this step exists (helps the sales team)"
                         rows={1}
                         className="mt-2 w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
                       />
 
                       <details className="mt-2 rounded-md border border-border bg-background p-2">
                         <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
-                          Condition d'affichage de l'étape
+                          Step display condition
                         </summary>
                         <div className="mt-2">
                           <ConditionGroupEditor
@@ -545,7 +545,7 @@ function PlaybookDetailPage() {
                             fields={fieldSummaries.filter(
                               (f) => !step.fields.some((sf) => sf.key === f.key),
                             )}
-                            emptyHint="Cette étape est toujours affichée (aucune condition)."
+                            emptyHint="This step is always shown (no condition)."
                           />
                         </div>
                       </details>
@@ -589,7 +589,7 @@ function PlaybookDetailPage() {
                           onClick={() => addField(section.id, step.id)}
                           className="rounded-md border border-input bg-background px-2 py-1 text-xs hover:bg-accent"
                         >
-                          + Champ
+                          + Field
                         </button>
                       </div>
                     </div>
@@ -599,7 +599,7 @@ function PlaybookDetailPage() {
                     onClick={() => addStep(section.id)}
                     className="rounded-md border border-input bg-background px-2 py-1 text-xs hover:bg-accent"
                   >
-                    + Étape
+                    + Step
                   </button>
                 </div>
               </div>
@@ -617,7 +617,7 @@ function PlaybookDetailPage() {
 
       {tab === "rules" && (
         <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold">Règles de cohérence</h2>
+          <h2 className="text-sm font-semibold">Consistency rules</h2>
           <div className="mt-3">
             <ValidationRulesEditor
               rules={draft.validationRules}
@@ -631,7 +631,7 @@ function PlaybookDetailPage() {
 
       {tab === "brief" && (
         <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold">Dossier Commercial</h2>
+          <h2 className="text-sm font-semibold">Commercial Dossier</h2>
           <div className="mt-3">
             <BriefConfigEditor
               briefConfig={draft.briefConfig}
@@ -644,7 +644,7 @@ function PlaybookDetailPage() {
 
       {tab === "json" && (
         <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold">JSON avancé</h2>
+          <h2 className="text-sm font-semibold">Advanced JSON</h2>
           <div className="mt-3 space-y-2">
             <textarea
               value={jsonText}
@@ -658,7 +658,7 @@ function PlaybookDetailPage() {
               onClick={applyJson}
               className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
             >
-              Appliquer le JSON
+              Apply JSON
             </button>
           </div>
         </section>

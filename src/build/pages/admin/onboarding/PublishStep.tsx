@@ -21,7 +21,7 @@ export function PublishStep({
     return (
       <div className="space-y-4">
         <div className="rounded-lg border border-emerald-300 bg-emerald-50 p-4">
-          <p className="text-sm font-semibold text-emerald-900">Mission publiée</p>
+          <p className="text-sm font-semibold text-emerald-900">Mission published</p>
           <p className="mt-1 text-sm text-emerald-800">{missionName}</p>
         </div>
 
@@ -47,8 +47,8 @@ export function PublishStep({
       <div>
         <h2 className="text-lg font-semibold text-foreground">Publish</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Mission « {missionName} » basée sur le Playbook « {playbookName} ». Une fois publiée, le
-          lien public est immédiatement actif.
+          Mission « {missionName} » based on the Playbook « {playbookName} ». Once published, the
+          public link is immediately active.
         </p>
       </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
@@ -59,7 +59,7 @@ export function PublishStep({
           disabled={publishing}
           className="rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent disabled:opacity-50"
         >
-          Retour
+          Back
         </button>
         <button
           type="button"

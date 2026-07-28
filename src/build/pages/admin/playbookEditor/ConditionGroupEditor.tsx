@@ -9,16 +9,16 @@ import type { FieldSummary } from "./fieldSummaries";
 import { FieldPicker } from "./FieldPicker";
 
 const OPERATOR_LABELS: Record<ConditionOperator, string> = {
-  equals: "est égal à",
-  not_equals: "est différent de",
-  includes: "contient",
-  not_includes: "ne contient pas",
-  is_empty: "est vide",
-  is_not_empty: "n'est pas vide",
-  greater_than: "est supérieur à",
-  less_than: "est inférieur à",
-  greater_or_equal: "est supérieur ou égal à",
-  less_or_equal: "est inférieur ou égal à",
+  equals: "equals",
+  not_equals: "does not equal",
+  includes: "contains",
+  not_includes: "does not contain",
+  is_empty: "is empty",
+  is_not_empty: "is not empty",
+  greater_than: "is greater than",
+  less_than: "is less than",
+  greater_or_equal: "is greater than or equal to",
+  less_or_equal: "is less than or equal to",
 };
 
 const OPERATORS = Object.keys(OPERATOR_LABELS) as ConditionOperator[];
@@ -82,7 +82,7 @@ function ConditionRow({
             className="rounded-md border border-input bg-background px-2 py-1"
           >
             <option value="" disabled>
-              — valeur —
+              — value —
             </option>
             {field.options.map((o) => (
               <option key={o.value} value={o.value}>
@@ -109,7 +109,7 @@ function ConditionRow({
         onClick={onRemove}
         className="ml-auto rounded-md border border-destructive/40 px-2 py-1 text-destructive hover:bg-destructive/10"
       >
-        Retirer
+        Remove
       </button>
     </div>
   );
@@ -119,7 +119,7 @@ export function ConditionGroupEditor({
   group,
   onChange,
   fields,
-  emptyHint = "Toujours affiché (aucune condition).",
+  emptyHint = "Always shown (no condition).",
 }: {
   group: ConditionGroup | undefined;
   onChange: (next: ConditionGroup | undefined) => void;
@@ -139,7 +139,7 @@ export function ConditionGroupEditor({
   if (fields.length === 0) {
     return (
       <p className="text-xs text-muted-foreground">
-        Ajoutez au moins un champ au Playbook pour pouvoir créer une condition.
+        Add at least one field to the Playbook to be able to create a condition.
       </p>
     );
   }
@@ -150,7 +150,7 @@ export function ConditionGroupEditor({
 
       <div>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">Toutes ces conditions (ET)</span>
+          <span className="text-xs font-medium text-muted-foreground">All of these conditions (AND)</span>
           <button
             type="button"
             onClick={() => updateAll([...all, newCondition(fields)])}
@@ -174,7 +174,7 @@ export function ConditionGroupEditor({
 
       <div>
         <div className="flex items-center justify-between">
-          <span className="text-xs font-medium text-muted-foreground">Au moins une de ces conditions (OU)</span>
+          <span className="text-xs font-medium text-muted-foreground">At least one of these conditions (OR)</span>
           <button
             type="button"
             onClick={() => updateAny([...any, newCondition(fields)])}

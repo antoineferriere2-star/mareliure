@@ -41,7 +41,7 @@ function RequestsPage() {
       <header>
         <h1 className="text-2xl font-semibold text-foreground">Requests</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Demandes soumises via les pages marketing (audit gratuit, beta privée).
+          Requests submitted via marketing pages (free audit, private beta).
         </p>
       </header>
 
@@ -51,7 +51,7 @@ function RequestsPage() {
           onChange={(e) => setType(e.target.value as RequestType | "")}
           className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
         >
-          <option value="">Tous les types</option>
+          <option value="">All types</option>
           <option value="audit">Audit</option>
           <option value="private_beta">Private beta</option>
         </select>
@@ -60,7 +60,7 @@ function RequestsPage() {
           onChange={(e) => setStatus(e.target.value as Status | "")}
           className="rounded-md border border-input bg-background px-3 py-1.5 text-sm"
         >
-          <option value="">Tous les statuts</option>
+          <option value="">All statuses</option>
           {REQUEST_STATUSES.map((s) => (
             <option key={s} value={s}>
               {s}
@@ -71,19 +71,19 @@ function RequestsPage() {
 
       {!requests || requests.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">Aucune demande pour ces filtres.</p>
+          <p className="text-sm text-muted-foreground">No request matches these filters.</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-border bg-card">
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="px-4 py-2 text-left">Demandeur</th>
-                <th className="px-4 py-2 text-left">Société</th>
+                <th className="px-4 py-2 text-left">Requester</th>
+                <th className="px-4 py-2 text-left">Company</th>
                 <th className="px-4 py-2 text-left">Type</th>
-                <th className="px-4 py-2 text-left">Statut</th>
-                <th className="px-4 py-2 text-left">Audit IA</th>
-                <th className="px-4 py-2 text-left">Reçu</th>
+                <th className="px-4 py-2 text-left">Status</th>
+                <th className="px-4 py-2 text-left">AI Audit</th>
+                <th className="px-4 py-2 text-left">Received</th>
               </tr>
             </thead>
             <tbody>
@@ -108,7 +108,7 @@ function RequestsPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {r.audit_analyzed_at ? "Fait" : "—"}
+                      {r.audit_analyzed_at ? "Done" : "—"}
                     </td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
                       {new Date(r.created_at).toLocaleString()}
