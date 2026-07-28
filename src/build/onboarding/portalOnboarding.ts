@@ -145,8 +145,33 @@ export function resolveDeckEligibility(analysis: {
 }
 
 /** A confirmed product must still be a deck product — the lock also applies to free text. */
+export type ConfirmationTextCheck = { ok: true; value: string } | { ok: false; error: string };
+
+export function checkBusinessType(value: string): ConfirmationTextCheck {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return { ok: false, error: "Business type cannot be empty." };
+  if (trimmed.length > 80)
+    return { ok: false, error: "Business type is too long (80 characters max)." };
+  return { ok: true, value: trimmed };
+}
+
+/** A confirmed product must still be a deck product - the lock also applies to free text. */
+export function checkDeckProduct(product: string): ConfirmationTextCheck {
+  const trimmed = product.trim();
+  if (trimmed.length === 0) return { ok: false, error: "Product cannot be empty." };
+  if (trimmed.length > 80) return { ok: false, error: "Product is too long (80 characters max)." };
+  if (!hasDeckSignal(trimmed)) {
+    return {
+      ok: false,
+      error:
+        "The current version of Metré Build supports deck projects only. Use deck-specific wording.",
+    };
+  }
+  return { ok: true, value: trimmed };
+}
+
 export function isAcceptableProduct(product: string): boolean {
-  return product.trim().length > 0 && product.trim().length <= 80 && hasDeckSignal(product);
+  return checkDeckProduct(product).ok;
 }
 
 // ------------------------------------------------------------- Step machine

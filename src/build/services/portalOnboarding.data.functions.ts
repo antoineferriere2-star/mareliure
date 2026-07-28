@@ -28,9 +28,10 @@ import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import {
   checkAiRun,
   checkBranding,
+  checkBusinessType,
+  checkDeckProduct,
   checkSiteUrl,
   defaultBranding,
-  isAcceptableProduct,
   isPublished,
   resolveDeckEligibility,
   type Branding,
@@ -340,7 +341,12 @@ export const analyzeMySite = createServerFn({ method: "POST" })
 export const confirmMyDeckProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    workspaceInput.extend({ product: z.string().min(1).max(80) }).parse(data),
+    workspaceInput
+      .extend({
+        businessType: z.string().min(1).max(80).optional(),
+        product: z.string().min(1).max(80),
+      })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
@@ -352,19 +358,17 @@ export const confirmMyDeckProduct = createServerFn({ method: "POST" })
 
     const eligibility = resolveDeckEligibility(analysis);
     if (!eligibility.eligible) fail(400, eligibility.reason);
-    if (!isAcceptableProduct(data.product)) {
-      fail(
-        400,
-        "The current version of Métré Build supports deck projects only. Pick one of the suggested deck products.",
-      );
-    }
+    const checkedBusinessType = checkBusinessType(data.businessType ?? analysis.businessType);
+    if (!checkedBusinessType.ok) fail(400, checkedBusinessType.error);
+    const checkedProduct = checkDeckProduct(data.product);
+    if (!checkedProduct.ok) fail(400, checkedProduct.error);
 
     const { error } = await sb
       .from("build_workspace_onboarding")
       .update({
         status: "confirmed",
-        confirmed_business_type: analysis.businessType,
-        confirmed_product: data.product.trim(),
+        confirmed_business_type: checkedBusinessType.value,
+        confirmed_product: checkedProduct.value,
       })
       .eq("workspace_id", data.workspaceId);
     if (error) fail(500, error.message);
