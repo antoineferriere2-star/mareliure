@@ -1,4 +1,4 @@
-// Replaces the old "valeur|libellé" pipe-syntax textarea with a real
+// Replaces the old "value|label" pipe-syntax textarea with a real
 // add/remove/reorder list. Generic over any row shaped like {value, label}
 // (FieldOption for choice/timeline fields, plain {value,label} for budget
 // ranges) — per-type extra fields (reassurance, isNotSure, urgency) are

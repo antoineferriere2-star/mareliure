@@ -56,13 +56,13 @@ export function FieldEditor({
               ...(wasAutoKey ? { key: uniqueSlug(nextLabel, otherKeys) } : {}),
             });
           }}
-          placeholder="Libellé"
+          placeholder="Label"
           className="rounded-md border border-input bg-background px-2 py-1 text-xs sm:col-span-2"
         />
         <input
           value={field.key}
           onChange={(e) => onPatch({ key: e.target.value })}
-          placeholder="clé"
+          placeholder="key"
           className="rounded-md border border-input bg-background px-2 py-1 text-xs font-mono"
         />
         <select
@@ -84,9 +84,9 @@ export function FieldEditor({
           onChange={(e) => onPatch({ desirability: e.target.value })}
           className="rounded-md border border-input bg-background px-2 py-1 text-xs"
         >
-          <option value="required">Obligatoire</option>
-          <option value="recommended">Recommandé</option>
-          <option value="optional">Optionnel</option>
+          <option value="required">Required</option>
+          <option value="recommended">Recommended</option>
+          <option value="optional">Optional</option>
         </select>
         <label className="flex items-center gap-2 text-xs">
           <input
@@ -94,21 +94,21 @@ export function FieldEditor({
             checked={field.allowNotSure ?? false}
             onChange={(e) => onPatch({ allowNotSure: e.target.checked })}
           />
-          "Pas sûr" autorisé
+          Allow "Not sure"
         </label>
         <button
           type="button"
           onClick={onRemove}
           className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
         >
-          Supprimer le champ
+          Remove field
         </button>
       </div>
 
       <input
         value={field.helpText ?? ""}
         onChange={(e) => onPatch({ helpText: e.target.value })}
-        placeholder="Texte d'aide"
+        placeholder="Help text"
         className="mt-2 w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
       />
 
@@ -125,7 +125,7 @@ export function FieldEditor({
                   <input
                     value={option.reassurance ?? ""}
                     onChange={(e) => onPatchOption({ reassurance: e.target.value })}
-                    placeholder="Texte de réassurance (optionnel)"
+                    placeholder="Reassurance text (optional)"
                     className="rounded-md border border-input bg-background px-2 py-1"
                   />
                   <label className="flex items-center gap-2">
@@ -134,7 +134,7 @@ export function FieldEditor({
                       checked={option.isNotSure ?? false}
                       onChange={(e) => onPatchOption({ isNotSure: e.target.checked })}
                     />
-                    Réponse "Pas sûr"
+                    Is the "Not sure" answer
                   </label>
                 </div>
               )}
@@ -160,9 +160,9 @@ export function FieldEditor({
                     }
                     className="rounded-md border border-input bg-background px-2 py-1"
                   >
-                    <option value="">Urgence : aucune</option>
-                    <option value="normal">Urgence : normale</option>
-                    <option value="high">Urgence : élevée</option>
+                    <option value="">Urgency: none</option>
+                    <option value="normal">Urgency: normal</option>
+                    <option value="high">Urgency: high</option>
                   </select>
                   <label className="flex items-center gap-2">
                     <input
@@ -170,7 +170,7 @@ export function FieldEditor({
                       checked={option.isNotSure ?? false}
                       onChange={(e) => onPatchOption({ isNotSure: e.target.checked })}
                     />
-                    Réponse "Pas sûr"
+                    Is the "Not sure" answer
                   </label>
                 </div>
               )}
@@ -200,8 +200,8 @@ export function FieldEditor({
             onChange={(e) => onPatch({ mode: e.target.value })}
             className="rounded-md border border-input bg-background px-2 py-1 text-xs"
           >
-            <option value="ranges">Fourchettes</option>
-            <option value="numeric">Montant libre</option>
+            <option value="ranges">Ranges</option>
+            <option value="numeric">Free amount</option>
           </select>
           {field.mode === "ranges" ? (
             <OptionsListEditor
@@ -213,7 +213,7 @@ export function FieldEditor({
             <input
               value={field.currency}
               onChange={(e) => onPatch({ currency: e.target.value })}
-              placeholder="Devise"
+              placeholder="Currency"
               className="rounded-md border border-input bg-background px-2 py-1 text-xs"
             />
           )}
@@ -226,14 +226,14 @@ export function FieldEditor({
             type="number"
             value={field.maxFiles}
             onChange={(e) => onPatch({ maxFiles: Number(e.target.value) })}
-            placeholder="Nb max de photos"
+            placeholder="Max number of photos"
             className="rounded-md border border-input bg-background px-2 py-1 text-xs"
           />
           <input
             type="number"
             value={field.maxFileSizeMb}
             onChange={(e) => onPatch({ maxFileSizeMb: Number(e.target.value) })}
-            placeholder="Taille max (Mo)"
+            placeholder="Max size (MB)"
             className="rounded-md border border-input bg-background px-2 py-1 text-xs"
           />
           <input
@@ -253,7 +253,7 @@ export function FieldEditor({
             type="number"
             value={field.maxFileSizeMb}
             onChange={(e) => onPatch({ maxFileSizeMb: Number(e.target.value) })}
-            placeholder="Taille max (Mo)"
+            placeholder="Max size (MB)"
             className="rounded-md border border-input bg-background px-2 py-1 text-xs"
           />
           <input
@@ -265,8 +265,8 @@ export function FieldEditor({
             className="rounded-md border border-input bg-background px-2 py-1 text-xs"
           />
           <p className="text-xs text-muted-foreground sm:col-span-2">
-            Le visiteur dépose une image ; l'IA propose des hypothèses (style, matériaux, forme, éléments) que le
-            visiteur confirme ou corrige. Toujours présenté comme une hypothèse, jamais comme une certitude.
+            The visitor uploads an image; the AI proposes assumptions (style, materials, shape, elements) that the
+            visitor confirms or corrects. Always presented as an assumption, never as a certainty.
           </p>
         </div>
       )}
@@ -282,14 +282,14 @@ export function FieldEditor({
 
       <details className="mt-3 rounded-md border border-border bg-muted/20 p-2">
         <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
-          Condition d'affichage
+          Display condition
         </summary>
         <div className="mt-2">
           <ConditionGroupEditor
             group={field.displayWhen}
             onChange={(next) => onPatch({ displayWhen: next })}
             fields={conditionFields}
-            emptyHint="Ce champ est toujours affiché (aucune condition)."
+            emptyHint="This field is always shown (no condition)."
           />
         </div>
       </details>
@@ -297,7 +297,7 @@ export function FieldEditor({
       {field.type !== "inspiration_photo" && (
       <details className="mt-2 rounded-md border border-border bg-muted/20 p-2">
         <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
-          Mapping vers le Dossier Commercial
+          Mapping to the Commercial Dossier
         </summary>
         <div className="mt-2 space-y-2">
           <label className="flex items-center gap-2 text-xs">
@@ -312,7 +312,7 @@ export function FieldEditor({
                 })
               }
             />
-            Inclure la réponse à ce champ dans le Dossier Commercial
+            Include this field's answer in the Commercial Dossier
           </label>
           {field.briefMapping && (
             <div className="grid gap-2 sm:grid-cols-2">
@@ -330,7 +330,7 @@ export function FieldEditor({
               <input
                 value={field.briefMapping.label}
                 onChange={(e) => onPatch({ briefMapping: { ...field.briefMapping, label: e.target.value } })}
-                placeholder="Libellé dans le Dossier"
+                placeholder="Label in the Dossier"
                 className="rounded-md border border-input bg-background px-2 py-1 text-xs"
               />
               <input
@@ -338,7 +338,7 @@ export function FieldEditor({
                 onChange={(e) =>
                   onPatch({ briefMapping: { ...field.briefMapping, category: e.target.value || undefined } })
                 }
-                placeholder="Catégorie (optionnel)"
+                placeholder="Category (optional)"
                 className="rounded-md border border-input bg-background px-2 py-1 text-xs"
               />
               <select
@@ -346,9 +346,9 @@ export function FieldEditor({
                 onChange={(e) => onPatch({ briefMapping: { ...field.briefMapping, format: e.target.value } })}
                 className="rounded-md border border-input bg-background px-2 py-1 text-xs"
               >
-                <option value="raw">Valeur brute</option>
-                <option value="join_comma">Liste séparée par virgules</option>
-                {"options" in field && <option value="option_label">Libellé de l'option choisie</option>}
+                <option value="raw">Raw value</option>
+                <option value="join_comma">Comma-separated list</option>
+                {"options" in field && <option value="option_label">Label of the selected option</option>}
               </select>
               <label className="flex items-center gap-2 text-xs sm:col-span-2">
                 <input
@@ -358,7 +358,7 @@ export function FieldEditor({
                     onPatch({ briefMapping: { ...field.briefMapping, includeIfEmpty: e.target.checked } })
                   }
                 />
-                Inclure même si la réponse est vide
+                Include even if the answer is empty
               </label>
             </div>
           )}

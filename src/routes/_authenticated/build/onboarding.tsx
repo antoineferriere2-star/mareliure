@@ -43,12 +43,12 @@ const STEP_ORDER: Step[] = [
 ];
 const STEP_LABELS: Record<Step, string> = {
   url: "URL",
-  businessType: "Métier",
-  product: "Produit",
+  businessType: "Business type",
+  product: "Product",
   playbookMatch: "Playbook",
-  customize: "Personnalisation",
-  preview: "Aperçu",
-  publish: "Publication",
+  customize: "Customization",
+  preview: "Preview",
+  publish: "Publish",
 };
 
 function OnboardingPage() {
@@ -86,7 +86,7 @@ function OnboardingPage() {
       setStep("businessType");
     },
     onError: (err: unknown) =>
-      setAnalyzeError(err instanceof Error ? err.message : "Analyse impossible."),
+      setAnalyzeError(err instanceof Error ? err.message : "Unable to analyze."),
   });
 
   const match: PlaybookMatch | null =
@@ -118,7 +118,7 @@ function OnboardingPage() {
       }),
     onSuccess: (mission) => {
       if (!mission) {
-        setPublishError("La Mission n'a pas pu être créée.");
+        setPublishError("The Mission could not be created.");
         return;
       }
       const origin =
@@ -127,7 +127,7 @@ function OnboardingPage() {
       setPublishError(null);
     },
     onError: (err: unknown) =>
-      setPublishError(err instanceof Error ? err.message : "Publication impossible."),
+      setPublishError(err instanceof Error ? err.message : "Unable to publish."),
   });
 
   return (
@@ -135,7 +135,7 @@ function OnboardingPage() {
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Onboarding</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Créer une Mission à partir du site du client — sans construire de Playbook depuis zéro.
+          Create a Mission from the client's website — without building a Playbook from scratch.
         </p>
       </div>
 
@@ -165,26 +165,26 @@ function OnboardingPage() {
 
         {step === "businessType" && (
           <SingleChoiceConfirmStep
-            title="Métier détecté"
-            description="Confirme le métier principal du client, ou corrige-le si besoin."
+            title="Detected business type"
+            description="Confirm the client's main business type, or correct it if needed."
             candidates={businessTypeCandidates}
             value={businessType}
             onValueChange={setBusinessType}
             onBack={() => setStep("url")}
             onConfirm={() => setStep("product")}
-            noneDetectedMessage="Aucun métier n'a pu être détecté automatiquement sur ce site — merci de le préciser."
-            confirmButtonLabel="Confirmer"
-            backLabel="Retour"
-            otherLabel="Autre (préciser)"
-            otherOnlyLabel="Préciser"
-            detectionLabels={{ detected: "Détecté automatiquement", notFound: "Non trouvé" }}
+            noneDetectedMessage="No business type could be automatically detected on this site — please specify it."
+            confirmButtonLabel="Confirm"
+            backLabel="Back"
+            otherLabel="Other (please specify)"
+            otherOnlyLabel="Please specify"
+            detectionLabels={{ detected: "Automatically detected", notFound: "Not found" }}
           />
         )}
 
         {step === "product" && (
           <SingleChoiceConfirmStep
-            title="Produit ou service"
-            description="Choisis le produit ou type de projet pour lequel créer un tunnel."
+            title="Product or service"
+            description="Choose the product or project type to create a funnel for."
             candidates={products}
             value={product}
             onValueChange={(value) => {
@@ -193,12 +193,12 @@ function OnboardingPage() {
             }}
             onBack={() => setStep("businessType")}
             onConfirm={() => setStep("playbookMatch")}
-            noneDetectedMessage="Aucun produit n'a pu être détecté automatiquement sur ce site — merci de le préciser."
-            confirmButtonLabel="Confirmer"
-            backLabel="Retour"
-            otherLabel="Autre (préciser)"
-            otherOnlyLabel="Préciser"
-            detectionLabels={{ detected: "Détecté automatiquement", notFound: "Non trouvé" }}
+            noneDetectedMessage="No product could be automatically detected on this site — please specify it."
+            confirmButtonLabel="Confirm"
+            backLabel="Back"
+            otherLabel="Other (please specify)"
+            otherOnlyLabel="Please specify"
+            detectionLabels={{ detected: "Automatically detected", notFound: "Not found" }}
           />
         )}
 
@@ -209,12 +209,12 @@ function OnboardingPage() {
             match={match}
             onBack={() => setStep("product")}
             onContinue={() => setStep("customize")}
-            title="Playbook associé"
-            businessTypeLabel="Métier"
-            productLabel="Produit"
-            matchedLabel="Playbook proposé"
-            backLabel="Retour"
-            continueLabel="Continuer"
+            title="Matched Playbook"
+            businessTypeLabel="Business type"
+            productLabel="Product"
+            matchedLabel="Suggested Playbook"
+            backLabel="Back"
+            continueLabel="Continue"
           />
         )}
 

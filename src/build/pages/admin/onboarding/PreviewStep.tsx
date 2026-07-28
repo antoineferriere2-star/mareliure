@@ -29,13 +29,13 @@ export function PreviewStep({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Prévisualisation</h2>
+        <h2 className="text-lg font-semibold text-foreground">Preview</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Aperçu en lecture seule de la première étape que verra le visiteur.
+          Read-only preview of the first step the visitor will see.
         </p>
       </div>
 
-      {loading && <p className="text-sm text-muted-foreground">Chargement de l'aperçu…</p>}
+      {loading && <p className="text-sm text-muted-foreground">Loading preview…</p>}
 
       {!loading && (
         <div className="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
@@ -62,7 +62,7 @@ export function PreviewStep({
                   })}
               </div>
             ) : (
-              <p className="text-sm text-slate-600">Ce Playbook n'a pas encore de question.</p>
+              <p className="text-sm text-slate-600">This Playbook doesn't have any questions yet.</p>
             )}
           </div>
         </div>
@@ -82,7 +82,7 @@ export function PreviewStep({
           disabled={loading || !schema}
           className="rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          Continuer vers la publication
+          Continue to publishing
         </button>
       </div>
     </div>

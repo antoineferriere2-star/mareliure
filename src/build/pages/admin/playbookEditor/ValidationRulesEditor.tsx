@@ -36,8 +36,8 @@ export function ValidationRulesEditor({
   return (
     <div className="space-y-3">
       <p className="text-xs text-muted-foreground">
-        Une règle signale un avertissement ou une erreur quand la condition ci-dessous devient vraie — formulez la
-        condition comme le cas problématique à détecter.
+        A rule raises a warning or an error when the condition below becomes true — phrase the
+        condition as the problematic case to detect.
       </p>
       {rules.map((rule, i) => (
         <div key={rule.id} className="rounded-md border border-border bg-background p-3">
@@ -52,8 +52,8 @@ export function ValidationRulesEditor({
               }
               className="rounded-md border border-input bg-background px-2 py-1 text-xs"
             >
-              <option value="playbook">Tout le Playbook</option>
-              <option value="step">Une étape précise</option>
+              <option value="playbook">Entire Playbook</option>
+              <option value="step">A specific step</option>
             </select>
             {rule.scope === "step" && (
               <select
@@ -62,7 +62,7 @@ export function ValidationRulesEditor({
                 className="rounded-md border border-input bg-background px-2 py-1 text-xs"
               >
                 <option value="" disabled>
-                  — Choisir une étape —
+                  — Select a step —
                 </option>
                 {steps.map((s) => (
                   <option key={s.id} value={s.id}>
@@ -76,31 +76,31 @@ export function ValidationRulesEditor({
               onChange={(e) => updateRule(i, { severity: e.target.value as ValidationRule["severity"] })}
               className="rounded-md border border-input bg-background px-2 py-1 text-xs"
             >
-              <option value="warning">Avertissement</option>
-              <option value="error">Erreur</option>
+              <option value="warning">Warning</option>
+              <option value="error">Error</option>
             </select>
             <button
               type="button"
               onClick={() => removeRule(i)}
               className="ml-auto rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
             >
-              Supprimer
+              Remove
             </button>
           </div>
           <input
             value={rule.message}
             onChange={(e) => updateRule(i, { message: e.target.value })}
-            placeholder="Message affiché quand la règle se déclenche"
+            placeholder="Message shown when the rule is triggered"
             className="mt-2 w-full rounded-md border border-input bg-background px-2 py-1 text-xs"
           />
           <div className="mt-2">
-            <span className="text-xs font-medium text-muted-foreground">Cette règle se déclenche quand…</span>
+            <span className="text-xs font-medium text-muted-foreground">This rule triggers when…</span>
             <div className="mt-1">
               <ConditionGroupEditor
                 group={rule.when}
                 onChange={(next) => updateRule(i, { when: next ?? {} })}
                 fields={fields}
-                emptyHint="Cette règle ne se déclenche jamais (aucune condition définie)."
+                emptyHint="This rule never triggers (no condition defined)."
               />
             </div>
           </div>
@@ -111,7 +111,7 @@ export function ValidationRulesEditor({
         onClick={() => onChange([...rules, newRule()])}
         className="rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-accent"
       >
-        + Règle
+        + Rule
       </button>
     </div>
   );

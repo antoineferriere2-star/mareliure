@@ -48,7 +48,7 @@ function MissionsPage() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Missions</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Missions publiques et leurs tokens `/m/:publicToken`.
+            Public Missions and their `/m/:publicToken` tokens.
           </p>
         </div>
         <Link
@@ -74,8 +74,8 @@ function MissionsPage() {
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="px-4 py-2 text-left">Nom</th>
-                <th className="px-4 py-2 text-left">Statut</th>
+                <th className="px-4 py-2 text-left">Name</th>
+                <th className="px-4 py-2 text-left">Status</th>
                 <th className="px-4 py-2 text-left">Playbook</th>
                 <th className="px-4 py-2 text-left">Created</th>
                 <th className="px-4 py-2 text-right">Actions</th>

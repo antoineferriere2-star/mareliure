@@ -60,16 +60,16 @@ export function PlaybookMatchStep({
       ) : (
         <div className="space-y-3 rounded-lg border border-amber-300 bg-amber-50 p-4">
           <p className="text-sm text-amber-900">
-            Aucun Playbook publié ne correspond encore à ce métier.
+            No published Playbook matches this business type yet.
           </p>
 
           {generateMutation.data ? (
             <div className="rounded-md border border-emerald-300 bg-white p-3 text-sm">
               <p className="font-medium text-emerald-900">
-                Brouillon généré : {generateMutation.data.name}
+                Draft generated: {generateMutation.data.name}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                Relis-le, ajuste-le et publie-le dans l'éditeur, puis reviens ici pour continuer.
+                Review it, adjust it, and publish it in the editor, then come back here to continue.
               </p>
               <div className="mt-2 flex flex-wrap gap-2">
                 <Link
@@ -78,14 +78,14 @@ export function PlaybookMatchStep({
                   target="_blank"
                   className="rounded-md border border-emerald-400 bg-emerald-50 px-3 py-1.5 text-xs font-medium text-emerald-800 hover:bg-emerald-100"
                 >
-                  Ouvrir dans l'éditeur
+                  Open in editor
                 </Link>
                 <button
                   type="button"
                   onClick={recheckMatch}
                   className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
                 >
-                  Revérifier la correspondance
+                  Recheck the match
                 </button>
               </div>
             </div>
@@ -97,8 +97,8 @@ export function PlaybookMatchStep({
               className="rounded-md border border-amber-400 bg-white px-3 py-1.5 text-xs font-medium text-amber-900 hover:bg-amber-100 disabled:opacity-50"
             >
               {generateMutation.isPending
-                ? "Génération en cours…"
-                : "Générer un Playbook avec l'IA (brouillon)"}
+                ? "Generating…"
+                : "Generate a Playbook with AI (draft)"}
             </button>
           )}
 
@@ -106,15 +106,15 @@ export function PlaybookMatchStep({
             <p className="text-xs text-destructive">
               {generateMutation.error instanceof Error
                 ? generateMutation.error.message
-                : "La génération a échoué."}
+                : "Generation failed."}
             </p>
           )}
 
           <p className="text-xs text-amber-800">
-            Ou publie toi-même un Playbook avec un <span className="font-mono">project_type</span>{" "}
-            adapté (
+            Or publish a Playbook yourself with a <span className="font-mono">project_type</span>{" "}
+            that fits (
             <Link to="/build/playbooks" className="underline">
-              gérer les Playbooks
+              manage Playbooks
             </Link>
             ).
           </p>
