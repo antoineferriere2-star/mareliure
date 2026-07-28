@@ -419,7 +419,7 @@ function PlaybookDetailPage() {
       <section
         className={`rounded-lg border p-4 ${issues.length > 0 ? "border-amber-300 bg-amber-50" : "border-emerald-300 bg-emerald-50"}`}
       >
-        <h2 className="text-sm font-semibold">Publication status</h2>
+        <h2 className="text-sm font-semibold">Publishing status</h2>
         {issues.length === 0 ? (
           <p className="mt-1 text-xs text-emerald-800">
             No issues detected — this Playbook is ready to be published.
