@@ -35,7 +35,7 @@ function AiInsightsSection({ insights }: { insights: AiInsights }) {
           result={insights.technicien}
           extra={insights.technicien.data?.knowledgeNoteTitlesUsed}
         />
-        <AgentBlock title="Vérificateur" result={insights.verificateur} />
+        <AgentBlock title="Verifier" result={insights.verificateur} />
         <div className="rounded-md border border-border bg-background p-3">
           <h3 className="text-xs font-semibold text-foreground">Writer</h3>
           {insights.redacteur.status === "error" ? (
