@@ -3,6 +3,8 @@ import {
   AI_RUNS_PER_HOUR,
   checkAiRun,
   checkBranding,
+  checkBusinessType,
+  checkDeckProduct,
   checkSiteUrl,
   defaultBranding,
   hasDeckSignal,
@@ -103,6 +105,40 @@ describe("isAcceptableProduct", () => {
     expect(isAcceptableProduct("Pergola")).toBe(false);
     expect(isAcceptableProduct("   ")).toBe(false);
     expect(isAcceptableProduct(`deck ${"x".repeat(200)}`)).toBe(false);
+  });
+});
+
+describe("confirmation text checks", () => {
+  it("lets the client correct the detected business type", () => {
+    expect(checkBusinessType("  Outdoor living / deck builder  ")).toEqual({
+      ok: true,
+      value: "Outdoor living / deck builder",
+    });
+  });
+
+  it.each([
+    ["", "Business type cannot be empty."],
+    ["x".repeat(81), "Business type is too long (80 characters max)."],
+  ])("rejects invalid business type %s", (input, error) => {
+    expect(checkBusinessType(input)).toEqual({ ok: false, error });
+  });
+
+  it("lets the client correct the detected product with deck-specific wording", () => {
+    expect(checkDeckProduct("  Composite deck resurfacing  ")).toEqual({
+      ok: true,
+      value: "Composite deck resurfacing",
+    });
+  });
+
+  it.each([
+    ["", "Product cannot be empty."],
+    ["deck ".concat("x".repeat(81)), "Product is too long (80 characters max)."],
+    [
+      "Pergola",
+      "The current version of Metré Build supports deck projects only. Use deck-specific wording.",
+    ],
+  ])("rejects invalid product %s", (input, error) => {
+    expect(checkDeckProduct(input)).toEqual({ ok: false, error });
   });
 });
 

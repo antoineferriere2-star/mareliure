@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQueryClient, useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
 import {
+  duplicateBuildPlaybook,
   getBuildPlaybook,
   publishPlaybookVersion,
   updatePlaybookDraft,
@@ -18,13 +19,18 @@ import {
 import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import { ConditionGroupEditor } from "@/build/pages/admin/playbookEditor/ConditionGroupEditor";
 import { FieldEditor } from "@/build/pages/admin/playbookEditor/FieldEditor";
-import { ValidationRulesEditor, type StepSummary } from "@/build/pages/admin/playbookEditor/ValidationRulesEditor";
+import {
+  ValidationRulesEditor,
+  type StepSummary,
+} from "@/build/pages/admin/playbookEditor/ValidationRulesEditor";
 import { BriefConfigEditor } from "@/build/pages/admin/playbookEditor/BriefConfigEditor";
 import { collectFieldSummaries } from "@/build/pages/admin/playbookEditor/fieldSummaries";
 
 export const Route = createFileRoute("/_authenticated/build/playbooks/$id")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Playbook — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({
+    meta: [{ title: "Playbook — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }],
+  }),
   component: PlaybookDetailPage,
 });
 
@@ -44,7 +50,13 @@ function newFieldOfType(type: PlaybookFieldType, key: string): PlaybookField {
     case "measurement":
       return { ...base, type, unit: "ft" };
     case "budget":
-      return { ...base, type, currency: "USD", mode: "ranges", ranges: [{ value: "range_1", label: "Range 1" }] };
+      return {
+        ...base,
+        type,
+        currency: "USD",
+        mode: "ranges",
+        ranges: [{ value: "range_1", label: "Range 1" }],
+      };
     case "address":
       return { ...base, type, components: [{ key: "zip", label: "ZIP code" }] };
     case "photo":
@@ -59,7 +71,12 @@ function newFieldOfType(type: PlaybookFieldType, key: string): PlaybookField {
     case "coordinates":
       return { ...base, type };
     case "consent":
-      return { ...base, type, consentText: "I consent to sharing this request for review.", desirability: "required" };
+      return {
+        ...base,
+        type,
+        consentText: "I consent to sharing this request for review.",
+        desirability: "required",
+      };
     case "inspiration_photo":
       return {
         ...base,
@@ -88,9 +105,11 @@ const TAB_LABELS: Record<Tab, string> = {
 
 function PlaybookDetailPage() {
   const { id } = Route.useParams();
+  const navigate = useNavigate();
   const fetchPlaybook = useServerFn(getBuildPlaybook);
   const updateDraftFn = useServerFn(updatePlaybookDraft);
   const publishFn = useServerFn(publishPlaybookVersion);
+  const duplicateFn = useServerFn(duplicateBuildPlaybook);
   const queryClient = useQueryClient();
   const key = ["build-admin", "playbook", id] as const;
 
@@ -111,10 +130,14 @@ function PlaybookDetailPage() {
   const [saveError, setSaveError] = useState<string | null>(null);
   const [publishError, setPublishError] = useState<string | null>(null);
   const [publishSuccess, setPublishSuccess] = useState<number | null>(null);
+  const [duplicateError, setDuplicateError] = useState<string | null>(null);
 
   const fieldSummaries = useMemo(() => collectFieldSummaries(draft), [draft]);
   const stepSummaries: StepSummary[] = useMemo(
-    () => draft.sections.flatMap((s) => s.steps.map((st) => ({ id: st.id, title: st.title, sectionTitle: s.title }))),
+    () =>
+      draft.sections.flatMap((s) =>
+        s.steps.map((st) => ({ id: st.id, title: st.title, sectionTitle: s.title })),
+      ),
     [draft],
   );
   const issues = useMemo(() => getPlaybookPublishIssues(draft), [draft]);
@@ -164,7 +187,19 @@ function PlaybookDetailPage() {
       queryClient.invalidateQueries({ queryKey: key });
       queryClient.invalidateQueries({ queryKey: ["build-admin", "playbooks"] });
     },
-    onError: (err: unknown) => setPublishError(err instanceof Error ? err.message : "Unable to publish"),
+    onError: (err: unknown) =>
+      setPublishError(err instanceof Error ? err.message : "Unable to publish"),
+  });
+
+  const duplicateMut = useMutation({
+    mutationFn: () => duplicateFn({ data: { id } }),
+    onSuccess: (copy) => {
+      setDuplicateError(null);
+      queryClient.invalidateQueries({ queryKey: ["build-admin", "playbooks"] });
+      if (copy?.id) navigate({ to: "/build/playbooks/$id", params: { id: copy.id } });
+    },
+    onError: (err: unknown) =>
+      setDuplicateError(err instanceof Error ? err.message : "Unable to duplicate"),
   });
 
   function addSection() {
@@ -177,7 +212,10 @@ function PlaybookDetailPage() {
     updateDraftState((d) => ({ ...d, sections: d.sections.filter((s) => s.id !== sectionId) }));
   }
   function updateSection(sectionId: string, patch: Partial<PlaybookSection>) {
-    updateDraftState((d) => ({ ...d, sections: d.sections.map((s) => (s.id === sectionId ? { ...s, ...patch } : s)) }));
+    updateDraftState((d) => ({
+      ...d,
+      sections: d.sections.map((s) => (s.id === sectionId ? { ...s, ...patch } : s)),
+    }));
   }
   function moveSection(index: number, dir: -1 | 1) {
     updateDraftState((d) => ({ ...d, sections: moveItem(d.sections, index, dir) }));
@@ -186,28 +224,39 @@ function PlaybookDetailPage() {
     updateDraftState((d) => ({
       ...d,
       sections: d.sections.map((s) =>
-        s.id === sectionId ? { ...s, steps: [...s.steps, { id: crypto.randomUUID(), title: "New step", fields: [] }] } : s,
+        s.id === sectionId
+          ? {
+              ...s,
+              steps: [...s.steps, { id: crypto.randomUUID(), title: "New step", fields: [] }],
+            }
+          : s,
       ),
     }));
   }
   function removeStep(sectionId: string, stepId: string) {
     updateDraftState((d) => ({
       ...d,
-      sections: d.sections.map((s) => (s.id === sectionId ? { ...s, steps: s.steps.filter((st) => st.id !== stepId) } : s)),
+      sections: d.sections.map((s) =>
+        s.id === sectionId ? { ...s, steps: s.steps.filter((st) => st.id !== stepId) } : s,
+      ),
     }));
   }
   function updateStep(sectionId: string, stepId: string, patch: Partial<PlaybookStep>) {
     updateDraftState((d) => ({
       ...d,
       sections: d.sections.map((s) =>
-        s.id === sectionId ? { ...s, steps: s.steps.map((st) => (st.id === stepId ? { ...st, ...patch } : st)) } : s,
+        s.id === sectionId
+          ? { ...s, steps: s.steps.map((st) => (st.id === stepId ? { ...st, ...patch } : st)) }
+          : s,
       ),
     }));
   }
   function moveStep(sectionId: string, index: number, dir: -1 | 1) {
     updateDraftState((d) => ({
       ...d,
-      sections: d.sections.map((s) => (s.id === sectionId ? { ...s, steps: moveItem(s.steps, index, dir) } : s)),
+      sections: d.sections.map((s) =>
+        s.id === sectionId ? { ...s, steps: moveItem(s.steps, index, dir) } : s,
+      ),
     }));
   }
   function addField(sectionId: string, stepId: string) {
@@ -216,7 +265,12 @@ function PlaybookDetailPage() {
       ...d,
       sections: d.sections.map((s) =>
         s.id === sectionId
-          ? { ...s, steps: s.steps.map((st) => (st.id === stepId ? { ...st, fields: [...st.fields, field] } : st)) }
+          ? {
+              ...s,
+              steps: s.steps.map((st) =>
+                st.id === stepId ? { ...st, fields: [...st.fields, field] } : st,
+              ),
+            }
           : s,
       ),
     }));
@@ -229,7 +283,9 @@ function PlaybookDetailPage() {
           ? {
               ...s,
               steps: s.steps.map((st) =>
-                st.id === stepId ? { ...st, fields: st.fields.filter((f) => f.key !== fieldKey) } : st,
+                st.id === stepId
+                  ? { ...st, fields: st.fields.filter((f) => f.key !== fieldKey) }
+                  : st,
               ),
             }
           : s,
@@ -241,12 +297,22 @@ function PlaybookDetailPage() {
       ...d,
       sections: d.sections.map((s) =>
         s.id === sectionId
-          ? { ...s, steps: s.steps.map((st) => (st.id === stepId ? { ...st, fields: moveItem(st.fields, index, dir) } : st)) }
+          ? {
+              ...s,
+              steps: s.steps.map((st) =>
+                st.id === stepId ? { ...st, fields: moveItem(st.fields, index, dir) } : st,
+              ),
+            }
           : s,
       ),
     }));
   }
-  function updateField(sectionId: string, stepId: string, fieldKey: string, patch: Record<string, unknown>) {
+  function updateField(
+    sectionId: string,
+    stepId: string,
+    fieldKey: string,
+    patch: Record<string, unknown>,
+  ) {
     updateDraftState((d) => ({
       ...d,
       sections: d.sections.map((s) =>
@@ -268,7 +334,12 @@ function PlaybookDetailPage() {
       ),
     }));
   }
-  function changeFieldType(sectionId: string, stepId: string, fieldKey: string, type: PlaybookFieldType) {
+  function changeFieldType(
+    sectionId: string,
+    stepId: string,
+    fieldKey: string,
+    type: PlaybookFieldType,
+  ) {
     updateDraftState((d) => ({
       ...d,
       sections: d.sections.map((s) =>
@@ -279,7 +350,9 @@ function PlaybookDetailPage() {
                 st.id === stepId
                   ? {
                       ...st,
-                      fields: st.fields.map((f) => (f.key === fieldKey ? newFieldOfType(type, f.key) : f)),
+                      fields: st.fields.map((f) =>
+                        f.key === fieldKey ? newFieldOfType(type, f.key) : f,
+                      ),
                     }
                   : st,
               ),
@@ -297,7 +370,8 @@ function PlaybookDetailPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-foreground">{playbook.name}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {playbook.published_version_id ? "Publié" : "Brouillon non publié"} · {playbook.versions.length} version(s)
+          {playbook.published_version_id ? "Publié" : "Brouillon non publié"} ·{" "}
+          {playbook.versions.length} version(s)
         </p>
       </div>
 
@@ -313,7 +387,9 @@ function PlaybookDetailPage() {
             />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground">Type de projet</label>
+            <label className="block text-xs font-medium text-muted-foreground">
+              Type de projet
+            </label>
             <input
               value={projectType}
               onChange={(e) => setProjectType(e.target.value)}
@@ -330,7 +406,11 @@ function PlaybookDetailPage() {
             />
           </div>
           <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />
+            <input
+              type="checkbox"
+              checked={isActive}
+              onChange={(e) => setIsActive(e.target.checked)}
+            />
             Actif
           </label>
         </div>
@@ -341,7 +421,9 @@ function PlaybookDetailPage() {
       >
         <h2 className="text-sm font-semibold">État de publication</h2>
         {issues.length === 0 ? (
-          <p className="mt-1 text-xs text-emerald-800">Aucun problème détecté — ce Playbook est prêt à être publié.</p>
+          <p className="mt-1 text-xs text-emerald-800">
+            Aucun problème détecté — ce Playbook est prêt à être publié.
+          </p>
         ) : (
           <ul className="mt-1 list-disc pl-5 text-xs text-amber-800">
             {issues.map((issue, i) => (
@@ -358,7 +440,9 @@ function PlaybookDetailPage() {
             type="button"
             onClick={() => setTab(t)}
             className={`rounded-md px-3 py-1.5 text-xs font-medium ${
-              tab === t ? "bg-primary text-primary-foreground" : "border border-input bg-background hover:bg-accent"
+              tab === t
+                ? "bg-primary text-primary-foreground"
+                : "border border-input bg-background hover:bg-accent"
             }`}
           >
             {TAB_LABELS[t]}
@@ -410,7 +494,9 @@ function PlaybookDetailPage() {
                       <div className="flex items-center gap-2">
                         <input
                           value={step.title}
-                          onChange={(e) => updateStep(section.id, step.id, { title: e.target.value })}
+                          onChange={(e) =>
+                            updateStep(section.id, step.id, { title: e.target.value })
+                          }
                           className="flex-1 rounded-md border border-input bg-background px-2 py-1 text-sm"
                         />
                         <span className="text-xs text-muted-foreground">Étape {stIdx + 1}</span>
@@ -453,8 +539,12 @@ function PlaybookDetailPage() {
                         <div className="mt-2">
                           <ConditionGroupEditor
                             group={step.displayWhen}
-                            onChange={(next) => updateStep(section.id, step.id, { displayWhen: next })}
-                            fields={fieldSummaries.filter((f) => !step.fields.some((sf) => sf.key === f.key))}
+                            onChange={(next) =>
+                              updateStep(section.id, step.id, { displayWhen: next })
+                            }
+                            fields={fieldSummaries.filter(
+                              (f) => !step.fields.some((sf) => sf.key === f.key),
+                            )}
                             emptyHint="Cette étape est toujours affichée (aucune condition)."
                           />
                         </div>
@@ -484,8 +574,12 @@ function PlaybookDetailPage() {
                             <FieldEditor
                               field={field}
                               fields={fieldSummaries}
-                              onChangeType={(type) => changeFieldType(section.id, step.id, field.key, type)}
-                              onPatch={(patch) => updateField(section.id, step.id, field.key, patch)}
+                              onChangeType={(type) =>
+                                changeFieldType(section.id, step.id, field.key, type)
+                              }
+                              onPatch={(patch) =>
+                                updateField(section.id, step.id, field.key, patch)
+                              }
                               onRemove={() => removeField(section.id, step.id, field.key)}
                             />
                           </div>
@@ -577,7 +671,7 @@ function PlaybookDetailPage() {
           disabled={saveMut.isPending}
           className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          {saveMut.isPending ? "Enregistrement…" : "Enregistrer le brouillon"}
+          {saveMut.isPending ? "Saving..." : "Save draft"}
         </button>
         <button
           type="button"
@@ -585,11 +679,22 @@ function PlaybookDetailPage() {
           disabled={publishMut.isPending}
           className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-sm text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
         >
-          {publishMut.isPending ? "Publication…" : "Publier une version"}
+          {publishMut.isPending ? "Publishing..." : "Publish version"}
+        </button>
+        <button
+          type="button"
+          onClick={() => duplicateMut.mutate()}
+          disabled={duplicateMut.isPending}
+          className="rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-accent disabled:opacity-50"
+        >
+          {duplicateMut.isPending ? "Duplicating..." : "Duplicate as draft"}
         </button>
         {saveError && <p className="text-xs text-destructive">{saveError}</p>}
         {publishError && <p className="text-xs text-destructive">{publishError}</p>}
-        {publishSuccess !== null && <p className="text-xs text-emerald-700">Version {publishSuccess} publiée.</p>}
+        {duplicateError && <p className="text-xs text-destructive">{duplicateError}</p>}
+        {publishSuccess !== null && (
+          <p className="text-xs text-emerald-700">Version {publishSuccess} published.</p>
+        )}
       </div>
     </div>
   );

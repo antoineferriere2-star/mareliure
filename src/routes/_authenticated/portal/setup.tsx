@@ -22,6 +22,8 @@ import {
   type PortalOnboardingState,
 } from "@/build/services/portalOnboarding.data.functions";
 import {
+  checkBusinessType,
+  checkDeckProduct,
   checkSiteUrl,
   defaultBranding,
   resolveDeckEligibility,
@@ -538,7 +540,11 @@ function ProductStep({
     [analysis],
   );
   const suggested = eligibility?.eligible ? eligibility.suggestedProducts : [];
+  const [businessType, setBusinessType] = useState(
+    setup.confirmedBusinessType ?? analysis?.businessType ?? "Deck builder",
+  );
   const [product, setProduct] = useState(setup.confirmedProduct ?? suggested[0] ?? "Deck");
+  const [localError, setLocalError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const requestId = useRef(newRequestId());
 
@@ -555,9 +561,26 @@ function ProductStep({
   async function handleConfirm() {
     if (running) return;
     onError(null);
+    const checkedBusinessType = checkBusinessType(businessType);
+    if (!checkedBusinessType.ok) {
+      setLocalError(checkedBusinessType.error);
+      return;
+    }
+    const checkedProduct = checkDeckProduct(product);
+    if (!checkedProduct.ok) {
+      setLocalError(checkedProduct.error);
+      return;
+    }
+    setLocalError(null);
     setRunning(true);
     try {
-      await confirmProduct({ data: { workspaceId, product } });
+      await confirmProduct({
+        data: {
+          workspaceId,
+          businessType: checkedBusinessType.value,
+          product: checkedProduct.value,
+        },
+      });
       const next = await generateDraft({ data: { workspaceId, requestId: requestId.current } });
       requestId.current = newRequestId();
       onDone(next);
@@ -576,6 +599,46 @@ function ProductStep({
         Version 1 of Métré Build is built for deck builders, so the intake we generate is a deck
         intake. Pick the wording your customers use.
       </p>
+
+      <div className="mt-5 grid gap-4 sm:grid-cols-2">
+        <div>
+          <label
+            className="mb-1 block text-xs font-medium text-foreground"
+            htmlFor="confirmed-business-type"
+          >
+            Business type
+          </label>
+          <input
+            id="confirmed-business-type"
+            value={businessType}
+            disabled={readOnly || running}
+            onChange={(e) => setBusinessType(e.target.value)}
+            aria-invalid={localError ? true : undefined}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
+          />
+        </div>
+        <div>
+          <label
+            className="mb-1 block text-xs font-medium text-foreground"
+            htmlFor="confirmed-product"
+          >
+            Product wording
+          </label>
+          <input
+            id="confirmed-product"
+            value={product}
+            disabled={readOnly || running}
+            onChange={(e) => setProduct(e.target.value)}
+            aria-invalid={localError ? true : undefined}
+            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring disabled:opacity-60"
+          />
+        </div>
+      </div>
+      {localError ? (
+        <p className="mt-2 text-sm text-destructive" role="alert">
+          {localError}
+        </p>
+      ) : null}
 
       <div className="mt-4 space-y-2">
         {suggested.map((option) => (
