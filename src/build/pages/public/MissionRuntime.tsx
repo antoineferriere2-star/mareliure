@@ -6,6 +6,12 @@ import { computeVisibleSteps, validateField, type VisibleStep } from "@/build/en
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import type { ProjectBrief } from "@/build/schema/brief";
 import type { PlaybookSchema } from "@/build/schema/playbook";
+import {
+  clearStoredAuth,
+  loadStoredAuth,
+  storeAuth,
+  type SessionAuth,
+} from "./publicSessionStorage";
 import { BriefPreview } from "./BriefPreview";
 import { BuildPublicShell, SectionHeader } from "./BuildPublicShell";
 
@@ -19,45 +25,13 @@ type PublicMission = {
   proposal: { intro?: string } | null;
 };
 
-type SessionAuth = { sessionId: string; secret: string };
-type DossierResult = { id: string; status: string; summary: string | null; content: ProjectBrief; next_questions: string[] };
-
-function storageKey(publicToken: string) {
-  return `metre_build_session_${publicToken}`;
-}
-
-function loadStoredAuth(publicToken: string): SessionAuth | null {
-  if (typeof window === "undefined") return null;
-  try {
-    const raw = window.sessionStorage.getItem(storageKey(publicToken));
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as Partial<SessionAuth>;
-    if (typeof parsed.sessionId === "string" && typeof parsed.secret === "string") {
-      return { sessionId: parsed.sessionId, secret: parsed.secret };
-    }
-  } catch {
-    /* ignore corrupted storage */
-  }
-  return null;
-}
-
-function storeAuth(publicToken: string, auth: SessionAuth) {
-  if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.setItem(storageKey(publicToken), JSON.stringify(auth));
-  } catch {
-    /* ignore (private browsing, quota...) */
-  }
-}
-
-function clearStoredAuth(publicToken: string) {
-  if (typeof window === "undefined") return;
-  try {
-    window.sessionStorage.removeItem(storageKey(publicToken));
-  } catch {
-    /* ignore */
-  }
-}
+type DossierResult = {
+  id: string;
+  status: string;
+  summary: string | null;
+  content: ProjectBrief;
+  next_questions: string[];
+};
 
 async function callRuntime<T>(body: Record<string, unknown>): Promise<T> {
   const res = await fetch("/api/public/build-runtime", {
@@ -122,7 +96,11 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
           playbook_schema: PlaybookSchema;
           session: { id: string; answers: Answers; status: string };
           dossier?: DossierResult;
-        }>({ action: "resume_session", session_id: stored.sessionId, session_secret: stored.secret });
+        }>({
+          action: "resume_session",
+          session_id: stored.sessionId,
+          session_secret: stored.secret,
+        });
         if (cancelled) return;
         setMission(data.mission);
         setSchema(data.playbook_schema);
@@ -153,7 +131,8 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
   );
   const clampedStepIndex = Math.min(stepIndex, Math.max(visibleSteps.length - 1, 0));
   const currentStep = visibleSteps[clampedStepIndex];
-  const progress = visibleSteps.length > 0 ? Math.round(((clampedStepIndex + 1) / visibleSteps.length) * 100) : 0;
+  const progress =
+    visibleSteps.length > 0 ? Math.round(((clampedStepIndex + 1) / visibleSteps.length) * 100) : 0;
   const isLastStep = clampedStepIndex >= visibleSteps.length - 1;
 
   function setAnswer(key: string, value: AnswerValue) {
@@ -241,12 +220,18 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
         {loading && <p className="mx-auto max-w-3xl text-slate-600">Loading mission…</p>}
 
         {!loading && error && !mission && (
-          <div className="mx-auto max-w-3xl rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}</div>
+          <div className="mx-auto max-w-3xl rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+            {error}
+          </div>
         )}
 
         {mission && dossier && (
           <div className="mx-auto max-w-5xl space-y-6">
-            <SectionHeader eyebrow="Mission complete" title="Project brief generated" description={mission.name} />
+            <SectionHeader
+              eyebrow="Mission complete"
+              title="Project brief generated"
+              description={mission.name}
+            />
             <BriefPreview brief={dossier.content} />
           </div>
         )}
@@ -254,16 +239,29 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
         {mission && schema && !dossier && (
           <section className="mx-auto max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
             <div className="border-b border-slate-200 p-6">
-              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">{mission.playbook_name ?? mission.name}</p>
-              <h1 className="mt-3 text-3xl font-semibold tracking-normal">{currentStep?.step.title ?? mission.name}</h1>
+              <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
+                {mission.playbook_name ?? mission.name}
+              </p>
+              <h1 className="mt-3 text-3xl font-semibold tracking-normal">
+                {currentStep?.step.title ?? mission.name}
+              </h1>
               {mission.proposal?.intro && !currentStep?.step.why && (
-                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">{mission.proposal.intro}</p>
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                  {mission.proposal.intro}
+                </p>
               )}
-              {currentStep?.step.why && <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">{currentStep.step.why}</p>}
+              {currentStep?.step.why && (
+                <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                  {currentStep.step.why}
+                </p>
+              )}
               {visibleSteps.length > 0 && (
                 <>
                   <div className="mt-5 h-2 rounded-full bg-slate-100">
-                    <div className="h-2 rounded-full bg-emerald-600" style={{ width: `${progress}%` }} />
+                    <div
+                      className="h-2 rounded-full bg-emerald-600"
+                      style={{ width: `${progress}%` }}
+                    />
                   </div>
                   <p className="mt-2 text-xs font-medium text-slate-500">
                     Step {clampedStepIndex + 1} of {visibleSteps.length} · {progress}% complete
@@ -272,7 +270,11 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
               )}
             </div>
             <div className="p-6">
-              {error && <div className="mb-5 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">{error}</div>}
+              {error && (
+                <div className="mb-5 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                  {error}
+                </div>
+              )}
               {currentStep ? (
                 <div className="grid gap-6">
                   {currentStep.visibleFields.map((field) => {
@@ -284,7 +286,9 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
                         value={answers[field.key]}
                         onChange={(value) => setAnswer(field.key, value)}
                         error={fieldErrors[field.key]}
-                        analyzeInspirationPhoto={(image) => analyzeInspirationPhoto(field.key, image)}
+                        analyzeInspirationPhoto={(image) =>
+                          analyzeInspirationPhoto(field.key, image)
+                        }
                       />
                     );
                   })}
@@ -307,7 +311,9 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
                     <FileText className="ml-2 h-4 w-4" />
                   </Button>
                 )}
-                <p className="text-xs text-slate-500">Your answers are saved as you go — you can close this tab and come back.</p>
+                <p className="text-xs text-slate-500">
+                  Your answers are saved as you go — you can close this tab and come back.
+                </p>
               </div>
             </div>
           </section>
