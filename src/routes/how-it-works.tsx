@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildHowItWorksPage } from "@/build/pages/public/BuildMarketingPages";
+import { breadcrumbSchema, jsonLdScript } from "@/lib/structured-data";
 
 const title = "How Métré Build works";
 const description =
