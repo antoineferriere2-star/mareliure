@@ -14,12 +14,12 @@ export const Route = createFileRoute("/how-it-works")({
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "/how-it-works" },
+      { property: "og:url", content: `${SITE_URL}/how-it-works` },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
     ],
-    links: [{ rel: "canonical", href: "/how-it-works" }],
+    links: [{ rel: "canonical", href: `${SITE_URL}/how-it-works` }],
     scripts: [
       jsonLdScript(
         breadcrumbSchema([{ name: "How it works", path: "/how-it-works" }]),

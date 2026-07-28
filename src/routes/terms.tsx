@@ -13,9 +13,9 @@ export const Route = createFileRoute("/terms")({
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "/terms" },
+      { property: "og:url", content: `${SITE_URL}/terms` },
     ],
-    links: [{ rel: "canonical", href: "/terms" }],
+    links: [{ rel: "canonical", href: `${SITE_URL}/terms` }],
     scripts: [
       jsonLdScript(breadcrumbSchema([{ name: "Terms", path: "/terms" }])),
     ],
