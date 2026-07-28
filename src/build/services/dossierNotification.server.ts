@@ -4,6 +4,7 @@
 // a failed notification must not fail the visitor's submission.
 import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 import type { Supa } from "./adminAuth.server";
+import { logOperationalError } from "./operationalLog.server";
 
 function portalUrl(dossierId: string): string {
   const base = (process.env.PUBLIC_SITE_URL || "https://metre-pro.com").replace(/\/+$/, "");
@@ -43,10 +44,17 @@ export async function notifyWorkspaceOfNewDossier(
           idempotencyKey: `new-dossier-${params.dossierId}-${recipient}`,
         });
       } catch (err) {
-        console.error("new-dossier notification failed", { recipient, error: err });
+        logOperationalError("new-dossier.notification-send-failed", err, {
+          recipientEmail: recipient,
+          dossierId: params.dossierId,
+          workspaceId: params.workspaceId,
+        });
       }
     }
   } catch (err) {
-    console.error("new-dossier notification lookup failed", err);
+    logOperationalError("new-dossier.notification-lookup-failed", err, {
+      dossierId: params.dossierId,
+      workspaceId: params.workspaceId,
+    });
   }
 }
