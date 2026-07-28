@@ -14,14 +14,24 @@ const richDraft: PlaybookDraft = {
           required: true,
           options: ["Book restoration", "New binding", "Repair"],
         },
-        { label: "Materials of interest", type: "multi_choice", required: false, options: ["Leather", "Cloth"] },
+        {
+          label: "Materials of interest",
+          type: "multi_choice",
+          required: false,
+          options: ["Leather", "Cloth"],
+        },
       ],
     },
     {
       title: "Budget and timeline",
       why: "Helps prioritize follow-up.",
       fields: [
-        { label: "Budget range", type: "budget", required: true, options: ["Under $100", "$100-$300"] },
+        {
+          label: "Budget range",
+          type: "budget",
+          required: true,
+          options: ["Under $100", "$100-$300"],
+        },
         { label: "Timeline", type: "timeline", required: true, options: ["ASAP", "Flexible"] },
       ],
     },
@@ -51,6 +61,20 @@ describe("expandPlaybookDraft", () => {
     expect(budgetField?.briefMapping?.section).toBe("budgetAndTiming");
     expect(timelineField?.briefMapping?.section).toBe("budgetAndTiming");
     expect(projectTypeField?.briefMapping?.section).toBe("confirmedInformation");
+  });
+
+  it("maps generated option fields to human labels in the Project Brief", () => {
+    const schema = expandPlaybookDraft(richDraft, "Bookbinder", "Book binding");
+    const allFields = schema.sections[0]!.steps.flatMap((s) => s.fields);
+    const projectTypeField = allFields.find((f) => f.label === "Project type");
+    const materialsField = allFields.find((f) => f.label === "Materials of interest");
+    const budgetField = allFields.find((f) => f.label === "Budget range");
+    const timelineField = allFields.find((f) => f.label === "Timeline");
+
+    expect(projectTypeField?.briefMapping?.format).toBe("option_label");
+    expect(materialsField?.briefMapping?.format).toBe("join_comma");
+    expect(budgetField?.briefMapping?.format).toBe("option_label");
+    expect(timelineField?.briefMapping?.format).toBe("option_label");
   });
 
   it("deduplicates field keys, including against the reserved contact keys", () => {
@@ -92,7 +116,9 @@ describe("expandPlaybookDraft", () => {
 
   it("falls back to generic ranges for a budget field with no options, since an empty ranges list would be unanswerable", () => {
     const draftMissingRanges: PlaybookDraft = {
-      steps: [{ title: "Budget", why: "", fields: [{ label: "Budget", type: "budget", required: true }] }],
+      steps: [
+        { title: "Budget", why: "", fields: [{ label: "Budget", type: "budget", required: true }] },
+      ],
     };
     const schema = expandPlaybookDraft(draftMissingRanges, "Test", "Test product");
     const field = schema.sections[0]!.steps[0]!.fields[0];

@@ -20,7 +20,13 @@ function findLine(lines: BriefLine[], label: string): BriefLine | undefined {
 describe("Deck playbook — brief generation reproduces the original business rules", () => {
   it("computes the area from length * width and tags it as calculated", () => {
     const area = findLine(defaultDeckBrief.assumptionsAndCalculated, "Approximate area");
-    expect(area).toEqual({ label: "Approximate area", value: "252 sq ft", source: "calculated_value", category: "Project details", fieldKey: "computedArea" });
+    expect(area).toEqual({
+      label: "Approximate area",
+      value: "252 sq ft",
+      source: "calculated_value",
+      category: "Project details",
+      fieldKey: "computedArea",
+    });
   });
 
   it("flags Access limitations, existing structure, but not the Not-sure/fast-timeline constraints", () => {
@@ -34,7 +40,9 @@ describe("Deck playbook — brief generation reproduces the original business ru
 
   it("always injects the permits/structural caveats, and omits gaps that were actually answered", () => {
     const missing = defaultDeckBrief.missingInformation;
-    expect(findLine(missing, "Permits")?.value).toBe("Permit requirements were not assessed in this demo.");
+    expect(findLine(missing, "Permits")?.value).toBe(
+      "Permit requirements were not assessed in this demo.",
+    );
     expect(findLine(missing, "Structural condition")).toBeDefined();
     expect(findLine(missing, "Phone")).toBeUndefined();
     expect(findLine(missing, "Photos")).toBeUndefined();
@@ -78,9 +86,17 @@ describe("Deck playbook — brief generation reproduces the original business ru
       email: "test@example.com",
       consent: true,
     };
-    const brief = generateProjectBrief(deckPlaybookSchema, answers, { name: "Deck Project Intake Demo" });
+    const brief = generateProjectBrief(deckPlaybookSchema, answers, {
+      name: "Deck Project Intake Demo",
+    });
     const area = findLine(brief.confirmedInformation, "Approximate area");
-    expect(area).toEqual({ label: "Approximate area", value: "about 200 sq ft", source: "visitor_answer", category: "Project details", fieldKey: "computedArea" });
+    expect(area).toEqual({
+      label: "Approximate area",
+      value: "about 200 sq ft",
+      source: "visitor_answer",
+      category: "Project details",
+      fieldKey: "computedArea",
+    });
     expect(findLine(brief.assumptionsAndCalculated, "Approximate area")).toBeUndefined();
   });
 
@@ -98,9 +114,90 @@ describe("Deck playbook — brief generation reproduces the original business ru
       email: "test@example.com",
       consent: true,
     };
-    const brief = generateProjectBrief(deckPlaybookSchema, answers, { name: "Deck Project Intake Demo" });
-    expect(findLine(brief.missingInformation, "Exact dimensions")?.value).toBe("Approximate dimensions were not confirmed.");
-    expect(brief.projectSummary).toBe("New deck for a single-family home with dimensions still unclear with interest in composite");
+    const brief = generateProjectBrief(deckPlaybookSchema, answers, {
+      name: "Deck Project Intake Demo",
+    });
+    expect(findLine(brief.missingInformation, "Exact dimensions")?.value).toBe(
+      "Approximate dimensions were not confirmed.",
+    );
+    expect(brief.projectSummary).toBe(
+      "New deck for a single-family home with dimensions still unclear with interest in composite",
+    );
+  });
+});
+
+describe("Option labels in the Brief", () => {
+  it("renders single-choice, timeline and budget stored values as human labels", () => {
+    const schema = playbookSchema.parse({
+      schemaVersion: 1,
+      sections: [
+        {
+          id: "s1",
+          title: "Project",
+          steps: [
+            {
+              id: "step1",
+              title: "Details",
+              fields: [
+                {
+                  key: "siteType",
+                  label: "Site type",
+                  type: "single_choice",
+                  desirability: "required",
+                  options: [{ value: "garden_ground_level", label: "Garden / Ground level" }],
+                  briefMapping: {
+                    section: "confirmedInformation",
+                    label: "Site type",
+                    format: "option_label",
+                  },
+                },
+                {
+                  key: "budget",
+                  label: "Budget",
+                  type: "budget",
+                  desirability: "required",
+                  currency: "USD",
+                  mode: "ranges",
+                  ranges: [{ value: "7_000_15_000", label: "$7,000-$15,000" }],
+                  briefMapping: {
+                    section: "budgetAndTiming",
+                    label: "Budget",
+                    format: "option_label",
+                  },
+                },
+                {
+                  key: "timeline",
+                  label: "Timeline",
+                  type: "timeline",
+                  desirability: "required",
+                  options: [{ value: "within_3_months", label: "Within 3 months" }],
+                  briefMapping: {
+                    section: "budgetAndTiming",
+                    label: "Timeline",
+                    format: "option_label",
+                  },
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      briefConfig: { suggestedNextActions: [{ label: "Next", value: "Follow up." }] },
+    });
+
+    const brief = generateProjectBrief(
+      schema,
+      {
+        siteType: "garden_ground_level",
+        budget: "7_000_15_000",
+        timeline: "within_3_months",
+      },
+      { name: "Test Mission" },
+    );
+
+    expect(findLine(brief.confirmedInformation, "Site type")?.value).toBe("Garden / Ground level");
+    expect(findLine(brief.budgetAndTiming, "Budget")?.value).toBe("$7,000-$15,000");
+    expect(findLine(brief.budgetAndTiming, "Timeline")?.value).toBe("Within 3 months");
   });
 });
 
@@ -134,10 +231,20 @@ describe("Inspiration-photo hypotheses in the Brief", () => {
       confirmed: { style: true },
       suggestedQuestions: [],
     };
-    const brief = generateProjectBrief(inspirationSchema(), { inspiration: answer } as unknown as Answers, { name: "Test" });
+    const brief = generateProjectBrief(
+      inspirationSchema(),
+      { inspiration: answer } as unknown as Answers,
+      { name: "Test" },
+    );
 
     const style = findLine(brief.confirmedInformation, "Style");
-    expect(style).toEqual({ label: "Style", value: "Moderne", source: "visitor_answer", category: "Inspiration", fieldKey: "inspiration" });
+    expect(style).toEqual({
+      label: "Style",
+      value: "Moderne",
+      source: "visitor_answer",
+      category: "Inspiration",
+      fieldKey: "inspiration",
+    });
   });
 
   it("leaves an unconfirmed dimension as an image_hypothesis in assumptionsAndCalculated", () => {
@@ -147,7 +254,11 @@ describe("Inspiration-photo hypotheses in the Brief", () => {
       confirmed: { style: true }, // materials left unconfirmed
       suggestedQuestions: [],
     };
-    const brief = generateProjectBrief(inspirationSchema(), { inspiration: answer } as unknown as Answers, { name: "Test" });
+    const brief = generateProjectBrief(
+      inspirationSchema(),
+      { inspiration: answer } as unknown as Answers,
+      { name: "Test" },
+    );
 
     const materials = findLine(brief.assumptionsAndCalculated, "Materials");
     expect(materials).toEqual({
@@ -167,9 +278,16 @@ describe("Inspiration-photo hypotheses in the Brief", () => {
       confirmed: {},
       suggestedQuestions: ["Quelle surface envisagez-vous ?", "Avez-vous une terrasse existante ?"],
     };
-    const brief = generateProjectBrief(inspirationSchema(), { inspiration: answer } as unknown as Answers, { name: "Test" });
+    const brief = generateProjectBrief(
+      inspirationSchema(),
+      { inspiration: answer } as unknown as Answers,
+      { name: "Test" },
+    );
 
-    const line = findLine(brief.missingInformation, "Questions to explore (from the inspiration photo)");
+    const line = findLine(
+      brief.missingInformation,
+      "Questions to explore (from the inspiration photo)",
+    );
     expect(line?.source).toBe("image_hypothesis");
     expect(line?.value).toContain("Quelle surface envisagez-vous ?");
   });
@@ -181,7 +299,11 @@ describe("Inspiration-photo hypotheses in the Brief", () => {
       confirmed: {},
       suggestedQuestions: [],
     };
-    const brief = generateProjectBrief(inspirationSchema(), { inspiration: answer } as unknown as Answers, { name: "Test" });
+    const brief = generateProjectBrief(
+      inspirationSchema(),
+      { inspiration: answer } as unknown as Answers,
+      { name: "Test" },
+    );
 
     expect(findLine(brief.confirmedInformation, "Style")).toBeUndefined();
     expect(findLine(brief.assumptionsAndCalculated, "Style")).toBeUndefined();

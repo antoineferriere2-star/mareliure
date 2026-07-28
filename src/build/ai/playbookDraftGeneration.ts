@@ -31,37 +31,65 @@ export const playbookDraftGenerationOutput = z.object({
 });
 export type PlaybookDraftGenerationOutput = z.infer<typeof playbookDraftGenerationOutput>;
 
-export const PLAYBOOK_DRAFT_GENERATION_SYSTEM_PROMPT = `Tu es l'agent de génération de Playbook de Métré Build. Un Playbook porte l'expertise métier d'une entreprise de services (construction, rénovation, artisanat...) : les étapes et questions qui permettent de qualifier un projet avant le premier appel commercial. Aucun Playbook publié ne correspond au métier/produit détecté — tu proposes un brouillon générique plausible, que l'entreprise ajustera ensuite elle-même.
+const NON_US_BUDGET_PATTERN =
+  /€|\beur\b|\beuros?\b|\/\s*m(?:2|²)\b|\bm(?:2|²)\b|\bsqm\b|\bsq\.?\s*m\b/i;
 
-Règles strictes :
-- Propose 4 à 7 étapes plausibles pour ce métier/produit, chacune avec 1 à 3 champs.
-- Types de champ autorisés UNIQUEMENT : single_choice, multi_choice, text, number, budget, timeline, address, photo. N'utilise aucun autre type.
-- Pour single_choice/multi_choice/timeline/budget, fournis 3 à 5 options plausibles et génériques (jamais de prix, norme ou certification inventés — reste sur des fourchettes ou des libellés généraux comme "Pas sûr").
-- N'ajoute jamais toi-même de champ nom/email/téléphone/consentement — une étape de contact standard est déjà ajoutée séparément.
-- Reste générique et raisonnable : c'est un point de départ à ajuster, pas une expertise métier définitive.
-- Réponds en français si le métier/produit fourni sont en français, en anglais sinon.
+export function validateUsMarketDraft(draft: PlaybookDraftGenerationOutput): string | null {
+  for (const step of draft.steps) {
+    for (const field of step.fields) {
+      if (field.type !== "budget") continue;
+      const invalid = field.options?.find((option) => NON_US_BUDGET_PATTERN.test(option));
+      if (invalid) {
+        return `Budget option "${invalid}" is not compatible with the US/USD market.`;
+      }
+    }
+  }
+  return null;
+}
 
-Format de sortie OBLIGATOIRE — réponds UNIQUEMENT avec un objet JSON valide, sans texte avant/après, sans balises Markdown, sans clés supplémentaires :
+export const PLAYBOOK_DRAFT_GENERATION_SYSTEM_PROMPT = `You are the Métré Build Playbook generation agent. A Playbook captures the business expertise of a service company (construction, remodeling, skilled trades...): the steps and questions needed to qualify a project before the first sales call. No published Playbook matches the detected business/product yet, so you propose a plausible generic draft that the business will review and adjust.
+
+Strict rules:
+- Always write native US English, even if the source business/product is in another language.
+- Use US market conventions only: USD for money, square feet/feet/inches for area and dimensions. Never use euros, EUR, m², sqm, meters, centimeters, or other non-US units.
+- Propose 4 to 7 plausible steps for this business/product, each with 1 to 3 fields.
+- Allowed field types ONLY: single_choice, multi_choice, text, number, budget, timeline, address, photo. Do not use any other type.
+- For single_choice/multi_choice/timeline/budget, provide 3 to 5 plausible generic options. Budget options must be broad USD ranges such as "Under $1,000", "$1,000-$5,000", "$5,000-$15,000", "$15,000+", or "Not sure yet".
+- Never invent exact prices, building codes, standards, permits, or certifications. Stay on generic ranges and labels.
+- Never add name/email/phone/consent fields yourself; a standard contact step is added separately.
+- Stay generic and reasonable: this is a starting point to adjust, not definitive trade expertise.
+
+Required output format — answer ONLY with a valid JSON object, with no text before/after, no Markdown fences, and no extra keys:
 {
   "steps": [
     {
-      "title": "titre de l'étape",
-      "why": "pourquoi cette étape est utile (aide au commercial)",
+      "title": "step title",
+      "why": "why this step helps the sales team",
       "fields": [
-        { "label": "libellé du champ", "type": "single_choice", "required": true, "options": ["Option 1", "Option 2"] }
+        { "label": "field label", "type": "single_choice", "required": true, "options": ["Option 1", "Option 2"] }
       ]
     }
   ]
 }
-"options" n'est pertinent que pour single_choice/multi_choice/timeline/budget — omets-le pour text/number/address/photo.`;
+"options" is only relevant for single_choice/multi_choice/timeline/budget; omit it for text/number/address/photo.`;
 
 export async function runPlaybookDraftGeneration(
   businessType: string,
   product: string,
 ): Promise<AgentResult<PlaybookDraftGenerationOutput>> {
-  return runAgent(
+  const result = await runAgent(
     PLAYBOOK_DRAFT_GENERATION_SYSTEM_PROMPT,
-    `Métier : ${businessType}\nProduit / type de projet : ${product}`,
+    `Business type: ${businessType}\nProduct / project type: ${product}`,
     playbookDraftGenerationOutput,
   );
+  if (result.status === "error" || !result.data) return result;
+
+  const marketError = validateUsMarketDraft(result.data);
+  if (marketError) {
+    return {
+      status: "error",
+      error: `${marketError} Regenerate the Playbook draft in native English with USD and US customary units.`,
+    };
+  }
+  return result;
 }
