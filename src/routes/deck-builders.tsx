@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildDeckBuildersPage } from "@/build/pages/public/BuildMarketingPages";
-import { breadcrumbSchema, jsonLdScript } from "@/lib/structured-data";
+import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
 
 const title = "Deck builders — Métré Build";
 const description =
