@@ -26,34 +26,32 @@ const NewDossierEmail = ({
   nextQuestions = [],
   dossierUrl,
 }: NewDossierEmailProps) => (
-  <Html lang="fr" dir="ltr">
+  <Html lang="en" dir="ltr">
     <Head />
-    <Preview>
-      {`Nouveau Dossier Commercial${missionName ? ` — ${missionName}` : ""}`}
-    </Preview>
+    <Preview>{`New Project Brief${missionName ? ` — ${missionName}` : ""}`}</Preview>
     <Body style={main}>
       <Container style={container}>
         <Text style={eyebrow}>Métré Build</Text>
-        <Heading style={heading}>Nouveau Dossier Commercial</Heading>
+        <Heading style={heading}>New Project Brief</Heading>
         <Text style={paragraph}>
-          Un visiteur vient de terminer la Mission
-          {missionName ? ` « ${missionName} »` : ""}. Son Dossier est disponible dans votre Espace
-          Client.
+          A visitor just completed the Mission
+          {missionName ? ` "${missionName}"` : ""}. The Project Brief is available in your Client
+          Portal.
         </Text>
 
         {summary && (
           <Section style={card}>
-            <Text style={cardLabel}>Résumé</Text>
+            <Text style={cardLabel}>Summary</Text>
             <Text style={cardText}>{summary}</Text>
           </Section>
         )}
 
         {nextQuestions.length > 0 && (
           <Section style={card}>
-            <Text style={cardLabel}>À demander au prochain contact</Text>
+            <Text style={cardLabel}>Ask during the next follow-up</Text>
             {nextQuestions.slice(0, 6).map((q, i) => (
               <Text key={i} style={cardText}>
-                • {q}
+                - {q}
               </Text>
             ))}
           </Section>
@@ -62,14 +60,14 @@ const NewDossierEmail = ({
         {dossierUrl && (
           <Section style={{ marginTop: "24px" }}>
             <Button href={dossierUrl} style={button}>
-              Ouvrir le Dossier
+              Open Project Brief
             </Button>
           </Section>
         )}
 
         <Hr style={hr} />
         <Text style={footer}>
-          Vous recevez cet e-mail parce que vous êtes membre de cet Espace Client Métré Build.
+          You received this email because you are a member of this Métré Build Client Portal.
         </Text>
       </Container>
     </Body>
@@ -79,14 +77,12 @@ const NewDossierEmail = ({
 export const template = {
   component: NewDossierEmail,
   subject: (data: Record<string, unknown>) =>
-    data.missionName
-      ? `Nouveau Dossier Commercial — ${String(data.missionName)}`
-      : "Nouveau Dossier Commercial",
-  displayName: "Nouveau Dossier Commercial",
+    data.missionName ? `New Project Brief — ${String(data.missionName)}` : "New Project Brief",
+  displayName: "New Project Brief",
   previewData: {
-    missionName: "Terrasse bois — Silvadec",
+    missionName: "Backyard deck — Silvadec",
     summary: "Complete dossier ready for commercial review.",
-    nextQuestions: ["Hauteur sous terrasse", "Accès chantier"],
+    nextQuestions: ["Deck height", "Site access"],
     dossierUrl: "https://metre-pro.com/portal",
   },
 } satisfies TemplateEntry;
