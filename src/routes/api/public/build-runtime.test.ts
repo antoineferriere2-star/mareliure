@@ -73,7 +73,10 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: unknown }> {
         if (this.tableName === "build_dossiers" && r.session_id != null) {
           const dup = rows.some((existing) => existing.session_id === r.session_id);
           if (dup) {
-            return { data: null, error: { code: "23505", message: "duplicate key value violates unique constraint" } };
+            return {
+              data: null,
+              error: { code: "23505", message: "duplicate key value violates unique constraint" },
+            };
           }
         }
         const row: Row = {
@@ -108,14 +111,18 @@ class FakeQuery implements PromiseLike<{ data: unknown; error: unknown }> {
     return Promise.resolve({ data: data[0], error });
   }
   then<TResult1 = { data: unknown; error: unknown }, TResult2 = never>(
-    onfulfilled?: ((value: { data: unknown; error: unknown }) => TResult1 | PromiseLike<TResult1>) | null,
+    onfulfilled?:
+      ((value: { data: unknown; error: unknown }) => TResult1 | PromiseLike<TResult1>) | null,
     onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
   ): PromiseLike<TResult1 | TResult2> {
     return Promise.resolve(this.execute()).then(onfulfilled, onrejected);
   }
 }
 
-function createFakeSupabase(seed: Record<string, Row[]> = {}, options: { uploadError?: { message: string } } = {}) {
+function createFakeSupabase(
+  seed: Record<string, Row[]> = {},
+  options: { uploadError?: { message: string } } = {},
+) {
   const store = new Map<string, Row[]>(Object.entries(seed).map(([k, v]) => [k, [...v]]));
   const uploadedPaths: string[] = [];
   return {
@@ -241,8 +248,13 @@ describe("bodySchema", () => {
 
 describe("findPublishedMission / handleGetMission", () => {
   it("refuse une mission dont le lien public a été révoqué", async () => {
-    const { mission, versionRow } = seedActiveMission({ public_token_revoked_at: new Date().toISOString() });
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { mission, versionRow } = seedActiveMission({
+      public_token_revoked_at: new Date().toISOString(),
+    });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const res = await handleGetMission(client, mission.public_token as string);
     expect(res.status).toBe(404);
@@ -250,7 +262,10 @@ describe("findPublishedMission / handleGetMission", () => {
 
   it("refuse une mission qui n'est pas active (draft)", async () => {
     const { mission, versionRow } = seedActiveMission({ status: "draft" });
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const res = await handleGetMission(client, mission.public_token as string);
     expect(res.status).toBe(404);
@@ -266,7 +281,10 @@ describe("findPublishedMission / handleGetMission", () => {
 
   it("retourne la mission et son schéma quand elle est active et non révoquée", async () => {
     const { mission, versionRow } = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const res = await handleGetMission(client, mission.public_token as string);
     expect(res.status).toBe(200);
@@ -279,18 +297,26 @@ describe("findPublishedMission / handleGetMission", () => {
 describe("possession de session (session_id + session_secret)", () => {
   it("refuse save_session avec le mauvais secret", async () => {
     const { mission, versionRow } = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session } = await started.json();
 
-    const res = await handleSaveSession(client, session.id, "wrong-secret-wrong-secret-wrong", { note: "hello" });
+    const res = await handleSaveSession(client, session.id, "wrong-secret-wrong-secret-wrong", {
+      note: "hello",
+    });
     expect(res.status).toBe(404);
   });
 
   it("accepte save_session avec le bon secret", async () => {
     const { mission, versionRow } = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
@@ -301,12 +327,17 @@ describe("possession de session (session_id + session_secret)", () => {
 
   it("refuse save_session avec une clé de réponse inconnue du schéma", async () => {
     const { mission, versionRow } = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
 
-    const res = await handleSaveSession(client, session.id, session_secret, { not_a_real_field: "hello" });
+    const res = await handleSaveSession(client, session.id, session_secret, {
+      not_a_real_field: "hello",
+    });
     expect(res.status).toBe(400);
   });
 });
@@ -314,7 +345,10 @@ describe("possession de session (session_id + session_secret)", () => {
 describe("reprise de session (resume_session)", () => {
   it("restaure les réponses déjà sauvegardées avec le bon secret", async () => {
     const { mission, versionRow } = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
@@ -329,7 +363,10 @@ describe("reprise de session (resume_session)", () => {
 
   it("refuse resume_session avec le mauvais secret", async () => {
     const { mission, versionRow } = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session } = await started.json();
@@ -337,12 +374,38 @@ describe("reprise de session (resume_session)", () => {
     const res = await handleResumeSession(client, session.id, "wrong-secret-wrong-secret-wrong");
     expect(res.status).toBe(404);
   });
+
+  it("reprend une session soumise en renvoyant le Project Brief existant", async () => {
+    const { mission, versionRow } = seedActiveMission();
+    const { client, store } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const { session, session_secret } = await started.json();
+
+    const submitted = await handleSubmitSession(client, session.id, session_secret, {
+      note: "finished",
+    });
+    const { dossier } = await submitted.json();
+
+    const resumed = await handleResumeSession(client, session.id, session_secret);
+    expect(resumed.status).toBe(200);
+    const body = await resumed.json();
+    expect(body.dossier.id).toBe(dossier.id);
+    expect(body.session.status).toBe("submitted");
+    expect((store.get("build_dossiers") ?? []).length).toBe(1);
+  });
 });
 
 describe("soumission", () => {
   it("refuse la soumission (422) quand un champ requis visible est manquant", async () => {
     const { mission, versionRow } = seedActiveMission({}, minimalSchema("required"));
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
@@ -353,7 +416,10 @@ describe("soumission", () => {
 
   it("une double soumission ne crée pas deux dossiers et renvoie le même dossier", async () => {
     const { mission, versionRow } = seedActiveMission();
-    const { client, store } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client, store } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
@@ -362,7 +428,9 @@ describe("soumission", () => {
     expect(first.status).toBe(200);
     const firstBody = await first.json();
 
-    const second = await handleSubmitSession(client, session.id, session_secret, { note: "answer" });
+    const second = await handleSubmitSession(client, session.id, session_secret, {
+      note: "answer",
+    });
     expect(second.status).toBe(200);
     const secondBody = await second.json();
 
@@ -372,12 +440,17 @@ describe("soumission", () => {
 
   it("refuse submit_session avec le mauvais secret", async () => {
     const { mission, versionRow } = seedActiveMission();
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session } = await started.json();
 
-    const res = await handleSubmitSession(client, session.id, "wrong-secret-wrong-secret-wrong", { note: "x" });
+    const res = await handleSubmitSession(client, session.id, "wrong-secret-wrong-secret-wrong", {
+      note: "x",
+    });
     expect(res.status).toBe(404);
   });
 });
@@ -387,7 +460,10 @@ describe("analyze_inspiration_photo", () => {
 
   it("refuse avec le mauvais secret", async () => {
     const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session } = await started.json();
@@ -405,18 +481,31 @@ describe("analyze_inspiration_photo", () => {
 
   it("refuse une clé de champ inconnue ou d'un autre type", async () => {
     const { mission, versionRow } = seedActiveMission({}, minimalSchema());
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
 
-    const res = await handleAnalyzeInspirationPhoto(client, session.id, session_secret, "note", smallImage, "image/jpeg");
+    const res = await handleAnalyzeInspirationPhoto(
+      client,
+      session.id,
+      session_secret,
+      "note",
+      smallImage,
+      "image/jpeg",
+    );
     expect(res.status).toBe(400);
   });
 
   it("refuse un type MIME non autorisé par le champ", async () => {
     const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
@@ -434,7 +523,10 @@ describe("analyze_inspiration_photo", () => {
 
   it("refuse une image dépassant maxFileSizeMb", async () => {
     const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
@@ -454,10 +546,17 @@ describe("analyze_inspiration_photo", () => {
   it("upload l'image et retourne les hypothèses en cas de succès", async () => {
     runImageAnalysisMock.mockResolvedValue({
       status: "ok",
-      data: { materials: ["Composite"], elements: ["Garde-corps"], suggestedQuestions: ["Quelle surface ?"] },
+      data: {
+        materials: ["Composite"],
+        elements: ["Garde-corps"],
+        suggestedQuestions: ["Quelle surface ?"],
+      },
     });
     const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
-    const { client, uploadedPaths } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client, uploadedPaths } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
@@ -478,9 +577,15 @@ describe("analyze_inspiration_photo", () => {
   });
 
   it("retourne quand même photoPath si l'analyse IA échoue, pour permettre un nouvel essai sans ré-upload", async () => {
-    runImageAnalysisMock.mockResolvedValue({ status: "error", error: "Réponse IA non structurée." });
+    runImageAnalysisMock.mockResolvedValue({
+      status: "error",
+      error: "Réponse IA non structurée.",
+    });
     const { mission, versionRow } = seedActiveMission({}, inspirationPhotoSchema());
-    const { client } = createFakeSupabase({ build_missions: [mission], build_playbook_versions: [versionRow] });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
 
     const started = await handleStartSession(client, mission.public_token as string, "iphash");
     const { session, session_secret } = await started.json();
