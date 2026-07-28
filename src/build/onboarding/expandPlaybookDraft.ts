@@ -6,7 +6,12 @@
 // here in code, never left to the model. This is the actual reliability
 // guarantee: if this function's output fails playbookSchema.parse, that is
 // a bug in this function, not a "bad AI response" to route around.
-import { playbookSchema, type PlaybookField, type PlaybookSchema, type PlaybookStep } from "@/build/schema/playbook";
+import {
+  playbookSchema,
+  type PlaybookField,
+  type PlaybookSchema,
+  type PlaybookStep,
+} from "@/build/schema/playbook";
 import { slugify, uniqueSlug } from "@/build/pages/admin/playbookEditor/slug";
 
 export const GENERATABLE_FIELD_TYPES = [
@@ -45,6 +50,14 @@ function toOption(label: string) {
 const FALLBACK_CHOICE_OPTIONS = ["Not sure yet"];
 const FALLBACK_BUDGET_RANGES = ["Under $1,000", "$1,000-$5,000", "$5,000+", "Not sure yet"];
 
+function generatedBriefFormat(fieldType: GeneratableFieldType) {
+  if (fieldType === "multi_choice") return "join_comma" as const;
+  if (fieldType === "single_choice" || fieldType === "timeline" || fieldType === "budget") {
+    return "option_label" as const;
+  }
+  return "raw" as const;
+}
+
 function expandField(field: DraftField, usedKeys: string[]): PlaybookField {
   const key = uniqueSlug(field.label, usedKeys);
   usedKeys.push(key);
@@ -53,21 +66,21 @@ function expandField(field: DraftField, usedKeys: string[]): PlaybookField {
   const briefMapping = {
     section: isBudgetOrTimeline ? ("budgetAndTiming" as const) : ("confirmedInformation" as const),
     label: field.label,
-    format: field.type === "multi_choice" ? ("join_comma" as const) : ("raw" as const),
+    format: generatedBriefFormat(field.type),
   };
 
   switch (field.type) {
     case "single_choice":
     case "multi_choice": {
-      const options = (field.options && field.options.length > 0 ? field.options : FALLBACK_CHOICE_OPTIONS).map(
-        toOption,
-      );
+      const options = (
+        field.options && field.options.length > 0 ? field.options : FALLBACK_CHOICE_OPTIONS
+      ).map(toOption);
       return { key, label: field.label, type: field.type, desirability, options, briefMapping };
     }
     case "timeline": {
-      const options = (field.options && field.options.length > 0 ? field.options : FALLBACK_CHOICE_OPTIONS).map(
-        toOption,
-      );
+      const options = (
+        field.options && field.options.length > 0 ? field.options : FALLBACK_CHOICE_OPTIONS
+      ).map(toOption);
       return { key, label: field.label, type: "timeline", desirability, options, briefMapping };
     }
     case "text":
@@ -75,9 +88,9 @@ function expandField(field: DraftField, usedKeys: string[]): PlaybookField {
     case "number":
       return { key, label: field.label, type: "number", desirability, briefMapping };
     case "budget": {
-      const ranges = (field.options && field.options.length > 0 ? field.options : FALLBACK_BUDGET_RANGES).map(
-        toOption,
-      );
+      const ranges = (
+        field.options && field.options.length > 0 ? field.options : FALLBACK_BUDGET_RANGES
+      ).map(toOption);
       return {
         key,
         label: field.label,
@@ -161,7 +174,11 @@ function buildContactStep(usedKeys: string[]): PlaybookStep {
   };
 }
 
-export function expandPlaybookDraft(draft: PlaybookDraft, businessType: string, product: string): PlaybookSchema {
+export function expandPlaybookDraft(
+  draft: PlaybookDraft,
+  businessType: string,
+  product: string,
+): PlaybookSchema {
   const usedKeys: string[] = [];
   // Reserve the contact step's keys first so an AI-generated field that
   // happens to be labeled e.g. "Email" gets suffixed instead of colliding.

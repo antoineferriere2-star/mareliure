@@ -24,11 +24,7 @@ export interface MissionLike {
 }
 
 function isBlank(value: AnswerValue | undefined): boolean {
-  return (
-    value === undefined ||
-    value === "" ||
-    (Array.isArray(value) && value.length === 0)
-  );
+  return value === undefined || value === "" || (Array.isArray(value) && value.length === 0);
 }
 
 function optionLabel(field: PlaybookField, raw: string): string {
@@ -36,14 +32,23 @@ function optionLabel(field: PlaybookField, raw: string): string {
     const opt = field.options.find((o) => o.value === raw);
     if (opt) return opt.label;
   }
+  if (field.type === "budget" && field.ranges) {
+    const range = field.ranges.find((r) => r.value === raw);
+    if (range) return range.label;
+  }
   return raw;
 }
 
-function formatValue(field: PlaybookField, value: AnswerValue, format: "raw" | "join_comma" | "option_label"): string {
+function formatValue(
+  field: PlaybookField,
+  value: AnswerValue,
+  format: "raw" | "join_comma" | "option_label",
+): string {
   if (Array.isArray(value)) {
     const parts = value.map((v) => {
       if (typeof v === "string") return format === "join_comma" ? optionLabel(field, v) : v;
-      if (v && typeof v === "object" && "filename" in v) return String((v as { filename: unknown }).filename);
+      if (v && typeof v === "object" && "filename" in v)
+        return String((v as { filename: unknown }).filename);
       return String(v);
     });
     return parts.join(", ");
@@ -58,13 +63,20 @@ function formatValue(field: PlaybookField, value: AnswerValue, format: "raw" | "
 }
 
 function interpolate(template: string, tokens: Record<string, string>): string {
-  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)(\|lower)?\s*\}\}/g, (_match, key: string, lowerFlag?: string) => {
-    const raw = tokens[key] ?? "";
-    return lowerFlag ? raw.toLowerCase() : raw;
-  });
+  return template.replace(
+    /\{\{\s*([a-zA-Z0-9_]+)(\|lower)?\s*\}\}/g,
+    (_match, key: string, lowerFlag?: string) => {
+      const raw = tokens[key] ?? "";
+      return lowerFlag ? raw.toLowerCase() : raw;
+    },
+  );
 }
 
-function buildTokens(allFields: PlaybookField[], answers: Answers, calculated: Record<string, string>): Record<string, string> {
+function buildTokens(
+  allFields: PlaybookField[],
+  answers: Answers,
+  calculated: Record<string, string>,
+): Record<string, string> {
   const tokens: Record<string, string> = { ...calculated };
   for (const field of allFields) {
     const value = answers[field.key];
@@ -109,7 +121,10 @@ export function generateProjectBrief(
     } else {
       const parts = calc.compute.inputs
         .map((k) => answers[k])
-        .filter((v): v is Exclude<AnswerValue, typeof NOT_SURE_VALUE> => v !== undefined && v !== NOT_SURE_VALUE && String(v).trim() !== "");
+        .filter(
+          (v): v is Exclude<AnswerValue, typeof NOT_SURE_VALUE> =>
+            v !== undefined && v !== NOT_SURE_VALUE && String(v).trim() !== "",
+        );
       if (parts.length > 0) value = parts.map(String).join(calc.compute.separator ?? " ");
     }
 
@@ -124,7 +139,13 @@ export function generateProjectBrief(
 
     if (value !== null) {
       calculatedTokens[calc.key] = value;
-      sections[targetSection].push({ label: calc.label, value, source, category: calc.category, fieldKey: calc.key });
+      sections[targetSection].push({
+        label: calc.label,
+        value,
+        source,
+        category: calc.category,
+        fieldKey: calc.key,
+      });
     } else if (calc.onMissingLabel) {
       sections.missingInformation.push({
         label: calc.onMissingLabel,
@@ -183,13 +204,17 @@ export function generateProjectBrief(
       {
         key: "materials",
         label: "Materials",
-        text: answer.hypotheses.materials.length > 0 ? answer.hypotheses.materials.join(", ") : undefined,
+        text:
+          answer.hypotheses.materials.length > 0
+            ? answer.hypotheses.materials.join(", ")
+            : undefined,
       },
       { key: "shape", label: "Shape", text: answer.hypotheses.shape },
       {
         key: "elements",
         label: "Elements",
-        text: answer.hypotheses.elements.length > 0 ? answer.hypotheses.elements.join(", ") : undefined,
+        text:
+          answer.hypotheses.elements.length > 0 ? answer.hypotheses.elements.join(", ") : undefined,
       },
     ];
 
@@ -218,13 +243,22 @@ export function generateProjectBrief(
   // 4. Derived lines: playbook-authored conditional business rules.
   for (const rule of schema.briefConfig.derivedLines) {
     if (evaluateConditionGroup(rule.when, answers)) {
-      sections[rule.section].push({ label: rule.label, value: interpolate(rule.value, tokens), source: rule.source });
+      sections[rule.section].push({
+        label: rule.label,
+        value: interpolate(rule.value, tokens),
+        source: rule.source,
+      });
     }
   }
 
   // 5. Always-injected caveats (e.g. "Permits not assessed").
   for (const line of schema.briefConfig.alwaysIncludeLines) {
-    sections[line.section].push({ label: line.label, value: line.value, source: "assumed_default", category: line.category });
+    sections[line.section].push({
+      label: line.label,
+      value: line.value,
+      source: "assumed_default",
+      category: line.category,
+    });
   }
 
   // 6. Project summary.
@@ -232,30 +266,41 @@ export function generateProjectBrief(
     .filter((f) => evaluateConditionGroup(f.when, answers))
     .map((f) => interpolate(f.template, tokens).trim())
     .filter(Boolean);
-  const projectSummary = summaryParts.length > 0 ? summaryParts.join(" ") : schema.briefConfig.emptySummaryFallback;
+  const projectSummary =
+    summaryParts.length > 0 ? summaryParts.join(" ") : schema.briefConfig.emptySummaryFallback;
 
   // 7. Confidence — a generic, engine-level heuristic (not playbook-configurable).
   const recommendedFields = allVisibleFields.filter((f) => f.desirability === "recommended");
   const requiredFields = allVisibleFields.filter((f) => f.desirability === "required");
-  const emptyRecommendedCount = recommendedFields.filter((f) => isBlank(answers[f.key]) || answers[f.key] === NOT_SURE_VALUE).length;
-  const notSureRequiredCount = requiredFields.filter((f) => answers[f.key] === NOT_SURE_VALUE).length;
+  const emptyRecommendedCount = recommendedFields.filter(
+    (f) => isBlank(answers[f.key]) || answers[f.key] === NOT_SURE_VALUE,
+  ).length;
+  const notSureRequiredCount = requiredFields.filter(
+    (f) => answers[f.key] === NOT_SURE_VALUE,
+  ).length;
   const triggeredWarnings = schema.validationRules.filter(
     (r) => r.severity === "warning" && evaluateConditionGroup(r.when, answers),
   ).length;
   const score = Math.max(
     0,
-    Math.min(100, 100 - emptyRecommendedCount * 10 - notSureRequiredCount * 15 - triggeredWarnings * 15),
+    Math.min(
+      100,
+      100 - emptyRecommendedCount * 10 - notSureRequiredCount * 15 - triggeredWarnings * 15,
+    ),
   );
   const label: ConfidenceLabel = score >= 80 ? "high" : score >= 50 ? "medium" : "low";
   const reasons: string[] = [];
-  if (emptyRecommendedCount > 0) reasons.push(`${emptyRecommendedCount} recommended field(s) not answered.`);
-  if (notSureRequiredCount > 0) reasons.push(`${notSureRequiredCount} required field(s) answered "not sure".`);
+  if (emptyRecommendedCount > 0)
+    reasons.push(`${emptyRecommendedCount} recommended field(s) not answered.`);
+  if (notSureRequiredCount > 0)
+    reasons.push(`${notSureRequiredCount} required field(s) answered "not sure".`);
   if (triggeredWarnings > 0) reasons.push(`${triggeredWarnings} consistency warning(s) triggered.`);
 
   // 8. Suggested next action: first conditional match wins, the unconditional entry is the default.
   const matchedAction =
-    schema.briefConfig.suggestedNextActions.find((a) => a.when && evaluateConditionGroup(a.when, answers)) ??
-    schema.briefConfig.suggestedNextActions.find((a) => !a.when);
+    schema.briefConfig.suggestedNextActions.find(
+      (a) => a.when && evaluateConditionGroup(a.when, answers),
+    ) ?? schema.briefConfig.suggestedNextActions.find((a) => !a.when);
   const suggestedNextAction: BriefLine = {
     label: "Suggested next action",
     value: matchedAction?.value ?? "Review this project with the visitor directly.",
@@ -264,7 +309,9 @@ export function generateProjectBrief(
 
   return {
     generatedAt,
-    missionName: schema.briefConfig.missionNameTemplate ? interpolate(schema.briefConfig.missionNameTemplate, tokens) : mission.name,
+    missionName: schema.briefConfig.missionNameTemplate
+      ? interpolate(schema.briefConfig.missionNameTemplate, tokens)
+      : mission.name,
     status: schema.briefConfig.statusLabel ?? "ready",
     projectSummary,
     confirmedInformation: sections.confirmedInformation,
