@@ -16,6 +16,9 @@ export const Route = createFileRoute("/privacy")({
       { property: "og:url", content: "/privacy" },
     ],
     links: [{ rel: "canonical", href: "/privacy" }],
+    scripts: [
+      jsonLdScript(breadcrumbSchema([{ name: "Privacy", path: "/privacy" }])),
+    ],
   }),
   component: () => (
     <BuildLegalPage
