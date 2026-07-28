@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { createHash } from "crypto";
 import { z } from "zod";
+import { logOperationalError } from "@/build/services/operationalLog.server";
 
 const MAX_BODY_BYTES = 24 * 1024; // 24 KB
 const RATE_LIMIT_WINDOW_HOURS = 24;
@@ -125,7 +126,10 @@ export const Route = createFileRoute("/api/public/build-public-intake")({
           .gte("created_at", windowStart);
 
         if (rateReadError) {
-          console.error("[build-public-intake] rate read", rateReadError);
+          logOperationalError("build-public-intake.rate-read-failed", rateReadError, {
+            requestType: type,
+            sourcePath,
+          });
           return jsonResponse(500, { error: "Unable to process request." });
         }
 
@@ -151,7 +155,10 @@ export const Route = createFileRoute("/api/public/build-public-intake")({
           .single();
 
         if (insertError || !inserted) {
-          console.error("[build-public-intake] insert", insertError);
+          logOperationalError("build-public-intake.insert-failed", insertError, {
+            requestType: type,
+            sourcePath,
+          });
           return jsonResponse(500, { error: "Unable to save request." });
         }
 

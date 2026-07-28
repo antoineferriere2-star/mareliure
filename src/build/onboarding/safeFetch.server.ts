@@ -72,13 +72,13 @@ export function normalizeOnboardingUrl(input: string): URL {
   try {
     url = new URL(input.trim());
   } catch {
-    throw new Error("URL invalide.");
+    throw new Error("Invalid URL.");
   }
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    throw new Error("Seules les URL http/https sont acceptées.");
+    throw new Error("Only http/https URLs are accepted.");
   }
   if (isBlockedHostname(url.hostname)) {
-    throw new Error("Cette URL pointe vers une adresse non autorisée.");
+    throw new Error("This URL points to a disallowed address.");
   }
   return url;
 }
@@ -154,24 +154,24 @@ export async function fetchSitePublicHtml(rawUrl: string): Promise<FetchedSite> 
 
     if (response.status >= 300 && response.status < 400) {
       const location = response.headers.get("location");
-      if (!location) throw new Error("Redirection sans destination.");
-      if (hop === MAX_REDIRECTS) throw new Error("Trop de redirections.");
+      if (!location) throw new Error("Redirect response did not include a destination.");
+      if (hop === MAX_REDIRECTS) throw new Error("Too many redirects.");
       url = normalizeOnboardingUrl(new URL(location, url).toString());
       continue;
     }
 
     if (!response.ok) {
-      throw new Error(`Le site a répondu avec le statut ${response.status}.`);
+      throw new Error(`The site responded with status ${response.status}.`);
     }
 
     const contentType = response.headers.get("content-type") ?? "";
     if (contentType && !/text\/html|text\/plain/i.test(contentType)) {
-      throw new Error("Le contenu de cette URL n'est pas une page web (HTML).");
+      throw new Error("This URL did not return an HTML page.");
     }
 
     const html = await readCappedBody(response);
     return { finalUrl: url.toString(), html };
   }
 
-  throw new Error("Trop de redirections.");
+  throw new Error("Too many redirects.");
 }

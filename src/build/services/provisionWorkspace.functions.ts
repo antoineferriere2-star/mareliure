@@ -11,6 +11,7 @@ import {
   provisionInputSchema,
   type ProvisionDeps,
 } from "./provisionWorkspace";
+import { logOperationalError } from "./operationalLog.server";
 import { fail } from "./serverError";
 
 export const ensureMyWorkspace = createServerFn({ method: "POST" })
@@ -56,7 +57,7 @@ export const ensureMyWorkspace = createServerFn({ method: "POST" })
           _workspace_name: name,
         });
         if (error) {
-          console.error("[provisioning] failed for user", uid, error.message);
+          logOperationalError("workspace.provisioning-failed", error, { userId: uid });
           fail(500, "Workspace provisioning failed");
         }
         return workspaceId as string;

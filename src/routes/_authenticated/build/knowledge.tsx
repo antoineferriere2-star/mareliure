@@ -21,7 +21,12 @@ const knowledgeKey = ["build-admin", "knowledge"] as const;
 
 export const Route = createFileRoute("/_authenticated/build/knowledge")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Knowledge — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({
+    meta: [
+      { title: "Knowledge — Métré Build AI" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: KnowledgePage,
 });
 
@@ -64,13 +69,26 @@ function KnowledgePage() {
 
   const createMut = useMutation({
     mutationFn: async () => {
-      const tagList = tags.split(",").map((t) => t.trim()).filter(Boolean);
-      if (source === "supabase") return create({ data: { title: title.trim(), content: content.trim() || null, tags: tagList } });
-      return localCreateKnowledge({ title: title.trim(), content: content.trim() || null, tags: tagList });
+      const tagList = tags
+        .split(",")
+        .map((t) => t.trim())
+        .filter(Boolean);
+      if (source === "supabase")
+        return create({
+          data: { title: title.trim(), content: content.trim() || null, tags: tagList },
+        });
+      return localCreateKnowledge({
+        title: title.trim(),
+        content: content.trim() || null,
+        tags: tagList,
+      });
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: knowledgeKey });
-      setTitle(""); setContent(""); setTags(""); setShowForm(false);
+      setTitle("");
+      setContent("");
+      setTags("");
+      setShowForm(false);
     },
   });
 
@@ -98,7 +116,7 @@ function KnowledgePage() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Knowledge</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Base de connaissance interne (matériaux, contraintes locales, tarifs).
+            Internal knowledge base (materials, local constraints, pricing).
           </p>
           <p className="mt-2 text-xs">
             <span className="text-muted-foreground">Data source: </span>
@@ -117,36 +135,54 @@ function KnowledgePage() {
           onClick={() => setShowForm((v) => !v)}
           className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
-          {showForm ? "Annuler" : "+ Add knowledge"}
+          {showForm ? "Cancel" : "+ Add knowledge"}
         </button>
       </header>
 
       {showForm && (
         <form
-          onSubmit={(e) => { e.preventDefault(); if (!title.trim()) return; createMut.mutate(); }}
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!title.trim()) return;
+            createMut.mutate();
+          }}
           className="space-y-3 rounded-lg border border-border bg-card p-4"
         >
           <div>
-            <label className="block text-xs font-medium text-muted-foreground">Titre *</label>
-            <input value={title} onChange={(e) => setTitle(e.target.value)} required
+            <label className="block text-xs font-medium text-muted-foreground">Title *</label>
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              placeholder="Ex : Trex Enhance vs Transcend — arbitrage prix/finition" />
+              placeholder="Example: Trex Enhance vs Transcend — price/finish tradeoff"
+            />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground">Contenu</label>
-            <textarea value={content} onChange={(e) => setContent(e.target.value)} rows={4}
-              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm" />
+            <label className="block text-xs font-medium text-muted-foreground">Content</label>
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              rows={4}
+              className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="block text-xs font-medium text-muted-foreground">Tags (virgules)</label>
-            <input value={tags} onChange={(e) => setTags(e.target.value)}
+            <label className="block text-xs font-medium text-muted-foreground">Tags (commas)</label>
+            <input
+              value={tags}
+              onChange={(e) => setTags(e.target.value)}
               className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-              placeholder="composite, deck, code-local" />
+              placeholder="composite, deck, code-local"
+            />
           </div>
           <div className="flex justify-end">
-            <button type="submit" disabled={createMut.isPending}
-              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50">
-              {createMut.isPending ? "Enregistrement…" : "Enregistrer"}
+            <button
+              type="submit"
+              disabled={createMut.isPending}
+              className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
+            >
+              {createMut.isPending ? "Saving..." : "Save"}
             </button>
           </div>
         </form>
@@ -154,9 +190,12 @@ function KnowledgePage() {
 
       {items.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">Aucune note interne pour le moment.</p>
-          <button onClick={() => setShowForm(true)} className="mt-3 text-sm font-medium text-primary underline">
-            Ajouter la première note
+          <p className="text-sm text-muted-foreground">No internal notes yet.</p>
+          <button
+            onClick={() => setShowForm(true)}
+            className="mt-3 text-sm font-medium text-primary underline"
+          >
+            Add the first note
           </button>
         </div>
       ) : (
@@ -166,20 +205,33 @@ function KnowledgePage() {
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h3 className="text-sm font-semibold text-foreground">{it.title}</h3>
-                  {it.content && <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">{it.content}</p>}
+                  {it.content && (
+                    <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                      {it.content}
+                    </p>
+                  )}
                   {it.tags.length > 0 && (
                     <div className="mt-2 flex flex-wrap gap-1">
                       {it.tags.map((t) => (
-                        <span key={t} className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground">{t}</span>
+                        <span
+                          key={t}
+                          className="rounded-full bg-muted px-2 py-0.5 text-[10px] text-muted-foreground"
+                        >
+                          {t}
+                        </span>
                       ))}
                     </div>
                   )}
-                  <div className="mt-2 text-[10px] text-muted-foreground">{new Date(it.created_at).toLocaleString()}</div>
+                  <div className="mt-2 text-[10px] text-muted-foreground">
+                    {new Date(it.created_at).toLocaleString()}
+                  </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <select
                     value={it.status}
-                    onChange={(e) => statusMut.mutate({ id: it.id, status: e.target.value as KnowledgeStatus })}
+                    onChange={(e) =>
+                      statusMut.mutate({ id: it.id, status: e.target.value as KnowledgeStatus })
+                    }
                     className="rounded-md border border-input bg-background px-2 py-1 text-xs"
                   >
                     <option value="proposed">proposed</option>
@@ -187,10 +239,10 @@ function KnowledgePage() {
                     <option value="archived">archived</option>
                   </select>
                   <button
-                    onClick={() => confirm("Supprimer cette note ?") && deleteMut.mutate(it.id)}
+                    onClick={() => confirm("Delete this note?") && deleteMut.mutate(it.id)}
                     className="text-[10px] text-muted-foreground hover:text-destructive"
                   >
-                    Supprimer
+                    Delete
                   </button>
                 </div>
               </div>

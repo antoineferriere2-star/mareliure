@@ -45,7 +45,7 @@ export function PublishStep({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold text-foreground">Publier</h2>
+        <h2 className="text-lg font-semibold text-foreground">Publish</h2>
         <p className="mt-1 text-sm text-muted-foreground">
           Mission « {missionName} » basée sur le Playbook « {playbookName} ». Une fois publiée, le
           lien public est immédiatement actif.
@@ -67,7 +67,7 @@ export function PublishStep({
           disabled={publishing}
           className="rounded-md border border-emerald-300 bg-emerald-50 px-4 py-2 text-sm font-medium text-emerald-800 hover:bg-emerald-100 disabled:opacity-50"
         >
-          {publishing ? "Publication…" : "Publier"}
+          {publishing ? "Publishing..." : "Publish"}
         </button>
       </div>
     </div>
