@@ -20,17 +20,18 @@ export const Route = createFileRoute("/")({
       { name: "twitter:description", content: description },
       { name: "twitter:image", content: "/og-image.png" },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
     scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
-          name: "Métré Build",
-          applicationCategory: "BusinessApplication",
-          operatingSystem: "Web",
-        }),
-      },
+      jsonLdScript({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Métré Build",
+        url: `${SITE_URL}/`,
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
+        publisher: { "@id": ORGANIZATION_ID },
+        isPartOf: { "@id": WEBSITE_ID },
+      }),
     ],
   }),
   component: HomeRoute,
