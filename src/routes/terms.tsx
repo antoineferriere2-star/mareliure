@@ -16,6 +16,9 @@ export const Route = createFileRoute("/terms")({
       { property: "og:url", content: "/terms" },
     ],
     links: [{ rel: "canonical", href: "/terms" }],
+    scripts: [
+      jsonLdScript(breadcrumbSchema([{ name: "Terms", path: "/terms" }])),
+    ],
   }),
   component: () => (
     <BuildLegalPage
