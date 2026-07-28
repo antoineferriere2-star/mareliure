@@ -20,6 +20,11 @@ export const Route = createFileRoute("/how-it-works")({
       { name: "twitter:description", content: description },
     ],
     links: [{ rel: "canonical", href: "/how-it-works" }],
+    scripts: [
+      jsonLdScript(
+        breadcrumbSchema([{ name: "How it works", path: "/how-it-works" }]),
+      ),
+    ],
   }),
   component: BuildHowItWorksPage,
 });
