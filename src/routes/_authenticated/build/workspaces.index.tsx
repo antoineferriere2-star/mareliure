@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_authenticated/build/workspaces/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Espaces Client — Métré Build AI" },
+      { title: "Client Workspaces — Métré Build AI" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -42,9 +42,9 @@ function UsageLine({ label, used, quota }: { label: string; used: number; quota:
   const level = usageLevel(used, quota);
   return (
     <p className={`text-xs ${USAGE_STYLES[level]}`}>
-      {label} : {used} / {quota}
-      {level === "warning" && " · approche de la limite"}
-      {level === "over" && " · limite atteinte"}
+      {label}: {used} / {quota}
+      {level === "warning" && " · approaching limit"}
+      {level === "over" && " · limit reached"}
     </p>
   );
 }
@@ -59,12 +59,12 @@ function WorkspaceUsage({ workspaceId }: { workspaceId: string }) {
   return (
     <div className="mt-2 space-y-0.5">
       <UsageLine
-        label="Missions actives"
+        label="Active Missions"
         used={data.activeMissions}
         quota={data.maxActiveMissions}
       />
       <UsageLine
-        label="Project Briefs ce mois-ci"
+        label="Project Briefs this month"
         used={data.monthlyBriefs}
         quota={data.monthlyBriefQuota}
       />
@@ -117,7 +117,7 @@ function WorkspacesPage() {
     onError: (err: unknown, { workspaceId }) => {
       setMemberError((prev) => ({
         ...prev,
-        [workspaceId]: err instanceof Error ? err.message : "Erreur inconnue.",
+        [workspaceId]: err instanceof Error ? err.message : "Unknown error.",
       }));
     },
   });
@@ -131,11 +131,11 @@ function WorkspacesPage() {
   return (
     <div className="space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-foreground">Espaces Client</h1>
+        <h1 className="text-2xl font-semibold text-foreground">Client Workspaces</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Chaque Espace Client donne accès au portail{" "}
-          <code className="rounded bg-muted px-1">/portal</code> pour suivre les Dossiers
-          Commerciaux des Missions qui lui sont assignées.
+          Each Client Workspace gets access to the{" "}
+          <code className="rounded bg-muted px-1">/portal</code> area to track Project Briefs
+          produced by its assigned Missions.
         </p>
       </header>
 
@@ -148,12 +148,12 @@ function WorkspacesPage() {
       >
         <div className="flex-1 min-w-[220px]">
           <label className="block text-xs font-medium text-muted-foreground">
-            Nom de l'entreprise cliente
+            Client company name
           </label>
           <input
             value={newName}
             onChange={(e) => setNewName(e.target.value)}
-            placeholder="Ex : Reliure Ferrière"
+            placeholder="Example: Reliure Ferrière"
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           />
         </div>
@@ -176,13 +176,13 @@ function WorkspacesPage() {
           disabled={createMutation.isPending || newName.trim().length < 2}
           className="rounded-md bg-primary px-3 py-2 text-sm font-medium text-primary-foreground disabled:opacity-50"
         >
-          {createMutation.isPending ? "Création…" : "Créer l'Espace Client"}
+          {createMutation.isPending ? "Creating…" : "Create Client Workspace"}
         </button>
       </form>
 
       {workspaces.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">Aucun Espace Client pour le moment.</p>
+          <p className="text-sm text-muted-foreground">No Client Workspace yet.</p>
         </div>
       ) : (
         <div className="space-y-4">
@@ -230,7 +230,7 @@ function WorkspacesPage() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-medium text-muted-foreground">
-                      Missions actives max
+                      Max active Missions
                     </label>
                     <input
                       type="number"
@@ -247,7 +247,7 @@ function WorkspacesPage() {
                   </div>
                   <div>
                     <label className="block text-[10px] font-medium text-muted-foreground">
-                      Project Briefs / mois
+                      Project Briefs / month
                     </label>
                     <input
                       type="number"
@@ -275,14 +275,14 @@ function WorkspacesPage() {
                     }
                     className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
                   >
-                    Enregistrer les limites
+                    Save limits
                   </button>
                 </div>
 
                 <ul className="mt-3 space-y-1">
                   {w.members.length === 0 && (
                     <li className="text-xs text-muted-foreground">
-                      Aucun membre — le portail n'est accessible à personne.
+                      No member yet — nobody can access this portal.
                     </li>
                   )}
                   {w.members.map((m) => (
@@ -292,7 +292,7 @@ function WorkspacesPage() {
                         onClick={() => removeMemberMutation.mutate(m.id)}
                         className="text-destructive hover:underline"
                       >
-                        Retirer
+                        Remove
                       </button>
                     </li>
                   ))}
@@ -320,7 +320,7 @@ function WorkspacesPage() {
                     disabled={addMemberMutation.isPending}
                     className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent disabled:opacity-50"
                   >
-                    Ajouter un membre
+                    Add member
                   </button>
                 </form>
                 {memberError[w.id] && (
