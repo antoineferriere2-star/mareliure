@@ -23,7 +23,7 @@ test.describe("home page", () => {
   test("lets visitors switch the home page language and keeps the choice", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    await page.getByLabel("Choose site language").selectOption("es-US");
+    await page.getByRole("button", { name: "ES", exact: true }).click();
 
     await expect(
       page.getByRole("heading", {
