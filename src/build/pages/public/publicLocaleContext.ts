@@ -147,6 +147,21 @@ const ES_PUBLIC_COPY: Record<string, string> = {
     "Solicitud recibida. La revisaremos internamente antes de cualquier seguimiento.",
   Submitting: "Enviando",
   "Unable to submit this request.": "No se pudo enviar esta solicitud.",
+  "Name is required.": "El nombre es obligatorio.",
+  "Subject is required.": "El asunto es obligatorio.",
+  "Message is required.": "El mensaje es obligatorio.",
+  "Enter a valid email.": "Ingrese un email válido.",
+  "Consent is required.": "El consentimiento es obligatorio.",
+  "Contact Métré Build": "Contactar a Métré Build",
+  "Send a direct message to the Métré Build team. We reply from contact@oppe.fr.":
+    "Envíe un mensaje directo al equipo de Métré Build. Respondemos desde contact@oppe.fr.",
+  "Company (optional)": "Empresa (opcional)",
+  Subject: "Asunto",
+  "Send message": "Enviar mensaje",
+  Sending: "Enviando",
+  "Unable to send this message.": "No se pudo enviar este mensaje.",
+  "Message sent. We will reply from contact@oppe.fr.":
+    "Mensaje enviado. Responderemos desde contact@oppe.fr.",
   "Setup review": "Revisión de configuración",
   "Request a setup review": "Solicitar revisión de configuración",
   "Tell us about your business and we'll get back to you about setting up a guided Project Intake for your website.":
@@ -462,6 +477,8 @@ const ES_PUBLIC_COPY: Record<string, string> = {
   Terms: "Términos",
   "Métré Build collects information submitted through website audit and setup request forms so the team can review requests and respond.":
     "Métré Build recopila la información enviada mediante formularios de auditoría del sitio y solicitudes de configuración para que el equipo pueda revisar y responder.",
+  "Métré Build collects information submitted through website audit, setup request and contact forms so the team can review requests and respond.":
+    "Métré Build recopila la información enviada mediante formularios de auditoría del sitio, solicitudes de configuración y formularios de contacto para que el equipo pueda revisar y responder.",
   "Demo Project Brief data is fictional or stored locally in your browser unless you submit a real request.":
     "Los datos del Project Brief de demo son ficticios o se almacenan localmente en su navegador, salvo que envíe una solicitud real.",
   "Real customer responses, runtime sessions and project briefs are not intended to be indexed or exposed publicly.":

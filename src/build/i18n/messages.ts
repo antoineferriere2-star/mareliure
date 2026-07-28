@@ -27,6 +27,7 @@ export const enUSMessages = {
   "navigation.howItWorks": "How it works",
   "navigation.exampleBrief": "Example brief",
   "navigation.freeAudit": "Free audit",
+  "navigation.contact": "Contact",
   "navigation.logIn": "Log in",
   "navigation.createAccount": "Create account",
   "navigation.tryDemo": "Try demo",
@@ -39,6 +40,7 @@ export const enUSMessages = {
   "footer.setupReview": "Request a setup review",
   "footer.privacy": "Privacy",
   "footer.terms": "Terms",
+  "footer.contact": "Contact",
   "cta.getStarted": "Get started",
   "cta.title": "See what your current website form is missing.",
   "cta.description":
@@ -97,6 +99,7 @@ export const esUSMessages: Partial<TranslationMessages> = {
   "navigation.howItWorks": "Cómo funciona",
   "navigation.exampleBrief": "Ejemplo de resumen",
   "navigation.freeAudit": "Auditoría gratis",
+  "navigation.contact": "Contacto",
   "navigation.logIn": "Iniciar sesión",
   "navigation.createAccount": "Crear cuenta",
   "navigation.tryDemo": "Probar demo",
@@ -109,6 +112,7 @@ export const esUSMessages: Partial<TranslationMessages> = {
   "footer.setupReview": "Solicitar revisión de configuración",
   "footer.privacy": "Privacidad",
   "footer.terms": "Términos",
+  "footer.contact": "Contacto",
   "cta.getStarted": "Comience",
   "cta.title": "Vea qué le falta a su formulario actual.",
   "cta.description":

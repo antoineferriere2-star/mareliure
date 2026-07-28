@@ -35,6 +35,7 @@ const PUBLIC_SURFACE_FILES = [
   "src/routes/how-it-works.tsx",
   "src/routes/example-project-brief.tsx",
   "src/routes/free-inquiry-audit.tsx",
+  "src/routes/contact.tsx",
   "src/routes/private-beta.tsx",
   "src/routes/privacy.tsx",
   "src/routes/terms.tsx",
@@ -125,5 +126,17 @@ describe("public marketing surface - marketing proposition", () => {
     expect(source).toContain("review your current inquiry flow");
     expect(source).toContain("recommended intake path");
     expect(source).toContain("No obligation.");
+  });
+
+  it("exposes the public contact page and email destination", () => {
+    const routeSource = readFileSync(resolve(repoRoot, "src/routes/contact.tsx"), "utf8");
+    const formsSource = readFileSync(
+      resolve(repoRoot, "src/build/pages/public/BuildPublicFormPages.tsx"),
+      "utf8",
+    );
+
+    expect(routeSource).toContain('createFileRoute("/contact")');
+    expect(formsSource).toContain("submitPublicContactRequest");
+    expect(formsSource).toContain("contact@oppe.fr");
   });
 });
