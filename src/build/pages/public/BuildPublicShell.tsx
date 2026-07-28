@@ -3,6 +3,9 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2 } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { t } from "@/build/i18n";
+import { PublicLanguageSelect, PublicLocaleProvider } from "@/build/pages/public/publicLocale";
+import { usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 
 /**
  * One entry per industry vertical Métré Build can serve. Only "published"
@@ -13,17 +16,30 @@ import type { ReactNode } from "react";
  * here, not a nav redesign.
  */
 const VERTICAL_NAV_ITEMS = [
-  { label: "Deck builders", to: "/deck-builders" as const, status: "published" as const },
-];
-
-const navItems = [
-  ...VERTICAL_NAV_ITEMS.filter((item) => item.status === "published"),
-  { label: "How it works", to: "/how-it-works" as const },
-  { label: "Example brief", to: "/example-project-brief" as const },
-  { label: "Free audit", to: "/free-inquiry-audit" as const },
+  {
+    labelKey: "navigation.deckBuilders" as const,
+    to: "/deck-builders" as const,
+    status: "published" as const,
+  },
 ];
 
 export function BuildPublicShell({ children }: { children: ReactNode }) {
+  return (
+    <PublicLocaleProvider>
+      <BuildPublicShellContent>{children}</BuildPublicShellContent>
+    </PublicLocaleProvider>
+  );
+}
+
+function BuildPublicShellContent({ children }: { children: ReactNode }) {
+  const { locale } = usePublicLocale();
+  const navItems = [
+    ...VERTICAL_NAV_ITEMS.filter((item) => item.status === "published"),
+    { labelKey: "navigation.howItWorks" as const, to: "/how-it-works" as const },
+    { labelKey: "navigation.exampleBrief" as const, to: "/example-project-brief" as const },
+    { labelKey: "navigation.freeAudit" as const, to: "/free-inquiry-audit" as const },
+  ];
+
   return (
     <div className="min-h-screen bg-white text-slate-950">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">
@@ -38,24 +54,25 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
           <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
             {navItems.map((item) => (
               <Link key={item.to} to={item.to} className="hover:text-slate-950">
-                {item.label}
+                {t(locale, item.labelKey)}
               </Link>
             ))}
           </nav>
           <div className="flex items-center gap-2">
+            <PublicLanguageSelect />
             <Link
               to="/auth"
               className="hidden text-sm font-medium text-slate-600 hover:text-slate-950 sm:inline-flex"
             >
-              Log in
+              {t(locale, "navigation.logIn")}
             </Link>
             <Link to="/auth">
               <Button size="sm" variant="outline" className="hidden sm:inline-flex">
-                Create account
+                {t(locale, "navigation.createAccount")}
               </Button>
             </Link>
             <Link to="/demo/deck-project">
-              <Button size="sm">Try demo</Button>
+              <Button size="sm">{t(locale, "navigation.tryDemo")}</Button>
             </Link>
           </div>
         </div>
@@ -69,24 +86,25 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
               Métré Build
             </div>
             <p className="mt-4 max-w-sm text-sm leading-6 text-slate-300">
-              Now available for US project-based contractors. Built to turn incomplete website
-              inquiries into structured Project Briefs.
+              {t(locale, "footer.description")}
             </p>
           </div>
           <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-3">
-            <FooterCol title="Product">
-              <FooterLink to="/deck-builders">Deck builders</FooterLink>
-              <FooterLink to="/how-it-works">How it works</FooterLink>
-              <FooterLink to="/demo/deck-project">Demo</FooterLink>
+            <FooterCol title={t(locale, "footer.product")}>
+              <FooterLink to="/deck-builders">{t(locale, "navigation.deckBuilders")}</FooterLink>
+              <FooterLink to="/how-it-works">{t(locale, "navigation.howItWorks")}</FooterLink>
+              <FooterLink to="/demo/deck-project">{t(locale, "footer.demo")}</FooterLink>
             </FooterCol>
-            <FooterCol title="Conversion">
-              <FooterLink to="/example-project-brief">Example brief</FooterLink>
-              <FooterLink to="/free-inquiry-audit">Free audit</FooterLink>
-              <FooterLink to="/private-beta">Request a setup review</FooterLink>
+            <FooterCol title={t(locale, "footer.conversion")}>
+              <FooterLink to="/example-project-brief">
+                {t(locale, "navigation.exampleBrief")}
+              </FooterLink>
+              <FooterLink to="/free-inquiry-audit">{t(locale, "navigation.freeAudit")}</FooterLink>
+              <FooterLink to="/private-beta">{t(locale, "footer.setupReview")}</FooterLink>
             </FooterCol>
-            <FooterCol title="Legal">
-              <FooterLink to="/privacy">Privacy</FooterLink>
-              <FooterLink to="/terms">Terms</FooterLink>
+            <FooterCol title={t(locale, "footer.legal")}>
+              <FooterLink to="/privacy">{t(locale, "footer.privacy")}</FooterLink>
+              <FooterLink to="/terms">{t(locale, "footer.terms")}</FooterLink>
             </FooterCol>
           </div>
         </div>
@@ -141,28 +159,29 @@ export function SectionHeader({
 }
 
 export function PublicCtaBand() {
+  const { locale } = usePublicLocale();
+
   return (
     <section className="bg-slate-950 px-4 py-16 text-white sm:px-6 lg:px-8">
       <div className="mx-auto flex max-w-7xl flex-col gap-6 md:flex-row md:items-center md:justify-between">
         <div>
           <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-200">
-            Get started
+            {t(locale, "cta.getStarted")}
           </p>
           <h2 className="mt-3 text-3xl font-semibold tracking-normal md:text-4xl">
-            See what your current website form is missing.
+            {t(locale, "cta.title")}
           </h2>
           <p className="mt-3 max-w-xl text-[16px] leading-7 text-slate-300">
-            Two minutes to review the demo. Free audit of your current form and inquiry flow on
-            request.
+            {t(locale, "cta.description")}
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <a href="/free-inquiry-audit">
-            <Button size="lg">Get a Free Website Inquiry Audit</Button>
+            <Button size="lg">{t(locale, "home.hero.secondaryCta")}</Button>
           </a>
           <a href="/demo/deck-project">
             <Button variant="link" className="h-auto p-0 text-base text-white hover:text-white">
-              Try the Live Deck Intake
+              {t(locale, "home.hero.primaryCta")}
             </Button>
           </a>
         </div>

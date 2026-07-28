@@ -16,6 +16,7 @@ const PUBLIC_SURFACE_FILES = [
   "src/build/pages/public/BuildPublicShell.tsx",
   "src/build/pages/public/BuildMarketingPages.tsx",
   "src/build/pages/public/BuildPublicFormPages.tsx",
+  "src/build/pages/public/MissionRuntime.tsx",
   "src/build/pages/public/BriefPreview.tsx",
   "src/build/pages/public/BriefSummary.tsx",
   "src/build/pages/public/AdminPreviewShots.tsx",
@@ -70,18 +71,49 @@ describe("public marketing surface — banned strings", () => {
 
 describe("public marketing surface - marketing proposition", () => {
   it("keeps the confirmed homepage positioning", () => {
-    const source = readFileSync(
+    const homeSource = readFileSync(
       resolve(repoRoot, "src/build/pages/public/BuildPublicHome.tsx"),
       "utf8",
     );
+    const messagesSource = readFileSync(resolve(repoRoot, "src/build/i18n/messages.ts"), "utf8");
 
-    expect(source).toContain("Guided project intake for project-based contractors");
-    expect(source).toContain(
+    expect(homeSource).toContain('t(locale, "home.hero.eyebrow")');
+    expect(homeSource).toContain('t(locale, "home.hero.title")');
+    expect(messagesSource).toContain("Guided project intake for project-based contractors");
+    expect(messagesSource).toContain(
       "Turn vague website inquiries into structured Project Briefs your team can act on.",
     );
-    expect(source).toContain(
+    expect(messagesSource).toContain(
       "More useful than a contact form. Simpler than a custom configurator.",
     );
+  });
+
+  it("exposes a persistent English and Spanish language choice on the public surface", () => {
+    const shellSource = readFileSync(
+      resolve(repoRoot, "src/build/pages/public/BuildPublicShell.tsx"),
+      "utf8",
+    );
+    const localeSource = readFileSync(
+      resolve(repoRoot, "src/build/pages/public/publicLocaleContext.ts"),
+      "utf8",
+    );
+
+    expect(shellSource).toContain("PublicLanguageSelect");
+    expect(localeSource).toContain("metre-build-public-locale");
+    expect(localeSource).toContain('"en-US"');
+    expect(localeSource).toContain('"es-US"');
+  });
+
+  it("wires the selected public language into the runtime intake labels", () => {
+    const source = readFileSync(
+      resolve(repoRoot, "src/build/pages/public/MissionRuntime.tsx"),
+      "utf8",
+    );
+
+    expect(source).toContain("usePublicLocale");
+    expect(source).toContain("localizeField(field, copy)");
+    expect(source).toContain('copy("Continue")');
+    expect(source).toContain('copy("Generate project brief")');
   });
 
   it("keeps the free audit offer concrete and bounded", () => {

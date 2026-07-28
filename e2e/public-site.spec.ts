@@ -20,6 +20,70 @@ test.describe("home page", () => {
     ).toBeVisible();
   });
 
+  test("lets visitors switch the home page language and keeps the choice", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.getByLabel("Choose site language").selectOption("es-US");
+
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: /Convierta consultas vagas de su sitio web/,
+      }),
+    ).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("lang", "es-US");
+
+    await page.reload();
+    await expect(page.getByLabel("Choose site language")).toHaveValue("es-US");
+    await expect(page.locator("html")).toHaveAttribute("lang", "es-US");
+  });
+
+  test("uses the selected language across the public site", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.getByLabel("Choose site language").selectOption("es-US");
+
+    await page.goto("/deck-builders");
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "Califique proyectos de terraza antes de la primera llamada comercial.",
+      }),
+    ).toBeVisible();
+    await expect(page.getByLabel("Choose site language")).toHaveValue("es-US");
+
+    await page.goto("/how-it-works");
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: "De una consulta vaga a un Project Brief estructurado.",
+      }),
+    ).toBeVisible();
+
+    await page.goto("/example-project-brief");
+    await expect(
+      page.getByRole("heading", { level: 1, name: "Project Brief de ejemplo" }),
+    ).toBeVisible();
+
+    await page.goto("/free-inquiry-audit");
+    await expect(page.getByLabel("URL del sitio web")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Auditar mi sitio web" })).toBeVisible();
+
+    await page.goto("/private-beta");
+    await expect(page.getByText(/Paso 1 de 4/)).toBeVisible();
+    await expect(page.getByRole("button", { name: "Continuar" })).toBeVisible();
+
+    await page.goto("/privacy");
+    await expect(page.getByRole("heading", { level: 1, name: "Privacidad" })).toBeVisible();
+
+    await page.goto("/terms");
+    await expect(page.getByRole("heading", { level: 1, name: "Términos" })).toBeVisible();
+
+    // `/demo/deck-project` needs Supabase runtime secrets locally; the route
+    // falls back to a server runtime error in this E2E environment before the
+    // client locale provider hydrates.
+  });
+
   test("top nav reaches every published page", async ({ page, isMobile }) => {
     // The header nav is intentionally hidden below the md breakpoint (no
     // hamburger menu exists); the footer links (tested separately below)
