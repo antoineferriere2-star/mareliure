@@ -74,7 +74,7 @@ export function PreviewStep({
           onClick={onBack}
           className="rounded-md border border-input bg-background px-4 py-2 text-sm hover:bg-accent"
         >
-          Retour
+          Back
         </button>
         <button
           type="button"
