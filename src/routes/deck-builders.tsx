@@ -22,6 +22,11 @@ export const Route = createFileRoute("/deck-builders")({
       { name: "twitter:image", content: "/og-image.png" },
     ],
     links: [{ rel: "canonical", href: "/deck-builders" }],
+    scripts: [
+      jsonLdScript(
+        breadcrumbSchema([{ name: "Deck builders", path: "/deck-builders" }]),
+      ),
+    ],
   }),
   component: BuildDeckBuildersPage,
 });
