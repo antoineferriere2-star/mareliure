@@ -458,7 +458,7 @@ export function BriefConfigEditor({
           </button>
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Toujours ajoutées au Dossier, sans condition (ex : mises en garde systématiques).
+          Always added to the Dossier, with no condition (e.g. systematic caveats).
         </p>
         <div className="mt-2 space-y-2">
           {briefConfig.alwaysIncludeLines.map((line, i) => (
@@ -489,7 +489,7 @@ export function BriefConfigEditor({
                     ),
                   })
                 }
-                placeholder="Libellé"
+                placeholder="Label"
                 className={inputCls}
               />
               <input
@@ -501,7 +501,7 @@ export function BriefConfigEditor({
                     ),
                   })
                 }
-                placeholder="Valeur"
+                placeholder="Value"
                 className={inputCls}
               />
               <div className="flex items-center gap-2">
@@ -514,7 +514,7 @@ export function BriefConfigEditor({
                       ),
                     })
                   }
-                  placeholder="Catégorie (optionnel)"
+                  placeholder="Category (optional)"
                   className={`flex-1 ${inputCls}`}
                 />
                 <button
@@ -522,7 +522,7 @@ export function BriefConfigEditor({
                   onClick={() => patch({ alwaysIncludeLines: briefConfig.alwaysIncludeLines.filter((_, j) => j !== i) })}
                   className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
                 >
-                  Supprimer
+                  Remove
                 </button>
               </div>
             </div>
@@ -532,11 +532,11 @@ export function BriefConfigEditor({
 
       <section>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Action suggérée</h3>
+          <h3 className="text-sm font-semibold">Suggested action</h3>
           <button
             type="button"
             onClick={() => {
-              const next: SuggestedNextActionRule = { label: "Action suggérée", value: "" };
+              const next: SuggestedNextActionRule = { label: "Suggested action", value: "" };
               patch({ suggestedNextActions: [...briefConfig.suggestedNextActions, next] });
             }}
             className="rounded-md border border-input bg-background px-2 py-1 text-xs hover:bg-accent"
@@ -545,8 +545,8 @@ export function BriefConfigEditor({
           </button>
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          La première action dont la condition est vraie est utilisée ; une entrée sans condition doit rester pour
-          servir de valeur par défaut.
+          The first action whose condition is true is used; an entry with no condition should remain to
+          serve as the default value.
         </p>
         <div className="mt-2 space-y-2">
           {briefConfig.suggestedNextActions.map((action, i) => (
@@ -560,7 +560,7 @@ export function BriefConfigEditor({
                     ),
                   })
                 }
-                placeholder="Libellé"
+                placeholder="Label"
                 className={`w-full ${inputCls}`}
               />
               <input
@@ -572,11 +572,11 @@ export function BriefConfigEditor({
                     ),
                   })
                 }
-                placeholder="Texte de l'action recommandée"
+                placeholder="Recommended action text"
                 className={`w-full ${inputCls}`}
               />
               <details>
-                <summary className="cursor-pointer text-[11px] text-muted-foreground">Condition (optionnelle)</summary>
+                <summary className="cursor-pointer text-[11px] text-muted-foreground">Condition (optional)</summary>
                 <div className="mt-1">
                   <ConditionGroupEditor
                     group={action.when}
@@ -586,7 +586,7 @@ export function BriefConfigEditor({
                       })
                     }
                     fields={fields}
-                    emptyHint="Aucune condition — sert de valeur par défaut."
+                    emptyHint="No condition — serves as the default value."
                   />
                 </div>
               </details>
@@ -595,7 +595,7 @@ export function BriefConfigEditor({
                 onClick={() => patch({ suggestedNextActions: briefConfig.suggestedNextActions.filter((_, j) => j !== i) })}
                 className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
               >
-                Supprimer
+                Remove
               </button>
             </div>
           ))}
