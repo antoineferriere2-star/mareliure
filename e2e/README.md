@@ -3,7 +3,7 @@
 Run with `npm run test:e2e` (starts the dev server automatically) or
 `npm run test:e2e:ui` for the interactive runner.
 
-## Current scope: public marketing site only
+## Current default scope: public marketing site
 
 `public-site.spec.ts` covers the anonymous surface — page loads, nav (desktop
 header + mobile footer), the `/private-beta` stepper's client-side validation
@@ -12,13 +12,21 @@ a final Submit button, because both of those forms write real rows to the
 live Supabase project — there is no separate test/staging project configured
 for this app yet.
 
+## Optional authenticated smoke test
+
+`authenticated-portal.spec.ts` is skipped by default. It runs only when both
+`E2E_CLIENT_EMAIL` and `E2E_CLIENT_PASSWORD` are set, and expects that account
+to already exist and have portal access. It signs in through `/auth` and checks
+that the client reaches `/portal`. Do not use a personal or production customer
+account for this; use a disposable staging client account.
+
 ## Deliberately out of scope for now
 
 The self-service journey the mission cares about most — sign up, AI-driven
 onboarding (site analysis, draft generation), publish a Mission, submit as an
 anonymous visitor, see the Dossier appear back in the owner's portal — is not
-covered here yet. Automating it safely needs a design decision, not just more
-test code:
+covered end-to-end here yet. Automating it safely needs a design decision, not
+just more test code:
 
 - **Signup**: self-service auth requires a confirmed email. The clean way to
   get a confirmed test user without solving email retrieval is a Playwright
