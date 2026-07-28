@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BuildDeckBuildersPage } from "@/build/pages/public/BuildMarketingPages";
 import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
 
-const title = "Deck builders — Métré Build";
+const title = "Deck builders - Métré Build";
 const description =
-  "Qualify deck projects before the first sales call with a guided Deck Project Intake.";
+  "Turn vague deck inquiries into structured Project Briefs before the first sales call with a guided Deck Project Intake.";
 
 export const Route = createFileRoute("/deck-builders")({
   head: () => ({
@@ -22,11 +22,7 @@ export const Route = createFileRoute("/deck-builders")({
       { name: "twitter:image", content: `${SITE_URL}/og-image.png` },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/deck-builders` }],
-    scripts: [
-      jsonLdScript(
-        breadcrumbSchema([{ name: "Deck builders", path: "/deck-builders" }]),
-      ),
-    ],
+    scripts: [jsonLdScript(breadcrumbSchema([{ name: "Deck builders", path: "/deck-builders" }]))],
   }),
   component: BuildDeckBuildersPage,
 });

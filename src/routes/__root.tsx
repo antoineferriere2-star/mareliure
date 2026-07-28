@@ -11,11 +11,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import {
-  jsonLdScript,
-  organizationSchema,
-  websiteSchema,
-} from "../lib/structured-data";
+import { jsonLdScript, organizationSchema, websiteSchema } from "../lib/structured-data";
 
 function NotFoundComponent() {
   return (
@@ -86,14 +82,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       {
         name: "description",
         content:
-          "Métré Build turns vague website inquiries into sales-ready project briefs.",
+          "Métré Build turns vague website inquiries into structured Project Briefs your team can act on.",
       },
       { name: "author", content: "Métré Build" },
       { property: "og:title", content: "Métré Build" },
       {
         property: "og:description",
         content:
-          "Métré Build turns vague website inquiries into sales-ready project briefs.",
+          "Métré Build turns vague website inquiries into structured Project Briefs your team can act on.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },

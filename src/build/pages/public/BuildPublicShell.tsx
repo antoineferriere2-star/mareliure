@@ -69,8 +69,8 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
               Métré Build
             </div>
             <p className="mt-4 max-w-sm text-sm leading-6 text-slate-300">
-              Now available for US project-based businesses. Built to turn incomplete website
-              inquiries into structured project briefs.
+              Now available for US project-based contractors. Built to turn incomplete website
+              inquiries into structured Project Briefs.
             </p>
           </div>
           <div className="grid gap-4 text-sm text-slate-300 sm:grid-cols-3">
@@ -152,7 +152,8 @@ export function PublicCtaBand() {
             See what your current website form is missing.
           </h2>
           <p className="mt-3 max-w-xl text-[16px] leading-7 text-slate-300">
-            Two minutes to review the demo. Free audit of your current inquiry flow on request.
+            Two minutes to review the demo. Free audit of your current form and inquiry flow on
+            request.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4">

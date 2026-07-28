@@ -27,6 +27,8 @@ const PUBLIC_SURFACE_FILES = [
   "src/build/components/DetectionBadge.tsx",
   "src/build/pages/admin/onboarding/SingleChoiceConfirmStep.tsx",
   "src/build/pages/admin/onboarding/PlaybookMatchStep.tsx",
+  "src/lib/structured-data.ts",
+  "src/routes/__root.tsx",
   "src/routes/index.tsx",
   "src/routes/deck-builders.tsx",
   "src/routes/how-it-works.tsx",
@@ -50,6 +52,9 @@ const BANNED_STRINGS = [
   "assumed_default",
   "Private beta",
   "Project Mission",
+  "every visitor",
+  "ready-to-quote",
+  "sales-ready project briefs",
 ];
 
 describe("public marketing surface — banned strings", () => {
@@ -61,4 +66,32 @@ describe("public marketing surface — banned strings", () => {
       }
     });
   }
+});
+
+describe("public marketing surface - marketing proposition", () => {
+  it("keeps the confirmed homepage positioning", () => {
+    const source = readFileSync(
+      resolve(repoRoot, "src/build/pages/public/BuildPublicHome.tsx"),
+      "utf8",
+    );
+
+    expect(source).toContain("Guided project intake for project-based contractors");
+    expect(source).toContain(
+      "Turn vague website inquiries into structured Project Briefs your team can act on.",
+    );
+    expect(source).toContain(
+      "More useful than a contact form. Simpler than a custom configurator.",
+    );
+  });
+
+  it("keeps the free audit offer concrete and bounded", () => {
+    const source = readFileSync(
+      resolve(repoRoot, "src/build/pages/public/BuildPublicFormPages.tsx"),
+      "utf8",
+    );
+
+    expect(source).toContain("review your current inquiry flow");
+    expect(source).toContain("recommended intake path");
+    expect(source).toContain("No obligation.");
+  });
 });

@@ -17,7 +17,7 @@ export const organizationSchema = {
   },
   image: `${SITE_URL}/og-image.png`,
   description:
-    "Métré Build turns vague website inquiries into sales-ready project briefs for project-based businesses.",
+    "Métré Build turns vague website inquiries into structured Project Briefs for project-based contractors.",
   email: "contact@oppe.fr",
   sameAs: ["https://www.linkedin.com/in/antoine-ferriere-53113048/"],
   contactPoint: [
@@ -45,14 +45,12 @@ export function breadcrumbSchema(items: { name: string; path: string }[]) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [{ name: "Home", path: "/" }, ...items].map(
-      (item, index) => ({
-        "@type": "ListItem",
-        position: index + 1,
-        name: item.name,
-        item: `${SITE_URL}${item.path}`,
-      }),
-    ),
+    itemListElement: [{ name: "Home", path: "/" }, ...items].map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      item: `${SITE_URL}${item.path}`,
+    })),
   };
 }
 
