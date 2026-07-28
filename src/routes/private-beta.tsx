@@ -20,6 +20,13 @@ export const Route = createFileRoute("/private-beta")({
       { name: "twitter:description", content: description },
     ],
     links: [{ rel: "canonical", href: "/private-beta" }],
+    scripts: [
+      jsonLdScript(
+        breadcrumbSchema([
+          { name: "Request a setup review", path: "/private-beta" },
+        ]),
+      ),
+    ],
   }),
   component: BuildPrivateBetaPage,
 });
