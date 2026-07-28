@@ -20,6 +20,13 @@ export const Route = createFileRoute("/free-inquiry-audit")({
       { name: "twitter:description", content: description },
     ],
     links: [{ rel: "canonical", href: "/free-inquiry-audit" }],
+    scripts: [
+      jsonLdScript(
+        breadcrumbSchema([
+          { name: "Free inquiry audit", path: "/free-inquiry-audit" },
+        ]),
+      ),
+    ],
   }),
   component: BuildFreeInquiryAuditPage,
 });
