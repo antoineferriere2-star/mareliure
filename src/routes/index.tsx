@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
+import {
+  jsonLdScript,
+  ORGANIZATION_ID,
+  SITE_URL,
+  WEBSITE_ID,
+} from "@/lib/structured-data";
 
 const title = "Métré Build — Project discovery for project-based businesses";
 const description =
