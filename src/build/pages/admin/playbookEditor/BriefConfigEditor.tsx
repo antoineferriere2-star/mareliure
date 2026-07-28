@@ -22,7 +22,7 @@ const selectCls = inputCls;
 function TokenHint() {
   return (
     <p className="text-[11px] text-muted-foreground">
-      Utilisez {"{{cléDuChamp}}"} pour insérer une réponse, ou {"{{cléDuChamp|lower}}"} pour l'insérer en minuscules.
+      Use {"{{fieldKey}}"} to insert an answer, or {"{{fieldKey|lower}}"} to insert it in lowercase.
     </p>
   );
 }
@@ -51,13 +51,13 @@ function CalculatedFieldRow({
             const wasAutoKey = calc.key === slugify(calc.label);
             onChange({ ...calc, label: nextLabel, ...(wasAutoKey ? { key: uniqueSlug(nextLabel, otherKeys) } : {}) });
           }}
-          placeholder="Libellé"
+          placeholder="Label"
           className={`${inputCls} sm:col-span-2`}
         />
         <input
           value={calc.key}
           onChange={(e) => onChange({ ...calc, key: e.target.value })}
-          placeholder="clé"
+          placeholder="key"
           className={`${inputCls} font-mono`}
         />
         <select
@@ -87,8 +87,8 @@ function CalculatedFieldRow({
         }}
         className={selectCls}
       >
-        <option value="multiply">Multiplier deux champs (ex : longueur × largeur)</option>
-        <option value="concat">Concaténer plusieurs champs</option>
+        <option value="multiply">Multiply two fields (e.g. length × width)</option>
+        <option value="concat">Concatenate multiple fields</option>
       </select>
 
       {compute.op === "multiply" ? (
@@ -106,7 +106,7 @@ function CalculatedFieldRow({
           <input
             value={compute.unit ?? ""}
             onChange={(e) => onChange({ ...calc, compute: { ...compute, unit: e.target.value || undefined } })}
-            placeholder="Unité (ex : sq ft)"
+            placeholder="Unit (e.g. sq ft)"
             className={inputCls}
           />
         </div>
@@ -127,7 +127,7 @@ function CalculatedFieldRow({
                   onClick={() => onChange({ ...calc, compute: { ...compute, inputs: compute.inputs.filter((_, j) => j !== i) } })}
                   className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
                 >
-                  Retirer
+                  Remove
                 </button>
               </div>
             ))}
@@ -138,12 +138,12 @@ function CalculatedFieldRow({
               onClick={() => onChange({ ...calc, compute: { ...compute, inputs: [...compute.inputs, fields[0]?.key ?? ""] } })}
               className="rounded-md border border-input bg-background px-2 py-1 text-xs hover:bg-accent"
             >
-              + Champ
+              + Field
             </button>
             <input
               value={compute.separator}
               onChange={(e) => onChange({ ...calc, compute: { ...compute, separator: e.target.value } })}
-              placeholder="Séparateur"
+              placeholder="Separator"
               className={`w-24 ${inputCls}`}
             />
           </div>
@@ -152,13 +152,13 @@ function CalculatedFieldRow({
 
       <div className="grid gap-2 sm:grid-cols-2">
         <div>
-          <label className="text-[11px] text-muted-foreground">Si la valeur ne peut pas être calculée, se replier sur :</label>
+          <label className="text-[11px] text-muted-foreground">If the value cannot be calculated, fall back to:</label>
           <select
             value={calc.fallbackFieldKey ?? ""}
             onChange={(e) => onChange({ ...calc, fallbackFieldKey: e.target.value || undefined })}
             className={`mt-1 w-full ${selectCls}`}
           >
-            <option value="">Aucun repli</option>
+            <option value="">No fallback</option>
             {fields.map((f) => (
               <option key={f.key} value={f.key}>
                 {f.label}
@@ -169,7 +169,7 @@ function CalculatedFieldRow({
         <input
           value={calc.category ?? ""}
           onChange={(e) => onChange({ ...calc, category: e.target.value || undefined })}
-          placeholder="Catégorie (optionnel)"
+          placeholder="Category (optional)"
           className={`self-end ${inputCls}`}
         />
       </div>
@@ -177,13 +177,13 @@ function CalculatedFieldRow({
         <input
           value={calc.onMissingLabel ?? ""}
           onChange={(e) => onChange({ ...calc, onMissingLabel: e.target.value || undefined })}
-          placeholder="Libellé si absent (optionnel)"
+          placeholder="Label if missing (optional)"
           className={inputCls}
         />
         <input
           value={calc.onMissingValue ?? ""}
           onChange={(e) => onChange({ ...calc, onMissingValue: e.target.value || undefined })}
-          placeholder="Valeur si absent (optionnel)"
+          placeholder="Value if missing (optional)"
           className={inputCls}
         />
       </div>
@@ -192,7 +192,7 @@ function CalculatedFieldRow({
         onClick={onRemove}
         className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
       >
-        Supprimer ce champ calculé
+        Remove this calculated field
       </button>
     </div>
   );
@@ -214,11 +214,11 @@ export function BriefConfigEditor({
   return (
     <div className="space-y-6">
       <section>
-        <h3 className="text-sm font-semibold">Général</h3>
+        <h3 className="text-sm font-semibold">General</h3>
         <TokenHint />
         <div className="mt-2 grid gap-2 sm:grid-cols-2">
           <div>
-            <label className="block text-[11px] text-muted-foreground">Nom de mission (modèle, optionnel)</label>
+            <label className="block text-[11px] text-muted-foreground">Mission name (template, optional)</label>
             <input
               value={briefConfig.missionNameTemplate ?? ""}
               onChange={(e) => patch({ missionNameTemplate: e.target.value || undefined })}
@@ -226,7 +226,7 @@ export function BriefConfigEditor({
             />
           </div>
           <div>
-            <label className="block text-[11px] text-muted-foreground">Libellé de statut (optionnel)</label>
+            <label className="block text-[11px] text-muted-foreground">Status label (optional)</label>
             <input
               value={briefConfig.statusLabel ?? ""}
               onChange={(e) => patch({ statusLabel: e.target.value || undefined })}
@@ -235,7 +235,7 @@ export function BriefConfigEditor({
           </div>
           <div className="sm:col-span-2">
             <label className="block text-[11px] text-muted-foreground">
-              Résumé par défaut si aucun fragment ne s'applique
+              Default summary if no fragment applies
             </label>
             <input
               value={briefConfig.emptySummaryFallback}
@@ -248,7 +248,7 @@ export function BriefConfigEditor({
 
       <section>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Résumé du projet</h3>
+          <h3 className="text-sm font-semibold">Project summary</h3>
           <button
             type="button"
             onClick={() => patch({ summaryFragments: [...briefConfig.summaryFragments, { template: "" }] })}
@@ -258,7 +258,7 @@ export function BriefConfigEditor({
           </button>
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Chaque fragment dont la condition est vraie est ajouté, dans l'ordre, pour former le résumé.
+          Each fragment whose condition is true is added, in order, to form the summary.
         </p>
         <div className="mt-2 space-y-2">
           {briefConfig.summaryFragments.map((frag, i) => (
@@ -273,7 +273,7 @@ export function BriefConfigEditor({
                       ),
                     })
                   }
-                  placeholder="ex : {{projectType}} pour un budget de {{budgetRange}}"
+                  placeholder="e.g. {{projectType}} with a budget of {{budgetRange}}"
                   className={`flex-1 ${inputCls}`}
                 />
                 <button
@@ -281,11 +281,11 @@ export function BriefConfigEditor({
                   onClick={() => patch({ summaryFragments: briefConfig.summaryFragments.filter((_, j) => j !== i) })}
                   className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
                 >
-                  Supprimer
+                  Remove
                 </button>
               </div>
               <details className="mt-2">
-                <summary className="cursor-pointer text-[11px] text-muted-foreground">Condition (optionnelle)</summary>
+                <summary className="cursor-pointer text-[11px] text-muted-foreground">Condition (optional)</summary>
                 <div className="mt-1">
                   <ConditionGroupEditor
                     group={frag.when}
@@ -295,7 +295,7 @@ export function BriefConfigEditor({
                       })
                     }
                     fields={fields}
-                    emptyHint="Ce fragment est toujours inclus."
+                    emptyHint="This fragment is always included."
                   />
                 </div>
               </details>
@@ -306,11 +306,11 @@ export function BriefConfigEditor({
 
       <section>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Champs calculés</h3>
+          <h3 className="text-sm font-semibold">Calculated fields</h3>
           <button
             type="button"
             onClick={() => {
-              const label = `Champ calculé ${briefConfig.calculatedFields.length + 1}`;
+              const label = `Calculated field ${briefConfig.calculatedFields.length + 1}`;
               const key = uniqueSlug(label, briefConfig.calculatedFields.map((c) => c.key));
               const next: CalculatedFieldMapping = {
                 key,
@@ -322,7 +322,7 @@ export function BriefConfigEditor({
             }}
             className="rounded-md border border-input bg-background px-2 py-1 text-xs hover:bg-accent"
           >
-            + Champ calculé
+            + Calculated field
           </button>
         </div>
         <div className="mt-2 space-y-2">
@@ -343,7 +343,7 @@ export function BriefConfigEditor({
 
       <section>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Lignes dérivées</h3>
+          <h3 className="text-sm font-semibold">Derived lines</h3>
           <button
             type="button"
             onClick={() => {
@@ -359,11 +359,11 @@ export function BriefConfigEditor({
             }}
             className="rounded-md border border-input bg-background px-2 py-1 text-xs hover:bg-accent"
           >
-            + Ligne
+            + Line
           </button>
         </div>
         <p className="mt-1 text-[11px] text-muted-foreground">
-          Une ligne ajoutée automatiquement au Dossier quand sa condition est vraie.
+          A line automatically added to the Dossier when its condition is true.
         </p>
         <div className="mt-2 space-y-2">
           {briefConfig.derivedLines.map((line, i) => (
@@ -397,9 +397,9 @@ export function BriefConfigEditor({
                   }
                   className={selectCls}
                 >
-                  <option value="deterministic_rule">Règle déterministe</option>
-                  <option value="calculated_value">Valeur calculée</option>
-                  <option value="visitor_answer">Réponse du visiteur</option>
+                  <option value="deterministic_rule">Deterministic rule</option>
+                  <option value="calculated_value">Calculated value</option>
+                  <option value="visitor_answer">Visitor answer</option>
                 </select>
               </div>
               <input
@@ -407,7 +407,7 @@ export function BriefConfigEditor({
                 onChange={(e) =>
                   patch({ derivedLines: briefConfig.derivedLines.map((l, j) => (j === i ? { ...l, label: e.target.value } : l)) })
                 }
-                placeholder="Libellé"
+                placeholder="Label"
                 className={`w-full ${inputCls}`}
               />
               <input
@@ -415,11 +415,11 @@ export function BriefConfigEditor({
                 onChange={(e) =>
                   patch({ derivedLines: briefConfig.derivedLines.map((l, j) => (j === i ? { ...l, value: e.target.value } : l)) })
                 }
-                placeholder="Valeur (peut utiliser {{cléDuChamp}})"
+                placeholder="Value (can use {{fieldKey}})"
                 className={`w-full ${inputCls}`}
               />
               <div>
-                <span className="text-[11px] font-medium text-muted-foreground">Cette ligne apparaît quand…</span>
+                <span className="text-[11px] font-medium text-muted-foreground">This line appears when…</span>
                 <div className="mt-1">
                   <ConditionGroupEditor
                     group={line.when}
@@ -427,7 +427,7 @@ export function BriefConfigEditor({
                       patch({ derivedLines: briefConfig.derivedLines.map((l, j) => (j === i ? { ...l, when: next ?? {} } : l)) })
                     }
                     fields={fields}
-                    emptyHint="Cette ligne apparaît toujours."
+                    emptyHint="This line always appears."
                   />
                 </div>
               </div>
@@ -436,7 +436,7 @@ export function BriefConfigEditor({
                 onClick={() => patch({ derivedLines: briefConfig.derivedLines.filter((_, j) => j !== i) })}
                 className="rounded-md border border-destructive/40 px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
               >
-                Supprimer
+                Remove
               </button>
             </div>
           ))}
@@ -445,7 +445,7 @@ export function BriefConfigEditor({
 
       <section>
         <div className="flex items-center justify-between">
-          <h3 className="text-sm font-semibold">Lignes toujours incluses</h3>
+          <h3 className="text-sm font-semibold">Always-included lines</h3>
           <button
             type="button"
             onClick={() => {
