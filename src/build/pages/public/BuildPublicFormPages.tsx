@@ -31,9 +31,9 @@ export function BuildFreeInquiryAuditPage() {
     <PublicFormPage
       eyebrow="Free audit"
       title="Free Website Inquiry Audit for Deck Builders"
-      description="Send us your website. We'll review how your current inquiry flow captures project details and identify the biggest gaps before the first sales call."
+      description="Send us your website. We'll review your current inquiry flow, identify what project context it misses and recommend a clearer Guided Project Intake."
       submitLabel="Audit My Website"
-      reassurance="We review your public website and send you a short, practical inquiry audit. No obligation."
+      reassurance="We review your public website and send a short, practical audit with the biggest gaps, recommended intake path and a lightweight preview. No obligation."
       form={form}
       setForm={setForm}
     />

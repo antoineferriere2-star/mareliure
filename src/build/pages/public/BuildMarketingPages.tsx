@@ -21,7 +21,7 @@ export function BuildDeckBuildersPage() {
         <PageHero
           eyebrow="Deck Builders"
           title="Qualify deck projects before the first sales call."
-          description="Métré Build helps deck builders replace vague inquiries with a guided intake that captures scope, site context, photos, budget, timing and contact consent."
+          description="Métré Build helps deck builders turn vague website inquiries into structured Project Briefs with scope, site context, photos, budget, timing and contact consent."
           primary="Get a Free Website Inquiry Audit"
           primaryTo="/free-inquiry-audit"
           secondary="Try the Live Deck Intake"
@@ -36,7 +36,7 @@ export function BuildDeckBuildersPage() {
             "Existing structure condition is unclear",
             "Budget and timing are missing",
             "Access constraints are discovered too late",
-            "Sales has to restart discovery from scratch",
+            "Sales has to rediscover the project from scratch",
           ]}
         />
         <ContentBand
@@ -140,7 +140,7 @@ export function BuildDeckBuildersPage() {
               <InfoPanel
                 title="Is this self-service?"
                 items={[
-                  "Setup is currently guided — we configure your first Playbook with you, and once published it runs on your site for every visitor.",
+                  "Setup is currently guided - we configure your first Playbook with you, and once published it runs on your site for visitors who choose to start it.",
                 ]}
               />
             </div>
@@ -176,7 +176,7 @@ export function BuildHowItWorksPage() {
       <main>
         <PageHero
           eyebrow="How it works"
-          title="From vague inquiry to structured project brief."
+          title="From vague inquiry to structured Project Brief."
           description="Métré Build gives prospects a guided project journey and gives the business a brief that prepares the first sales call."
           primary="Try the Live Deck Intake"
           primaryTo="/demo/deck-project"

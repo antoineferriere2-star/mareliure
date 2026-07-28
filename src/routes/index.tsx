@@ -1,16 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
-import {
-  jsonLdScript,
-  ORGANIZATION_ID,
-  SITE_URL,
-  WEBSITE_ID,
-} from "@/lib/structured-data";
+import { jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
 
-const title = "Métré Build — Project discovery for project-based businesses";
+const title = "Métré Build - Guided project intake for project-based contractors";
 const description =
-  "Métré Build helps customers explain complex projects and gives sales teams structured, sales-ready Project Briefs. More helpful than a form, simpler than a custom configurator.";
+  "Turn vague website inquiries into structured Project Briefs your team can act on. More useful than a contact form, simpler than a custom configurator.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -56,7 +51,7 @@ export const Route = createFileRoute("/")({
 
 // Supabase's configured Site URL sends magic-link / email-confirmation
 // redirects here instead of the app page we requested via `emailRedirectTo`
-// (its Redirect URLs allowlist needs that page added — a dashboard config
+// (its Redirect URLs allowlist needs that page added - a dashboard config
 // fix, not something this code can control). Until then, catch a stray
 // unprocessed session token in the hash and hand it to /auth, which already
 // knows how to detect the session and route to /build or /portal.

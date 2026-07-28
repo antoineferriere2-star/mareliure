@@ -26,17 +26,17 @@ export function BuildPublicHome() {
           <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,0.85fr)_1.25fr] lg:gap-10">
             <div>
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
-                Guided project intake for project-based businesses
+                Guided project intake for project-based contractors
               </p>
               <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl lg:text-5xl">
-                Turn vague website inquiries into sales-ready project briefs.
+                Turn vague website inquiries into structured Project Briefs your team can act on.
               </h1>
               <p className="mt-4 max-w-2xl text-[17px] leading-7 text-slate-700">
                 Métré Build guides customers through project scope, photos, dimensions, constraints,
                 budget and timing — so your sales team has useful context before the first call.
               </p>
               <p className="mt-3 max-w-2xl text-[15px] font-medium leading-6 text-slate-600">
-                More helpful than a form. Simpler than a custom configurator.
+                More useful than a contact form. Simpler than a custom configurator.
               </p>
               <p className="mt-2 max-w-2xl text-[13px] leading-5 text-slate-500">
                 Starting with our ready-to-use Deck Project{" "}
