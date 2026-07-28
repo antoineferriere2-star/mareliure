@@ -8,6 +8,7 @@ import {
   setMissionWorkspace,
   deleteBuildMission,
   listWorkspaces,
+  revokeMissionPublicToken,
 } from "@/build/services/admin.data.functions";
 
 export const Route = createFileRoute("/_authenticated/build/missions/$id")({
@@ -29,6 +30,7 @@ function MissionDetailPage() {
   const patchStatus = useServerFn(setMissionStatus);
   const patchWorkspace = useServerFn(setMissionWorkspace);
   const removeMission = useServerFn(deleteBuildMission);
+  const revokeToken = useServerFn(revokeMissionPublicToken);
   const [copied, setCopied] = useState(false);
 
   const listWs = useServerFn(listWorkspaces);
@@ -61,6 +63,14 @@ function MissionDetailPage() {
     },
   });
 
+  const revokeMutation = useMutation({
+    mutationFn: () => revokeToken({ data: { id } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: key });
+      queryClient.invalidateQueries({ queryKey: ["build-admin", "missions"] });
+    },
+  });
+
   const publicUrl =
     mission.public_token && mission.status === "active" && !mission.public_token_revoked_at
       ? `${typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com"}/m/${mission.public_token}`
@@ -80,7 +90,7 @@ function MissionDetailPage() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold">Statut</h2>
+          <h2 className="text-sm font-semibold">Status</h2>
           <div className="mt-2 text-sm">{mission.status}</div>
           <div className="mt-3 flex flex-wrap gap-2">
             {mission.status === "active" ? (
@@ -89,7 +99,7 @@ function MissionDetailPage() {
                 disabled={statusMutation.isPending}
                 className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
               >
-                Pause
+                Unpublish
               </button>
             ) : (
               <button
@@ -97,39 +107,64 @@ function MissionDetailPage() {
                 disabled={statusMutation.isPending}
                 className="rounded-md border border-emerald-300 bg-emerald-50 px-3 py-1.5 text-xs text-emerald-800 hover:bg-emerald-100"
               >
-                Publier
+                Publish
               </button>
             )}
+            {mission.public_token && !mission.public_token_revoked_at ? (
+              <button
+                onClick={() => {
+                  if (confirm("Revoke this public link? Existing embeds will stop loading.")) {
+                    revokeMutation.mutate();
+                  }
+                }}
+                disabled={revokeMutation.isPending}
+                className="rounded-md border border-amber-300 bg-amber-50 px-3 py-1.5 text-xs text-amber-900 hover:bg-amber-100"
+              >
+                Revoke public link
+              </button>
+            ) : null}
             {mission.status !== "archived" && (
               <button
                 onClick={() => statusMutation.mutate("archived")}
                 disabled={statusMutation.isPending}
                 className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
               >
-                Archiver
+                Archive
               </button>
             )}
             <button
               onClick={() => {
-                if (
-                  confirm("Supprimer définitivement cette mission ? Cette action est irréversible.")
-                ) {
+                if (confirm("Delete this Mission permanently? This action cannot be undone.")) {
                   deleteMutation.mutate();
                 }
               }}
               disabled={deleteMutation.isPending}
               className="rounded-md border border-destructive/40 bg-destructive/5 px-3 py-1.5 text-xs text-destructive hover:bg-destructive/10"
             >
-              Supprimer
+              Delete
             </button>
           </div>
           {statusMutation.isError && (
             <p className="mt-2 text-xs text-destructive">
               {statusMutation.error instanceof Error
                 ? statusMutation.error.message
-                : "Le changement de statut a échoué."}
+                : "Status update failed."}
             </p>
           )}
+          {revokeMutation.isError ? (
+            <p className="mt-2 text-xs text-destructive">
+              {revokeMutation.error instanceof Error
+                ? revokeMutation.error.message
+                : "Public link revocation failed."}
+            </p>
+          ) : null}
+          {deleteMutation.isError ? (
+            <p className="mt-2 text-xs text-destructive">
+              {deleteMutation.error instanceof Error
+                ? deleteMutation.error.message
+                : "Mission deletion failed."}
+            </p>
+          ) : null}
         </section>
 
         <section className="rounded-lg border border-border bg-card p-4">

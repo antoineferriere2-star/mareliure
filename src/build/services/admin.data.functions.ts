@@ -10,6 +10,13 @@ import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
 import { PLAN_IDS, getPlanDefaults } from "@/build/billing/plans";
 import { wouldExceedActiveMissions } from "@/build/billing/quota";
 import { resolvePlanColumnsUpdate } from "@/build/billing/planSync";
+import {
+  buildMissionStatusPatch,
+  canDeleteMission,
+  duplicatePlaybookName,
+  MISSION_STATUSES,
+  type MissionStatus,
+} from "@/build/intakes/intakeLifecycle";
 import { fail } from "./serverError";
 
 // ---------- Dashboard ----------
@@ -170,20 +177,25 @@ export const setMissionStatus = createServerFn({ method: "POST" })
     z
       .object({
         id: z.string().uuid(),
-        status: z.enum(["draft", "active", "paused", "archived"]),
+        status: z.enum(MISSION_STATUSES),
       })
       .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
-    const patch: { status: string; published_at?: string | null; public_token?: string } = {
-      status: data.status,
-    };
+    const patch: {
+      status: MissionStatus;
+      published_at?: string | null;
+      public_token?: string | null;
+      public_token_revoked_at?: string | null;
+    } = { status: data.status };
     if (data.status === "active") {
       const { data: existing } = await sb
         .from("build_missions")
-        .select("public_token, published_at, playbook_version_id, workspace_id, status")
+        .select(
+          "public_token, public_token_revoked_at, published_at, playbook_version_id, workspace_id, status",
+        )
         .eq("id", data.id)
         .maybeSingle();
       if (!existing?.playbook_version_id) {
@@ -212,8 +224,20 @@ export const setMissionStatus = createServerFn({ method: "POST" })
           );
         }
       }
-      if (!existing?.public_token) patch.public_token = crypto.randomUUID().replace(/-/g, "");
-      if (!existing?.published_at) patch.published_at = new Date().toISOString();
+      const lifecycle = buildMissionStatusPatch(
+        {
+          status: (existing.status ?? "draft") as MissionStatus,
+          playbook_version_id: existing.playbook_version_id,
+          public_token: existing.public_token,
+          public_token_revoked_at: existing.public_token_revoked_at,
+          published_at: existing.published_at,
+        },
+        "active",
+        new Date().toISOString(),
+        () => crypto.randomUUID().replace(/-/g, ""),
+      );
+      if (!lifecycle.ok) fail(400, lifecycle.error);
+      Object.assign(patch, lifecycle.patch);
     }
     const { data: updated, error } = await sb
       .from("build_missions")
@@ -231,9 +255,55 @@ export const deleteBuildMission = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
+    const { data: mission, error: missionError } = await sb
+      .from("build_missions")
+      .select("status")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (missionError) fail(500, missionError.message);
+    if (!mission) fail(404, "Not found");
+
+    const [dossiers, sessions] = await Promise.all([
+      sb
+        .from("build_dossiers")
+        .select("id", { count: "exact", head: true })
+        .eq("mission_id", data.id),
+      sb
+        .from("build_runtime_sessions")
+        .select("id", { count: "exact", head: true })
+        .eq("mission_id", data.id),
+    ]);
+    if (dossiers.error) fail(500, dossiers.error.message);
+    if (sessions.error) fail(500, sessions.error.message);
+
+    const deletion = canDeleteMission({
+      status: mission.status as MissionStatus,
+      dossierCount: dossiers.count ?? 0,
+      sessionCount: sessions.count ?? 0,
+    });
+    if (!deletion.ok) fail(409, deletion.error);
+
     const { error } = await sb.from("build_missions").delete().eq("id", data.id);
     if (error) fail(500, error.message);
     return { ok: true as const };
+  });
+
+export const revokeMissionPublicToken = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: updated, error } = await sb
+      .from("build_missions")
+      .update({ public_token_revoked_at: new Date().toISOString(), status: "paused" })
+      .eq("id", data.id)
+      .not("public_token", "is", null)
+      .select()
+      .maybeSingle();
+    if (error) fail(500, error.message);
+    if (!updated) fail(404, "No public token to revoke.");
+    return updated;
   });
 
 // ---------- Dossiers ----------
@@ -445,6 +515,42 @@ export const createBuildPlaybook = createServerFn({ method: "POST" })
         name: data.name,
         description: data.description ?? null,
         project_type: data.project_type ?? null,
+        created_by: context.userId,
+      })
+      .select()
+      .maybeSingle();
+    if (error) fail(500, error.message);
+    return inserted;
+  });
+
+export const duplicateBuildPlaybook = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: source, error: sourceError } = await sb
+      .from("build_playbooks")
+      .select("name, description, project_type, draft_schema")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (sourceError) fail(500, sourceError.message);
+    if (!source) fail(404, "Not found");
+
+    const parsedSchema = playbookSchema.safeParse(source.draft_schema);
+    if (!parsedSchema.success) {
+      fail(400, "The source draft schema is malformed and cannot be duplicated.");
+    }
+
+    const { data: inserted, error } = await sb
+      .from("build_playbooks")
+      .insert({
+        name: duplicatePlaybookName(source.name),
+        description: source.description,
+        project_type: source.project_type,
+        draft_schema: parsedSchema.data as unknown as Json,
+        published_version_id: null,
+        is_active: false,
         created_by: context.userId,
       })
       .select()
