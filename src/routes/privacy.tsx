@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildLegalPage } from "@/build/pages/public/BuildMarketingPages";
+import { breadcrumbSchema, jsonLdScript } from "@/lib/structured-data";
 
 const title = "Privacy — Métré Build";
 const description = "Métré Build privacy summary.";
