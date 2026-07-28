@@ -11,10 +11,15 @@ export const organizationSchema = {
   "@id": ORGANIZATION_ID,
   name: SITE_NAME,
   url: `${SITE_URL}/`,
-  logo: `${SITE_URL}/metre-icon.svg`,
+  logo: {
+    "@type": "ImageObject",
+    url: `${SITE_URL}/metre-icon.svg`,
+  },
+  image: `${SITE_URL}/og-image.png`,
   description:
     "Métré Build turns vague website inquiries into sales-ready project briefs for project-based businesses.",
   email: "contact@oppe.fr",
+  sameAs: ["https://www.linkedin.com/in/antoine-ferriere-53113048/"],
   contactPoint: [
     {
       "@type": "ContactPoint",

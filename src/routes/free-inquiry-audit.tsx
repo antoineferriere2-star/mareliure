@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildFreeInquiryAuditPage } from "@/build/pages/public/BuildPublicFormPages";
-import { breadcrumbSchema, jsonLdScript } from "@/lib/structured-data";
+import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
 
 const title = "Free inquiry audit — Métré Build";
 const description =
@@ -14,12 +14,12 @@ export const Route = createFileRoute("/free-inquiry-audit")({
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
-      { property: "og:url", content: "/free-inquiry-audit" },
+      { property: "og:url", content: `${SITE_URL}/free-inquiry-audit` },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
     ],
-    links: [{ rel: "canonical", href: "/free-inquiry-audit" }],
+    links: [{ rel: "canonical", href: `${SITE_URL}/free-inquiry-audit` }],
     scripts: [
       jsonLdScript(
         breadcrumbSchema([
