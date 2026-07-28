@@ -32,6 +32,16 @@ export interface BetaRequestInput {
   website?: string;
 }
 
+export interface ContactRequestInput {
+  name: string;
+  email: string;
+  company: string;
+  subject: string;
+  message: string;
+  consent: boolean;
+  website?: string;
+}
+
 export function isValidEmail(value: string): boolean {
   return /^\S+@\S+\.\S+$/.test(value.trim());
 }
@@ -62,6 +72,17 @@ export function validateBetaRequest(input: BetaRequestInput): string[] {
   if (!input.businessType.trim()) errors.push("Business type is required.");
   if (!input.monthlyInquiries.trim()) errors.push("Choose a monthly inquiry range.");
   if (!isValidEmail(input.email)) errors.push("Enter a valid email.");
+  if (!input.consent) errors.push("Consent is required.");
+  return errors;
+}
+
+export function validateContactRequest(input: ContactRequestInput): string[] {
+  const errors: string[] = [];
+  if (input.website) errors.push("Spam check failed.");
+  if (!input.name.trim()) errors.push("Name is required.");
+  if (!isValidEmail(input.email)) errors.push("Enter a valid email.");
+  if (!input.subject.trim()) errors.push("Subject is required.");
+  if (!input.message.trim()) errors.push("Message is required.");
   if (!input.consent) errors.push("Consent is required.");
   return errors;
 }
@@ -101,4 +122,30 @@ export async function submitBuildPublicRequest(
   }
   const body = (await response.json()) as { id: string };
   return { id: body.id };
+}
+
+export async function submitPublicContactRequest(
+  payload: ContactRequestInput,
+): Promise<{ ok: true }> {
+  const errors = validateContactRequest(payload);
+  if (errors.length > 0) throw new Error(errors[0]);
+
+  const { website, ...cleanPayload } = payload;
+  const sourcePath = typeof window !== "undefined" ? window.location.pathname : "/contact";
+
+  const response = await fetch("/api/public/contact", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      sourcePath,
+      website: website ?? "",
+      payload: cleanPayload,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = (await response.json().catch(() => ({}))) as { error?: string };
+    throw new Error(body.error ?? "Unable to send this message.");
+  }
+  return { ok: true };
 }

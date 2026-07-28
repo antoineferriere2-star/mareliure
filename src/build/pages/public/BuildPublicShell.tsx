@@ -38,6 +38,7 @@ function BuildPublicShellContent({ children }: { children: ReactNode }) {
     { labelKey: "navigation.howItWorks" as const, to: "/how-it-works" as const },
     { labelKey: "navigation.exampleBrief" as const, to: "/example-project-brief" as const },
     { labelKey: "navigation.freeAudit" as const, to: "/free-inquiry-audit" as const },
+    { labelKey: "navigation.contact" as const, to: "/contact" as const },
   ];
 
   return (
@@ -105,6 +106,7 @@ function BuildPublicShellContent({ children }: { children: ReactNode }) {
             <FooterCol title={t(locale, "footer.legal")}>
               <FooterLink to="/privacy">{t(locale, "footer.privacy")}</FooterLink>
               <FooterLink to="/terms">{t(locale, "footer.terms")}</FooterLink>
+              <FooterLink to="/contact">{t(locale, "footer.contact")}</FooterLink>
             </FooterCol>
           </div>
         </div>

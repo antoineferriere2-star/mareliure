@@ -8,10 +8,12 @@ import { BuildPublicShell, SectionHeader } from "@/build/pages/public/BuildPubli
 import { CHOICE_BUTTON_CLASS } from "@/build/engine/fields/types";
 import {
   submitBuildPublicRequest,
+  submitPublicContactRequest,
   isValidEmail,
   isValidWebsiteUrl,
   type AuditRequestInput,
   type BetaRequestInput,
+  type ContactRequestInput,
 } from "@/build/services/buildPublicForms";
 import {
   publicCopy,
@@ -42,6 +44,137 @@ export function BuildFreeInquiryAuditPage() {
       form={form}
       setForm={setForm}
     />
+  );
+}
+
+export function BuildContactPage() {
+  const [form, setForm] = useState<ContactRequestInput>({
+    name: "",
+    email: "",
+    company: "",
+    subject: "",
+    message: "",
+    consent: false,
+    website: "",
+  });
+
+  return (
+    <BuildPublicShell>
+      <BuildContactPageContent form={form} setForm={setForm} />
+    </BuildPublicShell>
+  );
+}
+
+function BuildContactPageContent({
+  form,
+  setForm,
+}: {
+  form: ContactRequestInput;
+  setForm: Dispatch<SetStateAction<ContactRequestInput>>;
+}) {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
+  const [status, setStatus] = useState<"idle" | "submitting" | "success">("idle");
+  const [error, setError] = useState<string | null>(null);
+
+  async function submit(event: React.FormEvent) {
+    event.preventDefault();
+    setStatus("submitting");
+    setError(null);
+    try {
+      await submitPublicContactRequest(form);
+      setStatus("success");
+      setForm({
+        name: "",
+        email: "",
+        company: "",
+        subject: "",
+        message: "",
+        consent: false,
+        website: "",
+      });
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unable to send this message.");
+      setStatus("idle");
+    }
+  }
+
+  return (
+    <main className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[420px_1fr]">
+        <SectionHeader
+          as="h1"
+          eyebrow={copy("Contact")}
+          title={copy("Contact Métré Build")}
+          description={copy(
+            "Send a direct message to the Métré Build team. We reply from contact@oppe.fr.",
+          )}
+        />
+        <form
+          onSubmit={submit}
+          className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+        >
+          <input
+            className="hidden"
+            tabIndex={-1}
+            autoComplete="off"
+            value={form.website ?? ""}
+            onChange={(event) => setForm({ ...form, website: event.target.value })}
+          />
+          <div className="grid gap-4 md:grid-cols-2">
+            <Field
+              label={copy("Name")}
+              value={form.name}
+              onChange={(value) => setForm({ ...form, name: value })}
+            />
+            <Field
+              label={copy("Work email")}
+              value={form.email}
+              onChange={(value) => setForm({ ...form, email: value })}
+            />
+            <Field
+              label={copy("Company (optional)")}
+              value={form.company}
+              onChange={(value) => setForm({ ...form, company: value })}
+            />
+            <Field
+              label={copy("Subject")}
+              value={form.subject}
+              onChange={(value) => setForm({ ...form, subject: value })}
+            />
+            <div className="md:col-span-2">
+              <Label>{copy("Message")}</Label>
+              <Textarea
+                className="mt-1 min-h-36"
+                value={form.message}
+                onChange={(event) => setForm({ ...form, message: event.target.value })}
+              />
+            </div>
+            <Consent
+              checked={form.consent}
+              onChange={(consent) => setForm({ ...form, consent })}
+              className="md:col-span-2"
+              locale={locale}
+            />
+          </div>
+
+          {error && (
+            <p className="mt-4 rounded-md border border-rose-200 bg-rose-50 p-3 text-sm text-rose-800">
+              {copy(error)}
+            </p>
+          )}
+          {status === "success" ? (
+            <div className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+              {copy("Message sent. We will reply from contact@oppe.fr.")}
+            </div>
+          ) : (
+            <Button className="mt-5" disabled={status === "submitting"}>
+              {status === "submitting" ? copy("Sending") : copy("Send message")}
+            </Button>
+          )}
+        </form>
+      </div>
+    </main>
   );
 }
 

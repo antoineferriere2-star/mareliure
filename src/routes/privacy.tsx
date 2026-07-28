@@ -16,15 +16,13 @@ export const Route = createFileRoute("/privacy")({
       { property: "og:url", content: `${SITE_URL}/privacy` },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/privacy` }],
-    scripts: [
-      jsonLdScript(breadcrumbSchema([{ name: "Privacy", path: "/privacy" }])),
-    ],
+    scripts: [jsonLdScript(breadcrumbSchema([{ name: "Privacy", path: "/privacy" }]))],
   }),
   component: () => (
     <BuildLegalPage
       title="Privacy"
       paragraphs={[
-        "Métré Build collects information submitted through website audit and setup request forms so the team can review requests and respond.",
+        "Métré Build collects information submitted through website audit, setup request and contact forms so the team can review requests and respond.",
         "Demo Project Brief data is fictional or stored locally in your browser unless you submit a real request.",
         "Real customer responses, runtime sessions and project briefs are not intended to be indexed or exposed publicly.",
         "Categories of data collected: contact details (name, email), website URL, and any information you provide in a request form. Questions about this policy can be sent to contact@oppe.fr.",

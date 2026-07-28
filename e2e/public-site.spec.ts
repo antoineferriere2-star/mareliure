@@ -79,6 +79,10 @@ test.describe("home page", () => {
     await page.goto("/terms");
     await expect(page.getByRole("heading", { level: 1, name: "Términos" })).toBeVisible();
 
+    await page.goto("/contact");
+    await expect(page.getByRole("heading", { level: 1, name: /Contactar a/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Enviar mensaje" })).toBeVisible();
+
     // `/demo/deck-project` needs Supabase runtime secrets locally; the route
     // falls back to a server runtime error in this E2E environment before the
     // client locale provider hydrates.
@@ -101,6 +105,9 @@ test.describe("home page", () => {
 
     await page.getByRole("link", { name: "Free audit" }).first().click();
     await expect(page).toHaveURL(/\/free-inquiry-audit$/);
+
+    await page.getByRole("link", { name: "Contact" }).first().click();
+    await expect(page).toHaveURL(/\/contact$/);
   });
 
   test("footer reaches the legal pages", async ({ page }) => {
@@ -161,5 +168,16 @@ test.describe("free inquiry audit page", () => {
     await page.goto("/free-inquiry-audit");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     await expect(page.locator("form")).toBeVisible();
+  });
+});
+
+test.describe("contact page", () => {
+  test("renders the contact form without submitting real email", async ({ page }) => {
+    await page.goto("/contact");
+    await expect(page.getByRole("heading", { name: /Contact/ })).toBeVisible();
+    await expect(page.getByLabel("Name")).toBeVisible();
+    await expect(page.getByLabel("Work email")).toBeVisible();
+    await expect(page.getByLabel("Subject")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Send message" })).toBeVisible();
   });
 });
