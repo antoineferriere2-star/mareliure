@@ -69,7 +69,9 @@ export const listWorkspaceMissions = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data: missions, error } = await sb
       .from("build_missions")
-      .select("id, name, status, playbook_name, public_token, published_at, created_at")
+      .select(
+        "id, name, status, playbook_name, public_token, public_token_revoked_at, published_at, created_at",
+      )
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false })
       .limit(200);

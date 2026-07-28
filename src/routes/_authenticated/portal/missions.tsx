@@ -15,6 +15,7 @@ import {
   setMissionPaused,
 } from "@/build/services/portal.data.functions";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
+import { IntegrationSnippetsPanel } from "@/build/pages/integration/IntegrationSnippetsPanel";
 
 export const Route = createFileRoute("/_authenticated/portal/missions")({
   ssr: false,
@@ -77,6 +78,13 @@ function PortalMissionsPage() {
     queryFn: () => fetchUsage({ data: { workspaceId } }),
     enabled: workspaceId.length > 0,
   });
+  const publicMissions =
+    missions?.filter(
+      (mission): mission is typeof mission & { public_token: string } =>
+        mission.status === "active" &&
+        mission.public_token !== null &&
+        mission.public_token_revoked_at === null,
+    ) ?? [];
 
   if (workspaces.length === 0) {
     return (
@@ -136,69 +144,91 @@ function PortalMissionsPage() {
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-border bg-card">
-          <table className="w-full min-w-[560px] text-sm">
-            <thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
-              <tr>
-                <th className="px-4 py-2 text-left">Mission</th>
-                <th className="px-4 py-2 text-left">Playbook</th>
-                <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-right">Dossiers</th>
-                <th className="px-4 py-2 text-left">Public link</th>
-                {isOwner && <th className="px-4 py-2 text-left">Actions</th>}
-              </tr>
-            </thead>
-            <tbody>
-              {missions.map((m) => (
-                <tr key={m.id} className="border-b border-border/60 last:border-b-0">
-                  <td className="px-4 py-3 font-medium text-foreground">{m.name}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {m.playbook_name ?? "—"}
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {STATUS_LABELS[m.status] ?? m.status}
-                  </td>
-                  <td className="px-4 py-3 text-right tabular-nums">{m.dossierCount}</td>
-                  <td className="px-4 py-3 text-xs">
-                    {m.public_token ? (
-                      <a
-                        href={`/m/${m.public_token}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="text-primary hover:underline"
-                      >
-                        Open
-                      </a>
-                    ) : (
-                      <span className="text-muted-foreground">Not published</span>
-                    )}
-                  </td>
-                  {isOwner && (
+        <>
+          <div className="overflow-x-auto rounded-lg border border-border bg-card">
+            <table className="w-full min-w-[560px] text-sm">
+              <thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
+                <tr>
+                  <th className="px-4 py-2 text-left">Mission</th>
+                  <th className="px-4 py-2 text-left">Playbook</th>
+                  <th className="px-4 py-2 text-left">Status</th>
+                  <th className="px-4 py-2 text-right">Dossiers</th>
+                  <th className="px-4 py-2 text-left">Public link</th>
+                  {isOwner && <th className="px-4 py-2 text-left">Actions</th>}
+                </tr>
+              </thead>
+              <tbody>
+                {missions.map((m) => (
+                  <tr key={m.id} className="border-b border-border/60 last:border-b-0">
+                    <td className="px-4 py-3 font-medium text-foreground">{m.name}</td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {m.playbook_name ?? "—"}
+                    </td>
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
+                      {STATUS_LABELS[m.status] ?? m.status}
+                    </td>
+                    <td className="px-4 py-3 text-right tabular-nums">{m.dossierCount}</td>
                     <td className="px-4 py-3 text-xs">
-                      {m.status === "active" || m.status === "paused" ? (
-                        <button
-                          type="button"
-                          onClick={() =>
-                            toggleMutation.mutate({
-                              missionId: m.id,
-                              paused: m.status === "active",
-                            })
-                          }
-                          disabled={toggleMutation.isPending}
-                          className="rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium text-foreground hover:bg-accent disabled:opacity-50"
+                      {m.status === "active" && m.public_token && !m.public_token_revoked_at ? (
+                        <a
+                          href={`/m/${m.public_token}`}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="text-primary hover:underline"
                         >
-                          {m.status === "active" ? "Pause" : "Reactivate"}
-                        </button>
+                          Open
+                        </a>
                       ) : (
-                        <span className="text-muted-foreground">—</span>
+                        <span className="text-muted-foreground">Not published</span>
                       )}
                     </td>
-                  )}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+                    {isOwner && (
+                      <td className="px-4 py-3 text-xs">
+                        {m.status === "active" || m.status === "paused" ? (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              toggleMutation.mutate({
+                                missionId: m.id,
+                                paused: m.status === "active",
+                              })
+                            }
+                            disabled={toggleMutation.isPending}
+                            className="rounded-md border border-input bg-background px-2.5 py-1 text-xs font-medium text-foreground hover:bg-accent disabled:opacity-50"
+                          >
+                            {m.status === "active" ? "Pause" : "Reactivate"}
+                          </button>
+                        ) : (
+                          <span className="text-muted-foreground">—</span>
+                        )}
+                      </td>
+                    )}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          {publicMissions.length > 0 ? (
+            <section className="rounded-lg border border-border bg-card p-4">
+              <h2 className="text-sm font-semibold text-foreground">Website integration</h2>
+              <div className="mt-4 space-y-6">
+                {publicMissions.map((mission) => (
+                  <div
+                    key={mission.id}
+                    className="border-t border-border pt-4 first:border-t-0 first:pt-0"
+                  >
+                    <p className="mb-3 text-sm font-medium text-foreground">{mission.name}</p>
+                    <IntegrationSnippetsPanel
+                      publicUrl={`/m/${mission.public_token}`}
+                      ctaLabel="Start your project"
+                      iframeTitle={`${mission.name} project intake`}
+                    />
+                  </div>
+                ))}
+              </div>
+            </section>
+          ) : null}
+        </>
       )}
     </div>
   );
