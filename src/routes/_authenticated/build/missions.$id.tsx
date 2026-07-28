@@ -1,7 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useSuspenseQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
 import {
   getBuildMission,
   setMissionStatus,
@@ -9,6 +8,7 @@ import {
   deleteBuildMission,
   listWorkspaces,
 } from "@/build/services/admin.data.functions";
+import { IntegrationSnippetsPanel } from "@/build/pages/integration/IntegrationSnippetsPanel";
 
 export const Route = createFileRoute("/_authenticated/build/missions/$id")({
   ssr: false,
@@ -29,7 +29,6 @@ function MissionDetailPage() {
   const patchStatus = useServerFn(setMissionStatus);
   const patchWorkspace = useServerFn(setMissionWorkspace);
   const removeMission = useServerFn(deleteBuildMission);
-  const [copied, setCopied] = useState(false);
 
   const listWs = useServerFn(listWorkspaces);
   const wsOpts = queryOptions({
@@ -61,9 +60,9 @@ function MissionDetailPage() {
     },
   });
 
-  const publicUrl =
+  const publicPath =
     mission.public_token && mission.status === "active" && !mission.public_token_revoked_at
-      ? `${typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com"}/m/${mission.public_token}`
+      ? `/m/${mission.public_token}`
       : null;
 
   return (
@@ -163,32 +162,27 @@ function MissionDetailPage() {
       </div>
 
       <section className="rounded-lg border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold">Lien public runtime</h2>
-        {publicUrl ? (
-          <div className="mt-2 flex flex-col gap-2 sm:flex-row sm:items-center">
-            <code className="flex-1 truncate rounded bg-muted px-2 py-1 text-xs">{publicUrl}</code>
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(publicUrl);
-                setCopied(true);
-                setTimeout(() => setCopied(false), 1500);
-              }}
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
-            >
-              {copied ? "Copié !" : "Copy link"}
-            </button>
+        <h2 className="text-sm font-semibold">Website integration</h2>
+        {publicPath ? (
+          <div className="mt-2 space-y-3">
+            <IntegrationSnippetsPanel
+              publicUrl={publicPath}
+              ctaLabel="Start your project"
+              iframeTitle={`${mission.name} project intake`}
+            />
             <a
-              href={publicUrl}
+              href={publicPath}
               target="_blank"
               rel="noreferrer"
-              className="rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
+              className="inline-flex rounded-md border border-input bg-background px-3 py-1.5 text-xs hover:bg-accent"
             >
               Open runtime
             </a>
           </div>
         ) : (
           <p className="mt-2 text-xs text-muted-foreground">
-            Le lien public sera généré lorsque la mission passera en statut « active ».
+            The public link is generated when this Mission is active and its token has not been
+            revoked.
           </p>
         )}
       </section>

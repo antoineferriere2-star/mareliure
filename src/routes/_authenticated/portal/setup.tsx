@@ -30,6 +30,7 @@ import {
   type SetupStep,
 } from "@/build/onboarding/portalOnboarding";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
+import { IntegrationSnippetsPanel } from "@/build/pages/integration/IntegrationSnippetsPanel";
 
 export const Route = createFileRoute("/_authenticated/portal/setup")({
   ssr: false,
@@ -891,70 +892,6 @@ function PreviewStep({
 
 // ------------------------------------------------------------------ Step 6
 
-function SnippetBlock({ publicUrl }: { publicUrl: string }) {
-  const [copied, setCopied] = useState<"link" | "snippet" | null>(null);
-  const fullUrl =
-    typeof window !== "undefined" ? `${window.location.origin}${publicUrl}` : publicUrl;
-  const snippet = `<a href="${fullUrl}" target="_blank" rel="noopener">Get a project estimate</a>`;
-
-  async function copy(text: string, which: "link" | "snippet") {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(which);
-      setTimeout(() => setCopied(null), 2000);
-    } catch {
-      // Clipboard access can be denied by the browser; the text is still
-      // selectable manually, so this is not a hard failure.
-    }
-  }
-
-  return (
-    <div className="space-y-4">
-      <div>
-        <label className="mb-1 block text-xs font-medium text-foreground">Direct link</label>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            readOnly
-            value={fullUrl}
-            className="w-full flex-1 rounded-md border border-input bg-muted/40 px-3 py-2 text-sm text-foreground"
-          />
-          <button
-            type="button"
-            onClick={() => copy(fullUrl, "link")}
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
-          >
-            {copied === "link" ? "Copied" : "Copy"}
-          </button>
-        </div>
-      </div>
-      <div>
-        <label className="mb-1 block text-xs font-medium text-foreground">
-          Snippet for your website
-        </label>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <textarea
-            readOnly
-            rows={2}
-            value={snippet}
-            className="w-full flex-1 rounded-md border border-input bg-muted/40 px-3 py-2 font-mono text-xs text-foreground"
-          />
-          <button
-            type="button"
-            onClick={() => copy(snippet, "snippet")}
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
-          >
-            {copied === "snippet" ? "Copied" : "Copy"}
-          </button>
-        </div>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Paste this anywhere in your site's HTML — a button, a menu item, a page footer. It opens
-          your project intake in a new tab and won't affect your site's styling.
-        </p>
-      </div>
-    </div>
-  );
-}
-
 function PublishStep({
   workspaceId,
   setup,
@@ -1003,7 +940,11 @@ function PublishStep({
           </p>
         </div>
         <div className="mt-4">
-          <SnippetBlock publicUrl={setup.publicUrl} />
+          <IntegrationSnippetsPanel
+            publicUrl={setup.publicUrl}
+            ctaLabel={branding.ctaLabel || "Start your project"}
+            iframeTitle={`${branding.displayName} project intake`}
+          />
         </div>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
           <Link
