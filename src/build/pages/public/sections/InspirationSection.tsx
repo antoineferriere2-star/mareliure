@@ -3,6 +3,7 @@ import { SectionHeader } from "@/build/pages/public/BuildPublicShell";
 import { InspirationPhotoField } from "@/build/engine/fields/InspirationPhotoField";
 import { demoInspirationPhotoField, demoInspirationAnswer } from "@/build/content/demoProductData";
 import type { AnswerValue } from "@/build/schema/answers";
+import { publicCopy, usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 
 /**
  * Simple schematic illustration standing in for an inspiration photo — never
@@ -10,11 +11,14 @@ import type { AnswerValue } from "@/build/schema/answers";
  * Inline SVG: no extra network request, crisp at any size.
  */
 function InspirationIllustration() {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
+
   return (
     <svg
       viewBox="0 0 400 300"
       role="img"
-      aria-label="Schematic illustration of a backyard deck with railing and stairs"
+      aria-label={copy("Schematic illustration of a backyard deck with railing and stairs")}
       className="w-full min-w-0 rounded-md border border-slate-200 bg-slate-50"
     >
       <rect x="0" y="0" width="400" height="300" fill="#f8fafc" />
@@ -54,7 +58,7 @@ function InspirationIllustration() {
         strokeWidth="2"
       />
       <text x="200" y="30" textAnchor="middle" fontSize="14" fill="#64748b" fontFamily="sans-serif">
-        Schematic — not an actual photo
+        {copy("Schematic — not an actual photo")}
       </text>
     </svg>
   );
@@ -62,31 +66,42 @@ function InspirationIllustration() {
 
 /** Bare illustration + field, no heading/section wrapper — for embedding compactly inside another section. */
 export function InspirationPreview() {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
   const [answer, setAnswer] = useState<AnswerValue>(demoInspirationAnswer);
+  const field = {
+    ...demoInspirationPhotoField,
+    label: copy(demoInspirationPhotoField.label),
+    helpText: demoInspirationPhotoField.helpText
+      ? copy(demoInspirationPhotoField.helpText)
+      : demoInspirationPhotoField.helpText,
+  };
+
   return (
     <div className="grid min-w-0 gap-4 sm:grid-cols-2 sm:items-start">
       <div className="min-w-0">
         <InspirationIllustration />
       </div>
       <div className="min-w-0">
-        <InspirationPhotoField
-          field={demoInspirationPhotoField}
-          value={answer}
-          onChange={setAnswer}
-        />
+        <InspirationPhotoField field={field} value={answer} onChange={setAnswer} />
       </div>
     </div>
   );
 }
 
 export function InspirationSection() {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
+
   return (
     <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeader
-          eyebrow="Start from a photo"
-          title="Customers who don't have the words can start from a picture instead."
-          description="An inspiration photo — their own yard, a screenshot, a catalog picture — is analyzed and turned into hypotheses the visitor confirms or corrects. Nothing is presented as fact until they say so."
+          eyebrow={copy("Start from a photo")}
+          title={copy("Customers who don't have the words can start from a picture instead.")}
+          description={copy(
+            "An inspiration photo — their own yard, a screenshot, a catalog picture — is analyzed and turned into hypotheses the visitor confirms or corrects. Nothing is presented as fact until they say so.",
+          )}
         />
         <div className="mt-8">
           <InspirationPreview />

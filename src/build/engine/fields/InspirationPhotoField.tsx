@@ -5,6 +5,7 @@ import type { InspirationPhotoField as InspirationPhotoFieldDef } from "@/build/
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DetectionBadge } from "@/build/components/DetectionBadge";
+import { publicCopy, useOptionalPublicLocale } from "@/build/pages/public/publicLocaleContext";
 import type { FieldComponentProps } from "./types";
 
 function resizeToBase64(
@@ -50,16 +51,25 @@ function HypothesisRow({
   confirmed: boolean;
   onChange: (value: string) => void;
 }) {
+  const { locale } = useOptionalPublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
+
   return (
     <div className="rounded-md border border-slate-200 bg-white p-3">
       <div className="flex items-center justify-between gap-2">
         <span className="text-xs font-medium text-slate-700">{label}</span>
-        <DetectionBadge state={confirmed ? "confirmed" : "detected"} />
+        <DetectionBadge
+          state={confirmed ? "confirmed" : "detected"}
+          labels={{
+            detected: copy("Detected from the provided information"),
+            confirmed: copy("Confirmed"),
+          }}
+        />
       </div>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        placeholder="Not detected — add details if needed"
+        placeholder={copy("Not detected — add details if needed")}
         className="mt-2 w-full min-w-0 rounded-md border border-slate-200 px-2 py-1 text-sm"
       />
     </div>
@@ -73,6 +83,8 @@ export function InspirationPhotoField({
   error,
   analyzeInspirationPhoto,
 }: FieldComponentProps<InspirationPhotoFieldDef>) {
+  const { locale } = useOptionalPublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
   const answer =
     value && typeof value === "object" && "photoPath" in value
       ? (value as InspirationPhotoAnswer)
@@ -131,9 +143,9 @@ export function InspirationPhotoField({
     <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6">
       <Upload className="h-6 w-6 text-emerald-700" />
       <Label htmlFor={field.key} className="mt-4 block font-semibold">
-        {field.label}
+        {copy(field.label)}
       </Label>
-      {field.helpText && <p className="mt-2 text-sm text-slate-600">{field.helpText}</p>}
+      {field.helpText && <p className="mt-2 text-sm text-slate-600">{copy(field.helpText)}</p>}
 
       {!answer && (
         <Input
@@ -146,9 +158,9 @@ export function InspirationPhotoField({
         />
       )}
 
-      {analyzing && <p className="mt-3 text-sm text-slate-600">Analyzing the image…</p>}
+      {analyzing && <p className="mt-3 text-sm text-slate-600">{copy("Analyzing the image…")}</p>}
       {(error || analyzeError) && (
-        <p className="mt-2 text-sm text-rose-700">{error ?? analyzeError}</p>
+        <p className="mt-2 text-sm text-rose-700">{copy(error ?? analyzeError ?? "")}</p>
       )}
 
       {previewUrl && (
@@ -162,19 +174,19 @@ export function InspirationPhotoField({
       {answer && !analyzing && (
         <div className="mt-4 space-y-3">
           <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
-            AI observations — review and confirm
+            {copy("AI observations — review and confirm")}
           </p>
 
           <HypothesisRow
-            label="Style"
+            label={copy("Style")}
             confirmed={answer.confirmed.style === true}
-            value={answer.hypotheses.style ?? ""}
+            value={copy(answer.hypotheses.style ?? "")}
             onChange={(v) => updateHypothesis({ style: v || undefined }, ["style"])}
           />
           <HypothesisRow
-            label="Materials"
+            label={copy("Materials")}
             confirmed={answer.confirmed.materials === true}
-            value={answer.hypotheses.materials.join(", ")}
+            value={answer.hypotheses.materials.map(copy).join(", ")}
             onChange={(v) =>
               updateHypothesis(
                 {
@@ -188,15 +200,15 @@ export function InspirationPhotoField({
             }
           />
           <HypothesisRow
-            label="Shape"
+            label={copy("Shape")}
             confirmed={answer.confirmed.shape === true}
-            value={answer.hypotheses.shape ?? ""}
+            value={copy(answer.hypotheses.shape ?? "")}
             onChange={(v) => updateHypothesis({ shape: v || undefined }, ["shape"])}
           />
           <HypothesisRow
-            label="Elements"
+            label={copy("Elements")}
             confirmed={answer.confirmed.elements === true}
-            value={answer.hypotheses.elements.join(", ")}
+            value={answer.hypotheses.elements.map(copy).join(", ")}
             onChange={(v) =>
               updateHypothesis(
                 {
@@ -212,10 +224,12 @@ export function InspirationPhotoField({
 
           {answer.suggestedQuestions.length > 0 && (
             <div className="rounded-md bg-white p-3 text-xs text-slate-600">
-              <p className="font-medium text-slate-700">Topics to review with the sales team:</p>
+              <p className="font-medium text-slate-700">
+                {copy("Topics to review with the sales team:")}
+              </p>
               <ul className="mt-1 list-disc pl-4">
                 {answer.suggestedQuestions.map((q) => (
-                  <li key={q}>{q}</li>
+                  <li key={q}>{copy(q)}</li>
                 ))}
               </ul>
             </div>

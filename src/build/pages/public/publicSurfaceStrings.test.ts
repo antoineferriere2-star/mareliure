@@ -16,6 +16,7 @@ const PUBLIC_SURFACE_FILES = [
   "src/build/pages/public/BuildPublicShell.tsx",
   "src/build/pages/public/BuildMarketingPages.tsx",
   "src/build/pages/public/BuildPublicFormPages.tsx",
+  "src/build/pages/public/MissionRuntime.tsx",
   "src/build/pages/public/BriefPreview.tsx",
   "src/build/pages/public/BriefSummary.tsx",
   "src/build/pages/public/AdminPreviewShots.tsx",
@@ -101,6 +102,18 @@ describe("public marketing surface - marketing proposition", () => {
     expect(localeSource).toContain("metre-build-public-locale");
     expect(localeSource).toContain('"en-US"');
     expect(localeSource).toContain('"es-US"');
+  });
+
+  it("wires the selected public language into the runtime intake labels", () => {
+    const source = readFileSync(
+      resolve(repoRoot, "src/build/pages/public/MissionRuntime.tsx"),
+      "utf8",
+    );
+
+    expect(source).toContain("usePublicLocale");
+    expect(source).toContain("localizeField(field, copy)");
+    expect(source).toContain('copy("Continue")');
+    expect(source).toContain('copy("Generate project brief")');
   });
 
   it("keeps the free audit offer concrete and bounded", () => {

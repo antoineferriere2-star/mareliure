@@ -9,6 +9,7 @@ import {
   demoDossiersRows,
   demoOnboarding,
 } from "@/build/content/demoProductData";
+import { publicCopy, usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 
 function OnboardingPreview() {
   const [step, setStep] = useState<"business" | "match">("business");
@@ -42,29 +43,34 @@ function OnboardingPreview() {
 }
 
 export function InsideMetreBuildSection() {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
+
   return (
     <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <SectionHeader
-          eyebrow="Inside Métré Build"
-          title="What your team sees, and how a Playbook gets set up in the first place."
+          eyebrow={copy("Inside Métré Build")}
+          title={copy("What your team sees, and how a Playbook gets set up in the first place.")}
         />
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
           <ProductShot
-            title="Project Intakes at a glance"
-            description="Every guided journey, its status and its Playbook in one list."
+            title={copy("Project Intakes at a glance")}
+            description={copy("Every guided journey, its status and its Playbook in one list.")}
           >
             <MissionsListPreview rows={demoMissionsRows} />
           </ProductShot>
           <ProductShot
-            title="Project Briefs ready to work"
-            description="Confidence and missing information surfaced before the first call."
+            title={copy("Project Briefs ready to work")}
+            description={copy("Confidence and missing information surfaced before the first call.")}
           >
             <DossiersListPreview rows={demoDossiersRows} />
           </ProductShot>
           <ProductShot
-            title="Website setup in minutes"
-            description="Point it at a business's website — the business type and a matching Playbook are proposed automatically."
+            title={copy("Website setup in minutes")}
+            description={copy(
+              "Point it at a business's website — the business type and a matching Playbook are proposed automatically.",
+            )}
           >
             <OnboardingPreview />
           </ProductShot>

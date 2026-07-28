@@ -2,6 +2,7 @@ import { ArrowRight, Check, FileText, Sparkles } from "lucide-react";
 import type { ProjectBrief } from "@/build/schema/brief";
 import { deckPlaybookSchema } from "@/build/playbooks/deckPlaybookSchema";
 import { BRIEF_SOURCE_LABELS, pickOneLinePerSource } from "@/build/schema/briefLabels";
+import { publicCopy, usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 
 const missionSteps = deckPlaybookSchema.sections
   .flatMap((section) => section.steps)
@@ -16,6 +17,8 @@ const missionSteps = deckPlaybookSchema.sections
  * the page.
  */
 export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
   const heroLines = pickOneLinePerSource(brief);
 
   return (
@@ -25,7 +28,7 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
         <div className="bg-slate-50 p-5">
           <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
             <Sparkles className="h-4 w-4 shrink-0" aria-hidden="true" />
-            Guided Project Intake
+            {copy("Guided Project Intake")}
           </p>
           <ol className="mt-4 space-y-2">
             {missionSteps.map((title, index) => (
@@ -48,7 +51,7 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
                 >
                   {index === 0 ? <Check className="h-3.5 w-3.5" aria-hidden="true" /> : index + 1}
                 </span>
-                <span className="min-w-0 line-clamp-2">{title}</span>
+                <span className="min-w-0 line-clamp-2">{copy(title)}</span>
               </li>
             ))}
           </ol>
@@ -66,10 +69,10 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
           <div className="flex items-center justify-between gap-3">
             <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.14em] text-emerald-700">
               <FileText className="h-4 w-4 shrink-0" aria-hidden="true" />
-              Project Brief
+              {copy("Project Brief")}
             </p>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-800 whitespace-nowrap">
-              Confidence:{" "}
+              {copy("Confidence")}:{" "}
               {brief.confidence.label.charAt(0).toUpperCase() + brief.confidence.label.slice(1)}
             </span>
           </div>
@@ -80,13 +83,13 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
                 className="rounded-md border border-slate-200 bg-slate-50 p-3"
               >
                 <div className="flex items-baseline justify-between gap-2">
-                  <dt className="text-[13px] font-semibold text-slate-950">{line.label}</dt>
+                  <dt className="text-[13px] font-semibold text-slate-950">{copy(line.label)}</dt>
                   <span className="shrink-0 text-[10px] font-semibold uppercase tracking-[0.1em] text-slate-500">
-                    {BRIEF_SOURCE_LABELS[line.source]}
+                    {copy(BRIEF_SOURCE_LABELS[line.source])}
                   </span>
                 </div>
                 <dd className="mt-1 line-clamp-2 text-[14px] leading-5 text-slate-700">
-                  {line.value}
+                  {copy(line.value)}
                 </dd>
               </div>
             ))}
@@ -94,7 +97,7 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
         </div>
       </div>
       <figcaption className="border-t border-slate-200 bg-slate-50 px-5 py-3 text-[13px] font-medium text-slate-600">
-        One guided Mission in, one structured Project Brief out.
+        {copy("One guided Mission in, one structured Project Brief out.")}
       </figcaption>
     </figure>
   );
