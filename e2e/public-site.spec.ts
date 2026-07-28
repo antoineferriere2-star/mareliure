@@ -44,7 +44,7 @@ test.describe("home page", () => {
   test("uses the selected language across the public site", async ({ page }) => {
     await page.goto("/");
     await page.waitForLoadState("networkidle");
-    await page.getByLabel("Choose site language").selectOption("es-US");
+    await page.getByRole("button", { name: "ES", exact: true }).click();
 
     await page.goto("/deck-builders");
     await expect(
@@ -53,7 +53,10 @@ test.describe("home page", () => {
         name: "Califique proyectos de terraza antes de la primera llamada comercial.",
       }),
     ).toBeVisible();
-    await expect(page.getByLabel("Choose site language")).toHaveValue("es-US");
+    await expect(page.getByRole("button", { name: "ES", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
 
     await page.goto("/how-it-works");
     await expect(
