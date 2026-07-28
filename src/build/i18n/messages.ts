@@ -4,10 +4,45 @@ export const enUSMessages = {
   "marketing.hero.title": "Turn vague website inquiries into sales-ready project briefs.",
   "marketing.hero.subtitle":
     "Métré Build guides customers through project scope, photos, dimensions, constraints, budget and timing.",
+  "home.hero.eyebrow": "Guided project intake for project-based contractors",
+  "home.hero.title":
+    "Turn vague website inquiries into structured Project Briefs your team can act on.",
+  "home.hero.description":
+    "Métré Build guides customers through project scope, photos, dimensions, constraints, budget and timing — so your sales team has useful context before the first call.",
+  "home.hero.kicker": "More useful than a contact form. Simpler than a custom configurator.",
+  "home.hero.deckIntro": "Starting with our ready-to-use Deck Project",
+  "home.hero.playbookTooltip": "A reusable industry-specific project discovery method.",
+  "home.hero.primaryCta": "Try the Live Deck Intake",
+  "home.hero.secondaryCta": "Get a Free Website Inquiry Audit",
+  "home.hero.disclaimer":
+    "Sales-ready means ready for a productive first conversation — not a final quote or technical approval.",
+  "home.problem.title":
+    "Your sales team should not have to rediscover the entire project on the first call.",
+  "home.problem.description":
+    "Most contact forms collect identity. They rarely collect the project.",
+  "home.problem.classicTitle": "Classic forms often capture",
+  "home.problem.missingTitle": "They usually miss",
+  "navigation.language": "Language",
   "navigation.deckBuilders": "Deck builders",
   "navigation.howItWorks": "How it works",
   "navigation.exampleBrief": "Example brief",
   "navigation.freeAudit": "Free audit",
+  "navigation.logIn": "Log in",
+  "navigation.createAccount": "Create account",
+  "navigation.tryDemo": "Try demo",
+  "footer.description":
+    "Now available for US project-based contractors. Built to turn incomplete website inquiries into structured Project Briefs.",
+  "footer.product": "Product",
+  "footer.conversion": "Conversion",
+  "footer.legal": "Legal",
+  "footer.demo": "Demo",
+  "footer.setupReview": "Request a setup review",
+  "footer.privacy": "Privacy",
+  "footer.terms": "Terms",
+  "cta.getStarted": "Get started",
+  "cta.title": "See what your current website form is missing.",
+  "cta.description":
+    "Two minutes to review the demo. Free audit of your current form and inquiry flow on request.",
   "auth.forgotPassword": "Forgot password?",
   "intake.navigation.next": "Continue",
   "intake.navigation.back": "Back",
@@ -38,10 +73,46 @@ export type TranslationKey = keyof typeof enUSMessages;
 export type TranslationMessages = Record<TranslationKey, string>;
 
 export const esUSMessages: Partial<TranslationMessages> = {
+  "home.hero.eyebrow": "Recorrido guiado para empresas que venden proyectos",
+  "home.hero.title":
+    "Convierta consultas vagas de su sitio web en Project Briefs estructurados para su equipo.",
+  "home.hero.description":
+    "Métré Build guía a sus clientes por alcance, fotos, dimensiones, restricciones, presupuesto y plazo para que su equipo comercial tenga contexto útil antes de la primera llamada.",
+  "home.hero.kicker": "Más útil que un formulario. Más simple que un configurador a medida.",
+  "home.hero.deckIntro": "Comience con nuestro Deck Project",
+  "home.hero.playbookTooltip":
+    "Un método reutilizable de descubrimiento de proyectos por industria.",
+  "home.hero.primaryCta": "Probar el intake de decks",
+  "home.hero.secondaryCta": "Solicitar una auditoría gratis",
+  "home.hero.disclaimer":
+    "Listo para ventas significa listo para una primera conversación productiva, no una cotización final ni una aprobación técnica.",
+  "home.problem.title":
+    "Su equipo comercial no debería tener que redescubrir todo el proyecto en la primera llamada.",
+  "home.problem.description":
+    "La mayoría de los formularios recopilan identidad. Rara vez recopilan el proyecto.",
+  "home.problem.classicTitle": "Los formularios clásicos suelen captar",
+  "home.problem.missingTitle": "Normalmente les falta",
+  "navigation.language": "Idioma",
   "navigation.deckBuilders": "Constructores de terrazas",
   "navigation.howItWorks": "Cómo funciona",
   "navigation.exampleBrief": "Ejemplo de resumen",
   "navigation.freeAudit": "Auditoría gratis",
+  "navigation.logIn": "Iniciar sesión",
+  "navigation.createAccount": "Crear cuenta",
+  "navigation.tryDemo": "Probar demo",
+  "footer.description":
+    "Disponible para contratistas de proyectos en EE. UU. Creado para convertir consultas incompletas del sitio web en Project Briefs estructurados.",
+  "footer.product": "Producto",
+  "footer.conversion": "Conversión",
+  "footer.legal": "Legal",
+  "footer.demo": "Demo",
+  "footer.setupReview": "Solicitar revisión de configuración",
+  "footer.privacy": "Privacidad",
+  "footer.terms": "Términos",
+  "cta.getStarted": "Comience",
+  "cta.title": "Vea qué le falta a su formulario actual.",
+  "cta.description":
+    "Dos minutos para revisar la demo. Auditoría gratis de su formulario actual y flujo de consultas si la solicita.",
   "auth.forgotPassword": "¿Olvidó su contraseña?",
   "intake.navigation.next": "Continuar",
   "intake.navigation.back": "Atrás",

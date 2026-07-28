@@ -70,18 +70,37 @@ describe("public marketing surface — banned strings", () => {
 
 describe("public marketing surface - marketing proposition", () => {
   it("keeps the confirmed homepage positioning", () => {
-    const source = readFileSync(
+    const homeSource = readFileSync(
       resolve(repoRoot, "src/build/pages/public/BuildPublicHome.tsx"),
       "utf8",
     );
+    const messagesSource = readFileSync(resolve(repoRoot, "src/build/i18n/messages.ts"), "utf8");
 
-    expect(source).toContain("Guided project intake for project-based contractors");
-    expect(source).toContain(
+    expect(homeSource).toContain('t(locale, "home.hero.eyebrow")');
+    expect(homeSource).toContain('t(locale, "home.hero.title")');
+    expect(messagesSource).toContain("Guided project intake for project-based contractors");
+    expect(messagesSource).toContain(
       "Turn vague website inquiries into structured Project Briefs your team can act on.",
     );
-    expect(source).toContain(
+    expect(messagesSource).toContain(
       "More useful than a contact form. Simpler than a custom configurator.",
     );
+  });
+
+  it("exposes a persistent English and Spanish language choice on the public surface", () => {
+    const shellSource = readFileSync(
+      resolve(repoRoot, "src/build/pages/public/BuildPublicShell.tsx"),
+      "utf8",
+    );
+    const localeSource = readFileSync(
+      resolve(repoRoot, "src/build/pages/public/publicLocaleContext.ts"),
+      "utf8",
+    );
+
+    expect(shellSource).toContain("PublicLanguageSelect");
+    expect(localeSource).toContain("metre-build-public-locale");
+    expect(localeSource).toContain('"en-US"');
+    expect(localeSource).toContain('"es-US"');
   });
 
   it("keeps the free audit offer concrete and bounded", () => {

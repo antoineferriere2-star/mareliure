@@ -20,6 +20,24 @@ test.describe("home page", () => {
     ).toBeVisible();
   });
 
+  test("lets visitors switch the home page language and keeps the choice", async ({ page }) => {
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+    await page.getByLabel("Choose site language").selectOption("es-US");
+
+    await expect(
+      page.getByRole("heading", {
+        level: 1,
+        name: /Convierta consultas vagas de su sitio web/,
+      }),
+    ).toBeVisible();
+    await expect(page.locator("html")).toHaveAttribute("lang", "es-US");
+
+    await page.reload();
+    await expect(page.getByLabel("Choose site language")).toHaveValue("es-US");
+    await expect(page.locator("html")).toHaveAttribute("lang", "es-US");
+  });
+
   test("top nav reaches every published page", async ({ page, isMobile }) => {
     // The header nav is intentionally hidden below the md breakpoint (no
     // hamburger menu exists); the footer links (tested separately below)
