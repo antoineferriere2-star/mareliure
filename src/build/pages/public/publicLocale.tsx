@@ -36,21 +36,32 @@ export function PublicLanguageSelect() {
   const { locale, setLocale } = usePublicLocale();
 
   return (
-    <label className="inline-flex h-9 items-center gap-2 rounded-md border border-slate-200 bg-white px-2 text-sm font-medium text-slate-700 shadow-sm transition hover:border-slate-300 hover:text-slate-950">
-      <Languages className="h-4 w-4 text-slate-500" aria-hidden="true" />
-      <span className="sr-only">Choose site language</span>
-      <select
-        aria-label="Choose site language"
-        value={locale}
-        onChange={(event) => setLocale(resolveSupportedLocale(event.target.value))}
-        className="bg-transparent text-sm font-semibold tracking-normal outline-none"
-      >
-        {PUBLIC_LANGUAGE_OPTIONS.map((option) => (
-          <option key={option.locale} value={option.locale}>
+    <div
+      role="group"
+      aria-label="Choose site language"
+      className="inline-flex items-center gap-1 rounded-full border border-border bg-muted/60 p-1 shadow-sm"
+    >
+      <Languages className="ml-1.5 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+      {PUBLIC_LANGUAGE_OPTIONS.map((option) => {
+        const active = option.locale === locale;
+        return (
+          <button
+            key={option.locale}
+            type="button"
+            aria-pressed={active}
+            onClick={() => setLocale(resolveSupportedLocale(option.locale))}
+            className={
+              "rounded-full px-2.5 py-1 text-xs font-semibold uppercase tracking-wide transition " +
+              (active
+                ? "bg-background text-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground")
+            }
+          >
             {option.shortLabel}
-          </option>
-        ))}
-      </select>
-    </label>
+          </button>
+        );
+      })}
+    </div>
   );
 }
+
