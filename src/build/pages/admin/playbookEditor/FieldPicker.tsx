@@ -4,7 +4,7 @@ export function FieldPicker({
   fields,
   value,
   onChange,
-  placeholder = "— Choisir un champ —",
+  placeholder = "— Select a field —",
   className,
 }: {
   fields: FieldSummary[];
