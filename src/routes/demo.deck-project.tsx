@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { DECK_DEMO_PUBLIC_TOKEN } from "@/build/constants";
 import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
+import { SITE_URL } from "@/lib/structured-data";
 
 const title = "Deck Project Demo — Métré Build";
 const description =
