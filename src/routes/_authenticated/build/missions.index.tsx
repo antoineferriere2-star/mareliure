@@ -7,7 +7,9 @@ const missionsKey = ["build-admin", "missions"] as const;
 
 export const Route = createFileRoute("/_authenticated/build/missions/")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Missions — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({
+    meta: [{ title: "Missions — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }],
+  }),
   component: MissionsPage,
 });
 
@@ -19,7 +21,9 @@ function StatusBadge({ status }: { status: string }) {
     archived: "border-slate-300 bg-slate-50 text-slate-500",
   };
   return (
-    <span className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase ${map[status] ?? map.draft}`}>
+    <span
+      className={`rounded-full border px-2 py-0.5 text-[10px] font-medium uppercase ${map[status] ?? map.draft}`}
+    >
       {status}
     </span>
   );
@@ -43,21 +47,26 @@ function MissionsPage() {
       <header className="flex items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Missions</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Missions publiques et leurs tokens `/m/:publicToken`.</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Missions publiques et leurs tokens `/m/:publicToken`.
+          </p>
         </div>
         <Link
           to="/build/missions/new"
           className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground hover:opacity-90"
         >
-          Nouvelle mission
+          New Mission
         </Link>
       </header>
 
       {missions.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">Aucune mission encore.</p>
-          <Link to="/build/missions/new" className="mt-3 inline-block text-sm font-medium text-primary underline">
-            Créer la première mission
+          <p className="text-sm text-muted-foreground">No Missions yet.</p>
+          <Link
+            to="/build/missions/new"
+            className="mt-3 inline-block text-sm font-medium text-primary underline"
+          >
+            Create the first Mission
           </Link>
         </div>
       ) : (
@@ -68,7 +77,7 @@ function MissionsPage() {
                 <th className="px-4 py-2 text-left">Nom</th>
                 <th className="px-4 py-2 text-left">Statut</th>
                 <th className="px-4 py-2 text-left">Playbook</th>
-                <th className="px-4 py-2 text-left">Créée</th>
+                <th className="px-4 py-2 text-left">Created</th>
                 <th className="px-4 py-2 text-right">Actions</th>
               </tr>
             </thead>
@@ -87,7 +96,9 @@ function MissionsPage() {
                       <div className="text-xs text-muted-foreground">{m.objective}</div>
                     ) : null}
                   </td>
-                  <td className="px-4 py-3"><StatusBadge status={m.status} /></td>
+                  <td className="px-4 py-3">
+                    <StatusBadge status={m.status} />
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground">{m.playbook_name ?? "—"}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {new Date(m.created_at).toLocaleDateString()}
@@ -107,7 +118,7 @@ function MissionsPage() {
                         disabled={mutation.isPending}
                         className="rounded-md border border-emerald-300 bg-emerald-50 px-2 py-1 text-xs text-emerald-800 hover:bg-emerald-100"
                       >
-                        Publier
+                        Publish
                       </button>
                     )}
                   </td>

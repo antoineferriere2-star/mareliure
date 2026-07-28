@@ -1,3 +1,4 @@
+import { readFileSync } from "fs";
 import { describe, expect, it, vi } from "vitest";
 import { logOperationalError, sanitizeOperationalMetadata } from "./operationalLog.server";
 
@@ -40,5 +41,22 @@ describe("operational logging", () => {
       },
     });
     spy.mockRestore();
+  });
+});
+
+const redactedLoggingSurfaces = [
+  "src/routes/api/public/build-public-intake.ts",
+  "src/routes/api/public/payments/webhook.ts",
+  "src/build/services/provisionWorkspace.functions.ts",
+] as const;
+
+describe("operational logging contract", () => {
+  it("keeps sensitive public/provisioning failures on the redacted logger", () => {
+    for (const path of redactedLoggingSurfaces) {
+      const source = readFileSync(path, "utf8");
+
+      expect(source).toContain("logOperationalError");
+      expect(source).not.toContain("console.error");
+    }
   });
 });

@@ -873,7 +873,7 @@ export const addWorkspaceMember = createServerFn({ method: "POST" })
       .maybeSingle();
     if (error) {
       if (error.code === "23505") {
-        fail(409, "Cette personne est déjà membre de cet Espace Client.");
+        fail(409, "This person is already a member of this Client Workspace.");
       }
       fail(500, error.message);
     }

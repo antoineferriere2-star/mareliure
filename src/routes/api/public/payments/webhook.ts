@@ -8,6 +8,7 @@ import Stripe from "stripe";
 import { createStripeClient, getWebhookSecret, parseStripeEnv } from "@/lib/stripe.server";
 import { mapLookupKeyToPlan, resolveWorkspaceId } from "@/build/billing/stripeSync";
 import { resolvePlanColumnsUpdate } from "@/build/billing/planSync";
+import { logOperationalError } from "@/build/services/operationalLog.server";
 import type { Database } from "@/integrations/supabase/types";
 
 type WorkspaceUpdate = Database["public"]["Tables"]["build_workspaces"]["Update"];
@@ -22,9 +23,10 @@ function jsonResponse(status: number, body: unknown) {
 async function handleSubscriptionEvent(subscription: Stripe.Subscription) {
   const workspaceId = resolveWorkspaceId(subscription);
   if (!workspaceId) {
-    console.error(
-      "[payments-webhook] subscription event without workspace_id metadata",
-      subscription.id,
+    logOperationalError(
+      "payments-webhook.subscription-missing-workspace",
+      new Error("Subscription event missing workspace_id metadata"),
+      { subscriptionId: subscription.id },
     );
     return;
   }
@@ -43,11 +45,10 @@ async function handleSubscriptionEvent(subscription: Stripe.Subscription) {
   if (plan) {
     Object.assign(update, resolvePlanColumnsUpdate(plan));
   } else {
-    console.error(
-      "[payments-webhook] could not resolve a plan from price",
-      price?.id,
-      price?.lookup_key,
-      "— plan/quota columns left untouched",
+    logOperationalError(
+      "payments-webhook.plan-unresolved",
+      new Error("Could not resolve a plan from Stripe price."),
+      { priceId: price?.id, lookupKey: price?.lookup_key },
     );
   }
 
@@ -55,15 +56,21 @@ async function handleSubscriptionEvent(subscription: Stripe.Subscription) {
     .from("build_workspaces")
     .update(update)
     .eq("id", workspaceId);
-  if (error) console.error("[payments-webhook] failed to update workspace", workspaceId, error);
+  if (error) {
+    logOperationalError("payments-webhook.workspace-update-failed", error, {
+      workspaceId,
+      subscriptionId: subscription.id,
+    });
+  }
 }
 
 async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
   const workspaceId = resolveWorkspaceId(subscription);
   if (!workspaceId) {
-    console.error(
-      "[payments-webhook] subscription.deleted without workspace_id metadata",
-      subscription.id,
+    logOperationalError(
+      "payments-webhook.subscription-deleted-missing-workspace",
+      new Error("subscription.deleted event missing workspace_id metadata"),
+      { subscriptionId: subscription.id },
     );
     return;
   }
@@ -73,16 +80,21 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .from("build_workspaces")
     .update({ subscription_status: "canceled" })
     .eq("id", workspaceId);
-  if (error)
-    console.error("[payments-webhook] failed to mark workspace canceled", workspaceId, error);
+  if (error) {
+    logOperationalError("payments-webhook.workspace-cancel-failed", error, {
+      workspaceId,
+      subscriptionId: subscription.id,
+    });
+  }
 }
 
 async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
   const workspaceId = resolveWorkspaceId(session);
   if (!workspaceId) {
-    console.error(
-      "[payments-webhook] checkout.session.completed without workspace_id metadata",
-      session.id,
+    logOperationalError(
+      "payments-webhook.checkout-missing-workspace",
+      new Error("checkout.session.completed event missing workspace_id metadata"),
+      { checkoutSessionId: session.id },
     );
     return;
   }
@@ -98,8 +110,12 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
           : (session.subscription?.id ?? null),
     })
     .eq("id", workspaceId);
-  if (error)
-    console.error("[payments-webhook] failed to record checkout completion", workspaceId, error);
+  if (error) {
+    logOperationalError("payments-webhook.checkout-record-failed", error, {
+      workspaceId,
+      checkoutSessionId: session.id,
+    });
+  }
 }
 
 export const Route = createFileRoute("/api/public/payments/webhook")({
@@ -121,7 +137,7 @@ export const Route = createFileRoute("/api/public/payments/webhook")({
           const stripe = createStripeClient(env);
           event = await stripe.webhooks.constructEventAsync(raw, signature, getWebhookSecret(env));
         } catch (err) {
-          console.error("[payments-webhook] signature verification failed", err);
+          logOperationalError("payments-webhook.signature-verification-failed", err, { env });
           return jsonResponse(400, { error: "Invalid signature." });
         }
 

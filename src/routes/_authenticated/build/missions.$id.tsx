@@ -83,7 +83,7 @@ function MissionDetailPage() {
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-foreground">{mission.name}</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          {mission.objective ?? "Sans objectif défini."}
+          {mission.objective ?? "No objective defined."}
         </p>
       </div>
 
@@ -175,14 +175,14 @@ function MissionDetailPage() {
         </section>
 
         <section className="rounded-lg border border-border bg-card p-4">
-          <h2 className="text-sm font-semibold">Espace Client</h2>
+          <h2 className="text-sm font-semibold">Client Workspace</h2>
           <select
             value={mission.workspace_id ?? ""}
             onChange={(e) => workspaceMutation.mutate(e.target.value)}
             disabled={workspaceMutation.isPending}
             className="mt-2 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="">Aucun (mission interne / démo)</option>
+            <option value="">None (internal/demo Mission)</option>
             {workspaces.map((w) => (
               <option key={w.id} value={w.id}>
                 {w.name}
@@ -190,8 +190,7 @@ function MissionDetailPage() {
             ))}
           </select>
           <p className="mt-1 text-xs text-muted-foreground">
-            Les Dossiers produits par cette mission apparaissent dans le portail de cet Espace
-            Client.
+            Project Briefs produced by this Mission appear in that Client Workspace portal.
           </p>
         </section>
       </div>
@@ -223,18 +222,18 @@ function MissionDetailPage() {
       </section>
 
       <section className="rounded-lg border border-border bg-card p-4">
-        <h2 className="text-sm font-semibold">Détails techniques</h2>
+        <h2 className="text-sm font-semibold">Technical details</h2>
         <dl className="mt-3 grid gap-2 text-xs sm:grid-cols-2">
           <div>
-            <dt className="text-muted-foreground">Créée</dt>
+            <dt className="text-muted-foreground">Created</dt>
             <dd>{new Date(mission.created_at).toLocaleString()}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Mise à jour</dt>
+            <dt className="text-muted-foreground">Updated</dt>
             <dd>{new Date(mission.updated_at).toLocaleString()}</dd>
           </div>
           <div>
-            <dt className="text-muted-foreground">Publiée</dt>
+            <dt className="text-muted-foreground">Published</dt>
             <dd>{mission.published_at ? new Date(mission.published_at).toLocaleString() : "—"}</dd>
           </div>
           <div>

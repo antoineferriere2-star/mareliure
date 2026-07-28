@@ -12,19 +12,31 @@ describe("normalizeOnboardingUrl", () => {
   });
 
   it("rejects malformed input", () => {
-    expect(() => normalizeOnboardingUrl("not a url")).toThrow();
+    expect(() => normalizeOnboardingUrl("not a url")).toThrow("Invalid URL.");
   });
 
   it("rejects non-http(s) schemes", () => {
-    expect(() => normalizeOnboardingUrl("ftp://example.com")).toThrow();
-    expect(() => normalizeOnboardingUrl("javascript:alert(1)")).toThrow();
-    expect(() => normalizeOnboardingUrl("file:///etc/passwd")).toThrow();
+    expect(() => normalizeOnboardingUrl("ftp://example.com")).toThrow(
+      "Only http/https URLs are accepted.",
+    );
+    expect(() => normalizeOnboardingUrl("javascript:alert(1)")).toThrow(
+      "Only http/https URLs are accepted.",
+    );
+    expect(() => normalizeOnboardingUrl("file:///etc/passwd")).toThrow(
+      "Only http/https URLs are accepted.",
+    );
   });
 
   it("rejects localhost and internal TLDs", () => {
-    expect(() => normalizeOnboardingUrl("http://localhost")).toThrow();
-    expect(() => normalizeOnboardingUrl("http://foo.local")).toThrow();
-    expect(() => normalizeOnboardingUrl("http://foo.internal")).toThrow();
+    expect(() => normalizeOnboardingUrl("http://localhost")).toThrow(
+      "This URL points to a disallowed address.",
+    );
+    expect(() => normalizeOnboardingUrl("http://foo.local")).toThrow(
+      "This URL points to a disallowed address.",
+    );
+    expect(() => normalizeOnboardingUrl("http://foo.internal")).toThrow(
+      "This URL points to a disallowed address.",
+    );
   });
 
   it("rejects private, loopback and link-local IPv4 ranges", () => {
@@ -96,7 +108,10 @@ describe("fetchSitePublicHtml", () => {
         new Response(null, { status: 302, headers: { location: "https://sanibeldecks.com/home" } }),
       )
       .mockResolvedValueOnce(
-        new Response("<html>Home</html>", { status: 200, headers: { "content-type": "text/html" } }),
+        new Response("<html>Home</html>", {
+          status: 200,
+          headers: { "content-type": "text/html" },
+        }),
       );
     vi.stubGlobal("fetch", fetchMock);
 
@@ -108,7 +123,9 @@ describe("fetchSitePublicHtml", () => {
   it("rejects a redirect pointing to a private address", async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValueOnce(new Response(null, { status: 302, headers: { location: "http://169.254.169.254/" } }));
+      .mockResolvedValueOnce(
+        new Response(null, { status: 302, headers: { location: "http://169.254.169.254/" } }),
+      );
     vi.stubGlobal("fetch", fetchMock);
 
     await expect(fetchSitePublicHtml("https://sanibeldecks.com")).rejects.toThrow();
@@ -117,27 +134,38 @@ describe("fetchSitePublicHtml", () => {
   it("rejects too many redirects", async () => {
     const fetchMock = vi
       .fn()
-      .mockResolvedValue(new Response(null, { status: 302, headers: { location: "https://sanibeldecks.com/loop" } }));
+      .mockResolvedValue(
+        new Response(null, { status: 302, headers: { location: "https://sanibeldecks.com/loop" } }),
+      );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchSitePublicHtml("https://sanibeldecks.com")).rejects.toThrow(/redirection/i);
+    await expect(fetchSitePublicHtml("https://sanibeldecks.com")).rejects.toThrow(
+      "Too many redirects.",
+    );
   });
 
   it("rejects non-HTML content types", async () => {
     const fetchMock = vi.fn().mockResolvedValue(
-      new Response(new Uint8Array([1, 2, 3]), { status: 200, headers: { "content-type": "application/octet-stream" } }),
+      new Response(new Uint8Array([1, 2, 3]), {
+        status: 200,
+        headers: { "content-type": "application/octet-stream" },
+      }),
     );
     vi.stubGlobal("fetch", fetchMock);
 
-    await expect(fetchSitePublicHtml("https://sanibeldecks.com")).rejects.toThrow(/HTML/i);
+    await expect(fetchSitePublicHtml("https://sanibeldecks.com")).rejects.toThrow(
+      "This URL did not return an HTML page.",
+    );
   });
 
   it("caps the response body at the size limit", async () => {
     const chunk = new TextEncoder().encode("a".repeat(1_000_000));
     const stream = streamFromChunks([chunk, chunk, chunk]); // 3MB total, cap is 2MB
-    const fetchMock = vi.fn().mockResolvedValue(
-      new Response(stream, { status: 200, headers: { "content-type": "text/html" } }),
-    );
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValue(
+        new Response(stream, { status: 200, headers: { "content-type": "text/html" } }),
+      );
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await fetchSitePublicHtml("https://sanibeldecks.com");

@@ -2,11 +2,20 @@ import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useMutation, useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
-import { createBuildMission, listPublishablePlaybooks, listWorkspaces } from "@/build/services/admin.data.functions";
+import {
+  createBuildMission,
+  listPublishablePlaybooks,
+  listWorkspaces,
+} from "@/build/services/admin.data.functions";
 
 export const Route = createFileRoute("/_authenticated/build/missions/new")({
   ssr: false,
-  head: () => ({ meta: [{ title: "Nouvelle mission — Métré Build AI" }, { name: "robots", content: "noindex,nofollow" }] }),
+  head: () => ({
+    meta: [
+      { title: "New Mission — Métré Build AI" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
+  }),
   component: NewMissionPage,
 });
 
@@ -47,16 +56,19 @@ function NewMissionPage() {
       if (m?.id) navigate({ to: "/build/missions/$id", params: { id: m.id } });
       else navigate({ to: "/build/missions" });
     },
-    onError: (err: unknown) => setError(err instanceof Error ? err.message : "Erreur inconnue"),
+    onError: (err: unknown) => setError(err instanceof Error ? err.message : "Unknown error"),
   });
 
   return (
     <div className="max-w-2xl space-y-6">
       <div>
-        <Link to="/build/missions" className="text-xs text-muted-foreground hover:underline">← Missions</Link>
-        <h1 className="mt-2 text-2xl font-semibold text-foreground">Nouvelle mission</h1>
+        <Link to="/build/missions" className="text-xs text-muted-foreground hover:underline">
+          ← Missions
+        </Link>
+        <h1 className="mt-2 text-2xl font-semibold text-foreground">New Mission</h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Crée une mission publique. Elle sera en brouillon — publie-la pour générer un lien <code className="rounded bg-muted px-1">/m/:publicToken</code>.
+          Create a public Mission. It starts as a draft; publish it to generate a{" "}
+          <code className="rounded bg-muted px-1">/m/:publicToken</code> link.
         </p>
       </div>
 
@@ -65,7 +77,7 @@ function NewMissionPage() {
           e.preventDefault();
           setError(null);
           if (name.trim().length < 2) {
-            setError("Le nom doit contenir au moins 2 caractères.");
+            setError("The name must contain at least 2 characters.");
             return;
           }
           mutation.mutate();
@@ -73,7 +85,7 @@ function NewMissionPage() {
         className="space-y-4 rounded-lg border border-border bg-card p-5"
       >
         <div>
-          <label className="block text-xs font-medium text-muted-foreground">Nom de la mission *</label>
+          <label className="block text-xs font-medium text-muted-foreground">Mission name *</label>
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -84,13 +96,13 @@ function NewMissionPage() {
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-muted-foreground">Objectif</label>
+          <label className="block text-xs font-medium text-muted-foreground">Objective</label>
           <textarea
             value={objective}
             onChange={(e) => setObjective(e.target.value)}
             rows={3}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-            placeholder="À quoi sert cette mission ? Qui va la remplir ?"
+            placeholder="What is this Mission for? Who will fill it out?"
           />
         </div>
 
@@ -101,7 +113,7 @@ function NewMissionPage() {
             onChange={(e) => setPlaybookId(e.target.value)}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="">Aucun (à définir plus tard)</option>
+            <option value="">None (set later)</option>
             {playbooks.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name}
@@ -110,19 +122,21 @@ function NewMissionPage() {
           </select>
           {playbooks.length === 0 && (
             <p className="mt-1 text-xs text-muted-foreground">
-              Aucun Playbook publié pour l'instant. La mission ne pourra pas être activée sans en choisir un.
+              No published Playbook yet. The Mission cannot be activated until one is selected.
             </p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs font-medium text-muted-foreground">Espace Client</label>
+          <label className="block text-xs font-medium text-muted-foreground">
+            Client Workspace
+          </label>
           <select
             value={workspaceId}
             onChange={(e) => setWorkspaceId(e.target.value)}
             className="mt-1 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           >
-            <option value="">Aucun (mission interne / démo)</option>
+            <option value="">None (internal/demo Mission)</option>
             {workspaces.map((w) => (
               <option key={w.id} value={w.id}>
                 {w.name}
@@ -130,22 +144,25 @@ function NewMissionPage() {
             ))}
           </select>
           <p className="mt-1 text-xs text-muted-foreground">
-            Les Dossiers produits par cette mission apparaîtront dans le portail de cet Espace Client.
+            Project Briefs produced by this Mission will appear in that Client Workspace portal.
           </p>
         </div>
 
         {error && <p className="text-xs text-destructive">{error}</p>}
 
         <div className="flex justify-end gap-2">
-          <Link to="/build/missions" className="rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-accent">
-            Annuler
+          <Link
+            to="/build/missions"
+            className="rounded-md border border-input bg-background px-3 py-1.5 text-sm hover:bg-accent"
+          >
+            Cancel
           </Link>
           <button
             type="submit"
             disabled={mutation.isPending}
             className="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-primary-foreground disabled:opacity-50"
           >
-            {mutation.isPending ? "Création…" : "Créer la mission"}
+            {mutation.isPending ? "Creating..." : "Create Mission"}
           </button>
         </div>
       </form>
