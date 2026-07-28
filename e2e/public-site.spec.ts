@@ -34,7 +34,10 @@ test.describe("home page", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "es-US");
 
     await page.reload();
-    await expect(page.getByLabel("Choose site language")).toHaveValue("es-US");
+    await expect(page.getByRole("button", { name: "ES", exact: true })).toHaveAttribute(
+      "aria-pressed",
+      "true",
+    );
     await expect(page.locator("html")).toHaveAttribute("lang", "es-US");
   });
 
