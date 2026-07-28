@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildExampleProjectBriefPage } from "@/build/pages/public/BuildMarketingPages";
+import { breadcrumbSchema, jsonLdScript } from "@/lib/structured-data";
 
 const title = "Example Project Brief — Métré Build";
 const description =
@@ -19,6 +20,13 @@ export const Route = createFileRoute("/example-project-brief")({
       { name: "twitter:description", content: description },
     ],
     links: [{ rel: "canonical", href: "/example-project-brief" }],
+    scripts: [
+      jsonLdScript(
+        breadcrumbSchema([
+          { name: "Example Project Brief", path: "/example-project-brief" },
+        ]),
+      ),
+    ],
   }),
   component: BuildExampleProjectBriefPage,
 });

@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
+import {
+  jsonLdScript,
+  ORGANIZATION_ID,
+  SITE_URL,
+  WEBSITE_ID,
+} from "@/lib/structured-data";
 
 const title = "Métré Build — Project discovery for project-based businesses";
 const description =
@@ -20,17 +26,18 @@ export const Route = createFileRoute("/")({
       { name: "twitter:description", content: description },
       { name: "twitter:image", content: "/og-image.png" },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
     scripts: [
-      {
-        type: "application/ld+json",
-        children: JSON.stringify({
-          "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
-          name: "Métré Build",
-          applicationCategory: "BusinessApplication",
-          operatingSystem: "Web",
-        }),
-      },
+      jsonLdScript({
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        name: "Métré Build",
+        url: `${SITE_URL}/`,
+        applicationCategory: "BusinessApplication",
+        operatingSystem: "Web",
+        publisher: { "@id": ORGANIZATION_ID },
+        isPartOf: { "@id": WEBSITE_ID },
+      }),
     ],
   }),
   component: HomeRoute,

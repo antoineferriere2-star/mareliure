@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildDeckBuildersPage } from "@/build/pages/public/BuildMarketingPages";
+import { breadcrumbSchema, jsonLdScript } from "@/lib/structured-data";
 
 const title = "Deck builders — Métré Build";
 const description =
@@ -21,6 +22,11 @@ export const Route = createFileRoute("/deck-builders")({
       { name: "twitter:image", content: "/og-image.png" },
     ],
     links: [{ rel: "canonical", href: "/deck-builders" }],
+    scripts: [
+      jsonLdScript(
+        breadcrumbSchema([{ name: "Deck builders", path: "/deck-builders" }]),
+      ),
+    ],
   }),
   component: BuildDeckBuildersPage,
 });

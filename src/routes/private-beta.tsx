@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildPrivateBetaPage } from "@/build/pages/public/BuildPublicFormPages";
+import { breadcrumbSchema, jsonLdScript } from "@/lib/structured-data";
 
 const title = "Request a setup review — Métré Build";
 const description =
@@ -19,6 +20,13 @@ export const Route = createFileRoute("/private-beta")({
       { name: "twitter:description", content: description },
     ],
     links: [{ rel: "canonical", href: "/private-beta" }],
+    scripts: [
+      jsonLdScript(
+        breadcrumbSchema([
+          { name: "Request a setup review", path: "/private-beta" },
+        ]),
+      ),
+    ],
   }),
   component: BuildPrivateBetaPage,
 });

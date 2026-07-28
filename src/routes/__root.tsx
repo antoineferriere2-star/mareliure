@@ -11,6 +11,11 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import {
+  jsonLdScript,
+  organizationSchema,
+  websiteSchema,
+} from "../lib/structured-data";
 
 function NotFoundComponent() {
   return (
@@ -101,6 +106,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "icon", href: "/metre-icon.svg?v=20260727", type: "image/svg+xml" },
       { rel: "shortcut icon", href: "/metre-icon.svg?v=20260727", type: "image/svg+xml" },
     ],
+    scripts: [jsonLdScript(organizationSchema), jsonLdScript(websiteSchema)],
   }),
   shellComponent: RootShell,
   component: RootComponent,

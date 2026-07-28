@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildLegalPage } from "@/build/pages/public/BuildMarketingPages";
+import { breadcrumbSchema, jsonLdScript } from "@/lib/structured-data";
 
 const title = "Privacy — Métré Build";
 const description = "Métré Build privacy summary.";
@@ -15,6 +16,9 @@ export const Route = createFileRoute("/privacy")({
       { property: "og:url", content: "/privacy" },
     ],
     links: [{ rel: "canonical", href: "/privacy" }],
+    scripts: [
+      jsonLdScript(breadcrumbSchema([{ name: "Privacy", path: "/privacy" }])),
+    ],
   }),
   component: () => (
     <BuildLegalPage

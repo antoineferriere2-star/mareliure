@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildHowItWorksPage } from "@/build/pages/public/BuildMarketingPages";
+import { breadcrumbSchema, jsonLdScript } from "@/lib/structured-data";
 
 const title = "How Métré Build works";
 const description =
@@ -19,6 +20,11 @@ export const Route = createFileRoute("/how-it-works")({
       { name: "twitter:description", content: description },
     ],
     links: [{ rel: "canonical", href: "/how-it-works" }],
+    scripts: [
+      jsonLdScript(
+        breadcrumbSchema([{ name: "How it works", path: "/how-it-works" }]),
+      ),
+    ],
   }),
   component: BuildHowItWorksPage,
 });
