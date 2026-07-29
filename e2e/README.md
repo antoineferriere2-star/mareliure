@@ -20,6 +20,21 @@ to already exist and have portal access. It signs in through `/auth` and checks
 that the client reaches `/portal`. Do not use a personal or production customer
 account for this; use a disposable staging client account.
 
+## Visitor summary + Deck visual preview (seeded, self-tearing-down)
+
+`visitor-summary-visual-preview.spec.ts` is skipped by default. It runs only
+when `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` are both set (same
+credentials `scripts/seedDeckPlaybook.ts` already uses). Unlike the seed
+script, it does NOT touch the real demo Mission — `e2e/fixtures/
+deckPreviewFixtures.ts` provisions two brand-new, clearly-tagged
+("E2E TEST — ...") Missions sharing the already-published Deck Playbook
+version, drives real visitor submissions through them, and deletes every
+row it created (workspace, Missions, sessions, dossiers, access tokens) in
+`afterAll` — this project has only one Supabase project (production, see
+above), so nothing test-shaped should ever be left behind. The visitor
+email used throughout is `contact@oppe.fr`, a safe address the project
+owner controls.
+
 ## Deliberately out of scope for now
 
 The self-service journey the mission cares about most — sign up, AI-driven
