@@ -36,6 +36,7 @@ type DossierResult = {
   next_questions: string[];
   visitor_summary: VisitorProjectSummary;
   emailSent?: boolean;
+  summaryUrl?: string | null;
 };
 
 type CopyFn = (text: string) => string;
@@ -262,6 +263,7 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
         <VisitorProjectSummaryView
           summary={dossier.visitor_summary}
           emailSent={dossier.emailSent}
+          summaryUrl={dossier.summaryUrl}
         />
       )}
 

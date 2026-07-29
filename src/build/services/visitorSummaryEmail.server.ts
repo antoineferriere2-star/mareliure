@@ -14,6 +14,8 @@ export async function sendVisitorSummaryEmail(params: {
   missionId: string;
   recipientEmail: string;
   summary: VisitorProjectSummary;
+  /** Secure link to /project-summary/:accessToken, or null if token minting failed — the CTA is simply omitted, never a broken link. */
+  summaryUrl: string | null;
 }): Promise<boolean> {
   try {
     const result = await sendTemplateEmail("visitor-summary", params.recipientEmail, {
@@ -26,6 +28,7 @@ export async function sendVisitorSummaryEmail(params: {
         budgetAndTimingItems: params.summary.budgetAndTimingItems,
         itemsToConfirm: params.summary.itemsToConfirm,
         nextStep: params.summary.confirmationText ?? undefined,
+        summaryUrl: params.summaryUrl ?? undefined,
       },
       // Deterministic per dossier: submit_session only ever reaches this
       // call once per dossier (the outer idempotency guards return the

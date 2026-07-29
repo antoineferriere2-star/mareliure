@@ -47,6 +47,9 @@ const ES_PUBLIC_COPY: Record<string, string> = {
     "El equipo revisará la información de su proyecto y se pondrá en contacto para hablar del próximo paso.",
   "We sent a copy of this summary to your email.":
     "Le enviamos una copia de este resumen a su correo electrónico.",
+  "Review your summary": "Revisar su resumen",
+  "Loading…": "Cargando…",
+  "This summary link is not available.": "Este enlace de resumen no está disponible.",
   "Deck Builders": "Constructores de terrazas",
   "Qualify deck projects before the first sales call.":
     "Califique proyectos de terraza antes de la primera llamada comercial.",

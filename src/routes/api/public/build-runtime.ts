@@ -455,6 +455,28 @@ export async function handleSubmitSession(
     nextQuestions: (dossier.next_questions as string[] | null) ?? [],
   });
 
+  // Mint the visitor's secure summary access token — only ever attempted
+  // here, in the one-time dossier-creation branch (same idempotency
+  // guarantee as the email below: a resubmitted/duplicate request can
+  // never mint a second token for the same dossier). Never throws; a
+  // failure here must not fail the visitor's submission.
+  let summaryUrl: string | null = null;
+  try {
+    const { generateAccessToken, hashAccessToken, accessTokenExpiryFromNow } =
+      await import("@/build/services/dossierAccessToken.server");
+    const { SITE_URL } = await import("@/lib/structured-data");
+    const rawToken = generateAccessToken();
+    const { error: tokenError } = await supabase.from("build_dossier_access_tokens").insert({
+      dossier_id: dossier.id,
+      token_hash: hashAccessToken(rawToken),
+      expires_at: accessTokenExpiryFromNow(),
+    });
+    if (tokenError) throw tokenError;
+    summaryUrl = `${SITE_URL}/project-summary/${rawToken}`;
+  } catch (err) {
+    logOperationalError("visitor-summary.token-mint-failed", err, { dossierId: dossier.id });
+  }
+
   // Visitor's own confirmation email — awaited (unlike the workspace
   // notification above) so the response can report a true emailSent
   // outcome; the UI must never claim a copy was sent when it wasn't.
@@ -471,6 +493,7 @@ export async function handleSubmitSession(
       missionId: updatedSession.mission_id as string,
       recipientEmail: visitorEmail,
       summary: visitorSummary,
+      summaryUrl,
     });
     if (emailSent) {
       await supabase
@@ -480,7 +503,7 @@ export async function handleSubmitSession(
     }
   }
 
-  return json(200, { dossier: { ...dossier, emailSent } });
+  return json(200, { dossier: { ...dossier, emailSent, summaryUrl } });
 }
 
 // Stateless: uploads the image to Storage and returns the vision agent's

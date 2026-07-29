@@ -31,6 +31,7 @@ const baseParams = {
   missionId: "33333333-3333-3333-3333-333333333333",
   recipientEmail: "not-a-real-address@example.test",
   summary,
+  summaryUrl: "https://metre-pro.com/project-summary/deadbeef",
 };
 
 describe("sendVisitorSummaryEmail", () => {
@@ -61,6 +62,7 @@ describe("sendVisitorSummaryEmail", () => {
         "locale",
         "nextStep",
         "summary",
+        "summaryUrl",
       ].sort(),
     );
   });

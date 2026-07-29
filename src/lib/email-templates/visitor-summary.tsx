@@ -6,6 +6,7 @@
 import * as React from "react";
 import {
   Body,
+  Button,
   Container,
   Head,
   Heading,
@@ -28,6 +29,7 @@ interface VisitorSummaryEmailProps {
   budgetAndTimingItems?: SummaryItem[];
   itemsToConfirm?: SummaryItem[];
   nextStep?: string;
+  summaryUrl?: string;
 }
 
 const COPY = {
@@ -39,6 +41,7 @@ const COPY = {
     projectSummary: "Project summary",
     stillToConfirm: "Still to confirm",
     whatsNext: "What happens next",
+    viewSummary: "View your project summary",
     disclaimer:
       "This summary reflects the information you provided. It is not a final quote, technical assessment or project approval.",
   },
@@ -50,6 +53,7 @@ const COPY = {
     projectSummary: "Resumen del proyecto",
     stillToConfirm: "Aún por confirmar",
     whatsNext: "Qué sigue",
+    viewSummary: "Ver el resumen de su proyecto",
     disclaimer:
       "Este resumen refleja la información que proporcionó. No constituye una cotización final, una evaluación técnica ni una aprobación del proyecto.",
   },
@@ -72,6 +76,7 @@ const VisitorSummaryEmail = ({
   budgetAndTimingItems = [],
   itemsToConfirm = [],
   nextStep,
+  summaryUrl,
 }: VisitorSummaryEmailProps) => {
   const t = COPY[locale] ?? COPY["en-US"];
   const projectItems = [...confirmedItems, ...calculatedItems, ...budgetAndTimingItems];
@@ -106,7 +111,13 @@ const VisitorSummaryEmail = ({
             </Section>
           )}
 
-          {/* Secure "view your summary" link is added once Lot 4 exists — never a raw dossier id. */}
+          {summaryUrl && (
+            <Section style={{ marginTop: "8px" }}>
+              <Button href={summaryUrl} style={button}>
+                {t.viewSummary}
+              </Button>
+            </Section>
+          )}
 
           <Hr style={hr} />
           <Text style={footer}>{t.disclaimer}</Text>
@@ -155,5 +166,14 @@ const card = {
 };
 const cardLabel = { fontSize: "12px", fontWeight: 700, color: "#0f172a", margin: "0 0 6px" };
 const cardText = { fontSize: "14px", lineHeight: "22px", color: "#334155", margin: "0 0 4px" };
+const button = {
+  backgroundColor: "#047857",
+  color: "#ffffff",
+  borderRadius: "8px",
+  padding: "12px 20px",
+  fontSize: "14px",
+  fontWeight: 700,
+  textDecoration: "none",
+};
 const hr = { borderColor: "#e2e8f0", margin: "26px 0 14px" };
 const footer = { fontSize: "12px", color: "#64748b", margin: 0 };

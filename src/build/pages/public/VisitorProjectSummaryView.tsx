@@ -30,9 +30,12 @@ function ItemList({ items }: { items: { label: string; value: string }[] }) {
 export function VisitorProjectSummaryView({
   summary,
   emailSent,
+  summaryUrl,
 }: {
   summary: VisitorProjectSummary;
   emailSent?: boolean;
+  /** Only passed on the live post-submission screen — the secure /project-summary page itself never links back to itself. */
+  summaryUrl?: string | null;
 }) {
   const { locale } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
@@ -91,6 +94,15 @@ export function VisitorProjectSummaryView({
       {emailSent && (
         <p className="text-center text-sm text-slate-500">
           {copy("We sent a copy of this summary to your email.")}
+        </p>
+      )}
+
+      {/* Bloc 6 — Actions */}
+      {summaryUrl && (
+        <p className="text-center text-sm">
+          <a href={summaryUrl} className="font-medium text-emerald-700 hover:underline">
+            {copy("Review your summary")}
+          </a>
         </p>
       )}
     </div>
