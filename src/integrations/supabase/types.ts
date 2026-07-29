@@ -14,6 +14,44 @@ export type Database = {
   }
   public: {
     Tables: {
+      build_dossier_access_tokens: {
+        Row: {
+          created_at: string
+          dossier_id: string
+          expires_at: string | null
+          id: string
+          last_accessed_at: string | null
+          revoked_at: string | null
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          dossier_id: string
+          expires_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          dossier_id?: string
+          expires_at?: string | null
+          id?: string
+          last_accessed_at?: string | null
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "build_dossier_access_tokens_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: false
+            referencedRelation: "build_dossiers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       build_dossiers: {
         Row: {
           ai_analyzed_at: string | null
@@ -27,10 +65,15 @@ export type Database = {
           last_activity_at: string
           mission_id: string | null
           next_questions: Json
+          playbook_version_id: string | null
           session_id: string | null
           status: string
           summary: string | null
           updated_at: string
+          visitor_email: string | null
+          visitor_email_sent_at: string | null
+          visitor_name: string | null
+          visitor_summary: Json | null
           workspace_id: string | null
         }
         Insert: {
@@ -45,10 +88,15 @@ export type Database = {
           last_activity_at?: string
           mission_id?: string | null
           next_questions?: Json
+          playbook_version_id?: string | null
           session_id?: string | null
           status?: string
           summary?: string | null
           updated_at?: string
+          visitor_email?: string | null
+          visitor_email_sent_at?: string | null
+          visitor_name?: string | null
+          visitor_summary?: Json | null
           workspace_id?: string | null
         }
         Update: {
@@ -63,10 +111,15 @@ export type Database = {
           last_activity_at?: string
           mission_id?: string | null
           next_questions?: Json
+          playbook_version_id?: string | null
           session_id?: string | null
           status?: string
           summary?: string | null
           updated_at?: string
+          visitor_email?: string | null
+          visitor_email_sent_at?: string | null
+          visitor_name?: string | null
+          visitor_summary?: Json | null
           workspace_id?: string | null
         }
         Relationships: [
@@ -75,6 +128,13 @@ export type Database = {
             columns: ["mission_id"]
             isOneToOne: false
             referencedRelation: "build_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "build_dossiers_playbook_version_id_fkey"
+            columns: ["playbook_version_id"]
+            isOneToOne: false
+            referencedRelation: "build_playbook_versions"
             referencedColumns: ["id"]
           },
           {
