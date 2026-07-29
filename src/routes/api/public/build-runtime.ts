@@ -9,7 +9,7 @@ import { buildVisitorProjectSummary, extractPhotoReferences } from "@/build/engi
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import { playbookSchema, type PlaybookField, type PlaybookSchema } from "@/build/schema/playbook";
 import { missionProposalSchema } from "@/build/schema/missionProposal";
-import { DEFAULT_LOCALE } from "@/build/i18n/locales";
+import { DEFAULT_LOCALE, resolveSupportedLocale } from "@/build/i18n/locales";
 import { DEFAULT_MEASUREMENT_SYSTEM } from "@/build/measurements/types";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 
@@ -45,6 +45,11 @@ export const bodySchema = z.union([
     session_id: z.string().uuid(),
     session_secret: z.string().min(32).max(256),
     answers: z.record(z.string(), z.unknown()).optional(),
+    // The visitor's own chosen locale — not persisted anywhere server-side
+    // before submission (see publicLocaleContext.ts, which is localStorage
+    // only), so the client passes it explicitly at the one point it needs
+    // to be frozen into the visitor summary snapshot and email.
+    locale: z.string().max(16).optional(),
   }),
   z.object({
     action: z.literal("analyze_inspiration_photo"),
@@ -219,11 +224,13 @@ async function verifySessionSecret(supabase: Supa, sessionId: string, secret: st
 async function findExistingDossier(supabase: Supa, sessionId: string) {
   const { data, error } = await supabase
     .from("build_dossiers")
-    .select("id, status, summary, content, next_questions, visitor_summary")
+    .select("id, status, summary, content, next_questions, visitor_summary, visitor_email_sent_at")
     .eq("session_id", sessionId)
     .maybeSingle();
   if (error) throw error;
-  return data;
+  if (!data) return null;
+  const { visitor_email_sent_at, ...rest } = data;
+  return { ...rest, emailSent: visitor_email_sent_at !== null };
 }
 
 export async function handleResumeSession(supabase: Supa, sessionId: string, secret: string) {
@@ -322,6 +329,7 @@ export async function handleSubmitSession(
   sessionId: string,
   secret: string,
   answers?: Record<string, unknown>,
+  rawLocale?: string,
 ) {
   const session = await verifySessionSecret(supabase, sessionId, secret);
   if (!session) return json(404, { error: "Session not found" });
@@ -395,9 +403,10 @@ export async function handleSubmitSession(
     ? missionProposalSchema.parse(mission.proposal ?? {})
     : {};
   const businessName = await resolveBusinessName(supabase, mission);
+  const locale = resolveSupportedLocale(rawLocale, DEFAULT_LOCALE);
   const visitorSummary = buildVisitorProjectSummary(brief, proposal, {
     businessName,
-    locale: DEFAULT_LOCALE,
+    locale,
     measurementSystem: DEFAULT_MEASUREMENT_SYSTEM,
     photos: extractPhotoReferences(finalAnswersTyped),
     submittedAt: update.submitted_at,
@@ -446,7 +455,32 @@ export async function handleSubmitSession(
     nextQuestions: (dossier.next_questions as string[] | null) ?? [],
   });
 
-  return json(200, { dossier });
+  // Visitor's own confirmation email — awaited (unlike the workspace
+  // notification above) so the response can report a true emailSent
+  // outcome; the UI must never claim a copy was sent when it wasn't.
+  // Never throws — see sendVisitorSummaryEmail's own contract. Only ever
+  // attempted here, in the one-time dossier-creation branch, never on any
+  // of the idempotent-retry paths above, so a resubmitted/duplicate
+  // request can never trigger a second email.
+  let emailSent = false;
+  if (visitorEmail) {
+    const { sendVisitorSummaryEmail } = await import("@/build/services/visitorSummaryEmail.server");
+    emailSent = await sendVisitorSummaryEmail({
+      dossierId: dossier.id,
+      workspaceId: (mission.workspace_id as string | null) ?? null,
+      missionId: updatedSession.mission_id as string,
+      recipientEmail: visitorEmail,
+      summary: visitorSummary,
+    });
+    if (emailSent) {
+      await supabase
+        .from("build_dossiers")
+        .update({ visitor_email_sent_at: new Date().toISOString() })
+        .eq("id", dossier.id);
+    }
+  }
+
+  return json(200, { dossier: { ...dossier, emailSent } });
 }
 
 // Stateless: uploads the image to Storage and returns the vision agent's
@@ -576,6 +610,7 @@ export const Route = createFileRoute("/api/public/build-runtime")({
                 body.session_id,
                 body.session_secret,
                 body.answers,
+                body.locale,
               );
             case "analyze_inspiration_photo":
               return await handleAnalyzeInspirationPhoto(

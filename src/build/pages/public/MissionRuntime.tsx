@@ -35,6 +35,7 @@ type DossierResult = {
   content: ProjectBrief;
   next_questions: string[];
   visitor_summary: VisitorProjectSummary;
+  emailSent?: boolean;
 };
 
 type CopyFn = (text: string) => string;
@@ -237,6 +238,7 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
         session_id: sessionAuth.sessionId,
         session_secret: sessionAuth.secret,
         answers,
+        locale,
       });
       setDossier(data.dossier);
     } catch (err) {
@@ -256,7 +258,12 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
         </div>
       )}
 
-      {mission && dossier && <VisitorProjectSummaryView summary={dossier.visitor_summary} />}
+      {mission && dossier && (
+        <VisitorProjectSummaryView
+          summary={dossier.visitor_summary}
+          emailSent={dossier.emailSent}
+        />
+      )}
 
       {mission && schema && !dossier && (
         <section className="mx-auto max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">

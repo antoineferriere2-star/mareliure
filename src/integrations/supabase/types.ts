@@ -27,6 +27,7 @@ export type Database = {
           summary: string | null;
           updated_at: string;
           visitor_email: string | null;
+          visitor_email_sent_at: string | null;
           visitor_name: string | null;
           visitor_summary: Json | null;
           workspace_id: string | null;
@@ -49,6 +50,7 @@ export type Database = {
           summary?: string | null;
           updated_at?: string;
           visitor_email?: string | null;
+          visitor_email_sent_at?: string | null;
           visitor_name?: string | null;
           visitor_summary?: Json | null;
           workspace_id?: string | null;
@@ -71,6 +73,7 @@ export type Database = {
           summary?: string | null;
           updated_at?: string;
           visitor_email?: string | null;
+          visitor_email_sent_at?: string | null;
           visitor_name?: string | null;
           visitor_summary?: Json | null;
           workspace_id?: string | null;
