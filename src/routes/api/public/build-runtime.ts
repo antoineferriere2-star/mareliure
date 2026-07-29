@@ -5,8 +5,12 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { generateProjectBrief } from "@/build/engine/brief";
 import { computeVisibleSteps, validateField, validateFieldFormat } from "@/build/engine/validation";
+import { buildVisitorProjectSummary, extractPhotoReferences } from "@/build/engine/visitorSummary";
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import { playbookSchema, type PlaybookField, type PlaybookSchema } from "@/build/schema/playbook";
+import { missionProposalSchema } from "@/build/schema/missionProposal";
+import { DEFAULT_LOCALE } from "@/build/i18n/locales";
+import { DEFAULT_MEASUREMENT_SYSTEM } from "@/build/measurements/types";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 
 type Supa = SupabaseClient<Database>;
@@ -85,6 +89,23 @@ function secretMatches(storedHash: string, provided: string): boolean {
   const b = Buffer.from(hashSecret(provided), "hex");
   if (a.length !== b.length) return false;
   return timingSafeEqual(a, b);
+}
+
+/** No dedicated "business name" field exists on build_missions — fall back to the mission's own name when the workspace lookup comes up empty. */
+async function resolveBusinessName(
+  supabase: Supa,
+  mission: Record<string, unknown>,
+): Promise<string> {
+  const workspaceId = mission.workspace_id as string | null;
+  if (workspaceId) {
+    const { data } = await supabase
+      .from("build_workspaces")
+      .select("name")
+      .eq("id", workspaceId)
+      .maybeSingle();
+    if (data?.name) return data.name;
+  }
+  return (mission.name as string | undefined) ?? "";
 }
 
 function publicMission(m: Record<string, unknown>) {
@@ -198,7 +219,7 @@ async function verifySessionSecret(supabase: Supa, sessionId: string, secret: st
 async function findExistingDossier(supabase: Supa, sessionId: string) {
   const { data, error } = await supabase
     .from("build_dossiers")
-    .select("id, status, summary, content, next_questions")
+    .select("id, status, summary, content, next_questions, visitor_summary")
     .eq("session_id", sessionId)
     .maybeSingle();
   if (error) throw error;
@@ -369,6 +390,23 @@ export async function handleSubmitSession(
       ? `Draft dossier — ${missingCount} follow-up item${missingCount > 1 ? "s" : ""} pending.`
       : "Complete dossier ready for commercial review.";
 
+  const finalAnswersTyped = updatedSession.answers as Answers;
+  const proposal = missionProposalSchema.safeParse(mission.proposal ?? {}).success
+    ? missionProposalSchema.parse(mission.proposal ?? {})
+    : {};
+  const businessName = await resolveBusinessName(supabase, mission);
+  const visitorSummary = buildVisitorProjectSummary(brief, proposal, {
+    businessName,
+    locale: DEFAULT_LOCALE,
+    measurementSystem: DEFAULT_MEASUREMENT_SYSTEM,
+    photos: extractPhotoReferences(finalAnswersTyped),
+    submittedAt: update.submitted_at,
+  });
+  const visitorEmail =
+    typeof finalAnswersTyped.email === "string" ? finalAnswersTyped.email.trim() || null : null;
+  const visitorName =
+    typeof finalAnswersTyped.name === "string" ? finalAnswersTyped.name.trim() || null : null;
+
   const { data: dossier, error: dErr } = await supabase
     .from("build_dossiers")
     .insert({
@@ -379,8 +417,12 @@ export async function handleSubmitSession(
       summary,
       content: brief as unknown as Json,
       next_questions: brief.missingInformation.map((line) => line.label),
+      playbook_version_id: (mission.playbook_version_id as string | null) ?? null,
+      visitor_summary: visitorSummary as unknown as Json,
+      visitor_email: visitorEmail,
+      visitor_name: visitorName,
     })
-    .select("id, status, summary, content, next_questions")
+    .select("id, status, summary, content, next_questions, visitor_summary")
     .single();
   if (dErr) {
     // Idempotency guard #2 (belt-and-braces): the unique index on

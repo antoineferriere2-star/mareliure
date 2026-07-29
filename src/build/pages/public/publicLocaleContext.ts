@@ -36,6 +36,17 @@ export function useOptionalPublicLocale() {
 }
 
 const ES_PUBLIC_COPY: Record<string, string> = {
+  "Your project summary is ready": "El resumen de su proyecto está listo",
+  "Your information has been sent to": "Su información ha sido enviada a",
+  "No details were provided yet.": "Aún no se proporcionaron detalles.",
+  "photo attached": "foto adjunta",
+  "photos attached": "fotos adjuntas",
+  "Still to confirm": "Aún por confirmar",
+  "What happens next": "Qué sigue",
+  "The team will review your project information and contact you to discuss the next step.":
+    "El equipo revisará la información de su proyecto y se pondrá en contacto para hablar del próximo paso.",
+  "We sent a copy of this summary to your email.":
+    "Le enviamos una copia de este resumen a su correo electrónico.",
   "Deck Builders": "Constructores de terrazas",
   "Qualify deck projects before the first sales call.":
     "Califique proyectos de terraza antes de la primera llamada comercial.",

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultDeckBrief } from "@/build/pages/public/defaultDeckBrief";
 import type { MissionProposal } from "@/build/schema/missionProposal";
-import { buildVisitorProjectSummary } from "./visitorSummary";
+import { buildVisitorProjectSummary, extractPhotoReferences } from "./visitorSummary";
 
 const proposal: MissionProposal = { confirmationText: "Thanks! We'll reach out within 24 hours." };
 
@@ -100,5 +100,31 @@ describe("buildVisitorProjectSummary", () => {
     ]) {
       expect(confirmKeys.has(`${item.label}|${item.value}`)).toBe(false);
     }
+  });
+});
+
+describe("extractPhotoReferences", () => {
+  it("collects the storage path from an inspiration photo answer", () => {
+    const refs = extractPhotoReferences({
+      inspirationPhoto: {
+        photoPath: "workspace-1/session-1/photo.jpg",
+        hypotheses: { materials: [], elements: [] },
+        confirmed: {},
+        suggestedQuestions: [],
+      },
+    });
+    expect(refs).toEqual([{ path: "workspace-1/session-1/photo.jpg" }]);
+  });
+
+  it("ignores the plain multi-photo field, which has no storage path", () => {
+    const refs = extractPhotoReferences({
+      photos: [{ filename: "deck.jpg", sizeBytes: 1000, mimeType: "image/jpeg" }],
+    });
+    expect(refs).toEqual([]);
+  });
+
+  it("ignores unrelated string/number/boolean answers", () => {
+    const refs = extractPhotoReferences({ length: 18, name: "Jane", consent: true });
+    expect(refs).toEqual([]);
   });
 });

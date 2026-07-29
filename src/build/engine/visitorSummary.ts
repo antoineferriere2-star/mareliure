@@ -6,6 +6,7 @@
 import type { BriefLine, ProjectBrief } from "@/build/schema/brief";
 import { NEEDS_VERIFICATION_SOURCES, allBriefLines } from "@/build/schema/briefLabels";
 import type { MissionProposal } from "@/build/schema/missionProposal";
+import type { Answers } from "@/build/schema/answers";
 import type { SupportedLocale } from "@/build/i18n/locales";
 import type { MeasurementSystem } from "@/build/measurements/types";
 import {
@@ -14,6 +15,29 @@ import {
   type VisitorPhotoReference,
   type VisitorProjectSummary,
 } from "@/build/schema/visitorSummary";
+
+/**
+ * Only InspirationPhotoAnswer entries carry a real Storage path — the plain
+ * multi-photo "photos" field only ever stores client-side filename metadata
+ * (no server-side file at all), so it can never produce a displayable
+ * reference. Generic across Playbooks: scans every answer value rather than
+ * assuming a specific field key.
+ */
+export function extractPhotoReferences(answers: Answers): VisitorPhotoReference[] {
+  const refs: VisitorPhotoReference[] = [];
+  for (const value of Object.values(answers)) {
+    if (
+      value &&
+      typeof value === "object" &&
+      !Array.isArray(value) &&
+      "photoPath" in value &&
+      typeof (value as { photoPath: unknown }).photoPath === "string"
+    ) {
+      refs.push({ path: (value as { photoPath: string }).photoPath });
+    }
+  }
+  return refs;
+}
 
 function toItem(line: BriefLine): SummaryItem {
   return { label: line.label, value: line.value };

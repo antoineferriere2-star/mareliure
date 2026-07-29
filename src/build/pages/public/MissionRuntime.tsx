@@ -5,6 +5,7 @@ import { FIELD_COMPONENTS, type InspirationPhotoAnalysis } from "@/build/engine/
 import { computeVisibleSteps, validateField, type VisibleStep } from "@/build/engine/validation";
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import type { ProjectBrief } from "@/build/schema/brief";
+import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
 import type { PlaybookSchema } from "@/build/schema/playbook";
 import type { PlaybookField } from "@/build/schema/playbook";
 import {
@@ -13,8 +14,8 @@ import {
   storeAuth,
   type SessionAuth,
 } from "./publicSessionStorage";
-import { BriefPreview } from "./BriefPreview";
-import { BuildPublicShell, SectionHeader } from "./BuildPublicShell";
+import { VisitorProjectSummaryView } from "./VisitorProjectSummaryView";
+import { BuildPublicShell } from "./BuildPublicShell";
 import { publicCopy, usePublicLocale } from "./publicLocaleContext";
 
 type PublicMission = {
@@ -33,6 +34,7 @@ type DossierResult = {
   summary: string | null;
   content: ProjectBrief;
   next_questions: string[];
+  visitor_summary: VisitorProjectSummary;
 };
 
 type CopyFn = (text: string) => string;
@@ -254,16 +256,7 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
         </div>
       )}
 
-      {mission && dossier && (
-        <div className="mx-auto max-w-5xl space-y-6">
-          <SectionHeader
-            eyebrow={copy("Mission complete")}
-            title={copy("Project brief generated")}
-            description={copy(mission.name)}
-          />
-          <BriefPreview brief={dossier.content} />
-        </div>
-      )}
+      {mission && dossier && <VisitorProjectSummaryView summary={dossier.visitor_summary} />}
 
       {mission && schema && !dossier && (
         <section className="mx-auto max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
