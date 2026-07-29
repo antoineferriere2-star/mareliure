@@ -40,9 +40,13 @@ export function computeCompletionPercent(brief: ProjectBrief): number {
   return Math.round((confirmed / total) * 100);
 }
 
-const NEEDS_VERIFICATION_SOURCES: BriefLineSource[] = ["assumed_default", "image_hypothesis"];
+/** Exported so other consumers (e.g. the visitor Project Summary transform) share this exact set rather than redefining it. */
+export const NEEDS_VERIFICATION_SOURCES: BriefLineSource[] = [
+  "assumed_default",
+  "image_hypothesis",
+];
 
-function allBriefLines(brief: ProjectBrief): BriefLine[] {
+export function allBriefLines(brief: ProjectBrief): BriefLine[] {
   return [
     ...brief.confirmedInformation,
     ...brief.assumptionsAndCalculated,

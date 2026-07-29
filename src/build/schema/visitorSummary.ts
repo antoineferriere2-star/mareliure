@@ -1,0 +1,38 @@
+// Visitor-facing Project Summary — a distinct, deliberately smaller view of
+// the same submission a Project Brief already describes. Never the
+// commercial DTO itself: built by engine/visitorSummary.ts's
+// buildVisitorProjectSummary, which drops ProjectBrief.confidence and
+// .suggestedNextAction entirely (both commercial-only) and regroups every
+// other line into the three buckets a visitor can make sense of, without
+// exposing the raw BriefLineSource enum.
+import type { SupportedLocale } from "@/build/i18n/locales";
+import type { MeasurementSystem } from "@/build/measurements/types";
+
+export interface SummaryItem {
+  label: string;
+  value: string;
+}
+
+/** Storage path only, never a signed URL — URLs are resolved fresh at display time (they expire), never frozen into this snapshot. */
+export interface VisitorPhotoReference {
+  path: string;
+  caption?: string;
+}
+
+export const VISITOR_SUMMARY_VERSION = 1;
+
+export interface VisitorProjectSummary {
+  version: number;
+  locale: SupportedLocale;
+  measurementSystem: MeasurementSystem;
+  businessName: string;
+  summary: string;
+  confirmedItems: SummaryItem[];
+  calculatedItems: SummaryItem[];
+  itemsToConfirm: SummaryItem[];
+  budgetAndTimingItems: SummaryItem[];
+  photos: VisitorPhotoReference[];
+  /** proposal.confirmationText, verbatim, or null when the workspace never configured one — the view layer supplies the localized generic fallback, never this module. */
+  confirmationText: string | null;
+  submittedAt: string;
+}
