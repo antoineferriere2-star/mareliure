@@ -4,7 +4,12 @@
 // post-submission screen. Read-only: no session, no mutation, no dossier id
 // ever touches the client.
 import { useEffect, useState } from "react";
-import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
+import type { DisplayPhotoReference, VisitorProjectSummary } from "@/build/schema/visitorSummary";
+
+/** The public endpoint's response shape: identical to VisitorProjectSummary except photos never carry a storage path — only a resolved signed url + caption. */
+type PublicVisitorProjectSummary = Omit<VisitorProjectSummary, "photos"> & {
+  photos: DisplayPhotoReference[];
+};
 import { VisitorProjectSummaryView } from "./VisitorProjectSummaryView";
 import { BuildPublicShell } from "./BuildPublicShell";
 import { publicCopy, usePublicLocale } from "./publicLocaleContext";
@@ -20,7 +25,7 @@ export function ProjectSummaryAccessView({ accessToken }: { accessToken: string 
 function ProjectSummaryAccessContent({ accessToken }: { accessToken: string }) {
   const { locale } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
-  const [summary, setSummary] = useState<VisitorProjectSummary | null>(null);
+  const [summary, setSummary] = useState<PublicVisitorProjectSummary | null>(null);
   const [notAvailable, setNotAvailable] = useState(false);
   const [loading, setLoading] = useState(true);
 
@@ -38,7 +43,7 @@ function ProjectSummaryAccessContent({ accessToken }: { accessToken: string }) {
           setNotAvailable(true);
           return;
         }
-        const data = (await res.json()) as { summary: VisitorProjectSummary };
+        const data = (await res.json()) as { summary: PublicVisitorProjectSummary };
         setSummary(data.summary);
       } catch {
         if (!cancelled) setNotAvailable(true);

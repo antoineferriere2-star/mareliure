@@ -3,7 +3,7 @@
 // VisitorProjectSummary DTO (src/build/schema/visitorSummary.ts), never the
 // raw ProjectBrief. Shared between the live post-submission screen
 // (MissionRuntime) and the secure /project-summary/:accessToken page (Lot 4).
-import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
+import type { DisplayPhotoReference, VisitorProjectSummary } from "@/build/schema/visitorSummary";
 import { publicCopy, usePublicLocale } from "./publicLocaleContext";
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
@@ -32,7 +32,7 @@ export function VisitorProjectSummaryView({
   emailSent,
   summaryUrl,
 }: {
-  summary: VisitorProjectSummary;
+  summary: Omit<VisitorProjectSummary, "photos"> & { photos: DisplayPhotoReference[] };
   emailSent?: boolean;
   /** Only passed on the live post-submission screen — the secure /project-summary page itself never links back to itself. */
   summaryUrl?: string | null;

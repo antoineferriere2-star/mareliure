@@ -127,6 +127,61 @@ describe("handleGetSummary", () => {
     expect(JSON.stringify(body)).not.toContain(dossierAId);
   });
 
+  it("never leaks storage paths, bucket names, or any internal id in the public response", async () => {
+    const dossierId = randomUUID();
+    const workspaceId = randomUUID();
+    const missionId = randomUUID();
+    const sessionId = randomUUID();
+    const rawToken = generateAccessToken();
+    const storagePath = "workspace-a/secret-photo-path.jpg";
+    const { client } = createFakeSupabase({
+      build_dossier_access_tokens: [
+        {
+          id: randomUUID(),
+          dossier_id: dossierId,
+          token_hash: hashAccessToken(rawToken),
+          expires_at: new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString(),
+          revoked_at: null,
+        },
+      ],
+      build_dossiers: [
+        {
+          id: dossierId,
+          // Extra internal ids embedded in the snapshot to prove the
+          // response is built strictly from an allow-listed shape, not by
+          // forwarding whatever happens to live in visitor_summary.
+          workspace_id: workspaceId,
+          mission_id: missionId,
+          session_id: sessionId,
+          visitor_summary: {
+            ...workspaceASummary,
+            photos: [{ path: storagePath, caption: "Backyard" }],
+          },
+        },
+      ],
+    });
+    const res = await handleGetSummary(client, rawToken);
+    expect(res.status).toBe(200);
+    const body = await jsonOf(res);
+    const raw = JSON.stringify(body);
+
+    // Internal ids must never appear anywhere in the response, regardless
+    // of what the underlying dossier row happens to carry.
+    expect(raw).not.toContain(dossierId);
+    expect(raw).not.toContain(workspaceId);
+    expect(raw).not.toContain(missionId);
+    expect(raw).not.toContain(sessionId);
+
+    // The photo must expose exactly { url, caption } — no raw storage path
+    // or bucket name as a standalone field. (The signed url legitimately
+    // embeds the path/bucket as part of pointing at the right object —
+    // that's expected and not a leak — but there must be no separate,
+    // reusable, unsigned reference to it.)
+    const photo = (body.summary as Record<string, unknown>).photos as Record<string, unknown>[];
+    expect(Object.keys(photo[0]).sort()).toEqual(["caption", "url"]);
+    expect(photo[0].url).toBe("https://signed.example/" + storagePath);
+  });
+
   it("rejects an unknown token with the generic not-available response", async () => {
     const { client } = createFakeSupabase();
     const res = await handleGetSummary(client, generateAccessToken());

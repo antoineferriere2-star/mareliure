@@ -13,9 +13,22 @@ export interface SummaryItem {
   value: string;
 }
 
-/** Storage path only, never a signed URL — URLs are resolved fresh at display time (they expire), never frozen into this snapshot. */
+/** Storage path only, never a signed URL — URLs are resolved fresh at display time (they expire), never frozen into this snapshot. Server-side only: never sent as-is to a browser (see DisplayPhotoReference). */
 export interface VisitorPhotoReference {
   path: string;
+  caption?: string;
+}
+
+/**
+ * What the view layer actually needs from a photo. Deliberately does not
+ * require `path` — the live post-submission response and the secure
+ * /project-summary link expose different shapes (the latter strips `path`
+ * and `bucket` entirely, exposing only a resolved signed `url`), and the
+ * shared VisitorProjectSummaryView only ever needs a count, never the path.
+ */
+export interface DisplayPhotoReference {
+  path?: string;
+  url?: string | null;
   caption?: string;
 }
 

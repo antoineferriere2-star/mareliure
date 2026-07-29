@@ -52,20 +52,27 @@ function hashIp(ip: string): string {
 // is only ever visible in the observability event name, server-side.
 const NOT_AVAILABLE = { error: "This summary link is not available." };
 
-async function resolvePhotoUrls<T extends { path: string }>(
+/**
+ * Resolves each photo to a fresh signed URL for public consumption.
+ * Deliberately returns ONLY `{ url, caption }` — the storage path and
+ * bucket name are server-side implementation details that must never
+ * reach a visitor's browser, so they are dropped here rather than passed
+ * through and filtered later.
+ */
+async function resolvePhotoUrls(
   supabase: Supa,
-  photos: T[],
-): Promise<(T & { url: string | null })[]> {
+  photos: { path: string; caption?: string }[],
+): Promise<{ url: string | null; caption?: string }[]> {
   return Promise.all(
-    photos.map(async (photo) => {
+    photos.map(async ({ path, caption }) => {
       const { data, error } = await supabase.storage
         .from(INSPIRATION_PHOTOS_BUCKET)
-        .createSignedUrl(photo.path, 3600);
+        .createSignedUrl(path, 3600);
       if (error) {
-        logOperationalError("project-summary.photo-sign-failed", error, { path: photo.path });
-        return { ...photo, url: null };
+        logOperationalError("project-summary.photo-sign-failed", error, {});
+        return { url: null, caption };
       }
-      return { ...photo, url: data.signedUrl };
+      return { url: data.signedUrl, caption };
     }),
   );
 }
