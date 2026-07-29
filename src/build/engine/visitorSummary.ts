@@ -15,6 +15,7 @@ import {
   type VisitorPhotoReference,
   type VisitorProjectSummary,
 } from "@/build/schema/visitorSummary";
+import type { DeckPreviewSnapshot } from "@/build/visualPreview/deckPreviewParams";
 
 /**
  * Only InspirationPhotoAnswer entries carry a real Storage path — the plain
@@ -53,6 +54,8 @@ export interface BuildVisitorProjectSummaryOptions {
   measurementSystem: MeasurementSystem;
   photos?: VisitorPhotoReference[];
   submittedAt: string;
+  /** Already resolved by the caller (build-runtime.ts, which alone has the Playbook schema + raw answers) — this module stays a pure brief->summary transform and never computes the resolution itself. */
+  visualPreview?: DeckPreviewSnapshot;
 }
 
 /**
@@ -123,5 +126,6 @@ export function buildVisitorProjectSummary(
     photos: options.photos ?? [],
     confirmationText: proposal.confirmationText?.trim() || null,
     submittedAt: options.submittedAt,
+    ...(options.visualPreview ? { visualPreview: options.visualPreview } : {}),
   };
 }

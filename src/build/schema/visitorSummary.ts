@@ -7,6 +7,7 @@
 // exposing the raw BriefLineSource enum.
 import type { SupportedLocale } from "@/build/i18n/locales";
 import type { MeasurementSystem } from "@/build/measurements/types";
+import type { DeckPreviewSnapshot } from "@/build/visualPreview/deckPreviewParams";
 
 export interface SummaryItem {
   label: string;
@@ -48,4 +49,6 @@ export interface VisitorProjectSummary {
   /** proposal.confirmationText, verbatim, or null when the workspace never configured one — the view layer supplies the localized generic fallback, never this module. */
   confirmationText: string | null;
   submittedAt: string;
+  /** Only present when the Mission's Playbook enabled the visual-preview capability at submit time — absent (not null) for every Mission that predates or never opted into this feature, so old snapshots stay byte-for-byte compatible. Frozen at submission; never recomputed from a later Playbook edit. */
+  visualPreview?: DeckPreviewSnapshot;
 }

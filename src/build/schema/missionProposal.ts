@@ -16,5 +16,20 @@ export const missionProposalSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/, "Couleur invalide (format attendu : #RRGGBB).")
     .optional(),
   hideOptionalFields: z.boolean().optional(),
+  /**
+   * V1 configuration surface is deliberately this small: on/off, which
+   * preview type, and a version number to key against future model
+   * changes — no 3D editor, no per-field customization. Absent entirely
+   * for every Mission that predates this feature (including every
+   * existing seeded/published Mission), so old Missions never show a
+   * preview they never opted into.
+   */
+  visualPreview: z
+    .object({
+      enabled: z.boolean(),
+      type: z.literal("simple-deck-3d"),
+      version: z.number().int().positive(),
+    })
+    .optional(),
 });
 export type MissionProposal = z.infer<typeof missionProposalSchema>;

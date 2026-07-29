@@ -64,6 +64,19 @@ export type DeckPreviewResolution =
   | { status: "unsupported-shape"; shapeLabel: string }
   | { status: "unavailable"; reason: string };
 
+/**
+ * What gets frozen onto VisitorProjectSummary.visualPreview at submission
+ * time. Deliberately a snapshot, not a recipe: the secure /project-summary
+ * link must reproduce exactly this resolution later, never recompute it
+ * from a Playbook that may since have changed. `version` is
+ * DECK_PREVIEW_MODEL_VERSION at submit time, so a future model change can
+ * tell old snapshots apart from new ones instead of misreading them.
+ */
+export interface DeckPreviewSnapshot {
+  version: number;
+  resolution: DeckPreviewResolution;
+}
+
 const LENGTH_UNIT = "ft" as const;
 
 /**

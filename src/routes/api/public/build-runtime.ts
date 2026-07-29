@@ -9,6 +9,7 @@ import { buildVisitorProjectSummary, extractPhotoReferences } from "@/build/engi
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import { playbookSchema, type PlaybookField, type PlaybookSchema } from "@/build/schema/playbook";
 import { missionProposalSchema } from "@/build/schema/missionProposal";
+import type { DeckPreviewSnapshot } from "@/build/visualPreview/deckPreviewParams";
 import { DEFAULT_LOCALE, resolveSupportedLocale } from "@/build/i18n/locales";
 import { DEFAULT_MEASUREMENT_SYSTEM } from "@/build/measurements/types";
 import { logOperationalError } from "@/build/services/operationalLog.server";
@@ -404,12 +405,31 @@ export async function handleSubmitSession(
     : {};
   const businessName = await resolveBusinessName(supabase, mission);
   const locale = resolveSupportedLocale(rawLocale, DEFAULT_LOCALE);
+
+  // Visual preview: only ever computed when the Mission's own Playbook
+  // opted in (old/other Missions get no visualPreview key at all — see
+  // VisitorProjectSummary.visualPreview). resolveDeckPreviewParams is a
+  // pure, total function (never throws), so this can never block
+  // submission. Frozen into the snapshot now, not recomputed later, so a
+  // subsequent Playbook edit can never silently change what a visitor
+  // already submitted sees on their secure link.
+  let visualPreview: DeckPreviewSnapshot | undefined;
+  if (proposal.visualPreview?.enabled && proposal.visualPreview.type === "simple-deck-3d") {
+    const { resolveDeckPreviewParams, DECK_PREVIEW_MODEL_VERSION } =
+      await import("@/build/visualPreview/deckPreviewParams");
+    visualPreview = {
+      version: DECK_PREVIEW_MODEL_VERSION,
+      resolution: resolveDeckPreviewParams(finalAnswersTyped, schema),
+    };
+  }
+
   const visitorSummary = buildVisitorProjectSummary(brief, proposal, {
     businessName,
     locale,
     measurementSystem: DEFAULT_MEASUREMENT_SYSTEM,
     photos: extractPhotoReferences(finalAnswersTyped),
     submittedAt: update.submitted_at,
+    visualPreview,
   });
   const visitorEmail =
     typeof finalAnswersTyped.email === "string" ? finalAnswersTyped.email.trim() || null : null;

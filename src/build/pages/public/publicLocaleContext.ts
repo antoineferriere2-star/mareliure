@@ -505,6 +505,19 @@ const ES_PUBLIC_COPY: Record<string, string> = {
     "La demo Deck Project no produce una cotización garantizada, evaluación de ingeniería ni revisión regulatoria.",
   "Access and available features may change as the product evolves. Contact contact@oppe.fr with any questions.":
     "El acceso y las funciones disponibles pueden cambiar a medida que el producto evoluciona. Contacte a contact@oppe.fr si tiene preguntas.",
+  "We'll show a representative preview once approximate length and width are provided.":
+    "Mostraremos una vista previa representativa en cuanto se indiquen el largo y el ancho aproximados.",
+  "This project shape can't be represented in the visual preview yet.":
+    "Esta forma de proyecto todavía no se puede representar en la vista previa visual.",
+  "Illustrative preview of your deck": "Vista previa ilustrativa de su terraza",
+  "Rotate left": "Girar a la izquierda",
+  "Rotate right": "Girar a la derecha",
+  "Zoom in": "Acercar",
+  "Zoom out": "Alejar",
+  "Reset view": "Restablecer vista",
+  "Elevation shown is simplified and subject to on-site verification.":
+    "La elevación mostrada es simplificada y está sujeta a verificación en el sitio.",
+  "The visual preview couldn't be shown.": "No se pudo mostrar la vista previa visual.",
 };
 
 export function publicCopy(locale: SupportedLocale, text: string): string {

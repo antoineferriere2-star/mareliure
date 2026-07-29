@@ -40,7 +40,9 @@ async function main() {
   const url = process.env.SUPABASE_URL;
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!url || !serviceKey) {
-    throw new Error("SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set (in .env or the environment).");
+    throw new Error(
+      "SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY must be set (in .env or the environment).",
+    );
   }
   const supabase = createClient<Database>(url, serviceKey);
 
@@ -77,7 +79,11 @@ async function main() {
     const nextVersionNumber = (lastVersion?.version_number ?? 0) + 1;
     const { data: version, error: versionErr } = await supabase
       .from("build_playbook_versions")
-      .insert({ playbook_id: DECK_PLAYBOOK_ID, version_number: nextVersionNumber, schema: schemaJson })
+      .insert({
+        playbook_id: DECK_PLAYBOOK_ID,
+        version_number: nextVersionNumber,
+        schema: schemaJson,
+      })
       .select("id")
       .single();
     if (versionErr) throw versionErr;
@@ -103,6 +109,9 @@ async function main() {
     status: "active",
     public_token: DECK_DEMO_PUBLIC_TOKEN,
     published_at: new Date().toISOString(),
+    proposal: {
+      visualPreview: { enabled: true, type: "simple-deck-3d", version: 1 },
+    } as unknown as Json,
   });
   if (missionErr) throw missionErr;
 

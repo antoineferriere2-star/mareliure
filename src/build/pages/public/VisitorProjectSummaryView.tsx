@@ -3,8 +3,14 @@
 // VisitorProjectSummary DTO (src/build/schema/visitorSummary.ts), never the
 // raw ProjectBrief. Shared between the live post-submission screen
 // (MissionRuntime) and the secure /project-summary/:accessToken page (Lot 4).
+import { lazy, Suspense } from "react";
 import type { DisplayPhotoReference, VisitorProjectSummary } from "@/build/schema/visitorSummary";
+import { DeckPreviewErrorBoundary } from "@/build/visualPreview/DeckPreviewErrorBoundary";
 import { publicCopy, usePublicLocale } from "./publicLocaleContext";
+
+// Loaded dynamically, after the textual summary, so a Mission that never
+// enables the visual-preview capability never pays for this bundle at all.
+const DeckVisualPreview = lazy(() => import("@/build/visualPreview/DeckVisualPreview"));
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
@@ -104,6 +110,20 @@ export function VisitorProjectSummaryView({
             {copy("Review your summary")}
           </a>
         </p>
+      )}
+
+      {/* Bloc 7 — Deck visual preview: a secondary, illustrative enhancement
+          that always renders after the textual summary above, and whose
+          failure or absence never affects anything else on this page. */}
+      {summary.visualPreview && (
+        <DeckPreviewErrorBoundary fallbackMessage={copy("The visual preview couldn't be shown.")}>
+          <Suspense fallback={null}>
+            <DeckVisualPreview
+              snapshot={summary.visualPreview}
+              measurementSystem={summary.measurementSystem}
+            />
+          </Suspense>
+        </DeckPreviewErrorBoundary>
       )}
     </div>
   );
