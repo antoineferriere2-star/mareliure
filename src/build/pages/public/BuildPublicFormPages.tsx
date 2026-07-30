@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -143,8 +143,9 @@ function BuildContactPageContent({
               onChange={(value) => setForm({ ...form, subject: value })}
             />
             <div className="md:col-span-2">
-              <Label>{copy("Message")}</Label>
+              <Label htmlFor="contact-message">{copy("Message")}</Label>
               <Textarea
+                id="contact-message"
                 className="mt-1 min-h-36"
                 value={form.message}
                 onChange={(event) => setForm({ ...form, message: event.target.value })}
@@ -330,8 +331,11 @@ function AuditFields({
         onChange={(value) => setForm({ ...form, firstName: value })}
       />
       <div className="md:col-span-2">
-        <Label>{copy("What is your biggest issue with website inquiries? (optional)")}</Label>
+        <Label htmlFor="audit-biggest-issue">
+          {copy("What is your biggest issue with website inquiries? (optional)")}
+        </Label>
         <Textarea
+          id="audit-biggest-issue"
           className="mt-1"
           value={form.biggestIssue}
           onChange={(event) => setForm({ ...form, biggestIssue: event.target.value })}
@@ -385,20 +389,22 @@ function Consent({
   locale?: SupportedLocale;
 }) {
   const copy = (text: string) => publicCopy(locale, text);
+  const consentId = useId();
 
   return (
-    <label
+    <div
       className={`flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm ${className}`}
     >
       <input
+        id={consentId}
         type="checkbox"
         checked={checked}
         onChange={(event) => onChange(event.target.checked)}
       />
-      <span>
+      <label htmlFor={consentId}>
         {copy("I consent to Métré Build processing this request for review and follow-up.")}
-      </span>
-    </label>
+      </label>
+    </div>
   );
 }
 
