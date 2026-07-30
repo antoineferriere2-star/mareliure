@@ -10,6 +10,7 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
@@ -59,6 +60,11 @@ import { Route as AuthenticatedBuildDossiersIdRouteImport } from './routes/_auth
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivateBetaRoute = PrivateBetaRouteImport.update({
@@ -322,6 +328,7 @@ export interface FileRoutesByFullPath {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/build': typeof AuthenticatedBuildRouteRouteWithChildren
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
@@ -369,6 +376,7 @@ export interface FileRoutesByTo {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
@@ -415,6 +423,7 @@ export interface FileRoutesById {
   '/how-it-works': typeof HowItWorksRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/_authenticated/build': typeof AuthenticatedBuildRouteRouteWithChildren
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
@@ -464,6 +473,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy'
     | '/private-beta'
+    | '/sitemap.xml'
     | '/terms'
     | '/build'
     | '/portal'
@@ -511,6 +521,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy'
     | '/private-beta'
+    | '/sitemap.xml'
     | '/terms'
     | '/demo/deck-project'
     | '/m/$publicToken'
@@ -556,6 +567,7 @@ export interface FileRouteTypes {
     | '/how-it-works'
     | '/privacy'
     | '/private-beta'
+    | '/sitemap.xml'
     | '/terms'
     | '/_authenticated/build'
     | '/_authenticated/portal'
@@ -605,6 +617,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivateBetaRoute: typeof PrivateBetaRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
@@ -626,6 +639,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/private-beta': {
@@ -1053,6 +1073,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   PrivacyRoute: PrivacyRoute,
   PrivateBetaRoute: PrivateBetaRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
   MPublicTokenRoute: MPublicTokenRoute,
