@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Disallow: /build/
+Disallow: /portal/
+Disallow: /api/
+Disallow: /m/
+Disallow: /project-summary/
+
+Sitemap: https://metre-pro.com/sitemap.xml

@@ -3,7 +3,8 @@ import { BuildLegalPage } from "@/build/pages/public/BuildMarketingPages";
 import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
 
 const title = "Privacy — Métré Build";
-const description = "Métré Build privacy summary.";
+const description =
+  "How Métré Build collects, uses and protects the information you submit through our audit, setup request and contact forms.";
 
 export const Route = createFileRoute("/privacy")({
   head: () => ({
