@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildExampleProjectBriefPage } from "@/build/pages/public/BuildMarketingPages";
-import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
+import {
+  breadcrumbSchema,
+  jsonLdScript,
+  ORGANIZATION_ID,
+  SITE_URL,
+  WEBSITE_ID,
+} from "@/lib/structured-data";
 
 const title = "Example Project Brief — Métré Build";
 const description =
@@ -21,6 +27,17 @@ export const Route = createFileRoute("/example-project-brief")({
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/example-project-brief` }],
     scripts: [
+      jsonLdScript({
+        "@context": "https://schema.org",
+        "@type": "Article",
+        headline: "Example Project Brief — Métré Build",
+        description,
+        mainEntityOfPage: `${SITE_URL}/example-project-brief`,
+        datePublished: "2026-01-15",
+        author: { "@id": ORGANIZATION_ID },
+        publisher: { "@id": ORGANIZATION_ID },
+        isPartOf: { "@id": WEBSITE_ID },
+      }),
       jsonLdScript(
         breadcrumbSchema([
           { name: "Example Project Brief", path: "/example-project-brief" },
