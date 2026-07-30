@@ -1,8 +1,8 @@
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Menu, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { t } from "@/build/i18n";
 import { PublicLanguageSelect, PublicLocaleProvider } from "@/build/pages/public/publicLocale";
 import { usePublicLocale } from "@/build/pages/public/publicLocaleContext";
