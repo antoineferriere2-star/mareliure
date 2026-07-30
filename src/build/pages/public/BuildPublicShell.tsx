@@ -33,6 +33,7 @@ export function BuildPublicShell({ children }: { children: ReactNode }) {
 
 function BuildPublicShellContent({ children }: { children: ReactNode }) {
   const { locale } = usePublicLocale();
+  const [menuOpen, setMenuOpen] = useState(false);
   const navItems = [
     ...VERTICAL_NAV_ITEMS.filter((item) => item.status === "published"),
     { labelKey: "navigation.howItWorks" as const, to: "/how-it-works" as const },
@@ -72,12 +73,53 @@ function BuildPublicShellContent({ children }: { children: ReactNode }) {
                 {t(locale, "navigation.createAccount")}
               </Button>
             </Link>
-            <Link to="/demo/deck-project">
+            <Link to="/demo/deck-project" className="hidden sm:inline-flex">
               <Button size="sm">{t(locale, "navigation.tryDemo")}</Button>
             </Link>
+            <button
+              type="button"
+              aria-label="Menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((open) => !open)}
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-slate-700 md:hidden"
+            >
+              {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
           </div>
         </div>
+        {menuOpen && (
+          <div className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
+            <nav className="flex flex-col gap-1 text-[15px] font-medium text-slate-700">
+              {navItems.map((item) => (
+                <Link
+                  key={item.to}
+                  to={item.to}
+                  onClick={() => setMenuOpen(false)}
+                  className="rounded-md px-2 py-2 hover:bg-slate-50 hover:text-slate-950"
+                >
+                  {t(locale, item.labelKey)}
+                </Link>
+              ))}
+            </nav>
+            <div className="mt-4 flex flex-col gap-2 border-t border-slate-200 pt-4">
+              <Link to="/auth" onClick={() => setMenuOpen(false)}>
+                <Button variant="outline" className="w-full">
+                  {t(locale, "navigation.logIn")}
+                </Button>
+              </Link>
+              <Link to="/auth" onClick={() => setMenuOpen(false)}>
+                <Button variant="outline" className="w-full">
+                  {t(locale, "navigation.createAccount")}
+                </Button>
+              </Link>
+              <Link to="/demo/deck-project" onClick={() => setMenuOpen(false)}>
+                <Button className="w-full">{t(locale, "navigation.tryDemo")}</Button>
+              </Link>
+            </div>
+          </div>
+        )}
       </header>
+
       {children}
       <footer className="border-t border-slate-200 bg-slate-950 text-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1fr_2fr] lg:px-8">
