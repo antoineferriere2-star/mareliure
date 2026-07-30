@@ -15,11 +15,10 @@ export const Route = createFileRoute("/terms")({
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { property: "og:url", content: `${SITE_URL}/terms` },
+      { property: "og:image", content: `${SITE_URL}/og-image.png` },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/terms` }],
-    scripts: [
-      jsonLdScript(breadcrumbSchema([{ name: "Terms", path: "/terms" }])),
-    ],
+    scripts: [jsonLdScript(breadcrumbSchema([{ name: "Terms", path: "/terms" }]))],
   }),
   component: () => (
     <BuildLegalPage

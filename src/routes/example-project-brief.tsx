@@ -9,8 +9,7 @@ import {
 } from "@/lib/structured-data";
 
 const title = "Example Project Brief — Métré Build";
-const description =
-  "View a fictional deck project brief created for demonstration purposes.";
+const description = "View a fictional deck project brief created for demonstration purposes.";
 
 export const Route = createFileRoute("/example-project-brief")({
   head: () => ({
@@ -21,9 +20,11 @@ export const Route = createFileRoute("/example-project-brief")({
       { property: "og:description", content: description },
       { property: "og:type", content: "article" },
       { property: "og:url", content: `${SITE_URL}/example-project-brief` },
+      { property: "og:image", content: `${SITE_URL}/og-image.png` },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
+      { name: "twitter:image", content: `${SITE_URL}/og-image.png` },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/example-project-brief` }],
     scripts: [
@@ -39,9 +40,7 @@ export const Route = createFileRoute("/example-project-brief")({
         isPartOf: { "@id": WEBSITE_ID },
       }),
       jsonLdScript(
-        breadcrumbSchema([
-          { name: "Example Project Brief", path: "/example-project-brief" },
-        ]),
+        breadcrumbSchema([{ name: "Example Project Brief", path: "/example-project-brief" }]),
       ),
     ],
   }),

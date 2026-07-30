@@ -2,6 +2,7 @@ User-agent: *
 Allow: /
 Disallow: /build/
 Disallow: /portal/
+Disallow: /auth
 Disallow: /api/
 Disallow: /m/
 Disallow: /project-summary/

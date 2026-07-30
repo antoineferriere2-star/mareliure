@@ -15,17 +15,15 @@ export const Route = createFileRoute("/free-inquiry-audit")({
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { property: "og:url", content: `${SITE_URL}/free-inquiry-audit` },
+      { property: "og:image", content: `${SITE_URL}/og-image.png` },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
+      { name: "twitter:image", content: `${SITE_URL}/og-image.png` },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/free-inquiry-audit` }],
     scripts: [
-      jsonLdScript(
-        breadcrumbSchema([
-          { name: "Free inquiry audit", path: "/free-inquiry-audit" },
-        ]),
-      ),
+      jsonLdScript(breadcrumbSchema([{ name: "Free inquiry audit", path: "/free-inquiry-audit" }])),
     ],
   }),
   component: BuildFreeInquiryAuditPage,
