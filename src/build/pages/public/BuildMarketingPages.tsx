@@ -278,7 +278,7 @@ function PlanPrice({
   return (
     <p className="mt-3 flex items-baseline gap-1">
       <span className="text-3xl font-semibold tracking-normal text-slate-950">{formatted}</span>
-      <span className="text-sm font-medium text-slate-500">{copy("/mo")}</span>
+      <span className="text-sm font-medium text-slate-500">{copy("/month")}</span>
     </p>
   );
 }

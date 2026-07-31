@@ -537,7 +537,7 @@ const ES_PUBLIC_COPY: Record<string, string> = {
   "Every plan includes the same guided Project Intake, AI-drafted Project Briefs and client portal. Plans only differ by how many active Project Intakes and monthly Project Briefs you need.":
     "Todos los planes incluyen el mismo Project Intake guiado, Project Briefs redactados por IA y portal de cliente. Los planes solo difieren en cuántos Project Intakes activos y Project Briefs mensuales necesita.",
   "Talk to us": "Hablar con nosotros",
-  "/mo": "/mes",
+  "/month": "/mes",
   Custom: "Personalizado",
   "active Project Intake": "Project Intake activo",
   "active Project Intakes": "Project Intakes activos",
