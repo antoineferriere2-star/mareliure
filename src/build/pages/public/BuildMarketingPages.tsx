@@ -255,8 +255,18 @@ function BuildHowItWorksPageContent() {
 
 const SELF_SERVE_PLAN_IDS: PlanId[] = ["launch", "growth", "pro", "business"];
 
-function formatMonthlyPrice(price: MonthlyUsdPrice | null, copy: (text: string) => string) {
-  if (!price) return copy("Custom");
+function PlanPrice({
+  price,
+  copy,
+}: {
+  price: MonthlyUsdPrice | null;
+  copy: (text: string) => string;
+}) {
+  if (!price) {
+    return (
+      <p className="mt-3 text-3xl font-semibold tracking-normal text-slate-950">{copy("Custom")}</p>
+    );
+  }
   const dollars = price.amountCents / 100;
   const hasCents = price.amountCents % 100 !== 0;
   const formatted = new Intl.NumberFormat("en-US", {
@@ -265,7 +275,12 @@ function formatMonthlyPrice(price: MonthlyUsdPrice | null, copy: (text: string) 
     minimumFractionDigits: hasCents ? 2 : 0,
     maximumFractionDigits: 2,
   }).format(dollars);
-  return `${formatted}${copy("/mo")}`;
+  return (
+    <p className="mt-3 flex items-baseline gap-1">
+      <span className="text-3xl font-semibold tracking-normal text-slate-950">{formatted}</span>
+      <span className="text-sm font-medium text-slate-500">{copy("/mo")}</span>
+    </p>
+  );
 }
 
 export function BuildPricingPage() {
@@ -306,9 +321,7 @@ function BuildPricingPageContent() {
                 <h3 className="text-lg font-semibold tracking-normal text-slate-950">
                   {plan.label}
                 </h3>
-                <p className="mt-3 text-3xl font-semibold tracking-normal text-slate-950">
-                  {formatMonthlyPrice(plan.monthlyUsdPrice, copy)}
-                </p>
+                <PlanPrice price={plan.monthlyUsdPrice} copy={copy} />
                 <div className="mt-5 space-y-2">
                   <CheckItem>
                     {plan.maxActiveMissions}{" "}
