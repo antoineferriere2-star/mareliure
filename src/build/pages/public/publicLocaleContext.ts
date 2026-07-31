@@ -518,6 +518,14 @@ const ES_PUBLIC_COPY: Record<string, string> = {
   "Elevation shown is simplified and subject to on-site verification.":
     "La elevación mostrada es simplificada y está sujeta a verificación en el sitio.",
   "The visual preview couldn't be shown.": "No se pudo mostrar la vista previa visual.",
+  "Questions, answered": "Preguntas frecuentes, respondidas",
+  "Don't see your question? Ask it here.": "¿No encuentra su pregunta? Pregúntenos aquí.",
+  "Type your question…": "Escriba su pregunta…",
+  "Asking…": "Preguntando…",
+  Ask: "Preguntar",
+  "Talk to the team": "Hablar con el equipo",
+  "We couldn't process that question — please try again or contact the team.":
+    "No pudimos procesar esa pregunta — intente de nuevo o contacte al equipo.",
 };
 
 export function publicCopy(locale: SupportedLocale, text: string): string {

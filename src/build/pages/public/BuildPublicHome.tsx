@@ -14,6 +14,7 @@ import { DossiersListPreview } from "@/build/pages/public/AdminPreviewShots";
 import { InspirationPreview } from "@/build/pages/public/sections/InspirationSection";
 import { BeforeAfterSection } from "@/build/pages/public/sections/BeforeAfterSection";
 import { InsideMetreBuildSection } from "@/build/pages/public/sections/InsideMetreBuildSection";
+import { FaqSection } from "@/build/pages/public/sections/FaqSection";
 import { demoJaneMillerBrief, demoDossiersRows } from "@/build/content/demoProductData";
 import founderPhoto from "@/assets/antoine-ferriere.jpg.asset.json";
 import { t, type SupportedLocale } from "@/build/i18n";
@@ -366,6 +367,9 @@ function BuildPublicHomeContent() {
 
       {/* OFFER / CTA */}
       <PublicCtaBand />
+
+      {/* FAQ */}
+      <FaqSection />
     </main>
   );
 }
