@@ -2,10 +2,12 @@ import { Button } from "@/components/ui/button";
 import { BriefPreview } from "@/build/pages/public/BriefPreview";
 import { defaultDeckBrief } from "@/build/pages/public/defaultDeckBrief";
 import { deckPlaybookSchema } from "@/build/playbooks/deckPlaybookSchema";
+import { PLAN_DEFAULTS, type MonthlyUsdPrice, type PlanId } from "@/build/billing/plans";
 
 const deckDemoSteps = deckPlaybookSchema.sections.flatMap((section) => section.steps);
 import {
   BuildPublicShell,
+  CheckItem,
   ContentBand,
   InfoPanel,
   PageHero,
@@ -246,6 +248,148 @@ function BuildHowItWorksPageContent() {
           "Administration",
         ])}
       />
+      <PublicCtaBand />
+    </main>
+  );
+}
+
+const SELF_SERVE_PLAN_IDS: PlanId[] = ["launch", "growth", "pro", "business"];
+
+function formatMonthlyPrice(price: MonthlyUsdPrice | null, copy: (text: string) => string) {
+  if (!price) return copy("Custom");
+  const dollars = price.amountCents / 100;
+  const hasCents = price.amountCents % 100 !== 0;
+  const formatted = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: hasCents ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(dollars);
+  return `${formatted}${copy("/mo")}`;
+}
+
+export function BuildPricingPage() {
+  return (
+    <BuildPublicShell>
+      <BuildPricingPageContent />
+    </BuildPublicShell>
+  );
+}
+
+function BuildPricingPageContent() {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
+
+  return (
+    <main>
+      <PageHero
+        eyebrow={copy("Pricing")}
+        title={copy("Simple pricing that scales with your Project Intakes.")}
+        description={copy(
+          "Every plan includes the same guided Project Intake, AI-drafted Project Briefs and client portal. Plans only differ by how many active Project Intakes and monthly Project Briefs you need.",
+        )}
+        primary={copy("Create account")}
+        primaryTo="/auth"
+        secondary={copy("Talk to us")}
+        secondaryTo="/contact"
+        secondaryVariant="link"
+      />
+      <section className="px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-2 lg:grid-cols-4">
+          {SELF_SERVE_PLAN_IDS.map((planId) => {
+            const plan = PLAN_DEFAULTS[planId];
+            return (
+              <section
+                key={planId}
+                className="flex flex-col rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+              >
+                <h3 className="text-lg font-semibold tracking-normal text-slate-950">
+                  {plan.label}
+                </h3>
+                <p className="mt-3 text-3xl font-semibold tracking-normal text-slate-950">
+                  {formatMonthlyPrice(plan.monthlyUsdPrice, copy)}
+                </p>
+                <div className="mt-5 space-y-2">
+                  <CheckItem>
+                    {plan.maxActiveMissions}{" "}
+                    {copy(
+                      plan.maxActiveMissions === 1
+                        ? "active Project Intake"
+                        : "active Project Intakes",
+                    )}
+                  </CheckItem>
+                  <CheckItem>
+                    {plan.monthlyBriefQuota?.toLocaleString("en-US")}{" "}
+                    {copy("Project Briefs / month")}
+                  </CheckItem>
+                </div>
+                <a href="/auth" className="mt-6">
+                  <Button variant="outline" className="w-full">
+                    {copy("Create account")}
+                  </Button>
+                </a>
+              </section>
+            );
+          })}
+        </div>
+        <div className="mx-auto mt-6 max-w-7xl">
+          <section className="flex flex-col items-start gap-4 rounded-lg border border-slate-200 bg-slate-50 p-6 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h3 className="text-lg font-semibold tracking-normal text-slate-950">
+                {copy("Enterprise")}
+              </h3>
+              <p className="mt-2 max-w-2xl text-[15px] leading-6 text-slate-700">
+                {copy(
+                  "For teams that need more active Project Intakes, a higher monthly Project Brief quota, or custom terms.",
+                )}
+              </p>
+            </div>
+            <a href="/contact">
+              <Button variant="outline">{copy("Talk to us")}</Button>
+            </a>
+          </section>
+        </div>
+      </section>
+      <ContentBand
+        title={copy("Every plan includes")}
+        items={publicCopies(locale, [
+          "Guided Project Intake for your website",
+          "AI-drafted Project Briefs",
+          "Secure Project Summary link and email copy for visitors",
+          "Client portal access for your team",
+        ])}
+      />
+      <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionHeader title={copy("Pricing FAQ")} />
+          <div className="mt-8 grid gap-4 md:grid-cols-2">
+            <InfoPanel
+              title={copy("What counts as an active Project Intake?")}
+              items={publicCopies(locale, [
+                "Each Project Intake published on your website counts toward your plan's limit, whether or not it is currently receiving visitors.",
+              ])}
+            />
+            <InfoPanel
+              title={copy("What counts as a Project Brief?")}
+              items={publicCopies(locale, [
+                "Each completed Project Intake that produces a Project Brief counts once toward your monthly quota, reset every billing cycle.",
+              ])}
+            />
+            <InfoPanel
+              title={copy("Can I change plans later?")}
+              items={publicCopies(locale, [
+                "Yes. You can change your plan at any time from your client portal billing page.",
+              ])}
+            />
+            <InfoPanel
+              title={copy("Is there a free trial?")}
+              items={publicCopies(locale, [
+                "Get a Free Website Inquiry Audit first to see what a Project Brief looks like for your business, with no account required.",
+              ])}
+            />
+          </div>
+        </div>
+      </section>
       <PublicCtaBand />
     </main>
   );

@@ -530,6 +530,40 @@ const ES_PUBLIC_COPY: Record<string, string> = {
   "Questions?": "¿Preguntas?",
   "Have a question?": "¿Tiene una pregunta?",
   "View full FAQ": "Ver todas las preguntas frecuentes",
+  Pricing: "Precios",
+  "Create account": "Crear cuenta",
+  "Simple pricing that scales with your Project Intakes.":
+    "Precios simples que crecen con sus Project Intakes.",
+  "Every plan includes the same guided Project Intake, AI-drafted Project Briefs and client portal. Plans only differ by how many active Project Intakes and monthly Project Briefs you need.":
+    "Todos los planes incluyen el mismo Project Intake guiado, Project Briefs redactados por IA y portal de cliente. Los planes solo difieren en cuántos Project Intakes activos y Project Briefs mensuales necesita.",
+  "Talk to us": "Hablar con nosotros",
+  "/mo": "/mes",
+  Custom: "Personalizado",
+  "active Project Intake": "Project Intake activo",
+  "active Project Intakes": "Project Intakes activos",
+  "Project Briefs / month": "Project Briefs / mes",
+  Enterprise: "Enterprise",
+  "For teams that need more active Project Intakes, a higher monthly Project Brief quota, or custom terms.":
+    "Para equipos que necesitan más Project Intakes activos, una cuota mensual de Project Briefs más alta, o condiciones personalizadas.",
+  "Every plan includes": "Todos los planes incluyen",
+  "Guided Project Intake for your website": "Project Intake guiado para su sitio web",
+  "AI-drafted Project Briefs": "Project Briefs redactados por IA",
+  "Secure Project Summary link and email copy for visitors":
+    "Enlace seguro de Project Summary y copia por correo para los visitantes",
+  "Client portal access for your team": "Acceso al portal de cliente para su equipo",
+  "Pricing FAQ": "Preguntas frecuentes sobre precios",
+  "What counts as an active Project Intake?": "¿Qué cuenta como un Project Intake activo?",
+  "Each Project Intake published on your website counts toward your plan's limit, whether or not it is currently receiving visitors.":
+    "Cada Project Intake publicado en su sitio web cuenta para el límite de su plan, reciba o no visitantes actualmente.",
+  "What counts as a Project Brief?": "¿Qué cuenta como un Project Brief?",
+  "Each completed Project Intake that produces a Project Brief counts once toward your monthly quota, reset every billing cycle.":
+    "Cada Project Intake completado que produce un Project Brief cuenta una vez para su cuota mensual, que se reinicia en cada ciclo de facturación.",
+  "Can I change plans later?": "¿Puedo cambiar de plan más adelante?",
+  "Yes. You can change your plan at any time from your client portal billing page.":
+    "Sí. Puede cambiar su plan en cualquier momento desde la página de facturación de su portal de cliente.",
+  "Is there a free trial?": "¿Hay una prueba gratuita?",
+  "Get a Free Website Inquiry Audit first to see what a Project Brief looks like for your business, with no account required.":
+    "Primero solicite una auditoría gratis para ver cómo sería un Project Brief para su negocio, sin necesidad de crear una cuenta.",
 };
 
 export function publicCopy(locale: SupportedLocale, text: string): string {

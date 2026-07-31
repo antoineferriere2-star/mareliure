@@ -59,6 +59,7 @@ function BuildPublicShellContent({
   const navItems = [
     ...VERTICAL_NAV_ITEMS.filter((item) => item.status === "published"),
     { labelKey: "navigation.howItWorks" as const, to: "/how-it-works" as const },
+    { labelKey: "navigation.pricing" as const, to: "/pricing" as const },
     { labelKey: "navigation.exampleBrief" as const, to: "/example-project-brief" as const },
     { labelKey: "navigation.freeAudit" as const, to: "/free-inquiry-audit" as const },
     { labelKey: "navigation.contact" as const, to: "/contact" as const },
@@ -159,6 +160,7 @@ function BuildPublicShellContent({
             <FooterCol title={t(locale, "footer.product")}>
               <FooterLink to="/deck-builders">{t(locale, "navigation.deckBuilders")}</FooterLink>
               <FooterLink to="/how-it-works">{t(locale, "navigation.howItWorks")}</FooterLink>
+              <FooterLink to="/pricing">{t(locale, "navigation.pricing")}</FooterLink>
               <FooterLink to="/demo/deck-project">{t(locale, "footer.demo")}</FooterLink>
             </FooterCol>
             <FooterCol title={t(locale, "footer.conversion")}>
