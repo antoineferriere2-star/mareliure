@@ -526,6 +526,10 @@ const ES_PUBLIC_COPY: Record<string, string> = {
   "Talk to the team": "Hablar con el equipo",
   "We couldn't process that question — please try again or contact the team.":
     "No pudimos procesar esa pregunta — intente de nuevo o contacte al equipo.",
+  "You can ask another question above.": "Puede hacer otra pregunta más arriba.",
+  "Questions?": "¿Preguntas?",
+  "Have a question?": "¿Tiene una pregunta?",
+  "View full FAQ": "Ver todas las preguntas frecuentes",
 };
 
 export function publicCopy(locale: SupportedLocale, text: string): string {

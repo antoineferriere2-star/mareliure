@@ -16,7 +16,10 @@ import { publicCopy, usePublicLocale } from "./publicLocaleContext";
 
 export function ProjectSummaryAccessView({ accessToken }: { accessToken: string }) {
   return (
-    <BuildPublicShell>
+    // No FAQ launcher on the secure summary page either — same reasoning
+    // as MissionRuntime: this is the visitor's own submitted result, not a
+    // place to surface a generic assistant entry point.
+    <BuildPublicShell showFaqLauncher={false}>
       <ProjectSummaryAccessContent accessToken={accessToken} />
     </BuildPublicShell>
   );

@@ -4,7 +4,7 @@
 // typing their own, which is also what keeps this affordable (see
 // src/routes/api/public/faq-ask.ts for the rate limiting). Every AI-answered
 // question is independent — no conversation history is kept anywhere.
-import { useState, type KeyboardEvent } from "react";
+import type { KeyboardEvent } from "react";
 import {
   Accordion,
   AccordionContent,
@@ -14,14 +14,14 @@ import {
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { SectionHeader } from "@/build/pages/public/BuildPublicShell";
-import { publicCopy, usePublicLocale } from "@/build/pages/public/publicLocaleContext";
+import { useFaqAsk } from "@/build/pages/public/useFaqAsk";
 
 interface StaticFaqEntry {
   question: string;
   answer: string;
 }
 
-const STATIC_FAQ: StaticFaqEntry[] = [
+export const STATIC_FAQ: StaticFaqEntry[] = [
   {
     question: "Is this a chatbot?",
     answer:
@@ -64,39 +64,8 @@ const STATIC_FAQ: StaticFaqEntry[] = [
   },
 ];
 
-const GENERIC_ERROR_ANSWER =
-  "We couldn't process that question — please try again or contact the team.";
-
 export function FaqSection() {
-  const { locale } = usePublicLocale();
-  const copy = (text: string) => publicCopy(locale, text);
-  const [question, setQuestion] = useState("");
-  const [answer, setAnswer] = useState<string | null>(null);
-  const [loading, setLoading] = useState(false);
-
-  async function askQuestion() {
-    const trimmed = question.trim();
-    if (!trimmed || loading) return;
-    setLoading(true);
-    setAnswer(null);
-    try {
-      const res = await fetch("/api/public/faq-ask", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: trimmed }),
-      });
-      if (!res.ok) {
-        setAnswer(copy(GENERIC_ERROR_ANSWER));
-        return;
-      }
-      const data = (await res.json()) as { answer: string };
-      setAnswer(data.answer);
-    } catch {
-      setAnswer(copy(GENERIC_ERROR_ANSWER));
-    } finally {
-      setLoading(false);
-    }
-  }
+  const { question, setQuestion, answer, loading, askQuestion, copy } = useFaqAsk();
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -106,7 +75,7 @@ export function FaqSection() {
   }
 
   return (
-    <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
+    <section id="faq" className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
         <SectionHeader eyebrow={copy("FAQ")} title={copy("Questions, answered")} />
 
@@ -152,12 +121,14 @@ export function FaqSection() {
           {answer && (
             <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
               <p>{answer}</p>
-              <a
-                href="/contact"
-                className="mt-2 inline-block text-sm font-medium text-emerald-700 hover:underline"
-              >
-                {copy("Talk to the team")}
-              </a>
+              <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
+                <a href="/contact" className="text-sm font-medium text-emerald-700 hover:underline">
+                  {copy("Talk to the team")}
+                </a>
+                <span className="text-xs text-slate-500">
+                  {copy("You can ask another question above.")}
+                </span>
+              </div>
             </div>
           )}
         </div>

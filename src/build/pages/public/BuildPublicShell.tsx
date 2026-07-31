@@ -6,6 +6,7 @@ import { useState, type ReactNode } from "react";
 import { t } from "@/build/i18n";
 import { PublicLanguageSelect, PublicLocaleProvider } from "@/build/pages/public/publicLocale";
 import { usePublicLocale } from "@/build/pages/public/publicLocaleContext";
+import { FaqLauncher } from "@/build/pages/public/FaqLauncher";
 
 /**
  * One entry per industry vertical Métré Build can serve. Only "published"
@@ -23,15 +24,36 @@ const VERTICAL_NAV_ITEMS = [
   },
 ];
 
-export function BuildPublicShell({ children }: { children: ReactNode }) {
+export function BuildPublicShell({
+  children,
+  showFaqLauncher = true,
+}: {
+  children: ReactNode;
+  /**
+   * Defaults to shown on every marketing page. Explicitly set to `false`
+   * only by the actual Guided Project Intake flow (MissionRuntime) and the
+   * secure Project Summary page — a persistent "Questions?" launcher there
+   * would dilute the product demo itself, the same reasoning that kept
+   * this feature an on-page FAQ instead of a site-wide chat widget.
+   */
+  showFaqLauncher?: boolean;
+}) {
   return (
     <PublicLocaleProvider>
-      <BuildPublicShellContent>{children}</BuildPublicShellContent>
+      <BuildPublicShellContent showFaqLauncher={showFaqLauncher}>
+        {children}
+      </BuildPublicShellContent>
     </PublicLocaleProvider>
   );
 }
 
-function BuildPublicShellContent({ children }: { children: ReactNode }) {
+function BuildPublicShellContent({
+  children,
+  showFaqLauncher,
+}: {
+  children: ReactNode;
+  showFaqLauncher: boolean;
+}) {
   const { locale } = usePublicLocale();
   const [menuOpen, setMenuOpen] = useState(false);
   const navItems = [
@@ -121,6 +143,7 @@ function BuildPublicShellContent({ children }: { children: ReactNode }) {
       </header>
 
       {children}
+      {showFaqLauncher && <FaqLauncher />}
       <footer className="border-t border-slate-200 bg-slate-950 text-white">
         <div className="mx-auto grid max-w-7xl gap-8 px-4 py-10 sm:px-6 md:grid-cols-[1fr_2fr] lg:px-8">
           <div>

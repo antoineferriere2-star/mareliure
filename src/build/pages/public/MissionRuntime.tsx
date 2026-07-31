@@ -79,7 +79,10 @@ async function callRuntime<T>(body: Record<string, unknown>): Promise<T> {
  */
 export function MissionRuntime({ publicToken }: { publicToken: string }) {
   return (
-    <BuildPublicShell>
+    // No FAQ launcher here — this is the actual Guided Project Intake a
+    // visitor is completing; a persistent "Questions?" button would
+    // dilute the product demo itself.
+    <BuildPublicShell showFaqLauncher={false}>
       <MissionRuntimeContent publicToken={publicToken} />
     </BuildPublicShell>
   );
