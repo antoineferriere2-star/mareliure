@@ -10,6 +10,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { hashAccessToken, ACCESS_TOKEN_BYTES } from "@/build/services/dossierAccessToken.server";
 import { logOperationalError } from "@/build/services/operationalLog.server";
+import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 
 type Supa = SupabaseClient<Database>;
 
@@ -19,7 +20,6 @@ const RATE_LIMIT_MAX = 30;
 // Same bucket name as build-runtime.ts / admin.data.functions.ts — kept as
 // its own literal here rather than a shared import so this file's trust
 // boundary stays self-contained and independently auditable.
-const INSPIRATION_PHOTOS_BUCKET = "build-inspiration-photos";
 
 const bodySchema = z.object({
   token: z

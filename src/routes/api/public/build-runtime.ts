@@ -13,12 +13,12 @@ import type { DeckPreviewSnapshot } from "@/build/visualPreview/deckPreviewParam
 import { DEFAULT_LOCALE, resolveSupportedLocale } from "@/build/i18n/locales";
 import { DEFAULT_MEASUREMENT_SYSTEM } from "@/build/measurements/types";
 import { logOperationalError } from "@/build/services/operationalLog.server";
+import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 
 type Supa = SupabaseClient<Database>;
 
 const MAX_BODY_BYTES = 32 * 1024; // 32 KB — every action except photo analysis
 const MAX_PHOTO_BODY_BYTES = 12 * 1024 * 1024; // 12 MB — base64-encoded inspiration photo
-const INSPIRATION_PHOTOS_BUCKET = "build-inspiration-photos";
 const RATE_LIMIT_WINDOW_MIN = 60;
 const RATE_LIMIT_MAX = 60;
 const PUBLISHED_STATUS = "active";

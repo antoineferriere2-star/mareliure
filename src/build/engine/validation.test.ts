@@ -204,6 +204,55 @@ describe("getPlaybookPublishIssues", () => {
     expect(getPlaybookPublishIssues(schema).some((i) => i.includes("sitePhotos"))).toBe(false);
   });
 
+  function schemaWithInspirationPhoto(overrides: Record<string, unknown>) {
+    return playbookSchema.parse({
+      schemaVersion: 1,
+      sections: [
+        {
+          id: "s1",
+          title: "Section",
+          steps: [
+            {
+              id: "step1",
+              title: "Step",
+              fields: [
+                {
+                  key: "inspiration",
+                  label: "Inspiration photo",
+                  type: "inspiration_photo",
+                  desirability: "optional",
+                  ...overrides,
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      briefConfig: { suggestedNextActions: [{ label: "Next", value: "Follow up." }] },
+    });
+  }
+
+  it("refuses an inspiration photo field larger than the Storage bucket allows", () => {
+    // Storage would reject the upload mid-request, which the visitor sees as
+    // a server error — catch it while the author can still fix it.
+    const issues = getPlaybookPublishIssues(schemaWithInspirationPhoto({ maxFileSizeMb: 15 }));
+    expect(issues.some((i) => i.includes("15 MB") && i.includes("8 MB"))).toBe(true);
+  });
+
+  it("refuses an inspiration photo field accepting a MIME type Storage rejects", () => {
+    const issues = getPlaybookPublishIssues(
+      schemaWithInspirationPhoto({ acceptMimeTypes: ["image/jpeg", "image/heic"] }),
+    );
+    expect(issues.some((i) => i.includes("image/heic"))).toBe(true);
+  });
+
+  it("accepts an inspiration photo field within the bucket's limits", () => {
+    const issues = getPlaybookPublishIssues(
+      schemaWithInspirationPhoto({ maxFileSizeMb: 8, acceptMimeTypes: ["image/jpeg"] }),
+    );
+    expect(issues.some((i) => i.includes("inspiration"))).toBe(false);
+  });
+
   it("requires at least one unconditional suggested next action", () => {
     const schema = playbookSchema.parse({
       schemaVersion: 1,

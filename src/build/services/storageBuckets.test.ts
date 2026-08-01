@@ -12,12 +12,13 @@ import { describe, expect, it } from "vitest";
 
 const MIGRATIONS_DIR = join(process.cwd(), "supabase/migrations");
 
-/** Bucket-name constants declared in app code, as `const NAME = "bucket-id"`. */
-const BUCKET_CONSTANT_SOURCES = [
-  "src/routes/api/public/build-runtime.ts",
-  "src/build/services/admin.data.functions.ts",
-  "src/routes/api/public/project-summary.ts",
-];
+/**
+ * Every bucket name is declared once, in src/build/storage/. Scanning the
+ * whole folder rather than a hardcoded file list means a new bucket is picked
+ * up automatically — a list would silently stop covering the thing it was
+ * written to cover.
+ */
+const BUCKET_CONSTANTS_DIR = join(process.cwd(), "src/build/storage");
 
 function allMigrationsSql(): string {
   return readdirSync(MIGRATIONS_DIR)
@@ -28,8 +29,9 @@ function allMigrationsSql(): string {
 
 function referencedBuckets(): string[] {
   const names = new Set<string>();
-  for (const relativePath of BUCKET_CONSTANT_SOURCES) {
-    const source = readFileSync(join(process.cwd(), relativePath), "utf8");
+  for (const file of readdirSync(BUCKET_CONSTANTS_DIR)) {
+    if (!file.endsWith(".ts") || file.endsWith(".test.ts")) continue;
+    const source = readFileSync(join(BUCKET_CONSTANTS_DIR, file), "utf8");
     for (const match of source.matchAll(/_BUCKET\s*=\s*"([a-z0-9-]+)"/g)) {
       names.add(match[1]);
     }

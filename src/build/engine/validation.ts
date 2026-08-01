@@ -12,6 +12,10 @@ import type {
   PlaybookStep,
 } from "../schema/playbook";
 import { evaluateConditionGroup } from "./conditions";
+import {
+  INSPIRATION_PHOTOS_ALLOWED_MIME_TYPES,
+  INSPIRATION_PHOTOS_MAX_FILE_SIZE_MB,
+} from "../storage/inspirationPhotosBucket";
 
 function isEmpty(value: AnswerValue | undefined): boolean {
   if (value === undefined || value === null) return true;
@@ -233,6 +237,26 @@ export function getPlaybookPublishIssues(schema: PlaybookSchema): string[] {
       issues.push(
         `Field "${field.key}" requests Storage upload, which is not implemented for photo fields yet — files would be discarded. Use an inspiration_photo field instead.`,
       );
+    }
+
+    // The Storage bucket enforces its own ceiling. A field asking for more
+    // would pass the app-side check in build-runtime.ts and then be rejected
+    // by Storage mid-upload, which the visitor sees as a server error — so
+    // refuse it here, where the Playbook author can still fix it.
+    if (field.type === "inspiration_photo") {
+      if (field.maxFileSizeMb > INSPIRATION_PHOTOS_MAX_FILE_SIZE_MB) {
+        issues.push(
+          `Field "${field.key}" allows ${field.maxFileSizeMb} MB, above the ${INSPIRATION_PHOTOS_MAX_FILE_SIZE_MB} MB Storage limit — those uploads would fail.`,
+        );
+      }
+      const unsupported = field.acceptMimeTypes.filter(
+        (type) => !(INSPIRATION_PHOTOS_ALLOWED_MIME_TYPES as readonly string[]).includes(type),
+      );
+      if (unsupported.length > 0) {
+        issues.push(
+          `Field "${field.key}" accepts ${unsupported.join(", ")}, which Storage rejects — those uploads would fail.`,
+        );
+      }
     }
   }
 

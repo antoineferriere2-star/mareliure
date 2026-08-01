@@ -18,6 +18,7 @@ import {
   type MissionStatus,
 } from "@/build/intakes/intakeLifecycle";
 import { fail } from "./serverError";
+import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 
 // ---------- Dashboard ----------
 
@@ -356,8 +357,6 @@ export const getBuildDossier = createServerFn({ method: "GET" })
     }
     return { dossier, mission, session };
   });
-
-const INSPIRATION_PHOTOS_BUCKET = "build-inspiration-photos";
 
 /** Signed URL (1h) for an inspiration photo stored during a public session — the bucket is private, admin-only access. */
 export const getInspirationPhotoUrl = createServerFn({ method: "GET" })
