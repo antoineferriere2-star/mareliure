@@ -17,6 +17,12 @@ import {
 import { VisitorProjectSummaryView } from "./VisitorProjectSummaryView";
 import { BuildPublicShell } from "./BuildPublicShell";
 import { publicCopy, usePublicLocale } from "./publicLocaleContext";
+import { MissionRuntimeSkeleton } from "./MissionRuntimeStates";
+
+/** How long the initial load can run before we tell the visitor it's taking
+ * longer than usual — long enough to not fire on a normal cold start, short
+ * enough that nobody stares at a silent skeleton for a full minute. */
+const SLOW_LOAD_MS = 8000;
 
 type PublicMission = {
   id: string;
@@ -100,10 +106,18 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
   const [dossier, setDossier] = useState<DossierResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [slowLoad, setSlowLoad] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setSlowLoad(false);
+    setError(null);
+    const slowLoadTimer = window.setTimeout(() => {
+      if (!cancelled) setSlowLoad(true);
+    }, SLOW_LOAD_MS);
 
     async function startFresh() {
       const data = await callRuntime<{
@@ -159,8 +173,17 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
 
     return () => {
       cancelled = true;
+      window.clearTimeout(slowLoadTimer);
     };
-  }, [publicToken]);
+  }, [publicToken, reloadKey]);
+
+  function retryLoad() {
+    // Bump the effect's dependency rather than clearing storage first — a
+    // stored session might still be valid and this was just a transient
+    // network failure; the effect's own catch already falls back to a
+    // fresh session if the stored one turns out to be genuinely invalid.
+    setReloadKey((key) => key + 1);
+  }
 
   const visibleSteps = useMemo<VisibleStep[]>(
     () => (schema ? computeVisibleSteps(schema, answers) : []),
@@ -254,11 +277,27 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
 
   return (
     <main className="bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
-      {loading && <p className="mx-auto max-w-3xl text-slate-600">{copy("Loading mission…")}</p>}
+      {loading && (
+        <div className="mx-auto max-w-5xl">
+          <MissionRuntimeSkeleton label={copy("Preparing your project intake…")} />
+          {slowLoad && (
+            <p className="mt-4 text-center text-sm text-slate-500">
+              {copy("This is taking longer than usual.")}
+            </p>
+          )}
+        </div>
+      )}
 
       {!loading && error && !mission && (
         <div className="mx-auto max-w-3xl rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
-          {copy(error)}
+          <p>{copy(error)}</p>
+          <button
+            type="button"
+            onClick={retryLoad}
+            className="mt-3 rounded-md border border-rose-300 bg-white px-3 py-1.5 text-xs font-medium text-rose-800 hover:bg-rose-100"
+          >
+            {copy("Try again")}
+          </button>
         </div>
       )}
 
