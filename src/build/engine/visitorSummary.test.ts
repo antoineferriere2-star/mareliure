@@ -113,6 +113,35 @@ describe("buildVisitorProjectSummary", () => {
   });
 });
 
+describe("buildVisitorProjectSummary — Spanish locale", () => {
+  it("translates a confirmed item's label and value using the shared ES dictionary", () => {
+    const summary = buildVisitorProjectSummary(defaultDeckBrief, proposal, {
+      ...baseOptions,
+      locale: "es-US",
+    });
+    expect(findItem(summary.confirmedItems, "Situación existente")?.value).toBe(
+      "Terraza de madera existente",
+    );
+    // The untranslated English pair must not also be present.
+    expect(findItem(summary.confirmedItems, "Existing situation")).toBeUndefined();
+  });
+
+  it("translates a calculated item's fixed label (value with a per-submission number stays as-is)", () => {
+    const summary = buildVisitorProjectSummary(defaultDeckBrief, proposal, {
+      ...baseOptions,
+      locale: "es-US",
+    });
+    expect(findItem(summary.calculatedItems, "Área aproximada")).toBeDefined();
+  });
+
+  it("leaves content untranslated for the default English locale", () => {
+    const summary = buildVisitorProjectSummary(defaultDeckBrief, proposal, baseOptions);
+    expect(findItem(summary.confirmedItems, "Existing situation")?.value).toBe(
+      "Existing wood deck",
+    );
+  });
+});
+
 describe("extractPhotoReferences", () => {
   it("collects the storage path from an inspiration photo answer", () => {
     const refs = extractPhotoReferences({

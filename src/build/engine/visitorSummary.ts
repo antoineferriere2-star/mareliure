@@ -1,14 +1,24 @@
 // Pure transform from the internal, commercial ProjectBrief into the
 // visitor-facing VisitorProjectSummary. Sits beside brief.ts's own
 // generateProjectBrief (same "engine/" convention: schema in -> schema out,
-// no I/O, no i18n copy strings — those belong to the view layer that calls
-// this). Never used as a public DTO substitute for ProjectBrief itself.
+// no I/O), with one deliberate exception: this is the fork point between the
+// internal ProjectBrief (English, stored as build_dossiers.content for the
+// commercial team regardless of the visitor's locale — generateProjectBrief
+// itself MUST stay untranslated, or a Spanish visitor's submission would
+// corrupt the English-speaking team's Dossier) and the visitor-facing DTO,
+// which is frozen once at submit time and later read by both the web view
+// and the confirmation email. Translating labels/values here, once, keeps
+// both consumers correctly localized without duplicating the lookup in each
+// view. Only whole-string dictionary matches translate — a visitor's own
+// free text, or a value with a per-submission number baked in, simply falls
+// through unchanged (see publicCopy).
 import type { BriefLine, ProjectBrief } from "@/build/schema/brief";
 import { NEEDS_VERIFICATION_SOURCES, allBriefLines } from "@/build/schema/briefLabels";
 import type { MissionProposal } from "@/build/schema/missionProposal";
 import type { Answers } from "@/build/schema/answers";
 import type { SupportedLocale } from "@/build/i18n/locales";
 import type { MeasurementSystem } from "@/build/measurements/types";
+import { publicCopy } from "@/build/pages/public/publicLocaleContext";
 import {
   VISITOR_SUMMARY_VERSION,
   type SummaryItem,
@@ -40,8 +50,8 @@ export function extractPhotoReferences(answers: Answers): VisitorPhotoReference[
   return refs;
 }
 
-function toItem(line: BriefLine): SummaryItem {
-  return { label: line.label, value: line.value };
+function toItem(line: BriefLine, translate: (text: string) => string): SummaryItem {
+  return { label: translate(line.label), value: translate(line.value) };
 }
 
 function lineKey(line: BriefLine): string {
@@ -71,6 +81,7 @@ export function buildVisitorProjectSummary(
   proposal: MissionProposal,
   options: BuildVisitorProjectSummaryOptions,
 ): VisitorProjectSummary {
+  const translate = (text: string) => publicCopy(options.locale, text);
   const needsVerification = new Set<string>();
   for (const line of brief.missingInformation) needsVerification.add(lineKey(line));
   for (const line of allBriefLines(brief)) {
@@ -83,7 +94,7 @@ export function buildVisitorProjectSummary(
     const key = lineKey(line);
     if (!needsVerification.has(key) || seenToConfirm.has(key)) continue;
     seenToConfirm.add(key);
-    itemsToConfirm.push(toItem(line));
+    itemsToConfirm.push(toItem(line, translate));
   }
 
   // confirmedInformation/assumptionsAndCalculated/constraints are pooled and
@@ -99,7 +110,7 @@ export function buildVisitorProjectSummary(
 
   const confirmedItems = pooled
     .filter((line) => line.source === "visitor_answer" && !needsVerification.has(lineKey(line)))
-    .map(toItem);
+    .map((line) => toItem(line, translate));
 
   const calculatedItems = pooled
     .filter(
@@ -107,18 +118,18 @@ export function buildVisitorProjectSummary(
         (line.source === "calculated_value" || line.source === "deterministic_rule") &&
         !needsVerification.has(lineKey(line)),
     )
-    .map(toItem);
+    .map((line) => toItem(line, translate));
 
   const budgetAndTimingItems = brief.budgetAndTiming
     .filter((line) => !needsVerification.has(lineKey(line)))
-    .map(toItem);
+    .map((line) => toItem(line, translate));
 
   return {
     version: VISITOR_SUMMARY_VERSION,
     locale: options.locale,
     measurementSystem: options.measurementSystem,
     businessName: options.businessName,
-    summary: brief.projectSummary,
+    summary: translate(brief.projectSummary),
     confirmedItems,
     calculatedItems,
     itemsToConfirm,

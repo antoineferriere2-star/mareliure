@@ -782,6 +782,12 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   '"{field}" allows at most {n0} photo(s).': '"{field}" permite como máximo {n0} foto(s).',
   '"{field}" has an unsupported photo.': '"{field}" tiene una foto no compatible.',
   '"{field}" must be accepted.': '"{field}" debe aceptarse.',
+
+  // Inspiration-photo brief line label (engine/brief.ts) — surfaced in the
+  // visitor Project Summary's "still to confirm" section for inspiration-
+  // photo intakes only.
+  "Questions to explore (from the inspiration photo)":
+    "Preguntas a explorar (a partir de la foto de inspiración)",
 };
 
 export function publicCopy(locale: SupportedLocale, text: string): string {
