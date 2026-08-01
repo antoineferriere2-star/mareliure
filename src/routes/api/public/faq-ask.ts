@@ -125,10 +125,15 @@ export const Route = createFileRoute("/api/public/faq-ask")({
           const windowStart = new Date(
             Date.now() - RATE_LIMIT_WINDOW_MIN * 60 * 1000,
           ).toISOString();
+          // Scoped to this endpoint's own action: build_runtime_rate is
+          // shared with /api/public/build-runtime, whose own actions
+          // (get_mission, save_session...) fire far more often and must
+          // never burn through this widget's separate, much stricter quota.
           const { count } = await supabaseAdmin
             .from("build_runtime_rate")
             .select("*", { count: "exact", head: true })
             .eq("ip_hash", ipHash)
+            .eq("action", RATE_LIMIT_ACTION)
             .gte("created_at", windowStart);
           usedBeforeThisRequest = count ?? 0;
           alreadyAtLimit = usedBeforeThisRequest >= RATE_LIMIT_MAX;
