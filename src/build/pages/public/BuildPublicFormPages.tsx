@@ -106,9 +106,7 @@ function BuildContactPageContent({
           as="h1"
           eyebrow={copy("Contact")}
           title={copy("Contact Métré Build")}
-          description={copy(
-            "Send a direct message to the Métré Build team. We reply from contact@oppe.fr.",
-          )}
+          description={copy("Send a direct message to the Métré Build team.")}
         />
         <form
           onSubmit={submit}
@@ -166,7 +164,7 @@ function BuildContactPageContent({
           )}
           {status === "success" ? (
             <div className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-              {copy("Message sent. We will reply from contact@oppe.fr.")}
+              {copy("Message sent. The team will reply to the email address you provided.")}
             </div>
           ) : (
             <Button className="mt-5" disabled={status === "submitting"}>

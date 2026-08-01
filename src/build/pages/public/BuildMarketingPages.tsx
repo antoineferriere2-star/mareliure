@@ -462,15 +462,46 @@ function BuildExampleProjectBriefPageContent() {
   );
 }
 
-export function BuildLegalPage({ title, paragraphs }: { title: string; paragraphs: string[] }) {
+export interface LegalSection {
+  heading: string;
+  body: string[];
+}
+
+/**
+ * LEGAL REVIEW REQUIRED before production publication. The content passed
+ * to this component (privacy.tsx, terms.tsx) is a structured draft written
+ * to be complete and honest about what the product actually does, but it
+ * has not been reviewed by a lawyer. Placeholders for facts we don't have
+ * (legal entity name, registered address, DPO, governing law, contractual
+ * retention periods) are phrased as "to be confirmed" rather than invented
+ * — do not replace them with plausible-sounding values without verifying
+ * them first.
+ */
+export function BuildLegalPage({
+  title,
+  updated,
+  sections,
+}: {
+  title: string;
+  updated: string;
+  sections: LegalSection[];
+}) {
   return (
     <BuildPublicShell>
-      <BuildLegalPageContent title={title} paragraphs={paragraphs} />
+      <BuildLegalPageContent title={title} updated={updated} sections={sections} />
     </BuildPublicShell>
   );
 }
 
-function BuildLegalPageContent({ title, paragraphs }: { title: string; paragraphs: string[] }) {
+function BuildLegalPageContent({
+  title,
+  updated,
+  sections,
+}: {
+  title: string;
+  updated: string;
+  sections: LegalSection[];
+}) {
   const { locale } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
 
@@ -478,10 +509,20 @@ function BuildLegalPageContent({ title, paragraphs }: { title: string; paragraph
     <main className="px-4 py-16 sm:px-6 lg:px-8">
       <article className="mx-auto max-w-3xl">
         <h1 className="text-4xl font-semibold tracking-normal">{copy(title)}</h1>
-        {paragraphs.map((paragraph) => (
-          <p key={paragraph} className="mt-5 text-base leading-7 text-slate-600">
-            {copy(paragraph)}
-          </p>
+        <p className="mt-2 text-sm text-slate-500">
+          {copy("Last updated")}: {updated}
+        </p>
+        {sections.map((section) => (
+          <section key={section.heading} className="mt-8">
+            <h2 className="text-xl font-semibold tracking-normal text-slate-950">
+              {copy(section.heading)}
+            </h2>
+            {section.body.map((paragraph) => (
+              <p key={paragraph} className="mt-3 text-base leading-7 text-slate-600">
+                {copy(paragraph)}
+              </p>
+            ))}
+          </section>
         ))}
       </article>
     </main>

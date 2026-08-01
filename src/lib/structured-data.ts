@@ -2,6 +2,18 @@
 export const SITE_URL = "https://metre-pro.com";
 export const SITE_NAME = "Métré Build";
 
+/**
+ * No Métré Build-branded mailbox has been provisioned yet (contact messages
+ * are currently routed, server-side only, to a legacy off-brand address —
+ * see the "to" recipient in src/lib/email-templates/public-contact.tsx).
+ * Rather than display that off-brand address publicly, or invent a Métré
+ * Build address that may not exist/be monitored, the public surface routes
+ * visitors to the /contact form instead. Set this once a real, monitored
+ * Métré Build mailbox exists to have it appear in structured data and
+ * public copy again.
+ */
+export const PUBLIC_CONTACT_EMAIL: string | null = null;
+
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;
 
@@ -18,14 +30,15 @@ export const organizationSchema = {
   image: `${SITE_URL}/og-image.png`,
   description:
     "Métré Build turns vague website inquiries into structured Project Briefs for project-based contractors.",
-  email: "contact@oppe.fr",
+  ...(PUBLIC_CONTACT_EMAIL ? { email: PUBLIC_CONTACT_EMAIL } : {}),
   sameAs: ["https://www.linkedin.com/in/antoine-ferriere-53113048/"],
   contactPoint: [
     {
       "@type": "ContactPoint",
       contactType: "sales",
-      email: "contact@oppe.fr",
-      availableLanguage: ["en", "fr"],
+      url: `${SITE_URL}/contact`,
+      ...(PUBLIC_CONTACT_EMAIL ? { email: PUBLIC_CONTACT_EMAIL } : {}),
+      availableLanguage: ["en", "es"],
     },
   ],
 };

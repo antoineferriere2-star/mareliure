@@ -167,15 +167,15 @@ const ES_PUBLIC_COPY: Record<string, string> = {
   "Enter a valid email.": "Ingrese un email válido.",
   "Consent is required.": "El consentimiento es obligatorio.",
   "Contact Métré Build": "Contactar a Métré Build",
-  "Send a direct message to the Métré Build team. We reply from contact@oppe.fr.":
-    "Envíe un mensaje directo al equipo de Métré Build. Respondemos desde contact@oppe.fr.",
+  "Send a direct message to the Métré Build team.":
+    "Envíe un mensaje directo al equipo de Métré Build.",
   "Company (optional)": "Empresa (opcional)",
   Subject: "Asunto",
   "Send message": "Enviar mensaje",
   Sending: "Enviando",
   "Unable to send this message.": "No se pudo enviar este mensaje.",
-  "Message sent. We will reply from contact@oppe.fr.":
-    "Mensaje enviado. Responderemos desde contact@oppe.fr.",
+  "Message sent. The team will reply to the email address you provided.":
+    "Mensaje enviado. El equipo responderá al correo electrónico que indicó.",
   "Setup review": "Revisión de configuración",
   "Request a setup review": "Solicitar revisión de configuración",
   "Tell us about your business and we'll get back to you about setting up a guided Project Intake for your website.":
@@ -489,22 +489,117 @@ const ES_PUBLIC_COPY: Record<string, string> = {
   "View on LinkedIn": "Ver en LinkedIn",
   Privacy: "Privacidad",
   Terms: "Términos",
-  "Métré Build collects information submitted through website audit and setup request forms so the team can review requests and respond.":
-    "Métré Build recopila la información enviada mediante formularios de auditoría del sitio y solicitudes de configuración para que el equipo pueda revisar y responder.",
-  "Métré Build collects information submitted through website audit, setup request and contact forms so the team can review requests and respond.":
-    "Métré Build recopila la información enviada mediante formularios de auditoría del sitio, solicitudes de configuración y formularios de contacto para que el equipo pueda revisar y responder.",
-  "Demo Project Brief data is fictional or stored locally in your browser unless you submit a real request.":
-    "Los datos del Project Brief de demo son ficticios o se almacenan localmente en su navegador, salvo que envíe una solicitud real.",
-  "Real customer responses, runtime sessions and project briefs are not intended to be indexed or exposed publicly.":
-    "Las respuestas reales de clientes, sesiones de ejecución y Project Briefs no están destinados a indexarse ni exponerse públicamente.",
-  "Categories of data collected: contact details (name, email), website URL, and any information you provide in a request form. Questions about this policy can be sent to contact@oppe.fr.":
-    "Categorías de datos recopilados: datos de contacto (nombre, email), URL del sitio web y cualquier información que proporcione en un formulario de solicitud. Las preguntas sobre esta política pueden enviarse a contact@oppe.fr.",
-  "Métré Build is provided for project discovery and qualification purposes only.":
-    "Métré Build se proporciona únicamente para descubrimiento y calificación de proyectos.",
-  "The Deck Project Demo does not produce a guaranteed quote, engineering assessment or regulatory review.":
-    "La demo Deck Project no produce una cotización garantizada, evaluación de ingeniería ni revisión regulatoria.",
-  "Access and available features may change as the product evolves. Contact contact@oppe.fr with any questions.":
-    "El acceso y las funciones disponibles pueden cambiar a medida que el producto evoluciona. Contacte a contact@oppe.fr si tiene preguntas.",
+  "Last updated": "Última actualización",
+  "Who operates Métré Build": "Quién opera Métré Build",
+  "Métré Build (metre-pro.com) is a project intake product for project-based contractors. The legal entity operating this service, its registration details and registered address will be published here once confirmed — until then, use the Contact page for any verification you need.":
+    "Métré Build (metre-pro.com) es un producto de captación de proyectos para contratistas que trabajan por proyecto. La entidad legal que opera este servicio, sus datos de registro y su domicilio social se publicarán aquí una vez confirmados; mientras tanto, use la página de Contacto para cualquier verificación que necesite.",
+  "Data we collect": "Datos que recopilamos",
+  "We collect information you submit directly through our audit request, setup request and contact forms, and information a visitor submits through a Guided Project Intake published by one of our client workspaces.":
+    "Recopilamos la información que usted envía directamente a través de nuestros formularios de solicitud de auditoría, solicitud de configuración y contacto, así como la información que un visitante envía a través de un Project Intake guiado publicado por uno de nuestros workspaces de clientes.",
+  "Information collected in a Guided Project Intake":
+    "Información recopilada en un Project Intake guiado",
+  "Depending on the Playbook a workspace publishes, a Guided Project Intake may ask for project details, dimensions, material or feature preferences, budget range, timing, site photos, and consent to be contacted.":
+    "Según el Playbook que publique un workspace, un Project Intake guiado puede solicitar detalles del proyecto, dimensiones, preferencias de materiales o características, rango de presupuesto, plazo, fotos del sitio y consentimiento para ser contactado.",
+  "Name, email address, phone number and ZIP/postal code, when provided, are used to let the relevant workspace follow up on a project.":
+    "El nombre, la dirección de correo electrónico, el número de teléfono y el código postal, cuando se proporcionan, se utilizan para que el workspace correspondiente pueda dar seguimiento a un proyecto.",
+  "Photos and documents": "Fotos y documentos",
+  "Photos or plans uploaded to a Guided Project Intake are stored so the workspace can review the project and, where that feature is enabled, may be analyzed by an AI vision service to surface observations for the workspace to confirm.":
+    "Las fotos o planos subidos a un Project Intake guiado se almacenan para que el workspace pueda revisar el proyecto y, cuando esa función está habilitada, pueden ser analizados por un servicio de visión por IA para señalar observaciones que el workspace debe confirmar.",
+  "Technical data": "Datos técnicos",
+  "We collect limited technical data needed to operate the service and protect it from abuse: IP address (hashed before storage for rate-limiting), browser locale, and basic request metadata. We do not use this data for advertising.":
+    "Recopilamos datos técnicos limitados necesarios para operar el servicio y protegerlo contra abusos: dirección IP (con hash antes de almacenarse, para limitar la frecuencia de solicitudes), idioma del navegador y metadatos básicos de la solicitud. No utilizamos estos datos con fines publicitarios.",
+  "Purposes of processing": "Finalidades del tratamiento",
+  "We use this information to operate the Guided Project Intake, generate a Project Brief for the relevant workspace, respond to audit, contact and setup requests, protect the service from abuse, and improve the product.":
+    "Utilizamos esta información para operar el Project Intake guiado, generar un Project Brief para el workspace correspondiente, responder a solicitudes de auditoría, contacto y configuración, proteger el servicio contra abusos y mejorar el producto.",
+  "Legal basis": "Base jurídica",
+  "The applicable legal basis for processing (for example consent, contract performance, or legitimate interest) depends on the visitor's jurisdiction and the specific data involved, and is to be confirmed with legal counsel for each territory we serve.":
+    "La base jurídica aplicable al tratamiento (por ejemplo, consentimiento, ejecución de un contrato o interés legítimo) depende de la jurisdicción del visitante y de los datos concretos implicados, y está pendiente de confirmación con asesoría legal para cada territorio en el que operamos.",
+  "Workspaces and team members": "Workspaces y miembros del equipo",
+  "A business using Métré Build operates its own workspace. Project Briefs and visitor information submitted through that workspace's Guided Project Intake are visible to the members of that workspace, not to other Métré Build customers.":
+    "Una empresa que utiliza Métré Build opera su propio workspace. Los Project Briefs y la información de los visitantes enviada a través del Project Intake guiado de ese workspace son visibles para los miembros de ese workspace, no para otros clientes de Métré Build.",
+  "Service providers and subprocessors": "Proveedores de servicios y subencargados",
+  "We rely on third-party service providers to operate Métré Build. We have not yet published a complete, versioned subprocessor list — the categories of providers we currently use are described in the sections below.":
+    "Dependemos de proveedores de servicios externos para operar Métré Build. Aún no hemos publicado una lista completa y versionada de subencargados; las categorías de proveedores que utilizamos actualmente se describen en las secciones siguientes.",
+  Hosting: "Alojamiento",
+  "The application and its database are hosted on Supabase.":
+    "La aplicación y su base de datos están alojadas en Supabase.",
+  "Email delivery": "Envío de correo electrónico",
+  "Transactional emails — confirmations, Project Summary copies, and contact replies — are sent through Lovable's managed email delivery service.":
+    "Los correos transaccionales (confirmaciones, copias del Project Summary y respuestas de contacto) se envían a través del servicio de entrega de correo gestionado de Lovable.",
+  "AI-assisted processing": "Tratamiento asistido por IA",
+  "Some features — drafting a Project Brief, analyzing an uploaded photo, or answering a free-text question in the site's FAQ assistant — send the relevant text or image to an AI model through the Lovable AI Gateway. We do not use this content to train AI models ourselves.":
+    "Algunas funciones (redactar un Project Brief, analizar una foto subida o responder una pregunta de texto libre en el asistente de preguntas frecuentes del sitio) envían el texto o la imagen correspondiente a un modelo de IA a través de Lovable AI Gateway. No utilizamos este contenido para entrenar modelos de IA nosotros mismos.",
+  Retention: "Conservación",
+  "We keep this information for as long as the relevant Mission or workspace account is active, plus a reasonable period afterward to respond to follow-up questions. We have not yet set contractual, jurisdiction-specific retention periods — this section will be updated once that review is complete.":
+    "Conservamos esta información mientras la Mission o la cuenta del workspace correspondiente esté activa, además de un período razonable posterior para responder a preguntas de seguimiento. Aún no hemos establecido plazos de conservación contractuales específicos por jurisdicción; esta sección se actualizará cuando se complete esa revisión.",
+  Deletion: "Eliminación",
+  "You can request deletion of your information at any time via the Contact page. We will delete or anonymize it unless we are required to keep it for a legitimate purpose, such as an unresolved dispute.":
+    "Puede solicitar la eliminación de su información en cualquier momento a través de la página de Contacto. La eliminaremos o anonimizaremos, salvo que debamos conservarla por un motivo legítimo, como una disputa sin resolver.",
+  Security: "Seguridad",
+  "We limit access to visitor and customer data to the systems and team members that need it, and rely on our hosting and email providers' own security controls. No online service can guarantee absolute security.":
+    "Limitamos el acceso a los datos de visitantes y clientes a los sistemas y miembros del equipo que lo necesitan, y confiamos en los controles de seguridad propios de nuestros proveedores de alojamiento y correo. Ningún servicio en línea puede garantizar una seguridad absoluta.",
+  "Cookies and similar technologies": "Cookies y tecnologías similares",
+  "The public site stores your language preference (English/Spanish) and, during a Guided Project Intake, a session identifier, using your browser's local storage rather than tracking cookies. We do not currently use third-party advertising or analytics cookies.":
+    "El sitio público almacena su preferencia de idioma (inglés/español) y, durante un Project Intake guiado, un identificador de sesión, mediante el almacenamiento local de su navegador en lugar de cookies de seguimiento. Actualmente no utilizamos cookies de publicidad o análisis de terceros.",
+  "Your rights": "Sus derechos",
+  "Depending on your location, you may have the right to access, correct, delete, or receive a copy of your information, and to object to certain processing. Contact us via the Contact page to exercise these rights.":
+    "Según su ubicación, puede tener derecho a acceder, corregir, eliminar o recibir una copia de su información, así como a oponerse a determinados tratamientos. Contáctenos a través de la página de Contacto para ejercer estos derechos.",
+  "Visitors in the United States": "Visitantes en Estados Unidos",
+  "Depending on your state of residence, you may have additional rights under state privacy law. We will confirm the specific rights that apply once we complete a jurisdiction-by-jurisdiction legal review.":
+    "Según su estado de residencia, puede tener derechos adicionales conforme a la ley de privacidad estatal. Confirmaremos los derechos específicos aplicables una vez completemos una revisión legal jurisdicción por jurisdicción.",
+  "Visitors in the European Economic Area": "Visitantes en el Espacio Económico Europeo",
+  "If you are located in the EEA, UK or Switzerland, additional rights under the GDPR may apply, including the right to lodge a complaint with your local data protection authority. Our EU-specific legal basis and representative details are to be confirmed.":
+    "Si se encuentra en el EEE, el Reino Unido o Suiza, pueden aplicarse derechos adicionales conforme al RGPD, incluido el derecho a presentar una reclamación ante su autoridad local de protección de datos. Nuestra base jurídica específica para la UE y los datos de nuestro representante están pendientes de confirmación.",
+  "Questions about this policy can be sent through the Contact page.":
+    "Las preguntas sobre esta política pueden enviarse a través de la página de Contacto.",
+  "What this service is": "Qué es este servicio",
+  "Métré Build is a guided project-intake tool: it helps a visitor describe a project — a deck project today — and turns the answers into a structured Project Brief for the business that published the intake.":
+    "Métré Build es una herramienta de captación de proyectos guiada: ayuda a un visitante a describir un proyecto (un proyecto de terraza hoy en día) y convierte las respuestas en un Project Brief estructurado para la empresa que publicó el intake.",
+  "Creating an account": "Creación de una cuenta",
+  "Creating a workspace account gives you a self-service space to publish a Guided Project Intake and review the Project Briefs it produces. You are responsible for keeping your account credentials secure.":
+    "Crear una cuenta de workspace le da un espacio de autoservicio para publicar un Project Intake guiado y revisar los Project Briefs que produce. Usted es responsable de mantener seguras las credenciales de su cuenta.",
+  "Authorized use": "Uso autorizado",
+  "You agree not to use Métré Build to submit false information at scale, attempt to disrupt the service, or extract other workspaces' data.":
+    "Usted se compromete a no utilizar Métré Build para enviar información falsa a gran escala, intentar interrumpir el servicio ni extraer datos de otros workspaces.",
+  "Your responsibilities as a workspace owner":
+    "Sus responsabilidades como propietario de un workspace",
+  "If you operate a workspace, you are responsible for the accuracy of the Playbook you publish, for how you use the Project Briefs you receive, and for your own compliance obligations toward the visitors your Guided Project Intake collects information from.":
+    "Si opera un workspace, usted es responsable de la exactitud del Playbook que publica, del uso que haga de los Project Briefs que recibe, y de sus propias obligaciones de cumplimiento frente a los visitantes de los que su Project Intake guiado recopila información.",
+  "Service limitations": "Limitaciones del servicio",
+  "Métré Build assists project discovery and qualification. It does not replace professional judgment, a site visit, or a formal proposal process.":
+    "Métré Build ayuda en el descubrimiento y la calificación de proyectos. No sustituye el criterio profesional, una visita al sitio ni un proceso formal de propuesta.",
+  "No final quote or price guarantee": "Sin cotización final ni garantía de precio",
+  "Nothing produced by a Guided Project Intake or a Project Brief is a binding price quote. Budget ranges and estimates are visitor-provided or calculated approximations, clearly marked as such.":
+    "Nada de lo producido por un Project Intake guiado o un Project Brief constituye una cotización de precio vinculante. Los rangos de presupuesto y las estimaciones son aproximaciones proporcionadas por el visitante o calculadas, claramente identificadas como tales.",
+  "No technical or engineering validation": "Sin validación técnica ni de ingeniería",
+  "A Project Brief is not an engineering assessment, a permit review, or a regulatory determination. Any measurements, materials, or site conditions it lists are visitor-reported or AI-assisted observations to be verified on site.":
+    "Un Project Brief no es una evaluación de ingeniería, una revisión de permisos ni una determinación regulatoria. Las medidas, materiales o condiciones del sitio que enumera son observaciones reportadas por el visitante o asistidas por IA que deben verificarse en el sitio.",
+  "Data you submit": "Datos que usted envía",
+  "You are responsible for having the right to submit any information, photo, or document you upload through a Guided Project Intake or as a workspace owner.":
+    "Usted es responsable de tener el derecho de enviar cualquier información, foto o documento que suba a través de un Project Intake guiado o como propietario de un workspace.",
+  "Content and photos": "Contenido y fotos",
+  "You retain ownership of the photos and content you submit. You grant Métré Build the license needed to store, process, and display that content back to the relevant workspace for the purpose of generating and reviewing a Project Brief.":
+    "Usted conserva la propiedad de las fotos y el contenido que envía. Otorga a Métré Build la licencia necesaria para almacenar, procesar y mostrar ese contenido al workspace correspondiente con el fin de generar y revisar un Project Brief.",
+  "Intellectual property": "Propiedad intelectual",
+  "The Métré Build product, its Playbooks, and its software are the property of the team operating the service. Nothing in these Terms transfers that ownership to you.":
+    "El producto Métré Build, sus Playbooks y su software son propiedad del equipo que opera el servicio. Nada en estos Términos le transfiere esa propiedad.",
+  Availability: "Disponibilidad",
+  "We aim to keep the service available but do not guarantee uninterrupted access. Features may change as the product evolves.":
+    "Procuramos mantener el servicio disponible, pero no garantizamos un acceso ininterrumpido. Las funciones pueden cambiar a medida que el producto evoluciona.",
+  Suspension: "Suspensión",
+  "We may suspend access to a workspace that violates these Terms or that we reasonably believe is abusing the service, after attempting to notify you where practical.":
+    "Podemos suspender el acceso a un workspace que infrinja estos Términos o que razonablemente consideremos que abusa del servicio, tras intentar notificarle cuando sea posible.",
+  Termination: "Terminación",
+  "You may stop using the service at any time. We may discontinue or change the service with reasonable notice.":
+    "Puede dejar de usar el servicio en cualquier momento. Podemos discontinuar o modificar el servicio con un aviso razonable.",
+  "Limitation of liability": "Limitación de responsabilidad",
+  "To the extent permitted by law, Métré Build is provided without warranties of any kind, and liability for any claim related to the service is limited as far as applicable law allows.":
+    "En la medida permitida por la ley, Métré Build se proporciona sin garantías de ningún tipo, y la responsabilidad por cualquier reclamación relacionada con el servicio se limita en la medida en que lo permita la ley aplicable.",
+  "Governing law": "Ley aplicable",
+  "The governing law and jurisdiction for these Terms are to be confirmed based on where the operating entity is registered and where its customers are located.":
+    "La ley aplicable y la jurisdicción de estos Términos están pendientes de confirmación en función del lugar de registro de la entidad operadora y de la ubicación de sus clientes.",
+  "Questions about these Terms can be sent through the Contact page.":
+    "Las preguntas sobre estos Términos pueden enviarse a través de la página de Contacto.",
   "We'll show a representative preview once approximate length and width are provided.":
     "Mostraremos una vista previa representativa en cuanto se indiquen el largo y el ancho aproximados.",
   "This project shape can't be represented in the visual preview yet.":

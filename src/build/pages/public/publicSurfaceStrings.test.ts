@@ -128,7 +128,7 @@ describe("public marketing surface - marketing proposition", () => {
     expect(source).toContain("No obligation.");
   });
 
-  it("exposes the public contact page and email destination", () => {
+  it("exposes the public contact page and routes messages through the contact form", () => {
     const routeSource = readFileSync(resolve(repoRoot, "src/routes/contact.tsx"), "utf8");
     const formsSource = readFileSync(
       resolve(repoRoot, "src/build/pages/public/BuildPublicFormPages.tsx"),
@@ -137,6 +137,21 @@ describe("public marketing surface - marketing proposition", () => {
 
     expect(routeSource).toContain('createFileRoute("/contact")');
     expect(formsSource).toContain("submitPublicContactRequest");
-    expect(formsSource).toContain("contact@oppe.fr");
   });
+});
+
+describe("public marketing surface — no off-brand email address", () => {
+  // contact@oppe.fr is a real, working mailbox on the backend delivery path
+  // (src/lib/email-templates/public-contact.tsx) but must never be shown to
+  // a Métré Build visitor — it would read as an inconsistent/untrustworthy
+  // brand. Every file reachable from an unauthenticated public route must
+  // stay free of it.
+  const filesToCheck = [...PUBLIC_SURFACE_FILES, "src/build/pages/public/publicLocaleContext.ts"];
+
+  for (const file of filesToCheck) {
+    it(`${file} does not display an @oppe.fr address`, () => {
+      const source = readFileSync(resolve(repoRoot, file), "utf8");
+      expect(source, `found "oppe.fr" in ${file}`).not.toContain("oppe.fr");
+    });
+  }
 });
