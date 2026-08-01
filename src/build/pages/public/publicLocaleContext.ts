@@ -756,6 +756,32 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Prefer a guided setup instead?": "¿Prefiere una configuración guiada?",
   "Get a Free Website Inquiry Audit first to see what a Project Brief looks like for your business, with no account required.":
     "Primero solicite una auditoría gratis para ver cómo sería un Project Brief para su negocio, sin necesidad de crear una cuenta.",
+
+  // Field-validation message templates (see localizeValidationMessage in
+  // MissionRuntime.tsx) — "{field}" and "{n0}" are literal placeholders
+  // substituted in after translation, never real text to match against.
+  '"{field}" is required.': '"{field}" es obligatorio.',
+  '"{field}" requires a specific answer.': '"{field}" requiere una respuesta específica.',
+  '"{field}" has an invalid option.': '"{field}" tiene una opción no válida.',
+  '"{field}" must be a list.': '"{field}" debe ser una lista.',
+  '"{field}" requires at least {n0} selection(s).':
+    '"{field}" requiere al menos {n0} selección(es).',
+  '"{field}" allows at most {n0} selection(s).':
+    '"{field}" permite como máximo {n0} selección(es).',
+  '"{field}" must be text.': '"{field}" debe ser texto.',
+  '"{field}" is too short.': '"{field}" es demasiado corto.',
+  '"{field}" is too long.': '"{field}" es demasiado largo.',
+  '"{field}" is not valid.': '"{field}" no es válido.',
+  '"{field}" must be a number.': '"{field}" debe ser un número.',
+  '"{field}" is below the minimum.': '"{field}" está por debajo del mínimo.',
+  '"{field}" is above the maximum.': '"{field}" está por encima del máximo.',
+  '"{field}" has an invalid range.': '"{field}" tiene un rango no válido.',
+  '"{field}" is invalid.': '"{field}" no es válido.',
+  '"{field}" requires at least one value.': '"{field}" requiere al menos un valor.',
+  '"{field}" must be a list of photos.': '"{field}" debe ser una lista de fotos.',
+  '"{field}" allows at most {n0} photo(s).': '"{field}" permite como máximo {n0} foto(s).',
+  '"{field}" has an unsupported photo.': '"{field}" tiene una foto no compatible.',
+  '"{field}" must be accepted.': '"{field}" debe aceptarse.',
 };
 
 export function publicCopy(locale: SupportedLocale, text: string): string {

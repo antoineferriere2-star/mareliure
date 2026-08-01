@@ -87,6 +87,49 @@ export function localizeField(field: PlaybookField, copy: CopyFn): PlaybookField
   return localized as PlaybookField;
 }
 
+/**
+ * `validateField` (engine/validation.ts) is deliberately i18n-free — it
+ * returns an English sentence with the field's (or, for address fields, a
+ * component's) English label quoted inside, e.g. `"ZIP code" is not valid.`.
+ * The dictionary can't translate that whole sentence directly since the
+ * quoted label and any counts vary per field. Instead: mask the label and
+ * any numbers out into placeholders, translate the resulting fixed template
+ * via `copy()`, then splice the (separately localized) label and numbers
+ * back in.
+ */
+export function localizeValidationMessage(
+  message: string,
+  field: PlaybookField,
+  copy: CopyFn,
+): string {
+  const labelCandidates =
+    field.type === "address" ? field.components.map((c) => c.label) : [field.label];
+
+  let template = message;
+  let localizedLabel: string | null = null;
+  for (const label of labelCandidates) {
+    const quoted = `"${label}"`;
+    if (template.includes(quoted)) {
+      template = template.replace(quoted, '"{field}"');
+      localizedLabel = copy(label);
+      break;
+    }
+  }
+
+  const numbers: string[] = [];
+  template = template.replace(/\d+/g, (match) => {
+    numbers.push(match);
+    return `{n${numbers.length - 1}}`;
+  });
+
+  let translated = copy(template);
+  if (localizedLabel) translated = translated.replace("{field}", localizedLabel);
+  numbers.forEach((n, i) => {
+    translated = translated.replace(`{n${i}}`, n);
+  });
+  return translated;
+}
+
 async function callRuntime<T>(body: Record<string, unknown>): Promise<T> {
   const res = await fetch("/api/public/build-runtime", {
     method: "POST",
@@ -248,7 +291,7 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
     const errors: Record<string, string> = {};
     for (const field of currentStep.visibleFields) {
       const message = validateField(field, answers[field.key]);
-      if (message) errors[field.key] = message;
+      if (message) errors[field.key] = localizeValidationMessage(message, field, copy);
     }
     if (Object.keys(errors).length > 0) {
       setFieldErrors((prev) => ({ ...prev, ...errors }));
