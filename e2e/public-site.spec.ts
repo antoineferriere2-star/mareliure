@@ -95,10 +95,10 @@ test.describe("home page", () => {
   });
 
   test("top nav reaches every published page", async ({ page, isMobile }) => {
-    // The header nav is intentionally hidden below the md breakpoint (no
-    // hamburger menu exists); the footer links (tested separately below)
-    // are the mobile-safe way to reach every page.
-    test.skip(isMobile, "header nav collapses below md; footer nav covers mobile");
+    // The header nav is intentionally hidden below the lg breakpoint,
+    // replaced by the hamburger menu; the footer links (tested separately
+    // below) are the mobile-safe way to reach every page without opening it.
+    test.skip(isMobile, "header nav collapses below lg; footer nav covers mobile");
     await page.goto("/");
     await page.getByRole("link", { name: "Deck builders" }).first().click();
     await expect(page).toHaveURL(/\/deck-builders$/);
@@ -126,6 +126,52 @@ test.describe("home page", () => {
     await page.getByRole("link", { name: "Privacy" }).click();
     await expect(page).toHaveURL(/\/privacy$/);
     await expect(page.getByRole("heading", { name: "Privacy" })).toBeVisible();
+  });
+});
+
+// The header nav and the "Log in"/"Create account"/"Try demo" cluster used
+// to appear at different breakpoints (md vs sm), so between ~640-767px they
+// briefly overlapped, and the header itself overflowed horizontally right
+// at the 768px tablet breakpoint once both showed together — found via
+// manual testing during the audit, not by an existing test. Both clusters
+// now switch together at lg (1024px).
+test.describe("responsive — no horizontal overflow at common breakpoints", () => {
+  for (const width of [320, 375, 390, 430, 768]) {
+    test(`homepage and pricing have no horizontal scroll at ${width}px`, async ({ page }) => {
+      await page.setViewportSize({ width, height: 900 });
+
+      await page.goto("/");
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      let overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(overflow, `homepage overflowed horizontally at ${width}px`).toBe(false);
+
+      await page.goto("/pricing");
+      await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+      overflow = await page.evaluate(
+        () => document.documentElement.scrollWidth > document.documentElement.clientWidth,
+      );
+      expect(overflow, `pricing overflowed horizontally at ${width}px`).toBe(false);
+    });
+  }
+
+  test("the hamburger menu (not the full nav) is what's visible at the 768px tablet breakpoint", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 768, height: 1024 });
+    await page.goto("/");
+    await page.waitForLoadState("networkidle");
+
+    const header = page.locator("header");
+    const menuButton = header.getByRole("button", { name: "Menu" });
+    await expect(menuButton).toBeVisible();
+    await expect(menuButton).toHaveAttribute("aria-expanded", "false");
+    await expect(header.getByRole("link", { name: "Deck builders" })).toBeHidden();
+
+    await menuButton.click();
+    await expect(menuButton).toHaveAttribute("aria-expanded", "true");
+    await expect(header.getByRole("link", { name: "Deck builders" })).toBeVisible();
   });
 });
 

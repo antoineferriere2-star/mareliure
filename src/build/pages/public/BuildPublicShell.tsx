@@ -76,7 +76,7 @@ function BuildPublicShellContent({
             <img src="/metre-icon.svg" alt="Métré Build" className="h-8 w-8" />
             <span>Métré Build</span>
           </Link>
-          <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 md:flex">
+          <nav className="hidden items-center gap-6 text-sm font-medium text-slate-600 lg:flex">
             {navItems.map((item) => (
               <Link key={item.to} to={item.to} className="hover:text-slate-950">
                 {t(locale, item.labelKey)}
@@ -104,14 +104,14 @@ function BuildPublicShellContent({
               aria-label="Menu"
               aria-expanded={menuOpen}
               onClick={() => setMenuOpen((open) => !open)}
-              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-slate-700 md:hidden"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-md border border-slate-200 text-slate-700 lg:hidden"
             >
               {menuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
         {menuOpen && (
-          <div className="border-t border-slate-200 bg-white px-4 py-4 md:hidden">
+          <div className="border-t border-slate-200 bg-white px-4 py-4 lg:hidden">
             <nav className="flex flex-col gap-1 text-[15px] font-medium text-slate-700">
               {navItems.map((item) => (
                 <Link
