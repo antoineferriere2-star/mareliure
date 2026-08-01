@@ -65,7 +65,7 @@ export const STATIC_FAQ: StaticFaqEntry[] = [
 ];
 
 export function FaqSection() {
-  const { question, setQuestion, answer, loading, askQuestion, copy } = useFaqAsk();
+  const { question, setQuestion, answer, notice, loading, askQuestion, copy } = useFaqAsk();
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (event.key === "Enter" && !event.shiftKey) {
@@ -121,6 +121,7 @@ export function FaqSection() {
           {answer && (
             <div className="mt-4 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-700">
               <p>{answer}</p>
+              {notice && <p className="mt-1 text-xs text-slate-500">{notice}</p>}
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                 <a href="/contact" className="text-sm font-medium text-emerald-700 hover:underline">
                   {copy("Talk to the team")}

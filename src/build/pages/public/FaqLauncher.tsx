@@ -13,12 +13,20 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { useFaqAsk } from "@/build/pages/public/useFaqAsk";
-import { STATIC_FAQ } from "@/build/pages/public/sections/FaqSection";
 
-const QUICK_QUESTIONS = STATIC_FAQ.slice(0, 3);
+// Deliberately NOT the same questions as the homepage FaqSection accordion
+// directly above/below this launcher on most pages — repeating them here
+// would read as a broken duplicate rather than a second, useful entry
+// point. These lean commercial/contextual instead of objection-handling.
+const QUICK_QUESTIONS = [
+  "How would this work on my website?",
+  "What would my team receive?",
+  "Can I use it for more than one project type?",
+  "Does it replace my contact form?",
+];
 
 export function FaqLauncher() {
-  const { question, setQuestion, answer, loading, askQuestion, copy } = useFaqAsk();
+  const { question, setQuestion, answer, notice, loading, askQuestion, copy } = useFaqAsk();
   const [open, setOpen] = useState(false);
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -44,14 +52,14 @@ export function FaqLauncher() {
         <p className="text-sm font-semibold text-slate-950">{copy("Have a question?")}</p>
 
         <div className="mt-3 flex flex-wrap gap-1.5">
-          {QUICK_QUESTIONS.map((item) => (
+          {QUICK_QUESTIONS.map((quickQuestion) => (
             <button
-              key={item.question}
+              key={quickQuestion}
               type="button"
-              onClick={() => setQuestion(item.question)}
+              onClick={() => setQuestion(copy(quickQuestion))}
               className="rounded-full border border-slate-200 px-2.5 py-1 text-xs text-slate-600 hover:border-emerald-300 hover:text-emerald-700"
             >
-              {item.question}
+              {copy(quickQuestion)}
             </button>
           ))}
         </div>
@@ -77,6 +85,7 @@ export function FaqLauncher() {
         {answer && (
           <div className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-700">
             <p>{answer}</p>
+            {notice && <p className="mt-1 text-xs text-slate-500">{notice}</p>}
             <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
               <a href="/contact" className="text-xs font-medium text-emerald-700 hover:underline">
                 {copy("Talk to the team")}

@@ -29,7 +29,7 @@ describe("truncateToWords", () => {
 });
 
 describe("answerFaqRequest", () => {
-  it("returns the (truncated) model answer on success", async () => {
+  it("returns the (truncated) model answer on success, flagged as not a fallback", async () => {
     answerFaqQuestionMock.mockResolvedValue({
       status: "ok",
       data: { answer: "No, it's a structured qualification journey, not a generic chat." },
@@ -38,6 +38,7 @@ describe("answerFaqRequest", () => {
     const result = await answerFaqRequest("Is this a chatbot?");
 
     expect(result.answer).toContain("structured qualification journey");
+    expect(result.usedFallback).toBe(false);
   });
 
   it("truncates an overly long model answer to the word backstop", async () => {
@@ -49,7 +50,7 @@ describe("answerFaqRequest", () => {
     expect(result.answer.split(/\s+/)).toHaveLength(80);
   });
 
-  it("returns a generic fallback, never a raw error, when the agent fails", async () => {
+  it("returns a generic fallback, never a raw error, when the agent fails — and flags it as a fallback", async () => {
     answerFaqQuestionMock.mockResolvedValue({ status: "error", error: "Gateway 429 rate limited" });
 
     const result = await answerFaqRequest("How much does it cost?");
@@ -57,14 +58,33 @@ describe("answerFaqRequest", () => {
     expect(result.answer).not.toContain("Gateway");
     expect(result.answer).not.toContain("429");
     expect(result.answer.length).toBeGreaterThan(0);
+    expect(result.usedFallback).toBe(true);
   });
 
-  it("returns a generic fallback, never throws, on an unexpected exception", async () => {
+  it("returns a generic fallback, never throws, on an unexpected exception — and flags it as a fallback", async () => {
     answerFaqQuestionMock.mockRejectedValue(new Error("network down"));
 
     const result = await answerFaqRequest("Does it integrate with my CRM?");
 
     expect(result.answer).not.toContain("network down");
     expect(result.answer.length).toBeGreaterThan(0);
+    expect(result.usedFallback).toBe(true);
+  });
+
+  it("answers in Spanish when the visitor's locale is es-US, including the fallback path", async () => {
+    answerFaqQuestionMock.mockResolvedValue({ status: "error", error: "boom" });
+
+    const result = await answerFaqRequest("¿Cuánto cuesta?", "es-US");
+
+    expect(result.usedFallback).toBe(true);
+    expect(result.answer).toMatch(/equipo/i);
+  });
+
+  it("defaults to English when no locale is given", async () => {
+    answerFaqQuestionMock.mockResolvedValue({ status: "error", error: "boom" });
+
+    const result = await answerFaqRequest("How much does it cost?");
+
+    expect(result.answer).toMatch(/team/i);
   });
 });

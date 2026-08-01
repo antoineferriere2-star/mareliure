@@ -715,6 +715,10 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Questions?": "¿Preguntas?",
   "Have a question?": "¿Tiene una pregunta?",
   "View full FAQ": "Ver todas las preguntas frecuentes",
+  "How would this work on my website?": "¿Cómo funcionaría esto en mi sitio web?",
+  "What would my team receive?": "¿Qué recibiría mi equipo?",
+  "Can I use it for more than one project type?": "¿Puedo usarlo para más de un tipo de proyecto?",
+  "Does it replace my contact form?": "¿Reemplaza mi formulario de contacto?",
   Pricing: "Precios",
   "Create account": "Crear cuenta",
   "Simple pricing that scales with your Project Intakes.":
