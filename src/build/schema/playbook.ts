@@ -169,6 +169,10 @@ export const photoField = z.object({
   maxFiles: z.number().int().positive(),
   maxFileSizeMb: z.number().positive(),
   acceptMimeTypes: z.array(z.string().min(1)).min(1),
+  /** Only "filename_only" is implemented — PhotoField.tsx never uploads the
+   * file itself. "supabase_storage" stays in the enum so existing rows keep
+   * parsing, but getPlaybookPublishIssues refuses to publish it (it would
+   * silently discard every attachment). Real uploads use `inspiration_photo`. */
   storage: z.enum(["filename_only", "supabase_storage"]).default("filename_only"),
 });
 

@@ -137,6 +137,73 @@ describe("getPlaybookPublishIssues", () => {
     expect(issues.some((i) => i.includes("ghost"))).toBe(true);
   });
 
+  it("refuses to publish a photo field asking for an unimplemented Storage upload", () => {
+    const schema = playbookSchema.parse({
+      schemaVersion: 1,
+      sections: [
+        {
+          id: "s1",
+          title: "Section",
+          steps: [
+            {
+              id: "step1",
+              title: "Step",
+              fields: [
+                {
+                  key: "sitePhotos",
+                  label: "Site photos",
+                  type: "photo",
+                  desirability: "optional",
+                  maxFiles: 6,
+                  maxFileSizeMb: 8,
+                  acceptMimeTypes: ["image/jpeg"],
+                  storage: "supabase_storage",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      briefConfig: { suggestedNextActions: [{ label: "Next", value: "Follow up." }] },
+    });
+    const issues = getPlaybookPublishIssues(schema);
+    expect(issues.some((i) => i.includes("sitePhotos") && i.includes("not implemented"))).toBe(
+      true,
+    );
+  });
+
+  it("allows the implemented filename_only photo mode", () => {
+    const schema = playbookSchema.parse({
+      schemaVersion: 1,
+      sections: [
+        {
+          id: "s1",
+          title: "Section",
+          steps: [
+            {
+              id: "step1",
+              title: "Step",
+              fields: [
+                {
+                  key: "sitePhotos",
+                  label: "Site photos",
+                  type: "photo",
+                  desirability: "optional",
+                  maxFiles: 6,
+                  maxFileSizeMb: 8,
+                  acceptMimeTypes: ["image/jpeg"],
+                  storage: "filename_only",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+      briefConfig: { suggestedNextActions: [{ label: "Next", value: "Follow up." }] },
+    });
+    expect(getPlaybookPublishIssues(schema).some((i) => i.includes("sitePhotos"))).toBe(false);
+  });
+
   it("requires at least one unconditional suggested next action", () => {
     const schema = playbookSchema.parse({
       schemaVersion: 1,

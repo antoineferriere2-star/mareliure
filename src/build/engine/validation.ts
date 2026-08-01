@@ -222,6 +222,20 @@ export function getPlaybookPublishIssues(schema: PlaybookSchema): string[] {
     issues.push(`Duplicate field keys: ${duplicates.join(", ")}.`);
   }
 
+  // `photo` fields accept a storage mode, but only "filename_only" is built:
+  // PhotoField.tsx records each file's name/size/type and never uploads the
+  // file itself. Publishing a Playbook that asks for "supabase_storage" would
+  // silently drop every image a visitor attaches, so refuse it loudly here
+  // rather than lose customer data. (`inspiration_photo` is the field type
+  // that really does upload.)
+  for (const field of allFields) {
+    if (field.type === "photo" && field.storage === "supabase_storage") {
+      issues.push(
+        `Field "${field.key}" requests Storage upload, which is not implemented for photo fields yet — files would be discarded. Use an inspiration_photo field instead.`,
+      );
+    }
+  }
+
   const knownKeys = new Set(keys);
   function checkRefs(group: ConditionGroup | undefined, where: string) {
     for (const fieldKey of collectConditionFieldKeys(group)) {
