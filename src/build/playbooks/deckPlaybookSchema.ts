@@ -304,7 +304,7 @@ export const deckPlaybookSchema: PlaybookSchema = {
               desirability: "required",
               requireAtLeastOne: true,
               components: [
-                { key: "zip", label: "ZIP code" },
+                { key: "zip", label: "ZIP code", pattern: "^\\d{5}(-\\d{4})?$" },
                 { key: "city_state", label: "City / State" },
               ],
               briefMapping: {

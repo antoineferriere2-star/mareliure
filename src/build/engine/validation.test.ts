@@ -1,8 +1,18 @@
 import { describe, expect, it } from "vitest";
 import { playbookSchema, type PlaybookField } from "@/build/schema/playbook";
-import { computeUnansweredRequiredFields, computeVisibleSteps, getPlaybookPublishIssues, validateField } from "./validation";
+import {
+  computeUnansweredRequiredFields,
+  computeVisibleSteps,
+  getPlaybookPublishIssues,
+  validateField,
+} from "./validation";
 
-const textField: PlaybookField = { key: "name", label: "Name", type: "text", desirability: "required" };
+const textField: PlaybookField = {
+  key: "name",
+  label: "Name",
+  type: "text",
+  desirability: "required",
+};
 const choiceField: PlaybookField = {
   key: "color",
   label: "Color",
@@ -11,7 +21,21 @@ const choiceField: PlaybookField = {
   options: [{ value: "red", label: "Red" }],
 };
 
+const zipField: PlaybookField = {
+  key: "address",
+  label: "Address",
+  type: "address",
+  desirability: "optional",
+  components: [{ key: "zip", label: "ZIP code", pattern: "^\\d{5}(-\\d{4})?$" }],
+};
+
 describe("validateField", () => {
+  it("rejects an address component value that fails its optional pattern", () => {
+    expect(validateField(zipField, { zip: "abc" })).toMatch(/ZIP code.*not valid/);
+    expect(validateField(zipField, { zip: "94103" })).toBeNull();
+    expect(validateField(zipField, { zip: "94103-1234" })).toBeNull();
+  });
+
   it("requires required fields to be non-empty", () => {
     expect(validateField(textField, undefined)).toMatch(/required/);
     expect(validateField(textField, "Alice")).toBeNull();
@@ -40,12 +64,18 @@ function schemaWithConditionalStep(): ReturnType<typeof playbookSchema.parse> {
         id: "s1",
         title: "Section",
         steps: [
-          { id: "step1", title: "Step 1", fields: [{ key: "hasPool", label: "Has pool?", type: "consent", consentText: "Yes" }] },
+          {
+            id: "step1",
+            title: "Step 1",
+            fields: [{ key: "hasPool", label: "Has pool?", type: "consent", consentText: "Yes" }],
+          },
           {
             id: "step2",
             title: "Step 2 (pool only)",
             displayWhen: { all: [{ fieldKey: "hasPool", operator: "equals", value: true }] },
-            fields: [{ key: "poolSize", label: "Pool size", type: "text", desirability: "required" }],
+            fields: [
+              { key: "poolSize", label: "Pool size", type: "text", desirability: "required" },
+            ],
           },
         ],
       },
@@ -110,9 +140,23 @@ describe("getPlaybookPublishIssues", () => {
   it("requires at least one unconditional suggested next action", () => {
     const schema = playbookSchema.parse({
       schemaVersion: 1,
-      sections: [{ id: "s1", title: "Section", steps: [{ id: "step1", title: "Step", fields: [{ key: "a", label: "A", type: "text", desirability: "optional" }] }] }],
+      sections: [
+        {
+          id: "s1",
+          title: "Section",
+          steps: [
+            {
+              id: "step1",
+              title: "Step",
+              fields: [{ key: "a", label: "A", type: "text", desirability: "optional" }],
+            },
+          ],
+        },
+      ],
       briefConfig: { suggestedNextActions: [] },
     });
-    expect(getPlaybookPublishIssues(schema)).toContain("At least one suggested next action is required.");
+    expect(getPlaybookPublishIssues(schema)).toContain(
+      "At least one suggested next action is required.",
+    );
   });
 });

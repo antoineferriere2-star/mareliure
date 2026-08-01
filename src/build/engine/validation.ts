@@ -5,7 +5,12 @@
  * rules themselves (per CLAUDE.md).
  */
 import { NOT_SURE_VALUE, type AnswerValue, type Answers } from "../schema/answers";
-import type { ConditionGroup, PlaybookField, PlaybookSchema, PlaybookStep } from "../schema/playbook";
+import type {
+  ConditionGroup,
+  PlaybookField,
+  PlaybookSchema,
+  PlaybookStep,
+} from "../schema/playbook";
 import { evaluateConditionGroup } from "./conditions";
 
 function isEmpty(value: AnswerValue | undefined): boolean {
@@ -38,7 +43,9 @@ export function validateFieldFormat(field: PlaybookField, value: AnswerValue): s
     }
     case "multi_choice": {
       if (!Array.isArray(value)) return `"${field.label}" must be a list.`;
-      const invalid = value.some((v) => typeof v !== "string" || !field.options.some((o) => o.value === v));
+      const invalid = value.some(
+        (v) => typeof v !== "string" || !field.options.some((o) => o.value === v),
+      );
       if (invalid) return `"${field.label}" has an invalid option.`;
       if (field.minSelected !== undefined && value.length < field.minSelected) {
         return `"${field.label}" requires at least ${field.minSelected} selection(s).`;
@@ -50,9 +57,12 @@ export function validateFieldFormat(field: PlaybookField, value: AnswerValue): s
     }
     case "text": {
       if (typeof value !== "string") return `"${field.label}" must be text.`;
-      if (field.minLength !== undefined && value.length < field.minLength) return `"${field.label}" is too short.`;
-      if (field.maxLength !== undefined && value.length > field.maxLength) return `"${field.label}" is too long.`;
-      if (field.pattern && !new RegExp(field.pattern).test(value)) return `"${field.label}" is not valid.`;
+      if (field.minLength !== undefined && value.length < field.minLength)
+        return `"${field.label}" is too short.`;
+      if (field.maxLength !== undefined && value.length > field.maxLength)
+        return `"${field.label}" is too long.`;
+      if (field.pattern && !new RegExp(field.pattern).test(value))
+        return `"${field.label}" is not valid.`;
       return null;
     }
     case "number": {
@@ -84,34 +94,54 @@ export function validateFieldFormat(field: PlaybookField, value: AnswerValue): s
     }
     case "address": {
       if (typeof value !== "object" || Array.isArray(value)) return `"${field.label}" is invalid.`;
+      const record = value as Record<string, unknown>;
       const anyFilled = field.components.some((c) => {
-        const v = (value as Record<string, unknown>)[c.key];
+        const v = record[c.key];
         return typeof v === "string" && v.trim().length > 0;
       });
-      if (field.requireAtLeastOne && !anyFilled) return `"${field.label}" requires at least one value.`;
+      if (field.requireAtLeastOne && !anyFilled)
+        return `"${field.label}" requires at least one value.`;
+      for (const component of field.components) {
+        const componentValue = record[component.key];
+        if (
+          component.pattern &&
+          typeof componentValue === "string" &&
+          componentValue.trim().length > 0 &&
+          !new RegExp(component.pattern).test(componentValue.trim())
+        ) {
+          return `"${component.label}" is not valid.`;
+        }
+      }
       return null;
     }
     case "photo": {
       if (!Array.isArray(value)) return `"${field.label}" must be a list of photos.`;
-      if (value.length > field.maxFiles) return `"${field.label}" allows at most ${field.maxFiles} photo(s).`;
+      if (value.length > field.maxFiles)
+        return `"${field.label}" allows at most ${field.maxFiles} photo(s).`;
       const invalid = value.some((p) => {
         const photo = p as { mimeType?: string; sizeBytes?: number };
         if (!photo.mimeType || !field.acceptMimeTypes.includes(photo.mimeType)) return true;
-        if (typeof photo.sizeBytes !== "number" || photo.sizeBytes > field.maxFileSizeMb * 1024 * 1024) return true;
+        if (
+          typeof photo.sizeBytes !== "number" ||
+          photo.sizeBytes > field.maxFileSizeMb * 1024 * 1024
+        )
+          return true;
         return false;
       });
       return invalid ? `"${field.label}" has an unsupported photo.` : null;
     }
     case "coordinates": {
       const v = value as { lat?: unknown; lng?: unknown };
-      if (typeof v.lat !== "number" || typeof v.lng !== "number") return `"${field.label}" is invalid.`;
+      if (typeof v.lat !== "number" || typeof v.lng !== "number")
+        return `"${field.label}" is invalid.`;
       return null;
     }
     case "consent":
       return value === true ? null : `"${field.label}" must be accepted.`;
     case "inspiration_photo": {
       const v = value as { photoPath?: unknown; hypotheses?: unknown };
-      if (typeof v.photoPath !== "string" || v.photoPath.length === 0) return `"${field.label}" is invalid.`;
+      if (typeof v.photoPath !== "string" || v.photoPath.length === 0)
+        return `"${field.label}" is invalid.`;
       return null;
     }
     default:
@@ -143,7 +173,9 @@ export function computeVisibleSteps(schema: PlaybookSchema, answers: Answers): V
   for (const section of schema.sections) {
     for (const step of section.steps) {
       if (!evaluateConditionGroup(step.displayWhen, answers)) continue;
-      const visibleFields = step.fields.filter((f) => evaluateConditionGroup(f.displayWhen, answers));
+      const visibleFields = step.fields.filter((f) =>
+        evaluateConditionGroup(f.displayWhen, answers),
+      );
       if (visibleFields.length === 0) continue;
       result.push({ sectionId: section.id, sectionTitle: section.title, step, visibleFields });
     }
@@ -152,7 +184,10 @@ export function computeVisibleSteps(schema: PlaybookSchema, answers: Answers): V
 }
 
 /** Labels of currently-visible required fields that are empty or invalid — used for build_dossiers.next_questions. */
-export function computeUnansweredRequiredFields(schema: PlaybookSchema, answers: Answers): string[] {
+export function computeUnansweredRequiredFields(
+  schema: PlaybookSchema,
+  answers: Answers,
+): string[] {
   const labels: string[] = [];
   for (const { visibleFields } of computeVisibleSteps(schema, answers)) {
     for (const field of visibleFields) {
@@ -207,10 +242,13 @@ export function getPlaybookPublishIssues(schema: PlaybookSchema): string[] {
   }
   for (const calc of schema.briefConfig.calculatedFields) {
     for (const inputKey of calc.compute.inputs) {
-      if (!knownKeys.has(inputKey)) issues.push(`Calculated field "${calc.key}" references unknown field "${inputKey}".`);
+      if (!knownKeys.has(inputKey))
+        issues.push(`Calculated field "${calc.key}" references unknown field "${inputKey}".`);
     }
     if (calc.fallbackFieldKey && !knownKeys.has(calc.fallbackFieldKey)) {
-      issues.push(`Calculated field "${calc.key}" fallback references unknown field "${calc.fallbackFieldKey}".`);
+      issues.push(
+        `Calculated field "${calc.key}" fallback references unknown field "${calc.fallbackFieldKey}".`,
+      );
     }
   }
   for (const line of schema.briefConfig.derivedLines) {

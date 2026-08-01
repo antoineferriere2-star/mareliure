@@ -149,7 +149,17 @@ export const addressComponentKey = z.enum(["zip", "city_state", "street", "count
 export const addressField = z.object({
   ...fieldBase,
   type: z.literal("address"),
-  components: z.array(z.object({ key: addressComponentKey, label: z.string().min(1) })).min(1),
+  components: z
+    .array(
+      z.object({
+        key: addressComponentKey,
+        label: z.string().min(1),
+        /** Optional format check (e.g. a ZIP code shape) — a Playbook-authored
+         * rule, not a hardcoded assumption in the generic address component. */
+        pattern: z.string().optional(),
+      }),
+    )
+    .min(1),
   requireAtLeastOne: z.boolean().optional(),
 });
 
@@ -180,7 +190,10 @@ export const inspirationPhotoField = z.object({
   ...fieldBase,
   type: z.literal("inspiration_photo"),
   maxFileSizeMb: z.number().positive().default(8),
-  acceptMimeTypes: z.array(z.string().min(1)).min(1).default(["image/jpeg", "image/png", "image/webp"]),
+  acceptMimeTypes: z
+    .array(z.string().min(1))
+    .min(1)
+    .default(["image/jpeg", "image/png", "image/webp"]),
 });
 
 export const consentField = z.object({
@@ -291,7 +304,9 @@ export const derivedLineRule = z.object({
   when: conditionGroup,
   label: z.string().min(1),
   value: z.string().min(1),
-  source: z.enum(["deterministic_rule", "calculated_value", "visitor_answer"]).default("deterministic_rule"),
+  source: z
+    .enum(["deterministic_rule", "calculated_value", "visitor_answer"])
+    .default("deterministic_rule"),
 });
 export type DerivedLineRule = z.infer<typeof derivedLineRule>;
 
