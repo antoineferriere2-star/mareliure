@@ -4,7 +4,13 @@ import type { PlaybookField } from "@/build/schema/playbook";
 /** Result of analyzing an inspiration photo — mirrors the public runtime API's analyze_inspiration_photo response. */
 export interface InspirationPhotoAnalysis {
   photoPath: string;
-  hypotheses: { style?: string; materials: string[]; shape?: string; elements: string[]; suggestedQuestions: string[] };
+  hypotheses: {
+    style?: string;
+    materials: string[];
+    shape?: string;
+    elements: string[];
+    suggestedQuestions: string[];
+  };
 }
 
 /**
@@ -24,10 +30,24 @@ export interface FieldComponentProps<F extends PlaybookField = PlaybookField> {
    * the image and runs vision analysis via the public runtime API. The
    * component itself never knows about session_id/session_secret.
    */
-  analyzeInspirationPhoto?: (image: { base64: string; mediaType: string }) => Promise<InspirationPhotoAnalysis>;
+  analyzeInspirationPhoto?: (image: {
+    base64: string;
+    mediaType: string;
+  }) => Promise<InspirationPhotoAnalysis>;
 }
 
 export const CHOICE_BUTTON_CLASS = (selected: boolean) =>
   `rounded-md border p-4 text-left text-sm font-medium ${
-    selected ? "border-emerald-500 bg-emerald-50 text-emerald-950" : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+    selected
+      ? "border-emerald-500 bg-emerald-50 text-emerald-950"
+      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
   }`;
+
+/**
+ * Legend for choice-grid field types (single/multi choice, timeline, budget
+ * ranges) — these render a custom button grid instead of native radio/
+ * checkbox inputs, so a <legend> is the only thing telling a visitor which
+ * question a given grid of buttons answers when a step has more than one
+ * field (e.g. "property type" immediately followed by "existing condition").
+ */
+export const FIELD_LEGEND_CLASS = "mb-2 block text-sm font-medium text-slate-900";
