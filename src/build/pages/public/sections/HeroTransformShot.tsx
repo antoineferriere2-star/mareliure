@@ -1,7 +1,11 @@
 import { ArrowRight, Check, FileText, Sparkles } from "lucide-react";
 import type { ProjectBrief } from "@/build/schema/brief";
 import { deckPlaybookSchema } from "@/build/playbooks/deckPlaybookSchema";
-import { BRIEF_SOURCE_LABELS, pickOneLinePerSource } from "@/build/schema/briefLabels";
+import {
+  BRIEF_SOURCE_LABELS,
+  CONFIDENCE_LABEL_TEXT,
+  pickOneLinePerSource,
+} from "@/build/schema/briefLabels";
 import { publicCopy, usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 
 const missionSteps = deckPlaybookSchema.sections
@@ -72,8 +76,7 @@ export function HeroTransformShot({ brief }: { brief: ProjectBrief }) {
               {copy("Project Brief")}
             </p>
             <span className="rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[12px] font-semibold text-emerald-800 whitespace-nowrap">
-              {copy("Confidence")}:{" "}
-              {brief.confidence.label.charAt(0).toUpperCase() + brief.confidence.label.slice(1)}
+              {copy("Confidence")}: {copy(CONFIDENCE_LABEL_TEXT[brief.confidence.label])}
             </span>
           </div>
           <dl className="mt-4 space-y-3">

@@ -216,7 +216,7 @@ function BuildPublicHomeContent() {
                       className="cursor-help underline decoration-dotted decoration-slate-400 underline-offset-4"
                       title={copy("The guided experience completed by the customer.")}
                     >
-                      Project Intake
+                      {copy("Project Intake")}
                     </span>
                     .
                   </>

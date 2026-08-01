@@ -35,7 +35,7 @@ export function useOptionalPublicLocale() {
   return context ?? { locale: DEFAULT_LOCALE, setLocale: () => undefined };
 }
 
-const ES_PUBLIC_COPY: Record<string, string> = {
+export const ES_PUBLIC_COPY: Record<string, string> = {
   "Your project summary is ready": "El resumen de su proyecto está listo",
   "Your information has been sent to": "Su información ha sido enviada a",
   "No details were provided yet.": "Aún no se proporcionaron detalles.",
@@ -365,6 +365,94 @@ const ES_PUBLIC_COPY: Record<string, string> = {
     "Hay que confirmar los requisitos exactos de permisos y si se puede reutilizar la estructura existente.",
   "Confirm permit requirements and existing structure condition before any estimate.":
     "Confirme requisitos de permisos y estado de la estructura existente antes de cualquier estimación.",
+  "How would you like to start?": "¿Cómo le gustaría empezar?",
+  "I know what I want": "Sé lo que quiero",
+  "I'm not sure yet": "Aún no estoy seguro",
+  "Tell us about the property and current site": "Cuéntenos sobre la propiedad y el sitio actual",
+  "Approximate dimensions": "Dimensiones aproximadas",
+  "Height and access": "Altura y acceso",
+  "Height/access": "Altura/acceso",
+  "Budget and timeline": "Presupuesto y plazo",
+  "Project location": "Ubicación del proyecto",
+  "Contact details and consent": "Datos de contacto y consentimiento",
+  Townhouse: "Casa adosada",
+  "Commercial property": "Propiedad comercial",
+  "Existing composite deck": "Terraza de composite existente",
+  "Patio or concrete slab": "Patio o losa de concreto",
+  "Deck extension": "Ampliación de terraza",
+  "Length (ft)": "Largo (pies)",
+  "Width (ft)": "Ancho (pies)",
+  "Approx. total area": "Área total aprox.",
+  "Second-story": "Segundo piso",
+  "Pressure-treated wood": "Madera tratada a presión",
+  "Cedar or hardwood": "Cedro o madera dura",
+  PVC: "PVC",
+  Pergola: "Pérgola",
+  "Built-in seating": "Asientos empotrados",
+  "Upload up to 6 photos": "Suba hasta 6 fotos",
+  "No photos were attached in this demo session.":
+    "No se adjuntaron fotos en esta sesión de demostración.",
+  "JPG, PNG, WEBP or HEIC. 8 MB max each.": "JPG, PNG, WEBP o HEIC. Máximo 8 MB cada una.",
+  "Under $10k": "Menos de $10k",
+  "Not sure yet": "Aún no estoy seguro",
+  "As soon as possible": "Lo antes posible",
+  "3-6 months": "3-6 meses",
+  "6-12 months": "6-12 meses",
+  "Just exploring": "Solo explorando",
+  "ZIP code": "Código postal",
+  "City / State": "Ciudad / Estado",
+  "No preference": "Sin preferencia",
+  "I consent to sharing this demo request for review and follow-up.":
+    "Doy mi consentimiento para compartir esta solicitud de demostración para su revisión y seguimiento.",
+  "Phone number was not provided.": "No se proporcionó número de teléfono.",
+  "Exact dimensions": "Dimensiones exactas",
+  "Approximate dimensions were not confirmed.":
+    "Las dimensiones aproximadas no fueron confirmadas.",
+  "Existing structure": "Estructura existente",
+  Timing: "Cronograma",
+  "Fast timeline should be confirmed before promising availability.":
+    "El plazo acelerado debe confirmarse antes de prometer disponibilidad.",
+  "Structural condition": "Condición estructural",
+  "Existing structure condition requires human review.":
+    "La condición de la estructura existente requiere revisión humana.",
+  "Confirm dimensions and site constraints, then schedule a site visit before preparing a detailed estimate.":
+    "Confirme las dimensiones y las limitaciones del sitio, luego programe una visita antes de preparar una estimación detallada.",
+  "Deck project brief": "Project Brief de terraza",
+  "Deck project inquiry with limited information.":
+    "Consulta de proyecto de terraza con información limitada.",
+  "Some visitors already know exactly what they want; others prefer to start from an inspiration photo.":
+    "Algunos visitantes ya saben exactamente lo que quieren; otros prefieren empezar desde una foto de inspiración.",
+  "We'll help you turn that inspiration into a project your contractor can understand.":
+    "Le ayudaremos a convertir esa inspiración en un proyecto que su contratista pueda entender.",
+  "The project type changes the questions a builder needs before the first call.":
+    "El tipo de proyecto cambia las preguntas que un constructor necesita antes de la primera llamada.",
+  "Existing conditions help separate a simple resurfacing request from a structural project.":
+    "El estado actual ayuda a diferenciar una simple renovación de superficie de un proyecto estructural.",
+  "Rough measurements are enough for a first qualification brief. Exact dimensions can be confirmed later.":
+    "Medidas aproximadas son suficientes para un primer brief de calificación. Las dimensiones exactas pueden confirmarse después.",
+  "I'm not sure": "No estoy seguro",
+  "Elevation, stairs and access constraints can change feasibility and the next sales step.":
+    "La elevación, las escaleras y las limitaciones de acceso pueden cambiar la viabilidad y el siguiente paso comercial.",
+  "Material preference helps sales prepare the right conversation without treating it as a final estimate.":
+    "La preferencia de material ayuda a ventas a preparar la conversación adecuada sin tratarla como una estimación final.",
+  "Features often reveal complexity that a free-text form misses.":
+    "Las características suelen revelar una complejidad que un formulario de texto libre no capta.",
+  Features: "Características",
+  "Photos reduce back-and-forth and help the team spot visible constraints.":
+    "Las fotos reducen las idas y vueltas y ayudan al equipo a detectar limitaciones visibles.",
+  "Ranges help prioritize follow-up without making a contractual estimate.":
+    "Los rangos ayudan a priorizar el seguimiento sin generar una estimación contractual.",
+  "$10k-$25k": "$10k-$25k",
+  "$25k-$50k": "$25k-$50k",
+  "$50k+": "$50k+",
+  "ZIP code and city/state help route the request and prepare local questions.":
+    "El código postal y la ciudad/estado ayudan a dirigir la solicitud y preparar preguntas locales.",
+  "The business needs permission to review and respond to the project request.":
+    "El negocio necesita permiso para revisar y responder a la solicitud del proyecto.",
+  Text: "Mensaje de texto",
+  "Project scope": "Alcance del proyecto",
+  "Visitor is unsure which deck project type fits.":
+    "El visitante no está seguro de qué tipo de proyecto de terraza corresponde.",
   "Modern minimalist": "Minimalista moderno",
   "Composite decking": "Tarima composite",
   "Black aluminum railing": "Barandilla de aluminio negro",
