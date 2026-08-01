@@ -751,6 +751,9 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Yes. You can change your plan at any time from your client portal billing page.":
     "Sí. Puede cambiar su plan en cualquier momento desde la página de facturación de su portal de cliente.",
   "Is there a free trial?": "¿Hay una prueba gratuita?",
+  "You can try the public Deck demo before creating an account. Once you sign up, you get your own workspace right away and can publish your first Guided Project Intake yourself.":
+    "Puede probar la demo pública de Deck antes de crear una cuenta. Al registrarse, obtiene su propio workspace de inmediato y puede publicar usted mismo su primer Project Intake guiado.",
+  "Prefer a guided setup instead?": "¿Prefiere una configuración guiada?",
   "Get a Free Website Inquiry Audit first to see what a Project Brief looks like for your business, with no account required.":
     "Primero solicite una auditoría gratis para ver cómo sería un Project Brief para su negocio, sin necesidad de crear una cuenta.",
 };

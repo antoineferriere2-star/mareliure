@@ -3,6 +3,7 @@ import { BriefPreview } from "@/build/pages/public/BriefPreview";
 import { defaultDeckBrief } from "@/build/pages/public/defaultDeckBrief";
 import { deckPlaybookSchema } from "@/build/playbooks/deckPlaybookSchema";
 import { PLAN_DEFAULTS, type MonthlyUsdPrice, type PlanId } from "@/build/billing/plans";
+import { BeforeAfterSection } from "@/build/pages/public/sections/BeforeAfterSection";
 
 const deckDemoSteps = deckPlaybookSchema.sections.flatMap((section) => section.steps);
 import {
@@ -248,6 +249,7 @@ function BuildHowItWorksPageContent() {
           "Administration",
         ])}
       />
+      <BeforeAfterSection />
       <PublicCtaBand />
     </main>
   );
@@ -309,7 +311,17 @@ function BuildPricingPageContent() {
         secondaryTo="/contact"
         secondaryVariant="link"
       />
-      <section className="px-4 py-16 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+        <p className="text-sm leading-6 text-slate-600">
+          {copy(
+            "You can try the public Deck demo before creating an account. Once you sign up, you get your own workspace right away and can publish your first Guided Project Intake yourself.",
+          )}{" "}
+          <a href="/private-beta" className="font-medium text-emerald-700 hover:underline">
+            {copy("Prefer a guided setup instead?")}
+          </a>
+        </p>
+      </div>
+      <section className="px-4 py-10 sm:px-6 lg:px-8">
         <div className="mx-auto grid max-w-7xl gap-6 md:grid-cols-2 lg:grid-cols-4">
           {SELF_SERVE_PLAN_IDS.map((planId) => {
             const plan = PLAN_DEFAULTS[planId];
