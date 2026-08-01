@@ -9,6 +9,7 @@ import {
 } from "@/build/services/billing.data.functions";
 import { PLAN_DEFAULTS, formatMonthlyUsdPrice, type PlanId } from "@/build/billing/plans";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
+import { EntitlementBanner } from "@/build/pages/portal/EntitlementBanner";
 
 export const Route = createFileRoute("/_authenticated/portal/billing")({
   ssr: false,
@@ -129,6 +130,8 @@ function PortalBillingPage() {
         </p>
       )}
       {billingPending && !billingError && <PortalPending />}
+
+      {billing && <EntitlementBanner entitlements={billing.entitlements} />}
 
       {billing && (
         <div className="rounded-lg border border-border bg-card p-4">

@@ -20,6 +20,7 @@ import type { Json } from "@/integrations/supabase/types";
 import { admin, type Supa } from "./adminAuth.server";
 import { fail } from "./serverError";
 import { assertWorkspaceMember, assertWorkspaceOwner } from "./workspaceAuth.server";
+import { assertCanPublish } from "./workspaceEntitlements.server";
 import { fetchSitePublicHtml } from "@/build/onboarding/safeFetch.server";
 import { extractSiteText } from "@/build/onboarding/extractText";
 import { expandPlaybookDraft } from "@/build/onboarding/expandPlaybookDraft";
@@ -614,6 +615,11 @@ export const publishMyDraft = createServerFn({ method: "POST" })
     if (row.status === "published" && row.mission_id) {
       return toState(sb, row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
     }
+
+    // Billing gate. Deliberately after the already-published short-circuit: a
+    // frozen workspace must still be able to re-read the Intake it published
+    // while entitled, it just cannot put a new one live.
+    await assertCanPublish(data.workspaceId);
 
     if (!row.playbook_id) {
       fail(400, "Generate your project intake draft first.");

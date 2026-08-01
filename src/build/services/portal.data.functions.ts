@@ -10,6 +10,8 @@ import { admin } from "./adminAuth.server";
 import { fail } from "./serverError";
 import { assertWorkspaceMember, assertWorkspaceOwner } from "./workspaceAuth.server";
 import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
+import { assertCanPublish, getWorkspaceEntitlements } from "./workspaceEntitlements.server";
+import { wouldExceedActiveMissions } from "@/build/billing/quota";
 
 const COMMERCIAL_STATUSES = ["nouveau", "contacte", "devise", "gagne", "perdu"] as const;
 export type CommercialStatus = (typeof COMMERCIAL_STATUSES)[number];
@@ -124,6 +126,21 @@ export const setMissionPaused = createServerFn({ method: "POST" })
       fail(400, "Only a published Mission can be paused or reactivated.");
     }
 
+    // Pausing is always allowed — it frees a slot and costs us nothing.
+    // Reactivating puts an Intake back online, so it goes through the same
+    // billing gate and the same plan limit as a first publish. Neither check
+    // existed here before, which let a paused Mission be revived past both.
+    if (!data.paused && mission.status === "paused") {
+      await assertCanPublish(data.workspaceId);
+      const usage = await getWorkspaceUsageInternal(data.workspaceId);
+      if (wouldExceedActiveMissions(usage.activeMissions, usage.maxActiveMissions)) {
+        fail(
+          409,
+          `Your plan allows ${usage.maxActiveMissions} active Project Intake(s). Pause another one first, or upgrade your plan.`,
+        );
+      }
+    }
+
     const { data: updated, error } = await sb
       .from("build_missions")
       .update({ status: data.paused ? "paused" : "active" })
@@ -140,7 +157,14 @@ export const getMyWorkspaceUsage = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
-    return getWorkspaceUsageInternal(data.workspaceId);
+    // Entitlements ride along with usage because the two are always shown
+    // together ("2 / 3 active Intakes" is meaningless next to a frozen
+    // account) and the missions page already fetches this once.
+    const [usage, entitlements] = await Promise.all([
+      getWorkspaceUsageInternal(data.workspaceId),
+      getWorkspaceEntitlements(data.workspaceId),
+    ]);
+    return { ...usage, entitlements };
   });
 
 /** Billing summary for /portal/billing — never returns the raw Stripe customer id, just whether one exists. */
@@ -163,6 +187,7 @@ export const getMyWorkspaceBilling = createServerFn({ method: "GET" })
       hasStripeCustomer: workspace.stripe_customer_id !== null,
       hasStripeBilling:
         workspace.stripe_customer_id !== null || workspace.stripe_subscription_id !== null,
+      entitlements: await getWorkspaceEntitlements(data.workspaceId),
     };
   });
 

@@ -15,6 +15,7 @@ import {
   setMissionPaused,
 } from "@/build/services/portal.data.functions";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
+import { EntitlementBanner } from "@/build/pages/portal/EntitlementBanner";
 import { IntegrationSnippetsPanel } from "@/build/pages/integration/IntegrationSnippetsPanel";
 
 export const Route = createFileRoute("/_authenticated/portal/missions")({
@@ -117,6 +118,8 @@ function PortalMissionsPage() {
           </select>
         )}
       </header>
+
+      {usage && <EntitlementBanner entitlements={usage.entitlements} />}
 
       {usage && (
         <div className="rounded-lg border border-border bg-card px-4 py-2.5 text-sm text-muted-foreground">
