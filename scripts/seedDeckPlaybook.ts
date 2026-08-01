@@ -55,7 +55,7 @@ async function main() {
 
   const { error: playbookErr } = await supabase.from("build_playbooks").upsert({
     id: DECK_PLAYBOOK_ID,
-    name: "Terrasse / Deck — v1",
+    name: "Deck Playbook",
     description: "Qualification d'un projet de terrasse (deck) résidentiel.",
     project_type: "deck",
     is_active: true,
@@ -105,7 +105,7 @@ async function main() {
     objective: "Public demo of the generic Playbook engine.",
     playbook_id: DECK_PLAYBOOK_ID,
     playbook_version_id: versionId,
-    playbook_name: "Terrasse / Deck — v1",
+    playbook_name: "Deck Playbook",
     status: "active",
     public_token: DECK_DEMO_PUBLIC_TOKEN,
     published_at: new Date().toISOString(),
