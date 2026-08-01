@@ -2,17 +2,11 @@
 export const SITE_URL = "https://metre-pro.com";
 export const SITE_NAME = "Métré Build";
 
-/**
- * No Métré Build-branded mailbox has been provisioned yet (contact messages
- * are currently routed, server-side only, to a legacy off-brand address —
- * see the "to" recipient in src/lib/email-templates/public-contact.tsx).
- * Rather than display that off-brand address publicly, or invent a Métré
- * Build address that may not exist/be monitored, the public surface routes
- * visitors to the /contact form instead. Set this once a real, monitored
- * Métré Build mailbox exists to have it appear in structured data and
- * public copy again.
- */
-export const PUBLIC_CONTACT_EMAIL: string | null = null;
+/** The real, monitored Métré Build mailbox — single source of truth for
+ * every public-facing mention of a contact address (structured data,
+ * /contact, Privacy, Terms). Backend delivery (public-contact.tsx) sends
+ * here too. */
+export const PUBLIC_CONTACT_EMAIL: string | null = "contact@metre-pro.com";
 
 export const ORGANIZATION_ID = `${SITE_URL}/#organization`;
 export const WEBSITE_ID = `${SITE_URL}/#website`;

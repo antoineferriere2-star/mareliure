@@ -141,11 +141,11 @@ describe("public marketing surface - marketing proposition", () => {
 });
 
 describe("public marketing surface — no off-brand email address", () => {
-  // contact@oppe.fr is a real, working mailbox on the backend delivery path
-  // (src/lib/email-templates/public-contact.tsx) but must never be shown to
-  // a Métré Build visitor — it would read as an inconsistent/untrustworthy
-  // brand. Every file reachable from an unauthenticated public route must
-  // stay free of it.
+  // The site is branded Métré Build / metre-pro.com; contact@metre-pro.com
+  // (src/lib/structured-data.ts's PUBLIC_CONTACT_EMAIL) is the only address
+  // that should ever appear, on the public surface or in backend delivery
+  // (src/lib/email-templates/public-contact.tsx). A leftover legacy
+  // off-brand address would read as an inconsistent/untrustworthy brand.
   const filesToCheck = [...PUBLIC_SURFACE_FILES, "src/build/pages/public/publicLocaleContext.ts"];
 
   for (const file of filesToCheck) {

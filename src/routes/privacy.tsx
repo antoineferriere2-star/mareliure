@@ -7,7 +7,12 @@
 // them with plausible-sounding values without verifying them first.
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildLegalPage, type LegalSection } from "@/build/pages/public/BuildMarketingPages";
-import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
+import {
+  breadcrumbSchema,
+  jsonLdScript,
+  PUBLIC_CONTACT_EMAIL,
+  SITE_URL,
+} from "@/lib/structured-data";
 
 const title = "Privacy — Métré Build";
 const description =
@@ -134,7 +139,9 @@ const PRIVACY_SECTIONS: LegalSection[] = [
   },
   {
     heading: "Contact",
-    body: ["Questions about this policy can be sent through the Contact page."],
+    body: [
+      `Questions about this policy can be emailed to ${PUBLIC_CONTACT_EMAIL} or sent through the Contact page.`,
+    ],
   },
 ];
 

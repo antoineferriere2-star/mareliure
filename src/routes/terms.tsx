@@ -6,7 +6,12 @@
 // jurisdiction without verifying it first.
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildLegalPage, type LegalSection } from "@/build/pages/public/BuildMarketingPages";
-import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
+import {
+  breadcrumbSchema,
+  jsonLdScript,
+  PUBLIC_CONTACT_EMAIL,
+  SITE_URL,
+} from "@/lib/structured-data";
 
 const title = "Terms — Métré Build";
 const description =
@@ -105,7 +110,9 @@ const TERMS_SECTIONS: LegalSection[] = [
   },
   {
     heading: "Contact",
-    body: ["Questions about these Terms can be sent through the Contact page."],
+    body: [
+      `Questions about these Terms can be emailed to ${PUBLIC_CONTACT_EMAIL} or sent through the Contact page.`,
+    ],
   },
 ];
 

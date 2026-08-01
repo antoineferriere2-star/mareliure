@@ -63,7 +63,7 @@ export const Route = createFileRoute("/api/public/contact")({
 
         const contact = parsed.data;
         try {
-          await sendTemplateEmail("public-contact", "contact@oppe.fr", {
+          await sendTemplateEmail("public-contact", "contact@metre-pro.com", {
             idempotencyKey: crypto.randomUUID(),
             replyTo: contact.email,
             templateData: {

@@ -76,7 +76,7 @@ export const template = {
   subject: (data: Record<string, unknown>) =>
     data.subject ? `Métré Build contact - ${String(data.subject)}` : "Métré Build contact",
   displayName: "Public Contact",
-  to: "contact@oppe.fr",
+  to: "contact@metre-pro.com",
   previewData: {
     name: "Jane Miller",
     email: "jane@example.com",

@@ -167,15 +167,15 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Enter a valid email.": "Ingrese un email válido.",
   "Consent is required.": "El consentimiento es obligatorio.",
   "Contact Métré Build": "Contactar a Métré Build",
-  "Send a direct message to the Métré Build team.":
-    "Envíe un mensaje directo al equipo de Métré Build.",
+  "Send a direct message to the Métré Build team. We reply from contact@metre-pro.com.":
+    "Envíe un mensaje directo al equipo de Métré Build. Respondemos desde contact@metre-pro.com.",
   "Company (optional)": "Empresa (opcional)",
   Subject: "Asunto",
   "Send message": "Enviar mensaje",
   Sending: "Enviando",
   "Unable to send this message.": "No se pudo enviar este mensaje.",
-  "Message sent. The team will reply to the email address you provided.":
-    "Mensaje enviado. El equipo responderá al correo electrónico que indicó.",
+  "Message sent. We will reply from contact@metre-pro.com.":
+    "Mensaje enviado. Responderemos desde contact@metre-pro.com.",
   "Setup review": "Revisión de configuración",
   "Request a setup review": "Solicitar revisión de configuración",
   "Tell us about your business and we'll get back to you about setting up a guided Project Intake for your website.":
@@ -640,8 +640,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Visitors in the European Economic Area": "Visitantes en el Espacio Económico Europeo",
   "If you are located in the EEA, UK or Switzerland, additional rights under the GDPR may apply, including the right to lodge a complaint with your local data protection authority. Our EU-specific legal basis and representative details are to be confirmed.":
     "Si se encuentra en el EEE, el Reino Unido o Suiza, pueden aplicarse derechos adicionales conforme al RGPD, incluido el derecho a presentar una reclamación ante su autoridad local de protección de datos. Nuestra base jurídica específica para la UE y los datos de nuestro representante están pendientes de confirmación.",
-  "Questions about this policy can be sent through the Contact page.":
-    "Las preguntas sobre esta política pueden enviarse a través de la página de Contacto.",
+  "Questions about this policy can be emailed to contact@metre-pro.com or sent through the Contact page.":
+    "Las preguntas sobre esta política pueden enviarse a contact@metre-pro.com o a través de la página de Contacto.",
   "What this service is": "Qué es este servicio",
   "Métré Build is a guided project-intake tool: it helps a visitor describe a project — a deck project today — and turns the answers into a structured Project Brief for the business that published the intake.":
     "Métré Build es una herramienta de captación de proyectos guiada: ayuda a un visitante a describir un proyecto (un proyecto de terraza hoy en día) y convierte las respuestas en un Project Brief estructurado para la empresa que publicó el intake.",
@@ -688,8 +688,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Governing law": "Ley aplicable",
   "The governing law and jurisdiction for these Terms are to be confirmed based on where the operating entity is registered and where its customers are located.":
     "La ley aplicable y la jurisdicción de estos Términos están pendientes de confirmación en función del lugar de registro de la entidad operadora y de la ubicación de sus clientes.",
-  "Questions about these Terms can be sent through the Contact page.":
-    "Las preguntas sobre estos Términos pueden enviarse a través de la página de Contacto.",
+  "Questions about these Terms can be emailed to contact@metre-pro.com or sent through the Contact page.":
+    "Las preguntas sobre estos Términos pueden enviarse a contact@metre-pro.com o a través de la página de Contacto.",
   "We'll show a representative preview once approximate length and width are provided.":
     "Mostraremos una vista previa representativa en cuanto se indiquen el largo y el ancho aproximados.",
   "This project shape can't be represented in the visual preview yet.":

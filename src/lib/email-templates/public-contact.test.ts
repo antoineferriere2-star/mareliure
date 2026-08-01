@@ -18,7 +18,7 @@ describe("public-contact email template", () => {
       plainText: true,
     });
 
-    expect(template.to).toBe("contact@oppe.fr");
+    expect(template.to).toBe("contact@metre-pro.com");
     expect(text.toLowerCase()).toContain("new contact message");
     expect(text).toContain("Jane Miller");
     expect(text).toContain("jane@example.com");

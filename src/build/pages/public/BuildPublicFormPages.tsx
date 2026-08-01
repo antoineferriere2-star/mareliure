@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BuildPublicShell, SectionHeader } from "@/build/pages/public/BuildPublicShell";
 import { CHOICE_BUTTON_CLASS } from "@/build/engine/fields/types";
+import { PUBLIC_CONTACT_EMAIL } from "@/lib/structured-data";
 import {
   submitBuildPublicRequest,
   submitPublicContactRequest,
@@ -106,7 +107,9 @@ function BuildContactPageContent({
           as="h1"
           eyebrow={copy("Contact")}
           title={copy("Contact Métré Build")}
-          description={copy("Send a direct message to the Métré Build team.")}
+          description={copy(
+            `Send a direct message to the Métré Build team. We reply from ${PUBLIC_CONTACT_EMAIL}.`,
+          )}
         />
         <form
           onSubmit={submit}
@@ -164,7 +167,7 @@ function BuildContactPageContent({
           )}
           {status === "success" ? (
             <div className="mt-5 rounded-md border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
-              {copy("Message sent. The team will reply to the email address you provided.")}
+              {copy(`Message sent. We will reply from ${PUBLIC_CONTACT_EMAIL}.`)}
             </div>
           ) : (
             <Button className="mt-5" disabled={status === "submitting"}>
