@@ -4,9 +4,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NotSureToggle } from "./NotSureToggle";
-import type { FieldComponentProps } from "./types";
+import { FIELD_ERROR_CLASS, type FieldComponentProps } from "./types";
 
-export function TextField({ field, value, onChange }: FieldComponentProps<TextFieldDef>) {
+export function TextField({ field, value, onChange, error }: FieldComponentProps<TextFieldDef>) {
   const isNotSure = value === NOT_SURE_VALUE;
   const stringValue = typeof value === "string" ? value : "";
 
@@ -34,8 +34,12 @@ export function TextField({ field, value, onChange }: FieldComponentProps<TextFi
         />
       )}
       {field.allowNotSure && (
-        <NotSureToggle active={isNotSure} onToggle={(nowNotSure) => onChange(nowNotSure ? NOT_SURE_VALUE : "")} />
+        <NotSureToggle
+          active={isNotSure}
+          onToggle={(nowNotSure) => onChange(nowNotSure ? NOT_SURE_VALUE : "")}
+        />
       )}
+      {error && <p className={FIELD_ERROR_CLASS}>{error}</p>}
     </div>
   );
 }

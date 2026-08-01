@@ -3,16 +3,31 @@ import type { MeasurementField as MeasurementFieldDef } from "@/build/schema/pla
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NotSureToggle } from "./NotSureToggle";
-import type { FieldComponentProps } from "./types";
+import { FIELD_ERROR_CLASS, type FieldComponentProps } from "./types";
 
-export function MeasurementField({ field, value, onChange }: FieldComponentProps<MeasurementFieldDef>) {
+export function MeasurementField({
+  field,
+  value,
+  onChange,
+  error,
+}: FieldComponentProps<MeasurementFieldDef>) {
   const isNotSure = value === NOT_SURE_VALUE;
-  const stringValue = typeof value === "number" ? String(value) : typeof value === "string" ? value : "";
+  const stringValue =
+    typeof value === "number" ? String(value) : typeof value === "string" ? value : "";
+  // Some already-published Playbook versions have the unit baked into the
+  // label itself (e.g. "Length (ft)") from before field.unit was appended
+  // generically here — appending it again produced "Length (ft) (ft)".
+  // Guarding on the label's own text keeps this correct for both old and
+  // new label conventions without needing that Playbook republished.
+  const labelAlreadyShowsUnit = field.label.trim().endsWith(`(${field.unit})`);
 
   return (
     <div>
       <Label htmlFor={field.key}>
-        {field.label} <span className="text-xs font-normal text-slate-500">({field.unit})</span>
+        {field.label}
+        {!labelAlreadyShowsUnit && (
+          <span className="text-xs font-normal text-slate-500"> ({field.unit})</span>
+        )}
       </Label>
       {field.helpText && <p className="mt-1 text-xs text-slate-500">{field.helpText}</p>}
       <Input
@@ -26,8 +41,12 @@ export function MeasurementField({ field, value, onChange }: FieldComponentProps
         className="mt-1"
       />
       {field.allowNotSure && (
-        <NotSureToggle active={isNotSure} onToggle={(nowNotSure) => onChange(nowNotSure ? NOT_SURE_VALUE : "")} />
+        <NotSureToggle
+          active={isNotSure}
+          onToggle={(nowNotSure) => onChange(nowNotSure ? NOT_SURE_VALUE : "")}
+        />
       )}
+      {error && <p className={FIELD_ERROR_CLASS}>{error}</p>}
     </div>
   );
 }

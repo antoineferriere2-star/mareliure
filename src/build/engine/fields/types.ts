@@ -51,3 +51,13 @@ export const CHOICE_BUTTON_CLASS = (selected: boolean) =>
  * field (e.g. "property type" immediately followed by "existing condition").
  */
 export const FIELD_LEGEND_CLASS = "mb-2 block text-sm font-medium text-slate-900";
+
+/**
+ * Every field component receives its own `error` prop (computed per
+ * field.key in MissionRuntime's validateField loop), but most components
+ * never rendered it — visitors only ever saw one generic top-level "Some
+ * required information is missing or invalid" message with no indication
+ * of which field caused it. This is the shared style for actually showing
+ * it, matching the one component (PhotoField) that already did.
+ */
+export const FIELD_ERROR_CLASS = "mt-2 text-sm text-rose-700";

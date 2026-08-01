@@ -1,10 +1,16 @@
 import type { SingleChoiceField as SingleChoiceFieldDef } from "@/build/schema/playbook";
-import { CHOICE_BUTTON_CLASS, FIELD_LEGEND_CLASS, type FieldComponentProps } from "./types";
+import {
+  CHOICE_BUTTON_CLASS,
+  FIELD_ERROR_CLASS,
+  FIELD_LEGEND_CLASS,
+  type FieldComponentProps,
+} from "./types";
 
 export function SingleChoiceField({
   field,
   value,
   onChange,
+  error,
 }: FieldComponentProps<SingleChoiceFieldDef>) {
   return (
     <fieldset>
@@ -29,6 +35,7 @@ export function SingleChoiceField({
           </button>
         ))}
       </div>
+      {error && <p className={FIELD_ERROR_CLASS}>{error}</p>}
     </fieldset>
   );
 }

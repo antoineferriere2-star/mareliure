@@ -1,10 +1,16 @@
 import type { MultiChoiceField as MultiChoiceFieldDef } from "@/build/schema/playbook";
-import { CHOICE_BUTTON_CLASS, FIELD_LEGEND_CLASS, type FieldComponentProps } from "./types";
+import {
+  CHOICE_BUTTON_CLASS,
+  FIELD_ERROR_CLASS,
+  FIELD_LEGEND_CLASS,
+  type FieldComponentProps,
+} from "./types";
 
 export function MultiChoiceField({
   field,
   value,
   onChange,
+  error,
 }: FieldComponentProps<MultiChoiceFieldDef>) {
   const selected = Array.isArray(value) ? (value as string[]) : [];
   function toggle(optionValue: string) {
@@ -36,6 +42,7 @@ export function MultiChoiceField({
           </button>
         ))}
       </div>
+      {error && <p className={FIELD_ERROR_CLASS}>{error}</p>}
     </fieldset>
   );
 }

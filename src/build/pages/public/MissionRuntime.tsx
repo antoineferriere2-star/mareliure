@@ -1,3 +1,4 @@
+/* eslint-disable react-refresh/only-export-components -- localizeField is exported for unit testing */
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -47,7 +48,7 @@ type DossierResult = {
 
 type CopyFn = (text: string) => string;
 
-function localizeField(field: PlaybookField, copy: CopyFn): PlaybookField {
+export function localizeField(field: PlaybookField, copy: CopyFn): PlaybookField {
   const localized = { ...field } as PlaybookField & Record<string, unknown>;
   localized.label = copy(field.label);
   if (typeof localized.helpText === "string") localized.helpText = copy(localized.helpText);
@@ -59,6 +60,29 @@ function localizeField(field: PlaybookField, copy: CopyFn): PlaybookField {
       }
       return option;
     });
+  }
+  // Address fields carry their sub-labels (ZIP code, City / State) in
+  // `components`, not `options` — missed by the block above.
+  if (Array.isArray(localized.components)) {
+    localized.components = localized.components.map((component) =>
+      component && typeof component === "object" && "label" in component
+        ? { ...component, label: copy(String(component.label)) }
+        : component,
+    );
+  }
+  // Budget fields in "ranges" mode carry their choices in `ranges`, a
+  // separate array from `options` used by every other choice-style field.
+  if (Array.isArray(localized.ranges)) {
+    localized.ranges = localized.ranges.map((range) =>
+      range && typeof range === "object" && "label" in range
+        ? { ...range, label: copy(String(range.label)) }
+        : range,
+    );
+  }
+  // Consent fields show their own copy of the agreement text separately
+  // from `label`.
+  if (typeof localized.consentText === "string") {
+    localized.consentText = copy(localized.consentText);
   }
   return localized as PlaybookField;
 }

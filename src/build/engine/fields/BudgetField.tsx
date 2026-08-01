@@ -1,9 +1,19 @@
 import type { BudgetField as BudgetFieldDef } from "@/build/schema/playbook";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CHOICE_BUTTON_CLASS, FIELD_LEGEND_CLASS, type FieldComponentProps } from "./types";
+import {
+  CHOICE_BUTTON_CLASS,
+  FIELD_ERROR_CLASS,
+  FIELD_LEGEND_CLASS,
+  type FieldComponentProps,
+} from "./types";
 
-export function BudgetField({ field, value, onChange }: FieldComponentProps<BudgetFieldDef>) {
+export function BudgetField({
+  field,
+  value,
+  onChange,
+  error,
+}: FieldComponentProps<BudgetFieldDef>) {
   if (field.mode === "ranges") {
     const selected = typeof value === "string" ? value : "";
     return (
@@ -24,6 +34,7 @@ export function BudgetField({ field, value, onChange }: FieldComponentProps<Budg
             </button>
           ))}
         </div>
+        {error && <p className={FIELD_ERROR_CLASS}>{error}</p>}
       </fieldset>
     );
   }
@@ -47,6 +58,7 @@ export function BudgetField({ field, value, onChange }: FieldComponentProps<Budg
           }
         />
       </div>
+      {error && <p className={FIELD_ERROR_CLASS}>{error}</p>}
     </div>
   );
 }

@@ -3,16 +3,27 @@ import type { CoordinatesField as CoordinatesFieldDef } from "@/build/schema/pla
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { FieldComponentProps } from "./types";
+import { FIELD_ERROR_CLASS, type FieldComponentProps } from "./types";
 
-export function CoordinatesField({ field, value, onChange }: FieldComponentProps<CoordinatesFieldDef>) {
+export function CoordinatesField({
+  field,
+  value,
+  onChange,
+  error,
+}: FieldComponentProps<CoordinatesFieldDef>) {
   const current: Partial<CoordinatesAnswerValue> =
-    value && typeof value === "object" && !Array.isArray(value) ? (value as CoordinatesAnswerValue) : {};
+    value && typeof value === "object" && !Array.isArray(value)
+      ? (value as CoordinatesAnswerValue)
+      : {};
 
   function useMyLocation() {
     if (typeof navigator === "undefined" || !navigator.geolocation) return;
     navigator.geolocation.getCurrentPosition((position) => {
-      onChange({ lat: position.coords.latitude, lng: position.coords.longitude, accuracyM: position.coords.accuracy });
+      onChange({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude,
+        accuracyM: position.coords.accuracy,
+      });
     });
   }
 
@@ -24,7 +35,9 @@ export function CoordinatesField({ field, value, onChange }: FieldComponentProps
           id={`${field.key}-lat`}
           type="number"
           value={current.lat ?? ""}
-          onChange={(event) => onChange({ ...current, lat: Number(event.target.value) } as CoordinatesAnswerValue)}
+          onChange={(event) =>
+            onChange({ ...current, lat: Number(event.target.value) } as CoordinatesAnswerValue)
+          }
           className="mt-1"
         />
       </div>
@@ -34,13 +47,22 @@ export function CoordinatesField({ field, value, onChange }: FieldComponentProps
           id={`${field.key}-lng`}
           type="number"
           value={current.lng ?? ""}
-          onChange={(event) => onChange({ ...current, lng: Number(event.target.value) } as CoordinatesAnswerValue)}
+          onChange={(event) =>
+            onChange({ ...current, lng: Number(event.target.value) } as CoordinatesAnswerValue)
+          }
           className="mt-1"
         />
       </div>
-      <Button type="button" variant="outline" size="sm" className="sm:col-span-2" onClick={useMyLocation}>
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="sm:col-span-2"
+        onClick={useMyLocation}
+      >
         Use my location
       </Button>
+      {error && <p className={`sm:col-span-2 ${FIELD_ERROR_CLASS}`}>{error}</p>}
     </div>
   );
 }

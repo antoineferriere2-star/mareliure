@@ -1,7 +1,17 @@
 import type { TimelineField as TimelineFieldDef } from "@/build/schema/playbook";
-import { CHOICE_BUTTON_CLASS, FIELD_LEGEND_CLASS, type FieldComponentProps } from "./types";
+import {
+  CHOICE_BUTTON_CLASS,
+  FIELD_ERROR_CLASS,
+  FIELD_LEGEND_CLASS,
+  type FieldComponentProps,
+} from "./types";
 
-export function TimelineField({ field, value, onChange }: FieldComponentProps<TimelineFieldDef>) {
+export function TimelineField({
+  field,
+  value,
+  onChange,
+  error,
+}: FieldComponentProps<TimelineFieldDef>) {
   const selected = typeof value === "string" ? value : "";
   return (
     <fieldset>
@@ -21,6 +31,7 @@ export function TimelineField({ field, value, onChange }: FieldComponentProps<Ti
           </button>
         ))}
       </div>
+      {error && <p className={FIELD_ERROR_CLASS}>{error}</p>}
     </fieldset>
   );
 }
