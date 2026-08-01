@@ -35,9 +35,19 @@ describe("buildVisitorProjectSummary", () => {
 
   it("puts a real visitor answer in confirmedItems", () => {
     const summary = buildVisitorProjectSummary(defaultDeckBrief, proposal, baseOptions);
-    expect(findItem(summary.confirmedItems, "Existing structure")?.value).toBe(
+    expect(findItem(summary.confirmedItems, "Existing situation")?.value).toBe(
       "Existing wood deck",
     );
+  });
+
+  it("does not duplicate the existing-site-condition answer under a second label", () => {
+    const summary = buildVisitorProjectSummary(defaultDeckBrief, proposal, baseOptions);
+    expect(findItem(summary.confirmedItems, "Existing structure")).toBeUndefined();
+    expect(
+      [...summary.confirmedItems, ...summary.calculatedItems, ...summary.itemsToConfirm].filter(
+        (item) => item.value === "Existing wood deck",
+      ),
+    ).toHaveLength(1);
   });
 
   it("puts the calculated area in calculatedItems, not confirmedItems", () => {

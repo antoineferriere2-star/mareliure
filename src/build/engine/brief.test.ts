@@ -29,13 +29,18 @@ describe("Deck playbook — brief generation reproduces the original business ru
     });
   });
 
-  it("flags Access limitations, existing structure, but not the Not-sure/fast-timeline constraints", () => {
+  it("flags Access limitations, but not the Not-sure/fast-timeline constraints", () => {
     const constraints = defaultDeckBrief.constraints;
     expect(findLine(constraints, "Access")?.value).toBe("Visitor reported access limitations.");
-    expect(findLine(constraints, "Existing structure")?.value).toBe("Existing wood deck");
-    expect(findLine(constraints, "Existing structure")?.source).toBe("visitor_answer");
     expect(findLine(constraints, "Project scope")).toBeUndefined();
     expect(findLine(constraints, "Timing")).toBeUndefined();
+  });
+
+  it("reports the existing site condition once, under confirmedInformation, not duplicated as a constraint", () => {
+    expect(findLine(defaultDeckBrief.confirmedInformation, "Existing situation")?.value).toBe(
+      "Existing wood deck",
+    );
+    expect(findLine(defaultDeckBrief.constraints, "Existing structure")).toBeUndefined();
   });
 
   it("always injects the permits/structural caveats, and omits gaps that were actually answered", () => {
