@@ -224,6 +224,17 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
         conversionRate: sessions.length ? Math.round((submitted / sessions.length) * 100) : 0,
       },
       series,
+      visits: {
+        topPages,
+        topReferrers,
+        devices: Object.entries(devices)
+          .map(([device, count]) => ({ device, count }))
+          .sort((a, b) => b.count - a.count),
+        locales: Object.entries(locales)
+          .map(([locale, count]) => ({ locale, count }))
+          .sort((a, b) => b.count - a.count),
+      },
+
       recentAccounts: accounts.slice(0, 15).map((a) => ({
         ...a,
         role: roleByUser.get(a.id) ?? (memberEmails.has(a.id) ? "client" : null),
