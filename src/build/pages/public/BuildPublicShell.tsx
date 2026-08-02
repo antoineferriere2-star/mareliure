@@ -7,6 +7,8 @@ import { t } from "@/build/i18n";
 import { PublicLanguageSelect, PublicLocaleProvider } from "@/build/pages/public/publicLocale";
 import { usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 import { FaqLauncher } from "@/build/pages/public/FaqLauncher";
+import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
+
 
 /**
  * One entry per industry vertical Métré Build can serve. Only "published"
