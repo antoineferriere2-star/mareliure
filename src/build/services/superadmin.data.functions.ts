@@ -236,7 +236,10 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
         conversionRate: sessions.length ? Math.round((submitted / sessions.length) * 100) : 0,
       },
       series,
+      pageSeries,
+      pageSeriesKeys: trendedPages.map((p) => p.path),
       visits: {
+
         topPages,
         topReferrers,
         devices: Object.entries(devices)
