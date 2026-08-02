@@ -211,8 +211,13 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
         workspaces: workspaces.length,
         workspaceMembers: members.length,
         admins: roles.filter((r) => r.role === "admin").length,
+        pageViews: views.length,
+        uniqueViewers,
+        viewSessions,
+        viewsPerVisitor: uniqueViewers ? Math.round((views.length / uniqueViewers) * 10) / 10 : 0,
         sessions: sessions.length,
         submittedSessions: submitted,
+
         uniqueVisitors,
         dossiers: dossiers.length,
         requests: requests.length,
