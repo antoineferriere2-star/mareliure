@@ -42,11 +42,13 @@ function Card({ label, value, sub }: { label: string; value: string | number; su
 }
 
 const SERIES = [
-  { key: "signups", label: "Signups", className: "bg-primary" },
-  { key: "sessions", label: "Sessions", className: "bg-sky-500" },
+  { key: "pageViews", label: "Page views", className: "bg-indigo-500" },
+  { key: "visitors", label: "Unique visitors", className: "bg-primary" },
+  { key: "sessions", label: "Intake sessions", className: "bg-sky-500" },
   { key: "dossiers", label: "Project Briefs", className: "bg-emerald-500" },
   { key: "requests", label: "Requests", className: "bg-amber-500" },
 ] as const;
+
 
 function Chart({ series }: { series: Record<string, string | number>[] }) {
   const max = Math.max(1, ...series.flatMap((row) => SERIES.map((s) => Number(row[s.key] ?? 0))));
