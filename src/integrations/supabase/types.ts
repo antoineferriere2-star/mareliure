@@ -268,6 +268,42 @@ export type Database = {
           },
         ]
       }
+      build_page_views: {
+        Row: {
+          created_at: string
+          device: string | null
+          id: string
+          is_new_session: boolean
+          locale: string | null
+          path: string
+          referrer_host: string | null
+          session_hash: string | null
+          visitor_hash: string | null
+        }
+        Insert: {
+          created_at?: string
+          device?: string | null
+          id?: string
+          is_new_session?: boolean
+          locale?: string | null
+          path: string
+          referrer_host?: string | null
+          session_hash?: string | null
+          visitor_hash?: string | null
+        }
+        Update: {
+          created_at?: string
+          device?: string | null
+          id?: string
+          is_new_session?: boolean
+          locale?: string | null
+          path?: string
+          referrer_host?: string | null
+          session_hash?: string | null
+          visitor_hash?: string | null
+        }
+        Relationships: []
+      }
       build_playbook_versions: {
         Row: {
           created_at: string

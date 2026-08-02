@@ -88,6 +88,7 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
       membersRes,
       workspacesRes,
       rolesRes,
+      viewsRes,
     ] = await Promise.all([
       sb
         .from("build_runtime_sessions")
@@ -110,7 +111,14 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
       sb.from("build_workspace_members").select("user_id, email, workspace_id, role"),
       sb.from("build_workspaces").select("id, name, plan, subscription_status, created_at"),
       sb.from("user_roles").select("user_id, role"),
+      sb
+        .from("build_page_views")
+        .select("path, referrer_host, device, locale, visitor_hash, session_hash, created_at")
+        .gte("created_at", sinceIso)
+        .order("created_at", { ascending: false })
+        .limit(20000),
     ]);
+
 
     const err =
       sessionsRes.error ||
@@ -119,7 +127,8 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
       missionsRes.error ||
       membersRes.error ||
       workspacesRes.error ||
-      rolesRes.error;
+      rolesRes.error ||
+      viewsRes.error;
     if (err) fail(500, err.message);
 
     const sessions = sessionsRes.data ?? [];
@@ -129,11 +138,40 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
     const members = membersRes.data ?? [];
     const workspaces = workspacesRes.data ?? [];
     const roles = rolesRes.data ?? [];
+    const views = viewsRes.data ?? [];
 
     const missionName = new Map(missions.map((m) => [m.id, m.name]));
     const workspaceName = new Map(workspaces.map((w) => [w.id, w.name]));
 
+    // --- Real visit tracking (public surface page views) ---
+    const uniqueViewers = new Set(views.map((v) => v.visitor_hash).filter(Boolean)).size;
+    const viewSessions = new Set(views.map((v) => v.session_hash).filter(Boolean)).size;
+    const viewsByDay = countBy(views, (v) => dayKey(v.created_at));
+    const uniquePerDay: Record<string, number> = {};
+    const seenPerDay = new Map<string, Set<string>>();
+    for (const v of views) {
+      const key = dayKey(v.created_at);
+      if (!v.visitor_hash) continue;
+      const set = seenPerDay.get(key) ?? new Set<string>();
+      set.add(v.visitor_hash);
+      seenPerDay.set(key, set);
+    }
+    for (const [key, set] of seenPerDay) uniquePerDay[key] = set.size;
+
+    const topPages = Object.entries(countBy(views, (v) => v.path))
+      .map(([path, count]) => ({ path, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 12);
+    const topReferrers = Object.entries(countBy(views, (v) => v.referrer_host ?? "direct"))
+      .map(([source, count]) => ({ source, count }))
+      .sort((a, b) => b.count - a.count)
+      .slice(0, 8);
+    const devices = countBy(views, (v) => v.device ?? "unknown");
+    const locales = countBy(views, (v) => v.locale ?? "unknown");
+
     const series = buildSeries(days, {
+      pageViews: viewsByDay,
+      visitors: uniquePerDay,
       signups: countBy(
         accounts.filter((a) => a.created_at >= sinceIso),
         (a) => dayKey(a.created_at),
@@ -142,6 +180,7 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
       dossiers: countBy(dossiers, (d) => dayKey(d.created_at)),
       requests: countBy(requests, (r) => dayKey(r.created_at)),
     });
+
 
     const submitted = sessions.filter((s) => s.status === "submitted").length;
     const uniqueVisitors = new Set(sessions.map((s) => s.visitor_hash).filter(Boolean)).size;
@@ -172,14 +211,30 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
         workspaces: workspaces.length,
         workspaceMembers: members.length,
         admins: roles.filter((r) => r.role === "admin").length,
+        pageViews: views.length,
+        uniqueViewers,
+        viewSessions,
+        viewsPerVisitor: uniqueViewers ? Math.round((views.length / uniqueViewers) * 10) / 10 : 0,
         sessions: sessions.length,
         submittedSessions: submitted,
+
         uniqueVisitors,
         dossiers: dossiers.length,
         requests: requests.length,
         conversionRate: sessions.length ? Math.round((submitted / sessions.length) * 100) : 0,
       },
       series,
+      visits: {
+        topPages,
+        topReferrers,
+        devices: Object.entries(devices)
+          .map(([device, count]) => ({ device, count }))
+          .sort((a, b) => b.count - a.count),
+        locales: Object.entries(locales)
+          .map(([locale, count]) => ({ locale, count }))
+          .sort((a, b) => b.count - a.count),
+      },
+
       recentAccounts: accounts.slice(0, 15).map((a) => ({
         ...a,
         role: roleByUser.get(a.id) ?? (memberEmails.has(a.id) ? "client" : null),

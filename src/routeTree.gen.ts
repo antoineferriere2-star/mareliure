@@ -29,6 +29,7 @@ import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenti
 import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
+import { Route as ApiPublicTrackViewRouteImport } from './routes/api/public/track-view'
 import { Route as ApiPublicProjectSummaryRouteImport } from './routes/api/public/project-summary'
 import { Route as ApiPublicFaqAskRouteImport } from './routes/api/public/faq-ask'
 import { Route as ApiPublicContactRouteImport } from './routes/api/public/contact'
@@ -160,6 +161,11 @@ const AuthenticatedBuildIndexRoute = AuthenticatedBuildIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedBuildRouteRoute,
+} as any)
+const ApiPublicTrackViewRoute = ApiPublicTrackViewRouteImport.update({
+  id: '/api/public/track-view',
+  path: '/api/public/track-view',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicProjectSummaryRoute = ApiPublicProjectSummaryRouteImport.update({
   id: '/api/public/project-summary',
@@ -362,6 +368,7 @@ export interface FileRoutesByFullPath {
   '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
+  '/api/public/track-view': typeof ApiPublicTrackViewRoute
   '/build/': typeof AuthenticatedBuildIndexRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
@@ -409,6 +416,7 @@ export interface FileRoutesByTo {
   '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
+  '/api/public/track-view': typeof ApiPublicTrackViewRoute
   '/build': typeof AuthenticatedBuildIndexRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
@@ -461,6 +469,7 @@ export interface FileRoutesById {
   '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
+  '/api/public/track-view': typeof ApiPublicTrackViewRoute
   '/_authenticated/build/': typeof AuthenticatedBuildIndexRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
   '/_authenticated/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
@@ -513,6 +522,7 @@ export interface FileRouteTypes {
     | '/api/public/contact'
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
+    | '/api/public/track-view'
     | '/build/'
     | '/portal/'
     | '/build/dossiers/$id'
@@ -560,6 +570,7 @@ export interface FileRouteTypes {
     | '/api/public/contact'
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
+    | '/api/public/track-view'
     | '/build'
     | '/portal'
     | '/build/dossiers/$id'
@@ -611,6 +622,7 @@ export interface FileRouteTypes {
     | '/api/public/contact'
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
+    | '/api/public/track-view'
     | '/_authenticated/build/'
     | '/_authenticated/portal/'
     | '/_authenticated/build/dossiers/$id'
@@ -652,6 +664,7 @@ export interface RootRouteChildren {
   ApiPublicContactRoute: typeof ApiPublicContactRoute
   ApiPublicFaqAskRoute: typeof ApiPublicFaqAskRoute
   ApiPublicProjectSummaryRoute: typeof ApiPublicProjectSummaryRoute
+  ApiPublicTrackViewRoute: typeof ApiPublicTrackViewRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -799,6 +812,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/build/'
       preLoaderRoute: typeof AuthenticatedBuildIndexRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/api/public/track-view': {
+      id: '/api/public/track-view'
+      path: '/api/public/track-view'
+      fullPath: '/api/public/track-view'
+      preLoaderRoute: typeof ApiPublicTrackViewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/project-summary': {
       id: '/api/public/project-summary'
@@ -1124,6 +1144,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicContactRoute: ApiPublicContactRoute,
   ApiPublicFaqAskRoute: ApiPublicFaqAskRoute,
   ApiPublicProjectSummaryRoute: ApiPublicProjectSummaryRoute,
+  ApiPublicTrackViewRoute: ApiPublicTrackViewRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
@@ -1132,13 +1153,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
