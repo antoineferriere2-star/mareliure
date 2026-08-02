@@ -181,6 +181,18 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
       requests: countBy(requests, (r) => dayKey(r.created_at)),
     });
 
+    // Daily trend for the most visited pages (top 5), same day buckets.
+    const trendedPages = topPages.slice(0, 5);
+    const pageBuckets: Record<string, Record<string, number>> = {};
+    for (const p of trendedPages) {
+      pageBuckets[p.path] = countBy(
+        views.filter((v) => v.path === p.path),
+        (v) => dayKey(v.created_at),
+      );
+    }
+    const pageSeries = buildSeries(days, pageBuckets);
+
+
 
     const submitted = sessions.filter((s) => s.status === "submitted").length;
     const uniqueVisitors = new Set(sessions.map((s) => s.visitor_hash).filter(Boolean)).size;
@@ -224,7 +236,10 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
         conversionRate: sessions.length ? Math.round((submitted / sessions.length) * 100) : 0,
       },
       series,
+      pageSeries,
+      pageSeriesKeys: trendedPages.map((p) => p.path),
       visits: {
+
         topPages,
         topReferrers,
         devices: Object.entries(devices)
