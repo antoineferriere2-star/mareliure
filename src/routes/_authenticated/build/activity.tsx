@@ -257,7 +257,24 @@ function ActivityPage() {
         />
       </div>
 
-      <Chart series={data.series} />
+      <TrendChart
+        title="Traffic & activity trends"
+        subtitle={`Daily evolution over the last ${data.days} days`}
+        rows={data.series}
+        lines={SERIES.map((s) => ({ key: s.key, label: s.label, color: s.color }))}
+      />
+
+      <TrendChart
+        title="Most visited pages over time"
+        subtitle="Top 5 public pages, daily page views"
+        rows={data.pageSeries}
+        lines={data.pageSeriesKeys.map((p, i) => ({
+          key: p,
+          label: p,
+          color: PAGE_COLORS[i % PAGE_COLORS.length],
+        }))}
+      />
+
 
       <div className="grid gap-4 lg:grid-cols-2">
         <section className="rounded-lg border border-border bg-card p-4">
