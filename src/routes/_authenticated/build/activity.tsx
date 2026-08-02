@@ -121,6 +121,29 @@ function ActivityPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card
+          label="Page views"
+          value={t.pageViews}
+          sub={`${t.viewSessions} visits · ${t.viewsPerVisitor} pages / visitor`}
+        />
+        <Card
+          label="Unique visitors"
+          value={t.uniqueViewers}
+          sub="Anonymous daily fingerprint, bots excluded"
+        />
+        <Card
+          label="Intake sessions"
+          value={t.sessions}
+          sub={`${t.uniqueVisitors} unique intake visitors`}
+        />
+        <Card
+          label="Completion rate"
+          value={`${t.conversionRate}%`}
+          sub={`${t.submittedSessions} submitted · ${t.dossiers} Project Briefs`}
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card
           label="Accounts"
           value={t.accounts}
           sub={`+${t.newAccounts} over the period · ${t.unconfirmedAccounts} unconfirmed`}
@@ -130,17 +153,66 @@ function ActivityPage() {
           value={t.workspaces}
           sub={`${t.workspaceMembers} members · ${t.admins} admin`}
         />
-        <Card label="Traffic" value={t.sessions} sub={`${t.uniqueVisitors} unique visitors`} />
         <Card
-          label="Completion rate"
-          value={`${t.conversionRate}%`}
-          sub={`${t.submittedSessions} submitted · ${t.dossiers} Project Briefs`}
+          label="Public requests"
+          value={t.requests}
+          sub={
+            Object.entries(data.requestsByType)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(" · ") || "No requests"
+          }
+        />
+        <Card
+          label="Devices"
+          value={data.visits.devices[0]?.device ?? "—"}
+          sub={
+            data.visits.devices.map((d) => `${d.device}: ${d.count}`).join(" · ") || "No visits yet"
+          }
         />
       </div>
 
       <Chart series={data.series} />
 
       <div className="grid gap-4 lg:grid-cols-2">
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold text-foreground">Most visited pages</h2>
+          <ul className="mt-3 divide-y divide-border">
+            {data.visits.topPages.length === 0 && (
+              <li className="py-2 text-xs text-muted-foreground">
+                No page views recorded yet over the period.
+              </li>
+            )}
+            {data.visits.topPages.map((p) => (
+              <li key={p.path} className="flex justify-between gap-2 py-2 text-xs">
+                <span className="min-w-0 truncate text-foreground">{p.path}</span>
+                <span className="shrink-0 text-muted-foreground">{p.count} views</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold text-foreground">Traffic sources</h2>
+          <ul className="mt-3 divide-y divide-border">
+            {data.visits.topReferrers.length === 0 && (
+              <li className="py-2 text-xs text-muted-foreground">No traffic recorded yet.</li>
+            )}
+            {data.visits.topReferrers.map((r) => (
+              <li key={r.source} className="flex justify-between gap-2 py-2 text-xs">
+                <span className="min-w-0 truncate text-foreground">{r.source}</span>
+                <span className="shrink-0 text-muted-foreground">{r.count} views</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Languages:{" "}
+            {data.visits.locales.map((l) => `${l.locale} (${l.count})`).join(" · ") || "—"}
+          </p>
+        </section>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="text-sm font-semibold text-foreground">Latest signups</h2>
           <ul className="mt-3 divide-y divide-border">
