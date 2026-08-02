@@ -55,7 +55,9 @@ function BuildPublicShellContent({
   showFaqLauncher: boolean;
 }) {
   const { locale } = usePublicLocale();
+  usePageViewTracking(locale);
   const [menuOpen, setMenuOpen] = useState(false);
+
   const navItems = [
     ...VERTICAL_NAV_ITEMS.filter((item) => item.status === "published"),
     { labelKey: "navigation.howItWorks" as const, to: "/how-it-works" as const },
