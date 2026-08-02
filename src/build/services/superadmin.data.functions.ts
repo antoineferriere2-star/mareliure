@@ -88,6 +88,7 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
       membersRes,
       workspacesRes,
       rolesRes,
+      viewsRes,
     ] = await Promise.all([
       sb
         .from("build_runtime_sessions")
@@ -110,7 +111,14 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
       sb.from("build_workspace_members").select("user_id, email, workspace_id, role"),
       sb.from("build_workspaces").select("id, name, plan, subscription_status, created_at"),
       sb.from("user_roles").select("user_id, role"),
+      sb
+        .from("build_page_views")
+        .select("path, referrer_host, device, locale, visitor_hash, session_hash, created_at")
+        .gte("created_at", sinceIso)
+        .order("created_at", { ascending: false })
+        .limit(20000),
     ]);
+
 
     const err =
       sessionsRes.error ||
