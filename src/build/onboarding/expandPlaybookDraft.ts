@@ -43,8 +43,28 @@ export interface PlaybookDraft {
   steps: DraftStep[];
 }
 
-function toOption(label: string) {
-  return { value: slugify(label), label };
+/**
+ * Option values are derived from the label, so two labels that differ only by
+ * punctuation, case or a symbol collapse to the same slug ("Pressure-treated
+ * pine" and "Pressure treated pine" both give `pressure_treated_pine`). Field
+ * keys have always gone through uniqueSlug for exactly this reason; options
+ * did not, and a duplicate value makes a choice field ambiguous — two buttons
+ * share a React key and read as selected together, and a multi-choice can end
+ * up with fewer distinct values than its own minSelected requires, which is a
+ * step no visitor can ever complete.
+ *
+ * Callers pass a per-field accumulator so numbering is scoped to the field.
+ */
+function toOption(label: string, usedValues: string[]) {
+  const value = uniqueSlug(label, usedValues);
+  usedValues.push(value);
+  return { value, label };
+}
+
+/** Maps a field's labels to options with values unique within that field. */
+function toOptions(labels: string[]) {
+  const usedValues: string[] = [];
+  return labels.map((label) => toOption(label, usedValues));
 }
 
 const FALLBACK_CHOICE_OPTIONS = ["Not sure yet"];
@@ -72,15 +92,15 @@ function expandField(field: DraftField, usedKeys: string[]): PlaybookField {
   switch (field.type) {
     case "single_choice":
     case "multi_choice": {
-      const options = (
-        field.options && field.options.length > 0 ? field.options : FALLBACK_CHOICE_OPTIONS
-      ).map(toOption);
+      const options = toOptions(
+        field.options && field.options.length > 0 ? field.options : FALLBACK_CHOICE_OPTIONS,
+      );
       return { key, label: field.label, type: field.type, desirability, options, briefMapping };
     }
     case "timeline": {
-      const options = (
-        field.options && field.options.length > 0 ? field.options : FALLBACK_CHOICE_OPTIONS
-      ).map(toOption);
+      const options = toOptions(
+        field.options && field.options.length > 0 ? field.options : FALLBACK_CHOICE_OPTIONS,
+      );
       return { key, label: field.label, type: "timeline", desirability, options, briefMapping };
     }
     case "text":
@@ -88,9 +108,9 @@ function expandField(field: DraftField, usedKeys: string[]): PlaybookField {
     case "number":
       return { key, label: field.label, type: "number", desirability, briefMapping };
     case "budget": {
-      const ranges = (
-        field.options && field.options.length > 0 ? field.options : FALLBACK_BUDGET_RANGES
-      ).map(toOption);
+      const ranges = toOptions(
+        field.options && field.options.length > 0 ? field.options : FALLBACK_BUDGET_RANGES,
+      );
       return {
         key,
         label: field.label,

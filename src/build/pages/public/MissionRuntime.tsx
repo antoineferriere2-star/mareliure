@@ -293,10 +293,22 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
       const message = validateField(field, answers[field.key]);
       if (message) errors[field.key] = localizeValidationMessage(message, field, copy);
     }
-    if (Object.keys(errors).length > 0) {
+    const blockingKeys = Object.keys(errors);
+    if (blockingKeys.length > 0) {
       setFieldErrors((prev) => ({ ...prev, ...errors }));
+      // Per-field messages are the primary signal, but they only help if the
+      // field renders them. A Playbook can put the blocking field somewhere a
+      // visitor does not connect with the button — and a component that drops
+      // the `error` prop would make Continue look simply dead. Naming the
+      // fields at the top guarantees the visitor always learns *why* nothing
+      // happened, whatever the field is.
+      const labels = currentStep.visibleFields
+        .filter((field) => blockingKeys.includes(field.key))
+        .map((field) => copy(field.label));
+      setError(`${copy("Please check the following before continuing:")} ${labels.join(", ")}.`);
       return;
     }
+    setError(null);
     setSaving(true);
     await persist(answers);
     setSaving(false);

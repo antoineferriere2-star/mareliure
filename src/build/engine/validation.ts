@@ -260,6 +260,68 @@ export function getPlaybookPublishIssues(schema: PlaybookSchema): string[] {
     }
   }
 
+  // ---- Runtime reachability -------------------------------------------
+  // A Playbook can be structurally valid (Zod passes) and still contain a step
+  // no visitor can ever complete: the Continue button validates, fails, and
+  // the visitor is stuck with nothing to fix. These checks make that
+  // unpublishable. They are deliberately about *possibility*, not taste — each
+  // one describes an answer the runtime would reject no matter what the
+  // visitor does.
+  for (const field of allFields) {
+    const choices =
+      "options" in field
+        ? field.options
+        : field.type === "budget" && field.mode === "ranges"
+          ? (field.ranges ?? [])
+          : null;
+    if (!choices) continue;
+
+    if (choices.length === 0) {
+      issues.push(`Field "${field.key}" offers no options, so it can never be answered.`);
+      continue;
+    }
+
+    // Option values are what the runtime stores and validates against, and
+    // what React keys the buttons by. Duplicates make two options
+    // indistinguishable and shrink the number of answers actually reachable.
+    const values = choices.map((c) => c.value);
+    const duplicated = Array.from(new Set(values.filter((v, i) => values.indexOf(v) !== i)));
+    if (duplicated.length > 0) {
+      issues.push(
+        `Field "${field.key}" has duplicate option values (${duplicated.join(", ")}) — those options are indistinguishable to the runtime.`,
+      );
+    }
+
+    if (field.type === "multi_choice") {
+      const distinct = new Set(values).size;
+      if (field.minSelected !== undefined && field.minSelected > distinct) {
+        issues.push(
+          `Field "${field.key}" requires at least ${field.minSelected} selection(s) but only ${distinct} distinct option(s) exist — this step could never be completed.`,
+        );
+      }
+      if (
+        field.minSelected !== undefined &&
+        field.maxSelected !== undefined &&
+        field.minSelected > field.maxSelected
+      ) {
+        issues.push(
+          `Field "${field.key}" requires at least ${field.minSelected} but allows at most ${field.maxSelected} selection(s).`,
+        );
+      }
+    }
+  }
+
+  // A step whose fields are all conditional can disappear entirely, which is
+  // fine — computeVisibleSteps skips it. A step declared with no fields at all
+  // is an authoring mistake that renders as a dead end.
+  for (const section of schema.sections) {
+    for (const step of section.steps) {
+      if (step.fields.length === 0) {
+        issues.push(`Step "${step.id}" has no fields.`);
+      }
+    }
+  }
+
   const knownKeys = new Set(keys);
   function checkRefs(group: ConditionGroup | undefined, where: string) {
     for (const fieldKey of collectConditionFieldKeys(group)) {

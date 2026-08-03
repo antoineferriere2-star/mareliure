@@ -62,6 +62,16 @@ function newRequestId(): string {
 }
 
 /** Server functions throw a Response; surface its body, never a generic message. */
+/**
+ * Recognises the plan's active-Mission limit refusal raised by
+ * publish_workspace_onboarding, so the banner can offer the two actions that
+ * resolve it. Matching on the message keeps this presentational — no
+ * entitlement or quota logic is duplicated here.
+ */
+function isActiveMissionLimitError(message: string): boolean {
+  return /active (Mission|Project Intake) limit/i.test(message);
+}
+
 async function readError(err: unknown): Promise<string> {
   if (err instanceof Response) {
     try {
@@ -155,12 +165,25 @@ function SetupFlow({ workspaceId }: { workspaceId: string }) {
       <StepBar current={step} setup={setup} onNavigate={setStep} />
 
       {banner ? (
-        <p
+        <div
           className="rounded-md border border-destructive/40 bg-destructive/5 px-4 py-2.5 text-sm text-destructive"
           role="alert"
         >
-          {banner}
-        </p>
+          <p>{banner}</p>
+          {/* The plan's active-Mission limit is the one error a visitor can
+              actually resolve themselves — but only if told where to go. The
+              limit itself is unchanged and still enforced server-side. */}
+          {isActiveMissionLimitError(banner) && (
+            <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1">
+              <Link to="/portal/missions" className="font-medium underline underline-offset-4">
+                Manage Missions
+              </Link>
+              <Link to="/portal/billing" className="font-medium underline underline-offset-4">
+                View plans
+              </Link>
+            </p>
+          )}
+        </div>
       ) : null}
 
       {step === "website" ? (

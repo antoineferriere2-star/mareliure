@@ -786,6 +786,7 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   // Inspiration-photo brief line label (engine/brief.ts) — surfaced in the
   // visitor Project Summary's "still to confirm" section for inspiration-
   // photo intakes only.
+  "Please check the following before continuing:": "Revise lo siguiente antes de continuar:",
   "Questions to explore (from the inspiration photo)":
     "Preguntas a explorar (a partir de la foto de inspiración)",
 };

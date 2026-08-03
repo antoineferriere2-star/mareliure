@@ -141,3 +141,68 @@ describe("expandPlaybookDraft", () => {
     expect(schema.briefConfig.suggestedNextActions[0]?.when).toBeUndefined();
   });
 });
+
+describe("option values are unique within a field", () => {
+  it("de-duplicates labels that slugify to the same value", () => {
+    // The production defect: option values came from bare slugify, so labels
+    // differing only by punctuation collapsed together and the runtime could
+    // not tell the two options apart.
+    const expanded = expandPlaybookDraft(
+      {
+        steps: [
+          {
+            title: "Timber & Material Selection",
+            why: "Material drives cost.",
+            fields: [
+              {
+                label: "Preferred timber",
+                type: "single_choice",
+                required: true,
+                options: ["Pressure-treated pine", "Pressure treated pine", "Cedar"],
+              },
+            ],
+          },
+        ],
+      },
+      "deck builder",
+      "Deck",
+    );
+    const field = expanded.sections[0].steps[0].fields[0];
+    const values = "options" in field ? field.options.map((o) => o.value) : [];
+    expect(values).toHaveLength(3);
+    expect(new Set(values).size).toBe(3);
+    // Labels are untouched — only the machine-facing value is disambiguated.
+    expect("options" in field ? field.options.map((o) => o.label) : []).toEqual([
+      "Pressure-treated pine",
+      "Pressure treated pine",
+      "Cedar",
+    ]);
+  });
+
+  it("produces a Playbook the publish-time integrity checks accept", async () => {
+    const { getPlaybookPublishIssues } = await import("@/build/engine/validation");
+    const expanded = expandPlaybookDraft(
+      {
+        steps: [
+          {
+            title: "Timber & Material Selection",
+            why: "Material drives cost.",
+            fields: [
+              {
+                label: "Preferred timber",
+                type: "multi_choice",
+                required: true,
+                options: ["Cedar", "cedar", "CEDAR"],
+              },
+            ],
+          },
+        ],
+      },
+      "deck builder",
+      "Deck",
+    );
+    expect(
+      getPlaybookPublishIssues(expanded).filter((i) => i.includes("duplicate option")),
+    ).toEqual([]);
+  });
+});
