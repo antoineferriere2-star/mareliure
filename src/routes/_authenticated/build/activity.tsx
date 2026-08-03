@@ -42,48 +42,136 @@ function Card({ label, value, sub }: { label: string; value: string | number; su
 }
 
 const SERIES = [
-  { key: "signups", label: "Signups", className: "bg-primary" },
-  { key: "sessions", label: "Sessions", className: "bg-sky-500" },
-  { key: "dossiers", label: "Project Briefs", className: "bg-emerald-500" },
-  { key: "requests", label: "Requests", className: "bg-amber-500" },
+  { key: "pageViews", label: "Page views", color: "hsl(243 75% 59%)" },
+  { key: "visitors", label: "Unique visitors", color: "hsl(var(--primary))" },
+  { key: "sessions", label: "Intake sessions", color: "hsl(199 89% 48%)" },
+  { key: "dossiers", label: "Project Briefs", color: "hsl(160 84% 39%)" },
+  { key: "requests", label: "Requests", color: "hsl(38 92% 50%)" },
 ] as const;
 
-function Chart({ series }: { series: Record<string, string | number>[] }) {
-  const max = Math.max(1, ...series.flatMap((row) => SERIES.map((s) => Number(row[s.key] ?? 0))));
+const PAGE_COLORS = [
+  "hsl(243 75% 59%)",
+  "hsl(160 84% 39%)",
+  "hsl(38 92% 50%)",
+  "hsl(199 89% 48%)",
+  "hsl(340 75% 55%)",
+];
+
+const W = 720;
+const H = 200;
+const PAD = { top: 12, right: 12, bottom: 22, left: 34 };
+
+function path(values: number[], max: number) {
+  const innerW = W - PAD.left - PAD.right;
+  const innerH = H - PAD.top - PAD.bottom;
+  const step = values.length > 1 ? innerW / (values.length - 1) : 0;
+  return values
+    .map((v, i) => {
+      const x = PAD.left + i * step;
+      const y = PAD.top + innerH - (v / max) * innerH;
+      return `${i === 0 ? "M" : "L"}${x.toFixed(1)} ${y.toFixed(1)}`;
+    })
+    .join(" ");
+}
+
+function TrendChart({
+  title,
+  subtitle,
+  rows,
+  lines,
+}: {
+  title: string;
+  subtitle?: string;
+  rows: Record<string, string | number>[];
+  lines: { key: string; label: string; color: string }[];
+}) {
+  const days = rows.map((r) => String(r.day));
+  const max = Math.max(1, ...rows.flatMap((r) => lines.map((l) => Number(r[l.key] ?? 0))));
+  const innerH = H - PAD.top - PAD.bottom;
+  const ticks = [0, 0.5, 1];
+  const labelEvery = Math.ceil(days.length / 10);
+
   return (
-    <div className="rounded-lg border border-border bg-card p-4">
-      <div className="mb-3 flex flex-wrap gap-3">
-        {SERIES.map((s) => (
-          <span key={s.key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
-            <span className={`h-2 w-2 rounded-full ${s.className}`} />
-            {s.label}
-          </span>
-        ))}
-      </div>
-      <div className="flex h-40 items-end gap-[3px] overflow-x-auto">
-        {series.map((row) => (
-          <div key={String(row.day)} className="flex min-w-[10px] flex-1 flex-col justify-end">
-            <div className="flex h-40 items-end gap-[1px]" title={String(row.day)}>
-              {SERIES.map((s) => {
-                const v = Number(row[s.key] ?? 0);
-                return (
-                  <div
-                    key={s.key}
-                    className={`w-full rounded-t-sm ${s.className} ${v === 0 ? "opacity-20" : ""}`}
-                    style={{ height: `${Math.max(2, (v / max) * 100)}%` }}
-                  />
-                );
-              })}
-            </div>
-            <span className="mt-1 truncate text-center text-[9px] text-muted-foreground">
-              {String(row.day).slice(8)}
+    <section className="rounded-lg border border-border bg-card p-4">
+      <div className="flex flex-wrap items-start justify-between gap-2">
+        <div>
+          <h2 className="text-sm font-semibold text-foreground">{title}</h2>
+          {subtitle && <p className="mt-0.5 text-xs text-muted-foreground">{subtitle}</p>}
+        </div>
+        <div className="flex flex-wrap gap-3">
+          {lines.map((l) => (
+            <span key={l.key} className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <span className="h-0.5 w-4 rounded-full" style={{ background: l.color }} />
+              <span className="max-w-[160px] truncate">{l.label}</span>
             </span>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
-    </div>
+
+      {lines.length === 0 ? (
+        <p className="mt-4 text-xs text-muted-foreground">No data over the period.</p>
+      ) : (
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="mt-3 h-52 w-full"
+          role="img"
+          aria-label={`${title} trend over ${days.length} days`}
+        >
+          {ticks.map((t) => {
+            const y = PAD.top + innerH - t * innerH;
+            return (
+              <g key={t}>
+                <line
+                  x1={PAD.left}
+                  x2={W - PAD.right}
+                  y1={y}
+                  y2={y}
+                  stroke="hsl(var(--border))"
+                  strokeWidth="1"
+                />
+                <text x="0" y={y + 3} className="fill-muted-foreground" fontSize="9">
+                  {Math.round(max * t)}
+                </text>
+              </g>
+            );
+          })}
+          {lines.map((l) => {
+            const values = rows.map((r) => Number(r[l.key] ?? 0));
+            return (
+              <path
+                key={l.key}
+                d={path(values, max)}
+                fill="none"
+                stroke={l.color}
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            );
+          })}
+          {days.map((d, i) => {
+            if (i % labelEvery !== 0) return null;
+            const innerW = W - PAD.left - PAD.right;
+            const step = days.length > 1 ? innerW / (days.length - 1) : 0;
+            return (
+              <text
+                key={d}
+                x={PAD.left + i * step}
+                y={H - 6}
+                textAnchor="middle"
+                className="fill-muted-foreground"
+                fontSize="9"
+              >
+                {d.slice(5)}
+              </text>
+            );
+          })}
+        </svg>
+      )}
+    </section>
   );
 }
+
 
 function ActivityPage() {
   const fetchOverview = useServerFn(getSuperAdminOverview);
@@ -119,6 +207,29 @@ function ActivityPage() {
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Card
+          label="Page views"
+          value={t.pageViews}
+          sub={`${t.viewSessions} visits · ${t.viewsPerVisitor} pages / visitor`}
+        />
+        <Card
+          label="Unique visitors"
+          value={t.uniqueViewers}
+          sub="Anonymous daily fingerprint, bots excluded"
+        />
+        <Card
+          label="Intake sessions"
+          value={t.sessions}
+          sub={`${t.uniqueVisitors} unique intake visitors`}
+        />
+        <Card
+          label="Completion rate"
+          value={`${t.conversionRate}%`}
+          sub={`${t.submittedSessions} submitted · ${t.dossiers} Project Briefs`}
+        />
+      </div>
+
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Card
           label="Accounts"
           value={t.accounts}
           sub={`+${t.newAccounts} over the period · ${t.unconfirmedAccounts} unconfirmed`}
@@ -128,17 +239,83 @@ function ActivityPage() {
           value={t.workspaces}
           sub={`${t.workspaceMembers} members · ${t.admins} admin`}
         />
-        <Card label="Traffic" value={t.sessions} sub={`${t.uniqueVisitors} unique visitors`} />
         <Card
-          label="Completion rate"
-          value={`${t.conversionRate}%`}
-          sub={`${t.submittedSessions} submitted · ${t.dossiers} Project Briefs`}
+          label="Public requests"
+          value={t.requests}
+          sub={
+            Object.entries(data.requestsByType)
+              .map(([k, v]) => `${k}: ${v}`)
+              .join(" · ") || "No requests"
+          }
+        />
+        <Card
+          label="Devices"
+          value={data.visits.devices[0]?.device ?? "—"}
+          sub={
+            data.visits.devices.map((d) => `${d.device}: ${d.count}`).join(" · ") || "No visits yet"
+          }
         />
       </div>
 
-      <Chart series={data.series} />
+      <TrendChart
+        title="Traffic & activity trends"
+        subtitle={`Daily evolution over the last ${data.days} days`}
+        rows={data.series}
+        lines={SERIES.map((s) => ({ key: s.key, label: s.label, color: s.color }))}
+      />
+
+      <TrendChart
+        title="Most visited pages over time"
+        subtitle="Top 5 public pages, daily page views"
+        rows={data.pageSeries}
+        lines={data.pageSeriesKeys.map((p, i) => ({
+          key: p,
+          label: p,
+          color: PAGE_COLORS[i % PAGE_COLORS.length],
+        }))}
+      />
+
 
       <div className="grid gap-4 lg:grid-cols-2">
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold text-foreground">Most visited pages</h2>
+          <ul className="mt-3 divide-y divide-border">
+            {data.visits.topPages.length === 0 && (
+              <li className="py-2 text-xs text-muted-foreground">
+                No page views recorded yet over the period.
+              </li>
+            )}
+            {data.visits.topPages.map((p) => (
+              <li key={p.path} className="flex justify-between gap-2 py-2 text-xs">
+                <span className="min-w-0 truncate text-foreground">{p.path}</span>
+                <span className="shrink-0 text-muted-foreground">{p.count} views</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+
+        <section className="rounded-lg border border-border bg-card p-4">
+          <h2 className="text-sm font-semibold text-foreground">Traffic sources</h2>
+          <ul className="mt-3 divide-y divide-border">
+            {data.visits.topReferrers.length === 0 && (
+              <li className="py-2 text-xs text-muted-foreground">No traffic recorded yet.</li>
+            )}
+            {data.visits.topReferrers.map((r) => (
+              <li key={r.source} className="flex justify-between gap-2 py-2 text-xs">
+                <span className="min-w-0 truncate text-foreground">{r.source}</span>
+                <span className="shrink-0 text-muted-foreground">{r.count} views</span>
+              </li>
+            ))}
+          </ul>
+          <p className="mt-3 text-xs text-muted-foreground">
+            Languages:{" "}
+            {data.visits.locales.map((l) => `${l.locale} (${l.count})`).join(" · ") || "—"}
+          </p>
+        </section>
+      </div>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="text-sm font-semibold text-foreground">Latest signups</h2>
           <ul className="mt-3 divide-y divide-border">

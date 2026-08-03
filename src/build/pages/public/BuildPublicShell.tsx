@@ -7,6 +7,8 @@ import { t } from "@/build/i18n";
 import { PublicLanguageSelect, PublicLocaleProvider } from "@/build/pages/public/publicLocale";
 import { usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 import { FaqLauncher } from "@/build/pages/public/FaqLauncher";
+import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
+
 
 /**
  * One entry per industry vertical Métré Build can serve. Only "published"
@@ -55,7 +57,9 @@ function BuildPublicShellContent({
   showFaqLauncher: boolean;
 }) {
   const { locale } = usePublicLocale();
+  usePageViewTracking(locale);
   const [menuOpen, setMenuOpen] = useState(false);
+
   const navItems = [
     ...VERTICAL_NAV_ITEMS.filter((item) => item.status === "published"),
     { labelKey: "navigation.howItWorks" as const, to: "/how-it-works" as const },
