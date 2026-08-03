@@ -57,16 +57,62 @@ export interface PortalOnboardingState {
   publicUrl: string | null;
   branding: Branding | null;
   isOwner: boolean;
+  /** Intakes this workspace has already published. Lets the wizard offer
+   * "set up another one" instead of looking like a dead end after the first. */
+  publishedIntakeCount: number;
 }
 
-async function loadRow(sb: Supa, workspaceId: string) {
+/**
+ * The setup currently being configured. A workspace may hold several rows —
+ * one unpublished plus every published one — so "the workspace's setup" is no
+ * longer meaningful and every *write* must go through this, never through a
+ * bare `.eq("workspace_id", …)` that would also hit published rows.
+ *
+ * At most one such row can exist: build_workspace_onboarding_one_in_flight_uidx
+ * enforces it, which is what keeps `.maybeSingle()` correct here.
+ */
+async function loadInFlightRow(sb: Supa, workspaceId: string) {
   const { data, error } = await sb
     .from("build_workspace_onboarding")
     .select("*")
     .eq("workspace_id", workspaceId)
+    .neq("status", "published")
     .maybeSingle();
   if (error) fail(500, error.message);
   return data;
+}
+
+/**
+ * What the wizard should render: the setup in flight, or — once it has been
+ * published and no new one is started — the most recent published setup, so
+ * the confirmation screen and its public link survive a page reload.
+ * Read-only; never use it to decide what to write.
+ */
+async function loadDisplayRow(sb: Supa, workspaceId: string) {
+  const inFlight = await loadInFlightRow(sb, workspaceId);
+  if (inFlight) return inFlight;
+
+  const { data, error } = await sb
+    .from("build_workspace_onboarding")
+    .select("*")
+    .eq("workspace_id", workspaceId)
+    .eq("status", "published")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) fail(500, error.message);
+  return data;
+}
+
+/** How many Intakes this workspace has already taken all the way to publish. */
+async function publishedSetupCount(sb: Supa, workspaceId: string): Promise<number> {
+  const { count, error } = await sb
+    .from("build_workspace_onboarding")
+    .select("id", { count: "exact", head: true })
+    .eq("workspace_id", workspaceId)
+    .eq("status", "published");
+  if (error) fail(500, error.message);
+  return count ?? 0;
 }
 
 async function workspaceName(sb: Supa, workspaceId: string): Promise<string> {
@@ -90,13 +136,14 @@ async function publicUrlForMission(sb: Supa, missionId: string | null): Promise<
 
 async function toState(
   sb: Supa,
-  row: Awaited<ReturnType<typeof loadRow>>,
+  row: Awaited<ReturnType<typeof loadInFlightRow>>,
   workspaceId: string,
   name: string,
   isOwner: boolean,
 ): Promise<PortalOnboardingState> {
   const status = (row?.status as OnboardingStatus | undefined) ?? "started";
   return {
+    publishedIntakeCount: await publishedSetupCount(sb, workspaceId),
     workspaceId,
     workspaceName: name,
     status,
@@ -128,7 +175,7 @@ export const getMySetup = createServerFn({ method: "GET" })
       data.workspaceId,
     );
     const sb = await admin();
-    const row = await loadRow(sb, data.workspaceId);
+    const row = await loadDisplayRow(sb, data.workspaceId);
     return toState(
       sb,
       row,
@@ -237,7 +284,7 @@ export const analyzeMySite = createServerFn({ method: "POST" })
       if (decision.reason === "duplicate") {
         // Double click / retry of the same submit: return what we already have
         // instead of paying for a second analysis.
-        const row = await loadRow(sb, data.workspaceId);
+        const row = await loadInFlightRow(sb, data.workspaceId);
         if (row?.analysis) {
           return toState(
             sb,
@@ -315,25 +362,40 @@ export const analyzeMySite = createServerFn({ method: "POST" })
       analyzedAt: new Date().toISOString(),
     };
 
-    const { error: upsertError } = await sb.from("build_workspace_onboarding").upsert(
-      {
-        workspace_id: data.workspaceId,
-        created_by: context.userId,
-        status: "analyzed",
-        site_url: checked.url,
-        final_url: fetched.finalUrl,
-        analysis: analysis as unknown as Json,
-        analyzed_at: analysis.analyzedAt,
-        last_analyze_request_id: data.requestId,
-        // A re-analysis invalidates a previous confirmation.
-        confirmed_business_type: null,
-        confirmed_product: null,
-      },
-      { onConflict: "workspace_id" },
-    );
-    if (upsertError) fail(500, upsertError.message);
+    // This used to be `.upsert(..., { onConflict: "workspace_id" })`, which
+    // relied on the UNIQUE constraint that 20260803100000 removed to allow
+    // several Intakes per workspace. Left as an upsert it would insert a new
+    // row on every analysis. Resolved explicitly instead: update the setup in
+    // flight, or start a new one when the previous was published.
+    const fields = {
+      status: "analyzed",
+      site_url: checked.url,
+      final_url: fetched.finalUrl,
+      analysis: analysis as unknown as Json,
+      analyzed_at: analysis.analyzedAt,
+      last_analyze_request_id: data.requestId,
+      // A re-analysis invalidates a previous confirmation.
+      confirmed_business_type: null,
+      confirmed_product: null,
+    };
+    const existing = await loadInFlightRow(sb, data.workspaceId);
 
-    const row = await loadRow(sb, data.workspaceId);
+    // The insert can still lose a race with a concurrent first analysis; the
+    // partial unique index is what makes that a clean 23505 rather than two
+    // competing setups.
+    const { error: upsertError } = existing
+      ? await sb.from("build_workspace_onboarding").update(fields).eq("id", existing.id)
+      : await sb
+          .from("build_workspace_onboarding")
+          .insert({ ...fields, workspace_id: data.workspaceId, created_by: context.userId });
+    if (upsertError) {
+      if (upsertError.code === "23505") {
+        fail(409, "Another setup was just started for this workspace. Reload and continue there.");
+      }
+      fail(500, upsertError.message);
+    }
+
+    const row = await loadInFlightRow(sb, data.workspaceId);
     return toState(sb, row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
   });
 
@@ -353,8 +415,9 @@ export const confirmMyDeckProduct = createServerFn({ method: "POST" })
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
 
-    const row = await loadRow(sb, data.workspaceId);
-    const analysis = row?.analysis as SiteAnalysis | null;
+    const row = await loadInFlightRow(sb, data.workspaceId);
+    if (!row) fail(400, "Analyze your website first.");
+    const analysis = row.analysis as SiteAnalysis | null;
     if (!analysis) fail(400, "Analyze your website first.");
 
     const eligibility = resolveDeckEligibility(analysis);
@@ -371,10 +434,12 @@ export const confirmMyDeckProduct = createServerFn({ method: "POST" })
         confirmed_business_type: checkedBusinessType.value,
         confirmed_product: checkedProduct.value,
       })
-      .eq("workspace_id", data.workspaceId);
+      // By row id, not workspace_id: a workspace can now hold published rows
+      // too, and those must never be rewritten by an in-flight step.
+      .eq("id", row.id);
     if (error) fail(500, error.message);
 
-    const updated = await loadRow(sb, data.workspaceId);
+    const updated = await loadInFlightRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
   });
 
@@ -387,7 +452,7 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
 
-    const row = await loadRow(sb, data.workspaceId);
+    const row = await loadInFlightRow(sb, data.workspaceId);
     if (!row?.confirmed_product || !row.confirmed_business_type) {
       fail(400, "Confirm your deck product first.");
     }
@@ -505,10 +570,10 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
         branding: branding as unknown as Json,
         last_generate_request_id: data.requestId,
       })
-      .eq("workspace_id", data.workspaceId);
+      .eq("id", row.id);
     if (updateError) fail(500, updateError.message);
 
-    const updated = await loadRow(sb, data.workspaceId);
+    const updated = await loadInFlightRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
   });
 
@@ -532,7 +597,7 @@ export const updateMyBranding = createServerFn({ method: "POST" })
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
 
-    const row = await loadRow(sb, data.workspaceId);
+    const row = await loadInFlightRow(sb, data.workspaceId);
     if (!row) fail(400, "Start your setup first.");
 
     const name = await workspaceName(sb, data.workspaceId);
@@ -548,10 +613,10 @@ export const updateMyBranding = createServerFn({ method: "POST" })
     const { error } = await sb
       .from("build_workspace_onboarding")
       .update({ branding: checked.branding as unknown as Json })
-      .eq("workspace_id", data.workspaceId);
+      .eq("id", row.id);
     if (error) fail(500, error.message);
 
-    const updated = await loadRow(sb, data.workspaceId);
+    const updated = await loadInFlightRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, name, true);
   });
 
@@ -563,7 +628,7 @@ export const getMyDraftPreview = createServerFn({ method: "GET" })
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
 
-    const row = await loadRow(sb, data.workspaceId);
+    const row = await loadDisplayRow(sb, data.workspaceId);
     if (!row?.playbook_id) fail(404, "No draft yet.");
 
     const { data: playbook, error } = await sb
@@ -614,13 +679,25 @@ export const publishMyDraft = createServerFn({ method: "POST" })
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
 
-    const row = await loadRow(sb, data.workspaceId);
-    if (!row) fail(400, "Start your setup first.");
+    const row = await loadInFlightRow(sb, data.workspaceId);
 
-    // Already published: return the existing Mission rather than publishing
-    // a second one (double click / retried request).
-    if (row.status === "published" && row.mission_id) {
-      return toState(sb, row, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
+    // No setup in flight means this publish already succeeded and the caller
+    // is retrying (double click, lost response). Return the Mission it
+    // produced rather than erroring — the same idempotency the old
+    // "row.status === published" branch gave, which loadInFlightRow can no
+    // longer see now that it filters published rows out.
+    if (!row) {
+      const published = await loadDisplayRow(sb, data.workspaceId);
+      if (published?.mission_id) {
+        return toState(
+          sb,
+          published,
+          data.workspaceId,
+          await workspaceName(sb, data.workspaceId),
+          true,
+        );
+      }
+      fail(400, "Start your setup first.");
     }
 
     // Billing gate. Deliberately after the already-published short-circuit: a
@@ -669,6 +746,6 @@ export const publishMyDraft = createServerFn({ method: "POST" })
     });
     if (publishError) fail(publishRpcStatus(publishError.message), publishError.message);
 
-    const updated = await loadRow(sb, data.workspaceId);
+    const updated = await loadDisplayRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);
   });

@@ -31,10 +31,10 @@ describe("entitlement enforcement wiring", () => {
 
   it("lets an already-published workspace re-read its Intake without hitting the gate", () => {
     // Idempotent re-call must not 402 a frozen workspace out of its own data.
-    const shortCircuit = indexOf(
-      onboardingServer,
-      'if (row.status === "published" && row.mission_id)',
-    );
+    // Since multiple Intakes per workspace landed, "already published" is no
+    // longer a status on the in-flight row — it is the absence of one, with
+    // the most recent published setup returned instead.
+    const shortCircuit = indexOf(onboardingServer, "const published = await loadDisplayRow(");
     const gate = indexOf(onboardingServer, "await assertCanPublish(data.workspaceId)");
     expect(shortCircuit).toBeLessThan(gate);
   });
