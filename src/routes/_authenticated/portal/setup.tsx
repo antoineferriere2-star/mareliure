@@ -220,6 +220,10 @@ function SetupFlow({ workspaceId }: { workspaceId: string }) {
           onError={setBanner}
           onBack={() => setStep("preview")}
           onDone={(next) => applyState(next, "publish")}
+          onStartAnother={() => {
+            setBanner(null);
+            setStep("website");
+          }}
         />
       ) : null}
     </div>
@@ -962,6 +966,7 @@ function PublishStep({
   onError,
   onBack,
   onDone,
+  onStartAnother,
 }: {
   workspaceId: string;
   setup: PortalOnboardingState;
@@ -969,6 +974,8 @@ function PublishStep({
   onError: (message: string | null) => void;
   onBack: () => void;
   onDone: (next: PortalOnboardingState) => void;
+  /** Sends the wizard back to step one so the next Intake can be configured. */
+  onStartAnother: () => void;
 }) {
   const publish = useServerFn(publishMyDraft);
   const [publishing, setPublishing] = useState(false);
@@ -1016,7 +1023,22 @@ function PublishStep({
           >
             Manage my Missions
           </Link>
+          {!readOnly && (
+            <button
+              type="button"
+              onClick={onStartAnother}
+              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+            >
+              Set up another Project Intake
+            </button>
+          )}
         </div>
+        {setup.publishedIntakeCount > 1 && (
+          <p className="mt-3 text-xs text-muted-foreground">
+            {setup.publishedIntakeCount} Project Intakes published for this workspace. How many can
+            be live at once depends on your plan.
+          </p>
+        )}
       </Card>
     );
   }
