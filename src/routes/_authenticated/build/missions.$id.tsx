@@ -202,7 +202,7 @@ function MissionDetailPage() {
             <IntegrationSnippetsPanel
               publicUrl={publicPath}
               ctaLabel="Start your project"
-              iframeTitle={`${mission.name} project intake`}
+              missionName={mission.name}
             />
             <a
               href={publicPath}

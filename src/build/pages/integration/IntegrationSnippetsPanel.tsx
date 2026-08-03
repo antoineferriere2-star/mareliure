@@ -1,5 +1,6 @@
 import { useMemo, useState } from "react";
 import { buildIntegrationSnippets } from "@/build/intakes/integrationSnippets";
+import { intakeAccessibleTitle } from "@/build/intakes/intakeTitle";
 
 type SnippetKey = "linkHtml" | "buttonHtml" | "iframeHtml";
 
@@ -12,11 +13,13 @@ const SNIPPET_LABELS: Record<SnippetKey, string> = {
 export function IntegrationSnippetsPanel({
   publicUrl,
   ctaLabel = "Start your project",
-  iframeTitle = "Project intake",
+  missionName,
 }: {
   publicUrl: string;
   ctaLabel?: string;
-  iframeTitle?: string;
+  /** Raw commercial name. The embed's accessible title is derived from it
+   * here, so every caller gets the same wording (see intakeAccessibleTitle). */
+  missionName?: string;
 }) {
   const [copied, setCopied] = useState<"url" | SnippetKey | null>(null);
   const snippets = useMemo(
@@ -24,10 +27,10 @@ export function IntegrationSnippetsPanel({
       buildIntegrationSnippets({
         publicUrl,
         ctaLabel,
-        iframeTitle,
+        iframeTitle: intakeAccessibleTitle(missionName),
         origin: typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com",
       }),
-    [ctaLabel, iframeTitle, publicUrl],
+    [ctaLabel, missionName, publicUrl],
   );
 
   async function copy(text: string, key: "url" | SnippetKey) {

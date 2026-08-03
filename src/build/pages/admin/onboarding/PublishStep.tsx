@@ -28,7 +28,7 @@ export function PublishStep({
         <IntegrationSnippetsPanel
           publicUrl={publicUrl}
           ctaLabel="Start your project"
-          iframeTitle={`${missionName} project intake`}
+          missionName={missionName}
         />
         <a
           href={publicUrl}

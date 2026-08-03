@@ -224,7 +224,7 @@ function PortalMissionsPage() {
                     <IntegrationSnippetsPanel
                       publicUrl={`/m/${mission.public_token}`}
                       ctaLabel="Start your project"
-                      iframeTitle={`${mission.name} project intake`}
+                      missionName={mission.name}
                     />
                   </div>
                 ))}

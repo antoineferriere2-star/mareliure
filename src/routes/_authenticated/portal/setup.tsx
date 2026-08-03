@@ -1006,7 +1006,7 @@ function PublishStep({
           <IntegrationSnippetsPanel
             publicUrl={setup.publicUrl}
             ctaLabel={branding.ctaLabel || "Start your project"}
-            iframeTitle={`${branding.displayName} project intake`}
+            missionName={branding.displayName}
           />
         </div>
         <div className="mt-5 flex flex-col gap-2 sm:flex-row">
