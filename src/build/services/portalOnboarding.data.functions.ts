@@ -453,7 +453,14 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
     );
 
     const nextVersion = (row.draft_version ?? 0) + 1;
-    const name = `${row.confirmed_product} intake — draft v${nextVersion}`;
+    // Identity only. This string is copied verbatim into
+    // build_missions.playbook_name at publish time and shown to the customer,
+    // so baking the lifecycle ("draft") and the redraft counter into it made a
+    // live Mission read "Deck intake — draft v1" forever. The real state comes
+    // from the Mission's own status, and the real version from
+    // build_playbook_versions.version_number — `nextVersion` below is the
+    // redraft counter, which is a different number and internal only.
+    const name = `${row.confirmed_product} intake`;
     let playbookId = row.playbook_id;
 
     if (playbookId) {

@@ -72,12 +72,29 @@ export const listWorkspaceMissions = createServerFn({ method: "GET" })
     const { data: missions, error } = await sb
       .from("build_missions")
       .select(
-        "id, name, status, playbook_name, public_token, public_token_revoked_at, published_at, created_at",
+        "id, name, status, playbook_name, playbook_version_id, public_token, public_token_revoked_at, published_at, created_at",
       )
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) fail(500, error.message);
+
+    // The published version number, so the portal can show a real "v3"
+    // instead of the redraft counter that used to be baked into
+    // playbook_name. Fetched separately rather than as an embedded select to
+    // stay consistent with the dossier count below.
+    const versionIds = [
+      ...new Set((missions ?? []).map((m) => m.playbook_version_id).filter((id) => id !== null)),
+    ];
+    const versionNumbers = new Map<string, number>();
+    if (versionIds.length > 0) {
+      const { data: versions, error: vErr } = await sb
+        .from("build_playbook_versions")
+        .select("id, version_number")
+        .in("id", versionIds);
+      if (vErr) fail(500, vErr.message);
+      for (const v of versions ?? []) versionNumbers.set(v.id, v.version_number);
+    }
 
     const { data: dossiers, error: dErr } = await sb
       .from("build_dossiers")
@@ -90,7 +107,13 @@ export const listWorkspaceMissions = createServerFn({ method: "GET" })
     for (const d of dossiers ?? []) {
       if (d.mission_id) counts.set(d.mission_id, (counts.get(d.mission_id) ?? 0) + 1);
     }
-    return (missions ?? []).map((m) => ({ ...m, dossierCount: counts.get(m.id) ?? 0 }));
+    return (missions ?? []).map((m) => ({
+      ...m,
+      dossierCount: counts.get(m.id) ?? 0,
+      playbookVersionNumber: m.playbook_version_id
+        ? (versionNumbers.get(m.playbook_version_id) ?? null)
+        : null,
+    }));
   });
 
 /**

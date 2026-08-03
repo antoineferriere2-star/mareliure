@@ -17,6 +17,11 @@ import {
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 import { EntitlementBanner } from "@/build/pages/portal/EntitlementBanner";
 import { IntegrationSnippetsPanel } from "@/build/pages/integration/IntegrationSnippetsPanel";
+import {
+  missionStatusPresentation,
+  playbookSummaryLabel,
+  type MissionLifecycle,
+} from "@/build/intakes/missionPresentation";
 
 export const Route = createFileRoute("/_authenticated/portal/missions")({
   ssr: false,
@@ -31,12 +36,29 @@ export const Route = createFileRoute("/_authenticated/portal/missions")({
   component: PortalMissionsPage,
 });
 
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  active: "Active",
-  paused: "Paused",
-  archived: "Archived",
+const LIFECYCLE_BADGE_CLASS: Record<MissionLifecycle, string> = {
+  active: "border-emerald-600/30 bg-emerald-600/10 text-emerald-700",
+  paused: "border-amber-500/40 bg-amber-500/10 text-amber-700",
+  draft: "border-border bg-muted text-muted-foreground",
+  archived: "border-border bg-muted text-muted-foreground",
 };
+
+function MissionStatusBadge({
+  status,
+  publishedAt,
+}: {
+  status: string;
+  publishedAt: string | null;
+}) {
+  const { label, lifecycle } = missionStatusPresentation({ status, publishedAt });
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium ${LIFECYCLE_BADGE_CLASS[lifecycle]}`}
+    >
+      {label}
+    </span>
+  );
+}
 
 function PortalMissionsPage() {
   const queryClient = useQueryClient();
@@ -165,10 +187,10 @@ function PortalMissionsPage() {
                   <tr key={m.id} className="border-b border-border/60 last:border-b-0">
                     <td className="px-4 py-3 font-medium text-foreground">{m.name}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {m.playbook_name ?? "—"}
+                      {playbookSummaryLabel(m.playbook_name, m.playbookVersionNumber)}
                     </td>
-                    <td className="px-4 py-3 text-xs text-muted-foreground">
-                      {STATUS_LABELS[m.status] ?? m.status}
+                    <td className="px-4 py-3 text-xs">
+                      <MissionStatusBadge status={m.status} publishedAt={m.published_at} />
                     </td>
                     <td className="px-4 py-3 text-right tabular-nums">{m.dossierCount}</td>
                     <td className="px-4 py-3 text-xs">
