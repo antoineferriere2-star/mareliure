@@ -685,7 +685,7 @@ export type Database = {
           {
             foreignKeyName: "build_workspace_onboarding_workspace_id_fkey"
             columns: ["workspace_id"]
-            isOneToOne: true
+            isOneToOne: false
             referencedRelation: "build_workspaces"
             referencedColumns: ["id"]
           },
