@@ -4,6 +4,7 @@ import {
   checkAiRun,
   checkBranding,
   checkBusinessType,
+  checkProduct,
   checkSiteUrl,
   defaultBranding,
   isPublished,
@@ -57,6 +58,35 @@ describe("confirmation text checks", () => {
     ["x".repeat(81), "Business type is too long (80 characters max)."],
   ])("rejects invalid business type %s", (input, error) => {
     expect(checkBusinessType(input)).toEqual({ ok: false, error });
+  });
+});
+
+describe("checkProduct", () => {
+  it("accepts any trade, not only the ones we ship a hand-written Playbook for", () => {
+    // The portal used to refuse anything that was not deck work. The draft
+    // generator builds a Playbook for any product, so that refusal turned
+    // clients away from a system that could already serve them.
+    for (const product of ["Deck", "Pergola", "Swimming pool", "Kitchen remodel"]) {
+      expect(checkProduct(product)).toEqual({ ok: true, value: product });
+    }
+  });
+
+  it("trims surrounding whitespace", () => {
+    expect(checkProduct("  Composite deck resurfacing  ")).toEqual({
+      ok: true,
+      value: "Composite deck resurfacing",
+    });
+  });
+
+  it.each([
+    [" ", "Product cannot be empty."],
+    ["x".repeat(81), "Product is too long (80 characters max)."],
+  ])("rejects %s", (input, error) => {
+    expect(checkProduct(input)).toEqual({ ok: false, error });
+  });
+
+  it("accepts exactly 80 characters", () => {
+    expect(checkProduct("x".repeat(80)).ok).toBe(true);
   });
 });
 

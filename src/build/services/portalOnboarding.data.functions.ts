@@ -30,6 +30,7 @@ import {
   checkAiRun,
   checkBranding,
   checkBusinessType,
+  checkProduct,
   checkSiteUrl,
   defaultBranding,
   isPublished,
@@ -37,7 +38,6 @@ import {
   type OnboardingStatus,
   type SiteAnalysis,
 } from "@/build/onboarding/portalOnboarding";
-import { checkVerticalProduct, resolveVerticalEligibility } from "@/build/verticals/registry";
 
 const workspaceInput = z.object({ workspaceId: z.string().uuid() });
 
@@ -419,11 +419,9 @@ export const confirmMyDeckProduct = createServerFn({ method: "POST" })
     const analysis = row.analysis as SiteAnalysis | null;
     if (!analysis) fail(400, "Analyze your website first.");
 
-    const eligibility = resolveVerticalEligibility(analysis);
-    if (!eligibility.eligible) fail(400, eligibility.reason);
     const checkedBusinessType = checkBusinessType(data.businessType ?? analysis.businessType);
     if (!checkedBusinessType.ok) fail(400, checkedBusinessType.error);
-    const checkedProduct = checkVerticalProduct(data.product);
+    const checkedProduct = checkProduct(data.product);
     if (!checkedProduct.ok) fail(400, checkedProduct.error);
 
     const { error } = await sb
@@ -453,7 +451,7 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
 
     const row = await loadInFlightRow(sb, data.workspaceId);
     if (!row?.confirmed_product || !row.confirmed_business_type) {
-      fail(400, "Confirm your deck product first.");
+      fail(400, "Confirm your product first.");
     }
 
     const decision = await guardAiRun(
@@ -540,7 +538,7 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
         .insert({
           name,
           description: `Self-service draft generated for ${row.confirmed_business_type} / ${row.confirmed_product}.`,
-          project_type: `deck ${row.confirmed_product}`,
+          project_type: row.confirmed_product,
           workspace_id: data.workspaceId,
           draft_schema: draftSchema as unknown as Json,
           created_by: context.userId,

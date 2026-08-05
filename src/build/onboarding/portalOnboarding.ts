@@ -97,6 +97,22 @@ export function checkBusinessType(value: string): ConfirmationTextCheck {
   return { ok: true, value: trimmed };
 }
 
+export type ProductCheck = { ok: true; value: string } | { ok: false; error: string };
+
+/**
+ * A confirmed product names what the business sells. Deliberately no vertical
+ * filtering: the draft generator builds a Playbook for any product, so
+ * refusing one here would block a client the engine can actually serve.
+ * src/build/verticals/registry.ts still records what we can deliver, but that
+ * is now a statement for the admin console, not a gate on self-service.
+ */
+export function checkProduct(product: string): ProductCheck {
+  const trimmed = product.trim();
+  if (trimmed.length === 0) return { ok: false, error: "Product cannot be empty." };
+  if (trimmed.length > 80) return { ok: false, error: "Product is too long (80 characters max)." };
+  return { ok: true, value: trimmed };
+}
+
 // ------------------------------------------------------------- Step machine
 
 export const SETUP_STEPS = [

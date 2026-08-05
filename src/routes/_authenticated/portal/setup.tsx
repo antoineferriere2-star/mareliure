@@ -24,17 +24,13 @@ import {
 } from "@/build/services/portalOnboarding.data.functions";
 import {
   checkBusinessType,
+  checkProduct,
   checkSiteUrl,
   defaultBranding,
   resumeStep,
   type Branding,
   type SetupStep,
 } from "@/build/onboarding/portalOnboarding";
-import {
-  checkVerticalProduct,
-  resolveVerticalEligibility,
-  selfServiceSummary,
-} from "@/build/verticals/registry";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 import { IntegrationSnippetsPanel } from "@/build/pages/integration/IntegrationSnippetsPanel";
 
@@ -155,8 +151,8 @@ function SetupFlow({ workspaceId }: { workspaceId: string }) {
           Set up your project intake
         </h1>
         <p className="max-w-2xl text-sm text-muted-foreground">
-          We analyze your website, propose a deck project intake, and you confirm it. Nothing goes
-          live until you decide to publish it.
+          We analyze your website, propose a project intake for what you sell, and you confirm it.
+          Nothing goes live until you decide to publish it.
         </p>
       </header>
 
@@ -432,8 +428,6 @@ function ReviewStep({
       </Card>
     );
   }
-  const eligibility = resolveVerticalEligibility(analysis);
-
   return (
     <div className="space-y-4">
       <Card>
@@ -504,44 +498,24 @@ function ReviewStep({
         </ul>
       </Card>
 
-      {eligibility.eligible ? (
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <button
-            type="button"
-            onClick={onContinue}
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Looks right — continue
-          </button>
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
-          >
-            Analyze a different address
-          </button>
-        </div>
-      ) : (
-        <Card>
-          <h3 className="text-sm font-semibold text-foreground">We can&apos;t set this up yet</h3>
-          <p className="mt-1 text-sm text-muted-foreground">{eligibility.reason}</p>
-          <div className="mt-4 flex flex-col gap-2 sm:flex-row">
-            <button
-              type="button"
-              onClick={onBack}
-              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
-            >
-              Try another page of my site
-            </button>
-            <Link
-              to="/portal"
-              className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
-            >
-              Back to my workspace
-            </Link>
-          </div>
-        </Card>
-      )}
+      {/* The analysis informs the next step, it never blocks it: setup
+          continues whatever trade was detected. */}
+      <div className="flex flex-col gap-2 sm:flex-row">
+        <button
+          type="button"
+          onClick={onContinue}
+          className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+        >
+          Looks right — continue
+        </button>
+        <button
+          type="button"
+          onClick={onBack}
+          className="inline-flex items-center justify-center rounded-md border border-input bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
+        >
+          Analyze a different address
+        </button>
+      </div>
     </div>
   );
 }
@@ -566,27 +540,26 @@ function ProductStep({
   const confirmProduct = useServerFn(confirmMyDeckProduct);
   const generateDraft = useServerFn(generateMyDeckDraft);
   const analysis = setup.analysis;
-  const eligibility = useMemo(
-    () => (analysis ? resolveVerticalEligibility(analysis) : null),
+  // Every detected product is offered. The draft generator builds a Playbook
+  // for any of them, so filtering here would hide options that work.
+  const suggested = useMemo(
+    () => (analysis ? analysis.products.filter((p) => p.trim().length > 0).slice(0, 5) : []),
     [analysis],
   );
-  const suggested = eligibility?.eligible ? eligibility.suggestedProducts : [];
   const [businessType, setBusinessType] = useState(
-    setup.confirmedBusinessType ?? analysis?.businessType ?? "Deck builder",
+    setup.confirmedBusinessType ?? analysis?.businessType ?? "",
   );
-  const [product, setProduct] = useState(setup.confirmedProduct ?? suggested[0] ?? "Deck");
+  // No hardcoded fallback: guessing "Deck" for a pergola installer would put
+  // the wrong word in front of them, and an empty field asks the question.
+  const [product, setProduct] = useState(setup.confirmedProduct ?? suggested[0] ?? "");
   const [localError, setLocalError] = useState<string | null>(null);
   const [running, setRunning] = useState(false);
   const requestId = useRef(newRequestId());
 
-  if (!eligibility?.eligible) {
+  if (!analysis) {
     return (
       <Card>
-        <p className="text-sm text-muted-foreground">
-          {eligibility && !eligibility.eligible
-            ? eligibility.reason
-            : `Métré Build currently supports ${selfServiceSummary()} projects in self-service.`}
-        </p>
+        <p className="text-sm text-muted-foreground">Analyze your website first.</p>
       </Card>
     );
   }
@@ -599,7 +572,7 @@ function ProductStep({
       setLocalError(checkedBusinessType.error);
       return;
     }
-    const checkedProduct = checkVerticalProduct(product);
+    const checkedProduct = checkProduct(product);
     if (!checkedProduct.ok) {
       setLocalError(checkedProduct.error);
       return;
@@ -629,8 +602,8 @@ function ProductStep({
     <Card>
       <h2 className="text-base font-semibold text-foreground">Confirm your product</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Métré Build currently supports {selfServiceSummary()} projects in self-service, so that is
-        the intake we generate. Pick the wording your customers use.
+        We generate the intake for the product you confirm here, so pick the wording your customers
+        use.
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
@@ -681,7 +654,7 @@ function ProductStep({
           >
             <input
               type="radio"
-              name="deck-product"
+              name="confirmed-product"
               value={option}
               checked={product === option}
               disabled={readOnly || running}
@@ -738,7 +711,7 @@ function CustomizeStep({
 }) {
   const save = useServerFn(updateMyBranding);
   const base: Branding =
-    setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Deck");
+    setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Project");
   const [form, setForm] = useState<Branding>(base);
   const [saving, setSaving] = useState(false);
 
@@ -887,7 +860,7 @@ function PreviewStep({
   });
 
   const branding =
-    setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Deck");
+    setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Project");
 
   return (
     <div className="space-y-4">
@@ -1010,7 +983,7 @@ function PublishStep({
   const [publishing, setPublishing] = useState(false);
   const requestId = useRef(newRequestId());
   const branding =
-    setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Deck");
+    setup.branding ?? defaultBranding(setup.workspaceName, setup.confirmedProduct ?? "Project");
 
   async function handlePublish() {
     if (publishing) return;
@@ -1088,7 +1061,7 @@ function PublishStep({
         </div>
         <div>
           <dt className="text-xs uppercase tracking-wide text-muted-foreground">Product</dt>
-          <dd className="text-foreground">{setup.confirmedProduct ?? "Deck"}</dd>
+          <dd className="text-foreground">{setup.confirmedProduct ?? "Project"}</dd>
         </div>
       </dl>
 
