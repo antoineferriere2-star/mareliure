@@ -4,13 +4,9 @@ import {
   checkAiRun,
   checkBranding,
   checkBusinessType,
-  checkDeckProduct,
   checkSiteUrl,
   defaultBranding,
-  hasDeckSignal,
-  isAcceptableProduct,
   isPublished,
-  resolveDeckEligibility,
   resumeStep,
 } from "./portalOnboarding";
 
@@ -48,66 +44,6 @@ describe("checkSiteUrl", () => {
   });
 });
 
-describe("hasDeckSignal", () => {
-  it("matches deck words at word level", () => {
-    expect(hasDeckSignal("Custom deck building")).toBe(true);
-    expect(hasDeckSignal("Composite decking")).toBe(true);
-    expect(hasDeckSignal("Terrasse bois")).toBe(true);
-  });
-
-  it("does not match unrelated words that merely contain the letters", () => {
-    expect(hasDeckSignal("Decker Roofing")).toBe(false);
-    expect(hasDeckSignal("Swimming pools")).toBe(false);
-  });
-});
-
-describe("resolveDeckEligibility", () => {
-  it("accepts a deck business and suggests the site's own wording", () => {
-    const result = resolveDeckEligibility({
-      businessType: "Deck builder",
-      isDeckBusiness: true,
-      products: ["Composite decking", "Pergolas"],
-    });
-    expect(result.eligible).toBe(true);
-    if (result.eligible) {
-      expect(result.suggestedProducts).toContain("Deck");
-      expect(result.suggestedProducts).toContain("Composite decking");
-      expect(result.suggestedProducts).not.toContain("Pergolas");
-    }
-  });
-
-  it("blocks a non-deck site with an explicit explanation and no alternative funnel", () => {
-    const result = resolveDeckEligibility({
-      businessType: "Swimming pool installer",
-      isDeckBusiness: false,
-      products: ["Pool installation", "Pool maintenance"],
-    });
-    expect(result.eligible).toBe(false);
-    if (!result.eligible) {
-      expect(result.reason).toContain("deck businesses only");
-      expect(result.reason.toLowerCase()).not.toContain("pool");
-    }
-  });
-
-  it("still accepts a site whose products mention decks even if the model said false", () => {
-    const result = resolveDeckEligibility({
-      businessType: "General contractor",
-      isDeckBusiness: false,
-      products: ["Deck replacement"],
-    });
-    expect(result.eligible).toBe(true);
-  });
-});
-
-describe("isAcceptableProduct", () => {
-  it("keeps free-text confirmation inside the deck vertical", () => {
-    expect(isAcceptableProduct("Composite deck")).toBe(true);
-    expect(isAcceptableProduct("Pergola")).toBe(false);
-    expect(isAcceptableProduct("   ")).toBe(false);
-    expect(isAcceptableProduct(`deck ${"x".repeat(200)}`)).toBe(false);
-  });
-});
-
 describe("confirmation text checks", () => {
   it("lets the client correct the detected business type", () => {
     expect(checkBusinessType("  Outdoor living / deck builder  ")).toEqual({
@@ -121,24 +57,6 @@ describe("confirmation text checks", () => {
     ["x".repeat(81), "Business type is too long (80 characters max)."],
   ])("rejects invalid business type %s", (input, error) => {
     expect(checkBusinessType(input)).toEqual({ ok: false, error });
-  });
-
-  it("lets the client correct the detected product with deck-specific wording", () => {
-    expect(checkDeckProduct("  Composite deck resurfacing  ")).toEqual({
-      ok: true,
-      value: "Composite deck resurfacing",
-    });
-  });
-
-  it.each([
-    ["", "Product cannot be empty."],
-    ["deck ".concat("x".repeat(81)), "Product is too long (80 characters max)."],
-    [
-      "Pergola",
-      "The current version of Metré Build supports deck projects only. Use deck-specific wording.",
-    ],
-  ])("rejects invalid product %s", (input, error) => {
-    expect(checkDeckProduct(input)).toEqual({ ok: false, error });
   });
 });
 

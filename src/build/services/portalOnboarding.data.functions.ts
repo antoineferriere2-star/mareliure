@@ -30,15 +30,14 @@ import {
   checkAiRun,
   checkBranding,
   checkBusinessType,
-  checkDeckProduct,
   checkSiteUrl,
   defaultBranding,
   isPublished,
-  resolveDeckEligibility,
   type Branding,
   type OnboardingStatus,
   type SiteAnalysis,
 } from "@/build/onboarding/portalOnboarding";
+import { checkVerticalProduct, resolveVerticalEligibility } from "@/build/verticals/registry";
 
 const workspaceInput = z.object({ workspaceId: z.string().uuid() });
 
@@ -420,11 +419,11 @@ export const confirmMyDeckProduct = createServerFn({ method: "POST" })
     const analysis = row.analysis as SiteAnalysis | null;
     if (!analysis) fail(400, "Analyze your website first.");
 
-    const eligibility = resolveDeckEligibility(analysis);
+    const eligibility = resolveVerticalEligibility(analysis);
     if (!eligibility.eligible) fail(400, eligibility.reason);
     const checkedBusinessType = checkBusinessType(data.businessType ?? analysis.businessType);
     if (!checkedBusinessType.ok) fail(400, checkedBusinessType.error);
-    const checkedProduct = checkDeckProduct(data.product);
+    const checkedProduct = checkVerticalProduct(data.product);
     if (!checkedProduct.ok) fail(400, checkedProduct.error);
 
     const { error } = await sb

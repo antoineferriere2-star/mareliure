@@ -8,8 +8,6 @@
 // nothing here publishes anything.
 
 /** V1 is locked to deck builders. No other vertical may be added here. */
-export const SUPPORTED_VERTICAL = "deck" as const;
-
 export const ONBOARDING_STATUSES = [
   "started",
   "analyzed",
@@ -87,64 +85,8 @@ export function checkSiteUrl(raw: string): UrlCheck {
   return { ok: true, url: parsed.toString() };
 }
 
-// -------------------------------------------------------- Deck-only product
-
-const DECK_WORDS = [
-  "deck",
-  "decks",
-  "decking",
-  "terrasse",
-  "terrasses",
-  "porch",
-  "porches",
-  "boardwalk",
-];
-
-/** Word-level (not substring) deck detection — "decker" must not match. */
-export function hasDeckSignal(text: string): boolean {
-  return text
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .split(/[^a-z0-9]+/)
-    .some((word) => DECK_WORDS.includes(word));
-}
-
-export type DeckEligibility =
-  { eligible: true; suggestedProducts: string[] } | { eligible: false; reason: string };
-
-/**
- * The V1 lock. When the analysed site is not a deck business we say so
- * plainly and stop — we never invent a different funnel, and we never
- * silently downgrade the site into "deck" anyway.
- */
-export function resolveDeckEligibility(analysis: {
-  businessType: string;
-  isDeckBusiness: boolean;
-  products: string[];
-}): DeckEligibility {
-  const deckProducts = analysis.products.filter(hasDeckSignal);
-  const signalled =
-    analysis.isDeckBusiness || deckProducts.length > 0 || hasDeckSignal(analysis.businessType);
-
-  if (!signalled) {
-    return {
-      eligible: false,
-      reason:
-        "We could not find deck or decking work on this website. The current version of Métré Build supports deck businesses only, so there is no setup we can honestly generate for this site yet.",
-    };
-  }
-
-  // Always offer the canonical deck product, plus whatever deck-specific
-  // wording the site itself used (so the client recognises their own words).
-  const suggested = ["Deck"];
-  for (const product of deckProducts) {
-    if (!suggested.some((s) => s.toLowerCase() === product.toLowerCase())) suggested.push(product);
-  }
-  return { eligible: true, suggestedProducts: suggested.slice(0, 5) };
-}
-
-/** A confirmed product must still be a deck product — the lock also applies to free text. */
+/** Shared shape for the free-text confirmations below. Which trades are
+ * actually accepted is decided by src/build/verticals/registry.ts, not here. */
 export type ConfirmationTextCheck = { ok: true; value: string } | { ok: false; error: string };
 
 export function checkBusinessType(value: string): ConfirmationTextCheck {
@@ -153,25 +95,6 @@ export function checkBusinessType(value: string): ConfirmationTextCheck {
   if (trimmed.length > 80)
     return { ok: false, error: "Business type is too long (80 characters max)." };
   return { ok: true, value: trimmed };
-}
-
-/** A confirmed product must still be a deck product - the lock also applies to free text. */
-export function checkDeckProduct(product: string): ConfirmationTextCheck {
-  const trimmed = product.trim();
-  if (trimmed.length === 0) return { ok: false, error: "Product cannot be empty." };
-  if (trimmed.length > 80) return { ok: false, error: "Product is too long (80 characters max)." };
-  if (!hasDeckSignal(trimmed)) {
-    return {
-      ok: false,
-      error:
-        "The current version of Metré Build supports deck projects only. Use deck-specific wording.",
-    };
-  }
-  return { ok: true, value: trimmed };
-}
-
-export function isAcceptableProduct(product: string): boolean {
-  return checkDeckProduct(product).ok;
 }
 
 // ------------------------------------------------------------- Step machine

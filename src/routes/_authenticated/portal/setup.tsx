@@ -1,5 +1,6 @@
-// Client-facing self-service setup for a deck business (/portal/setup).
-// Five steps: website -> review the analysis -> confirm the deck product ->
+// Client-facing self-service setup (/portal/setup). Which trades can go
+// through it is decided by src/build/verticals/registry.ts, not here.
+// Five steps: website -> review the analysis -> confirm the product ->
 // light customization -> preview. Nothing here publishes anything and no
 // payment is involved; the flow ends on an explicit "Draft ready" state.
 //
@@ -23,14 +24,17 @@ import {
 } from "@/build/services/portalOnboarding.data.functions";
 import {
   checkBusinessType,
-  checkDeckProduct,
   checkSiteUrl,
   defaultBranding,
-  resolveDeckEligibility,
   resumeStep,
   type Branding,
   type SetupStep,
 } from "@/build/onboarding/portalOnboarding";
+import {
+  checkVerticalProduct,
+  resolveVerticalEligibility,
+  selfServiceSummary,
+} from "@/build/verticals/registry";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 import { IntegrationSnippetsPanel } from "@/build/pages/integration/IntegrationSnippetsPanel";
 
@@ -428,7 +432,7 @@ function ReviewStep({
       </Card>
     );
   }
-  const eligibility = resolveDeckEligibility(analysis);
+  const eligibility = resolveVerticalEligibility(analysis);
 
   return (
     <div className="space-y-4">
@@ -563,7 +567,7 @@ function ProductStep({
   const generateDraft = useServerFn(generateMyDeckDraft);
   const analysis = setup.analysis;
   const eligibility = useMemo(
-    () => (analysis ? resolveDeckEligibility(analysis) : null),
+    () => (analysis ? resolveVerticalEligibility(analysis) : null),
     [analysis],
   );
   const suggested = eligibility?.eligible ? eligibility.suggestedProducts : [];
@@ -579,7 +583,9 @@ function ProductStep({
     return (
       <Card>
         <p className="text-sm text-muted-foreground">
-          The current version of Métré Build supports deck businesses only.
+          {eligibility && !eligibility.eligible
+            ? eligibility.reason
+            : `Métré Build currently supports ${selfServiceSummary()} projects in self-service.`}
         </p>
       </Card>
     );
@@ -593,7 +599,7 @@ function ProductStep({
       setLocalError(checkedBusinessType.error);
       return;
     }
-    const checkedProduct = checkDeckProduct(product);
+    const checkedProduct = checkVerticalProduct(product);
     if (!checkedProduct.ok) {
       setLocalError(checkedProduct.error);
       return;
@@ -623,8 +629,8 @@ function ProductStep({
     <Card>
       <h2 className="text-base font-semibold text-foreground">Confirm your product</h2>
       <p className="mt-1 text-sm text-muted-foreground">
-        Version 1 of Métré Build is built for deck builders, so the intake we generate is a deck
-        intake. Pick the wording your customers use.
+        Métré Build currently supports {selfServiceSummary()} projects in self-service, so that is
+        the intake we generate. Pick the wording your customers use.
       </p>
 
       <div className="mt-5 grid gap-4 sm:grid-cols-2">
