@@ -1,9 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useSuspenseQuery, useMutation, useQueryClient, queryOptions } from "@tanstack/react-query";
+import {
+  useSuspenseQuery,
+  useMutation,
+  useQuery,
+  useQueryClient,
+  queryOptions,
+} from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import {
+  assignMyDossier,
   getWorkspaceDossier,
+  listMyWorkspaceMembers,
   updateDossierFollowUp,
   type CommercialStatus,
 } from "@/build/services/portal.data.functions";
@@ -103,6 +111,24 @@ function PortalDossierDetailPage() {
     },
   });
 
+  // Who this Dossier can be handed to. Scoped to its own workspace, so the
+  // list can never offer someone who would not be allowed to open it.
+  const fetchMembers = useServerFn(listMyWorkspaceMembers);
+  const { data: members } = useQuery({
+    queryKey: ["portal", "members", dossier.workspace_id] as const,
+    queryFn: () => fetchMembers({ data: { workspaceId: dossier.workspace_id! } }),
+    enabled: Boolean(dossier.workspace_id),
+  });
+
+  const assign = useServerFn(assignMyDossier);
+  const assignMutation = useMutation({
+    mutationFn: (userId: string | null) => assign({ data: { id, userId } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: key });
+      queryClient.invalidateQueries({ queryKey: ["portal", "dossiers"] });
+    },
+  });
+
   const brief = dossier.content as unknown as ProjectBrief;
   const aiInsights = dossier.ai_insights as unknown as AiInsights | null;
   const nextQuestions = ((dossier.next_questions ?? []) as QuestionItem[])
@@ -139,7 +165,39 @@ function PortalDossierDetailPage() {
 
       <section className="rounded-lg border border-border bg-card p-4">
         <h2 className="text-sm font-semibold">Follow-up</h2>
-        <div className="mt-2 flex flex-wrap gap-2">
+
+        <div className="mt-3">
+          <label
+            htmlFor="dossier-assignee"
+            className="block text-xs font-medium text-muted-foreground"
+          >
+            Assigned to
+          </label>
+          <select
+            id="dossier-assignee"
+            value={dossier.assigned_to_user_id ?? ""}
+            disabled={assignMutation.isPending || !members}
+            onChange={(event) => assignMutation.mutate(event.target.value || null)}
+            className="mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm disabled:opacity-50"
+          >
+            <option value="">Unassigned</option>
+            {(members ?? []).map((m) => (
+              <option key={m.user_id} value={m.user_id}>
+                {m.email}
+                {m.isSelf ? " (you)" : ""}
+              </option>
+            ))}
+          </select>
+          {assignMutation.isError && (
+            <p role="alert" className="mt-1 text-xs text-destructive">
+              {assignMutation.error instanceof Error
+                ? assignMutation.error.message
+                : "Could not change the assignee."}
+            </p>
+          )}
+        </div>
+
+        <div className="mt-4 flex flex-wrap gap-2">
           {STATUS_OPTIONS.map((s) => (
             <button
               key={s.id}

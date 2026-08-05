@@ -278,3 +278,168 @@ export const updateDossierFollowUp = createServerFn({ method: "POST" })
     if (!updated) fail(404, "Not found");
     return updated;
   });
+
+// ---------------------------------------------------------------- Team
+//
+// A workspace was single-user in practice: build_workspace_members has always
+// distinguished 'owner' from 'member', but only an admin could add anyone, so
+// a customer who subscribed had no way to give their sales rep access. These
+// four functions close that, entirely inside the owner's own workspace.
+
+/** Anyone in the workspace may see who else is in it. */
+export const listMyWorkspaceMembers = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
+    const sb = await admin();
+    const { data: members, error } = await sb
+      .from("build_workspace_members")
+      .select("id, user_id, email, role, created_at")
+      .eq("workspace_id", data.workspaceId)
+      .order("created_at", { ascending: true });
+    if (error) fail(500, error.message);
+    return (members ?? []).map((m) => ({ ...m, isSelf: m.user_id === context.userId }));
+  });
+
+/**
+ * Invites a colleague by email. build_workspace_members.user_id is a real FK
+ * to auth.users, so there is no "pending invite" state to model: the account
+ * is created up front with no password, exactly like admin provisioning does,
+ * and the person signs in with the same passwordless OTP as everyone else.
+ * Creating the account is therefore not a security decision — it grants
+ * nothing until that person proves ownership of the mailbox.
+ */
+export const inviteMyWorkspaceMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ workspaceId: z.string().uuid(), email: z.string().email().max(320) }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
+    const sb = await admin();
+    const email = data.email.trim().toLowerCase();
+
+    const { data: existingUsers, error: listError } = await sb.auth.admin.listUsers({
+      perPage: 1000,
+    });
+    if (listError) fail(500, listError.message);
+    let userId = existingUsers.users.find((u) => u.email?.toLowerCase() === email)?.id;
+
+    if (!userId) {
+      const { data: created, error: createError } = await sb.auth.admin.createUser({
+        email,
+        email_confirm: true,
+      });
+      if (createError || !created.user) {
+        fail(500, createError?.message ?? "Could not create that account.");
+      }
+      userId = created.user.id;
+    }
+
+    const { data: inserted, error } = await sb
+      .from("build_workspace_members")
+      .insert({ workspace_id: data.workspaceId, user_id: userId, email, role: "member" })
+      .select("id, user_id, email, role, created_at")
+      .maybeSingle();
+    if (error) {
+      if (error.code === "23505") fail(409, "That person is already in this workspace.");
+      fail(500, error.message);
+    }
+    return inserted;
+  });
+
+/**
+ * Removes a member. Two guards: the last owner cannot be removed (the
+ * workspace would become unmanageable), and an owner cannot remove
+ * themselves by accident — that is a separate, deliberate action.
+ */
+export const removeMyWorkspaceMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ workspaceId: z.string().uuid(), memberId: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
+    const sb = await admin();
+
+    const { data: member, error: findError } = await sb
+      .from("build_workspace_members")
+      .select("id, user_id, role, workspace_id")
+      .eq("id", data.memberId)
+      .maybeSingle();
+    if (findError) fail(500, findError.message);
+    if (!member || member.workspace_id !== data.workspaceId) fail(404, "Member not found.");
+
+    if (member.user_id === context.userId) {
+      fail(400, "You cannot remove yourself from your own workspace.");
+    }
+
+    if (member.role === "owner") {
+      const { count, error: countError } = await sb
+        .from("build_workspace_members")
+        .select("id", { count: "exact", head: true })
+        .eq("workspace_id", data.workspaceId)
+        .eq("role", "owner");
+      if (countError) fail(500, countError.message);
+      if ((count ?? 0) <= 1) fail(400, "A workspace must keep at least one owner.");
+    }
+
+    // Dossiers assigned to this person become unassigned rather than pointing
+    // at someone who can no longer open them.
+    const { error: unassignError } = await sb
+      .from("build_dossiers")
+      .update({ assigned_to_user_id: null })
+      .eq("workspace_id", data.workspaceId)
+      .eq("assigned_to_user_id", member.user_id);
+    if (unassignError) fail(500, unassignError.message);
+
+    const { error } = await sb.from("build_workspace_members").delete().eq("id", data.memberId);
+    if (error) fail(500, error.message);
+    return { removed: true };
+  });
+
+/**
+ * Assigns a Dossier to a workspace member, or clears the assignment with a
+ * null userId. Any member may assign — deciding who follows up is ordinary
+ * sales work, not an ownership privilege.
+ */
+export const assignMyDossier = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ id: z.string().uuid(), userId: z.string().uuid().nullable() }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    const sb = await admin();
+    const { data: dossier, error: fetchError } = await sb
+      .from("build_dossiers")
+      .select("workspace_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (fetchError) fail(500, fetchError.message);
+    if (!dossier?.workspace_id) fail(404, "Not found");
+    await assertWorkspaceMember(context.supabase, context.userId, dossier.workspace_id);
+
+    // The assignee must belong to the same workspace: without this, any
+    // member could park a Dossier on an arbitrary user id.
+    if (data.userId !== null) {
+      const { data: member, error: memberError } = await sb
+        .from("build_workspace_members")
+        .select("id")
+        .eq("workspace_id", dossier.workspace_id)
+        .eq("user_id", data.userId)
+        .maybeSingle();
+      if (memberError) fail(500, memberError.message);
+      if (!member) fail(400, "That person is not in this workspace.");
+    }
+
+    const { data: updated, error } = await sb
+      .from("build_dossiers")
+      .update({ assigned_to_user_id: data.userId })
+      .eq("id", data.id)
+      .select("id, assigned_to_user_id")
+      .maybeSingle();
+    if (error) fail(500, error.message);
+    if (!updated) fail(404, "Not found");
+    return updated;
+  });
