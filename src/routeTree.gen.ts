@@ -39,6 +39,7 @@ import { Route as AuthenticatedPortalBillingRouteImport } from './routes/_authen
 import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authenticated/portal/missions'
 import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
 import { Route as AuthenticatedPortalTeamRouteImport } from './routes/_authenticated/portal/team'
+import { Route as ApiPublicAnalyzeSiteRouteImport } from './routes/api/public/analyze-site'
 import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
 import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
 import { Route as ApiPublicContactRouteImport } from './routes/api/public/contact'
@@ -222,6 +223,11 @@ const AuthenticatedPortalTeamRoute = AuthenticatedPortalTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedPortalRouteRoute,
 } as any)
+const ApiPublicAnalyzeSiteRoute = ApiPublicAnalyzeSiteRouteImport.update({
+  id: '/api/public/analyze-site',
+  path: '/api/public/analyze-site',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicBuildPublicIntakeRoute =
   ApiPublicBuildPublicIntakeRouteImport.update({
     id: '/api/public/build-public-intake',
@@ -370,6 +376,7 @@ export interface FileRoutesByFullPath {
   '/portal/missions': typeof AuthenticatedPortalMissionsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
   '/api/public/contact': typeof ApiPublicContactRoute
@@ -419,6 +426,7 @@ export interface FileRoutesByTo {
   '/portal/missions': typeof AuthenticatedPortalMissionsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
   '/api/public/contact': typeof ApiPublicContactRoute
@@ -473,6 +481,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/missions': typeof AuthenticatedPortalMissionsRoute
   '/_authenticated/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/_authenticated/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
   '/api/public/contact': typeof ApiPublicContactRoute
@@ -527,6 +536,7 @@ export interface FileRouteTypes {
     | '/portal/missions'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
     | '/api/public/contact'
@@ -576,6 +586,7 @@ export interface FileRouteTypes {
     | '/portal/missions'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
     | '/api/public/contact'
@@ -629,6 +640,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/missions'
     | '/_authenticated/portal/setup'
     | '/_authenticated/portal/team'
+    | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
     | '/api/public/contact'
@@ -671,6 +683,7 @@ export interface RootRouteChildren {
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
   ProjectSummaryAccessTokenRoute: typeof ProjectSummaryAccessTokenRoute
+  ApiPublicAnalyzeSiteRoute: typeof ApiPublicAnalyzeSiteRoute
   ApiPublicBuildPublicIntakeRoute: typeof ApiPublicBuildPublicIntakeRoute
   ApiPublicBuildRuntimeRoute: typeof ApiPublicBuildRuntimeRoute
   ApiPublicContactRoute: typeof ApiPublicContactRoute
@@ -894,6 +907,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/team'
       preLoaderRoute: typeof AuthenticatedPortalTeamRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/api/public/analyze-site': {
+      id: '/api/public/analyze-site'
+      path: '/api/public/analyze-site'
+      fullPath: '/api/public/analyze-site'
+      preLoaderRoute: typeof ApiPublicAnalyzeSiteRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/build-public-intake': {
       id: '/api/public/build-public-intake'
@@ -1160,6 +1180,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoDeckProjectRoute: DemoDeckProjectRoute,
   MPublicTokenRoute: MPublicTokenRoute,
   ProjectSummaryAccessTokenRoute: ProjectSummaryAccessTokenRoute,
+  ApiPublicAnalyzeSiteRoute: ApiPublicAnalyzeSiteRoute,
   ApiPublicBuildPublicIntakeRoute: ApiPublicBuildPublicIntakeRoute,
   ApiPublicBuildRuntimeRoute: ApiPublicBuildRuntimeRoute,
   ApiPublicContactRoute: ApiPublicContactRoute,

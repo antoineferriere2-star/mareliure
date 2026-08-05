@@ -16,6 +16,7 @@ const PUBLIC_SURFACE_FILES = [
   "src/build/pages/public/BuildPublicShell.tsx",
   "src/build/pages/public/BuildMarketingPages.tsx",
   "src/build/pages/public/BuildPublicFormPages.tsx",
+  "src/build/pages/public/BuildFreeInquiryAuditPage.tsx",
   "src/build/pages/public/MissionRuntime.tsx",
   "src/build/pages/public/BriefPreview.tsx",
   "src/build/pages/public/BriefSummary.tsx",
@@ -117,15 +118,28 @@ describe("public marketing surface - marketing proposition", () => {
     expect(source).toContain('copy("Generate project brief")');
   });
 
-  it("keeps the free audit offer concrete and bounded", () => {
+  it("gives the free analysis before asking for anything", () => {
+    // This page used to be a contact form promising a manual audit later.
+    // It now runs the analysis for anyone: no email, no consent checkbox, no
+    // account — the CTA comes after the result. A regression here would put
+    // the only worthwhile moment back behind a form.
     const source = readFileSync(
-      resolve(repoRoot, "src/build/pages/public/BuildPublicFormPages.tsx"),
+      resolve(repoRoot, "src/build/pages/public/BuildFreeInquiryAuditPage.tsx"),
       "utf8",
     );
+    // Comments stripped: the file's own header explains what it replaced, and
+    // that prose would otherwise satisfy the "no email field" check.
+    const code = source.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
 
-    expect(source).toContain("review your current inquiry flow");
-    expect(source).toContain("recommended intake path");
-    expect(source).toContain("No obligation.");
+    expect(code).toContain("No account, no email address.");
+    expect(code).toContain("Analyze my site");
+    expect(code.replace("No account, no email address.", "")).not.toContain("email");
+    expect(code).not.toContain("consent");
+
+    // The account CTA exists, and it sends them into setup rather than a
+    // generic sign-up.
+    expect(source).toContain("Create your account to publish this on your website");
+    expect(source).toContain('redirect: "/portal/setup"');
   });
 
   it("exposes the public contact page and routes messages through the contact form", () => {

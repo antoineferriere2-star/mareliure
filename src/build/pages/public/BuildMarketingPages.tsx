@@ -42,7 +42,7 @@ function BuildDeckBuildersPageContent() {
         description={copy(
           "Métré Build helps deck builders turn vague website inquiries into structured Project Briefs with scope, site context, photos, budget, timing and contact consent.",
         )}
-        primary={copy("Get a Free Website Inquiry Audit")}
+        primary={copy("Analyze My Website Free")}
         primaryTo="/free-inquiry-audit"
         secondary={copy("Try the Live Deck Intake")}
         secondaryTo="/demo/deck-project"
@@ -123,7 +123,7 @@ function BuildDeckBuildersPageContent() {
           </h2>
           <div className="flex flex-wrap items-center gap-4">
             <a href="/free-inquiry-audit">
-              <Button>{copy("Get a Free Website Inquiry Audit")}</Button>
+              <Button>{copy("Analyze My Website Free")}</Button>
             </a>
             <a href="/demo/deck-project">
               <Button variant="link" className="h-auto p-0 text-base">
@@ -409,7 +409,7 @@ function BuildPricingPageContent() {
             <InfoPanel
               title={copy("Is there a free trial?")}
               items={publicCopies(locale, [
-                "Get a Free Website Inquiry Audit first to see what a Project Brief looks like for your business, with no account required.",
+                "Analyze your website first to see what a Project Brief looks like for your business, with no account required.",
               ])}
             />
           </div>
@@ -460,7 +460,7 @@ function BuildExampleProjectBriefPageContent() {
           </p>
           <div className="flex flex-wrap items-center gap-4">
             <a href="/free-inquiry-audit">
-              <Button>{copy("Get a Free Website Inquiry Audit")}</Button>
+              <Button>{copy("Analyze My Website Free")}</Button>
             </a>
             <a href="/demo/deck-project">
               <Button variant="link" className="h-auto p-0 text-base">

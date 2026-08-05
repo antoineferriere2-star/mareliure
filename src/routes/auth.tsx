@@ -9,6 +9,14 @@ import { resolvePostAuthDestination } from "@/build/services/postAuthRoute";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
+  // `?redirect=` lets /free-inquiry-audit send a visitor straight into setup
+  // after they create an account. The value is never trusted as a
+  // destination — resolvePostAuthDestination matches it against an
+  // allow-list, so an attacker-crafted link cannot redirect anyone off-site.
+  // The return type keeps `redirect` optional, so every other link to /auth
+  // stays valid without passing a search object.
+  validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
+    typeof search.redirect === "string" ? { redirect: search.redirect } : {},
   head: () => ({
     meta: [
       { title: "Sign in or create your account — Métré Build" },
@@ -33,6 +41,7 @@ type Audience = "client" | "team";
 
 function AuthPage() {
   const navigate = useNavigate();
+  const { redirect } = Route.useSearch();
   const router = useRouter();
   const [audience, setAudience] = useState<Audience>("client");
   const [accessError, setAccessError] = useState<string | null>(null);
@@ -48,11 +57,14 @@ function AuthPage() {
     async (company?: string) => {
       setRouting(true);
       setAccessError(null);
-      const destination = await resolvePostAuthDestination({
-        checkAdmin: () => checkAdmin(),
-        checkWorkspace: () => checkWorkspace(),
-        provision: () => provision({ data: { company } }),
-      });
+      const destination = await resolvePostAuthDestination(
+        {
+          checkAdmin: () => checkAdmin(),
+          checkWorkspace: () => checkWorkspace(),
+          provision: () => provision({ data: { company } }),
+        },
+        redirect,
+      );
       setRouting(false);
       if (destination.to === null) {
         setAccessError(destination.error);
@@ -60,7 +72,7 @@ function AuthPage() {
       }
       navigate({ to: destination.to, replace: true });
     },
-    [checkAdmin, checkWorkspace, provision, navigate],
+    [checkAdmin, checkWorkspace, provision, navigate, redirect],
   );
 
   useEffect(() => {
@@ -82,7 +94,10 @@ function AuthPage() {
 
         <div className="mt-10">
           {accessError && (
-            <p className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive" role="alert">
+            <p
+              className="mb-4 rounded-md bg-destructive/10 p-3 text-sm text-destructive"
+              role="alert"
+            >
               {accessError}
             </p>
           )}
@@ -184,9 +199,9 @@ function ClientAuth({
       <div>
         <h1 className="text-xl font-semibold text-foreground">Confirm your email</h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          We sent a confirmation link to <span className="font-medium text-foreground">{email}</span>
-          . Click it to activate your account, then come back here to sign in — your workspace is
-          created automatically.
+          We sent a confirmation link to{" "}
+          <span className="font-medium text-foreground">{email}</span>. Click it to activate your
+          account, then come back here to sign in — your workspace is created automatically.
         </p>
         <button
           type="button"

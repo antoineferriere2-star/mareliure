@@ -10,10 +10,10 @@ export const enUSMessages = {
   "home.hero.description":
     "Métré Build guides customers through project scope, photos, dimensions, constraints, budget and timing — so your sales team has useful context before the first call.",
   "home.hero.kicker": "More useful than a contact form. Simpler than a custom configurator.",
-  "home.hero.deckIntro": "Starting with our ready-to-use Deck Project",
+  "home.hero.deckIntro": "Works with any project-based business — start from a",
   "home.hero.playbookTooltip": "A reusable industry-specific project discovery method.",
   "home.hero.primaryCta": "Try the Live Deck Intake",
-  "home.hero.secondaryCta": "Get a Free Website Inquiry Audit",
+  "home.hero.secondaryCta": "Analyze My Website Free",
   "home.hero.disclaimer":
     "Sales-ready means ready for a productive first conversation — not a final quote or technical approval.",
   "home.problem.title":
@@ -27,7 +27,7 @@ export const enUSMessages = {
   "navigation.howItWorks": "How it works",
   "navigation.pricing": "Pricing",
   "navigation.exampleBrief": "Example brief",
-  "navigation.freeAudit": "Free audit",
+  "navigation.freeAudit": "Free analysis",
   "navigation.contact": "Contact",
   "navigation.logIn": "Log in",
   "navigation.createAccount": "Create account",
@@ -45,7 +45,7 @@ export const enUSMessages = {
   "cta.getStarted": "Get started",
   "cta.title": "See what your current website form is missing.",
   "cta.description":
-    "Two minutes to review the demo. Free audit of your current form and inquiry flow on request.",
+    "Two minutes to review the demo. Free analysis of your own website, no account required.",
   "auth.forgotPassword": "Forgot password?",
   "intake.navigation.next": "Continue",
   "intake.navigation.back": "Back",
@@ -82,11 +82,11 @@ export const esUSMessages: Partial<TranslationMessages> = {
   "home.hero.description":
     "Métré Build guía a sus clientes por alcance, fotos, dimensiones, restricciones, presupuesto y plazo para que su equipo comercial tenga contexto útil antes de la primera llamada.",
   "home.hero.kicker": "Más útil que un formulario. Más simple que un configurador a medida.",
-  "home.hero.deckIntro": "Comience con nuestro Deck Project",
+  "home.hero.deckIntro": "Funciona con cualquier negocio basado en proyectos — comience desde un",
   "home.hero.playbookTooltip":
     "Un método reutilizable de descubrimiento de proyectos por industria.",
   "home.hero.primaryCta": "Probar el intake de decks",
-  "home.hero.secondaryCta": "Solicitar una auditoría gratis",
+  "home.hero.secondaryCta": "Analizar mi sitio gratis",
   "home.hero.disclaimer":
     "Listo para ventas significa listo para una primera conversación productiva, no una cotización final ni una aprobación técnica.",
   "home.problem.title":

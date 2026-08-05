@@ -55,7 +55,7 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
     "Califique proyectos de terraza antes de la primera llamada comercial.",
   "Métré Build helps deck builders turn vague website inquiries into structured Project Briefs with scope, site context, photos, budget, timing and contact consent.":
     "Métré Build ayuda a constructores de terrazas a convertir consultas vagas del sitio web en Project Briefs estructurados con alcance, contexto del sitio, fotos, presupuesto, plazo y consentimiento de contacto.",
-  "Get a Free Website Inquiry Audit": "Solicitar una auditoría gratis",
+  "Analyze My Website Free": "Analizar mi sitio gratis",
   "Try the Live Deck Intake": "Probar el intake de decks",
   "Frequent inquiry gaps": "Brechas frecuentes en las consultas",
   "Prospects do not know dimensions": "Los prospectos no conocen las dimensiones",
@@ -142,14 +142,41 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
     "¿Quiere Project Briefs como este desde su propio sitio web?",
   "Start with a ready-to-use industry journey, adapt it to your business and add it to your website with a link or simple snippet.":
     "Comience con un recorrido sectorial listo para usar, adáptelo a su negocio y agréguelo a su sitio con un enlace o snippet simple.",
-  "Free audit": "Auditoría gratis",
-  "Free Website Inquiry Audit for Deck Builders":
-    "Auditoría gratis de consultas web para constructores de terrazas",
-  "Send us your website. We'll review your current inquiry flow, identify what project context it misses and recommend a clearer Guided Project Intake.":
-    "Envíenos su sitio web. Revisaremos su flujo actual de consultas, identificaremos qué contexto de proyecto falta y recomendaremos un Guided Project Intake más claro.",
-  "Audit My Website": "Auditar mi sitio web",
-  "We review your public website and send a short, practical audit with the biggest gaps, recommended intake path and a lightweight preview. No obligation.":
-    "Revisamos su sitio público y enviamos una auditoría breve y práctica con las principales brechas, un recorrido recomendado y una vista previa ligera. Sin compromiso.",
+  // /free-inquiry-audit — the analysis page. The strings it replaced (the
+  // old contact form: "Audit My Website", "Free Website Inquiry Audit for
+  // Deck Builders") are gone with the form itself.
+  "Free website analysis": "Análisis gratis de su sitio web",
+  "See what Métré Build finds on your website.":
+    "Vea lo que Métré Build encuentra en su sitio web.",
+  "Enter your website URL. We'll analyze what your business offers and suggest a project intake. No account, no email address.":
+    "Ingrese la URL de su sitio web. Analizaremos lo que ofrece su negocio y le propondremos un intake de proyecto. Sin cuenta y sin correo electrónico.",
+  "Your website address": "La dirección de su sitio web",
+  "Analyze my site": "Analizar mi sitio",
+  "Analyzing…": "Analizando…",
+  "Analyzing your website… this takes a few seconds.":
+    "Analizando su sitio web… esto toma unos segundos.",
+  "Try again": "Intentar de nuevo",
+  "We could not analyze that address. Check it and try again.":
+    "No pudimos analizar esa dirección. Verifíquela e intente de nuevo.",
+  "We read the public page at that address. Nothing is published and nothing is sent to anyone.":
+    "Leemos la página pública de esa dirección. No se publica nada ni se envía nada a nadie.",
+  "Analyzed page": "Página analizada",
+  "Business type": "Tipo de negocio",
+  "Services detected": "Servicios detectados",
+  "No specific service was named on this page.":
+    "Esta página no menciona ningún servicio específico.",
+  "What we found": "Lo que encontramos",
+  "Proved means the page says it. Assumed means we inferred it — you correct those during setup.":
+    "Comprobado significa que la página lo dice. Supuesto significa que lo dedujimos: usted lo corrige durante la configuración.",
+  "Create your account to publish this on your website":
+    "Cree su cuenta para publicar esto en su sitio web",
+  "We turn this into a guided project intake your customers fill in, and you get a structured brief instead of a name and a phone number. You confirm everything before anything goes live.":
+    "Lo convertimos en un intake de proyecto guiado que sus clientes completan, y usted recibe un brief estructurado en lugar de un nombre y un teléfono. Usted confirma todo antes de que algo se publique.",
+  "Create my account": "Crear mi cuenta",
+  "Analyze another address": "Analizar otra dirección",
+  Proved: "Comprobado",
+  Assumed: "Supuesto",
+  "Nothing conclusive on this page.": "Nada concluyente en esta página.",
   "Website URL": "URL del sitio web",
   "Work email": "Email laboral",
   "First name": "Nombre",
@@ -181,7 +208,6 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Tell us about your business and we'll get back to you about setting up a guided Project Intake for your website.":
     "Cuéntenos sobre su negocio y le responderemos sobre la configuración de un Project Intake guiado para su sitio web.",
   Website: "Sitio web",
-  "Business type": "Tipo de negocio",
   "Monthly inquiries": "Consultas mensuales",
   Contact: "Contacto",
   "Deck builder": "Constructor de terrazas",
@@ -260,7 +286,6 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "View the full example brief →": "Ver el brief completo de ejemplo →",
   "Preparing your project intake…": "Preparando el recorrido de su proyecto…",
   "This is taking longer than usual.": "Esto está tardando más de lo habitual.",
-  "Try again": "Intentar de nuevo",
   "Mission complete": "Mission completa",
   "Project brief generated": "Project Brief generado",
   "This mission has no questions yet.": "Esta Mission aún no tiene preguntas.",
@@ -754,8 +779,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "You can try the public Deck demo before creating an account. Once you sign up, you get your own workspace right away and can publish your first Guided Project Intake yourself.":
     "Puede probar la demo pública de Deck antes de crear una cuenta. Al registrarse, obtiene su propio workspace de inmediato y puede publicar usted mismo su primer Project Intake guiado.",
   "Prefer a guided setup instead?": "¿Prefiere una configuración guiada?",
-  "Get a Free Website Inquiry Audit first to see what a Project Brief looks like for your business, with no account required.":
-    "Primero solicite una auditoría gratis para ver cómo sería un Project Brief para su negocio, sin necesidad de crear una cuenta.",
+  "Analyze your website first to see what a Project Brief looks like for your business, with no account required.":
+    "Analice primero su sitio web para ver cómo sería un Project Brief para su negocio, sin necesidad de crear una cuenta.",
 
   // Field-validation message templates (see localizeValidationMessage in
   // MissionRuntime.tsx) — "{field}" and "{n0}" are literal placeholders

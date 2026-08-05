@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BuildFreeInquiryAuditPage } from "@/build/pages/public/BuildPublicFormPages";
+import { BuildFreeInquiryAuditPage } from "@/build/pages/public/BuildFreeInquiryAuditPage";
 import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
 
-const title = "Free inquiry audit — Métré Build";
+const title = "Free Website Analysis — Métré Build";
 const description =
-  "Send us your website. We'll review how your inquiry flow captures project details and identify the biggest gaps.";
+  "Enter your website URL. See what Métré Build detects about your business and what a guided project intake would look like for your customers.";
 
 export const Route = createFileRoute("/free-inquiry-audit")({
   head: () => ({
@@ -23,7 +23,9 @@ export const Route = createFileRoute("/free-inquiry-audit")({
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/free-inquiry-audit` }],
     scripts: [
-      jsonLdScript(breadcrumbSchema([{ name: "Free inquiry audit", path: "/free-inquiry-audit" }])),
+      jsonLdScript(
+        breadcrumbSchema([{ name: "Free website analysis", path: "/free-inquiry-audit" }]),
+      ),
     ],
   }),
   component: BuildFreeInquiryAuditPage,

@@ -46,4 +46,54 @@ describe("resolvePostAuthDestination", () => {
     });
     expect(dest).toEqual({ to: null, error: PROVISION_ERROR });
   });
+
+  describe("?redirect= from /free-inquiry-audit", () => {
+    const ok = () => vi.fn(async () => ({}));
+
+    it("sends a client with a workspace straight to setup", async () => {
+      // Otherwise someone who just saw their analysis lands on an empty
+      // portal and has to find the setup wizard themselves.
+      const dest = await resolvePostAuthDestination(
+        { checkAdmin: fail(), checkWorkspace: ok(), provision: fail() },
+        "/portal/setup",
+      );
+      expect(dest).toEqual({ to: "/portal/setup" });
+    });
+
+    it("honours it for a brand-new account too, right after provisioning", async () => {
+      const dest = await resolvePostAuthDestination(
+        {
+          checkAdmin: fail(),
+          checkWorkspace: fail(),
+          provision: vi.fn(async () => ({ status: "provisioned" as const })),
+        },
+        "/portal/setup",
+      );
+      expect(dest).toEqual({ to: "/portal/setup" });
+    });
+
+    it.each([
+      ["an absolute URL", "https://evil.example.com"],
+      ["a protocol-relative URL", "//evil.example.com"],
+      ["a path traversal", "/portal/setup/../../admin"],
+      ["an admin path", "/build"],
+      ["an unknown portal path", "/portal/billing"],
+    ])("ignores %s and falls back to /portal", async (_label, requested) => {
+      // The value comes from a URL anyone can craft and send to a customer.
+      // It is matched against an allow-list, never sanitised into shape.
+      const dest = await resolvePostAuthDestination(
+        { checkAdmin: fail(), checkWorkspace: ok(), provision: fail() },
+        requested,
+      );
+      expect(dest).toEqual({ to: "/portal" });
+    });
+
+    it("never diverts an admin away from /build", async () => {
+      const dest = await resolvePostAuthDestination(
+        { checkAdmin: ok(), checkWorkspace: fail(), provision: fail() },
+        "/portal/setup",
+      );
+      expect(dest).toEqual({ to: "/build" });
+    });
+  });
 });
