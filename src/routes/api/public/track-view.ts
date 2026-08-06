@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { createHash } from "crypto";
 import { z } from "zod";
 import { logOperationalError } from "@/build/services/operationalLog.server";
+import { visitorFingerprint } from "@/build/services/visitorFingerprint.server";
 
 /**
  * Insights Engine — real visit tracking for the public surface.
@@ -26,19 +26,6 @@ function jsonResponse(status: number, body: unknown) {
     status,
     headers: { "Content-Type": "application/json" },
   });
-}
-
-function clientIp(request: Request): string {
-  const fwd = request.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0]!.trim();
-  return request.headers.get("x-real-ip") ?? request.headers.get("cf-connecting-ip") ?? "unknown";
-}
-
-function visitorFingerprint(request: Request): string {
-  const salt = process.env["IP_HASH_SALT"] ?? "metre-build-ai";
-  const day = new Date().toISOString().slice(0, 10);
-  const ua = request.headers.get("user-agent") ?? "";
-  return createHash("sha256").update(`${salt}:${day}:${clientIp(request)}:${ua}`).digest("hex");
 }
 
 function deviceClass(request: Request): string {
