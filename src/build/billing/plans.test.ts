@@ -81,10 +81,17 @@ describe("plans", () => {
   });
 
   it("formats monthly USD prices for the portal without component-level constants", () => {
-    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.launch.monthlyUsdPrice)).toBe("19,99 $/mois");
-    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.growth.monthlyUsdPrice)).toBe("59 $/mois");
-    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.pro.monthlyUsdPrice)).toBe("149 $/mois");
-    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.business.monthlyUsdPrice)).toBe("299 $/mois");
-    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.enterprise.monthlyUsdPrice)).toBe("Sur devis");
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.launch.monthlyUsdPrice)).toBe("$19.99/mo");
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.growth.monthlyUsdPrice)).toBe("$59/mo");
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.pro.monthlyUsdPrice)).toBe("$149/mo");
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.business.monthlyUsdPrice)).toBe("$299/mo");
+    expect(formatMonthlyUsdPrice(PLAN_DEFAULTS.enterprise.monthlyUsdPrice)).toBe("Custom pricing");
+
+    // Garde-fou de non-régression : aucune sortie ne doit contenir de séparateur
+    // décimal français ni d'unité de temps française sur le produit international.
+    for (const plan of ["launch", "growth", "pro", "business", "enterprise"] as const) {
+      const formatted = formatMonthlyUsdPrice(PLAN_DEFAULTS[plan].monthlyUsdPrice);
+      expect(formatted).not.toMatch(/mois|devis|\d,\d/);
+    }
   });
 });
