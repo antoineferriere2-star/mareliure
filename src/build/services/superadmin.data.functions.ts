@@ -92,13 +92,16 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
     ] = await Promise.all([
       sb
         .from("build_runtime_sessions")
-        .select("id, mission_id, status, created_at, submitted_at, visitor_hash")
+        // `updated_at` separates a Mission page that was merely opened from one
+        // the visitor actually answered: the row is only ever updated by
+        // save_session or submit_session, and a touch trigger bumps the column.
+        .select("id, mission_id, status, created_at, updated_at, submitted_at, visitor_hash")
         .gte("created_at", sinceIso)
         .order("created_at", { ascending: false })
         .limit(5000),
       sb
         .from("build_dossiers")
-        .select("id, mission_id, workspace_id, created_at")
+        .select("id, mission_id, workspace_id, session_id, created_at")
         .gte("created_at", sinceIso)
         .limit(5000),
       sb
@@ -107,7 +110,7 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
         .gte("created_at", sinceIso)
         .order("created_at", { ascending: false })
         .limit(5000),
-      sb.from("build_missions").select("id, name, status, workspace_id"),
+      sb.from("build_missions").select("id, name, status, workspace_id, public_token"),
       sb.from("build_workspace_members").select("user_id, email, workspace_id, role"),
       sb.from("build_workspaces").select("id, name, plan, subscription_status, created_at"),
       sb.from("user_roles").select("user_id, role"),
@@ -143,6 +146,18 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
     const missionName = new Map(missions.map((m) => [m.id, m.name]));
     const workspaceName = new Map(workspaces.map((w) => [w.id, w.name]));
 
+    // A Mission's public URL is /m/<public_token>. Left raw, those rows read as
+    // truncated 64-character tokens in the dashboard, which name nothing — so
+    // resolve them back to the Mission the operator actually knows.
+    const missionByToken = new Map(
+      missions.filter((m) => m.public_token).map((m) => [m.public_token as string, m.name]),
+    );
+    function labelPath(path: string): string {
+      const token = path.startsWith("/m/") ? path.slice(3).split(/[/?#]/)[0] : null;
+      const name = token ? missionByToken.get(token) : undefined;
+      return name ? `Intake · ${name}` : path;
+    }
+
     // --- Real visit tracking (public surface page views) ---
     const uniqueViewers = new Set(views.map((v) => v.visitor_hash).filter(Boolean)).size;
     const viewSessions = new Set(views.map((v) => v.session_hash).filter(Boolean)).size;
@@ -159,7 +174,7 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
     for (const [key, set] of seenPerDay) uniquePerDay[key] = set.size;
 
     const topPages = Object.entries(countBy(views, (v) => v.path))
-      .map(([path, count]) => ({ path, count }))
+      .map(([path, count]) => ({ path, label: labelPath(path), count }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 12);
     const topReferrers = Object.entries(countBy(views, (v) => v.referrer_host ?? "direct"))
@@ -177,25 +192,43 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
         (a) => dayKey(a.created_at),
       ),
       sessions: countBy(sessions, (s) => dayKey(s.created_at)),
+      submitted: countBy(
+        sessions.filter((s) => s.submitted_at),
+        (s) => dayKey(s.submitted_at as string),
+      ),
       dossiers: countBy(dossiers, (d) => dayKey(d.created_at)),
       requests: countBy(requests, (r) => dayKey(r.created_at)),
     });
 
-    // Daily trend for the most visited pages (top 5), same day buckets.
-    const trendedPages = topPages.slice(0, 5);
-    const pageBuckets: Record<string, Record<string, number>> = {};
-    for (const p of trendedPages) {
-      pageBuckets[p.path] = countBy(
-        views.filter((v) => v.path === p.path),
-        (v) => dayKey(v.created_at),
-      );
-    }
-    const pageSeries = buildSeries(days, pageBuckets);
-
-
 
     const submitted = sessions.filter((s) => s.status === "submitted").length;
     const uniqueVisitors = new Set(sessions.map((s) => s.visitor_hash).filter(Boolean)).size;
+
+    // --- The funnel -------------------------------------------------------
+    // A session row is created the moment /m/:token renders, before the
+    // visitor has done anything, so "sessions" is an opened-page count and
+    // completion measured against it is pessimistic by construction. `started`
+    // is the honest denominator: the row was written to, which only happens
+    // once a step has been answered.
+    const startedSessions = sessions.filter(
+      (s) => s.updated_at && s.created_at && s.updated_at > s.created_at,
+    ).length;
+    // Dossiers whose session began inside the window, so the number is
+    // comparable with `submitted` above. `dossiers.length` counts every
+    // Dossier created in the window including ones from older sessions, which
+    // is why the two used to disagree.
+    const sessionIds = new Set(sessions.map((s) => s.id));
+    const dossiersFromPeriodSessions = dossiers.filter(
+      (d) => d.session_id && sessionIds.has(d.session_id),
+    ).length;
+
+    const funnel = [
+      { key: "visitors", label: "Unique visitors", value: uniqueViewers },
+      { key: "opened", label: "Intake opened", value: sessions.length },
+      { key: "started", label: "Started answering", value: startedSessions },
+      { key: "submitted", label: "Submitted", value: submitted },
+      { key: "briefs", label: "Project Briefs", value: dossiersFromPeriodSessions },
+    ];
 
     const sessionsByMission = countBy(sessions, (s) => s.mission_id);
     const dossiersByMission = countBy(dossiers, (d) => d.mission_id);
@@ -228,16 +261,23 @@ export const getSuperAdminOverview = createServerFn({ method: "GET" })
         viewSessions,
         viewsPerVisitor: uniqueViewers ? Math.round((views.length / uniqueViewers) * 10) / 10 : 0,
         sessions: sessions.length,
+        startedSessions,
         submittedSessions: submitted,
-
         uniqueVisitors,
         dossiers: dossiers.length,
+        dossiersFromPeriodSessions,
         requests: requests.length,
-        conversionRate: sessions.length ? Math.round((submitted / sessions.length) * 100) : 0,
+        /** Of the visitors who answered at least one step. The honest rate. */
+        completionRate: startedSessions ? Math.round((submitted / startedSessions) * 100) : 0,
+        /** Of everyone who merely opened the page. Kept because it is what the
+         * old "conversion rate" measured, and the drop between the two is the
+         * useful signal — it says how many visitors bounce off step one. */
+        openedToSubmittedRate: sessions.length
+          ? Math.round((submitted / sessions.length) * 100)
+          : 0,
       },
+      funnel,
       series,
-      pageSeries,
-      pageSeriesKeys: trendedPages.map((p) => p.path),
       visits: {
 
         topPages,
