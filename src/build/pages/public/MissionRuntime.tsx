@@ -4,6 +4,7 @@ import { ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FIELD_COMPONENTS, type InspirationPhotoAnalysis } from "@/build/engine/fields";
 import { computeVisibleSteps, validateField, type VisibleStep } from "@/build/engine/validation";
+import { formatAnswerForDisplay } from "@/build/engine/brief";
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import type { ProjectBrief } from "@/build/schema/brief";
 import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
@@ -185,6 +186,10 @@ function MissionRuntimeContent({
   const [sessionAuth, setSessionAuth] = useState<SessionAuth | null>(null);
   const [answers, setAnswers] = useState<Answers>({});
   const [stepIndex, setStepIndex] = useState(0);
+  // The last screen before submitting. Not a step in the Playbook — the
+  // homepage has promised visitors "a clear recap before submission" all
+  // along, and there was none.
+  const [reviewing, setReviewing] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [dossier, setDossier] = useState<DossierResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -332,11 +337,26 @@ function MissionRuntimeContent({
     setSaving(true);
     await persist(answers);
     setSaving(false);
+    if (isLastStep) {
+      setReviewing(true);
+      return;
+    }
     setStepIndex((i) => Math.min(i + 1, visibleSteps.length - 1));
   }
 
   function goBack() {
+    if (reviewing) {
+      setReviewing(false);
+      return;
+    }
     setStepIndex((i) => Math.max(0, i - 1));
+  }
+
+  /** Jump straight back to the step that holds a given answer, from the review. */
+  function editStep(index: number) {
+    setReviewing(false);
+    setError(null);
+    setStepIndex(index);
   }
 
   async function analyzeInspirationPhoto(
@@ -436,7 +456,9 @@ function MissionRuntimeContent({
               {copy(mission.playbook_name ?? mission.name)}
             </p>
             <h1 className="mt-3 text-3xl font-semibold tracking-normal">
-              {copy(currentStep?.step.title ?? mission.name)}
+              {reviewing
+                ? copy("Check your answers before sending")
+                : copy(currentStep?.step.title ?? mission.name)}
             </h1>
             {mission.proposal?.intro && !currentStep?.step.why && (
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
@@ -470,7 +492,9 @@ function MissionRuntimeContent({
                 {copy(error)}
               </div>
             )}
-            {currentStep ? (
+            {reviewing ? (
+              <ReviewAnswers steps={visibleSteps} answers={answers} copy={copy} onEdit={editStep} />
+            ) : currentStep ? (
               <div className="grid gap-6">
                 {currentStep.visibleFields.map((field) => {
                   const FieldComponent = FIELD_COMPONENTS[field.type];
@@ -491,18 +515,22 @@ function MissionRuntimeContent({
               <p className="text-sm text-slate-600">{copy("This mission has no questions yet.")}</p>
             )}
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button variant="outline" disabled={clampedStepIndex === 0} onClick={goBack}>
+              <Button
+                variant="outline"
+                disabled={clampedStepIndex === 0 && !reviewing}
+                onClick={goBack}
+              >
                 {copy("Back")}
               </Button>
-              {!isLastStep ? (
-                <Button onClick={goNext} disabled={saving}>
-                  {copy("Continue")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              ) : (
+              {reviewing ? (
                 <Button onClick={submit} disabled={saving}>
                   {saving ? copy("Working…") : copy("Generate project brief")}
                   <FileText className="ml-2 h-4 w-4" />
+                </Button>
+              ) : (
+                <Button onClick={goNext} disabled={saving}>
+                  {isLastStep ? copy("Review my answers") : copy("Continue")}
+                  <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
               <p className="text-xs text-slate-500">
@@ -513,5 +541,64 @@ function MissionRuntimeContent({
         </section>
       )}
     </main>
+  );
+}
+
+/**
+ * The recap the marketing site has been promising: every answer the visitor
+ * is about to send, grouped by the step it came from, each group with a way
+ * straight back to it.
+ *
+ * Editing jumps to the step rather than opening the field inline, so there is
+ * only ever one place a question is answered — the visitor sees the same
+ * screen, the same help text and the same validation they saw the first time.
+ *
+ * Unanswered optional fields are listed as such instead of being hidden: on an
+ * eleven-step intake, "you left this blank" is exactly what a recap is for.
+ */
+function ReviewAnswers({
+  steps,
+  answers,
+  copy,
+  onEdit,
+}: {
+  steps: VisibleStep[];
+  answers: Answers;
+  copy: CopyFn;
+  onEdit: (index: number) => void;
+}) {
+  return (
+    <div className="grid gap-5">
+      <p className="text-sm leading-6 text-slate-600">
+        {copy("Nothing has been sent yet. Change anything that is not right.")}
+      </p>
+      {steps.map((step, index) => (
+        <section key={step.step.id} className="rounded-lg border border-slate-200 bg-white p-4">
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-semibold text-slate-900">{copy(step.step.title)}</h2>
+            <button
+              type="button"
+              onClick={() => onEdit(index)}
+              className="text-xs font-medium text-emerald-700 underline underline-offset-2 hover:text-emerald-900"
+            >
+              {copy("Edit")}
+            </button>
+          </div>
+          <dl className="mt-3 grid gap-2">
+            {step.visibleFields.map((field) => {
+              const text = formatAnswerForDisplay(field, answers[field.key] as AnswerValue);
+              return (
+                <div key={field.key} className="grid gap-0.5 sm:grid-cols-[220px_1fr] sm:gap-3">
+                  <dt className="text-xs text-slate-500">{copy(field.label)}</dt>
+                  <dd className={text ? "text-sm text-slate-900" : "text-sm italic text-slate-400"}>
+                    {text || copy("Not answered")}
+                  </dd>
+                </div>
+              );
+            })}
+          </dl>
+        </section>
+      ))}
+    </div>
   );
 }

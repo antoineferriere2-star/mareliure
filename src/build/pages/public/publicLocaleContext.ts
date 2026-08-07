@@ -812,6 +812,14 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   // visitor Project Summary's "still to confirm" section for inspiration-
   // photo intakes only.
   "Please check the following before continuing:": "Revise lo siguiente antes de continuar:",
+
+  // Recap screen shown before the visitor submits.
+  "Check your answers before sending": "Revise sus respuestas antes de enviar",
+  "Nothing has been sent yet. Change anything that is not right.":
+    "Todavía no se ha enviado nada. Cambie lo que no esté bien.",
+  "Review my answers": "Revisar mis respuestas",
+  Edit: "Editar",
+  "Not answered": "Sin responder",
   "Questions to explore (from the inspiration photo)":
     "Preguntas a explorar (a partir de la foto de inspiración)",
 };

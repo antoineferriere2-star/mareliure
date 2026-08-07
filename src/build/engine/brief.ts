@@ -62,6 +62,19 @@ function formatValue(
   return String(value);
 }
 
+/**
+ * One answer, rendered the way a person should read it: option values
+ * resolved to their labels, lists joined, address parts run together. The
+ * review screen shows the visitor what they are about to send, and it has to
+ * agree with the Dossier the sales team will read — so both go through this
+ * same formatter rather than each inventing its own.
+ */
+export function formatAnswerForDisplay(field: PlaybookField, value: AnswerValue): string {
+  if (isBlank(value)) return "";
+  if (value === NOT_SURE_VALUE) return "Not sure";
+  return formatValue(field, value, "option_label");
+}
+
 function interpolate(template: string, tokens: Record<string, string>): string {
   return template.replace(
     /\{\{\s*([a-zA-Z0-9_]+)(\|lower)?\s*\}\}/g,
