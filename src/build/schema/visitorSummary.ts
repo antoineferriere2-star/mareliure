@@ -18,6 +18,13 @@ export interface SummaryItem {
 export interface VisitorPhotoReference {
   path: string;
   caption?: string;
+  /**
+   * Which Storage bucket holds it. Absent means the inspiration bucket, the
+   * only source that existed when this shape was introduced — every summary
+   * snapshot already persisted omits it, so the reader must keep treating
+   * absence as that bucket rather than as an error.
+   */
+  bucket?: string;
 }
 
 /**

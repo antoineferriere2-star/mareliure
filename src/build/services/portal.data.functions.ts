@@ -287,7 +287,9 @@ export const getWorkspaceDossierPhotos = createServerFn({ method: "GET" })
     const photos: DisplayPhotoReference[] = [];
     for (const ref of refs) {
       const { data: signed } = await sb.storage
-        .from(INSPIRATION_PHOTOS_BUCKET)
+        // No bucket on the reference means the inspiration bucket — the only
+        // one that existed when those snapshots were written.
+        .from(ref.bucket ?? INSPIRATION_PHOTOS_BUCKET)
         .createSignedUrl(ref.path, SIGNED_PHOTO_URL_TTL_SECONDS);
       // One unreadable object must not take the whole Dossier down with it.
       if (signed?.signedUrl) photos.push({ url: signed.signedUrl, caption: ref.caption });

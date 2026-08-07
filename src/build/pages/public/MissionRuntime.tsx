@@ -354,6 +354,27 @@ function MissionRuntimeContent({
     });
   }
 
+  async function uploadProjectPhoto(
+    fieldKey: string,
+    file: { base64: string; mediaType: string; filename: string },
+  ) {
+    if (!sessionAuth) throw new Error("Session not ready.");
+    return callRuntime<{
+      storagePath: string;
+      filename: string;
+      sizeBytes: number;
+      mimeType: string;
+    }>({
+      action: "upload_project_photo",
+      session_id: sessionAuth.sessionId,
+      session_secret: sessionAuth.secret,
+      field_key: fieldKey,
+      image_base64: file.base64,
+      media_type: file.mediaType,
+      filename: file.filename,
+    });
+  }
+
   async function submit() {
     if (!sessionAuth) return;
     setSaving(true);
@@ -461,6 +482,7 @@ function MissionRuntimeContent({
                       onChange={(value) => setAnswer(field.key, value)}
                       error={fieldErrors[field.key]}
                       analyzeInspirationPhoto={(image) => analyzeInspirationPhoto(field.key, image)}
+                      uploadProjectPhoto={(file) => uploadProjectPhoto(field.key, file)}
                     />
                   );
                 })}

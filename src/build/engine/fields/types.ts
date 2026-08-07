@@ -34,6 +34,25 @@ export interface FieldComponentProps<F extends PlaybookField = PlaybookField> {
     base64: string;
     mediaType: string;
   }) => Promise<InspirationPhotoAnalysis>;
+  /**
+   * Stores one file for a `photo` field whose Playbook asks for
+   * `supabase_storage`, and returns the entry to record in the answer. No
+   * analysis — this one only puts the bytes somewhere the workspace can read
+   * them. Absent for `filename_only` fields, which keep the old behaviour.
+   */
+  uploadProjectPhoto?: (file: {
+    base64: string;
+    mediaType: string;
+    filename: string;
+  }) => Promise<UploadedProjectPhoto>;
+}
+
+/** Mirrors the public runtime API's upload_project_photo response. */
+export interface UploadedProjectPhoto {
+  storagePath: string;
+  filename: string;
+  sizeBytes: number;
+  mimeType: string;
 }
 
 export const CHOICE_BUTTON_CLASS = (selected: boolean) =>

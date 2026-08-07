@@ -250,8 +250,16 @@ export const deckPlaybookSchema: PlaybookSchema = {
               helpText: "JPG, PNG, WEBP or HEIC. 8 MB max each.",
               maxFiles: 6,
               maxFileSizeMb: 8,
-              acceptMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/heic"],
-              storage: "filename_only",
+              acceptMimeTypes: [
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/heic",
+                "image/heif",
+              ],
+              // The files are kept now. Before this, the brief listed names
+              // like "backyard-current-deck.jpg" that nobody could open.
+              storage: "supabase_storage",
               briefMapping: {
                 section: "confirmedInformation",
                 label: "Photos",
