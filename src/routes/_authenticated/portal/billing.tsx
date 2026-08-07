@@ -177,8 +177,8 @@ function PortalBillingPage() {
                 {formatMonthlyUsdPrice(defaults.monthlyUsdPrice)}
               </p>
               <p className="mt-1 text-xs text-muted-foreground">
-                {defaults.maxActiveMissions} Missions actives ·{" "}
-                {defaults.monthlyBriefQuota?.toLocaleString("fr-FR")} Briefs/mois
+                {defaults.maxActiveMissions} active missions ·{" "}
+                {defaults.monthlyBriefQuota?.toLocaleString("en-US") ?? "Unlimited"} briefs/mo
               </p>
               <button
                 type="button"

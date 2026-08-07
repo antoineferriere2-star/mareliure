@@ -79,11 +79,12 @@ export function getPlanByStripeLookupKey(lookupKey: string): PlanId | null {
 }
 
 export function formatMonthlyUsdPrice(price: MonthlyUsdPrice | null): string {
-  if (!price) return "Sur devis";
-  const dollars = price.amountCents / 100;
+  if (!price) return "Custom pricing";
   const hasCents = price.amountCents % 100 !== 0;
-  return `${new Intl.NumberFormat("fr-FR", {
+  return `${new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: price.currency,
     minimumFractionDigits: hasCents ? 2 : 0,
     maximumFractionDigits: 2,
-  }).format(dollars)} $/mois`;
+  }).format(price.amountCents / 100)}/mo`;
 }
