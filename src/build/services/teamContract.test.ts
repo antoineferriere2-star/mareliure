@@ -118,3 +118,35 @@ describe("assigning a Dossier", () => {
     expect(fn()).toContain("if (data.userId !== null)");
   });
 });
+
+describe("a Dossier's photos stay inside their workspace", () => {
+  const fn = () => serverFn("getWorkspaceDossierPhotos");
+
+  it("takes a Dossier id, never a Storage path", () => {
+    // The admin-only variant (getInspirationPhotoUrl) signs whatever path it
+    // is handed, which is safe only because it also asserts admin. If this
+    // one ever accepted a path, any workspace member could mint a URL for
+    // another workspace's photo by replaying it.
+    const body = fn();
+    expect(body).toContain("z.object({ id: z.string().uuid() })");
+    expect(body).not.toContain("data.path");
+  });
+
+  it("proves membership before signing anything", () => {
+    const body = fn();
+    const check = indexOfIn(body, "assertWorkspaceMember(");
+    const sign = indexOfIn(body, "createSignedUrl(");
+    expect(check, "signs a URL before authorizing").toBeLessThan(sign);
+  });
+
+  it("reads the paths from the Dossier's own session", () => {
+    // The paths must come from the row the caller was just authorized for,
+    // not from anywhere the caller can influence.
+    const body = fn();
+    const dossier = indexOfIn(body, 'from("build_dossiers")');
+    const session = indexOfIn(body, 'from("build_runtime_sessions")');
+    const extract = indexOfIn(body, "extractPhotoReferences(");
+    expect(dossier).toBeLessThan(session);
+    expect(session).toBeLessThan(extract);
+  });
+});

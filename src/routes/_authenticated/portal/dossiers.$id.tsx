@@ -11,6 +11,7 @@ import { useState } from "react";
 import {
   assignMyDossier,
   getWorkspaceDossier,
+  getWorkspaceDossierPhotos,
   listMyWorkspaceMembers,
   updateDossierFollowUp,
   type CommercialStatus,
@@ -238,6 +239,8 @@ function PortalDossierDetailPage() {
         </div>
       </section>
 
+      <DossierPhotos dossierId={dossier.id} />
+
       <section className="rounded-lg border border-border bg-card p-4">
         <h2 className="text-sm font-semibold">Project details</h2>
         <div className="mt-3">
@@ -245,5 +248,56 @@ function PortalDossierDetailPage() {
         </div>
       </section>
     </div>
+  );
+}
+
+/**
+ * The photos the visitor attached. Loaded separately from the Dossier because
+ * the URLs are signed and expire — freezing them into the Dossier payload
+ * would hand the page links that are already dead by the time anyone reopens
+ * a cached brief.
+ *
+ * Renders nothing at all when there are no photos: an empty "Photos" card on
+ * every text-only Dossier would be noise on the page the sales team reads
+ * before each call.
+ */
+function DossierPhotos({ dossierId }: { dossierId: string }) {
+  const fetchPhotos = useServerFn(getWorkspaceDossierPhotos);
+  const { data, isPending } = useQuery({
+    queryKey: ["portal", "dossier-photos", dossierId] as const,
+    queryFn: () => fetchPhotos({ data: { id: dossierId } }),
+  });
+
+  if (isPending) {
+    return <div className="h-24 animate-pulse rounded-lg border border-border bg-muted" />;
+  }
+  const photos = data?.photos ?? [];
+  if (photos.length === 0) return null;
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-4">
+      <h2 className="text-sm font-semibold">
+        Photos from the visitor
+        <span className="ml-2 font-normal text-muted-foreground">({photos.length})</span>
+      </h2>
+      <ul className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {photos.map((photo, index) => (
+          <li key={photo.url ?? index}>
+            <a href={photo.url ?? "#"} target="_blank" rel="noreferrer" className="block">
+              <img
+                src={photo.url ?? ""}
+                alt={photo.caption ?? `Photo ${index + 1} attached by the visitor`}
+                loading="lazy"
+                className="h-40 w-full rounded-md border border-border object-cover"
+              />
+            </a>
+            {photo.caption && <p className="mt-1 text-xs text-muted-foreground">{photo.caption}</p>}
+          </li>
+        ))}
+      </ul>
+      <p className="mt-3 text-xs text-muted-foreground">
+        Links expire after an hour — reopen this Dossier to view them again.
+      </p>
+    </section>
   );
 }
