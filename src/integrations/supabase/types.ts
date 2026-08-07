@@ -467,16 +467,19 @@ export type Database = {
           action: string
           created_at: string
           ip_hash: string
+          session_id: string | null
         }
         Insert: {
           action: string
           created_at?: string
           ip_hash: string
+          session_id?: string | null
         }
         Update: {
           action?: string
           created_at?: string
           ip_hash?: string
+          session_id?: string | null
         }
         Relationships: []
       }
