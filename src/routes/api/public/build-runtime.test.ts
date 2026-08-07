@@ -330,7 +330,7 @@ describe("possession de session (session_id + session_secret)", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session } = await started.json();
 
     const res = await handleSaveSession(client, session.id, "wrong-secret-wrong-secret-wrong", {
@@ -346,7 +346,7 @@ describe("possession de session (session_id + session_secret)", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const res = await handleSaveSession(client, session.id, session_secret, { note: "hello" });
@@ -360,7 +360,7 @@ describe("possession de session (session_id + session_secret)", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const res = await handleSaveSession(client, session.id, session_secret, {
@@ -378,7 +378,7 @@ describe("reprise de session (resume_session)", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
     await handleSaveSession(client, session.id, session_secret, { note: "in progress" });
 
@@ -396,7 +396,7 @@ describe("reprise de session (resume_session)", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session } = await started.json();
 
     const res = await handleResumeSession(client, session.id, "wrong-secret-wrong-secret-wrong");
@@ -410,7 +410,7 @@ describe("reprise de session (resume_session)", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const submitted = await handleSubmitSession(client, session.id, session_secret, {
@@ -435,7 +435,7 @@ describe("soumission", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const res = await handleSubmitSession(client, session.id, session_secret, { note: "" });
@@ -449,7 +449,7 @@ describe("soumission", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const first = await handleSubmitSession(client, session.id, session_secret, { note: "answer" });
@@ -473,7 +473,7 @@ describe("soumission", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session } = await started.json();
 
     const res = await handleSubmitSession(client, session.id, "wrong-secret-wrong-secret-wrong", {
@@ -493,7 +493,7 @@ describe("analyze_inspiration_photo", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session } = await started.json();
 
     const res = await handleAnalyzeInspirationPhoto(
@@ -514,7 +514,7 @@ describe("analyze_inspiration_photo", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const res = await handleAnalyzeInspirationPhoto(
@@ -535,7 +535,7 @@ describe("analyze_inspiration_photo", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const res = await handleAnalyzeInspirationPhoto(
@@ -556,7 +556,7 @@ describe("analyze_inspiration_photo", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const oversized = Buffer.alloc(1024 * 1024 + 1, "a").toString("base64"); // > 1 MB limit
@@ -586,7 +586,7 @@ describe("analyze_inspiration_photo", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const res = await handleAnalyzeInspirationPhoto(
@@ -615,7 +615,7 @@ describe("analyze_inspiration_photo", () => {
       build_playbook_versions: [versionRow],
     });
 
-    const started = await handleStartSession(client, mission.public_token as string, "iphash");
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
     const { session, session_secret } = await started.json();
 
     const res = await handleAnalyzeInspirationPhoto(

@@ -13,6 +13,7 @@ import type { DeckPreviewSnapshot } from "@/build/visualPreview/deckPreviewParam
 import { DEFAULT_LOCALE, resolveSupportedLocale } from "@/build/i18n/locales";
 import { DEFAULT_MEASUREMENT_SYSTEM } from "@/build/measurements/types";
 import { logOperationalError } from "@/build/services/operationalLog.server";
+import { clientIp, visitorFingerprint } from "@/build/services/visitorFingerprint.server";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 import {
   PROJECT_PHOTOS_ALLOWED_MIME_TYPES,
@@ -86,12 +87,6 @@ function json(status: number, data: unknown) {
     status,
     headers: { "Content-Type": "application/json" },
   });
-}
-
-function clientIp(request: Request): string {
-  const fwd = request.headers.get("x-forwarded-for");
-  if (fwd) return fwd.split(",")[0]!.trim();
-  return request.headers.get("x-real-ip") ?? request.headers.get("cf-connecting-ip") ?? "unknown";
 }
 
 function hashIp(ip: string): string {
@@ -197,7 +192,15 @@ export async function handleGetMission(supabase: Supa, publicToken: string) {
   return json(200, { mission: publicMission(data, workspaceName), playbook_schema: schema });
 }
 
-export async function handleStartSession(supabase: Supa, publicToken: string, ipHash: string) {
+export async function handleStartSession(
+  supabase: Supa,
+  publicToken: string,
+  ipHash: string,
+  /** Same daily fingerprint `track-view` records, so a visitor who browsed the
+   * site and then opened this intake is recognisable as one person. Null only
+   * where no request is available (tests). */
+  visitorHash: string | null,
+) {
   const { data: mission, error: mErr } = await findPublishedMission(supabase, publicToken);
   if (mErr) throw mErr;
   if (!mission) return json(404, { error: "Mission not available" });
@@ -212,6 +215,7 @@ export async function handleStartSession(supabase: Supa, publicToken: string, ip
     .insert({
       mission_id: mission.id,
       ip_hash: ipHash,
+      visitor_hash: visitorHash,
       status: "in_progress",
       session_secret_hash: hashSecret(secret),
     })
@@ -748,7 +752,12 @@ export const Route = createFileRoute("/api/public/build-runtime")({
             case "get_mission":
               return await handleGetMission(supabaseAdmin, body.public_token);
             case "start_session":
-              return await handleStartSession(supabaseAdmin, body.public_token, ipHash);
+              return await handleStartSession(
+                supabaseAdmin,
+                body.public_token,
+                ipHash,
+                visitorFingerprint(request),
+              );
             case "resume_session":
               return await handleResumeSession(supabaseAdmin, body.session_id, body.session_secret);
             case "save_session":
