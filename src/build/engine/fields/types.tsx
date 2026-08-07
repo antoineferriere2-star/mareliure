@@ -55,6 +55,24 @@ export interface UploadedProjectPhoto {
   mimeType: string;
 }
 
+/**
+ * Marks a field the visitor cannot skip.
+ *
+ * Without it, an intake only tells you a field is required by refusing to
+ * continue — on an eleven-step Playbook that means discovering the rule by
+ * failing, sometimes on two fields of the same step at once. The asterisk is
+ * aria-hidden because the input itself carries `aria-required`; announcing
+ * both would read the requirement twice.
+ */
+export function RequiredMark({ field }: { field: PlaybookField }) {
+  if (field.desirability !== "required") return null;
+  return (
+    <span className="ml-1 text-rose-600" aria-hidden="true">
+      *
+    </span>
+  );
+}
+
 export const CHOICE_BUTTON_CLASS = (selected: boolean) =>
   `rounded-md border p-4 text-left text-sm font-medium ${
     selected

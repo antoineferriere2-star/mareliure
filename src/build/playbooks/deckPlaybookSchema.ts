@@ -152,6 +152,19 @@ export const deckPlaybookSchema: PlaybookSchema = {
               desirability: "optional",
               placeholder: "I'm not sure",
               allowNotSure: true,
+              // Only asked when the area cannot be worked out. Someone who
+              // gave a length and a width was being asked for a number the
+              // engine already multiplies for them (briefConfig's
+              // computedArea) — redundant work, and an invitation to
+              // contradict themselves. It stays as the escape hatch for a
+              // visitor who knows the surface but not the sides, which is
+              // exactly what fallbackFieldKey uses it for.
+              displayWhen: {
+                any: [
+                  { fieldKey: "length", operator: "is_empty" },
+                  { fieldKey: "width", operator: "is_empty" },
+                ],
+              },
             },
           ],
         },

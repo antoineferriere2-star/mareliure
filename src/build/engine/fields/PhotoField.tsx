@@ -4,7 +4,7 @@ import type { PhotoAnswerEntry } from "@/build/schema/answers";
 import type { PhotoField as PhotoFieldDef } from "@/build/schema/playbook";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FIELD_ERROR_CLASS, type FieldComponentProps } from "./types";
+import { FIELD_ERROR_CLASS, type FieldComponentProps, RequiredMark } from "./types";
 
 function readAsBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -96,6 +96,7 @@ export function PhotoField({
       <Upload className="h-6 w-6 text-emerald-700" />
       <Label htmlFor={field.key} className="mt-4 block font-semibold">
         {field.label}
+        <RequiredMark field={field} />
       </Label>
       {field.helpText && <p className="mt-2 text-sm text-slate-600">{field.helpText}</p>}
       <Input

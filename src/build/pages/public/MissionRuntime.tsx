@@ -472,16 +472,43 @@ function MissionRuntimeContent({
             )}
             {visibleSteps.length > 0 && (
               <>
-                <div className="mt-5 h-2 rounded-full bg-slate-100">
-                  <div
-                    className="h-2 rounded-full bg-emerald-600"
-                    style={{ width: `${progress}%` }}
-                  />
-                </div>
+                {/* Segments, not one bar: a visitor who wants to fix an
+                    earlier answer had to press Back once per step, eight
+                    times on an eleven-step Playbook. Only steps already
+                    reached are clickable — jumping ahead would skip the
+                    validation that gates each one. */}
+                <ol className="mt-5 flex gap-1" aria-label={copy("Steps")}>
+                  {visibleSteps.map((step, index) => {
+                    const reached = index <= clampedStepIndex || reviewing;
+                    const current = !reviewing && index === clampedStepIndex;
+                    return (
+                      <li key={step.step.id} className="h-2 flex-1">
+                        <button
+                          type="button"
+                          disabled={!reached}
+                          aria-current={current ? "step" : undefined}
+                          aria-label={`${copy(step.step.title)}${current ? ` — ${copy("current step")}` : ""}`}
+                          onClick={() => editStep(index)}
+                          className={`h-2 w-full rounded-full transition-colors ${
+                            reached
+                              ? "cursor-pointer bg-emerald-600 hover:bg-emerald-700"
+                              : "cursor-default bg-slate-100"
+                          }`}
+                        />
+                      </li>
+                    );
+                  })}
+                </ol>
                 <p className="mt-2 text-xs font-medium text-slate-500">
-                  {locale === "es-US" ? "Paso" : "Step"} {clampedStepIndex + 1}{" "}
-                  {locale === "es-US" ? "de" : "of"} {visibleSteps.length} · {progress}%{" "}
-                  {copy("complete")}
+                  {reviewing ? (
+                    copy("Last look before sending")
+                  ) : (
+                    <>
+                      {locale === "es-US" ? "Paso" : "Step"} {clampedStepIndex + 1}{" "}
+                      {locale === "es-US" ? "de" : "of"} {visibleSteps.length} · {progress}%{" "}
+                      {copy("complete")}
+                    </>
+                  )}
                 </p>
               </>
             )}

@@ -820,6 +820,9 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Review my answers": "Revisar mis respuestas",
   Edit: "Editar",
   "Not answered": "Sin responder",
+  Steps: "Pasos",
+  "current step": "paso actual",
+  "Last look before sending": "Última revisión antes de enviar",
   "Questions to explore (from the inspiration photo)":
     "Preguntas a explorar (a partir de la foto de inspiración)",
 };

@@ -3,6 +3,7 @@ import {
   CHOICE_BUTTON_CLASS,
   FIELD_ERROR_CLASS,
   FIELD_LEGEND_CLASS,
+  RequiredMark,
   type FieldComponentProps,
 } from "./types";
 
@@ -15,7 +16,10 @@ export function TimelineField({
   const selected = typeof value === "string" ? value : "";
   return (
     <fieldset>
-      <legend className={FIELD_LEGEND_CLASS}>{field.label}</legend>
+      <legend className={FIELD_LEGEND_CLASS}>
+        {field.label}
+        <RequiredMark field={field} />
+      </legend>
       {field.helpText && <p className="mb-2 text-xs text-slate-500">{field.helpText}</p>}
       <div className="grid gap-3 sm:grid-cols-2" role="radiogroup" aria-label={field.label}>
         {field.options.map((option) => (
