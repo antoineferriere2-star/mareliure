@@ -30,7 +30,6 @@ import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
 import { Route as ApiPublicTrackViewRouteImport } from './routes/api/public/track-view'
-import { Route as ApiPublicTmpClearRateRouteImport } from './routes/api/public/tmp-clear-rate'
 import { Route as ApiPublicProjectSummaryRouteImport } from './routes/api/public/project-summary'
 import { Route as ApiPublicFaqAskRouteImport } from './routes/api/public/faq-ask'
 import { Route as ApiPublicContactRouteImport } from './routes/api/public/contact'
@@ -168,11 +167,6 @@ const AuthenticatedBuildIndexRoute = AuthenticatedBuildIndexRouteImport.update({
 const ApiPublicTrackViewRoute = ApiPublicTrackViewRouteImport.update({
   id: '/api/public/track-view',
   path: '/api/public/track-view',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicTmpClearRateRoute = ApiPublicTmpClearRateRouteImport.update({
-  id: '/api/public/tmp-clear-rate',
-  path: '/api/public/tmp-clear-rate',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiPublicProjectSummaryRoute = ApiPublicProjectSummaryRouteImport.update({
@@ -388,7 +382,6 @@ export interface FileRoutesByFullPath {
   '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
-  '/api/public/tmp-clear-rate': typeof ApiPublicTmpClearRateRoute
   '/api/public/track-view': typeof ApiPublicTrackViewRoute
   '/build/': typeof AuthenticatedBuildIndexRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
@@ -439,7 +432,6 @@ export interface FileRoutesByTo {
   '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
-  '/api/public/tmp-clear-rate': typeof ApiPublicTmpClearRateRoute
   '/api/public/track-view': typeof ApiPublicTrackViewRoute
   '/build': typeof AuthenticatedBuildIndexRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
@@ -495,7 +487,6 @@ export interface FileRoutesById {
   '/api/public/contact': typeof ApiPublicContactRoute
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
-  '/api/public/tmp-clear-rate': typeof ApiPublicTmpClearRateRoute
   '/api/public/track-view': typeof ApiPublicTrackViewRoute
   '/_authenticated/build/': typeof AuthenticatedBuildIndexRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
@@ -551,7 +542,6 @@ export interface FileRouteTypes {
     | '/api/public/contact'
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
-    | '/api/public/tmp-clear-rate'
     | '/api/public/track-view'
     | '/build/'
     | '/portal/'
@@ -602,7 +592,6 @@ export interface FileRouteTypes {
     | '/api/public/contact'
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
-    | '/api/public/tmp-clear-rate'
     | '/api/public/track-view'
     | '/build'
     | '/portal'
@@ -657,7 +646,6 @@ export interface FileRouteTypes {
     | '/api/public/contact'
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
-    | '/api/public/tmp-clear-rate'
     | '/api/public/track-view'
     | '/_authenticated/build/'
     | '/_authenticated/portal/'
@@ -701,7 +689,6 @@ export interface RootRouteChildren {
   ApiPublicContactRoute: typeof ApiPublicContactRoute
   ApiPublicFaqAskRoute: typeof ApiPublicFaqAskRoute
   ApiPublicProjectSummaryRoute: typeof ApiPublicProjectSummaryRoute
-  ApiPublicTmpClearRateRoute: typeof ApiPublicTmpClearRateRoute
   ApiPublicTrackViewRoute: typeof ApiPublicTrackViewRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
@@ -856,13 +843,6 @@ declare module '@tanstack/react-router' {
       path: '/api/public/track-view'
       fullPath: '/api/public/track-view'
       preLoaderRoute: typeof ApiPublicTrackViewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/tmp-clear-rate': {
-      id: '/api/public/tmp-clear-rate'
-      path: '/api/public/tmp-clear-rate'
-      fullPath: '/api/public/tmp-clear-rate'
-      preLoaderRoute: typeof ApiPublicTmpClearRateRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/project-summary': {
@@ -1206,7 +1186,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicContactRoute: ApiPublicContactRoute,
   ApiPublicFaqAskRoute: ApiPublicFaqAskRoute,
   ApiPublicProjectSummaryRoute: ApiPublicProjectSummaryRoute,
-  ApiPublicTmpClearRateRoute: ApiPublicTmpClearRateRoute,
   ApiPublicTrackViewRoute: ApiPublicTrackViewRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
@@ -1216,13 +1195,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
