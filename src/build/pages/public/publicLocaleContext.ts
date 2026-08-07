@@ -820,6 +820,15 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Review my answers": "Revisar mis respuestas",
   Edit: "Editar",
   "Not answered": "Sin responder",
+
+  // The Vérificateur's framing. Rule messages themselves are Playbook-authored
+  // and pass through untranslated, like every other Playbook string.
+  "This combination does not work:": "Esta combinación no funciona:",
+  "Worth checking before you continue:": "Conviene revisar esto antes de continuar:",
+  "Select Continue again to keep your answers as they are.":
+    "Seleccione Continuar de nuevo para dejar sus respuestas como están.",
+  "Select Generate project brief again to send your answers as they are.":
+    "Seleccione Generar Project Brief de nuevo para enviar sus respuestas como están.",
   Steps: "Pasos",
   "current step": "paso actual",
   "Last look before sending": "Última revisión antes de enviar",

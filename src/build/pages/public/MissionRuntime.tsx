@@ -4,6 +4,12 @@ import { ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FIELD_COMPONENTS, type InspirationPhotoAnalysis } from "@/build/engine/fields";
 import { computeVisibleSteps, validateField, type VisibleStep } from "@/build/engine/validation";
+import {
+  evaluatePlaybookConsistency,
+  evaluateStepConsistency,
+  gateOnConsistency,
+  type TriggeredConsistency,
+} from "@/build/engine/consistency";
 import { formatAnswerForDisplay } from "@/build/engine/brief";
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import type { ProjectBrief } from "@/build/schema/brief";
@@ -146,6 +152,13 @@ async function callRuntime<T>(body: Record<string, unknown>): Promise<T> {
   return payload as T;
 }
 
+/** A triggered consistency rule, reduced to what the visitor is shown. */
+type ConsistencyNotice = { id: string; message: string };
+
+function toNotices(rules: { id: string; message: string }[]): ConsistencyNotice[] {
+  return rules.map((rule) => ({ id: rule.id, message: rule.message }));
+}
+
 /**
  * Generic Mission runtime: given a public_token, drives the hardened public
  * API (start/resume/save/submit) and renders whatever PlaybookSchema comes
@@ -190,6 +203,12 @@ function MissionRuntimeContent({
   // homepage has promised visitors "a clear recap before submission" all
   // along, and there was none.
   const [reviewing, setReviewing] = useState(false);
+  // Triggered consistency rules. Errors block; a warning is shown once and may
+  // then be moved past — acknowledgement is sticky for the session so a
+  // visitor who has read one is never asked to dismiss it again.
+  const [consistencyErrors, setConsistencyErrors] = useState<ConsistencyNotice[]>([]);
+  const [consistencyWarnings, setConsistencyWarnings] = useState<ConsistencyNotice[]>([]);
+  const [acknowledgedRuleIds, setAcknowledgedRuleIds] = useState<string[]>([]);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [dossier, setDossier] = useState<DossierResult | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -295,6 +314,10 @@ function MissionRuntimeContent({
       delete next[key];
       return next;
     });
+    // A consistency notice describes a combination of answers, so any edit may
+    // have resolved it. Clear and let the next Continue re-evaluate.
+    setConsistencyErrors([]);
+    setConsistencyWarnings([]);
   }
 
   async function persist(next: Answers) {
@@ -309,6 +332,17 @@ function MissionRuntimeContent({
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to save answers");
     }
+  }
+
+  /** Shows what the Vérificateur found and reports whether the visitor may move on — the policy itself lives in the engine. */
+  function clearsConsistency(rules: TriggeredConsistency) {
+    const gate = gateOnConsistency(rules, acknowledgedRuleIds);
+    setConsistencyErrors(toNotices(gate.errors));
+    setConsistencyWarnings(toNotices(gate.newWarnings));
+    if (gate.newWarnings.length > 0) {
+      setAcknowledgedRuleIds((prev) => [...prev, ...gate.newWarnings.map((rule) => rule.id)]);
+    }
+    return gate.proceed;
   }
 
   async function goNext() {
@@ -333,11 +367,28 @@ function MissionRuntimeContent({
       setError(`${copy("Please check the following before continuing:")} ${labels.join(", ")}.`);
       return;
     }
+
+    // Every field on this step is individually valid — now ask the Playbook
+    // whether they hold together, and whether they contradict an earlier step.
+    // Only steps the visitor has actually seen count as answered.
+    if (schema) {
+      const reached = visibleSteps.slice(0, clampedStepIndex + 1).map((s) => s.step.id);
+      const stepRules = evaluateStepConsistency(schema, answers, currentStep.step.id, reached);
+      if (!clearsConsistency(stepRules)) {
+        setError(null);
+        return;
+      }
+    }
+
     setError(null);
     setSaving(true);
     await persist(answers);
     setSaving(false);
     if (isLastStep) {
+      // Playbook-scoped rules span the whole journey, so the recap is the
+      // first moment they can be judged — and the right place to show them:
+      // the visitor is already looking at everything they are about to send.
+      if (schema) clearsConsistency(evaluatePlaybookConsistency(schema, answers));
       setReviewing(true);
       return;
     }
@@ -397,6 +448,12 @@ function MissionRuntimeContent({
 
   async function submit() {
     if (!sessionAuth) return;
+    // Last gate before the server sees it. The recap already showed these when
+    // it opened; this catches an answer edited from the recap since.
+    if (schema && !clearsConsistency(evaluatePlaybookConsistency(schema, answers))) {
+      setError(null);
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
@@ -517,6 +574,35 @@ function MissionRuntimeContent({
             {error && (
               <div className="mb-5 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
                 {copy(error)}
+              </div>
+            )}
+            {consistencyErrors.length > 0 && (
+              <div className="mb-5 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                <p className="font-medium">{copy("This combination does not work:")}</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {consistencyErrors.map((notice) => (
+                    <li key={notice.id}>{copy(notice.message)}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {consistencyWarnings.length > 0 && (
+              <div className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                <p className="font-medium">{copy("Worth checking before you continue:")}</p>
+                <ul className="mt-2 list-disc space-y-1 pl-5">
+                  {consistencyWarnings.map((notice) => (
+                    <li key={notice.id}>{copy(notice.message)}</li>
+                  ))}
+                </ul>
+                {/* A warning informs, it never decides — say plainly how to
+                    keep the answer as it stands. */}
+                <p className="mt-3 text-xs text-amber-800">
+                  {copy(
+                    reviewing
+                      ? "Select Generate project brief again to send your answers as they are."
+                      : "Select Continue again to keep your answers as they are.",
+                  )}
+                </p>
               </div>
             )}
             {reviewing ? (

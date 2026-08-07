@@ -17,7 +17,8 @@ function isEmptyValue(value: AnswerValue | undefined): boolean {
 
 function toComparable(value: AnswerValue | undefined): string | number | boolean | undefined {
   if (value === undefined || value === NOT_SURE_VALUE) return undefined;
-  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return value;
+  if (typeof value === "string" || typeof value === "number" || typeof value === "boolean")
+    return value;
   return undefined;
 }
 
@@ -58,9 +59,29 @@ export function evaluateCondition(condition: Condition, answers: Answers): boole
 }
 
 /** Absent group => always visible. `all` (AND) and `any` (OR) combine with AND between them. */
-export function evaluateConditionGroup(group: ConditionGroup | undefined, answers: Answers): boolean {
+export function evaluateConditionGroup(
+  group: ConditionGroup | undefined,
+  answers: Answers,
+): boolean {
   if (!group) return true;
   const allPass = (group.all ?? []).every((c) => evaluateCondition(c, answers));
   const anyPass = group.any ? group.any.some((c) => evaluateCondition(c, answers)) : true;
   return allPass && anyPass;
+}
+
+/** Every field key a group reads — used to check references and to decide whether a group can be evaluated yet. */
+export function collectConditionFieldKeys(group: ConditionGroup | undefined): string[] {
+  if (!group) return [];
+  return [...(group.all ?? []), ...(group.any ?? [])].map((c) => c.fieldKey);
+}
+
+/**
+ * An empty group (`{}`) evaluates to `true` above, which is right for
+ * "displayWhen" (no condition => always shown) and wrong for anything that
+ * describes a problem to detect: a consistency rule with no condition would
+ * fire on every visitor. Callers that read a group as a trigger use this to
+ * tell "no condition authored yet" from "condition currently satisfied".
+ */
+export function hasAnyCondition(group: ConditionGroup | undefined): boolean {
+  return collectConditionFieldKeys(group).length > 0;
 }

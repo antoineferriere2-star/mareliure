@@ -294,3 +294,79 @@ describe("getPlaybookPublishIssues", () => {
     );
   });
 });
+
+describe("a consistency rule that can never fire is refused at publish", () => {
+  function schemaWithRule(rule: Record<string, unknown>) {
+    return playbookSchema.parse({
+      schemaVersion: 1,
+      sections: [
+        {
+          id: "s1",
+          title: "Section",
+          steps: [
+            {
+              id: "step1",
+              title: "Step",
+              fields: [{ key: "a", label: "A", type: "text", desirability: "optional" }],
+            },
+          ],
+        },
+      ],
+      validationRules: [rule],
+      briefConfig: { suggestedNextActions: [{ label: "Next", value: "Follow up." }] },
+    });
+  }
+
+  it("refuses a rule with no condition", () => {
+    // evaluateConditionGroup({}) is true, and the editor's "+ Rule" button
+    // creates exactly this shape — without the guard every unfinished rule
+    // would fire on every visitor.
+    const schema = schemaWithRule({
+      id: "blank",
+      scope: "playbook",
+      severity: "warning",
+      message: "Something is off.",
+      when: {},
+    });
+    expect(getPlaybookPublishIssues(schema)).toContain(
+      'Validation rule "blank" has no condition, so it can never trigger.',
+    );
+  });
+
+  it("refuses a step-scoped rule attached to no step, or to an unknown one", () => {
+    const orphan = schemaWithRule({
+      id: "orphan",
+      scope: "step",
+      severity: "error",
+      message: "Something is off.",
+      when: { all: [{ fieldKey: "a", operator: "is_empty" }] },
+    });
+    expect(getPlaybookPublishIssues(orphan)).toContain(
+      'Validation rule "orphan" is attached to no step, so it can never trigger.',
+    );
+
+    const ghost = schemaWithRule({
+      id: "ghost-step",
+      scope: "step",
+      stepId: "nope",
+      severity: "error",
+      message: "Something is off.",
+      when: { all: [{ fieldKey: "a", operator: "is_empty" }] },
+    });
+    expect(getPlaybookPublishIssues(ghost)).toContain(
+      'Validation rule "ghost-step" is attached to unknown step "nope", so it can never trigger.',
+    );
+  });
+
+  it("accepts a fully-wired rule", () => {
+    const schema = schemaWithRule({
+      id: "ok",
+      scope: "step",
+      stepId: "step1",
+      severity: "error",
+      message: "Something is off.",
+      when: { all: [{ fieldKey: "a", operator: "is_empty" }] },
+    });
+    expect(getPlaybookPublishIssues(schema).some((i) => i.includes('rule "ok"'))).toBe(false);
+  });
+});

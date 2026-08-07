@@ -16,6 +16,7 @@ import {
 import type { BriefLine, BriefLineSource, ConfidenceLabel, ProjectBrief } from "../schema/brief";
 import type { BriefSectionKey, PlaybookField, PlaybookSchema } from "../schema/playbook";
 import { evaluateConditionGroup } from "./conditions";
+import { evaluatePlaybookConsistency } from "./consistency";
 import { computeVisibleSteps, validateField } from "./validation";
 
 export interface MissionLike {
@@ -291,14 +292,14 @@ export function generateProjectBrief(
   const notSureRequiredCount = requiredFields.filter(
     (f) => answers[f.key] === NOT_SURE_VALUE,
   ).length;
-  const triggeredWarnings = schema.validationRules.filter(
-    (r) => r.severity === "warning" && evaluateConditionGroup(r.when, answers),
-  ).length;
+  // The Vérificateur's own findings. Only warnings can reach this point — an
+  // error-severity rule blocks the submit that would have produced this brief.
+  const triggeredWarnings = evaluatePlaybookConsistency(schema, answers).warnings;
   const score = Math.max(
     0,
     Math.min(
       100,
-      100 - emptyRecommendedCount * 10 - notSureRequiredCount * 15 - triggeredWarnings * 15,
+      100 - emptyRecommendedCount * 10 - notSureRequiredCount * 15 - triggeredWarnings.length * 15,
     ),
   );
   const label: ConfidenceLabel = score >= 80 ? "high" : score >= 50 ? "medium" : "low";
@@ -307,7 +308,10 @@ export function generateProjectBrief(
     reasons.push(`${emptyRecommendedCount} recommended field(s) not answered.`);
   if (notSureRequiredCount > 0)
     reasons.push(`${notSureRequiredCount} required field(s) answered "not sure".`);
-  if (triggeredWarnings > 0) reasons.push(`${triggeredWarnings} consistency warning(s) triggered.`);
+  // The rule's own message, not a count of them: "2 consistency warning(s)
+  // triggered" tells the sales team nothing they can act on, while the
+  // sentence the trade expert wrote is exactly what to raise on the first call.
+  for (const rule of triggeredWarnings) reasons.push(rule.message);
 
   // 8. Suggested next action: first conditional match wins, the unconditional entry is the default.
   const matchedAction =

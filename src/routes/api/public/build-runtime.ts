@@ -5,6 +5,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import { generateProjectBrief } from "@/build/engine/brief";
 import { computeVisibleSteps, validateField, validateFieldFormat } from "@/build/engine/validation";
+import { evaluatePlaybookConsistency } from "@/build/engine/consistency";
 import { buildVisitorProjectSummary, extractPhotoReferences } from "@/build/engine/visitorSummary";
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import { playbookSchema, type PlaybookField, type PlaybookSchema } from "@/build/schema/playbook";
@@ -398,6 +399,18 @@ export async function handleSubmitSession(
     return json(422, { error: "Some required information is missing or invalid.", fieldErrors });
   }
 
+  // The Vérificateur as authority rather than courtesy: the runtime checks
+  // these in the browser, but a Dossier built on a combination the Playbook
+  // says cannot exist would send the sales team to call on a project that does
+  // not add up.
+  const { errors: consistencyErrors } = evaluatePlaybookConsistency(schema, finalAnswers);
+  if (consistencyErrors.length > 0) {
+    return json(422, {
+      error: "Some answers contradict each other.",
+      consistencyErrors: consistencyErrors.map((rule) => ({ id: rule.id, message: rule.message })),
+    });
+  }
+
   const update: { status: string; submitted_at: string; answers?: Json } = {
     status: "submitted",
     submitted_at: new Date().toISOString(),
@@ -745,7 +758,6 @@ export const Route = createFileRoute("/api/public/build-runtime")({
         await supabaseAdmin
           .from("build_runtime_rate")
           .insert({ ip_hash: ipHash, action: body.action, session_id: sessionId });
-
 
         try {
           switch (body.action) {
