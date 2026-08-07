@@ -25,7 +25,12 @@ type Supa = SupabaseClient<Database>;
 const MAX_BODY_BYTES = 32 * 1024; // 32 KB — every action except photo analysis
 const MAX_PHOTO_BODY_BYTES = 12 * 1024 * 1024; // 12 MB — base64-encoded inspiration photo
 const RATE_LIMIT_WINDOW_MIN = 60;
+// Anonymous budget per IP (get_mission / start_session only).
 const RATE_LIMIT_MAX = 60;
+// A single visitor legitimately saves after every step and can upload a dozen
+// photos, so a session gets its own, larger budget.
+const SESSION_RATE_LIMIT_MAX = 300;
+
 const PUBLISHED_STATUS = "active";
 const SESSION_SECRET_BYTES = 32;
 
