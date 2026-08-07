@@ -25,7 +25,12 @@ type Supa = SupabaseClient<Database>;
 const MAX_BODY_BYTES = 32 * 1024; // 32 KB — every action except photo analysis
 const MAX_PHOTO_BODY_BYTES = 12 * 1024 * 1024; // 12 MB — base64-encoded inspiration photo
 const RATE_LIMIT_WINDOW_MIN = 60;
+// Anonymous budget per IP (get_mission / start_session only).
 const RATE_LIMIT_MAX = 60;
+// A single visitor legitimately saves after every step and can upload a dozen
+// photos, so a session gets its own, larger budget.
+const SESSION_RATE_LIMIT_MAX = 300;
+
 const PUBLISHED_STATUS = "active";
 const SESSION_SECRET_BYTES = 32;
 
@@ -715,19 +720,28 @@ export const Route = createFileRoute("/api/public/build-runtime")({
         const ipHash = hashIp(clientIp(request));
         const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-        // Per-IP rate limit
+        // Two separate budgets. The IP budget only covers anonymous actions
+        // (discovering a Mission, opening a session): that is the surface an
+        // attacker can hit without holding a session secret. Everything else
+        // is charged to the session, so a household behind one NAT address —
+        // or a QA run — cannot exhaust another visitor's allowance.
         const windowStart = new Date(Date.now() - RATE_LIMIT_WINDOW_MIN * 60 * 1000).toISOString();
-        const { count } = await supabaseAdmin
+        const sessionId = "session_id" in body ? body.session_id : null;
+
+        const rateQuery = supabaseAdmin
           .from("build_runtime_rate")
           .select("*", { count: "exact", head: true })
-          .eq("ip_hash", ipHash)
           .gte("created_at", windowStart);
-        if ((count ?? 0) >= RATE_LIMIT_MAX) {
+        const { count } = sessionId
+          ? await rateQuery.eq("session_id", sessionId)
+          : await rateQuery.eq("ip_hash", ipHash).is("session_id", null);
+        if ((count ?? 0) >= (sessionId ? SESSION_RATE_LIMIT_MAX : RATE_LIMIT_MAX)) {
           return json(429, { error: "Too many requests" });
         }
         await supabaseAdmin
           .from("build_runtime_rate")
-          .insert({ ip_hash: ipHash, action: body.action });
+          .insert({ ip_hash: ipHash, action: body.action, session_id: sessionId });
+
 
         try {
           switch (body.action) {
