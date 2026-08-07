@@ -820,6 +820,23 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Review my answers": "Revisar mis respuestas",
   Edit: "Editar",
   "Not answered": "Sin responder",
+
+  // The Vérificateur's framing. Rule messages themselves are Playbook-authored
+  // and pass through untranslated, like every other Playbook string.
+  "This combination does not work:": "Esta combinación no funciona:",
+  "Worth checking before you continue:": "Conviene revisar esto antes de continuar:",
+
+  // Deck Playbook consistency-rule messages.
+  "A deck cannot be both ground-level and second-story. Please pick the one that describes this project.":
+    "Una terraza no puede estar a la vez a nivel del suelo y en el segundo piso. Elija la que describe este proyecto.",
+  "This deck is raised but no stairs are mentioned. If it is reached from inside, say so — otherwise stairs change the scope.":
+    "Esta terraza está elevada pero no se mencionan escaleras. Si se accede desde el interior, indíquelo; de lo contrario las escaleras cambian el alcance.",
+  "Stairs are listed as required but not selected as a feature. Add them to the features so the quote includes them.":
+    "Las escaleras figuran como necesarias pero no están seleccionadas como elemento. Agréguelas para que la cotización las incluya.",
+  "Select Continue again to keep your answers as they are.":
+    "Seleccione Continuar de nuevo para dejar sus respuestas como están.",
+  "Select Generate project brief again to send your answers as they are.":
+    "Seleccione Generar Project Brief de nuevo para enviar sus respuestas como están.",
   Steps: "Pasos",
   "current step": "paso actual",
   "Last look before sending": "Última revisión antes de enviar",

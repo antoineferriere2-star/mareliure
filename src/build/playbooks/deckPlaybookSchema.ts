@@ -405,7 +405,72 @@ export const deckPlaybookSchema: PlaybookSchema = {
       ],
     },
   ],
-  validationRules: [],
+  // The Playbook's first armed traps. These are trade judgments, not code:
+  // each one is a question an experienced builder would ask on reading the
+  // answers, and each is worded as the message the visitor and the sales team
+  // actually see. Written to be reviewed and corrected by the trade — the
+  // engine only interprets them.
+  //
+  // Severity is the whole design. `error` blocks the submit and must therefore
+  // be reserved for combinations that cannot physically exist; anything a
+  // customer might legitimately mean is a `warning`, which is shown once and
+  // then let through. Getting that backwards would refuse real projects.
+  validationRules: [
+    {
+      id: "deck-ground-and-second-story",
+      scope: "step",
+      stepId: "heightAccess",
+      severity: "error",
+      // Not a judgment call: one deck cannot be both at ground level and on
+      // the second storey. Almost always a mis-click on the multi-select.
+      message:
+        "A deck cannot be both ground-level and second-story. Please pick the one that describes this project.",
+      when: {
+        all: [
+          { fieldKey: "heightAccess", operator: "includes", value: "Ground-level" },
+          { fieldKey: "heightAccess", operator: "includes", value: "Second-story" },
+        ],
+      },
+    },
+    {
+      id: "deck-elevated-without-stairs",
+      scope: "step",
+      stepId: "features",
+      severity: "warning",
+      // Legitimate when the deck is reached from a door inside, which is why
+      // this only asks. Left unasked it becomes a site-visit surprise: stairs
+      // change the footing count, the permit and the price.
+      message:
+        "This deck is raised but no stairs are mentioned. If it is reached from inside, say so — otherwise stairs change the scope.",
+      when: {
+        any: [
+          { fieldKey: "heightAccess", operator: "includes", value: "Elevated" },
+          { fieldKey: "heightAccess", operator: "includes", value: "Second-story" },
+        ],
+        all: [
+          { fieldKey: "heightAccess", operator: "not_includes", value: "Stairs required" },
+          { fieldKey: "features", operator: "not_includes", value: "Stairs" },
+        ],
+      },
+    },
+    {
+      id: "deck-stairs-disagreement",
+      scope: "step",
+      stepId: "features",
+      severity: "warning",
+      // The two fields overlap: "Stairs required" under access and "Stairs"
+      // under features are the same fact asked twice. The example brief on the
+      // marketing site shows them disagreeing, which is how this was found.
+      message:
+        "Stairs are listed as required but not selected as a feature. Add them to the features so the quote includes them.",
+      when: {
+        all: [
+          { fieldKey: "heightAccess", operator: "includes", value: "Stairs required" },
+          { fieldKey: "features", operator: "not_includes", value: "Stairs" },
+        ],
+      },
+    },
+  ],
   briefConfig: {
     statusLabel: "Deck project brief",
     summaryFragments: [

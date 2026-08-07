@@ -17,7 +17,12 @@ const exampleAnswers: Answers = {
   width: 14,
   heightAccess: ["Elevated", "Stairs required", "Access limitations"],
   desiredMaterial: "Composite",
-  features: ["Railing", "Lighting", "Privacy screen"],
+  // "Stairs" belongs here because "Stairs required" is ticked above. Without
+  // it the example brief published on the marketing site showed the two
+  // fields contradicting each other — a deck whose access needs stairs and
+  // whose feature list does not mention them. The consistency rule
+  // deck-stairs-disagreement now catches exactly that, and caught this.
+  features: ["Stairs", "Railing", "Lighting", "Privacy screen"],
   photos: [
     { filename: "backyard-current-deck.jpg", sizeBytes: 480_000, mimeType: "image/jpeg" },
     { filename: "stairs-access.png", sizeBytes: 410_000, mimeType: "image/png" },

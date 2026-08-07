@@ -45,6 +45,13 @@ function collectTranslatableStrings(): string[] {
     }
   }
 
+  // A consistency rule's message is shown to the visitor mid-journey, so it
+  // belongs here as much as any label does. It was not covered when the rules
+  // were armed, which is exactly the silent-fallback this file exists to stop.
+  for (const rule of deckPlaybookSchema.validationRules) {
+    strings.push(rule.message);
+  }
+
   const { briefConfig } = deckPlaybookSchema;
   if (briefConfig.statusLabel) strings.push(briefConfig.statusLabel);
   if (briefConfig.emptySummaryFallback) strings.push(briefConfig.emptySummaryFallback);

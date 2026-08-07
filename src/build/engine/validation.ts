@@ -11,7 +11,7 @@ import type {
   PlaybookSchema,
   PlaybookStep,
 } from "../schema/playbook";
-import { evaluateConditionGroup } from "./conditions";
+import { collectConditionFieldKeys, evaluateConditionGroup, hasAnyCondition } from "./conditions";
 import {
   INSPIRATION_PHOTOS_ALLOWED_MIME_TYPES,
   INSPIRATION_PHOTOS_MAX_FILE_SIZE_MB,
@@ -207,11 +207,6 @@ export function computeUnansweredRequiredFields(
   return labels;
 }
 
-function collectConditionFieldKeys(group: ConditionGroup | undefined): string[] {
-  if (!group) return [];
-  return [...(group.all ?? []), ...(group.any ?? [])].map((c) => c.fieldKey);
-}
-
 /**
  * Semantic "ready to publish" checks. Structural validity (shapes/types) is
  * already guaranteed by the Zod schema before this runs; this catches
@@ -361,8 +356,21 @@ export function getPlaybookPublishIssues(schema: PlaybookSchema): string[] {
       }
     }
   }
+  // A consistency rule that can never fire is worse than no rule: the trade
+  // expert believes the trap is armed, and neither the visitor nor the sales
+  // team is ever told. Both shapes below pass Zod (every part of `when` is
+  // optional, `stepId` is optional) so they can only be caught here.
+  const stepIds = new Set(schema.sections.flatMap((s) => s.steps.map((step) => step.id)));
   for (const rule of schema.validationRules) {
     checkRefs(rule.when, `Validation rule "${rule.id}"`);
+    if (!hasAnyCondition(rule.when)) {
+      issues.push(`Validation rule "${rule.id}" has no condition, so it can never trigger.`);
+    }
+    if (rule.scope === "step" && (!rule.stepId || !stepIds.has(rule.stepId))) {
+      issues.push(
+        `Validation rule "${rule.id}" is attached to ${rule.stepId ? `unknown step "${rule.stepId}"` : "no step"}, so it can never trigger.`,
+      );
+    }
   }
   for (const calc of schema.briefConfig.calculatedFields) {
     for (const inputKey of calc.compute.inputs) {
