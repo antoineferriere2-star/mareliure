@@ -33,6 +33,8 @@ type PublicMission = {
   playbook_id: string | null;
   playbook_name: string | null;
   proposal: { intro?: string } | null;
+  /** The business publishing this intake — what the visitor should see. */
+  workspace_name: string | null;
 };
 
 type DossierResult = {
@@ -151,17 +153,31 @@ async function callRuntime<T>(body: Record<string, unknown>): Promise<T> {
  * from the Playbook itself.
  */
 export function MissionRuntime({ publicToken }: { publicToken: string }) {
+  // The header needs the business's name, which only arrives with the mission
+  // fetched by the content below — so it is lifted here rather than fetched
+  // twice.
+  const [businessName, setBusinessName] = useState<string | null>(null);
   return (
     // No FAQ launcher here — this is the actual Guided Project Intake a
     // visitor is completing; a persistent "Questions?" button would
     // dilute the product demo itself.
-    <BuildPublicShell showFaqLauncher={false}>
-      <MissionRuntimeContent publicToken={publicToken} />
+    //
+    // `embedded` chrome: this page is normally an iframe inside the
+    // business's own website. Métré Build's marketing nav has no business
+    // being there.
+    <BuildPublicShell showFaqLauncher={false} chrome="embedded" businessName={businessName}>
+      <MissionRuntimeContent publicToken={publicToken} onBusinessName={setBusinessName} />
     </BuildPublicShell>
   );
 }
 
-function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
+function MissionRuntimeContent({
+  publicToken,
+  onBusinessName,
+}: {
+  publicToken: string;
+  onBusinessName: (name: string | null) => void;
+}) {
   const { locale } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
   const [mission, setMission] = useState<PublicMission | null>(null);
@@ -197,6 +213,7 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
       const auth = { sessionId: data.session.id, secret: data.session_secret };
       storeAuth(publicToken, auth);
       setMission(data.mission);
+      onBusinessName(data.mission.workspace_name);
       setSchema(data.playbook_schema);
       setSessionAuth(auth);
       setAnswers(data.session.answers ?? {});
@@ -221,6 +238,7 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
         });
         if (cancelled) return;
         setMission(data.mission);
+        onBusinessName(data.mission.workspace_name);
         setSchema(data.playbook_schema);
         setSessionAuth(stored);
         setAnswers(data.session.answers ?? {});
@@ -242,7 +260,9 @@ function MissionRuntimeContent({ publicToken }: { publicToken: string }) {
       cancelled = true;
       window.clearTimeout(slowLoadTimer);
     };
-  }, [publicToken, reloadKey]);
+    // onBusinessName is a setState setter, so its identity is stable and
+    // listing it never re-runs the load.
+  }, [publicToken, reloadKey, onBusinessName]);
 
   function retryLoad() {
     // Bump the effect's dependency rather than clearing storage first — a

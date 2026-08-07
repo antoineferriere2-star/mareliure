@@ -26,9 +26,24 @@ const VERTICAL_NAV_ITEMS = [
   },
 ];
 
+/**
+ * `marketing` is Métré Build's own site: full nav, full footer.
+ *
+ * `embedded` is a surface a visitor reaches from *someone else's* website —
+ * a Guided Project Intake, usually inside an iframe on the contractor's own
+ * page. Showing the marketing header there put ten links out of the intake
+ * ("Pricing", "Create account") in front of a homeowner who came to describe
+ * a deck, wearing the vendor's brand instead of the contractor's. The
+ * embedded chrome carries the business's name and nothing else but the legal
+ * links Métré owes the visitor as the processor of their data.
+ */
+export type PublicShellChrome = "marketing" | "embedded";
+
 export function BuildPublicShell({
   children,
   showFaqLauncher = true,
+  chrome = "marketing",
+  businessName,
 }: {
   children: ReactNode;
   /**
@@ -39,10 +54,17 @@ export function BuildPublicShell({
    * this feature an on-page FAQ instead of a site-wide chat widget.
    */
   showFaqLauncher?: boolean;
+  chrome?: PublicShellChrome;
+  /** Shown in the embedded header. Absent until the mission has loaded. */
+  businessName?: string | null;
 }) {
   return (
     <PublicLocaleProvider>
-      <BuildPublicShellContent showFaqLauncher={showFaqLauncher}>
+      <BuildPublicShellContent
+        showFaqLauncher={showFaqLauncher}
+        chrome={chrome}
+        businessName={businessName}
+      >
         {children}
       </BuildPublicShellContent>
     </PublicLocaleProvider>
@@ -52,9 +74,13 @@ export function BuildPublicShell({
 function BuildPublicShellContent({
   children,
   showFaqLauncher,
+  chrome,
+  businessName,
 }: {
   children: ReactNode;
   showFaqLauncher: boolean;
+  chrome: PublicShellChrome;
+  businessName?: string | null;
 }) {
   const { locale } = usePublicLocale();
   usePageViewTracking(locale);
@@ -68,6 +94,44 @@ function BuildPublicShellContent({
     { labelKey: "navigation.freeAudit" as const, to: "/free-inquiry-audit" as const },
     { labelKey: "navigation.contact" as const, to: "/contact" as const },
   ];
+
+  if (chrome === "embedded") {
+    return (
+      <div className="min-h-screen bg-white text-slate-950">
+        <header className="border-b border-slate-200 bg-white">
+          <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+            {/* Not a link: inside an iframe on the business's own site there is
+                nowhere useful to navigate to, and any destination here would
+                lead the visitor away from the intake. */}
+            <span className="truncate text-sm font-semibold text-slate-900">
+              {businessName || " "}
+            </span>
+            <PublicLanguageSelect />
+          </div>
+        </header>
+
+        {children}
+
+        <footer className="border-t border-slate-200 bg-white">
+          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-slate-500 sm:px-6">
+            {/* Métré Build processes what the visitor submits, so its privacy
+                and terms have to stay reachable even on an embedded surface.
+                The attribution is deliberately quiet — it is a credit, not a
+                call to action, and it never competes with the business. */}
+            <span>Project intake powered by Métré Build</span>
+            <span className="flex gap-4">
+              <a href="/privacy" target="_blank" rel="noreferrer" className="hover:text-slate-900">
+                {t(locale, "footer.privacy")}
+              </a>
+              <a href="/terms" target="_blank" rel="noreferrer" className="hover:text-slate-900">
+                {t(locale, "footer.terms")}
+              </a>
+            </span>
+          </div>
+        </footer>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-white text-slate-950">

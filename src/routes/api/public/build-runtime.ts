@@ -114,7 +114,7 @@ async function resolveBusinessName(
   return (mission.name as string | undefined) ?? "";
 }
 
-function publicMission(m: Record<string, unknown>) {
+function publicMission(m: Record<string, unknown>, workspaceName?: string | null) {
   return {
     id: m.id,
     name: m.name,
@@ -123,6 +123,10 @@ function publicMission(m: Record<string, unknown>) {
     playbook_id: m.playbook_id,
     playbook_name: m.playbook_name,
     proposal: m.proposal,
+    /** The business the visitor thinks they are talking to. The runtime shows
+     * this instead of Métré Build's own branding — the intake is embedded in
+     * the customer's site and must read as theirs. */
+    workspace_name: workspaceName ?? null,
   };
 }
 
@@ -170,7 +174,8 @@ export async function handleGetMission(supabase: Supa, publicToken: string) {
   if (!data.playbook_version_id) return json(404, { error: "Mission has no published playbook" });
   const schema = await loadPlaybookSchema(supabase, data.playbook_version_id as string);
   if (!schema) return json(500, { error: "Playbook schema unavailable" });
-  return json(200, { mission: publicMission(data), playbook_schema: schema });
+  const workspaceName = await resolveBusinessName(supabase, data);
+  return json(200, { mission: publicMission(data, workspaceName), playbook_schema: schema });
 }
 
 export async function handleStartSession(supabase: Supa, publicToken: string, ipHash: string) {
@@ -195,7 +200,7 @@ export async function handleStartSession(supabase: Supa, publicToken: string, ip
     .single();
   if (error) throw error;
   return json(200, {
-    mission: publicMission(mission),
+    mission: publicMission(mission, await resolveBusinessName(supabase, mission)),
     session: data,
     session_secret: secret,
     playbook_schema: schema,
@@ -255,7 +260,7 @@ export async function handleResumeSession(supabase: Supa, sessionId: string, sec
     const existing = await findExistingDossier(supabase, sessionId);
     if (existing) {
       return json(200, {
-        mission: publicMission(mission),
+        mission: publicMission(mission, await resolveBusinessName(supabase, mission)),
         playbook_schema: schema,
         session: sessionPayload,
         dossier: existing,
@@ -264,7 +269,7 @@ export async function handleResumeSession(supabase: Supa, sessionId: string, sec
   }
 
   return json(200, {
-    mission: publicMission(mission),
+    mission: publicMission(mission, await resolveBusinessName(supabase, mission)),
     playbook_schema: schema,
     session: sessionPayload,
   });

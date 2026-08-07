@@ -292,6 +292,34 @@ describe("findPublishedMission / handleGetMission", () => {
     expect(body.mission.id).toBe(mission.id);
     expect(body.playbook_schema.sections).toHaveLength(1);
   });
+
+  it("expose le nom du Client Workspace — le visiteur doit voir l'entreprise, pas Métré Build", async () => {
+    const workspaceId = randomUUID();
+    const { mission, versionRow } = seedActiveMission({ workspace_id: workspaceId });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+      build_workspaces: [{ id: workspaceId, name: "Sanibel Decks" }],
+    });
+
+    const res = await handleGetMission(client, mission.public_token as string);
+    const body = await res.json();
+    expect(body.mission.workspace_name).toBe("Sanibel Decks");
+  });
+
+  it("retombe sur le nom de la Mission quand aucun workspace n'est rattaché", async () => {
+    // Le champ ne doit jamais être vide côté visiteur : un en-tête sans nom
+    // vaut mieux que « Métré Build », mais un nom de Mission vaut mieux que rien.
+    const { mission, versionRow } = seedActiveMission({ workspace_id: null });
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
+
+    const res = await handleGetMission(client, mission.public_token as string);
+    const body = await res.json();
+    expect(body.mission.workspace_name).toBe(mission.name);
+  });
 });
 
 describe("possession de session (session_id + session_secret)", () => {
