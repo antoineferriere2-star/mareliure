@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DetectionBadge } from "@/build/components/DetectionBadge";
 import { publicCopy, useOptionalPublicLocale } from "@/build/pages/public/publicLocaleContext";
-import type { FieldComponentProps } from "./types";
+import { RequiredMark, type FieldComponentProps } from "./types";
 
 function resizeToBase64(
   file: File,
@@ -144,6 +144,7 @@ export function InspirationPhotoField({
       <Upload className="h-6 w-6 text-emerald-700" />
       <Label htmlFor={field.key} className="mt-4 block font-semibold">
         {copy(field.label)}
+        <RequiredMark field={field} />
       </Label>
       {field.helpText && <p className="mt-2 text-sm text-slate-600">{copy(field.helpText)}</p>}
 

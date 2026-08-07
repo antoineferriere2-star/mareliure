@@ -3,7 +3,7 @@ import type { MeasurementField as MeasurementFieldDef } from "@/build/schema/pla
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NotSureToggle } from "./NotSureToggle";
-import { FIELD_ERROR_CLASS, type FieldComponentProps } from "./types";
+import { FIELD_ERROR_CLASS, type FieldComponentProps, RequiredMark } from "./types";
 
 export function MeasurementField({
   field,
@@ -25,6 +25,7 @@ export function MeasurementField({
     <div>
       <Label htmlFor={field.key}>
         {field.label}
+        <RequiredMark field={field} />
         {!labelAlreadyShowsUnit && (
           <span className="text-xs font-normal text-slate-500"> ({field.unit})</span>
         )}

@@ -11,6 +11,13 @@ export interface PhotoAnswerEntry {
   filename: string;
   sizeBytes: number;
   mimeType: string;
+  /**
+   * Where the file actually lives, for a field whose Playbook sets
+   * `storage: "supabase_storage"`. Absent on `filename_only` fields and on
+   * every answer recorded before uploads existed — those entries carry the
+   * name of a file nobody kept, and there is no way to recover it.
+   */
+  storagePath?: string;
 }
 
 export interface AddressAnswerValue {

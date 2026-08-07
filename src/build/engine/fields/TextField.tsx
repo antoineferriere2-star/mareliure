@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { NotSureToggle } from "./NotSureToggle";
-import { FIELD_ERROR_CLASS, type FieldComponentProps } from "./types";
+import { FIELD_ERROR_CLASS, type FieldComponentProps, RequiredMark } from "./types";
 
 export function TextField({ field, value, onChange, error }: FieldComponentProps<TextFieldDef>) {
   const isNotSure = value === NOT_SURE_VALUE;
@@ -12,7 +12,10 @@ export function TextField({ field, value, onChange, error }: FieldComponentProps
 
   return (
     <div>
-      <Label htmlFor={field.key}>{field.label}</Label>
+      <Label htmlFor={field.key}>
+        {field.label}
+        <RequiredMark field={field} />
+      </Label>
       {field.helpText && <p className="mt-1 text-xs text-slate-500">{field.helpText}</p>}
       {field.multiline ? (
         <Textarea

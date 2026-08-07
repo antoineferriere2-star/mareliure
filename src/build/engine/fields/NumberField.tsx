@@ -3,7 +3,7 @@ import type { NumberField as NumberFieldDef } from "@/build/schema/playbook";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { NotSureToggle } from "./NotSureToggle";
-import { FIELD_ERROR_CLASS, type FieldComponentProps } from "./types";
+import { FIELD_ERROR_CLASS, type FieldComponentProps, RequiredMark } from "./types";
 
 export function NumberField({
   field,
@@ -17,7 +17,10 @@ export function NumberField({
 
   return (
     <div>
-      <Label htmlFor={field.key}>{field.label}</Label>
+      <Label htmlFor={field.key}>
+        {field.label}
+        <RequiredMark field={field} />
+      </Label>
       {field.helpText && <p className="mt-1 text-xs text-slate-500">{field.helpText}</p>}
       <Input
         id={field.key}

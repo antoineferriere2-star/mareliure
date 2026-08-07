@@ -12,6 +12,13 @@ import { assertWorkspaceMember, assertWorkspaceOwner } from "./workspaceAuth.ser
 import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
 import { assertCanPublish, getWorkspaceEntitlements } from "./workspaceEntitlements.server";
 import { wouldExceedActiveMissions } from "@/build/billing/quota";
+import { extractPhotoReferences } from "@/build/engine/visitorSummary";
+import type { Answers } from "@/build/schema/answers";
+import type { DisplayPhotoReference } from "@/build/schema/visitorSummary";
+import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
+
+/** Long enough to read a Dossier without reloading, short enough that a copied URL dies quickly. */
+const SIGNED_PHOTO_URL_TTL_SECONDS = 3600;
 
 const COMMERCIAL_STATUSES = ["nouveau", "contacte", "devise", "gagne", "perdu"] as const;
 export type CommercialStatus = (typeof COMMERCIAL_STATUSES)[number];
@@ -238,6 +245,56 @@ export const getWorkspaceDossier = createServerFn({ method: "GET" })
       mission = m;
     }
     return { dossier, mission };
+  });
+
+/**
+ * Signed URLs for the photos a visitor attached to this Dossier.
+ *
+ * The Storage bucket is private and the admin console has been able to show
+ * these since the feature shipped; the workspace that actually receives the
+ * project never could. A Project Brief promising "photos in one place" was
+ * showing the sales team nothing.
+ *
+ * The caller passes a Dossier id, never a Storage path. Paths are read
+ * server-side from that Dossier's own session after membership is checked, so
+ * a member of one workspace cannot mint a URL for another's photo by guessing
+ * or replaying a path — which is exactly what the admin-only variant
+ * (getInspirationPhotoUrl) allows, and why it must stay admin-only.
+ */
+export const getWorkspaceDossierPhotos = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    const sb = await admin();
+    const { data: dossier, error } = await sb
+      .from("build_dossiers")
+      .select("id, workspace_id, session_id")
+      .eq("id", data.id)
+      .maybeSingle();
+    if (error) fail(500, error.message);
+    if (!dossier || !dossier.workspace_id) fail(404, "Not found");
+    await assertWorkspaceMember(context.supabase, context.userId, dossier.workspace_id);
+    if (!dossier.session_id) return { photos: [] as DisplayPhotoReference[] };
+
+    const { data: session } = await sb
+      .from("build_runtime_sessions")
+      .select("answers")
+      .eq("id", dossier.session_id)
+      .maybeSingle();
+    const refs = extractPhotoReferences((session?.answers ?? {}) as Answers);
+    if (refs.length === 0) return { photos: [] as DisplayPhotoReference[] };
+
+    const photos: DisplayPhotoReference[] = [];
+    for (const ref of refs) {
+      const { data: signed } = await sb.storage
+        // No bucket on the reference means the inspiration bucket — the only
+        // one that existed when those snapshots were written.
+        .from(ref.bucket ?? INSPIRATION_PHOTOS_BUCKET)
+        .createSignedUrl(ref.path, SIGNED_PHOTO_URL_TTL_SECONDS);
+      // One unreadable object must not take the whole Dossier down with it.
+      if (signed?.signedUrl) photos.push({ url: signed.signedUrl, caption: ref.caption });
+    }
+    return { photos };
   });
 
 export const updateDossierFollowUp = createServerFn({ method: "POST" })

@@ -18,6 +18,7 @@ import type { MissionProposal } from "@/build/schema/missionProposal";
 import type { Answers } from "@/build/schema/answers";
 import type { SupportedLocale } from "@/build/i18n/locales";
 import type { MeasurementSystem } from "@/build/measurements/types";
+import { PROJECT_PHOTOS_BUCKET } from "@/build/storage/projectPhotosBucket";
 import { publicCopy } from "@/build/pages/public/publicLocaleContext";
 import {
   VISITOR_SUMMARY_VERSION,
@@ -28,22 +29,43 @@ import {
 import type { DeckPreviewSnapshot } from "@/build/visualPreview/deckPreviewParams";
 
 /**
- * Only InspirationPhotoAnswer entries carry a real Storage path — the plain
- * multi-photo "photos" field only ever stores client-side filename metadata
- * (no server-side file at all), so it can never produce a displayable
- * reference. Generic across Playbooks: scans every answer value rather than
- * assuming a specific field key.
+ * Every answer that points at a real file in Storage, from either source: the
+ * single InspirationPhotoAnswer the vision agent reads, and the entries of a
+ * `photo` field whose Playbook stores uploads rather than filenames. Entries
+ * without a storagePath are skipped — a `filename_only` field records the name
+ * of a file that was never sent anywhere, so there is nothing to show.
+ *
+ * Generic across Playbooks: scans every answer value rather than assuming a
+ * specific field key.
  */
 export function extractPhotoReferences(answers: Answers): VisitorPhotoReference[] {
   const refs: VisitorPhotoReference[] = [];
   for (const value of Object.values(answers)) {
+    if (Array.isArray(value)) {
+      for (const entry of value) {
+        if (
+          entry &&
+          typeof entry === "object" &&
+          typeof (entry as { storagePath?: unknown }).storagePath === "string"
+        ) {
+          const photo = entry as { storagePath: string; filename?: string };
+          refs.push({
+            path: photo.storagePath,
+            caption: photo.filename,
+            bucket: PROJECT_PHOTOS_BUCKET,
+          });
+        }
+      }
+      continue;
+    }
     if (
       value &&
       typeof value === "object" &&
-      !Array.isArray(value) &&
       "photoPath" in value &&
       typeof (value as { photoPath: unknown }).photoPath === "string"
     ) {
+      // No bucket: the inspiration bucket is the historical default, and
+      // every snapshot already stored relies on that reading.
       refs.push({ path: (value as { photoPath: string }).photoPath });
     }
   }

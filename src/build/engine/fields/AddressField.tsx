@@ -2,7 +2,7 @@ import type { AddressAnswerValue } from "@/build/schema/answers";
 import type { AddressField as AddressFieldDef } from "@/build/schema/playbook";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { FIELD_ERROR_CLASS, type FieldComponentProps } from "./types";
+import { FIELD_ERROR_CLASS, type FieldComponentProps, RequiredMark } from "./types";
 
 export function AddressField({
   field,
@@ -18,9 +18,14 @@ export function AddressField({
   return (
     <div>
       <div className="grid gap-4 md:grid-cols-2">
-        {field.components.map((component) => (
+        {field.components.map((component, index) => (
           <div key={component.key}>
-            <Label htmlFor={`${field.key}-${component.key}`}>{component.label}</Label>
+            <Label htmlFor={`${field.key}-${component.key}`}>
+              {component.label}
+              {/* Once, on the first part: the requirement is the address, not
+                  each line of it. */}
+              {index === 0 && <RequiredMark field={field} />}
+            </Label>
             <Input
               id={`${field.key}-${component.key}`}
               value={current[component.key] ?? ""}

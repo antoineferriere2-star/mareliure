@@ -14,6 +14,11 @@ import { DEFAULT_LOCALE, resolveSupportedLocale } from "@/build/i18n/locales";
 import { DEFAULT_MEASUREMENT_SYSTEM } from "@/build/measurements/types";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
+import {
+  PROJECT_PHOTOS_ALLOWED_MIME_TYPES,
+  PROJECT_PHOTOS_BUCKET,
+  PROJECT_PHOTOS_MAX_FILE_SIZE_MB,
+} from "@/build/storage/projectPhotosBucket";
 
 type Supa = SupabaseClient<Database>;
 
@@ -51,6 +56,15 @@ export const bodySchema = z.union([
     // only), so the client passes it explicitly at the one point it needs
     // to be frozen into the visitor summary snapshot and email.
     locale: z.string().max(16).optional(),
+  }),
+  z.object({
+    action: z.literal("upload_project_photo"),
+    session_id: z.string().uuid(),
+    session_secret: z.string().min(32).max(256),
+    field_key: z.string().min(1),
+    image_base64: z.string().min(1),
+    media_type: z.string().min(1),
+    filename: z.string().min(1).max(200),
   }),
   z.object({
     action: z.literal("analyze_inspiration_photo"),
@@ -114,7 +128,7 @@ async function resolveBusinessName(
   return (mission.name as string | undefined) ?? "";
 }
 
-function publicMission(m: Record<string, unknown>) {
+function publicMission(m: Record<string, unknown>, workspaceName?: string | null) {
   return {
     id: m.id,
     name: m.name,
@@ -123,6 +137,10 @@ function publicMission(m: Record<string, unknown>) {
     playbook_id: m.playbook_id,
     playbook_name: m.playbook_name,
     proposal: m.proposal,
+    /** The business the visitor thinks they are talking to. The runtime shows
+     * this instead of Métré Build's own branding — the intake is embedded in
+     * the customer's site and must read as theirs. */
+    workspace_name: workspaceName ?? null,
   };
 }
 
@@ -170,7 +188,8 @@ export async function handleGetMission(supabase: Supa, publicToken: string) {
   if (!data.playbook_version_id) return json(404, { error: "Mission has no published playbook" });
   const schema = await loadPlaybookSchema(supabase, data.playbook_version_id as string);
   if (!schema) return json(500, { error: "Playbook schema unavailable" });
-  return json(200, { mission: publicMission(data), playbook_schema: schema });
+  const workspaceName = await resolveBusinessName(supabase, data);
+  return json(200, { mission: publicMission(data, workspaceName), playbook_schema: schema });
 }
 
 export async function handleStartSession(supabase: Supa, publicToken: string, ipHash: string) {
@@ -195,7 +214,7 @@ export async function handleStartSession(supabase: Supa, publicToken: string, ip
     .single();
   if (error) throw error;
   return json(200, {
-    mission: publicMission(mission),
+    mission: publicMission(mission, await resolveBusinessName(supabase, mission)),
     session: data,
     session_secret: secret,
     playbook_schema: schema,
@@ -255,7 +274,7 @@ export async function handleResumeSession(supabase: Supa, sessionId: string, sec
     const existing = await findExistingDossier(supabase, sessionId);
     if (existing) {
       return json(200, {
-        mission: publicMission(mission),
+        mission: publicMission(mission, await resolveBusinessName(supabase, mission)),
         playbook_schema: schema,
         session: sessionPayload,
         dossier: existing,
@@ -264,7 +283,7 @@ export async function handleResumeSession(supabase: Supa, sessionId: string, sec
   }
 
   return json(200, {
-    mission: publicMission(mission),
+    mission: publicMission(mission, await resolveBusinessName(supabase, mission)),
     playbook_schema: schema,
     session: sessionPayload,
   });
@@ -529,6 +548,82 @@ export async function handleSubmitSession(
 // Stateless: uploads the image to Storage and returns the vision agent's
 // hypotheses. Never writes to build_runtime_sessions — the visitor confirms
 // or corrects the hypotheses client-side, and the resulting
+/**
+ * Stores one file attached to a `photo` field whose Playbook asks for
+ * `supabase_storage`. No AI, no analysis: this is evidence the workspace will
+ * look at, not something a model reads. Stateless like the inspiration
+ * upload — the returned storagePath is written into the answer by the
+ * ordinary save_session call, so an abandoned session leaves an orphaned
+ * object and never a half-written answer.
+ */
+export async function handleUploadProjectPhoto(
+  supabase: Supa,
+  sessionId: string,
+  secret: string,
+  fieldKey: string,
+  imageBase64: string,
+  mediaType: string,
+  filename: string,
+) {
+  const session = await verifySessionSecret(supabase, sessionId, secret);
+  if (!session) return json(404, { error: "Session not found" });
+  if (session.status !== "in_progress") return json(409, { error: "Session already submitted" });
+
+  const { data: mission, error: mErr } = await supabase
+    .from("build_missions")
+    .select("playbook_version_id")
+    .eq("id", session.mission_id)
+    .maybeSingle();
+  if (mErr) throw mErr;
+  if (!mission?.playbook_version_id)
+    return json(500, { error: "Mission has no published playbook" });
+  const schema = await loadPlaybookSchema(supabase, mission.playbook_version_id as string);
+  if (!schema) return json(500, { error: "Playbook schema unavailable" });
+
+  // The Playbook decides what this field accepts, and it must also have asked
+  // for uploads: a filename_only field has no business writing to Storage.
+  const field = findFieldByKey(schema, fieldKey);
+  if (!field || field.type !== "photo" || field.storage !== "supabase_storage") {
+    return json(400, { error: "Unknown or invalid field for a photo upload." });
+  }
+  if (!field.acceptMimeTypes.includes(mediaType)) {
+    return json(400, { error: "Unsupported image type." });
+  }
+  if (!PROJECT_PHOTOS_ALLOWED_MIME_TYPES.includes(mediaType as never)) {
+    // Storage would reject it anyway; refusing here keeps the visitor out of a 500.
+    return json(400, { error: "Unsupported image type." });
+  }
+
+  const buffer = Buffer.from(imageBase64, "base64");
+  const maxBytes = Math.min(field.maxFileSizeMb, PROJECT_PHOTOS_MAX_FILE_SIZE_MB) * 1024 * 1024;
+  if (buffer.length === 0 || buffer.length > maxBytes) {
+    return json(400, { error: `Each photo must be under ${field.maxFileSizeMb} MB.` });
+  }
+
+  // The visitor's filename never becomes the object key — it is theirs, it can
+  // collide, and it can carry anything. It travels as the caption instead.
+  const storagePath = `sessions/${sessionId}/${randomUUID()}`;
+  const { error: uploadError } = await supabase.storage
+    .from(PROJECT_PHOTOS_BUCKET)
+    .upload(storagePath, buffer, { contentType: mediaType, upsert: false });
+  if (uploadError) {
+    logOperationalError("build-runtime.project-photo-upload-failed", uploadError, {
+      sessionId,
+      fieldKey,
+      mediaType,
+      storagePath,
+    });
+    return json(500, { error: "Unable to store the photo." });
+  }
+
+  return json(200, {
+    storagePath,
+    filename: filename.slice(0, 200),
+    sizeBytes: buffer.length,
+    mimeType: mediaType,
+  });
+}
+
 // InspirationPhotoAnswer is persisted like any other field via the ordinary
 // save_session/submit_session actions above.
 export async function handleAnalyzeInspirationPhoto(
@@ -611,7 +706,9 @@ export const Route = createFileRoute("/api/public/build-runtime")({
         }
         const body = parsed.data;
         // Only the photo-analysis action may exceed the ordinary 32 KB cap.
-        if (body.action !== "analyze_inspiration_photo" && raw.length > MAX_BODY_BYTES) {
+        const isPhotoUpload =
+          body.action === "analyze_inspiration_photo" || body.action === "upload_project_photo";
+        if (!isPhotoUpload && raw.length > MAX_BODY_BYTES) {
           return json(413, { error: "Payload too large" });
         }
 
@@ -654,6 +751,16 @@ export const Route = createFileRoute("/api/public/build-runtime")({
                 body.session_secret,
                 body.answers,
                 body.locale,
+              );
+            case "upload_project_photo":
+              return await handleUploadProjectPhoto(
+                supabaseAdmin,
+                body.session_id,
+                body.session_secret,
+                body.field_key,
+                body.image_base64,
+                body.media_type,
+                body.filename,
               );
             case "analyze_inspiration_photo":
               return await handleAnalyzeInspirationPhoto(

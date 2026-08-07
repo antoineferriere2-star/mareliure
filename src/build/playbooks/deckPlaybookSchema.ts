@@ -152,6 +152,19 @@ export const deckPlaybookSchema: PlaybookSchema = {
               desirability: "optional",
               placeholder: "I'm not sure",
               allowNotSure: true,
+              // Only asked when the area cannot be worked out. Someone who
+              // gave a length and a width was being asked for a number the
+              // engine already multiplies for them (briefConfig's
+              // computedArea) — redundant work, and an invitation to
+              // contradict themselves. It stays as the escape hatch for a
+              // visitor who knows the surface but not the sides, which is
+              // exactly what fallbackFieldKey uses it for.
+              displayWhen: {
+                any: [
+                  { fieldKey: "length", operator: "is_empty" },
+                  { fieldKey: "width", operator: "is_empty" },
+                ],
+              },
             },
           ],
         },
@@ -250,8 +263,16 @@ export const deckPlaybookSchema: PlaybookSchema = {
               helpText: "JPG, PNG, WEBP or HEIC. 8 MB max each.",
               maxFiles: 6,
               maxFileSizeMb: 8,
-              acceptMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/heic"],
-              storage: "filename_only",
+              acceptMimeTypes: [
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/heic",
+                "image/heif",
+              ],
+              // The files are kept now. Before this, the brief listed names
+              // like "backyard-current-deck.jpg" that nobody could open.
+              storage: "supabase_storage",
               briefMapping: {
                 section: "confirmedInformation",
                 label: "Photos",

@@ -137,8 +137,8 @@ describe("getPlaybookPublishIssues", () => {
     expect(issues.some((i) => i.includes("ghost"))).toBe(true);
   });
 
-  it("refuses to publish a photo field asking for an unimplemented Storage upload", () => {
-    const schema = playbookSchema.parse({
+  function photoSchema(overrides: Record<string, unknown>) {
+    return playbookSchema.parse({
       schemaVersion: 1,
       sections: [
         {
@@ -158,6 +158,7 @@ describe("getPlaybookPublishIssues", () => {
                   maxFileSizeMb: 8,
                   acceptMimeTypes: ["image/jpeg"],
                   storage: "supabase_storage",
+                  ...overrides,
                 },
               ],
             },
@@ -166,10 +167,27 @@ describe("getPlaybookPublishIssues", () => {
       ],
       briefConfig: { suggestedNextActions: [{ label: "Next", value: "Follow up." }] },
     });
-    const issues = getPlaybookPublishIssues(schema);
-    expect(issues.some((i) => i.includes("sitePhotos") && i.includes("not implemented"))).toBe(
-      true,
+  }
+
+  it("publishes a Storage-backed photo field that fits the bucket", () => {
+    // This used to be refused outright: uploads were unimplemented and the
+    // files would have been silently discarded. They are stored now.
+    expect(getPlaybookPublishIssues(photoSchema({})).some((i) => i.includes("sitePhotos"))).toBe(
+      false,
     );
+  });
+
+  it("refuses a Storage-backed photo field the bucket would reject", () => {
+    // Passing the app-side check and then failing inside Storage shows the
+    // visitor a 500 mid-upload — catch it while the author can still fix it.
+    const tooBig = getPlaybookPublishIssues(photoSchema({ maxFileSizeMb: 25 }));
+    expect(tooBig.some((i) => i.includes("sitePhotos") && i.includes("MB"))).toBe(true);
+
+    const badType = getPlaybookPublishIssues(photoSchema({ acceptMimeTypes: ["image/gif"] }));
+    expect(badType.some((i) => i.includes("sitePhotos") && i.includes("image/gif"))).toBe(true);
+
+    const tooMany = getPlaybookPublishIssues(photoSchema({ maxFiles: 50 }));
+    expect(tooMany.some((i) => i.includes("sitePhotos") && i.includes("50 files"))).toBe(true);
   });
 
   it("allows the implemented filename_only photo mode", () => {

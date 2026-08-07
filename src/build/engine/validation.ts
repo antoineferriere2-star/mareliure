@@ -16,6 +16,11 @@ import {
   INSPIRATION_PHOTOS_ALLOWED_MIME_TYPES,
   INSPIRATION_PHOTOS_MAX_FILE_SIZE_MB,
 } from "../storage/inspirationPhotosBucket";
+import {
+  PROJECT_PHOTOS_ALLOWED_MIME_TYPES,
+  PROJECT_PHOTOS_MAX_FILES,
+  PROJECT_PHOTOS_MAX_FILE_SIZE_MB,
+} from "../storage/projectPhotosBucket";
 
 function isEmpty(value: AnswerValue | undefined): boolean {
   if (value === undefined || value === null) return true;
@@ -226,18 +231,37 @@ export function getPlaybookPublishIssues(schema: PlaybookSchema): string[] {
     issues.push(`Duplicate field keys: ${duplicates.join(", ")}.`);
   }
 
-  // `photo` fields accept a storage mode, but only "filename_only" is built:
-  // PhotoField.tsx records each file's name/size/type and never uploads the
-  // file itself. Publishing a Playbook that asks for "supabase_storage" would
-  // silently drop every image a visitor attaches, so refuse it loudly here
-  // rather than lose customer data. (`inspiration_photo` is the field type
-  // that really does upload.)
+  // Both storage modes are implemented now. `supabase_storage` uploads
+  // through upload_project_photo into the build-project-photos bucket, so the
+  // only thing left to refuse is a field asking for more than that bucket
+  // will accept — which would pass the app-side check and then be rejected by
+  // Storage mid-upload, in front of the visitor.
   for (const field of allFields) {
     if (field.type === "photo" && field.storage === "supabase_storage") {
-      issues.push(
-        `Field "${field.key}" requests Storage upload, which is not implemented for photo fields yet — files would be discarded. Use an inspiration_photo field instead.`,
+      if (field.maxFileSizeMb > PROJECT_PHOTOS_MAX_FILE_SIZE_MB) {
+        issues.push(
+          `Field "${field.key}" allows ${field.maxFileSizeMb} MB, above the ${PROJECT_PHOTOS_MAX_FILE_SIZE_MB} MB Storage limit — those uploads would fail.`,
+        );
+      }
+      if (field.maxFiles > PROJECT_PHOTOS_MAX_FILES) {
+        issues.push(
+          `Field "${field.key}" allows ${field.maxFiles} files, above the ${PROJECT_PHOTOS_MAX_FILES} the bucket is sized for.`,
+        );
+      }
+      const unsupported = field.acceptMimeTypes.filter(
+        (type) => !(PROJECT_PHOTOS_ALLOWED_MIME_TYPES as readonly string[]).includes(type),
       );
+      if (unsupported.length > 0) {
+        issues.push(
+          `Field "${field.key}" accepts ${unsupported.join(", ")}, which Storage rejects — those uploads would fail.`,
+        );
+      }
     }
+
+    // `filename_only` stays publishable: Playbooks published against it are
+    // live, and turning a working mode into a publish blocker would strand
+    // them. It keeps discarding the files, which is now a choice rather than
+    // the only option.
 
     // The Storage bucket enforces its own ceiling. A field asking for more
     // would pass the app-side check in build-runtime.ts and then be rejected

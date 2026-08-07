@@ -34,6 +34,43 @@ export interface FieldComponentProps<F extends PlaybookField = PlaybookField> {
     base64: string;
     mediaType: string;
   }) => Promise<InspirationPhotoAnalysis>;
+  /**
+   * Stores one file for a `photo` field whose Playbook asks for
+   * `supabase_storage`, and returns the entry to record in the answer. No
+   * analysis — this one only puts the bytes somewhere the workspace can read
+   * them. Absent for `filename_only` fields, which keep the old behaviour.
+   */
+  uploadProjectPhoto?: (file: {
+    base64: string;
+    mediaType: string;
+    filename: string;
+  }) => Promise<UploadedProjectPhoto>;
+}
+
+/** Mirrors the public runtime API's upload_project_photo response. */
+export interface UploadedProjectPhoto {
+  storagePath: string;
+  filename: string;
+  sizeBytes: number;
+  mimeType: string;
+}
+
+/**
+ * Marks a field the visitor cannot skip.
+ *
+ * Without it, an intake only tells you a field is required by refusing to
+ * continue — on an eleven-step Playbook that means discovering the rule by
+ * failing, sometimes on two fields of the same step at once. The asterisk is
+ * aria-hidden because the input itself carries `aria-required`; announcing
+ * both would read the requirement twice.
+ */
+export function RequiredMark({ field }: { field: PlaybookField }) {
+  if (field.desirability !== "required") return null;
+  return (
+    <span className="ml-1 text-rose-600" aria-hidden="true">
+      *
+    </span>
+  );
 }
 
 export const CHOICE_BUTTON_CLASS = (selected: boolean) =>
