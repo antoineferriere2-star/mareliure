@@ -61,6 +61,24 @@ export function breadcrumbSchema(items: { name: string; path: string }[]) {
   };
 }
 
+/**
+ * FAQPage for a page that already shows these questions and answers on
+ * screen. Google requires the markup to match the visible content, so this
+ * only ever takes the same array the page renders from
+ * (src/build/content/publicFaq.ts) — never a second, hand-written copy.
+ */
+export function faqPageSchema(entries: { question: string; answer: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: entries.map((entry) => ({
+      "@type": "Question",
+      name: entry.question,
+      acceptedAnswer: { "@type": "Answer", text: entry.answer },
+    })),
+  };
+}
+
 /** Convenience: a JSON-LD script entry for a TanStack route `head()`. */
 export function jsonLdScript(schema: unknown) {
   return {

@@ -6,6 +6,7 @@ import { PLAN_DEFAULTS, type MonthlyUsdPrice, type PlanId } from "@/build/billin
 import { BeforeAfterSection } from "@/build/pages/public/sections/BeforeAfterSection";
 
 const deckDemoSteps = deckPlaybookSchema.sections.flatMap((section) => section.steps);
+import { DECK_BUILDERS_FAQ, PRICING_FAQ } from "@/build/content/publicFaq";
 import {
   BuildPublicShell,
   CheckItem,
@@ -147,30 +148,15 @@ function BuildDeckBuildersPageContent() {
         <div className="mx-auto max-w-7xl">
           <SectionHeader title={copy("FAQ")} />
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <InfoPanel
-              title={copy("Does it produce a final estimate?")}
-              items={publicCopies(locale, [
-                "No. The demo produces a project brief, not a contractual estimate.",
-              ])}
-            />
-            <InfoPanel
-              title={copy("Can we use our own questions?")}
-              items={publicCopies(locale, [
-                "You can customize the journey around your sales process.",
-              ])}
-            />
-            <InfoPanel
-              title={copy("Does it replace sales?")}
-              items={publicCopies(locale, [
-                "No. It prepares the first conversation so sales can move faster with better context.",
-              ])}
-            />
-            <InfoPanel
-              title={copy("Is this self-service?")}
-              items={publicCopies(locale, [
-                "Setup is currently guided - we configure your first Playbook with you, and once published it runs on your site for visitors who choose to start it.",
-              ])}
-            />
+            {/* Rendered from the same array the FAQPage structured data is
+                built from — see src/build/content/publicFaq.ts. */}
+            {DECK_BUILDERS_FAQ.map((entry) => (
+              <InfoPanel
+                key={entry.question}
+                title={copy(entry.question)}
+                items={publicCopies(locale, [entry.answer])}
+              />
+            ))}
           </div>
         </div>
       </section>
@@ -388,30 +374,13 @@ function BuildPricingPageContent() {
         <div className="mx-auto max-w-7xl">
           <SectionHeader title={copy("Pricing FAQ")} />
           <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <InfoPanel
-              title={copy("What counts as an active Project Intake?")}
-              items={publicCopies(locale, [
-                "Each Project Intake published on your website counts toward your plan's limit, whether or not it is currently receiving visitors.",
-              ])}
-            />
-            <InfoPanel
-              title={copy("What counts as a Project Brief?")}
-              items={publicCopies(locale, [
-                "Each completed Project Intake that produces a Project Brief counts once toward your monthly quota, reset every billing cycle.",
-              ])}
-            />
-            <InfoPanel
-              title={copy("Can I change plans later?")}
-              items={publicCopies(locale, [
-                "Yes. You can change your plan at any time from your client portal billing page.",
-              ])}
-            />
-            <InfoPanel
-              title={copy("Is there a free trial?")}
-              items={publicCopies(locale, [
-                "Analyze your website first to see what a Project Brief looks like for your business, with no account required.",
-              ])}
-            />
+            {PRICING_FAQ.map((entry) => (
+              <InfoPanel
+                key={entry.question}
+                title={copy(entry.question)}
+                items={publicCopies(locale, [entry.answer])}
+              />
+            ))}
           </div>
         </div>
       </section>
