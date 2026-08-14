@@ -3,7 +3,7 @@ import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
 import { jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
 
-const title = "Métré Build - Guided project intake for project-based contractors";
+const title = "Métré Build - Guided project intake for contractors";
 const description =
   "Turn vague website inquiries into structured Project Briefs your team can act on. More useful than a contact form, simpler than a custom configurator.";
 
