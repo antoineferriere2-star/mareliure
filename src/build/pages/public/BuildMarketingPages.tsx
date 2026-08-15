@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { BriefPreview } from "@/build/pages/public/BriefPreview";
 import { defaultDeckBrief } from "@/build/pages/public/defaultDeckBrief";
@@ -236,10 +237,41 @@ function BuildHowItWorksPageContent() {
         ])}
       />
       <BeforeAfterSection />
+      <RelatedReading>
+        {copy("See it for one trade:")}{" "}
+        <Link to="/deck-builders" className={INLINE_LINK}>
+          {copy("lead qualification for deck builders")}
+        </Link>
+        {copy(", or read")}{" "}
+        <Link to="/example-project-brief" className={INLINE_LINK}>
+          {copy("an example Project Brief, annotated line by line")}
+        </Link>
+        .
+      </RelatedReading>
       <PublicCtaBand />
     </main>
   );
 }
+
+/**
+ * Contextual links written into the body copy.
+ *
+ * Every page already exposes the same nav and the same footer, which tells a
+ * crawler nothing about which page matters. A link inside the prose, with an
+ * anchor that says where it leads, is the only signal that does. One sentence
+ * per page — a block of "related links" is navigation wearing a different hat,
+ * and carries the same non-signal.
+ */
+function RelatedReading({ children }: { children: React.ReactNode }) {
+  return (
+    <section className="px-4 py-10 sm:px-6 lg:px-8">
+      <p className="mx-auto max-w-3xl text-[15px] leading-7 text-slate-600">{children}</p>
+    </section>
+  );
+}
+
+const INLINE_LINK =
+  "font-medium text-emerald-700 underline underline-offset-2 hover:text-emerald-900";
 
 const SELF_SERVE_PLAN_IDS: PlanId[] = ["launch", "growth", "pro", "business"];
 
@@ -384,6 +416,13 @@ function BuildPricingPageContent() {
           </div>
         </div>
       </section>
+      <RelatedReading>
+        {copy("Not sure which plan fits? Start from the trade page:")}{" "}
+        <Link to="/deck-builders" className={INLINE_LINK}>
+          {copy("what a deck builder's Project Intake collects")}
+        </Link>
+        .
+      </RelatedReading>
       <PublicCtaBand />
     </main>
   );
@@ -418,6 +457,13 @@ function BuildExampleProjectBriefPageContent() {
         <div className="mt-8">
           <BriefPreview brief={defaultDeckBrief} />
         </div>
+        <p className="mt-8 max-w-3xl text-[15px] leading-7 text-slate-600">
+          {copy("This brief came out of eleven guided questions —")}{" "}
+          <Link to="/demo/deck-project" className={INLINE_LINK}>
+            {copy("walk the deck intake yourself to see how")}
+          </Link>
+          .
+        </p>
         <div className="mt-8 flex flex-col items-start gap-4 rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
           <h2 className="text-2xl font-semibold tracking-normal text-slate-950">
             {copy("Want Project Briefs like this from your own website?")}

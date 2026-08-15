@@ -2,9 +2,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { BuildFreeInquiryAuditPage } from "@/build/pages/public/BuildFreeInquiryAuditPage";
 import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
 
-const title = "Free Website Analysis — Métré Build";
+const title = "Free Contractor Website Lead-Form Audit — Métré Build";
 const description =
-  "Enter your website URL. See what Métré Build detects about your business and what a guided project intake would look like for your customers.";
+  "Paste your website address and see what your current contact form misses. Business type, services and gaps detected in seconds. No account, no email.";
 
 export const Route = createFileRoute("/free-inquiry-audit")({
   head: () => ({

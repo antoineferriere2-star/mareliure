@@ -8,8 +8,9 @@ import {
   WEBSITE_ID,
 } from "@/lib/structured-data";
 
-const title = "Example Project Brief — Métré Build";
-const description = "View a fictional deck project brief created for demonstration purposes.";
+const title = "Example Deck Project Brief — See the Output — Métré Build";
+const description =
+  "A full deck project brief, annotated: confirmed answers, calculated values, business rules and what still needs checking. Fictional data, real structure.";
 
 export const Route = createFileRoute("/example-project-brief")({
   head: () => ({

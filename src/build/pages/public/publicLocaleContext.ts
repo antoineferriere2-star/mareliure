@@ -821,6 +821,21 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   Edit: "Editar",
   "Not answered": "Sin responder",
 
+  // Contextual in-body links added for internal linking (RelatedReading).
+  "See it for one trade:": "Véalo en un oficio concreto:",
+  "lead qualification for deck builders":
+    "calificación de prospectos para constructores de terrazas",
+  ", or read": ", o lea",
+  "an example Project Brief, annotated line by line":
+    "un Project Brief de ejemplo, anotado línea por línea",
+  "Not sure which plan fits? Start from the trade page:":
+    "¿No sabe qué plan le conviene? Empiece por la página del oficio:",
+  "what a deck builder's Project Intake collects":
+    "qué recopila el Project Intake de un constructor de terrazas",
+  "This brief came out of eleven guided questions —": "Este brief salió de once preguntas guiadas:",
+  "walk the deck intake yourself to see how":
+    "recorra usted mismo el intake de terrazas para verlo",
+
   // The Vérificateur's framing. Rule messages themselves are Playbook-authored
   // and pass through untranslated, like every other Playbook string.
   "This combination does not work:": "Esta combinación no funciona:",

@@ -3,9 +3,9 @@ import { BuildDeckBuildersPage } from "@/build/pages/public/BuildMarketingPages"
 import { breadcrumbSchema, faqPageSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
 import { DECK_BUILDERS_FAQ } from "@/build/content/publicFaq";
 
-const title = "Deck builders - Métré Build";
+const title = "Lead Qualification Software for Deck Builders — Métré Build";
 const description =
-  "Turn vague deck inquiries into structured Project Briefs before the first sales call with a guided Deck Project Intake.";
+  "Stop quoting blind. Deck builders get scope, dimensions, height, access, material and budget before the first call — with every answer sourced. Try the demo.";
 
 export const Route = createFileRoute("/deck-builders")({
   head: () => ({

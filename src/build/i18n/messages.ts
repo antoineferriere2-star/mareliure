@@ -5,8 +5,11 @@ export const enUSMessages = {
   "marketing.hero.subtitle":
     "Métré Build guides customers through project scope, photos, dimensions, constraints, budget and timing.",
   "home.hero.eyebrow": "Guided project intake for project-based contractors",
+  // Keyword first, benefit intact. The previous wording convinced a visitor
+  // already on the page but contained nothing anyone searches for — "lead"
+  // and "qualify" are the terms contractors actually type.
   "home.hero.title":
-    "Turn vague website inquiries into structured Project Briefs your team can act on.",
+    "Qualify contractor leads before the first call — turn vague inquiries into structured project briefs.",
   "home.hero.description":
     "Métré Build guides customers through project scope, photos, dimensions, constraints, budget and timing — so your sales team has useful context before the first call.",
   "home.hero.kicker": "More useful than a contact form. Simpler than a custom configurator.",
@@ -78,7 +81,7 @@ export type TranslationMessages = Record<TranslationKey, string>;
 export const esUSMessages: Partial<TranslationMessages> = {
   "home.hero.eyebrow": "Recorrido guiado para empresas que venden proyectos",
   "home.hero.title":
-    "Convierta consultas vagas de su sitio web en Project Briefs estructurados para su equipo.",
+    "Califique sus prospectos antes de la primera llamada: convierta consultas vagas en briefs de proyecto estructurados.",
   "home.hero.description":
     "Métré Build guía a sus clientes por alcance, fotos, dimensiones, restricciones, presupuesto y plazo para que su equipo comercial tenga contexto útil antes de la primera llamada.",
   "home.hero.kicker": "Más útil que un formulario. Más simple que un configurador a medida.",
