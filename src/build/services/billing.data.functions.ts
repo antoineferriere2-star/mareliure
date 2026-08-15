@@ -8,6 +8,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { assertWorkspaceOwner } from "./workspaceAuth.server";
 import { admin } from "./adminAuth.server";
+import { assertBillingSurface } from "./workspaceEntitlements.server";
 import { createStripeClient, getStripeEnv } from "@/lib/stripe.server";
 import { PLAN_IDS, getPlanDefaults } from "@/build/billing/plans";
 import { canCreateCheckout } from "@/build/billing/checkoutDecision";
@@ -26,6 +27,7 @@ export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
   )
   .handler(async ({ context, data }) => {
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
+    await assertBillingSurface(data.workspaceId);
     const sb = await admin();
 
     if (data.plan === "enterprise") {
@@ -85,6 +87,7 @@ export const createWorkspaceBillingPortalSession = createServerFn({ method: "POS
   )
   .handler(async ({ context, data }) => {
     await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
+    await assertBillingSurface(data.workspaceId);
 
     const sb = await admin();
     const { data: workspace, error } = await sb

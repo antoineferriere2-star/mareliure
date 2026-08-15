@@ -21,12 +21,14 @@ import { admin, type Supa } from "./adminAuth.server";
 import { fail } from "./serverError";
 import { assertWorkspaceMember, assertWorkspaceOwner } from "./workspaceAuth.server";
 import { assertCanPublish } from "./workspaceEntitlements.server";
+import { aiRunsPerHourFor, INITIAL_PROSPECT_STATUS } from "@/build/workspaces/internalSales";
 import { fetchSitePublicHtml } from "@/build/onboarding/safeFetch.server";
 import { extractSiteText } from "@/build/onboarding/extractText";
 import { expandPlaybookDraft } from "@/build/onboarding/expandPlaybookDraft";
 import { playbookSchema, type PlaybookSchema } from "@/build/schema/playbook";
 import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import {
+  AI_RUNS_PER_HOUR,
   checkAiRun,
   checkBranding,
   checkBusinessType,
@@ -123,6 +125,20 @@ async function workspaceName(sb: Supa, workspaceId: string): Promise<string> {
   return data?.name ?? "My business";
 }
 
+/**
+ * `build_workspaces.workspace_type`, for the two rules that differ between a
+ * customer's setup and an internal prospect demo: the hourly AI budget, and
+ * whether the prospect fields mean anything.
+ */
+async function workspaceTypeOf(sb: Supa, workspaceId: string): Promise<string> {
+  const { data } = await sb
+    .from("build_workspaces")
+    .select("workspace_type")
+    .eq("id", workspaceId)
+    .maybeSingle();
+  return data?.workspace_type ?? "client";
+}
+
 async function publicUrlForMission(sb: Supa, missionId: string | null): Promise<string | null> {
   if (!missionId) return null;
   const { data } = await sb
@@ -198,6 +214,9 @@ async function guardAiRun(
   userId: string,
   action: string,
   requestId: string,
+  /** Hourly ceiling. Higher for an internal Sales workspace, which analyses one
+   * site per prospect rather than one per lifetime — see internalSales.ts. */
+  limit: number = AI_RUNS_PER_HOUR,
 ) {
   const since = new Date(Date.now() - 60 * 60 * 1000).toISOString();
   const { data: runs, error } = await sb
@@ -212,6 +231,7 @@ async function guardAiRun(
     (runs ?? []).map((r) => ({ requestId: r.request_id, createdAt: r.created_at })),
     requestId,
     new Date(),
+    limit,
   );
   if (!decision.allow) return decision;
 
@@ -278,6 +298,7 @@ export const analyzeMySite = createServerFn({ method: "POST" })
       context.userId,
       "analyze_site",
       data.requestId,
+      aiRunsPerHourFor(await workspaceTypeOf(sb, data.workspaceId), AI_RUNS_PER_HOUR),
     );
     if (!decision.allow) {
       if (decision.reason === "duplicate") {
@@ -460,6 +481,7 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
       context.userId,
       "generate_draft",
       data.requestId,
+      aiRunsPerHourFor(await workspaceTypeOf(sb, data.workspaceId), AI_RUNS_PER_HOUR),
     );
     if (!decision.allow) {
       if (decision.reason === "duplicate" && row.playbook_id) {
@@ -742,6 +764,17 @@ export const publishMyDraft = createServerFn({ method: "POST" })
       p_mission_name: missionName,
     });
     if (publishError) fail(publishRpcStatus(publishError.message), publishError.message);
+
+    // A published demo has a link the agent can send, so it is no longer a
+    // draft. Only ever moves the initial value forward: `sent` and `archived`
+    // are the agent's own markers and a republish must not undo them. Harmless
+    // on a customer setup, where the column is never read.
+    const { error: prospectError } = await sb
+      .from("build_workspace_onboarding")
+      .update({ prospect_status: "ready" })
+      .eq("id", row.id)
+      .eq("prospect_status", INITIAL_PROSPECT_STATUS);
+    if (prospectError) fail(500, prospectError.message);
 
     const updated = await loadDisplayRow(sb, data.workspaceId);
     return toState(sb, updated, data.workspaceId, await workspaceName(sb, data.workspaceId), true);

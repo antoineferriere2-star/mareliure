@@ -5,9 +5,15 @@ import type { Json } from "@/integrations/supabase/types";
 import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import { playbookSchema } from "@/build/schema/playbook";
 import type { ProjectBrief } from "@/build/schema/brief";
-import { admin, assertAdmin } from "./adminAuth.server";
+import { admin, assertAdmin, type Supa } from "./adminAuth.server";
 import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
 import { PLAN_IDS, getPlanDefaults } from "@/build/billing/plans";
+import {
+  INTERNAL_SALES,
+  INTERNAL_SALES_ACTIVE_MISSIONS,
+  INTERNAL_SALES_MONTHLY_BRIEFS,
+  WORKSPACE_TYPES,
+} from "@/build/workspaces/internalSales";
 import { wouldExceedActiveMissions } from "@/build/billing/quota";
 import { resolvePlanColumnsUpdate } from "@/build/billing/planSync";
 import {
@@ -22,6 +28,43 @@ import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBuck
 
 // ---------- Dashboard ----------
 
+/**
+ * Ids that belong to Métré's own Sales / Demos workspaces. The dashboard is a
+ * business-activity panel: a prospect demonstration is neither a customer
+ * Intake nor a real Project Brief, so counting them there would inflate every
+ * number on the page and make the conversion rate meaningless.
+ *
+ * Returned as two lists because the runtime tables are reached differently —
+ * Missions and Dossiers carry `workspace_id`, sessions only carry `mission_id`.
+ */
+async function internalSalesScope(
+  sb: Supa,
+): Promise<{ workspaceIds: string[]; missionIds: string[] }> {
+  const { data: workspaces, error } = await sb
+    .from("build_workspaces")
+    .select("id")
+    .eq("workspace_type", INTERNAL_SALES);
+  if (error) fail(500, error.message);
+  const workspaceIds = (workspaces ?? []).map((w) => w.id);
+  if (workspaceIds.length === 0) return { workspaceIds: [], missionIds: [] };
+
+  const { data: missions, error: mErr } = await sb
+    .from("build_missions")
+    .select("id")
+    .in("workspace_id", workspaceIds);
+  if (mErr) fail(500, mErr.message);
+  return { workspaceIds, missionIds: (missions ?? []).map((m) => m.id) };
+}
+
+/**
+ * PostgREST `not.in` drops NULLs (SQL: `NULL NOT IN (...)` is NULL, not true),
+ * which would silently hide every row that predates workspaces. Paired with an
+ * explicit `is.null` so "not one of ours" keeps meaning "everything else".
+ */
+function excludingIds(column: string, ids: string[]): string {
+  return `${column}.is.null,${column}.not.in.(${ids.join(",")})`;
+}
+
 export const getBuildDashboardStats = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -29,14 +72,34 @@ export const getBuildDashboardStats = createServerFn({ method: "GET" })
     await assertAdmin(supabase, userId);
     const sb = await admin();
 
+    const scope = await internalSalesScope(sb);
+    /** Applies the exclusion only when there is something to exclude. */
+    const notDemo = <T extends { or: (filter: string) => T }>(
+      query: T,
+      column: string,
+      ids: string[],
+    ) => (ids.length > 0 ? query.or(excludingIds(column, ids)) : query);
+
     const [missions, activeMissions, dossiers, audits, betas, sessions, submitted] =
       await Promise.all([
-        sb.from("build_missions").select("id", { count: "exact", head: true }),
-        sb
-          .from("build_missions")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "active"),
-        sb.from("build_dossiers").select("id", { count: "exact", head: true }),
+        notDemo(
+          sb.from("build_missions").select("id", { count: "exact", head: true }),
+          "workspace_id",
+          scope.workspaceIds,
+        ),
+        notDemo(
+          sb
+            .from("build_missions")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "active"),
+          "workspace_id",
+          scope.workspaceIds,
+        ),
+        notDemo(
+          sb.from("build_dossiers").select("id", { count: "exact", head: true }),
+          "workspace_id",
+          scope.workspaceIds,
+        ),
         sb
           .from("build_public_requests")
           .select("id", { count: "exact", head: true })
@@ -45,11 +108,19 @@ export const getBuildDashboardStats = createServerFn({ method: "GET" })
           .from("build_public_requests")
           .select("id", { count: "exact", head: true })
           .eq("request_type", "private_beta"),
-        sb.from("build_runtime_sessions").select("id", { count: "exact", head: true }),
-        sb
-          .from("build_runtime_sessions")
-          .select("id", { count: "exact", head: true })
-          .eq("status", "submitted"),
+        notDemo(
+          sb.from("build_runtime_sessions").select("id", { count: "exact", head: true }),
+          "mission_id",
+          scope.missionIds,
+        ),
+        notDemo(
+          sb
+            .from("build_runtime_sessions")
+            .select("id", { count: "exact", head: true })
+            .eq("status", "submitted"),
+          "mission_id",
+          scope.missionIds,
+        ),
       ]);
 
     const totalSessions = sessions.count ?? 0;
@@ -57,11 +128,15 @@ export const getBuildDashboardStats = createServerFn({ method: "GET" })
     const conversionRate =
       totalSessions > 0 ? Math.round((submittedCount / totalSessions) * 100) : 0;
 
-    const { data: recentDossiers } = await sb
-      .from("build_dossiers")
-      .select("id, status, mission_id, summary, created_at")
-      .order("created_at", { ascending: false })
-      .limit(5);
+    const { data: recentDossiers } = await notDemo(
+      sb
+        .from("build_dossiers")
+        .select("id, status, mission_id, summary, created_at")
+        .order("created_at", { ascending: false })
+        .limit(5),
+      "workspace_id",
+      scope.workspaceIds,
+    );
 
     const { data: recentRequests } = await sb
       .from("build_public_requests")
@@ -758,7 +833,9 @@ export const listWorkspaces = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data: workspaces, error } = await sb
       .from("build_workspaces")
-      .select("id, name, is_active, plan, max_active_missions, monthly_brief_quota, created_at")
+      .select(
+        "id, name, is_active, workspace_type, plan, max_active_missions, monthly_brief_quota, created_at",
+      )
       .order("created_at", { ascending: false });
     if (error) fail(500, error.message);
 
@@ -776,21 +853,39 @@ export const listWorkspaces = createServerFn({ method: "GET" })
 export const createWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({ name: z.string().min(2).max(200), plan: z.enum(PLAN_IDS).optional() }).parse(data),
+    z
+      .object({
+        name: z.string().min(2).max(200),
+        plan: z.enum(PLAN_IDS).optional(),
+        workspaceType: z.enum(WORKSPACE_TYPES).optional(),
+      })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const plan = data.plan ?? "launch";
     const defaults = getPlanDefaults(plan);
+    const workspaceType = data.workspaceType ?? "client";
+    // An internal Sales / Demos workspace holds one live demo per prospect, so
+    // the Launch default of a single active Mission would block the second
+    // prospect. Seeded generously here rather than exempted in code: the limit
+    // stays a column the operator can see and change, exactly like an
+    // Enterprise deal.
+    const isInternal = workspaceType === INTERNAL_SALES;
     const { data: inserted, error } = await sb
       .from("build_workspaces")
       .insert({
         name: data.name,
         created_by: context.userId,
         plan,
-        max_active_missions: defaults.maxActiveMissions ?? 1,
-        monthly_brief_quota: defaults.monthlyBriefQuota ?? 50,
+        workspace_type: workspaceType,
+        max_active_missions: isInternal
+          ? INTERNAL_SALES_ACTIVE_MISSIONS
+          : (defaults.maxActiveMissions ?? 1),
+        monthly_brief_quota: isInternal
+          ? INTERNAL_SALES_MONTHLY_BRIEFS
+          : (defaults.monthlyBriefQuota ?? 50),
       })
       .select()
       .maybeSingle();
@@ -841,7 +936,18 @@ export const getWorkspaceUsage = createServerFn({ method: "GET" })
 export const addWorkspaceMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
-    z.object({ workspaceId: z.string().uuid(), email: z.string().email() }).parse(data),
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        email: z.string().email(),
+        // Only `provision_owner_workspace` ever created an owner, and that
+        // routine only runs for self-service signups — so every workspace an
+        // operator created by hand had members but no owner, and no one in it
+        // could run the setup wizard (owner-only on every write). Explicit and
+        // defaulted to the least privilege.
+        role: z.enum(["owner", "member"]).optional(),
+      })
+      .parse(data),
   )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
@@ -867,7 +973,12 @@ export const addWorkspaceMember = createServerFn({ method: "POST" })
 
     const { data: inserted, error } = await sb
       .from("build_workspace_members")
-      .insert({ workspace_id: data.workspaceId, user_id: userId, email: normalizedEmail })
+      .insert({
+        workspace_id: data.workspaceId,
+        user_id: userId,
+        email: normalizedEmail,
+        role: data.role ?? "member",
+      })
       .select()
       .maybeSingle();
     if (error) {

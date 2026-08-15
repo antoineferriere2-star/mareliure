@@ -15,6 +15,7 @@
  * website — breaking a live form punishes the visitor and the customer's
  * business for a billing problem between us and the customer.
  */
+import { isInternalSales } from "@/build/workspaces/internalSales";
 
 /** Days of full access a self-service signup gets before a subscription is required. */
 export const TRIAL_DAYS = 14;
@@ -33,8 +34,11 @@ const ACTIVE_STRIPE_STATUSES = new Set(["active", "trialing"]);
 const GRACE_STRIPE_STATUSES = new Set(["past_due"]);
 
 export type EntitlementState =
+  /** Métré's own Sales / Demos workspace. Not an exemption granted to a
+   * customer — there is no subscription to have. */
+  | "internal_sales"
   /** No `provisioned_for_user_id`: an operator created this workspace by hand
-   * (Enterprise deal, internal demo). A human already decided — never auto-gate it. */
+   * (Enterprise deal). A human already decided — never auto-gate it. */
   | "admin_managed"
   /** Paid and current. */
   | "subscribed"
@@ -51,6 +55,8 @@ export type EntitlementState =
 
 export interface WorkspaceEntitlementInput {
   isActive: boolean;
+  /** `build_workspaces.workspace_type`. See build/workspaces/internalSales.ts. */
+  workspaceType?: string | null;
   /** Null for operator-created workspaces; set for self-service signups. */
   provisionedForUserId: string | null;
   subscriptionStatus: string | null;
@@ -84,6 +90,18 @@ export function resolveEntitlements(
       state: "workspace_disabled",
       canPublish: false,
       canAcceptSubmissions: false,
+      trialDaysRemaining: null,
+    };
+  }
+
+  // Ours. Checked before every billing rule rather than after: an internal
+  // workspace must stay outside the funnel even if a stray `trial_ends_at` or
+  // `provisioned_for_user_id` ends up on the row.
+  if (isInternalSales(input.workspaceType)) {
+    return {
+      state: "internal_sales",
+      canPublish: true,
+      canAcceptSubmissions: true,
       trialDaysRemaining: null,
     };
   }
@@ -167,6 +185,7 @@ export function resolveEntitlements(
  * machine so a new state can never ship without a message.
  */
 export const PUBLISH_BLOCKED_MESSAGE: Record<EntitlementState, string | null> = {
+  internal_sales: null,
   admin_managed: null,
   subscribed: null,
   grace_past_due: null,

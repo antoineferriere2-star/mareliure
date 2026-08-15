@@ -20,6 +20,51 @@ const selfServe: WorkspaceEntitlementInput = {
   trialEndsAt: daysFromNow(7),
 };
 
+describe("Métré's own Sales / Demos workspace", () => {
+  const internal: WorkspaceEntitlementInput = { ...selfServe, workspaceType: "internal_sales" };
+
+  it("is never gated, whatever the billing columns say", () => {
+    // The point of checking the type first: an internal workspace must stay
+    // out of the funnel even if a stray trial date, a provisioning id or a
+    // cancelled subscription ends up on the row.
+    for (const overrides of [
+      {},
+      { trialEndsAt: daysFromNow(-30) },
+      { subscriptionStatus: "canceled" },
+      { subscriptionStatus: "unpaid", trialEndsAt: daysFromNow(-1) },
+      { provisionedForUserId: null as string | null },
+    ]) {
+      const result = resolveEntitlements({ ...internal, ...overrides }, NOW);
+      expect(result.state).toBe("internal_sales");
+      expect(result.canPublish).toBe(true);
+      expect(result.canAcceptSubmissions).toBe(true);
+    }
+  });
+
+  it("still obeys the operator kill switch", () => {
+    const result = resolveEntitlements({ ...internal, isActive: false }, NOW);
+    expect(result.state).toBe("workspace_disabled");
+    expect(result.canPublish).toBe(false);
+  });
+
+  it("never blocks a publish, so it needs no explanation", () => {
+    expect(PUBLISH_BLOCKED_MESSAGE.internal_sales).toBeNull();
+  });
+
+  it("leaves a customer workspace exactly where it was", () => {
+    // The new field is optional; every existing caller that omits it must
+    // resolve to the same state as before.
+    expect(resolveEntitlements(selfServe, NOW).state).toBe("trialing");
+    expect(resolveEntitlements({ ...selfServe, workspaceType: "client" }, NOW).state).toBe(
+      "trialing",
+    );
+    expect(
+      resolveEntitlements({ ...selfServe, workspaceType: null, trialEndsAt: daysFromNow(-1) }, NOW)
+        .state,
+    ).toBe("trial_expired");
+  });
+});
+
 describe("resolveEntitlements", () => {
   it("gives an operator-created workspace full access with no subscription", () => {
     const result = resolveEntitlements(

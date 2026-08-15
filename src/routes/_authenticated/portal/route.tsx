@@ -8,8 +8,11 @@ import {
   useNavigate,
 } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
+import { useQuery } from "@tanstack/react-query";
 import { requireWorkspaceAccess } from "@/build/services/workspace.functions";
+import { listMyWorkspaces } from "@/build/services/portal.data.functions";
 import { ensureMyWorkspace } from "@/build/services/provisionWorkspace.functions";
 
 export const Route = createFileRoute("/_authenticated/portal")({
@@ -39,6 +42,17 @@ export const Route = createFileRoute("/_authenticated/portal")({
 
 function PortalLayout() {
   const { access } = Route.useRouteContext();
+  // An internal Sales / Demos workspace has a prospect list and no billing at
+  // all — the two server functions behind that tab answer 404 for it, so
+  // linking there would be a dead end. Read from the same cached query the
+  // pages use; while it loads, the nav shows the client shape, which is the
+  // safe default (it links to nothing an internal agent may not open).
+  const fetchWorkspaces = useServerFn(listMyWorkspaces);
+  const { data: workspaces } = useQuery({
+    queryKey: ["portal", "workspaces"] as const,
+    queryFn: () => fetchWorkspaces(),
+  });
+  const isInternalSales = (workspaces ?? []).some((workspace) => workspace.isInternalSales);
   const router = useRouter();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -56,7 +70,7 @@ function PortalLayout() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
           <Link to="/portal" className="text-sm font-semibold">
-            Client Portal · Métré Build
+            {isInternalSales ? "Métré Sales · Demos" : "Client Portal · Métré Build"}
           </Link>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
             <span>{access.email ?? access.userId.slice(0, 8)}</span>
@@ -80,6 +94,15 @@ function PortalLayout() {
           >
             My Dossiers
           </Link>
+          {isInternalSales && (
+            <Link
+              to="/portal/demos"
+              activeProps={{ className: "border-primary text-foreground font-medium" }}
+              className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
+            >
+              Prospect demos
+            </Link>
+          )}
           <Link
             to="/portal/missions"
             activeProps={{ className: "border-primary text-foreground font-medium" }}
@@ -103,13 +126,15 @@ function PortalLayout() {
             Team
           </Link>
 
-          <Link
-            to="/portal/billing"
-            activeProps={{ className: "border-primary text-foreground font-medium" }}
-            className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
-          >
-            Billing
-          </Link>
+          {!isInternalSales && (
+            <Link
+              to="/portal/billing"
+              activeProps={{ className: "border-primary text-foreground font-medium" }}
+              className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
+            >
+              Billing
+            </Link>
+          )}
         </div>
       </nav>
       <main className="mx-auto max-w-5xl px-4 py-8">

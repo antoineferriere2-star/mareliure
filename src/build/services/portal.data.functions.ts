@@ -10,12 +10,17 @@ import { admin } from "./adminAuth.server";
 import { fail } from "./serverError";
 import { assertWorkspaceMember, assertWorkspaceOwner } from "./workspaceAuth.server";
 import { getWorkspaceUsageInternal } from "./workspaceUsage.server";
-import { assertCanPublish, getWorkspaceEntitlements } from "./workspaceEntitlements.server";
+import {
+  assertBillingSurface,
+  assertCanPublish,
+  getWorkspaceEntitlements,
+} from "./workspaceEntitlements.server";
 import { wouldExceedActiveMissions } from "@/build/billing/quota";
 import { extractPhotoReferences } from "@/build/engine/visitorSummary";
 import type { Answers } from "@/build/schema/answers";
 import type { DisplayPhotoReference } from "@/build/schema/visitorSummary";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
+import { isInternalSales } from "@/build/workspaces/internalSales";
 
 /** Long enough to read a Dossier without reloading, short enough that a copied URL dies quickly. */
 const SIGNED_PHOTO_URL_TTL_SECONDS = 3600;
@@ -36,7 +41,9 @@ export const listMyWorkspaces = createServerFn({ method: "GET" })
 
     const { data: workspaces, error: wErr } = await sb
       .from("build_workspaces")
-      .select("id, name")
+      // workspace_type drives what the portal shows: an internal Sales / Demos
+      // workspace has a prospect list and no billing tab.
+      .select("id, name, workspace_type")
       .in(
         "id",
         memberships.map((m) => m.workspace_id),
@@ -45,7 +52,11 @@ export const listMyWorkspaces = createServerFn({ method: "GET" })
     if (wErr) fail(500, wErr.message);
 
     const roleByWorkspace = new Map(memberships.map((m) => [m.workspace_id, m.role]));
-    return (workspaces ?? []).map((w) => ({ ...w, role: roleByWorkspace.get(w.id) ?? "member" }));
+    return (workspaces ?? []).map((w) => ({
+      ...w,
+      role: roleByWorkspace.get(w.id) ?? "member",
+      isInternalSales: isInternalSales(w.workspace_type),
+    }));
   });
 
 export const listWorkspaceDossiers = createServerFn({ method: "GET" })
@@ -203,6 +214,7 @@ export const getMyWorkspaceBilling = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
+    await assertBillingSurface(data.workspaceId);
     const sb = await admin();
     const { data: workspace, error } = await sb
       .from("build_workspaces")

@@ -18,6 +18,7 @@ import {
 } from "@/build/services/admin.data.functions";
 import { PLAN_IDS, PLAN_DEFAULTS, type PlanId } from "@/build/billing/plans";
 import { usageLevel } from "@/build/billing/quota";
+import { isInternalSales, type WorkspaceType } from "@/build/workspaces/internalSales";
 
 export const Route = createFileRoute("/_authenticated/build/workspaces/")({
   ssr: false,
@@ -81,8 +82,10 @@ function WorkspacesPage() {
   const create = useServerFn(createWorkspace);
   const [newName, setNewName] = useState("");
   const [newPlan, setNewPlan] = useState<PlanId>("launch");
+  const [newType, setNewType] = useState<WorkspaceType>("client");
   const createMutation = useMutation({
-    mutationFn: () => create({ data: { name: newName.trim(), plan: newPlan } }),
+    mutationFn: () =>
+      create({ data: { name: newName.trim(), plan: newPlan, workspaceType: newType } }),
     onSuccess: () => {
       setNewName("");
       queryClient.invalidateQueries({ queryKey: workspacesKey });
@@ -106,9 +109,17 @@ function WorkspacesPage() {
   const addMember = useServerFn(addWorkspaceMember);
   const [memberEmail, setMemberEmail] = useState<Record<string, string>>({});
   const [memberError, setMemberError] = useState<Record<string, string>>({});
+  const [memberRole, setMemberRole] = useState<Record<string, "owner" | "member">>({});
   const addMemberMutation = useMutation({
-    mutationFn: ({ workspaceId, email }: { workspaceId: string; email: string }) =>
-      addMember({ data: { workspaceId, email } }),
+    mutationFn: ({
+      workspaceId,
+      email,
+      role,
+    }: {
+      workspaceId: string;
+      email: string;
+      role: "owner" | "member";
+    }) => addMember({ data: { workspaceId, email, role } }),
     onSuccess: (_, { workspaceId }) => {
       setMemberEmail((prev) => ({ ...prev, [workspaceId]: "" }));
       setMemberError((prev) => ({ ...prev, [workspaceId]: "" }));
@@ -171,6 +182,19 @@ function WorkspacesPage() {
             ))}
           </select>
         </div>
+        <div>
+          <label className="block text-xs font-medium text-muted-foreground">Type</label>
+          {/* Internal Sales workspaces are ours: never billed, no Stripe tab,
+              and their demos are kept out of the business metrics. */}
+          <select
+            value={newType}
+            onChange={(e) => setNewType(e.target.value as WorkspaceType)}
+            className="mt-1 rounded-md border border-input bg-background px-3 py-2 text-sm"
+          >
+            <option value="client">Client</option>
+            <option value="internal_sales">Internal — Sales / Demos</option>
+          </select>
+        </div>
         <button
           type="submit"
           disabled={createMutation.isPending || newName.trim().length < 2}
@@ -194,7 +218,14 @@ function WorkspacesPage() {
             return (
               <section key={w.id} className="rounded-lg border border-border bg-card p-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="text-sm font-semibold text-foreground">{w.name}</h2>
+                  <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                    {w.name}
+                    {isInternalSales(w.workspace_type) && (
+                      <span className="rounded-full border border-sky-600/30 bg-sky-600/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-sky-700">
+                        Internal
+                      </span>
+                    )}
+                  </h2>
                   <span className="text-[10px] uppercase text-muted-foreground">
                     {new Date(w.created_at).toLocaleDateString()}
                   </span>
@@ -302,7 +333,13 @@ function WorkspacesPage() {
                   onSubmit={(e) => {
                     e.preventDefault();
                     const email = memberEmail[w.id]?.trim();
-                    if (email) addMemberMutation.mutate({ workspaceId: w.id, email });
+                    if (email) {
+                      addMemberMutation.mutate({
+                        workspaceId: w.id,
+                        email,
+                        role: memberRole[w.id] ?? "member",
+                      });
+                    }
                   }}
                   className="mt-3 flex flex-wrap items-center gap-2"
                 >
@@ -315,6 +352,24 @@ function WorkspacesPage() {
                     placeholder="email@client.com"
                     className="flex-1 min-w-[200px] rounded-md border border-input bg-background px-3 py-1.5 text-xs"
                   />
+                  {/* Owner is what the setup wizard and every portal write
+                      require. Until this existed, only self-service signups
+                      ever got one, so nobody in an operator-created workspace
+                      could publish an Intake. */}
+                  <select
+                    value={memberRole[w.id] ?? "member"}
+                    onChange={(e) =>
+                      setMemberRole((prev) => ({
+                        ...prev,
+                        [w.id]: e.target.value as "owner" | "member",
+                      }))
+                    }
+                    aria-label="Role"
+                    className="rounded-md border border-input bg-background px-2 py-1.5 text-xs"
+                  >
+                    <option value="member">Member</option>
+                    <option value="owner">Owner</option>
+                  </select>
                   <button
                     type="submit"
                     disabled={addMemberMutation.isPending}

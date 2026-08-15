@@ -57,6 +57,7 @@ function bannerFor(entitlements: Entitlements): BannerCopy | null {
       };
     case "subscribed":
     case "admin_managed":
+    case "internal_sales":
       return null;
   }
 }
