@@ -625,6 +625,8 @@ export type Database = {
           last_generate_request_id: string | null
           mission_id: string | null
           playbook_id: string | null
+          prospect_company_name: string | null
+          prospect_status: string
           site_url: string | null
           status: string
           updated_at: string
@@ -645,6 +647,8 @@ export type Database = {
           last_generate_request_id?: string | null
           mission_id?: string | null
           playbook_id?: string | null
+          prospect_company_name?: string | null
+          prospect_status?: string
           site_url?: string | null
           status?: string
           updated_at?: string
@@ -665,6 +669,8 @@ export type Database = {
           last_generate_request_id?: string | null
           mission_id?: string | null
           playbook_id?: string | null
+          prospect_company_name?: string | null
+          prospect_status?: string
           site_url?: string | null
           status?: string
           updated_at?: string
@@ -710,6 +716,7 @@ export type Database = {
           subscription_status: string | null
           trial_ends_at: string | null
           updated_at: string
+          workspace_type: string
         }
         Insert: {
           created_at?: string
@@ -726,6 +733,7 @@ export type Database = {
           subscription_status?: string | null
           trial_ends_at?: string | null
           updated_at?: string
+          workspace_type?: string
         }
         Update: {
           created_at?: string
@@ -742,6 +750,7 @@ export type Database = {
           subscription_status?: string | null
           trial_ends_at?: string | null
           updated_at?: string
+          workspace_type?: string
         }
         Relationships: []
       }
