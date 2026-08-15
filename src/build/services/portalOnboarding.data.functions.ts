@@ -58,6 +58,11 @@ export interface PortalOnboardingState {
   publicUrl: string | null;
   branding: Branding | null;
   isOwner: boolean;
+  /** The setup row itself. An internal Sales agent needs it to name the
+   * prospect without first looking the demo up in another list. */
+  setupId: string | null;
+  /** Only ever set inside an internal Sales workspace; NULL on a customer setup. */
+  prospectCompanyName: string | null;
   /** Intakes this workspace has already published. Lets the wizard offer
    * "set up another one" instead of looking like a dead end after the first. */
   publishedIntakeCount: number;
@@ -176,6 +181,8 @@ async function toState(
         ? (row.branding as unknown as Branding)
         : null,
     isOwner,
+    setupId: row?.id ?? null,
+    prospectCompanyName: row?.prospect_company_name ?? null,
   };
 }
 
@@ -282,7 +289,14 @@ export const analyzeMySite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     workspaceInput
-      .extend({ url: z.string().min(1).max(2048), requestId: z.string().min(8).max(64) })
+      .extend({
+        url: z.string().min(1).max(2048),
+        requestId: z.string().min(8).max(64),
+        // Naming the prospect used to be possible only after publishing, from
+        // the demos list — a second screen for one field. Optional, so the
+        // customer wizard passes nothing and behaves exactly as before.
+        prospectCompanyName: z.string().trim().max(200).optional(),
+      })
       .parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -398,16 +412,23 @@ export const analyzeMySite = createServerFn({ method: "POST" })
       confirmed_business_type: null,
       confirmed_product: null,
     };
+    // Only written when supplied: a re-analysis that omits it must not erase a
+    // name the agent already typed.
+    const withProspect =
+      data.prospectCompanyName !== undefined
+        ? { ...fields, prospect_company_name: data.prospectCompanyName || null }
+        : fields;
+
     const existing = await loadInFlightRow(sb, data.workspaceId);
 
     // The insert can still lose a race with a concurrent first analysis; the
     // partial unique index is what makes that a clean 23505 rather than two
     // competing setups.
     const { error: upsertError } = existing
-      ? await sb.from("build_workspace_onboarding").update(fields).eq("id", existing.id)
+      ? await sb.from("build_workspace_onboarding").update(withProspect).eq("id", existing.id)
       : await sb
           .from("build_workspace_onboarding")
-          .insert({ ...fields, workspace_id: data.workspaceId, created_by: context.userId });
+          .insert({ ...withProspect, workspace_id: data.workspaceId, created_by: context.userId });
     if (upsertError) {
       if (upsertError.code === "23505") {
         fail(409, "Another setup was just started for this workspace. Reload and continue there.");

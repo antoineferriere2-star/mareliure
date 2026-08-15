@@ -27,6 +27,7 @@ import {
 } from "@/build/services/salesDemos.data.functions";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 import { PROSPECT_STATUSES, type ProspectStatus } from "@/build/workspaces/internalSales";
+import { DemoLink } from "@/build/pages/portal/DemoLink";
 
 export const Route = createFileRoute("/_authenticated/portal/demos")({
   ssr: false,
@@ -63,35 +64,6 @@ function formatDate(iso: string): string {
   });
 }
 
-/** Absolute URL for the prospect, built in the browser: server code has no reliable origin. */
-function demoUrl(path: string): string {
-  return `${window.location.origin}${path}`;
-}
-
-function CopyLinkButton({ path }: { path: string }) {
-  const [copied, setCopied] = useState(false);
-  return (
-    <button
-      type="button"
-      onClick={async () => {
-        try {
-          await navigator.clipboard.writeText(demoUrl(path));
-          setCopied(true);
-          window.setTimeout(() => setCopied(false), 2000);
-        } catch {
-          // Clipboard blocked (permissions, insecure context): the link is
-          // still visible and selectable in the row, so say nothing rather
-          // than throw an error at someone mid-prospecting.
-          setCopied(false);
-        }
-      }}
-      className="rounded-md border border-input bg-background px-2 py-1 text-xs font-medium hover:bg-accent"
-    >
-      {copied ? "Copied" : "Copy link"}
-    </button>
-  );
-}
-
 function PortalDemosPage() {
   const queryClient = useQueryClient();
   const fetchWorkspaces = useServerFn(listMyWorkspaces);
@@ -114,6 +86,12 @@ function PortalDemosPage() {
     enabled: workspaceId.length > 0,
   });
 
+  // A prospect list is a working list: at fifty rows, finding "the Denver one"
+  // by eye is the slowest part of the job. /portal already filters Dossiers
+  // this way; this is the same affordance.
+  const [query, setQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<ProspectStatus | "all">("all");
+
   const update = useServerFn(updateProspectDemo);
   const [updateError, setUpdateError] = useState<string | null>(null);
   const updateMutation = useMutation({
@@ -126,6 +104,15 @@ function PortalDemosPage() {
     onError: (err: unknown) => {
       setUpdateError(err instanceof Error ? err.message : "Unable to update this demo.");
     },
+  });
+
+  const needle = query.trim().toLowerCase();
+  const visible = (demos ?? []).filter((demo) => {
+    if (statusFilter !== "all" && demo.status !== statusFilter) return false;
+    if (!needle) return true;
+    return [demo.prospectName, demo.companyName, demo.domain, demo.websiteUrl]
+      .filter(Boolean)
+      .some((field) => field!.toLowerCase().includes(needle));
   });
 
   if (salesWorkspaces.length === 0) {
@@ -149,7 +136,7 @@ function PortalDemosPage() {
           </p>
         </div>
         <Link
-          to="/portal/setup"
+          to="/portal/demos/new"
           className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
         >
           New demo
@@ -179,6 +166,42 @@ function PortalDemosPage() {
         </p>
       )}
 
+      {demos && demos.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2">
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search prospect or domain…"
+            aria-label="Search demos"
+            className="min-w-[220px] flex-1 rounded-md border border-input bg-background px-3 py-1.5 text-sm"
+          />
+          <div className="flex flex-wrap gap-1">
+            {(["all", ...PROSPECT_STATUSES] as const).map((value) => {
+              const count =
+                value === "all"
+                  ? demos.length
+                  : demos.filter((demo) => demo.status === value).length;
+              const active = statusFilter === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  aria-pressed={active}
+                  onClick={() => setStatusFilter(value)}
+                  className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                    active
+                      ? "border-primary bg-primary text-primary-foreground"
+                      : "border-input bg-background hover:bg-accent"
+                  }`}
+                >
+                  {value === "all" ? "All" : STATUS_LABEL[value]} ({count})
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {isPending && <PortalPending />}
       {error && <PortalError error={error as Error} />}
 
@@ -190,7 +213,13 @@ function PortalDemosPage() {
         </div>
       )}
 
-      {demos && demos.length > 0 && (
+      {demos && demos.length > 0 && visible.length === 0 && (
+        <p className="rounded-lg border border-dashed border-border bg-card p-6 text-center text-sm text-muted-foreground">
+          No demo matches this search.
+        </p>
+      )}
+
+      {visible.length > 0 && (
         <div className="overflow-x-auto rounded-lg border border-border bg-card">
           <table className="w-full min-w-[52rem] text-left text-sm">
             <thead className="border-b border-border text-xs uppercase tracking-wide text-muted-foreground">
@@ -204,7 +233,7 @@ function PortalDemosPage() {
               </tr>
             </thead>
             <tbody>
-              {demos.map((demo) => (
+              {visible.map((demo) => (
                 <DemoRow
                   key={demo.id}
                   demo={demo}
@@ -277,7 +306,10 @@ function DemoRow({
             >
               Open demo
             </a>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+            <div className="mt-1 max-w-sm">
+              <DemoLink path={demo.publicPath} />
+            </div>
+            <p className="mt-1 text-xs text-muted-foreground">
               {demo.funnel.viewed} viewed · {demo.funnel.started} started · {demo.funnel.completed}{" "}
               completed · {demo.funnel.briefs} briefs
             </p>
@@ -316,7 +348,6 @@ function DemoRow({
       <td className="px-4 py-3 text-muted-foreground">{formatDate(demo.createdAt)}</td>
       <td className="px-4 py-3">
         <div className="flex flex-wrap gap-2">
-          {demo.publicPath && <CopyLinkButton path={demo.publicPath} />}
           <Link
             to="/portal/missions"
             className="rounded-md border border-input bg-background px-2 py-1 text-xs font-medium hover:bg-accent"

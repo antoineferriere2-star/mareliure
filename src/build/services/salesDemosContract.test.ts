@@ -175,3 +175,49 @@ describe("demonstrations are not business activity", () => {
     expect(adminFns).toContain("${column}.is.null,${column}.not.in.");
   });
 });
+
+describe("the single-screen agent flow opens no door the wizard does not", () => {
+  const newDemo = source("src/routes/_authenticated/portal/demos.new.tsx");
+
+  it("calls the same server functions as /portal/setup", () => {
+    // The point of the screen is fewer navigations, not a second engine. If it
+    // ever grew its own write path, the guards would have to be duplicated —
+    // and duplicated guards are the ones that drift.
+    for (const fn of [
+      "analyzeMySite",
+      "confirmMyDeckProduct",
+      "generateMyDeckDraft",
+      "updateMyBranding",
+      "publishMyDraft",
+    ]) {
+      expect(newDemo, `${fn} not reused`).toContain(fn);
+    }
+  });
+
+  it("never talks to the database or the service-role client directly", () => {
+    expect(newDemo).not.toContain("supabaseAdmin");
+    expect(newDemo).not.toContain('from("build_');
+  });
+
+  it("renders only for an owner of an internal Sales workspace", () => {
+    // Belt and braces: the server refuses anyway, but a customer must not be
+    // shown a screen that will only ever error at them.
+    expect(newDemo).toContain("w.isInternalSales");
+    expect(newDemo).toContain('w.role === "owner"');
+  });
+});
+
+describe("naming the prospect early changes nothing for a customer", () => {
+  const onboarding = source("src/build/services/portalOnboarding.data.functions.ts");
+
+  it("is optional on analyzeMySite", () => {
+    expect(onboarding).toContain("prospectCompanyName: z.string().trim().max(200).optional()");
+  });
+
+  it("is only written when supplied", () => {
+    // A re-analysis that omits it must not erase a name already typed, and the
+    // customer wizard — which never sends it — must write exactly what it did
+    // before.
+    expect(onboarding).toContain("data.prospectCompanyName !== undefined");
+  });
+});
