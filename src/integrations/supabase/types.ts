@@ -462,6 +462,39 @@ export type Database = {
         }
         Relationships: []
       }
+      build_public_site_analyses: {
+        Row: {
+          created_at: string
+          error: string | null
+          id: string
+          ip_hash: string
+          request_id: string
+          result: Json | null
+          status: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          ip_hash: string
+          request_id: string
+          result?: Json | null
+          status: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          id?: string
+          ip_hash?: string
+          request_id?: string
+          result?: Json | null
+          status?: string
+          url?: string
+        }
+        Relationships: []
+      }
       build_runtime_rate: {
         Row: {
           action: string
