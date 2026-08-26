@@ -189,6 +189,7 @@ export type Database = {
       build_missions: {
         Row: {
           audience: Json
+          branding: Json
           created_at: string
           id: string
           name: string
@@ -208,6 +209,7 @@ export type Database = {
         }
         Insert: {
           audience?: Json
+          branding?: Json
           created_at?: string
           id?: string
           name: string
@@ -227,6 +229,7 @@ export type Database = {
         }
         Update: {
           audience?: Json
+          branding?: Json
           created_at?: string
           id?: string
           name?: string
