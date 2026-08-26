@@ -38,6 +38,7 @@ import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/pub
 import { Route as ApiPublicAnalyzeSiteRouteImport } from './routes/api/public/analyze-site'
 import { Route as AuthenticatedPortalTeamRouteImport } from './routes/_authenticated/portal/team'
 import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
+import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
 import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authenticated/portal/missions'
 import { Route as AuthenticatedPortalDemosRouteImport } from './routes/_authenticated/portal/demos'
 import { Route as AuthenticatedPortalBillingRouteImport } from './routes/_authenticated/portal/billing'
@@ -211,6 +212,12 @@ const AuthenticatedPortalSetupRoute =
   AuthenticatedPortalSetupRouteImport.update({
     id: '/setup',
     path: '/setup',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalSettingsRoute =
+  AuthenticatedPortalSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
     getParentRoute: () => AuthenticatedPortalRouteRoute,
   } as any)
 const AuthenticatedPortalMissionsRoute =
@@ -389,6 +396,7 @@ export interface FileRoutesByFullPath {
   '/portal/billing': typeof AuthenticatedPortalBillingRoute
   '/portal/demos': typeof AuthenticatedPortalDemosRouteWithChildren
   '/portal/missions': typeof AuthenticatedPortalMissionsRoute
+  '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
@@ -441,6 +449,7 @@ export interface FileRoutesByTo {
   '/portal/billing': typeof AuthenticatedPortalBillingRoute
   '/portal/demos': typeof AuthenticatedPortalDemosRouteWithChildren
   '/portal/missions': typeof AuthenticatedPortalMissionsRoute
+  '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
@@ -498,6 +507,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/billing': typeof AuthenticatedPortalBillingRoute
   '/_authenticated/portal/demos': typeof AuthenticatedPortalDemosRouteWithChildren
   '/_authenticated/portal/missions': typeof AuthenticatedPortalMissionsRoute
+  '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/_authenticated/portal/team': typeof AuthenticatedPortalTeamRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
@@ -555,6 +565,7 @@ export interface FileRouteTypes {
     | '/portal/billing'
     | '/portal/demos'
     | '/portal/missions'
+    | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
     | '/api/public/analyze-site'
@@ -607,6 +618,7 @@ export interface FileRouteTypes {
     | '/portal/billing'
     | '/portal/demos'
     | '/portal/missions'
+    | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
     | '/api/public/analyze-site'
@@ -663,6 +675,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/billing'
     | '/_authenticated/portal/demos'
     | '/_authenticated/portal/missions'
+    | '/_authenticated/portal/settings'
     | '/_authenticated/portal/setup'
     | '/_authenticated/portal/team'
     | '/api/public/analyze-site'
@@ -927,6 +940,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalSetupRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
+    '/_authenticated/portal/settings': {
+      id: '/_authenticated/portal/settings'
+      path: '/settings'
+      fullPath: '/portal/settings'
+      preLoaderRoute: typeof AuthenticatedPortalSettingsRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
     '/_authenticated/portal/missions': {
       id: '/_authenticated/portal/missions'
       path: '/missions'
@@ -1184,6 +1204,7 @@ interface AuthenticatedPortalRouteRouteChildren {
   AuthenticatedPortalBillingRoute: typeof AuthenticatedPortalBillingRoute
   AuthenticatedPortalDemosRoute: typeof AuthenticatedPortalDemosRouteWithChildren
   AuthenticatedPortalMissionsRoute: typeof AuthenticatedPortalMissionsRoute
+  AuthenticatedPortalSettingsRoute: typeof AuthenticatedPortalSettingsRoute
   AuthenticatedPortalSetupRoute: typeof AuthenticatedPortalSetupRoute
   AuthenticatedPortalTeamRoute: typeof AuthenticatedPortalTeamRoute
   AuthenticatedPortalIndexRoute: typeof AuthenticatedPortalIndexRoute
@@ -1195,6 +1216,7 @@ const AuthenticatedPortalRouteRouteChildren: AuthenticatedPortalRouteRouteChildr
     AuthenticatedPortalBillingRoute: AuthenticatedPortalBillingRoute,
     AuthenticatedPortalDemosRoute: AuthenticatedPortalDemosRouteWithChildren,
     AuthenticatedPortalMissionsRoute: AuthenticatedPortalMissionsRoute,
+    AuthenticatedPortalSettingsRoute: AuthenticatedPortalSettingsRoute,
     AuthenticatedPortalSetupRoute: AuthenticatedPortalSetupRoute,
     AuthenticatedPortalTeamRoute: AuthenticatedPortalTeamRoute,
     AuthenticatedPortalIndexRoute: AuthenticatedPortalIndexRoute,
