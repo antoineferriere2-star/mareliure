@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import {
   listMyWorkspaces,
   listWorkspaceDossiers,
+  type WorkspaceDossierRow,
   getMyWorkspaceUsage,
   type CommercialStatus,
 } from "@/build/services/portal.data.functions";
@@ -27,20 +28,71 @@ export const Route = createFileRoute("/_authenticated/portal/")({
 
 const PAGE_SIZE = 25;
 
-type DossierRow = {
-  id: string;
-  summary: string | null;
-  commercial_status: string;
-  created_at: string;
-  last_activity_at: string;
-};
+/**
+ * The row shape comes from the server function rather than being restated
+ * here. The local copy had drifted to five fields and silently dropped
+ * everything the list needed to tell two briefs apart.
+ */
+type DossierRow = WorkspaceDossierRow;
+
+/**
+ * Received date, without the seconds. The list and the setup wizard used to
+ * render dates two different ways in the same session, one of them down to the
+ * second — noise on a column nobody reads that precisely.
+ */
+function formatReceived(iso: string): string {
+  return new Date(iso).toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
+}
+
+function SortHeader({
+  label,
+  active,
+  onSort,
+}: {
+  label: string;
+  active: "newest" | "oldest";
+  onSort: (next: "newest" | "oldest") => void;
+}) {
+  return (
+    <th className="px-4 py-2 text-left">
+      <button
+        type="button"
+        onClick={() => onSort(active === "newest" ? "oldest" : "newest")}
+        aria-label={`Sort by ${label}, ${active === "newest" ? "oldest" : "newest"} first`}
+        className="inline-flex items-center gap-1 uppercase hover:text-foreground"
+      >
+        {label}
+        <span aria-hidden="true">{active === "newest" ? "↓" : "↑"}</span>
+      </button>
+    </th>
+  );
+}
 
 function toCsv(rows: DossierRow[]): string {
   const escape = (v: string) => `"${v.replace(/"/g, '""')}"`;
-  const header = ["Summary", "Status", "Received", "Last activity"].map(escape).join(",");
+  // Same columns as the table. An export that carries less than the screen it
+  // was exported from sends people back to the screen.
+  const header = [
+    "Client",
+    "Project",
+    "Budget & timing",
+    "Intake",
+    "Status",
+    "Received",
+    "Last activity",
+  ]
+    .map(escape)
+    .join(",");
   const body = rows.map((r) =>
     [
+      r.visitorName ?? "",
       r.summary ?? `Project Brief ${r.id.slice(0, 8)}`,
+      r.budgetAndTiming.join(" · "),
+      r.missionName ?? "",
       r.commercial_status,
       new Date(r.created_at).toISOString(),
       new Date(r.last_activity_at).toISOString(),
@@ -56,7 +108,7 @@ function downloadCsv(rows: DossierRow[]) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `dossiers-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.download = `project-briefs-${new Date().toISOString().slice(0, 10)}.csv`;
   a.click();
   URL.revokeObjectURL(url);
 }
@@ -168,6 +220,9 @@ function PortalHomePage() {
   const [tab, setTab] = useState<CommercialStatus | "all">("all");
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  // Newest first is the working order; oldest first is how you find the one
+  // that has been sitting unanswered.
+  const [sort, setSort] = useState<"newest" | "oldest">("newest");
 
   const fetchDossiers = useServerFn(listWorkspaceDossiers);
   const {
@@ -191,10 +246,20 @@ function PortalHomePage() {
     if (tab !== "all") res = res.filter((d) => d.commercial_status === tab);
     if (search.trim()) {
       const s = search.trim().toLowerCase();
-      res = res.filter((d) => (d.summary ?? "").toLowerCase().includes(s));
+      // Searching the summary alone was close to useless: it is generated from
+      // the trade and the product, so it is the same sentence on every brief
+      // from one Intake. The name is what someone actually types.
+      res = res.filter((d) =>
+        [d.visitorName, d.summary, d.missionName, ...d.budgetAndTiming]
+          .filter(Boolean)
+          .some((field) => field!.toLowerCase().includes(s)),
+      );
     }
-    return res;
-  }, [dossiers, tab, search]);
+    return [...res].sort((a, b) => {
+      const delta = new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+      return sort === "newest" ? delta : -delta;
+    });
+  }, [dossiers, tab, search, sort]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
@@ -294,9 +359,12 @@ function PortalHomePage() {
           <table className="w-full text-sm">
             <thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
               <tr>
-                <th className="px-4 py-2 text-left">Summary</th>
+                <th className="px-4 py-2 text-left">Client</th>
+                <th className="px-4 py-2 text-left">Project</th>
+                <th className="px-4 py-2 text-left">Budget &amp; timing</th>
+                <th className="px-4 py-2 text-left">Intake</th>
+                <SortHeader label="Received" active={sort} onSort={setSort} />
                 <th className="px-4 py-2 text-left">Status</th>
-                <th className="px-4 py-2 text-left">Last activity</th>
               </tr>
             </thead>
             <tbody>
@@ -311,14 +379,31 @@ function PortalHomePage() {
                       params={{ id: d.id }}
                       className="font-medium text-foreground hover:underline"
                     >
-                      {d.summary ?? `Project Brief ${d.id.slice(0, 8)}`}
+                      {/* The name is what tells two briefs apart. The generated
+                          summary cannot: it is built from the trade and the
+                          product, so every brief from one Intake reads the
+                          same. */}
+                      {d.visitorName ?? "Unnamed visitor"}
                     </Link>
+                  </td>
+                  <td className="max-w-[22rem] px-4 py-3 text-muted-foreground">
+                    {d.summary ?? `Project Brief ${d.id.slice(0, 8)}`}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {d.budgetAndTiming.length > 0 ? (
+                      d.budgetAndTiming.map((line) => <div key={line}>{line}</div>)
+                    ) : (
+                      <span>—</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {d.missionName ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">
+                    {formatReceived(d.created_at)}
                   </td>
                   <td className="px-4 py-3">
                     <StatusBadge status={d.commercial_status} />
-                  </td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {new Date(d.last_activity_at).toLocaleString()}
                   </td>
                 </tr>
               ))}

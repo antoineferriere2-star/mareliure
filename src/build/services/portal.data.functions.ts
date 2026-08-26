@@ -60,21 +60,105 @@ export const listMyWorkspaces = createServerFn({ method: "GET" })
     }));
   });
 
+/**
+ * One row of the Project Briefs list.
+ *
+ * The list used to carry three columns — a summary, a status and a date — and
+ * the summary is generated from the trade and the product, so two different
+ * projects rendered as the same sentence. At thirty briefs a month, the
+ * promised benefit ("handle the good requests first") was not reachable from
+ * this screen: you had to open every one to learn what it was.
+ */
+export interface WorkspaceDossierRow {
+  id: string;
+  summary: string | null;
+  commercial_status: string;
+  mission_id: string | null;
+  created_at: string;
+  last_activity_at: string;
+  /** Who sent it. Stored on the row itself — no brief parsing needed. */
+  visitorName: string | null;
+  /** The Project Intake it came through. */
+  missionName: string | null;
+  assignedToUserId: string | null;
+  /**
+   * Budget and timing, read from the brief's `budgetAndTiming` section.
+   *
+   * Deliberately the section and not a list of field keys: `budgetRange` and
+   * `timeline` are the deck Playbook's names, and hard-coding them here would
+   * put a trade's vocabulary inside a screen that must serve every trade
+   * (CLAUDE.md: no business rule in the interface). The section is the
+   * Playbook's own declaration of what these lines are.
+   */
+  budgetAndTiming: string[];
+}
+
 export const listWorkspaceDossiers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
-  .handler(async ({ context, data }) => {
+  .handler(async ({ context, data }): Promise<WorkspaceDossierRow[]> => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
     const { data: dossiers, error } = await sb
       .from("build_dossiers")
-      .select("id, summary, commercial_status, mission_id, created_at, last_activity_at")
+      .select(
+        "id, summary, commercial_status, mission_id, created_at, last_activity_at, visitor_name, assigned_to_user_id, content",
+      )
       .eq("workspace_id", data.workspaceId)
       .order("last_activity_at", { ascending: false })
       .limit(200);
     if (error) fail(500, error.message);
-    return dossiers ?? [];
+
+    const missionIds = [...new Set((dossiers ?? []).map((d) => d.mission_id).filter(Boolean))];
+    const missionNames = new Map<string, string>();
+    if (missionIds.length > 0) {
+      const { data: missions, error: mErr } = await sb
+        .from("build_missions")
+        .select("id, name")
+        .in("id", missionIds as string[])
+        // The ids came from this workspace's own briefs, but a Mission is only
+        // ever named here if it is still this workspace's.
+        .eq("workspace_id", data.workspaceId);
+      if (mErr) fail(500, mErr.message);
+      for (const m of missions ?? []) missionNames.set(m.id, m.name);
+    }
+
+    // `content` is the whole ProjectBrief and never leaves the server: the list
+    // needs two short lines from it, not the document.
+    return (dossiers ?? []).map((d) => ({
+      id: d.id,
+      summary: d.summary,
+      commercial_status: d.commercial_status,
+      mission_id: d.mission_id,
+      created_at: d.created_at,
+      last_activity_at: d.last_activity_at,
+      visitorName: d.visitor_name,
+      missionName: d.mission_id ? (missionNames.get(d.mission_id) ?? null) : null,
+      assignedToUserId: d.assigned_to_user_id,
+      budgetAndTiming: budgetAndTimingLines(d.content),
+    }));
   });
+
+/**
+ * The `budgetAndTiming` lines of a stored brief, as short strings.
+ *
+ * Total by construction: `content` is a jsonb column written by a version of
+ * the generator that may be older than this code, and a brief that will not
+ * parse must cost the row its two extra columns, never the whole list.
+ */
+function budgetAndTimingLines(content: unknown): string[] {
+  if (!content || typeof content !== "object") return [];
+  const section = (content as { budgetAndTiming?: unknown }).budgetAndTiming;
+  if (!Array.isArray(section)) return [];
+  return section
+    .map((line) => {
+      if (!line || typeof line !== "object") return null;
+      const value = (line as { value?: unknown }).value;
+      return typeof value === "string" && value.trim() ? value.trim().slice(0, 80) : null;
+    })
+    .filter((v): v is string => v !== null)
+    .slice(0, 2);
+}
 
 /**
  * Missions belonging to the workspace, with the number of Dossiers each one

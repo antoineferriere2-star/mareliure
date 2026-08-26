@@ -221,3 +221,44 @@ describe("naming the prospect early changes nothing for a customer", () => {
     expect(onboarding).toContain("data.prospectCompanyName !== undefined");
   });
 });
+
+describe("the Project Briefs list can be worked, not just read", () => {
+  const portalSource = source("src/build/services/portal.data.functions.ts");
+  const listPage = source("src/routes/_authenticated/portal/index.tsx");
+
+  it("carries the name that tells two briefs apart", () => {
+    // The generated summary is built from the trade and the product, so every
+    // brief from one Intake reads identically. visitor_name is a column on the
+    // row and needs no parsing.
+    expect(serverFn(portalSource, "listWorkspaceDossiers")).toContain("visitor_name");
+    expect(listPage).toContain("d.visitorName");
+  });
+
+  it("reads budget and timing from the section, never from a trade's field keys", () => {
+    // budgetRange and timeline are the deck Playbook's names. Hard-coding them
+    // would put one trade's vocabulary in a screen that serves every trade —
+    // the "règle métier dans l'interface" anti-pattern from CLAUDE.md.
+    expect(portalSource).toContain("budgetAndTiming");
+    expect(portalSource).not.toContain('"budgetRange"');
+    expect(listPage).not.toContain("budgetRange");
+    expect(listPage).not.toContain("timeline");
+  });
+
+  it("never ships the whole brief to the browser", () => {
+    // `content` is the full ProjectBrief. The list needs two short lines from
+    // it; sending 200 documents to render a table would be the easy mistake.
+    const fn = serverFn(portalSource, "listWorkspaceDossiers");
+    expect(fn).toContain("budgetAndTimingLines(d.content)");
+    expect(fn).not.toMatch(/content: d\.content/);
+  });
+
+  it("re-checks the Intake belongs to this workspace before naming it", () => {
+    expect(serverFn(portalSource, "listWorkspaceDossiers")).toContain(
+      '.eq("workspace_id", data.workspaceId)',
+    );
+  });
+
+  it("searches what a person would actually type", () => {
+    expect(listPage).toContain("d.visitorName, d.summary, d.missionName");
+  });
+});
