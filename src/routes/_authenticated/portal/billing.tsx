@@ -10,6 +10,33 @@ import {
 import { PLAN_DEFAULTS, formatMonthlyUsdPrice, type PlanId } from "@/build/billing/plans";
 import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 import { EntitlementBanner } from "@/build/pages/portal/EntitlementBanner";
+import type { EntitlementState } from "@/build/billing/entitlements";
+
+/**
+ * What the workspace's subscription actually is, in one sentence. Derived from
+ * the entitlement state rather than from the `plan` column, so it can never
+ * contradict the banner directly above it.
+ */
+function subscriptionLabel(state: EntitlementState): string {
+  switch (state) {
+    case "subscribed":
+      return "Your subscription is active.";
+    case "grace_past_due":
+      return "Your subscription is active — your last payment is being retried.";
+    case "trialing":
+      return "You are on the free trial. No subscription yet.";
+    case "trial_expired":
+      return "Your free trial has ended. No active subscription.";
+    case "subscription_ended":
+      return "Your subscription is no longer active.";
+    case "workspace_disabled":
+      return "This workspace is disabled.";
+    case "admin_managed":
+      return "This workspace is managed by Métré — nothing to pay here.";
+    case "internal_sales":
+      return "Internal workspace — not billed.";
+  }
+}
 
 export const Route = createFileRoute("/_authenticated/portal/billing")({
   ssr: false,
@@ -135,15 +162,21 @@ function PortalBillingPage() {
 
       {billing && (
         <div className="rounded-lg border border-border bg-card p-4">
-          <p className="text-sm text-foreground">
-            Current plan:{" "}
-            <span className="font-semibold">
+          {/* This used to read "Current plan: Launch" off the `plan` column
+              while the banner above said the trial had ended — the two
+              disagreeing on the one screen where someone decides to pay.
+              They were never the same fact: `plan` only sets how much a
+              workspace may do (see 20260725130000), and entitlements answer
+              whether it may do anything at all. The heading now states the
+              subscription, and names the tier as what it is. */}
+          <p className="text-sm text-foreground">{subscriptionLabel(billing.entitlements.state)}</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Plan limits:{" "}
+            <span className="font-medium text-foreground">
               {PLAN_DEFAULTS[billing.plan as PlanId]?.label ?? billing.plan}
             </span>
             {billing.subscriptionStatus && (
-              <span className="ml-2 text-xs uppercase text-muted-foreground">
-                ({billing.subscriptionStatus})
-              </span>
+              <span className="ml-2 text-xs uppercase">({billing.subscriptionStatus})</span>
             )}
           </p>
           {billing.hasStripeBilling && canManageBilling && (
