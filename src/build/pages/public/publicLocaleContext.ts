@@ -821,6 +821,21 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   Edit: "Editar",
   "Not answered": "Sin responder",
 
+  // Fallback shown when the automated analysis is down (AnalysisUnavailableFallback).
+  "The automated analysis is down right now.":
+    "El análisis automático no funciona en este momento.",
+  "Leave your name and email and we will run it by hand, then send you the result within one business day.":
+    "Déjenos su nombre y correo: lo haremos manualmente y le enviaremos el resultado en un día hábil.",
+  "Website to analyze:": "Sitio web a analizar:",
+  "I agree to be contacted about this analysis.": "Acepto que me contacten sobre este análisis.",
+  "Send me the analysis": "Envíenme el análisis",
+  "Sending…": "Enviando…",
+  "Try the automated analysis again": "Intentar de nuevo el análisis automático",
+  "Thank you — we have your request.": "Gracias, hemos recibido su solicitud.",
+  "We will run the analysis by hand and email it to you within one business day.":
+    "Haremos el análisis manualmente y se lo enviaremos por correo en un día hábil.",
+  "We could not send that. Please try again.": "No pudimos enviarlo. Inténtelo de nuevo.",
+
   // Contextual in-body links added for internal linking (RelatedReading).
   "See it for one trade:": "Véalo en un oficio concreto:",
   "lead qualification for deck builders":

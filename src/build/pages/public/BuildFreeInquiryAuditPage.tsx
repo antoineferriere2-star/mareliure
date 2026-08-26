@@ -10,6 +10,7 @@
 // (quoted from the page) or assumed (inferred), exactly as /portal/setup
 // shows it. The visitor corrects it during setup — the AI proposes.
 import { useRef, useState } from "react";
+import { AnalysisUnavailableFallback } from "./AnalysisUnavailableFallback";
 import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,7 +31,7 @@ interface SiteAnalysisResult {
   facts: AnalysisFact[];
 }
 
-type Status = "idle" | "analyzing" | "done" | "error";
+type Status = "idle" | "analyzing" | "done" | "error" | "unavailable";
 
 const GENERIC_ERROR = "We could not analyze that address. Check it and try again.";
 
@@ -73,6 +74,17 @@ function FreeInquiryAuditContent() {
       });
       const body = (await res.json()) as { data?: SiteAnalysisResult; error?: string };
       if (!res.ok || !body.data) {
+        // Whose fault it is decides what we offer. A 503 is ours — the
+        // analyser is down — so we ask for an address and run it by hand
+        // rather than sending the most interested visitor away. A 400
+        // (unreachable site) or 429 (hourly allowance) is not an outage:
+        // asking for an email to fix someone's typo would be a dark pattern,
+        // and their own message already says what to do.
+        if (res.status === 503) {
+          setStatus("unavailable");
+          requestId.current = newRequestId();
+          return;
+        }
         // The endpoint's messages are already visitor-facing (unreachable
         // site, hourly limit); only an unexpected shape falls back.
         setError(copy(body.error ?? GENERIC_ERROR));
@@ -84,8 +96,9 @@ function FreeInquiryAuditContent() {
       setStatus("done");
       requestId.current = newRequestId();
     } catch {
-      setError(copy(GENERIC_ERROR));
-      setStatus("error");
+      // The request never completed. Indistinguishable from an outage from
+      // here, and treated as one: the visitor did nothing wrong.
+      setStatus("unavailable");
       requestId.current = newRequestId();
     }
   }
@@ -138,6 +151,14 @@ function FreeInquiryAuditContent() {
               <p role="status" className="mt-4 text-sm text-slate-600">
                 {copy("Analyzing your website… this takes a few seconds.")}
               </p>
+            )}
+
+            {status === "unavailable" && (
+              <AnalysisUnavailableFallback
+                websiteUrl={url.trim()}
+                copy={copy}
+                onRetry={() => setStatus("idle")}
+              />
             )}
 
             {status === "error" && error && (
