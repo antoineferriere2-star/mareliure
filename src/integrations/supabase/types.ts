@@ -745,6 +745,7 @@ export type Database = {
           max_active_missions: number
           monthly_brief_quota: number
           name: string
+          notify_on_new_brief: string
           plan: string
           provisioned_for_user_id: string | null
           stripe_customer_id: string | null
@@ -762,6 +763,7 @@ export type Database = {
           max_active_missions?: number
           monthly_brief_quota?: number
           name: string
+          notify_on_new_brief?: string
           plan?: string
           provisioned_for_user_id?: string | null
           stripe_customer_id?: string | null
@@ -779,6 +781,7 @@ export type Database = {
           max_active_missions?: number
           monthly_brief_quota?: number
           name?: string
+          notify_on_new_brief?: string
           plan?: string
           provisioned_for_user_id?: string | null
           stripe_customer_id?: string | null
