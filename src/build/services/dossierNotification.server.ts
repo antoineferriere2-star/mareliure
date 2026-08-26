@@ -5,6 +5,7 @@
 import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 import type { Supa } from "./adminAuth.server";
 import { logOperationalError } from "./operationalLog.server";
+import { recipientsFor, toBriefNotificationMode } from "@/build/settings/notifications";
 
 function portalUrl(dossierId: string): string {
   const base = (process.env.PUBLIC_SITE_URL || "https://metre-pro.com").replace(/\/+$/, "");
@@ -24,13 +25,24 @@ export async function notifyWorkspaceOfNewDossier(
   if (!params.workspaceId) return;
 
   try {
+    // The workspace decides who hears about its own customers. Read before the
+    // members so an "off" workspace costs one query, not two.
+    const { data: workspace, error: wErr } = await supabase
+      .from("build_workspaces")
+      .select("notify_on_new_brief")
+      .eq("id", params.workspaceId)
+      .maybeSingle();
+    if (wErr) throw wErr;
+    const mode = toBriefNotificationMode(workspace?.notify_on_new_brief);
+    if (mode === "off") return;
+
     const { data: members, error } = await supabase
       .from("build_workspace_members")
-      .select("email")
+      .select("email, role")
       .eq("workspace_id", params.workspaceId);
     if (error) throw error;
 
-    const recipients = [...new Set((members ?? []).map((m) => m.email).filter(Boolean))];
+    const recipients = recipientsFor(members ?? [], mode);
 
     for (const recipient of recipients) {
       try {

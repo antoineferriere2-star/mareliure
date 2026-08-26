@@ -126,6 +126,14 @@ function PortalLayout() {
             Team
           </Link>
 
+          <Link
+            to="/portal/settings"
+            activeProps={{ className: "border-primary text-foreground font-medium" }}
+            className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
+          >
+            Settings
+          </Link>
+
           {!isInternalSales && (
             <Link
               to="/portal/billing"

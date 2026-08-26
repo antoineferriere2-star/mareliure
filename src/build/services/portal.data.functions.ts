@@ -22,6 +22,7 @@ import type { DisplayPhotoReference } from "@/build/schema/visitorSummary";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 import { isInternalSales } from "@/build/workspaces/internalSales";
 import { readMissionBranding } from "@/build/branding/missionBranding";
+import { BRIEF_NOTIFICATION_MODES, toBriefNotificationMode } from "@/build/settings/notifications";
 
 /** Long enough to read a Dossier without reloading, short enough that a copied URL dies quickly. */
 const SIGNED_PHOTO_URL_TTL_SECONDS = 3600;
@@ -600,4 +601,68 @@ export const assignMyDossier = createServerFn({ method: "POST" })
     if (error) fail(500, error.message);
     if (!updated) fail(404, "Not found");
     return updated;
+  });
+
+// ---------------------------------------------------------------- Settings
+//
+// /portal/settings did not exist: the route 404'd on an unstyled page. Two
+// things live here, and only two, because a settings screen whose controls do
+// not change anything is worse than no settings screen — every option below is
+// wired end to end.
+
+export const getMyWorkspaceSettings = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    const { role } = await assertWorkspaceMember(
+      context.supabase,
+      context.userId,
+      data.workspaceId,
+    );
+    const sb = await admin();
+    const { data: workspace, error } = await sb
+      .from("build_workspaces")
+      .select("name, notify_on_new_brief")
+      .eq("id", data.workspaceId)
+      .maybeSingle();
+    if (error) fail(500, error.message);
+    if (!workspace) fail(404, "Workspace not found.");
+    return {
+      name: workspace.name,
+      notifyOnNewBrief: toBriefNotificationMode(workspace.notify_on_new_brief),
+      isOwner: role === "owner",
+    };
+  });
+
+/**
+ * Owner-only, like every other write in the portal. Both fields are optional so
+ * the two independent controls go through one function rather than two
+ * near-identical ones.
+ */
+export const updateMyWorkspaceSettings = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        workspaceId: z.string().uuid(),
+        // The business name a visitor sees when an Intake carries no branding
+        // display name — see resolveBusinessName. Renaming it used to require
+        // a Métré admin.
+        name: z.string().trim().min(2).max(200).optional(),
+        notifyOnNewBrief: z.enum(BRIEF_NOTIFICATION_MODES).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertWorkspaceOwner(context.supabase, context.userId, data.workspaceId);
+    const sb = await admin();
+
+    const fields: { name?: string; notify_on_new_brief?: string } = {};
+    if (data.name !== undefined) fields.name = data.name;
+    if (data.notifyOnNewBrief !== undefined) fields.notify_on_new_brief = data.notifyOnNewBrief;
+    if (Object.keys(fields).length === 0) fail(400, "Nothing to update.");
+
+    const { error } = await sb.from("build_workspaces").update(fields).eq("id", data.workspaceId);
+    if (error) fail(500, error.message);
+    return { ok: true as const };
   });
