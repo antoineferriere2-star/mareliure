@@ -92,7 +92,7 @@ function PortalLayout() {
             activeProps={{ className: "border-primary text-foreground font-medium" }}
             className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
           >
-            My Dossiers
+            Project Briefs
           </Link>
           {isInternalSales && (
             <Link
@@ -108,7 +108,7 @@ function PortalLayout() {
             activeProps={{ className: "border-primary text-foreground font-medium" }}
             className="border-b-2 border-transparent py-3 text-muted-foreground hover:text-foreground"
           >
-            My Missions
+            Project Intakes
           </Link>
           <Link
             to="/portal/setup"

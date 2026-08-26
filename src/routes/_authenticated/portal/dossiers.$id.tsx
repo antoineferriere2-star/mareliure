@@ -25,7 +25,10 @@ import { PortalError, PortalPending } from "@/build/pages/portal/PortalStates";
 export const Route = createFileRoute("/_authenticated/portal/dossiers/$id")({
   ssr: false,
   head: () => ({
-    meta: [{ title: "Dossier — Client Portal" }, { name: "robots", content: "noindex,nofollow" }],
+    meta: [
+      { title: "Project Brief — Client Portal" },
+      { name: "robots", content: "noindex,nofollow" },
+    ],
   }),
   pendingComponent: PortalPending,
   errorComponent: PortalError,
@@ -140,7 +143,7 @@ function PortalDossierDetailPage() {
     <div className="space-y-6">
       <div>
         <Link to="/portal" className="text-xs text-muted-foreground hover:underline">
-          ← My Dossiers
+          ← Project Briefs
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-foreground">
           {dossier.summary ?? `Dossier ${dossier.id.slice(0, 8)}`}
@@ -296,7 +299,7 @@ function DossierPhotos({ dossierId }: { dossierId: string }) {
         ))}
       </ul>
       <p className="mt-3 text-xs text-muted-foreground">
-        Links expire after an hour — reopen this Dossier to view them again.
+        Links expire after an hour — reopen this Project Brief to view them again.
       </p>
     </section>
   );

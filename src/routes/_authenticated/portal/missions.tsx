@@ -27,7 +27,7 @@ export const Route = createFileRoute("/_authenticated/portal/missions")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "My Missions — Client Portal" },
+      { title: "Project Intakes — Client Portal" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -91,7 +91,7 @@ function PortalMissionsPage() {
       queryClient.invalidateQueries({ queryKey: missionsKey });
     },
     onError: (err: unknown) => {
-      setToggleError(err instanceof Error ? err.message : "Unable to update this Mission.");
+      setToggleError(err instanceof Error ? err.message : "Unable to update this Project Intake.");
     },
   });
 
@@ -121,9 +121,9 @@ function PortalMissionsPage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">My Missions</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Project Intakes</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            The journeys published for your workspace and the Dossiers they produce.
+            The journeys published for your workspace and the Project Briefs they produce.
           </p>
         </div>
         {workspaces.length > 1 && (
@@ -158,14 +158,14 @@ function PortalMissionsPage() {
 
       {error ? (
         <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {error instanceof Error ? error.message : "Unable to load your Missions."}
+          {error instanceof Error ? error.message : "Unable to load your Project Intakes."}
         </p>
       ) : isPending ? (
         <PortalPending />
       ) : missions.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
           <p className="text-sm text-muted-foreground">
-            No Mission is linked to this workspace yet.
+            No Project Intake is linked to this workspace yet.
           </p>
         </div>
       ) : (
@@ -174,10 +174,10 @@ function PortalMissionsPage() {
             <table className="w-full min-w-[560px] text-sm">
               <thead className="border-b border-border bg-muted/40 text-xs uppercase text-muted-foreground">
                 <tr>
-                  <th className="px-4 py-2 text-left">Mission</th>
+                  <th className="px-4 py-2 text-left">Project Intake</th>
                   <th className="px-4 py-2 text-left">Playbook</th>
                   <th className="px-4 py-2 text-left">Status</th>
-                  <th className="px-4 py-2 text-right">Dossiers</th>
+                  <th className="px-4 py-2 text-right">Briefs</th>
                   <th className="px-4 py-2 text-left">Public link</th>
                   {isOwner && <th className="px-4 py-2 text-left">Actions</th>}
                 </tr>

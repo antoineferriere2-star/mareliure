@@ -34,7 +34,7 @@ const NewDossierEmail = ({
         <Text style={eyebrow}>Métré Build</Text>
         <Heading style={heading}>New Project Brief</Heading>
         <Text style={paragraph}>
-          A visitor just completed the Mission
+          A visitor just completed the Project Intake
           {missionName ? ` "${missionName}"` : ""}. The Project Brief is available in your Client
           Portal.
         </Text>

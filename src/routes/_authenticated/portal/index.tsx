@@ -16,7 +16,7 @@ export const Route = createFileRoute("/_authenticated/portal/")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "My Dossiers — Client Portal" },
+      { title: "Project Briefs — Client Portal" },
       { name: "robots", content: "noindex,nofollow" },
     ],
   }),
@@ -40,7 +40,7 @@ function toCsv(rows: DossierRow[]): string {
   const header = ["Summary", "Status", "Received", "Last activity"].map(escape).join(",");
   const body = rows.map((r) =>
     [
-      r.summary ?? `Dossier ${r.id.slice(0, 8)}`,
+      r.summary ?? `Project Brief ${r.id.slice(0, 8)}`,
       r.commercial_status,
       new Date(r.created_at).toISOString(),
       new Date(r.last_activity_at).toISOString(),
@@ -212,9 +212,9 @@ function PortalHomePage() {
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-semibold text-foreground">My Dossiers</h1>
+          <h1 className="text-2xl font-semibold text-foreground">Project Briefs</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Requests received through your Missions, to follow up until closed.
+            Requests received through your Project Intakes, to follow up until closed.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -279,13 +279,15 @@ function PortalHomePage() {
 
       {dossiersError ? (
         <p className="rounded-lg border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm text-destructive">
-          {dossiersError instanceof Error ? dossiersError.message : "Unable to load your Dossiers."}
+          {dossiersError instanceof Error
+            ? dossiersError.message
+            : "Unable to load your Project Briefs."}
         </p>
       ) : dossiersPending ? (
         <PortalPending />
       ) : filtered.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border bg-card p-8 text-center">
-          <p className="text-sm text-muted-foreground">No Dossier matches right now.</p>
+          <p className="text-sm text-muted-foreground">No Project Brief matches right now.</p>
         </div>
       ) : (
         <div className="overflow-hidden rounded-lg border border-border bg-card">
@@ -309,7 +311,7 @@ function PortalHomePage() {
                       params={{ id: d.id }}
                       className="font-medium text-foreground hover:underline"
                     >
-                      {d.summary ?? `Dossier ${d.id.slice(0, 8)}`}
+                      {d.summary ?? `Project Brief ${d.id.slice(0, 8)}`}
                     </Link>
                   </td>
                   <td className="px-4 py-3">
@@ -328,7 +330,7 @@ function PortalHomePage() {
       {pageCount > 1 && (
         <div className="flex items-center justify-between text-xs text-muted-foreground">
           <span>
-            Page {currentPage} of {pageCount} · {filtered.length} Dossiers
+            Page {currentPage} of {pageCount} · {filtered.length} Project Briefs
           </span>
           <div className="flex gap-2">
             <button

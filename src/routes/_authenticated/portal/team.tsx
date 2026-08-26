@@ -89,7 +89,7 @@ function PortalTeamPage() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Team</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Everyone who can see this workspace's Dossiers and follow them up.
+            Everyone who can see this workspace's Project Briefs and follow them up.
           </p>
         </div>
         {workspaces.length > 1 && (

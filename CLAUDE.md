@@ -25,6 +25,27 @@ Toujours utiliser à la place : `Mission`, `Projet`, `Visiteur`, `Playbook`,
 `build_knowledge_notes`, routes `/build/*`, `/m/:publicToken`) suit déjà cette
 convention — la conserver pour tout ajout.
 
+### Deux registres, une seule discipline
+
+Cette règle protège le **modèle conceptuel**, pas la langue française. Elle
+existe pour qu'on n'appelle jamais une Mission un « formulaire », ni un Dossier
+un « lead » — pas pour imposer deux mots français à des artisans américains.
+
+D'où la séparation, décidée le 26 août 2026 :
+
+| Registre | Termes | Portée |
+| --- | --- | --- |
+| Interne | `Mission`, `Playbook`, `Dossier Commercial` | tables, types, identifiants, commentaires, commits |
+| Client | **Project Intake**, **Playbook**, **Project Brief** | tout ce qu'un client ou un visiteur lit : portail, marketing, e-mails |
+
+Les mots interdits le restent **dans les deux registres**. `Project Intake`
+n'est pas `Form`, `Project Brief` n'est pas `Lead` : la discipline est intacte,
+on ne cède sur aucun des termes de la liste noire.
+
+Avant cette décision le produit se vendait en anglais et se livrait en
+français : le client achetait un « Project Intake », se connectait, et
+cherchait des « Missions ». Un concept, un mot, par registre.
+
 ## La chaîne d'objets (ne jamais casser cet ordre)
 
 ```
