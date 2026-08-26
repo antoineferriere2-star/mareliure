@@ -315,3 +315,77 @@ describe("Inspiration-photo hypotheses in the Brief", () => {
     expect(findLine(brief.assumptionsAndCalculated, "Materials")).toBeUndefined();
   });
 });
+
+describe("the Dossier never shows a stored value where a person expects a word", () => {
+  /**
+   * The bug this guards: briefMapping.format defaults to "raw", so any field
+   * whose Playbook did not explicitly ask for "option_label" put its stored
+   * value straight into the Dossier. The contractor opening the document
+   * before a sales call read `garden_ground_level` and `7_000_15_000`, while
+   * the visitor who typed the answers saw proper words — the review screen
+   * goes through formatAnswerForDisplay, which always asked for labels.
+   */
+  function machineLooking(value: string): boolean {
+    // A stored option value: lowercase words joined by underscores, or the
+    // digit-underscore shape budget ranges use (7_000_15_000).
+    return /(^|\s)[a-z0-9]+(_[a-z0-9]+)+(\s|$)/.test(value);
+  }
+
+  it("resolves an option to its label even when the Playbook asked for raw", () => {
+    const field = {
+      key: "surface",
+      label: "Current ground surface",
+      type: "single_choice" as const,
+      options: [
+        { value: "soil_or_lawn", label: "Soil or lawn" },
+        { value: "existing_slab", label: "Existing slab" },
+      ],
+      briefMapping: {
+        section: "confirmedInformation" as const,
+        label: "Ground surface",
+        // No `format`, so it defaults to "raw" — the shape that shipped the bug.
+      },
+    };
+    const schema = playbookSchema.parse({
+      ...deckPlaybookSchema,
+      sections: [
+        {
+          id: "s",
+          title: "S",
+          steps: [{ id: "st", title: "T", fields: [field] }],
+        },
+      ],
+    });
+    const brief = generateProjectBrief(schema, { surface: "soil_or_lawn" }, { name: "M" });
+    const line = findLine(brief.confirmedInformation, "Ground surface");
+    expect(line?.value).toBe("Soil or lawn");
+    expect(line?.value).not.toBe("soil_or_lawn");
+  });
+
+  it("leaves free text, numbers and dates untouched", () => {
+    // optionLabel returns anything it cannot match, so resolving labels
+    // unconditionally must not mangle a field that has no options.
+    const brief = generateProjectBrief(
+      deckPlaybookSchema,
+      { length: 20, width: 10, location: { zip: "78704" }, email: "a@b.com" },
+      { name: "M" },
+    );
+    const all = [...brief.confirmedInformation, ...brief.missingInformation];
+    expect(all.some((line) => line.value.includes("78704"))).toBe(true);
+  });
+
+  it("puts no machine-looking value in the reference deck brief", () => {
+    // The end-to-end guard the audit asked for: whatever a Playbook declares,
+    // nothing that reaches the contractor may read as a database row.
+    const lines: BriefLine[] = [
+      ...defaultDeckBrief.confirmedInformation,
+      ...defaultDeckBrief.assumptionsAndCalculated,
+      ...defaultDeckBrief.constraints,
+      ...defaultDeckBrief.missingInformation,
+      ...defaultDeckBrief.budgetAndTiming,
+      defaultDeckBrief.suggestedNextAction,
+    ];
+    const offenders = lines.filter((line) => machineLooking(line.value));
+    expect(offenders.map((l) => `${l.label}: ${l.value}`)).toEqual([]);
+  });
+});
