@@ -14,9 +14,14 @@ export function IntegrationSnippetsPanel({
   publicUrl,
   ctaLabel = "Start your project",
   missionName,
+  brandColor,
 }: {
   publicUrl: string;
   ctaLabel?: string;
+  /** The customer's accent. Omitted, the button keeps the product's own green.
+   * The generator has accepted this since it was written; nothing passed it,
+   * so every customer pasted a Métré-green button onto their own site. */
+  brandColor?: string;
   /** Raw commercial name. The embed's accessible title is derived from it
    * here, so every caller gets the same wording (see intakeAccessibleTitle). */
   missionName?: string;
@@ -28,9 +33,10 @@ export function IntegrationSnippetsPanel({
         publicUrl,
         ctaLabel,
         iframeTitle: intakeAccessibleTitle(missionName),
+        brandColor,
         origin: typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com",
       }),
-    [ctaLabel, missionName, publicUrl],
+    [brandColor, ctaLabel, missionName, publicUrl],
   );
 
   async function copy(text: string, key: "url" | SnippetKey) {

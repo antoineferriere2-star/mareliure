@@ -99,3 +99,42 @@ describe("buildIntegrationSnippets", () => {
     expect(snippets.iframeHtml).toContain('height="320"');
   });
 });
+
+describe("the button carries the customer's colour, not ours", () => {
+  it("uses the brand colour when one is given", () => {
+    // The generator has accepted brandColor since it was written. Nothing ever
+    // passed it, so every customer pasted a Métré-green button onto their own
+    // site.
+    const { buttonHtml } = buildIntegrationSnippets({
+      publicUrl: "/m/tok",
+      brandColor: "#3d2817",
+    });
+    expect(buttonHtml).toContain("background-color:#3d2817");
+    expect(buttonHtml).not.toContain("#047857");
+  });
+
+  it("picks the text colour from the background, never a constant", () => {
+    // White on a light brand colour is unreadable, in markup we generated, on
+    // a page we do not control.
+    const light = buildIntegrationSnippets({ publicUrl: "/m/t", brandColor: "#f5d89f" });
+    expect(light.buttonHtml).toContain("color:#000000");
+
+    const dark = buildIntegrationSnippets({ publicUrl: "/m/t", brandColor: "#3d2817" });
+    expect(dark.buttonHtml).toContain("color:#ffffff");
+  });
+
+  it("keeps the product's green when no colour is given", () => {
+    const { buttonHtml } = buildIntegrationSnippets({ publicUrl: "/m/tok" });
+    expect(buttonHtml).toContain("background-color:#047857");
+    expect(buttonHtml).toContain("color:#ffffff");
+  });
+
+  it("still refuses a value that could smuggle in a second declaration", () => {
+    const { buttonHtml } = buildIntegrationSnippets({
+      publicUrl: "/m/tok",
+      brandColor: "red;background-image:url(https://evil.example/x.png)",
+    });
+    expect(buttonHtml).toContain("background-color:#047857");
+    expect(buttonHtml).not.toContain("background-image");
+  });
+});

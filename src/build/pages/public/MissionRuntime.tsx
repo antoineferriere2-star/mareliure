@@ -24,6 +24,8 @@ import {
 } from "./publicSessionStorage";
 import { VisitorProjectSummaryView } from "./VisitorProjectSummaryView";
 import { BuildPublicShell } from "./BuildPublicShell";
+import { EMPTY_BRANDING, type PublicBranding } from "@/build/branding/missionBranding";
+import { readableTextColor } from "@/build/branding/contrast";
 import { publicCopy, usePublicLocale } from "./publicLocaleContext";
 import { MissionRuntimeSkeleton } from "./MissionRuntimeStates";
 
@@ -42,6 +44,9 @@ type PublicMission = {
   proposal: { intro?: string } | null;
   /** The business publishing this intake — what the visitor should see. */
   workspace_name: string | null;
+  /** Frozen at publish time. Every field may be null on an Intake published
+   * before branding was captured; each one falls back to what was shown then. */
+  branding: PublicBranding | null;
 };
 
 type DossierResult = {
@@ -302,6 +307,17 @@ function MissionRuntimeContent({
   );
   const clampedStepIndex = Math.min(stepIndex, Math.max(visibleSteps.length - 1, 0));
   const currentStep = visibleSteps[clampedStepIndex];
+
+  // Branding frozen onto the Mission at publish time. Null on anything
+  // published before it was captured, and every read below falls back to what
+  // that Intake already showed.
+  const branding = mission?.branding ?? EMPTY_BRANDING;
+  const accent = branding.accentColor;
+  // The customer picks the background; we pick the text. White on a light
+  // brand colour is unreadable, and this runs on the customer's own site.
+  const accentStyle = accent
+    ? { backgroundColor: accent, color: readableTextColor(accent) }
+    : undefined;
   const progress =
     visibleSteps.length > 0 ? Math.round(((clampedStepIndex + 1) / visibleSteps.length) * 100) : 0;
   const isLastStep = clampedStepIndex >= visibleSteps.length - 1;
@@ -509,15 +525,34 @@ function MissionRuntimeContent({
       {mission && schema && !dossier && (
         <section className="mx-auto max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
           <div className="border-b border-slate-200 p-6">
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
-              {copy(mission.playbook_name ?? mission.name)}
+            {/* The customer's accent, where they expect to see it: their own
+                name and their own progress. Never the page background — a dark
+                brand colour behind body text is unreadable, and we do not get
+                to test every colour a customer might pick. */}
+            <p
+              className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700"
+              style={accent ? { color: accent } : undefined}
+            >
+              {copy(branding.displayName ?? mission.playbook_name ?? mission.name)}
             </p>
+            {/* The welcome line, first step only. It sits above the step's own
+                title rather than replacing it: "Welcome to Denver Decks" is a
+                greeting, and the question the step actually asks still has to
+                be legible. */}
+            {branding.introTitle && !reviewing && clampedStepIndex === 0 && (
+              <p className="mt-3 text-lg font-medium text-slate-900">{branding.introTitle}</p>
+            )}
             <h1 className="mt-3 text-3xl font-semibold tracking-normal">
               {reviewing
                 ? copy("Check your answers before sending")
                 : copy(currentStep?.step.title ?? mission.name)}
             </h1>
-            {mission.proposal?.intro && !currentStep?.step.why && (
+            {branding.introText && !reviewing && clampedStepIndex === 0 && (
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
+                {branding.introText}
+              </p>
+            )}
+            {mission.proposal?.intro && !branding.introText && !currentStep?.step.why && (
               <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
                 {copy(mission.proposal.intro)}
               </p>
@@ -551,6 +586,7 @@ function MissionRuntimeContent({
                               ? "cursor-pointer bg-emerald-600 hover:bg-emerald-700"
                               : "cursor-default bg-slate-100"
                           }`}
+                          style={reached && accent ? { backgroundColor: accent } : undefined}
                         />
                       </li>
                     );
@@ -641,7 +677,7 @@ function MissionRuntimeContent({
                   <FileText className="ml-2 h-4 w-4" />
                 </Button>
               ) : (
-                <Button onClick={goNext} disabled={saving}>
+                <Button onClick={goNext} disabled={saving} style={accentStyle}>
                   {isLastStep ? copy("Review my answers") : copy("Continue")}
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>

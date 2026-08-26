@@ -21,6 +21,7 @@ import type { Answers } from "@/build/schema/answers";
 import type { DisplayPhotoReference } from "@/build/schema/visitorSummary";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 import { isInternalSales } from "@/build/workspaces/internalSales";
+import { readMissionBranding } from "@/build/branding/missionBranding";
 
 /** Long enough to read a Dossier without reloading, short enough that a copied URL dies quickly. */
 const SIGNED_PHOTO_URL_TTL_SECONDS = 3600;
@@ -90,7 +91,7 @@ export const listWorkspaceMissions = createServerFn({ method: "GET" })
     const { data: missions, error } = await sb
       .from("build_missions")
       .select(
-        "id, name, status, playbook_name, playbook_version_id, public_token, public_token_revoked_at, published_at, created_at",
+        "id, name, status, playbook_name, playbook_version_id, public_token, public_token_revoked_at, published_at, created_at, branding",
       )
       .eq("workspace_id", data.workspaceId)
       .order("created_at", { ascending: false })
@@ -127,6 +128,10 @@ export const listWorkspaceMissions = createServerFn({ method: "GET" })
     }
     return (missions ?? []).map((m) => ({
       ...m,
+      // Parsed here rather than in the page: the frozen snapshot may predate
+      // the current shape, and readMissionBranding is the one place that
+      // knows how to read it safely.
+      branding: readMissionBranding(m.branding),
       dossierCount: counts.get(m.id) ?? 0,
       playbookVersionNumber: m.playbook_version_id
         ? (versionNumbers.get(m.playbook_version_id) ?? null)

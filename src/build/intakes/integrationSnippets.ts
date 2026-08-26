@@ -1,3 +1,5 @@
+import { readableTextColor } from "@/build/branding/contrast";
+
 export interface IntegrationSnippetInput {
   publicUrl: string;
   origin?: string;
@@ -51,12 +53,16 @@ export function buildIntegrationSnippets(input: IntegrationSnippetInput): Integr
   const label = escapeHtml(input.ctaLabel ?? "Start your project");
   const title = escapeHtml(input.iframeTitle ?? "Project intake");
   const height = Math.max(320, Math.min(input.iframeHeight ?? 800, 2000));
+  const background = safeButtonColor(input.brandColor);
   const buttonStyle = escapeHtml(
     [
       "display:inline-block",
       "padding:14px 28px",
-      `background-color:${safeButtonColor(input.brandColor)}`,
-      "color:#ffffff",
+      `background-color:${background}`,
+      // Not a constant. The customer picks the background and we pick the text
+      // — white on a light brand colour is unreadable, and this markup runs on
+      // the customer's own website, where we never get to see it fail.
+      `color:${readableTextColor(background)}`,
       "font-family:system-ui,-apple-system,'Segoe UI',Roboto,sans-serif",
       "font-size:16px",
       "font-weight:600",

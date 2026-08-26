@@ -1,4 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { readMissionBranding } from "@/build/branding/missionBranding";
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "crypto";
 import { z } from "zod";
 import type { SupabaseClient } from "@supabase/supabase-js";
@@ -113,10 +114,23 @@ function secretMatches(storedHash: string, provided: string): boolean {
 }
 
 /** No dedicated "business name" field exists on build_missions — fall back to the mission's own name when the workspace lookup comes up empty. */
+/**
+ * The name the visitor sees. Prefers the display name frozen onto the Mission
+ * at publish time; falls back to the workspace name, which was the only source
+ * before branding was captured.
+ *
+ * The workspace name alone was correct by accident for a customer — their
+ * workspace is their company — and wrong for Métré's internal Sales workspace,
+ * where every prospect demonstration introduced itself as "Métré Sales / Demos"
+ * rather than as the prospect's own business.
+ */
 async function resolveBusinessName(
   supabase: Supa,
   mission: Record<string, unknown>,
 ): Promise<string> {
+  const branding = readMissionBranding(mission.branding);
+  if (branding.displayName) return branding.displayName;
+
   const workspaceId = mission.workspace_id as string | null;
   if (workspaceId) {
     const { data } = await supabase
@@ -142,6 +156,9 @@ function publicMission(m: Record<string, unknown>, workspaceName?: string | null
      * this instead of Métré Build's own branding — the intake is embedded in
      * the customer's site and must read as theirs. */
     workspace_name: workspaceName ?? null,
+    /** Frozen at publish time. Only the fields a visitor sees; never logoPath,
+     * which nothing renders. */
+    branding: readMissionBranding(m.branding),
   };
 }
 

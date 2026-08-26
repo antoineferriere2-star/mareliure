@@ -245,8 +245,9 @@ function PortalMissionsPage() {
                     <p className="mb-3 text-sm font-medium text-foreground">{mission.name}</p>
                     <IntegrationSnippetsPanel
                       publicUrl={`/m/${mission.public_token}`}
-                      ctaLabel="Start your project"
-                      missionName={mission.name}
+                      ctaLabel={mission.branding.ctaLabel ?? "Start your project"}
+                      missionName={mission.branding.displayName ?? mission.name}
+                      brandColor={mission.branding.accentColor ?? undefined}
                     />
                   </div>
                 ))}
