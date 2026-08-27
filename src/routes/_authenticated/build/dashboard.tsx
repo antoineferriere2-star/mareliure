@@ -133,6 +133,9 @@ function DashboardPage() {
         ))}
       </div>
 
+      <ProspectFunnelsPanel demos={stats.prospectDemos} />
+
+
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="text-sm font-semibold text-foreground">Latest Project Briefs</h2>
