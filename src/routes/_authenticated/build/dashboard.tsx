@@ -23,7 +23,23 @@ const emptyStats: Stats = {
   },
   recentDossiers: [],
   recentRequests: [],
+  prospectDemos: {
+    counts: {
+      funnels: 0,
+      ready: 0,
+      sent: 0,
+      archived: 0,
+      views: 0,
+      sessions: 0,
+      submittedSessions: 0,
+      briefs: 0,
+      viewToStartRate: 0,
+      startToBriefRate: 0,
+    },
+    recentFunnels: [],
+  },
 };
+
 
 export const Route = createFileRoute("/_authenticated/build/dashboard")({
   ssr: false,
