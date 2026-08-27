@@ -262,3 +262,53 @@ describe("the Project Briefs list can be worked, not just read", () => {
     expect(listPage).toContain("d.visitorName, d.summary, d.missionName");
   });
 });
+
+describe("prospect funnels are tracked without becoming business activity", () => {
+  const funnels = source("src/build/services/prospectFunnels.server.ts");
+  const dashboard = source("src/routes/_authenticated/build/dashboard.tsx");
+
+  it("exposes prospectDemos as its own key on the dashboard stats", () => {
+    // Separate from `counts` so no existing reader starts including demos.
+    const fn = serverFn(adminFns, "getBuildDashboardStats");
+    expect(fn).toContain("prospectDemos");
+    expect(fn).toContain("readProspectDemos(sb, scope.workspaceIds)");
+  });
+
+  it("still excludes internal workspaces from the normal metrics", () => {
+    const fn = serverFn(adminFns, "getBuildDashboardStats");
+    expect(fn).toContain("internalSalesScope(");
+    expect(fn).toContain("notDemo(");
+  });
+
+  it("reads only the tables the runtime already writes", () => {
+    for (const table of [
+      "build_workspace_onboarding",
+      "build_page_views",
+      "build_runtime_sessions",
+      "build_dossiers",
+    ]) {
+      expect(funnels, `${table} not read`).toContain(`.from("${table}")`);
+    }
+    expect(funnels).toContain(".from(\"build_missions\")");
+  });
+
+  it("scopes every funnel to the internal workspaces handed to it", () => {
+    // workspaceIds come from internalSalesScope, never re-derived here.
+    expect(funnels).toContain('.in("workspace_id", workspaceIds)');
+    expect(funnels).not.toContain("workspace_type");
+  });
+
+  it("matches public views on the token path", () => {
+    expect(funnels).toContain('.like("path", "/m/%")');
+  });
+
+  it("renders the panel on the admin dashboard", () => {
+    expect(dashboard).toContain("Hermes prospect funnels");
+    expect(dashboard).toContain("<ProspectFunnelsPanel");
+  });
+
+  it("keeps the panel out of the customer Project Briefs list", () => {
+    const briefs = dashboard.indexOf("Latest Project Briefs");
+    expect(dashboard.indexOf("<ProspectFunnelsPanel")).toBeLessThan(briefs);
+  });
+});

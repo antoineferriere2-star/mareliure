@@ -25,6 +25,8 @@ import {
 } from "@/build/intakes/intakeLifecycle";
 import { fail } from "./serverError";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
+import { readProspectDemos } from "./prospectFunnels.server";
+
 
 // ---------- Dashboard ----------
 
@@ -144,6 +146,9 @@ export const getBuildDashboardStats = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false })
       .limit(5);
 
+    // Kept in its own key: these are demonstrations, not business activity.
+    const prospectDemos = await readProspectDemos(sb, scope.workspaceIds);
+
     return {
       dataSource: "supabase" as const,
       counts: {
@@ -158,8 +163,10 @@ export const getBuildDashboardStats = createServerFn({ method: "GET" })
       },
       recentDossiers: recentDossiers ?? [],
       recentRequests: recentRequests ?? [],
+      prospectDemos,
     };
   });
+
 
 // ---------- Missions ----------
 

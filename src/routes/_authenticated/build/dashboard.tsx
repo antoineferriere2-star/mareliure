@@ -23,7 +23,23 @@ const emptyStats: Stats = {
   },
   recentDossiers: [],
   recentRequests: [],
+  prospectDemos: {
+    counts: {
+      funnels: 0,
+      ready: 0,
+      sent: 0,
+      archived: 0,
+      views: 0,
+      sessions: 0,
+      submittedSessions: 0,
+      briefs: 0,
+      viewToStartRate: 0,
+      startToBriefRate: 0,
+    },
+    recentFunnels: [],
+  },
 };
+
 
 export const Route = createFileRoute("/_authenticated/build/dashboard")({
   ssr: false,
@@ -117,6 +133,9 @@ function DashboardPage() {
         ))}
       </div>
 
+      <ProspectFunnelsPanel demos={stats.prospectDemos} />
+
+
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="text-sm font-semibold text-foreground">Latest Project Briefs</h2>
@@ -175,5 +194,107 @@ function DashboardPage() {
         </section>
       </div>
     </div>
+  );
+}
+
+/**
+ * Hermès prospect funnels — the demonstrations our own agents build from a
+ * prospect's website. Deliberately a separate panel: these Missions and Project
+ * Briefs are excluded from every business metric above, and mixing them into the
+ * customer lists would make both readings untrustworthy.
+ */
+function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
+  const c = demos.counts;
+  const metrics = [
+    { label: "Funnels", value: c.funnels, sub: `${c.ready} ready · ${c.sent} sent` },
+    { label: "Archived", value: c.archived, sub: "not being worked" },
+    { label: "Public views", value: c.views, sub: "on /m/ links" },
+    { label: "Sessions", value: c.sessions, sub: `${c.submittedSessions} submitted` },
+    { label: "Project Briefs", value: c.briefs, sub: "generated" },
+    {
+      label: "View → start",
+      value: `${c.viewToStartRate}%`,
+      sub: `start → Brief ${c.startToBriefRate}%`,
+    },
+  ];
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-4">
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="text-sm font-semibold text-foreground">Hermes prospect funnels</h2>
+        <span className="text-xs text-muted-foreground">
+          Métré Sales / Demos only — excluded from the metrics above
+        </span>
+      </div>
+
+      <div className="mt-3 grid gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {metrics.map((m) => (
+          <div key={m.label} className="rounded-md border border-border/70 bg-background p-3">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              {m.label}
+            </div>
+            <div className="mt-1 text-xl font-semibold text-foreground">{m.value}</div>
+            <div className="mt-0.5 text-[11px] text-muted-foreground">{m.sub}</div>
+          </div>
+        ))}
+      </div>
+
+      {demos.recentFunnels.length === 0 ? (
+        <p className="mt-4 text-xs text-muted-foreground">No prospect funnel yet.</p>
+      ) : (
+        <div className="mt-4 overflow-x-auto">
+          <table className="w-full text-left text-xs">
+            <thead className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              <tr>
+                <th className="pb-2 pr-3 font-medium">Prospect</th>
+                <th className="pb-2 pr-3 font-medium">Status</th>
+                <th className="pb-2 pr-3 font-medium">Public link</th>
+                <th className="pb-2 pr-3 font-medium">Funnel</th>
+                <th className="pb-2 font-medium">Last view</th>
+              </tr>
+            </thead>
+            <tbody>
+              {demos.recentFunnels.map((f) => (
+                <tr key={f.id} className="border-t border-border/60">
+                  <td className="py-2 pr-3">
+                    <div className="font-medium text-foreground">{f.prospect}</div>
+                    <div className="text-[11px] text-muted-foreground">
+                      {f.domain ?? "no site"}
+                      {f.missionName ? ` · ${f.missionName}` : ""}
+                    </div>
+                  </td>
+                  <td className="py-2 pr-3">
+                    <span className="rounded-full border border-border px-2 py-0.5 text-[10px] uppercase text-muted-foreground">
+                      {f.status}
+                    </span>
+                  </td>
+                  <td className="py-2 pr-3">
+                    {f.publicToken ? (
+                      <a
+                        href={`/m/${f.publicToken}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-foreground underline underline-offset-2"
+                      >
+                        {f.publicLinkActive ? "Open" : "Revoked"}
+                      </a>
+                    ) : (
+                      <span className="text-muted-foreground">Not published</span>
+                    )}
+                  </td>
+                  <td className="py-2 pr-3 text-muted-foreground">
+                    {f.views} views · {f.sessions} started · {f.submittedSessions} submitted ·{" "}
+                    {f.briefs} Briefs
+                  </td>
+                  <td className="py-2 text-muted-foreground">
+                    {f.lastViewAt ? new Date(f.lastViewAt).toLocaleString() : "—"}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   );
 }
