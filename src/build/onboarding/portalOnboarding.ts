@@ -137,7 +137,11 @@ export function resumeStep(state: OnboardingState | null): SetupStep {
   if (!state) return "website";
   if (state.status === "published") return "publish";
   if (state.hasDraft) return "preview";
-  if (state.hasConfirmedProduct) return "customize";
+  // A confirmed product with no draft means the generation failed or was
+  // interrupted: send them back to the confirm screen, which is the only
+  // place that can relaunch it. Landing on "customize" would offer branding
+  // for a draft that does not exist.
+  if (state.hasConfirmedProduct) return "product";
   if (state.hasAnalysis) return "review";
   return "website";
 }
