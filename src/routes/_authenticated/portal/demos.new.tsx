@@ -251,7 +251,12 @@ function NewDemoFlow({ workspaceId }: { workspaceId: string }) {
   }
 
   async function onPublish() {
-    const state = await run("publish", () => publish({ data: { workspaceId } }));
+    // publishMyDraft validates a requestId for idempotency: a fresh id per
+    // click, so a lost response retried by the user is not a second publish.
+    publishRequestId.current = newRequestId();
+    const state = await run("publish", () =>
+      publish({ data: { workspaceId, requestId: publishRequestId.current } }),
+    );
     if (state) setSetup(state);
   }
 
