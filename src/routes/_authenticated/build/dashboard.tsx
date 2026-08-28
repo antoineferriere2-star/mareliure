@@ -205,11 +205,17 @@ function DashboardPage() {
  * Briefs are excluded from every business metric above, and mixing them into the
  * customer lists would make both readings untrustworthy.
  */
+const PROSPECT_FILTERS = ["all", "draft", "ready", "sent", "archived"] as const;
+type ProspectFilter = (typeof PROSPECT_FILTERS)[number];
+
 function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
-  const c = demos.counts;
+  const c = demos.totals;
+  const [search, setSearch] = useState("");
+  const [filter, setFilter] = useState<ProspectFilter>("all");
+
   const metrics = [
     { label: "Funnels", value: c.funnels, sub: `${c.ready} ready · ${c.sent} sent` },
-    { label: "Archived", value: c.archived, sub: "not being worked" },
+    { label: "Archived", value: c.archived, sub: `${c.draft} still draft` },
     { label: "Public views", value: c.views, sub: "on /m/ links" },
     { label: "Sessions", value: c.sessions, sub: `${c.submittedSessions} submitted` },
     { label: "Project Briefs", value: c.briefs, sub: "generated" },
@@ -219,6 +225,17 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
       sub: `start → Brief ${c.startToBriefRate}%`,
     },
   ];
+
+  // Every funnel is consultable here, so the list needs its own search rather
+  // than a top-10 cut: an agent looks for one prospect by whatever they recall.
+  const needle = search.trim().toLowerCase();
+  const visible = demos.items.filter((f) => {
+    if (filter !== "all" && f.status !== filter) return false;
+    if (!needle) return true;
+    return [f.prospectName, f.companyName, f.domain, f.confirmedProduct, f.createdByEmail]
+      .filter(Boolean)
+      .some((value) => (value as string).toLowerCase().includes(needle));
+  });
 
   return (
     <section className="rounded-lg border border-border bg-card p-4">
@@ -241,8 +258,38 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
         ))}
       </div>
 
-      {demos.recentFunnels.length === 0 ? (
+      <div className="mt-4 flex flex-wrap items-center gap-2">
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search prospect, domain, product or creator"
+          className="w-full max-w-xs rounded-md border border-input bg-background px-3 py-1.5 text-xs"
+          aria-label="Search prospect tunnels"
+        />
+        <div className="flex flex-wrap gap-1">
+          {PROSPECT_FILTERS.map((f) => (
+            <button
+              key={f}
+              onClick={() => setFilter(f)}
+              className={`rounded-full border px-2.5 py-1 text-[11px] capitalize ${
+                filter === f
+                  ? "border-foreground bg-foreground text-background"
+                  : "border-input bg-background text-muted-foreground hover:bg-accent"
+              }`}
+            >
+              {f}
+            </button>
+          ))}
+        </div>
+        <span className="ml-auto text-[11px] text-muted-foreground">
+          Showing {visible.length} of {demos.items.length} prospect tunnels
+        </span>
+      </div>
+
+      {demos.items.length === 0 ? (
         <p className="mt-4 text-xs text-muted-foreground">No prospect funnel yet.</p>
+      ) : visible.length === 0 ? (
+        <p className="mt-4 text-xs text-muted-foreground">No tunnel matches this search.</p>
       ) : (
         <div className="mt-4 overflow-x-auto">
           <table className="w-full text-left text-xs">
@@ -250,19 +297,22 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
               <tr>
                 <th className="pb-2 pr-3 font-medium">Prospect</th>
                 <th className="pb-2 pr-3 font-medium">Status</th>
-                <th className="pb-2 pr-3 font-medium">Public link</th>
+                <th className="pb-2 pr-3 font-medium">Setup</th>
+                <th className="pb-2 pr-3 font-medium">Tunnel</th>
                 <th className="pb-2 pr-3 font-medium">Funnel</th>
-                <th className="pb-2 font-medium">Last view</th>
+                <th className="pb-2 pr-3 font-medium">Last view</th>
+                <th className="pb-2 font-medium">Created</th>
               </tr>
             </thead>
             <tbody>
-              {demos.recentFunnels.map((f) => (
-                <tr key={f.id} className="border-t border-border/60">
+              {visible.map((f) => (
+                <tr key={f.id} className="border-t border-border/60 align-top">
                   <td className="py-2 pr-3">
-                    <div className="font-medium text-foreground">{f.prospect}</div>
+                    <div className="font-medium text-foreground">{f.prospectName}</div>
                     <div className="text-[11px] text-muted-foreground">
                       {f.domain ?? "no site"}
-                      {f.missionName ? ` · ${f.missionName}` : ""}
+                      {f.confirmedProduct ? ` · ${f.confirmedProduct}` : ""}
+                      {f.detectedBusinessType ? ` · ${f.detectedBusinessType}` : ""}
                     </div>
                   </td>
                   <td className="py-2 pr-3">
@@ -270,26 +320,45 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
                       {f.status}
                     </span>
                   </td>
+                  <td className="py-2 pr-3 text-muted-foreground">{f.setupStatus}</td>
                   <td className="py-2 pr-3">
-                    {f.publicToken ? (
+                    {f.publicPath ? (
                       <a
-                        href={`/m/${f.publicToken}`}
+                        href={f.publicPath}
                         target="_blank"
                         rel="noreferrer"
                         className="text-foreground underline underline-offset-2"
                       >
-                        {f.publicLinkActive ? "Open" : "Revoked"}
+                        {f.publicLinkActive ? "Open public link" : "Revoked link"}
                       </a>
                     ) : (
                       <span className="text-muted-foreground">Not published</span>
                     )}
+                    {f.missionId ? (
+                      <div className="mt-0.5">
+                        <Link
+                          to="/build/missions/$id"
+                          params={{ id: f.missionId }}
+                          className="text-muted-foreground underline underline-offset-2 hover:text-foreground"
+                        >
+                          {f.missionName ?? "Project Intake"}
+                          {f.missionStatus ? ` · ${f.missionStatus}` : ""}
+                        </Link>
+                      </div>
+                    ) : null}
                   </td>
                   <td className="py-2 pr-3 text-muted-foreground">
-                    {f.views} views · {f.sessions} started · {f.submittedSessions} submitted ·{" "}
-                    {f.briefs} Briefs
+                    {f.funnel.viewed} views · {f.funnel.started} starts · {f.funnel.completed}{" "}
+                    submitted · {f.funnel.briefs} Briefs
+                  </td>
+                  <td className="py-2 pr-3 text-muted-foreground">
+                    {f.lastViewedAt ? new Date(f.lastViewedAt).toLocaleString() : "—"}
                   </td>
                   <td className="py-2 text-muted-foreground">
-                    {f.lastViewAt ? new Date(f.lastViewAt).toLocaleString() : "—"}
+                    {new Date(f.createdAt).toLocaleDateString()}
+                    {f.createdByEmail ? (
+                      <div className="text-[11px]">{f.createdByEmail}</div>
+                    ) : null}
                   </td>
                 </tr>
               ))}
