@@ -24,8 +24,9 @@ const emptyStats: Stats = {
   recentDossiers: [],
   recentRequests: [],
   prospectDemos: {
-    counts: {
+    totals: {
       funnels: 0,
+      draft: 0,
       ready: 0,
       sent: 0,
       archived: 0,
@@ -36,7 +37,8 @@ const emptyStats: Stats = {
       viewToStartRate: 0,
       startToBriefRate: 0,
     },
-    recentFunnels: [],
+    items: [],
+    recent: [],
   },
 };
 
