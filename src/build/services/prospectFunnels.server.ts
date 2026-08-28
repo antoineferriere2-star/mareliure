@@ -11,6 +11,11 @@
  *   build_page_views            public views, matched on `/m/:public_token`
  *   build_runtime_sessions      sessions started / submitted
  *   build_dossiers              Project Briefs produced
+ *   build_workspace_members     which agent created the funnel (email)
+ *
+ * `items` carries every funnel loaded so the admin can consult each one;
+ * `recent` is the same list truncated for the summary strip. There is one read
+ * and one derivation, so the two can never disagree.
  *
  * Kept out of the server-function module on purpose: that file must stay a thin
  * wrapper of `createServerFn` declarations.
@@ -20,26 +25,33 @@ import { prospectDisplayName, prospectDomain } from "@/build/workspaces/internal
 
 export type ProspectFunnelRow = {
   id: string;
-  prospect: string;
+  prospectName: string;
+  companyName: string | null;
   domain: string | null;
-  siteUrl: string | null;
+  websiteUrl: string | null;
+  /** `prospect_status` on the onboarding row: draft / ready / sent / archived. */
   status: string;
+  /** Where the setup wizard stands: started / analyzed / confirmed / published. */
+  setupStatus: string;
+  detectedBusinessType: string | null;
+  confirmedProduct: string | null;
   missionId: string | null;
   missionName: string | null;
   missionStatus: string | null;
   publicToken: string | null;
+  /** `/m/<token>` when the demo is published and its link is still live. */
+  publicPath: string | null;
   publicLinkActive: boolean;
-  views: number;
-  sessions: number;
-  submittedSessions: number;
-  briefs: number;
-  lastViewAt: string | null;
   createdAt: string;
+  createdByEmail: string | null;
+  lastViewedAt: string | null;
+  funnel: { viewed: number; started: number; completed: number; briefs: number };
 };
 
 export type ProspectDemosStats = {
-  counts: {
+  totals: {
     funnels: number;
+    draft: number;
     ready: number;
     sent: number;
     archived: number;
@@ -50,12 +62,15 @@ export type ProspectDemosStats = {
     viewToStartRate: number;
     startToBriefRate: number;
   };
-  recentFunnels: ProspectFunnelRow[];
+  /** Every funnel loaded — the admin consults the list, not a top 10. */
+  items: ProspectFunnelRow[];
+  recent: ProspectFunnelRow[];
 };
 
 const EMPTY: ProspectDemosStats = {
-  counts: {
+  totals: {
     funnels: 0,
+    draft: 0,
     ready: 0,
     sent: 0,
     archived: 0,
@@ -66,7 +81,8 @@ const EMPTY: ProspectDemosStats = {
     viewToStartRate: 0,
     startToBriefRate: 0,
   },
-  recentFunnels: [],
+  items: [],
+  recent: [],
 };
 
 function rate(numerator: number, denominator: number): number {
@@ -87,7 +103,7 @@ export async function readProspectDemos(
   const { data: onboardings } = await sb
     .from("build_workspace_onboarding")
     .select(
-      "id, workspace_id, mission_id, prospect_company_name, prospect_status, site_url, final_url, created_at",
+      "id, workspace_id, mission_id, created_by, status, prospect_company_name, prospect_status, confirmed_business_type, confirmed_product, site_url, final_url, created_at",
     )
     .in("workspace_id", workspaceIds)
     .order("created_at", { ascending: false });
@@ -97,7 +113,7 @@ export async function readProspectDemos(
 
   const missionIds = rows.map((r) => r.mission_id).filter((id): id is string => Boolean(id));
 
-  const [missionsRes, viewsRes, sessionsRes, briefsRes] = await Promise.all([
+  const [missionsRes, viewsRes, sessionsRes, briefsRes, membersRes] = await Promise.all([
     missionIds.length > 0
       ? sb
           .from("build_missions")
@@ -116,11 +132,19 @@ export async function readProspectDemos(
     missionIds.length > 0
       ? sb.from("build_dossiers").select("mission_id").in("mission_id", missionIds)
       : Promise.resolve({ data: [] as never[] }),
+    // Who built the demo. `created_by` is a user id; the email already lives on
+    // the membership row, so nothing new has to be stored to name the agent.
+    sb.from("build_workspace_members").select("user_id, email").in("workspace_id", workspaceIds),
   ]);
 
   const missions = new Map(
     (missionsRes.data ?? []).map((m: Record<string, unknown>) => [m['id'] as string, m]),
   );
+
+  const emailByUser = new Map<string, string>();
+  for (const m of membersRes.data ?? []) {
+    if (m.user_id && m.email) emailByUser.set(m.user_id, m.email);
+  }
 
   const viewsByToken = new Map<string, { count: number; last: string }>();
   for (const v of viewsRes.data ?? []) {
@@ -145,50 +169,63 @@ export async function readProspectDemos(
     briefsByMission.set(d.mission_id, (briefsByMission.get(d.mission_id) ?? 0) + 1);
   }
 
-  const funnels: ProspectFunnelRow[] = rows.map((r) => {
+  const items: ProspectFunnelRow[] = rows.map((r) => {
     const mission = r.mission_id ? missions.get(r.mission_id) : undefined;
     const publicToken = (mission?.['public_token'] as string | null) ?? null;
+    const revoked = Boolean(mission?.['public_token_revoked_at']);
     const view = publicToken ? viewsByToken.get(publicToken) : undefined;
     const session = r.mission_id ? sessionsByMission.get(r.mission_id) : undefined;
+    const briefs = r.mission_id ? (briefsByMission.get(r.mission_id) ?? 0) : 0;
     return {
       id: r.id,
-      prospect: prospectDisplayName(r.prospect_company_name, r.final_url ?? r.site_url),
+      prospectName: prospectDisplayName(r.prospect_company_name, r.final_url ?? r.site_url),
+      companyName: r.prospect_company_name ?? null,
       domain: prospectDomain(r.final_url ?? r.site_url),
-      siteUrl: r.final_url ?? r.site_url ?? null,
+      websiteUrl: r.final_url ?? r.site_url ?? null,
       status: r.prospect_status,
+      setupStatus: r.status,
+      detectedBusinessType: r.confirmed_business_type ?? null,
+      confirmedProduct: r.confirmed_product ?? null,
       missionId: r.mission_id ?? null,
       missionName: (mission?.['name'] as string | null) ?? null,
       missionStatus: (mission?.['status'] as string | null) ?? null,
       publicToken,
-      publicLinkActive: Boolean(publicToken) && !mission?.['public_token_revoked_at'],
-      views: view?.count ?? 0,
-      sessions: session?.total ?? 0,
-      submittedSessions: session?.submitted ?? 0,
-      briefs: r.mission_id ? (briefsByMission.get(r.mission_id) ?? 0) : 0,
-      lastViewAt: view?.last ?? null,
+      publicPath: publicToken ? `/m/${publicToken}` : null,
+      publicLinkActive: Boolean(publicToken) && !revoked,
       createdAt: r.created_at,
+      createdByEmail: r.created_by ? (emailByUser.get(r.created_by) ?? null) : null,
+      lastViewedAt: view?.last ?? null,
+      funnel: {
+        viewed: view?.count ?? 0,
+        started: session?.total ?? 0,
+        completed: session?.submitted ?? 0,
+        briefs,
+      },
     };
   });
 
   const sum = (pick: (f: ProspectFunnelRow) => number) =>
-    funnels.reduce((total, f) => total + pick(f), 0);
-  const views = sum((f) => f.views);
-  const sessions = sum((f) => f.sessions);
-  const briefs = sum((f) => f.briefs);
+    items.reduce((total, f) => total + pick(f), 0);
+  const views = sum((f) => f.funnel.viewed);
+  const sessions = sum((f) => f.funnel.started);
+  const briefs = sum((f) => f.funnel.briefs);
+  const withStatus = (status: string) => items.filter((f) => f.status === status).length;
 
   return {
-    counts: {
-      funnels: funnels.length,
-      ready: funnels.filter((f) => f.status === "ready").length,
-      sent: funnels.filter((f) => f.status === "sent").length,
-      archived: funnels.filter((f) => f.status === "archived").length,
+    totals: {
+      funnels: items.length,
+      draft: withStatus("draft"),
+      ready: withStatus("ready"),
+      sent: withStatus("sent"),
+      archived: withStatus("archived"),
       views,
       sessions,
-      submittedSessions: sum((f) => f.submittedSessions),
+      submittedSessions: sum((f) => f.funnel.completed),
       briefs,
       viewToStartRate: rate(sessions, views),
       startToBriefRate: rate(briefs, sessions),
     },
-    recentFunnels: funnels.slice(0, 10),
+    items,
+    recent: items.slice(0, 10),
   };
 }

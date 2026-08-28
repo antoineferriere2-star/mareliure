@@ -302,9 +302,15 @@ describe("prospect funnels are tracked without becoming business activity", () =
     expect(funnels).toContain('.like("path", "/m/%")');
   });
 
-  it("renders the panel on the admin dashboard", () => {
+  it("keeps a separate admin tracking panel for prospect funnels", () => {
     expect(dashboard).toContain("Hermes prospect funnels");
     expect(dashboard).toContain("<ProspectFunnelsPanel");
+    // Every funnel is consultable, not just the ten most recent: the panel
+    // reads `items`, and `recent` stays a summary convenience only.
+    expect(dashboard).toContain("demos.items");
+    expect(funnels).toContain("items,");
+    expect(funnels).toContain("recent: items.slice(0, 10)");
+    expect(dashboard).toContain("Showing {visible.length} of {demos.items.length}");
   });
 
   it("keeps the panel out of the customer Project Briefs list", () => {
