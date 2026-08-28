@@ -138,6 +138,7 @@ function NewDemoFlow({ workspaceId }: { workspaceId: string }) {
   const [businessType, setBusinessType] = useState("");
   const [product, setProduct] = useState("");
   const generateRequestId = useRef(newRequestId());
+  const publishRequestId = useRef(newRequestId());
 
   // Section 3
   const [displayName, setDisplayName] = useState("");
