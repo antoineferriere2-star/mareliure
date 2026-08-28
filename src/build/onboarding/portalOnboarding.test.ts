@@ -111,7 +111,7 @@ describe("resumeStep", () => {
         hasConfirmedProduct: true,
         hasDraft: false,
       }),
-    ).toBe("customize");
+    ).toBe("product");
     expect(
       resumeStep({
         status: "draft_ready",
