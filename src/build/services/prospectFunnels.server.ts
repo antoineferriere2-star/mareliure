@@ -115,7 +115,7 @@ export async function readProspectDemos(
   const { data: onboardings } = await sb
     .from("build_workspace_onboarding")
     .select(
-      "id, workspace_id, mission_id, created_by, status, prospect_company_name, prospect_status, confirmed_business_type, confirmed_product, site_url, final_url, created_at",
+      "id, workspace_id, mission_id, created_by, status, prospect_company_name, prospect_status, confirmed_business_type, confirmed_product, site_url, final_url, created_at, updated_at, analyzed_at, analysis, playbook_id",
     )
     .in("workspace_id", workspaceIds)
     .order("created_at", { ascending: false });
