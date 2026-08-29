@@ -45,6 +45,18 @@ export type ProspectFunnelRow = {
   createdAt: string;
   createdByEmail: string | null;
   lastViewedAt: string | null;
+  /** Most recent sign of life: setup edit, publish, or public view. */
+  lastActivityAt: string;
+  analyzedAt: string | null;
+  hasAnalysis: boolean;
+  hasDraft: boolean;
+  /**
+   * What is blocking this funnel, in the agent's terms, or `null` when nothing
+   * is. Derived from the setup row rather than stored: an interrupted analysis
+   * or draft generation leaves its trace in the columns already written, so the
+   * admin can see a stalled prospect instead of guessing from a status word.
+   */
+  issue: string | null;
   funnel: { viewed: number; started: number; completed: number; briefs: number };
 };
 
@@ -90,6 +102,26 @@ function rate(numerator: number, denominator: number): number {
 }
 
 /**
+ * The one blocking step of a funnel, named the way the wizard names it, so the
+ * admin reads "where it stopped" instead of inferring it from a status word.
+ * Read-only derivation: a failed analysis or an interrupted draft generation
+ * both leave the setup row half-filled, and that is exactly what is reported.
+ */
+function funnelIssue(f: {
+  setupStatus: string;
+  hasAnalysis: boolean;
+  hasConfirmedProduct: boolean;
+  hasDraft: boolean;
+  missionId: string | null;
+}): string | null {
+  if (f.setupStatus === "published" && f.missionId) return null;
+  if (!f.hasAnalysis) return "Site analysis never completed — resumes at Your website";
+  if (!f.hasConfirmedProduct) return "Product not confirmed yet — resumes at Your product";
+  if (!f.hasDraft) return "Draft generation interrupted — resumes at Your product";
+  return "Draft built but never published — resumes at Publish";
+}
+
+/**
  * @param workspaceIds ids of the `internal_sales` workspaces, already resolved
  *   by the caller's `internalSalesScope` so there is one definition of
  *   "internal" and no second query keyed on anything else.
@@ -103,7 +135,7 @@ export async function readProspectDemos(
   const { data: onboardings } = await sb
     .from("build_workspace_onboarding")
     .select(
-      "id, workspace_id, mission_id, created_by, status, prospect_company_name, prospect_status, confirmed_business_type, confirmed_product, site_url, final_url, created_at",
+      "id, workspace_id, mission_id, created_by, status, prospect_company_name, prospect_status, confirmed_business_type, confirmed_product, site_url, final_url, created_at, updated_at, analyzed_at, playbook_id",
     )
     .in("workspace_id", workspaceIds)
     .order("created_at", { ascending: false });
@@ -176,6 +208,12 @@ export async function readProspectDemos(
     const view = publicToken ? viewsByToken.get(publicToken) : undefined;
     const session = r.mission_id ? sessionsByMission.get(r.mission_id) : undefined;
     const briefs = r.mission_id ? (briefsByMission.get(r.mission_id) ?? 0) : 0;
+    const hasAnalysis = Boolean(r.analyzed_at);
+    const hasDraft = Boolean(r.playbook_id);
+    const lastActivityAt = [r.updated_at, r.created_at, view?.last]
+      .filter((d): d is string => Boolean(d))
+      .sort()
+      .at(-1) as string;
     return {
       id: r.id,
       prospectName: prospectDisplayName(r.prospect_company_name, r.final_url ?? r.site_url),
@@ -195,6 +233,17 @@ export async function readProspectDemos(
       createdAt: r.created_at,
       createdByEmail: r.created_by ? (emailByUser.get(r.created_by) ?? null) : null,
       lastViewedAt: view?.last ?? null,
+      lastActivityAt,
+      analyzedAt: r.analyzed_at ?? null,
+      hasAnalysis,
+      hasDraft,
+      issue: funnelIssue({
+        setupStatus: r.status,
+        hasAnalysis,
+        hasConfirmedProduct: Boolean(r.confirmed_product),
+        hasDraft,
+        missionId: r.mission_id ?? null,
+      }),
       funnel: {
         viewed: view?.count ?? 0,
         started: session?.total ?? 0,

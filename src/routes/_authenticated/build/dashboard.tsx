@@ -301,7 +301,7 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
                 <th className="pb-2 pr-3 font-medium">Setup</th>
                 <th className="pb-2 pr-3 font-medium">Tunnel</th>
                 <th className="pb-2 pr-3 font-medium">Funnel</th>
-                <th className="pb-2 pr-3 font-medium">Last view</th>
+                <th className="pb-2 pr-3 font-medium">Last activity</th>
                 <th className="pb-2 font-medium">Created</th>
               </tr>
             </thead>
@@ -321,7 +321,14 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
                       {f.status}
                     </span>
                   </td>
-                  <td className="py-2 pr-3 text-muted-foreground">{f.setupStatus}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">
+                    {f.setupStatus}
+                    {f.issue ? (
+                      <div className="mt-1 text-[11px] text-amber-700">{f.issue}</div>
+                    ) : (
+                      <div className="mt-1 text-[11px] text-emerald-700">Published, no blocker</div>
+                    )}
+                  </td>
                   <td className="py-2 pr-3">
                     {f.publicPath ? (
                       <a
@@ -353,7 +360,10 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
                     submitted · {f.funnel.briefs} Briefs
                   </td>
                   <td className="py-2 pr-3 text-muted-foreground">
-                    {f.lastViewedAt ? new Date(f.lastViewedAt).toLocaleString() : "—"}
+                    {new Date(f.lastActivityAt).toLocaleString()}
+                    <div className="text-[11px]">
+                      last view: {f.lastViewedAt ? new Date(f.lastViewedAt).toLocaleString() : "—"}
+                    </div>
                   </td>
                   <td className="py-2 text-muted-foreground">
                     {new Date(f.createdAt).toLocaleDateString()}
