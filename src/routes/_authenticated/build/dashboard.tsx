@@ -301,7 +301,7 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
                 <th className="pb-2 pr-3 font-medium">Setup</th>
                 <th className="pb-2 pr-3 font-medium">Tunnel</th>
                 <th className="pb-2 pr-3 font-medium">Funnel</th>
-                <th className="pb-2 pr-3 font-medium">Last view</th>
+                <th className="pb-2 pr-3 font-medium">Last activity</th>
                 <th className="pb-2 font-medium">Created</th>
               </tr>
             </thead>
