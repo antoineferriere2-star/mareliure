@@ -302,6 +302,16 @@ describe("prospect funnels are tracked without becoming business activity", () =
     expect(funnels).toContain('.like("path", "/m/%")');
   });
 
+  it("reports last activity and where a funnel stalled", () => {
+    // The admin is the source of truth for what Hermès produces, so an
+    // interrupted analysis or draft must be readable, not inferred.
+    expect(funnels).toContain("lastActivityAt");
+    expect(funnels).toContain("function funnelIssue");
+    expect(funnels).toContain("Draft generation interrupted");
+    expect(dashboard).toContain("f.issue");
+    expect(dashboard).toContain("Last activity");
+  });
+
   it("keeps a separate admin tracking panel for prospect funnels", () => {
     expect(dashboard).toContain("Hermes prospect funnels");
     expect(dashboard).toContain("<ProspectFunnelsPanel");
