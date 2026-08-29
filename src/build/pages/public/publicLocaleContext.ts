@@ -606,8 +606,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   Terms: "Términos",
   "Last updated": "Última actualización",
   "Who operates Métré Build": "Quién opera Métré Build",
-  "Métré Build (metre-pro.com) is a project intake product for project-based contractors. The legal entity operating this service, its registration details and registered address will be published here once confirmed — until then, use the Contact page for any verification you need.":
-    "Métré Build (metre-pro.com) es un producto de captación de proyectos para contratistas que trabajan por proyecto. La entidad legal que opera este servicio, sus datos de registro y su domicilio social se publicarán aquí una vez confirmados; mientras tanto, use la página de Contacto para cualquier verificación que necesite.",
+  "Métré Build (metre-pro.com) is a project intake product for businesses that need to understand project context before they sell. The legal entity operating this service, its registration details and registered address will be published here once confirmed — until then, use the Contact page for any verification you need.":
+    "Métré Build (metre-pro.com) es un producto de captación de proyectos para negocios que necesitan entender el contexto del proyecto antes de vender. La entidad legal que opera este servicio, sus datos de registro y su domicilio social se publicarán aquí una vez confirmados; mientras tanto, use la página de Contacto para cualquier verificación que necesite.",
   "Data we collect": "Datos que recopilamos",
   "We collect information you submit directly through our audit request, setup request and contact forms, and information a visitor submits through a Guided Project Intake published by one of our client workspaces.":
     "Recopilamos la información que usted envía directamente a través de nuestros formularios de solicitud de auditoría, solicitud de configuración y contacto, así como la información que un visitante envía a través de un Project Intake guiado publicado por uno de nuestros workspaces de clientes.",
@@ -668,8 +668,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Questions about this policy can be emailed to contact@metre-pro.com or sent through the Contact page.":
     "Las preguntas sobre esta política pueden enviarse a contact@metre-pro.com o a través de la página de Contacto.",
   "What this service is": "Qué es este servicio",
-  "Métré Build is a guided project-intake tool: it helps a visitor describe a project — a deck project today — and turns the answers into a structured Project Brief for the business that published the intake.":
-    "Métré Build es una herramienta de captación de proyectos guiada: ayuda a un visitante a describir un proyecto (un proyecto de terraza hoy en día) y convierte las respuestas en un Project Brief estructurado para la empresa que publicó el intake.",
+  "Métré Build is a guided project-intake tool: it helps a visitor describe a project and turns the answers into a structured Project Brief for the business that published the intake. The public demo available today uses a deck project as its example.":
+    "Métré Build es una herramienta de captación de proyectos guiada: ayuda a un visitante a describir un proyecto y convierte las respuestas en un Project Brief estructurado para la empresa que publicó el intake. La demo pública disponible hoy usa un proyecto de terraza como ejemplo.",
   "Creating an account": "Creación de una cuenta",
   "Creating a workspace account gives you a self-service space to publish a Guided Project Intake and review the Project Briefs it produces. You are responsible for keeping your account credentials secure.":
     "Crear una cuenta de workspace le da un espacio de autoservicio para publicar un Project Intake guiado y revisar los Project Briefs que produce. Usted es responsable de mantener seguras las credenciales de su cuenta.",
@@ -776,8 +776,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Yes. You can change your plan at any time from your client portal billing page.":
     "Sí. Puede cambiar su plan en cualquier momento desde la página de facturación de su portal de cliente.",
   "Is there a free trial?": "¿Hay una prueba gratuita?",
-  "You can try the public Deck demo before creating an account. Once you sign up, you get your own workspace right away and can publish your first Guided Project Intake yourself.":
-    "Puede probar la demo pública de Deck antes de crear una cuenta. Al registrarse, obtiene su propio workspace de inmediato y puede publicar usted mismo su primer Project Intake guiado.",
+  "You can try the live public intake before creating an account. Once you sign up, you get your own workspace right away and can publish your first Guided Project Intake yourself.":
+    "Puede probar el intake público en vivo antes de crear una cuenta. Al registrarse, obtiene su propio workspace de inmediato y puede publicar usted mismo su primer Project Intake guiado.",
   "Prefer a guided setup instead?": "¿Prefiere una configuración guiada?",
   "Analyze your website first to see what a Project Brief looks like for your business, with no account required.":
     "Analice primero su sitio web para ver cómo sería un Project Brief para su negocio, sin necesidad de crear una cuenta.",

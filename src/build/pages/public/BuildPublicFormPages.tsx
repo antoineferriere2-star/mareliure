@@ -74,7 +74,7 @@ function BuildContactPageContent({
   }
 
   return (
-    <main className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+    <main className="bg-[#f7f3ec] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[420px_1fr]">
         <SectionHeader
           as="h1"
@@ -84,10 +84,7 @@ function BuildContactPageContent({
             `Send a direct message to the Métré Build team. We reply from ${PUBLIC_CONTACT_EMAIL}.`,
           )}
         />
-        <form
-          onSubmit={submit}
-          className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
-        >
+        <form onSubmit={submit} className="metre-frame rounded-lg bg-[#fffdf8] p-6">
           <input
             className="hidden"
             tabIndex={-1}
@@ -320,7 +317,7 @@ function BuildPrivateBetaPageContent() {
   const progress = Math.round(((step + 1) / BETA_STEP_LABELS.length) * 100);
 
   return (
-    <main className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+    <main className="bg-[#f7f3ec] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto grid max-w-6xl gap-8 lg:grid-cols-[420px_1fr]">
         <SectionHeader
           eyebrow={copy("Setup review")}
@@ -329,7 +326,7 @@ function BuildPrivateBetaPageContent() {
             "Tell us about your business and we'll get back to you about setting up a guided Project Intake for your website.",
           )}
         />
-        <div className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="metre-frame rounded-lg bg-[#fffdf8] p-6">
           <input
             className="hidden"
             tabIndex={-1}

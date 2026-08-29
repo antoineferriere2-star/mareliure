@@ -22,7 +22,7 @@ const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: "Who operates Métré Build",
     body: [
-      "Métré Build (metre-pro.com) is a project intake product for project-based contractors. The legal entity operating this service, its registration details and registered address will be published here once confirmed — until then, use the Contact page for any verification you need.",
+      "Métré Build (metre-pro.com) is a project intake product for businesses that need to understand project context before they sell. The legal entity operating this service, its registration details and registered address will be published here once confirmed — until then, use the Contact page for any verification you need.",
     ],
   },
   {

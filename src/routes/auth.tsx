@@ -23,7 +23,7 @@ export const Route = createFileRoute("/auth")({
       {
         name: "description",
         content:
-          "Create your Métré Build account and get your own workspace to turn website visitors into qualified deck project briefs.",
+          "Create your Métré Build account and get your own workspace to turn website visitors into structured project briefs.",
       },
       { name: "robots", content: "noindex,nofollow" },
     ],
@@ -224,7 +224,7 @@ function ClientAuth({
       </h1>
       <p className="mt-1 text-sm text-muted-foreground">
         {mode === "signup"
-          ? "For deck builders. You get your own workspace right away — no setup call needed."
+          ? "For project-based businesses. You get your own workspace right away — no setup call needed."
           : "Welcome back. Sign in to your workspace."}
       </p>
 

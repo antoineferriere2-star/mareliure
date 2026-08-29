@@ -9,7 +9,6 @@ import { usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 import { FaqLauncher } from "@/build/pages/public/FaqLauncher";
 import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
 
-
 /**
  * One entry per industry vertical Métré Build can serve. Only "published"
  * verticals appear in the nav — Pool & Spa and Windows & Doors exist today
@@ -350,15 +349,15 @@ export function PageHero({
   secondaryVariant?: "outline" | "link";
 }) {
   return (
-    <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
+    <section className="bg-[#f7f3ec] px-4 py-16 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-7xl">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
           {eyebrow}
         </p>
-        <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-normal text-slate-950 sm:text-5xl">
+        <h1 className="mt-5 max-w-4xl text-4xl font-semibold tracking-normal text-stone-950 sm:text-5xl lg:text-6xl">
           {title}
         </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-700">{description}</p>
+        <p className="mt-5 max-w-2xl text-lg leading-8 text-stone-700">{description}</p>
         <div className="mt-8 flex flex-wrap items-center gap-4">
           <a href={primaryTo}>
             <Button size="lg">{primary}</Button>

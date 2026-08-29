@@ -110,7 +110,7 @@ function FreeInquiryAuditContent() {
   }
 
   return (
-    <main className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+    <main className="bg-[#f7f3ec] px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-3xl">
         <SectionHeader
           as="h1"
@@ -122,10 +122,7 @@ function FreeInquiryAuditContent() {
         />
 
         {status !== "done" && (
-          <form
-            onSubmit={analyze}
-            className="mt-8 rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
-          >
+          <form onSubmit={analyze} className="metre-frame mt-8 rounded-lg bg-[#fffdf8] p-6">
             <Label htmlFor="site-url" className="text-sm font-medium text-slate-900">
               {copy("Your website address")}
             </Label>
@@ -203,7 +200,7 @@ function AnalysisResult({
 }) {
   return (
     <div className="mt-8 space-y-6">
-      <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="metre-frame rounded-lg bg-[#fffdf8] p-6">
         <p className="text-xs uppercase tracking-[0.16em] text-slate-500">
           {copy("Analyzed page")}
         </p>
@@ -242,7 +239,7 @@ function AnalysisResult({
         </dl>
       </section>
 
-      <section className="rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+      <section className="metre-frame rounded-lg bg-[#fffdf8] p-6">
         <h2 className="text-base font-semibold text-slate-950">{copy("What we found")}</h2>
         <p className="mt-1 text-sm text-slate-600">
           {copy(
@@ -282,23 +279,26 @@ function AnalysisResult({
 
       <section className="rounded-lg border border-emerald-200 bg-emerald-50 p-6">
         <h2 className="text-base font-semibold text-emerald-950">
-          {copy("Create your account to publish this on your website")}
+          {copy("Turn this analysis into your project intake")}
         </h2>
         <p className="mt-1 text-sm leading-6 text-emerald-900">
           {copy(
-            "We turn this into a guided project intake your customers fill in, and you get a structured brief instead of a name and a phone number. You confirm everything before anything goes live.",
+            "Create your account and we'll use what we found to prepare your first project intake. You can review everything before publishing.",
           )}
         </p>
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
           <Button asChild>
             <Link to="/auth" search={{ redirect: "/portal/setup" }}>
-              {copy("Create my account")}
+              {copy("Create my account and continue")}
             </Link>
           </Button>
           <Button variant="outline" type="button" onClick={onStartOver}>
             {copy("Analyze another address")}
           </Button>
         </div>
+        <p className="mt-3 text-xs font-medium text-emerald-900">
+          {copy("Your analysis will be waiting for you after sign-up.")}
+        </p>
       </section>
     </div>
   );

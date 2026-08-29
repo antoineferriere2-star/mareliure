@@ -81,7 +81,7 @@ describe("public marketing surface - marketing proposition", () => {
 
     expect(homeSource).toContain('t(locale, "home.hero.eyebrow")');
     expect(homeSource).toContain('t(locale, "home.hero.title")');
-    expect(messagesSource).toContain("Guided project intake for project-based contractors");
+    expect(messagesSource).toContain("Guided project intake for configurable project businesses");
     // Guard the project-canvas positioning so the homepage does not drift
     // back toward generic lead-capture language.
     expect(messagesSource).toContain("Turn vague inquiries into projects your team can act on.");
@@ -136,7 +136,7 @@ describe("public marketing surface - marketing proposition", () => {
 
     // The account CTA exists, and it sends them into setup rather than a
     // generic sign-up.
-    expect(source).toContain("Create your account to publish this on your website");
+    expect(source).toContain("Turn this analysis into your project intake");
     expect(source).toContain('redirect: "/portal/setup"');
   });
 
