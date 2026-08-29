@@ -606,8 +606,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   Terms: "Términos",
   "Last updated": "Última actualización",
   "Who operates Métré Build": "Quién opera Métré Build",
-  "Métré Build (metre-pro.com) is a project intake product for project-based contractors. The legal entity operating this service, its registration details and registered address will be published here once confirmed — until then, use the Contact page for any verification you need.":
-    "Métré Build (metre-pro.com) es un producto de captación de proyectos para contratistas que trabajan por proyecto. La entidad legal que opera este servicio, sus datos de registro y su domicilio social se publicarán aquí una vez confirmados; mientras tanto, use la página de Contacto para cualquier verificación que necesite.",
+  "Métré Build (metre-pro.com) is a project intake product for businesses that need to understand project context before they sell. The legal entity operating this service, its registration details and registered address will be published here once confirmed — until then, use the Contact page for any verification you need.":
+    "Métré Build (metre-pro.com) es un producto de captación de proyectos para negocios que necesitan entender el contexto del proyecto antes de vender. La entidad legal que opera este servicio, sus datos de registro y su domicilio social se publicarán aquí una vez confirmados; mientras tanto, use la página de Contacto para cualquier verificación que necesite.",
   "Data we collect": "Datos que recopilamos",
   "We collect information you submit directly through our audit request, setup request and contact forms, and information a visitor submits through a Guided Project Intake published by one of our client workspaces.":
     "Recopilamos la información que usted envía directamente a través de nuestros formularios de solicitud de auditoría, solicitud de configuración y contacto, así como la información que un visitante envía a través de un Project Intake guiado publicado por uno de nuestros workspaces de clientes.",
@@ -668,8 +668,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Questions about this policy can be emailed to contact@metre-pro.com or sent through the Contact page.":
     "Las preguntas sobre esta política pueden enviarse a contact@metre-pro.com o a través de la página de Contacto.",
   "What this service is": "Qué es este servicio",
-  "Métré Build is a guided project-intake tool: it helps a visitor describe a project — a deck project today — and turns the answers into a structured Project Brief for the business that published the intake.":
-    "Métré Build es una herramienta de captación de proyectos guiada: ayuda a un visitante a describir un proyecto (un proyecto de terraza hoy en día) y convierte las respuestas en un Project Brief estructurado para la empresa que publicó el intake.",
+  "Métré Build is a guided project-intake tool: it helps a visitor describe a project and turns the answers into a structured Project Brief for the business that published the intake. The public demo available today uses a deck project as its example.":
+    "Métré Build es una herramienta de captación de proyectos guiada: ayuda a un visitante a describir un proyecto y convierte las respuestas en un Project Brief estructurado para la empresa que publicó el intake. La demo pública disponible hoy usa un proyecto de terraza como ejemplo.",
   "Creating an account": "Creación de una cuenta",
   "Creating a workspace account gives you a self-service space to publish a Guided Project Intake and review the Project Briefs it produces. You are responsible for keeping your account credentials secure.":
     "Crear una cuenta de workspace le da un espacio de autoservicio para publicar un Project Intake guiado y revisar los Project Briefs que produce. Usted es responsable de mantener seguras las credenciales de su cuenta.",
@@ -776,8 +776,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Yes. You can change your plan at any time from your client portal billing page.":
     "Sí. Puede cambiar su plan en cualquier momento desde la página de facturación de su portal de cliente.",
   "Is there a free trial?": "¿Hay una prueba gratuita?",
-  "You can try the public Deck demo before creating an account. Once you sign up, you get your own workspace right away and can publish your first Guided Project Intake yourself.":
-    "Puede probar la demo pública de Deck antes de crear una cuenta. Al registrarse, obtiene su propio workspace de inmediato y puede publicar usted mismo su primer Project Intake guiado.",
+  "You can try the live public intake before creating an account. Once you sign up, you get your own workspace right away and can publish your first Guided Project Intake yourself.":
+    "Puede probar el intake público en vivo antes de crear una cuenta. Al registrarse, obtiene su propio workspace de inmediato y puede publicar usted mismo su primer Project Intake guiado.",
   "Prefer a guided setup instead?": "¿Prefiere una configuración guiada?",
   "Analyze your website first to see what a Project Brief looks like for your business, with no account required.":
     "Analice primero su sitio web para ver cómo sería un Project Brief para su negocio, sin necesidad de crear una cuenta.",
@@ -820,6 +820,82 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Review my answers": "Revisar mis respuestas",
   Edit: "Editar",
   "Not answered": "Sin responder",
+  "Your project": "Su proyecto",
+  "Live project canvas": "Canvas del proyecto en vivo",
+  "Project canvas": "Canvas del proyecto",
+  "Project Canvas": "Canvas del proyecto",
+  "Project sent": "Proyecto enviado",
+  Project: "Proyecto",
+  "Budget & timing": "Presupuesto y plazo",
+  "To clarify": "Por aclarar",
+  "detail captured": "detalle capturado",
+  "details captured": "detalles capturados",
+  "The project details Métré has captured so far.":
+    "Los detalles del proyecto que Métré ha capturado hasta ahora.",
+  "Your project will take shape as you answer.": "Su proyecto tomará forma a medida que responda.",
+  "Send my project": "Enviar mi proyecto",
+  "Marked to clarify": "Marcado para aclarar",
+  "Image notes captured": "Notas de imagen capturadas",
+  Captured: "Capturado",
+  Approximate: "Aproximado",
+  Derived: "Derivado",
+  "Choose photos or use your camera": "Elija fotos o use la cámara",
+  "Photo limit reached": "Límite de fotos alcanzado",
+  slot: "espacio",
+  slots: "espacios",
+  available: "disponibles",
+  Uploading: "Subiendo",
+  "Uploading…": "Subiendo…",
+  "Maximum of": "Máximo de",
+  "reached. Remove one to add another.": "alcanzado. Quite una para agregar otra.",
+  "Add photos that help the team understand the site before the first call.":
+    "Agregue fotos que ayuden al equipo a entender el sitio antes de la primera llamada.",
+  "Choose an inspiration image": "Elija una imagen de inspiración",
+  "Métré will suggest what it notices, then you confirm or adjust it.":
+    "Métré sugerirá lo que observa; luego usted confirma o ajusta.",
+  "Looking at your inspiration…": "Observando su inspiración…",
+  "Here's what we noticed — review and confirm": "Esto es lo que notamos: revise y confirme",
+  "These answers don't seem to work together": "Estas respuestas no parecen funcionar juntas",
+  "Worth checking": "Conviene revisar",
+  "Select Send my project again to keep your answers as they are.":
+    "Seleccione Enviar mi proyecto de nuevo para mantener sus respuestas tal como están.",
+  "Vague inquiry": "Consulta vaga",
+  "I'd like to replace the old deck behind our house. Maybe composite. Not sure about the size.":
+    "Quisiera reemplazar la terraza vieja detrás de la casa. Quizá con composite. No estoy seguro del tamaño.",
+  Material: "Material",
+  Size: "Tamaño",
+  "Existing site": "Sitio existente",
+  "Existing deck": "Terraza existente",
+  "Sales action": "Acción comercial",
+  "Build the project": "Construir el proyecto",
+  "The intake changes shape as the visitor explains the work.":
+    "El intake cambia de forma a medida que el visitante explica el trabajo.",
+  "Métré keeps the question focused, while the Project Canvas keeps the whole project visible.":
+    "Métré mantiene la pregunta enfocada, mientras el Canvas del proyecto mantiene visible el proyecto completo.",
+  "Know what you know": "Saber lo que se sabe",
+  "Métré does not manufacture certainty.": "Métré no fabrica certeza.",
+  "Confirmed answers, approximations, calculated lines and open questions stay visibly different.":
+    "Las respuestas confirmadas, aproximaciones, líneas calculadas y preguntas abiertas permanecen visiblemente distintas.",
+  "The visitor gave a clear answer.": "El visitante dio una respuesta clara.",
+  "Useful, but still framed as approximate.": "Útil, pero todavía presentado como aproximado.",
+  "Calculated or inferred by existing rules.": "Calculado o inferido por reglas existentes.",
+  "Unknown details become a next step.":
+    "Los detalles desconocidos se convierten en el próximo paso.",
+  "Project moments": "Momentos del proyecto",
+  "Photos, choices and uncertainty become project context.":
+    "Fotos, elecciones e incertidumbre se convierten en contexto del proyecto.",
+  "One system. Many kinds of projects.": "Un sistema. Muchos tipos de proyectos.",
+  "A Canvas for any configurable project, not a deck-only interface.":
+    "Un Canvas para cualquier proyecto configurable, no una interfaz solo para terrazas.",
+  "Outdoor projects": "Proyectos exteriores",
+  "Decks, patios, pergolas and exterior upgrades.":
+    "Terrazas, patios, pérgolas y mejoras exteriores.",
+  "Home improvement": "Mejoras del hogar",
+  "Windows, kitchens, bathrooms and remodel scopes.":
+    "Ventanas, cocinas, baños y alcances de remodelación.",
+  "Custom products": "Productos a medida",
+  "Furniture, millwork, equipment or made-to-order work.":
+    "Mobiliario, carpintería, equipos o trabajos hechos a medida.",
 
   // Fallback shown when the automated analysis is down (AnalysisUnavailableFallback).
   "The automated analysis is down right now.":

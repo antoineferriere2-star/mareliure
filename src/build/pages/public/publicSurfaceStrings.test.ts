@@ -81,14 +81,11 @@ describe("public marketing surface - marketing proposition", () => {
 
     expect(homeSource).toContain('t(locale, "home.hero.eyebrow")');
     expect(homeSource).toContain('t(locale, "home.hero.title")');
-    expect(messagesSource).toContain("Guided project intake for project-based contractors");
-    // Rewritten for search intent (SEO audit point 2.2). The guard exists to
-    // catch accidental drift, so it tracks the confirmed wording rather than
-    // freezing the original one.
-    expect(messagesSource).toContain("Qualify contractor leads before the first call");
-    expect(messagesSource).toContain(
-      "More useful than a contact form. Simpler than a custom configurator.",
-    );
+    expect(messagesSource).toContain("Guided project intake for configurable project businesses");
+    // Guard the project-canvas positioning so the homepage does not drift
+    // back toward generic lead-capture language.
+    expect(messagesSource).toContain("Turn vague inquiries into projects your team can act on.");
+    expect(messagesSource).toContain("Answers become a project, not another form submission.");
   });
 
   it("exposes a persistent English and Spanish language choice on the public surface", () => {
@@ -116,7 +113,7 @@ describe("public marketing surface - marketing proposition", () => {
     expect(source).toContain("usePublicLocale");
     expect(source).toContain("localizeField(field, copy)");
     expect(source).toContain('copy("Continue")');
-    expect(source).toContain('copy("Generate project brief")');
+    expect(source).toContain('copy("Send my project")');
   });
 
   it("gives the free analysis before asking for anything", () => {
@@ -139,7 +136,7 @@ describe("public marketing surface - marketing proposition", () => {
 
     // The account CTA exists, and it sends them into setup rather than a
     // generic sign-up.
-    expect(source).toContain("Create your account to publish this on your website");
+    expect(source).toContain("Turn this analysis into your project intake");
     expect(source).toContain('redirect: "/portal/setup"');
   });
 

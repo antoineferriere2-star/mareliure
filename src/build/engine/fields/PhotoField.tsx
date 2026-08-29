@@ -1,8 +1,8 @@
-import { Upload } from "lucide-react";
+import { Camera, ImagePlus, Upload } from "lucide-react";
 import { useState } from "react";
 import type { PhotoAnswerEntry } from "@/build/schema/answers";
 import type { PhotoField as PhotoFieldDef } from "@/build/schema/playbook";
-import { Input } from "@/components/ui/input";
+import { publicCopy, useOptionalPublicLocale } from "@/build/pages/public/publicLocaleContext";
 import { Label } from "@/components/ui/label";
 import { FIELD_ERROR_CLASS, type FieldComponentProps, RequiredMark } from "./types";
 
@@ -36,6 +36,8 @@ export function PhotoField({
   error,
   uploadProjectPhoto,
 }: FieldComponentProps<PhotoFieldDef>) {
+  const { locale } = useOptionalPublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
   const photos: PhotoAnswerEntry[] = Array.isArray(value) ? (value as PhotoAnswerEntry[]) : [];
   const [busy, setBusy] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -92,20 +94,41 @@ export function PhotoField({
   }
 
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6">
-      <Upload className="h-6 w-6 text-emerald-700" />
-      <Label htmlFor={field.key} className="mt-4 block font-semibold">
-        {field.label}
-        <RequiredMark field={field} />
-      </Label>
-      {field.helpText && <p className="mt-2 text-sm text-slate-600">{field.helpText}</p>}
-      <Input
+    <div className="rounded-lg border border-stone-300 bg-[#fffdf8] p-5">
+      <div className="flex items-start gap-4">
+        <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[color:var(--metre-accent-soft)] text-[color:var(--metre-accent)]">
+          <Camera className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="min-w-0">
+          <Label htmlFor={field.key} className="block text-base font-semibold text-stone-950">
+            {field.label}
+            <RequiredMark field={field} />
+          </Label>
+          <p className="mt-2 text-sm leading-6 text-stone-600">
+            {field.helpText ??
+              copy("Add photos that help the team understand the site before the first call.")}
+          </p>
+        </div>
+      </div>
+      <label
+        htmlFor={field.key}
+        className="mt-5 flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-stone-400 bg-white px-4 py-6 text-center transition hover:border-[color:var(--metre-accent)] hover:bg-[color:var(--metre-accent-soft)]"
+      >
+        <ImagePlus className="h-7 w-7 text-stone-500" aria-hidden="true" />
+        <span className="mt-3 text-sm font-semibold text-stone-950">
+          {copy(remaining === 0 ? "Photo limit reached" : "Choose photos or use your camera")}
+        </span>
+        <span className="mt-1 text-xs text-stone-500">
+          {remaining} {copy(remaining === 1 ? "slot" : "slots")} {copy("available")}
+        </span>
+      </label>
+      <input
         id={field.key}
         type="file"
         accept={field.acceptMimeTypes.join(",")}
         multiple
         disabled={busy || remaining === 0}
-        className="mt-4"
+        className="sr-only"
         onChange={(event) => {
           void onFiles(event.target.files);
           // Let the same file be picked again after a failure.
@@ -113,29 +136,32 @@ export function PhotoField({
         }}
       />
       {busy && (
-        <p className="mt-2 text-sm text-slate-600" role="status">
-          Uploading…
+        <p className="mt-3 text-sm text-stone-600" role="status">
+          {copy("Uploading…")}
         </p>
       )}
       {remaining === 0 && !busy && (
-        <p className="mt-2 text-sm text-slate-600">
-          Maximum of {field.maxFiles} reached. Remove one to add another.
+        <p className="mt-3 text-sm text-stone-600">
+          {copy("Maximum of")} {field.maxFiles} {copy("reached. Remove one to add another.")}
         </p>
       )}
       {uploadError && <p className={FIELD_ERROR_CLASS}>{uploadError}</p>}
       {error && <p className={FIELD_ERROR_CLASS}>{error}</p>}
-      <ul className="mt-4 flex flex-wrap gap-2">
+      <ul className="mt-4 grid gap-2 sm:grid-cols-2">
         {photos.map((photo, index) => (
           <li
             key={photo.storagePath ?? `${photo.filename}-${index}`}
-            className="flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-600"
+            className="flex items-center justify-between gap-2 rounded-md border border-stone-200 bg-white px-3 py-2 text-xs font-medium text-stone-700"
           >
-            {photo.filename}
+            <span className="min-w-0 truncate">
+              <Upload className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+              {photo.filename}
+            </span>
             <button
               type="button"
               onClick={() => remove(index)}
               aria-label={`Remove ${photo.filename}`}
-              className="text-slate-400 hover:text-slate-700"
+              className="shrink-0 text-stone-400 hover:text-stone-700"
             >
               ×
             </button>

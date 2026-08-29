@@ -21,7 +21,7 @@ export function NumberField({
         {field.label}
         <RequiredMark field={field} />
       </Label>
-      {field.helpText && <p className="mt-1 text-xs text-slate-500">{field.helpText}</p>}
+      {field.helpText && <p className="mt-2 text-sm leading-6 text-stone-600">{field.helpText}</p>}
       <Input
         id={field.key}
         type="number"
@@ -31,7 +31,7 @@ export function NumberField({
         value={isNotSure ? "" : stringValue}
         disabled={isNotSure}
         onChange={(event) => onChange(event.target.value === "" ? "" : Number(event.target.value))}
-        className="mt-1"
+        className="mt-3 h-12 rounded-lg border-stone-300 bg-[#fffdf8] text-base focus-visible:ring-[color:var(--metre-accent)]"
       />
       {field.allowNotSure && (
         <NotSureToggle

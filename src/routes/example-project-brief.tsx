@@ -8,9 +8,9 @@ import {
   WEBSITE_ID,
 } from "@/lib/structured-data";
 
-const title = "Example Deck Project Brief — See the Output — Métré Build";
+const title = "Example Project Brief — See the Sales Output — Métré Build";
 const description =
-  "A full deck project brief, annotated: confirmed answers, calculated values, business rules and what still needs checking. Fictional data, real structure.";
+  "A fictional Project Brief showing visitor answers, derived values, missing information and the next commercial action. Real structure, demo data.";
 
 export const Route = createFileRoute("/example-project-brief")({
   head: () => ({

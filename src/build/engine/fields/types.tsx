@@ -74,10 +74,10 @@ export function RequiredMark({ field }: { field: PlaybookField }) {
 }
 
 export const CHOICE_BUTTON_CLASS = (selected: boolean) =>
-  `rounded-md border p-4 text-left text-sm font-medium ${
+  `group min-h-20 rounded-lg border p-4 text-left text-[15px] font-medium leading-6 transition duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--metre-accent)] focus-visible:ring-offset-2 ${
     selected
-      ? "border-emerald-500 bg-emerald-50 text-emerald-950"
-      : "border-slate-200 bg-white text-slate-700 hover:border-slate-300"
+      ? "border-[color:var(--metre-accent)] bg-[color:var(--metre-accent-soft)] text-stone-950 shadow-[inset_0_0_0_1px_var(--metre-accent)]"
+      : "border-stone-300 bg-[#fffdf8] text-stone-800 hover:border-stone-500 hover:bg-white"
   }`;
 
 /**
@@ -87,7 +87,7 @@ export const CHOICE_BUTTON_CLASS = (selected: boolean) =>
  * question a given grid of buttons answers when a step has more than one
  * field (e.g. "property type" immediately followed by "existing condition").
  */
-export const FIELD_LEGEND_CLASS = "mb-2 block text-sm font-medium text-slate-900";
+export const FIELD_LEGEND_CLASS = "mb-3 block text-base font-semibold text-stone-950";
 
 /**
  * Every field component receives its own `error` prop (computed per
@@ -97,4 +97,4 @@ export const FIELD_LEGEND_CLASS = "mb-2 block text-sm font-medium text-slate-900
  * of which field caused it. This is the shared style for actually showing
  * it, matching the one component (PhotoField) that already did.
  */
-export const FIELD_ERROR_CLASS = "mt-2 text-sm text-rose-700";
+export const FIELD_ERROR_CLASS = "mt-2 text-sm font-medium text-rose-700";

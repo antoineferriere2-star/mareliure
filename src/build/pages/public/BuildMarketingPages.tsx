@@ -2,9 +2,10 @@ import { Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { BriefPreview } from "@/build/pages/public/BriefPreview";
 import { defaultDeckBrief } from "@/build/pages/public/defaultDeckBrief";
+import { ProjectCanvas } from "@/build/pages/public/ProjectCanvas";
+import type { ProjectCanvasItem } from "@/build/pages/public/ProjectCanvasProjection";
 import { deckPlaybookSchema } from "@/build/playbooks/deckPlaybookSchema";
 import { PLAN_DEFAULTS, type MonthlyUsdPrice, type PlanId } from "@/build/billing/plans";
-import { BeforeAfterSection } from "@/build/pages/public/sections/BeforeAfterSection";
 
 const deckDemoSteps = deckPlaybookSchema.sections.flatMap((section) => section.steps);
 import { DECK_BUILDERS_FAQ, PRICING_FAQ } from "@/build/content/publicFaq";
@@ -177,66 +178,119 @@ export function BuildHowItWorksPage() {
 function BuildHowItWorksPageContent() {
   const { locale } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
-  const journeySteps = [
+  const projectCanvas: ProjectCanvasItem[] = [
     {
-      title: "We review your website",
-      text: "We identify what your current inquiry journey collects and what your sales team still has to ask.",
+      id: "how-project",
+      group: copy("Project"),
+      label: copy("Project"),
+      value: copy("Deck replacement"),
+      status: "confirmed",
     },
     {
-      title: "You start from a ready-to-use Playbook",
-      text: "We match your business and selected service with the closest available Project Intake.",
+      id: "how-material",
+      group: copy("Preferences"),
+      label: copy("Material"),
+      value: copy("Composite decking"),
+      status: "approximate",
     },
     {
-      title: "You review and adjust it",
-      text: "Confirm the wording, optional questions, branding and Project Brief.",
+      id: "how-area",
+      group: copy("Derived"),
+      label: copy("Approximate area"),
+      value: copy("Calculated from dimensions"),
+      status: "derived",
     },
     {
-      title: "Add it to your site",
-      text: "Publish it with a link or simple website snippet.",
+      id: "how-open",
+      group: copy("To clarify"),
+      label: copy("Access"),
+      value: copy("Confirm before first call"),
+      status: "clarify",
     },
   ];
+
   return (
-    <main>
+    <main className="bg-[#f7f3ec]">
       <PageHero
         eyebrow={copy("How it works")}
-        title={copy("From vague inquiry to structured Project Brief.")}
+        title={copy("From vague inquiry to a project your team can act on.")}
         description={copy(
-          "Métré Build gives prospects a guided project journey and gives the business a brief that prepares the first sales call.",
+          "A visitor starts with what they know. Métré keeps building the project context, keeps unknowns explicit, and gives sales a structured Project Brief.",
         )}
-        primary={copy("Try the Live Deck Intake")}
+        primary={copy("Try a live project intake")}
         primaryTo="/demo/deck-project"
         secondary={copy("See an example brief")}
         secondaryTo="/example-project-brief"
         secondaryVariant="link"
       />
       <section className="px-4 py-16 sm:px-6 lg:px-8">
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.72fr_1fr] lg:items-start">
+          <div>
+            <SectionHeader
+              title={copy("The intake is not the product. The project is.")}
+              description={copy(
+                "Métré asks enough to understand what is known, what is approximate, what can be derived, and what still needs clarification.",
+              )}
+            />
+            <div className="mt-8 space-y-5 border-y border-stone-200 py-6">
+              {[
+                ["Visitor", "Starts with an incomplete idea and answers focused questions."],
+                ["Project Canvas", "Keeps the developing project visible as facts arrive."],
+                ["Project Brief", "Turns the same project into commercial context for sales."],
+              ].map(([title, text]) => (
+                <div key={title} className="grid gap-2 sm:grid-cols-[120px_1fr]">
+                  <p className="text-sm font-semibold uppercase tracking-[0.14em] text-stone-500">
+                    {copy(title)}
+                  </p>
+                  <p className="text-[16px] leading-7 text-stone-700">{copy(text)}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+          <ProjectCanvas
+            title={copy("Project Canvas")}
+            eyebrow={copy("During the intake")}
+            items={projectCanvas}
+            emptyText={copy("Project details will appear here.")}
+          />
+        </div>
+      </section>
+      <section className="bg-[#fffdf8] px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
-          <SectionHeader title={copy("From website audit to live Project Intake")} />
-          <div className="mt-8 grid gap-4 md:grid-cols-4">
-            {journeySteps.map((step, index) => (
-              <StepLine
-                key={step.title}
-                index={index + 1}
-                title={copy(step.title)}
-                text={copy(step.text)}
-              />
+          <SectionHeader
+            title={copy("Playbook -> Project Intake -> Project Brief")}
+            description={copy(
+              "The Playbook is how Métré knows what to understand. The Project Intake is how the customer builds the project. The Project Brief is what sales receives.",
+            )}
+          />
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
+            {[
+              ["1", "Playbook", "Industry-specific discovery logic, reviewed by the business."],
+              ["2", "Project Intake", "A guided visitor experience that accepts uncertainty."],
+              ["3", "Project Brief", "A structured sales document before the first call."],
+            ].map(([index, title, text]) => (
+              <section key={title} className="border-t border-stone-300 pt-5">
+                <span className="text-sm font-semibold text-emerald-700">{index}</span>
+                <h3 className="mt-3 text-xl font-semibold tracking-normal text-stone-950">
+                  {copy(title)}
+                </h3>
+                <p className="mt-2 text-[15px] leading-7 text-stone-600">{copy(text)}</p>
+              </section>
             ))}
           </div>
         </div>
       </section>
       <ContentBand
-        muted
-        title={copy("What stays private")}
+        title={copy("What stays explicit")}
         items={publicCopies(locale, [
-          "Runtime sessions",
-          "Real Project Briefs",
-          "Visitor answers",
-          "Private Playbooks",
-          "Knowledge Records",
-          "Administration",
+          "Confirmed visitor answers",
+          "Approximate answers",
+          "Calculated or rule-derived values",
+          "Missing information",
+          "Qualification confidence",
+          "Suggested next commercial action",
         ])}
       />
-      <BeforeAfterSection />
       <RelatedReading>
         {copy("See it for one trade:")}{" "}
         <Link to="/deck-builders" className={INLINE_LINK}>
@@ -316,7 +370,7 @@ function BuildPricingPageContent() {
   const copy = (text: string) => publicCopy(locale, text);
 
   return (
-    <main>
+    <main className="bg-[#f7f3ec]">
       <PageHero
         eyebrow={copy("Pricing")}
         title={copy("Simple pricing that scales with your Project Intakes.")}
@@ -332,7 +386,7 @@ function BuildPricingPageContent() {
       <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
         <p className="text-sm leading-6 text-slate-600">
           {copy(
-            "You can try the public Deck demo before creating an account. Once you sign up, you get your own workspace right away and can publish your first Guided Project Intake yourself.",
+            "You can try the live public intake before creating an account. Once you sign up, you get your own workspace right away and can publish your first Guided Project Intake yourself.",
           )}{" "}
           <a href="/private-beta" className="font-medium text-emerald-700 hover:underline">
             {copy("Prefer a guided setup instead?")}
@@ -346,7 +400,7 @@ function BuildPricingPageContent() {
             return (
               <section
                 key={planId}
-                className="flex flex-col rounded-lg border border-slate-200 bg-white p-6 shadow-sm"
+                className="metre-frame flex flex-col rounded-lg bg-[#fffdf8] p-6"
               >
                 <h3 className="text-lg font-semibold tracking-normal text-slate-950">
                   {plan.label}
@@ -376,7 +430,7 @@ function BuildPricingPageContent() {
           })}
         </div>
         <div className="mx-auto mt-6 max-w-7xl">
-          <section className="flex flex-col items-start gap-4 rounded-lg border border-slate-200 bg-slate-50 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <section className="metre-frame flex flex-col items-start gap-4 rounded-lg bg-[#fffdf8] p-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="text-lg font-semibold tracking-normal text-slate-950">
                 {copy("Enterprise")}
@@ -439,36 +493,72 @@ export function BuildExampleProjectBriefPage() {
 function BuildExampleProjectBriefPageContent() {
   const { locale } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
+  const originCanvas: ProjectCanvasItem[] = [
+    {
+      id: "brief-visitor-said",
+      group: copy("Visitor said"),
+      label: copy("Project"),
+      value: copy("New deck"),
+      status: "confirmed",
+    },
+    {
+      id: "brief-derived",
+      group: copy("Métré derived"),
+      label: copy("Approximate area"),
+      value: copy("320 sq ft"),
+      status: "derived",
+    },
+    {
+      id: "brief-unknown",
+      group: copy("Still unknown"),
+      label: copy("Access"),
+      value: copy("Confirm side-yard access"),
+      status: "clarify",
+    },
+    {
+      id: "brief-action",
+      group: copy("Sales action"),
+      label: copy("Next step"),
+      value: copy("Schedule a discovery call"),
+      status: "neutral",
+    },
+  ];
 
   return (
-    <main className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-5xl">
+    <main className="bg-[#f7f3ec] px-4 py-12 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl">
         <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
           {copy("Example - fictional project created for demonstration purposes")}
         </p>
-        <h1 className="mt-4 text-4xl font-semibold tracking-normal text-slate-950">
-          {copy("Example Project Brief")}
+        <h1 className="mt-4 max-w-4xl text-4xl font-semibold tracking-normal text-stone-950 sm:text-5xl">
+          {copy("A Project Brief is the sales view of the same project.")}
         </h1>
-        <p className="mt-4 max-w-3xl text-base leading-7 text-slate-600">
+        <p className="mt-4 max-w-3xl text-base leading-7 text-stone-700">
           {copy(
-            "This page uses fictional data only. It shows the kind of structured output a deck builder can review after a guided Project Intake.",
+            "This page uses fictional data only. It shows how confirmed answers, derived values, missing information and next action arrive in one structured document.",
           )}
         </p>
-        <div className="mt-8">
+        <div className="mt-10 grid gap-6 lg:grid-cols-[0.58fr_1fr] lg:items-start">
+          <ProjectCanvas
+            title={copy("Project Canvas")}
+            eyebrow={copy("Before sales sees it")}
+            items={originCanvas}
+            emptyText={copy("Project details will appear here.")}
+          />
           <BriefPreview brief={defaultDeckBrief} />
         </div>
-        <p className="mt-8 max-w-3xl text-[15px] leading-7 text-slate-600">
+        <p className="mt-8 max-w-3xl text-[15px] leading-7 text-stone-600">
           {copy("This brief came out of eleven guided questions —")}{" "}
           <Link to="/demo/deck-project" className={INLINE_LINK}>
             {copy("walk the deck intake yourself to see how")}
           </Link>
           .
         </p>
-        <div className="mt-8 flex flex-col items-start gap-4 rounded-lg border border-slate-200 bg-white p-8 shadow-sm">
-          <h2 className="text-2xl font-semibold tracking-normal text-slate-950">
+        <div className="metre-frame mt-8 flex flex-col items-start gap-4 rounded-lg bg-[#fffdf8] p-8">
+          <h2 className="text-2xl font-semibold tracking-normal text-stone-950">
             {copy("Want Project Briefs like this from your own website?")}
           </h2>
-          <p className="max-w-2xl text-[15px] leading-7 text-slate-700">
+          <p className="max-w-2xl text-[15px] leading-7 text-stone-700">
             {copy(
               "Start with a ready-to-use industry journey, adapt it to your business and add it to your website with a link or simple snippet.",
             )}
@@ -479,7 +569,7 @@ function BuildExampleProjectBriefPageContent() {
             </a>
             <a href="/demo/deck-project">
               <Button variant="link" className="h-auto p-0 text-base">
-                {copy("Try the Live Deck Intake")}
+                {copy("Try a live project intake")}
               </Button>
             </a>
           </div>

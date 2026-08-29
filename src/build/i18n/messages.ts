@@ -4,19 +4,15 @@ export const enUSMessages = {
   "marketing.hero.title": "Turn vague website inquiries into sales-ready project briefs.",
   "marketing.hero.subtitle":
     "Métré Build guides customers through project scope, photos, dimensions, constraints, budget and timing.",
-  "home.hero.eyebrow": "Guided project intake for project-based contractors",
-  // Keyword first, benefit intact. The previous wording convinced a visitor
-  // already on the page but contained nothing anyone searches for — "lead"
-  // and "qualify" are the terms contractors actually type.
-  "home.hero.title":
-    "Qualify contractor leads before the first call — turn vague inquiries into structured project briefs.",
+  "home.hero.eyebrow": "Guided project intake for configurable project businesses",
+  "home.hero.title": "Turn vague inquiries into projects your team can act on.",
   "home.hero.description":
-    "Métré Build guides customers through project scope, photos, dimensions, constraints, budget and timing — so your sales team has useful context before the first call.",
-  "home.hero.kicker": "More useful than a contact form. Simpler than a custom configurator.",
+    "Your customers don't need to know how to describe a project. Métré helps them build it with you, then gives your team the structured brief.",
+  "home.hero.kicker": "Answers become a project, not another form submission.",
   "home.hero.deckIntro": "Works with any project-based business — start from a",
   "home.hero.playbookTooltip": "A reusable industry-specific project discovery method.",
-  "home.hero.primaryCta": "Try the Live Deck Intake",
-  "home.hero.secondaryCta": "Analyze My Website Free",
+  "home.hero.primaryCta": "Try a live project intake",
+  "home.hero.secondaryCta": "Analyze my website",
   "home.hero.disclaimer":
     "Sales-ready means ready for a productive first conversation — not a final quote or technical approval.",
   "home.problem.title":
@@ -36,7 +32,7 @@ export const enUSMessages = {
   "navigation.createAccount": "Create account",
   "navigation.tryDemo": "Try demo",
   "footer.description":
-    "Now available for US project-based contractors. Built to turn incomplete website inquiries into structured Project Briefs.",
+    "Built to turn incomplete website inquiries into structured Project Briefs for teams that sell configurable projects.",
   "footer.product": "Product",
   "footer.conversion": "Conversion",
   "footer.legal": "Legal",
@@ -46,9 +42,9 @@ export const enUSMessages = {
   "footer.terms": "Terms",
   "footer.contact": "Contact",
   "cta.getStarted": "Get started",
-  "cta.title": "See what your current website form is missing.",
+  "cta.title": "See what Métré could build from your website.",
   "cta.description":
-    "Two minutes to review the demo. Free analysis of your own website, no account required.",
+    "Try the live intake, or start with a free website analysis. No account required for the analysis.",
   "auth.forgotPassword": "Forgot password?",
   "intake.navigation.next": "Continue",
   "intake.navigation.back": "Back",
@@ -79,17 +75,16 @@ export type TranslationKey = keyof typeof enUSMessages;
 export type TranslationMessages = Record<TranslationKey, string>;
 
 export const esUSMessages: Partial<TranslationMessages> = {
-  "home.hero.eyebrow": "Recorrido guiado para empresas que venden proyectos",
-  "home.hero.title":
-    "Califique sus prospectos antes de la primera llamada: convierta consultas vagas en briefs de proyecto estructurados.",
+  "home.hero.eyebrow": "Recorrido guiado para negocios de proyectos configurables",
+  "home.hero.title": "Convierta consultas vagas en proyectos sobre los que su equipo puede actuar.",
   "home.hero.description":
-    "Métré Build guía a sus clientes por alcance, fotos, dimensiones, restricciones, presupuesto y plazo para que su equipo comercial tenga contexto útil antes de la primera llamada.",
-  "home.hero.kicker": "Más útil que un formulario. Más simple que un configurador a medida.",
+    "Sus clientes no necesitan saber cómo describir un proyecto. Métré les ayuda a construirlo con usted y luego entrega un brief estructurado a su equipo.",
+  "home.hero.kicker": "Las respuestas se convierten en un proyecto, no en otro formulario enviado.",
   "home.hero.deckIntro": "Funciona con cualquier negocio basado en proyectos — comience desde un",
   "home.hero.playbookTooltip":
     "Un método reutilizable de descubrimiento de proyectos por industria.",
-  "home.hero.primaryCta": "Probar el intake de decks",
-  "home.hero.secondaryCta": "Analizar mi sitio gratis",
+  "home.hero.primaryCta": "Probar un intake de proyecto",
+  "home.hero.secondaryCta": "Analizar mi sitio web",
   "home.hero.disclaimer":
     "Listo para ventas significa listo para una primera conversación productiva, no una cotización final ni una aprobación técnica.",
   "home.problem.title":
@@ -109,7 +104,7 @@ export const esUSMessages: Partial<TranslationMessages> = {
   "navigation.createAccount": "Crear cuenta",
   "navigation.tryDemo": "Probar demo",
   "footer.description":
-    "Disponible para contratistas de proyectos en EE. UU. Creado para convertir consultas incompletas del sitio web en Project Briefs estructurados.",
+    "Creado para convertir consultas incompletas del sitio web en Project Briefs estructurados para equipos que venden proyectos configurables.",
   "footer.product": "Producto",
   "footer.conversion": "Conversión",
   "footer.legal": "Legal",
@@ -119,9 +114,9 @@ export const esUSMessages: Partial<TranslationMessages> = {
   "footer.terms": "Términos",
   "footer.contact": "Contacto",
   "cta.getStarted": "Comience",
-  "cta.title": "Vea qué le falta a su formulario actual.",
+  "cta.title": "Vea qué podría construir Métré a partir de su sitio web.",
   "cta.description":
-    "Dos minutos para revisar la demo. Auditoría gratis de su formulario actual y flujo de consultas si la solicita.",
+    "Pruebe el intake en vivo o empiece con un análisis gratuito de su sitio web. No se necesita cuenta para el análisis.",
   "auth.forgotPassword": "¿Olvidó su contraseña?",
   "intake.navigation.next": "Continuar",
   "intake.navigation.back": "Atrás",

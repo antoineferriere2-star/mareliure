@@ -23,7 +23,7 @@ export const organizationSchema = {
   },
   image: `${SITE_URL}/og-image.png`,
   description:
-    "Métré Build turns vague website inquiries into structured Project Briefs for project-based contractors.",
+    "Métré Build turns vague website inquiries into structured Project Briefs for teams that sell configurable projects.",
   ...(PUBLIC_CONTACT_EMAIL ? { email: PUBLIC_CONTACT_EMAIL } : {}),
   sameAs: ["https://www.linkedin.com/in/antoine-ferriere-53113048/"],
   contactPoint: [

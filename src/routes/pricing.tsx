@@ -3,9 +3,9 @@ import { BuildPricingPage } from "@/build/pages/public/BuildMarketingPages";
 import { breadcrumbSchema, faqPageSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
 import { PRICING_FAQ } from "@/build/content/publicFaq";
 
-const title = "Contractor Lead Intake Pricing from $19.99/mo — Métré Build";
+const title = "Project Intake Pricing from $19.99/mo — Métré Build";
 const description =
-  "Plans from $19.99/mo by active intakes and monthly briefs. Every plan includes the guided intake, AI-drafted briefs and the client portal. No setup fee.";
+  "Plans from $19.99/mo by active Project Intakes and monthly Project Briefs. Every plan includes guided intake, AI-drafted briefs and the client portal.";
 
 export const Route = createFileRoute("/pricing")({
   head: () => ({

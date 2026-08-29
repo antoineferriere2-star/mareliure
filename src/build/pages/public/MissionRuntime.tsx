@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components -- localizeField is exported for unit testing */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import { ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FIELD_COMPONENTS, type InspirationPhotoAnalysis } from "@/build/engine/fields";
@@ -24,6 +24,8 @@ import {
 } from "./publicSessionStorage";
 import { VisitorProjectSummaryView } from "./VisitorProjectSummaryView";
 import { BuildPublicShell } from "./BuildPublicShell";
+import { ProjectCanvas, ProjectCanvasMobileSheet } from "./ProjectCanvas";
+import { projectCanvasItemsFromRuntime } from "./ProjectCanvasProjection";
 import { EMPTY_BRANDING, type PublicBranding } from "@/build/branding/missionBranding";
 import { readableTextColor } from "@/build/branding/contrast";
 import { publicCopy, usePublicLocale } from "./publicLocaleContext";
@@ -198,7 +200,7 @@ function MissionRuntimeContent({
   onBusinessName: (name: string | null) => void;
 }) {
   const { locale } = usePublicLocale();
-  const copy = (text: string) => publicCopy(locale, text);
+  const copy = useCallback((text: string) => publicCopy(locale, text), [locale]);
   const [mission, setMission] = useState<PublicMission | null>(null);
   const [schema, setSchema] = useState<PlaybookSchema | null>(null);
   const [sessionAuth, setSessionAuth] = useState<SessionAuth | null>(null);
@@ -318,9 +320,26 @@ function MissionRuntimeContent({
   const accentStyle = accent
     ? { backgroundColor: accent, color: readableTextColor(accent) }
     : undefined;
+  const accentVariables = {
+    "--metre-accent": accent ?? "oklch(0.53 0.12 154)",
+    "--metre-accent-soft": accent
+      ? `color-mix(in oklab, ${accent} 12%, white)`
+      : "oklch(0.94 0.055 154)",
+  } as CSSProperties;
   const progress =
     visibleSteps.length > 0 ? Math.round(((clampedStepIndex + 1) / visibleSteps.length) * 100) : 0;
   const isLastStep = clampedStepIndex >= visibleSteps.length - 1;
+  const canvasItems = useMemo(
+    () =>
+      projectCanvasItemsFromRuntime(
+        visibleSteps,
+        answers,
+        copy,
+        reviewing ? visibleSteps.length - 1 : clampedStepIndex,
+      ),
+    [answers, clampedStepIndex, copy, reviewing, visibleSteps],
+  );
+  const capturedCount = canvasItems.filter((item) => item.status !== "clarify").length;
 
   function setAnswer(key: string, value: AnswerValue) {
     setAnswers((prev) => ({ ...prev, [key]: value }));
@@ -489,12 +508,15 @@ function MissionRuntimeContent({
   }
 
   return (
-    <main className="bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
+    <main
+      className="min-h-screen bg-[#f7f3ec] px-4 py-5 text-stone-950 sm:px-6 lg:px-8 lg:py-8"
+      style={accentVariables}
+    >
       {loading && (
         <div className="mx-auto max-w-5xl">
           <MissionRuntimeSkeleton label={copy("Preparing your project intake…")} />
           {slowLoad && (
-            <p className="mt-4 text-center text-sm text-slate-500">
+            <p className="mt-4 text-center text-sm text-stone-500">
               {copy("This is taking longer than usual.")}
             </p>
           )}
@@ -523,170 +545,192 @@ function MissionRuntimeContent({
       )}
 
       {mission && schema && !dossier && (
-        <section className="mx-auto max-w-5xl overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 p-6">
-            {/* The customer's accent, where they expect to see it: their own
-                name and their own progress. Never the page background — a dark
-                brand colour behind body text is unreadable, and we do not get
-                to test every colour a customer might pick. */}
-            <p
-              className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700"
-              style={accent ? { color: accent } : undefined}
-            >
-              {copy(branding.displayName ?? mission.playbook_name ?? mission.name)}
-            </p>
-            {/* The welcome line, first step only. It sits above the step's own
-                title rather than replacing it: "Welcome to Denver Decks" is a
-                greeting, and the question the step actually asks still has to
-                be legible. */}
-            {branding.introTitle && !reviewing && clampedStepIndex === 0 && (
-              <p className="mt-3 text-lg font-medium text-slate-900">{branding.introTitle}</p>
-            )}
-            <h1 className="mt-3 text-3xl font-semibold tracking-normal">
-              {reviewing
-                ? copy("Check your answers before sending")
-                : copy(currentStep?.step.title ?? mission.name)}
-            </h1>
-            {branding.introText && !reviewing && clampedStepIndex === 0 && (
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                {branding.introText}
+        <section className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)] lg:items-start">
+          <div className="min-w-0">
+            <ProjectCanvasMobileSheet
+              items={canvasItems}
+              title={copy("Your project")}
+              triggerLabel={`${copy("Your project")} · ${capturedCount} ${copy(capturedCount === 1 ? "detail captured" : "details captured")} ›`}
+              description={copy("The project details Métré has captured so far.")}
+              emptyText={copy("Your project will take shape as you answer.")}
+            />
+            <section className="mt-4 rounded-lg border border-stone-300 bg-white p-5 shadow-sm sm:p-6 lg:mt-0 lg:p-8">
+              {/* The customer's accent, where they expect to see it: their own
+                  name and their own progress. Never the page background — a dark
+                  brand colour behind body text is unreadable, and we do not get
+                  to test every colour a customer might pick. */}
+              <p
+                className="text-sm font-semibold uppercase tracking-[0.14em]"
+                style={accent ? { color: accent } : undefined}
+              >
+                {copy(branding.displayName ?? mission.playbook_name ?? mission.name)}
               </p>
-            )}
-            {mission.proposal?.intro && !branding.introText && !currentStep?.step.why && (
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                {copy(mission.proposal.intro)}
-              </p>
-            )}
-            {currentStep?.step.why && (
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-600">
-                {copy(currentStep.step.why)}
-              </p>
-            )}
-            {visibleSteps.length > 0 && (
-              <>
-                {/* Segments, not one bar: a visitor who wants to fix an
-                    earlier answer had to press Back once per step, eight
-                    times on an eleven-step Playbook. Only steps already
-                    reached are clickable — jumping ahead would skip the
-                    validation that gates each one. */}
-                <ol className="mt-5 flex gap-1" aria-label={copy("Steps")}>
-                  {visibleSteps.map((step, index) => {
-                    const reached = index <= clampedStepIndex || reviewing;
-                    const current = !reviewing && index === clampedStepIndex;
+              {/* The welcome line, first step only. It sits above the step's own
+                  title rather than replacing it: "Welcome to Denver Decks" is a
+                  greeting, and the question the step actually asks still has to
+                  be legible. */}
+              {branding.introTitle && !reviewing && clampedStepIndex === 0 && (
+                <p className="mt-4 text-lg font-medium text-stone-900">{branding.introTitle}</p>
+              )}
+              <h1 className="mt-3 max-w-3xl text-3xl font-semibold leading-tight tracking-normal text-stone-950 sm:text-4xl">
+                {reviewing ? copy("Your project") : copy(currentStep?.step.title ?? mission.name)}
+              </h1>
+              {branding.introText && !reviewing && clampedStepIndex === 0 && (
+                <p className="mt-4 max-w-2xl text-base leading-7 text-stone-600">
+                  {branding.introText}
+                </p>
+              )}
+              {mission.proposal?.intro && !branding.introText && !currentStep?.step.why && (
+                <p className="mt-4 max-w-2xl text-base leading-7 text-stone-600">
+                  {copy(mission.proposal.intro)}
+                </p>
+              )}
+              {currentStep?.step.why && !reviewing && (
+                <p className="mt-4 max-w-2xl text-base leading-7 text-stone-600 sm:text-lg">
+                  {copy(currentStep.step.why)}
+                </p>
+              )}
+              {visibleSteps.length > 0 && (
+                <>
+                  {/* Segments, not one bar: a visitor who wants to fix an
+                      earlier answer had to press Back once per step, eight
+                      times on an eleven-step Playbook. Only steps already
+                      reached are clickable — jumping ahead would skip the
+                      validation that gates each one. */}
+                  <ol className="mt-6 flex gap-1" aria-label={copy("Steps")}>
+                    {visibleSteps.map((step, index) => {
+                      const reached = index <= clampedStepIndex || reviewing;
+                      const current = !reviewing && index === clampedStepIndex;
+                      return (
+                        <li key={step.step.id} className="h-1.5 flex-1">
+                          <button
+                            type="button"
+                            disabled={!reached}
+                            aria-current={current ? "step" : undefined}
+                            aria-label={`${copy(step.step.title)}${current ? ` — ${copy("current step")}` : ""}`}
+                            onClick={() => editStep(index)}
+                            className={`h-1.5 w-full rounded-full transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--metre-accent)] focus-visible:ring-offset-2 ${
+                              reached
+                                ? "cursor-pointer bg-[color:var(--metre-accent)] hover:opacity-85"
+                                : "cursor-default bg-stone-200"
+                            }`}
+                          />
+                        </li>
+                      );
+                    })}
+                  </ol>
+                  <p className="mt-2 text-sm font-medium text-stone-500">
+                    {reviewing ? (
+                      copy("Last look before sending")
+                    ) : (
+                      <>
+                        {locale === "es-US" ? "Paso" : "Step"} {clampedStepIndex + 1}{" "}
+                        {locale === "es-US" ? "de" : "of"} {visibleSteps.length} · {progress}%{" "}
+                        {copy("complete")}
+                      </>
+                    )}
+                  </p>
+                </>
+              )}
+            </section>
+            <section className="mt-4 rounded-lg border border-stone-300 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
+              {error && (
+                <div className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                  {copy(error)}
+                </div>
+              )}
+              {consistencyErrors.length > 0 && (
+                <div className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                  <p className="font-medium">{copy("These answers don't seem to work together")}</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {consistencyErrors.map((notice) => (
+                      <li key={notice.id}>{copy(notice.message)}</li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {consistencyWarnings.length > 0 && (
+                <div className="mb-5 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                  <p className="font-medium">{copy("Worth checking")}</p>
+                  <ul className="mt-2 list-disc space-y-1 pl-5">
+                    {consistencyWarnings.map((notice) => (
+                      <li key={notice.id}>{copy(notice.message)}</li>
+                    ))}
+                  </ul>
+                  {/* A warning informs, it never decides — say plainly how to
+                    keep the answer as it stands. */}
+                  <p className="mt-3 text-xs text-amber-800">
+                    {copy(
+                      reviewing
+                        ? "Select Send my project again to keep your answers as they are."
+                        : "Select Continue again to keep your answers as they are.",
+                    )}
+                  </p>
+                </div>
+              )}
+              {reviewing ? (
+                <ReviewAnswers
+                  steps={visibleSteps}
+                  answers={answers}
+                  copy={copy}
+                  onEdit={editStep}
+                />
+              ) : currentStep ? (
+                <div className="grid gap-6">
+                  {currentStep.visibleFields.map((field) => {
+                    const FieldComponent = FIELD_COMPONENTS[field.type];
                     return (
-                      <li key={step.step.id} className="h-2 flex-1">
-                        <button
-                          type="button"
-                          disabled={!reached}
-                          aria-current={current ? "step" : undefined}
-                          aria-label={`${copy(step.step.title)}${current ? ` — ${copy("current step")}` : ""}`}
-                          onClick={() => editStep(index)}
-                          className={`h-2 w-full rounded-full transition-colors ${
-                            reached
-                              ? "cursor-pointer bg-emerald-600 hover:bg-emerald-700"
-                              : "cursor-default bg-slate-100"
-                          }`}
-                          style={reached && accent ? { backgroundColor: accent } : undefined}
-                        />
-                      </li>
+                      <FieldComponent
+                        key={field.key}
+                        field={localizeField(field, copy)}
+                        value={answers[field.key]}
+                        onChange={(value) => setAnswer(field.key, value)}
+                        error={fieldErrors[field.key]}
+                        analyzeInspirationPhoto={(image) =>
+                          analyzeInspirationPhoto(field.key, image)
+                        }
+                        uploadProjectPhoto={(file) => uploadProjectPhoto(field.key, file)}
+                      />
                     );
                   })}
-                </ol>
-                <p className="mt-2 text-xs font-medium text-slate-500">
-                  {reviewing ? (
-                    copy("Last look before sending")
-                  ) : (
-                    <>
-                      {locale === "es-US" ? "Paso" : "Step"} {clampedStepIndex + 1}{" "}
-                      {locale === "es-US" ? "de" : "of"} {visibleSteps.length} · {progress}%{" "}
-                      {copy("complete")}
-                    </>
-                  )}
-                </p>
-              </>
-            )}
-          </div>
-          <div className="p-6">
-            {error && (
-              <div className="mb-5 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
-                {copy(error)}
-              </div>
-            )}
-            {consistencyErrors.length > 0 && (
-              <div className="mb-5 rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
-                <p className="font-medium">{copy("This combination does not work:")}</p>
-                <ul className="mt-2 list-disc space-y-1 pl-5">
-                  {consistencyErrors.map((notice) => (
-                    <li key={notice.id}>{copy(notice.message)}</li>
-                  ))}
-                </ul>
-              </div>
-            )}
-            {consistencyWarnings.length > 0 && (
-              <div className="mb-5 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                <p className="font-medium">{copy("Worth checking before you continue:")}</p>
-                <ul className="mt-2 list-disc space-y-1 pl-5">
-                  {consistencyWarnings.map((notice) => (
-                    <li key={notice.id}>{copy(notice.message)}</li>
-                  ))}
-                </ul>
-                {/* A warning informs, it never decides — say plainly how to
-                    keep the answer as it stands. */}
-                <p className="mt-3 text-xs text-amber-800">
-                  {copy(
-                    reviewing
-                      ? "Select Generate project brief again to send your answers as they are."
-                      : "Select Continue again to keep your answers as they are.",
-                  )}
-                </p>
-              </div>
-            )}
-            {reviewing ? (
-              <ReviewAnswers steps={visibleSteps} answers={answers} copy={copy} onEdit={editStep} />
-            ) : currentStep ? (
-              <div className="grid gap-6">
-                {currentStep.visibleFields.map((field) => {
-                  const FieldComponent = FIELD_COMPONENTS[field.type];
-                  return (
-                    <FieldComponent
-                      key={field.key}
-                      field={localizeField(field, copy)}
-                      value={answers[field.key]}
-                      onChange={(value) => setAnswer(field.key, value)}
-                      error={fieldErrors[field.key]}
-                      analyzeInspirationPhoto={(image) => analyzeInspirationPhoto(field.key, image)}
-                      uploadProjectPhoto={(file) => uploadProjectPhoto(field.key, file)}
-                    />
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-sm text-slate-600">{copy("This mission has no questions yet.")}</p>
-            )}
-            <div className="mt-8 flex flex-wrap items-center gap-3">
-              <Button
-                variant="outline"
-                disabled={clampedStepIndex === 0 && !reviewing}
-                onClick={goBack}
-              >
-                {copy("Back")}
-              </Button>
-              {reviewing ? (
-                <Button onClick={submit} disabled={saving}>
-                  {saving ? copy("Working…") : copy("Generate project brief")}
-                  <FileText className="ml-2 h-4 w-4" />
-                </Button>
+                </div>
               ) : (
-                <Button onClick={goNext} disabled={saving} style={accentStyle}>
-                  {isLastStep ? copy("Review my answers") : copy("Continue")}
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <p className="text-sm text-stone-600">
+                  {copy("This mission has no questions yet.")}
+                </p>
               )}
-              <p className="text-xs text-slate-500">
-                {copy("Your answers are saved as you go — you can close this tab and come back.")}
-              </p>
-            </div>
+              <div className="mt-8 flex flex-wrap items-center gap-3">
+                <Button
+                  variant="outline"
+                  disabled={clampedStepIndex === 0 && !reviewing}
+                  onClick={goBack}
+                >
+                  {copy("Back")}
+                </Button>
+                {reviewing ? (
+                  <Button onClick={submit} disabled={saving} style={accentStyle}>
+                    {saving ? copy("Working…") : copy("Send my project")}
+                    <FileText className="ml-2 h-4 w-4" />
+                  </Button>
+                ) : (
+                  <Button onClick={goNext} disabled={saving} style={accentStyle}>
+                    {isLastStep ? copy("Review my answers") : copy("Continue")}
+                    <ArrowRight className="ml-2 h-4 w-4" />
+                  </Button>
+                )}
+                <p className="text-sm leading-6 text-stone-500">
+                  {copy("Your answers are saved as you go — you can close this tab and come back.")}
+                </p>
+              </div>
+            </section>
           </div>
+          <ProjectCanvas
+            title={copy("Your project")}
+            eyebrow={copy("Live project canvas")}
+            items={canvasItems}
+            emptyText={copy("Your project will take shape as you answer.")}
+            className="sticky top-6 hidden lg:block"
+          />
         </section>
       )}
     </main>
@@ -717,29 +761,35 @@ function ReviewAnswers({
   onEdit: (index: number) => void;
 }) {
   return (
-    <div className="grid gap-5">
-      <p className="text-sm leading-6 text-slate-600">
+    <div className="grid gap-6">
+      <p className="max-w-2xl text-base leading-7 text-stone-600">
         {copy("Nothing has been sent yet. Change anything that is not right.")}
       </p>
       {steps.map((step, index) => (
-        <section key={step.step.id} className="rounded-lg border border-slate-200 bg-white p-4">
-          <div className="flex flex-wrap items-baseline justify-between gap-2">
-            <h2 className="text-sm font-semibold text-slate-900">{copy(step.step.title)}</h2>
+        <section key={step.step.id} className="border-t border-stone-300 pt-5">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <h2 className="text-lg font-semibold tracking-normal text-stone-950">
+              {copy(step.step.title)}
+            </h2>
             <button
               type="button"
               onClick={() => onEdit(index)}
-              className="text-xs font-medium text-emerald-700 underline underline-offset-2 hover:text-emerald-900"
+              className="rounded-full border border-stone-300 px-3 py-1 text-xs font-semibold text-stone-700 hover:border-[color:var(--metre-accent)] hover:text-stone-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--metre-accent)]"
             >
               {copy("Edit")}
             </button>
           </div>
-          <dl className="mt-3 grid gap-2">
+          <dl className="mt-4 grid gap-3">
             {step.visibleFields.map((field) => {
               const text = formatAnswerForDisplay(field, answers[field.key] as AnswerValue);
               return (
-                <div key={field.key} className="grid gap-0.5 sm:grid-cols-[220px_1fr] sm:gap-3">
-                  <dt className="text-xs text-slate-500">{copy(field.label)}</dt>
-                  <dd className={text ? "text-sm text-slate-900" : "text-sm italic text-slate-400"}>
+                <div key={field.key} className="grid gap-1 sm:grid-cols-[220px_1fr] sm:gap-4">
+                  <dt className="text-sm font-medium text-stone-500">{copy(field.label)}</dt>
+                  <dd
+                    className={
+                      text ? "text-base text-stone-950" : "text-base italic text-stone-400"
+                    }
+                  >
                     {text || copy("Not answered")}
                   </dd>
                 </div>

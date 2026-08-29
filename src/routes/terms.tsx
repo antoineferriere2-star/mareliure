@@ -21,7 +21,7 @@ const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: "What this service is",
     body: [
-      "Métré Build is a guided project-intake tool: it helps a visitor describe a project — a deck project today — and turns the answers into a structured Project Brief for the business that published the intake.",
+      "Métré Build is a guided project-intake tool: it helps a visitor describe a project and turns the answers into a structured Project Brief for the business that published the intake. The public demo available today uses a deck project as its example.",
     ],
   },
   {
