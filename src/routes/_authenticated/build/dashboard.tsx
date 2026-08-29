@@ -321,7 +321,14 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
                       {f.status}
                     </span>
                   </td>
-                  <td className="py-2 pr-3 text-muted-foreground">{f.setupStatus}</td>
+                  <td className="py-2 pr-3 text-muted-foreground">
+                    {f.setupStatus}
+                    {f.issue ? (
+                      <div className="mt-1 text-[11px] text-amber-700">{f.issue}</div>
+                    ) : (
+                      <div className="mt-1 text-[11px] text-emerald-700">Published, no blocker</div>
+                    )}
+                  </td>
                   <td className="py-2 pr-3">
                     {f.publicPath ? (
                       <a
