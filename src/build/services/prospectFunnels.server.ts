@@ -213,6 +213,17 @@ export async function readProspectDemos(
       createdAt: r.created_at,
       createdByEmail: r.created_by ? (emailByUser.get(r.created_by) ?? null) : null,
       lastViewedAt: view?.last ?? null,
+      lastActivityAt,
+      analyzedAt: r.analyzed_at ?? null,
+      hasAnalysis,
+      hasDraft,
+      issue: funnelIssue({
+        setupStatus: r.status,
+        hasAnalysis,
+        hasConfirmedProduct: Boolean(r.confirmed_product),
+        hasDraft,
+        missionId: r.mission_id ?? null,
+      }),
       funnel: {
         viewed: view?.count ?? 0,
         started: session?.total ?? 0,
