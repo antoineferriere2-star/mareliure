@@ -188,6 +188,12 @@ export async function readProspectDemos(
     const view = publicToken ? viewsByToken.get(publicToken) : undefined;
     const session = r.mission_id ? sessionsByMission.get(r.mission_id) : undefined;
     const briefs = r.mission_id ? (briefsByMission.get(r.mission_id) ?? 0) : 0;
+    const hasAnalysis = Boolean(r.analyzed_at);
+    const hasDraft = Boolean(r.playbook_id);
+    const lastActivityAt = [r.updated_at, r.created_at, view?.last]
+      .filter((d): d is string => Boolean(d))
+      .sort()
+      .at(-1) as string;
     return {
       id: r.id,
       prospectName: prospectDisplayName(r.prospect_company_name, r.final_url ?? r.site_url),
