@@ -360,7 +360,10 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
                     submitted · {f.funnel.briefs} Briefs
                   </td>
                   <td className="py-2 pr-3 text-muted-foreground">
-                    {f.lastViewedAt ? new Date(f.lastViewedAt).toLocaleString() : "—"}
+                    {new Date(f.lastActivityAt).toLocaleString()}
+                    <div className="text-[11px]">
+                      last view: {f.lastViewedAt ? new Date(f.lastViewedAt).toLocaleString() : "—"}
+                    </div>
                   </td>
                   <td className="py-2 text-muted-foreground">
                     {new Date(f.createdAt).toLocaleDateString()}
