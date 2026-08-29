@@ -45,6 +45,18 @@ export type ProspectFunnelRow = {
   createdAt: string;
   createdByEmail: string | null;
   lastViewedAt: string | null;
+  /** Most recent sign of life: setup edit, publish, or public view. */
+  lastActivityAt: string;
+  analyzedAt: string | null;
+  hasAnalysis: boolean;
+  hasDraft: boolean;
+  /**
+   * What is blocking this funnel, in the agent's terms, or `null` when nothing
+   * is. Derived from the setup row rather than stored: an interrupted analysis
+   * or draft generation leaves its trace in the columns already written, so the
+   * admin can see a stalled prospect instead of guessing from a status word.
+   */
+  issue: string | null;
   funnel: { viewed: number; started: number; completed: number; briefs: number };
 };
 
