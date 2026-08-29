@@ -73,8 +73,8 @@ function ProjectSummaryAccessContent({
   }, [accessToken, onBusinessName]);
 
   return (
-    <main className="bg-slate-50 px-4 py-8 sm:px-6 lg:px-8">
-      {loading && <p className="mx-auto max-w-3xl text-slate-600">{copy("Loading…")}</p>}
+    <main className="min-h-screen bg-[#f7f3ec] px-4 py-8 sm:px-6 lg:px-8">
+      {loading && <p className="mx-auto max-w-3xl text-stone-600">{copy("Loading…")}</p>}
       {!loading && notAvailable && (
         <div className="mx-auto max-w-3xl rounded-md border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
           {copy("This summary link is not available.")}

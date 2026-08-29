@@ -1,8 +1,7 @@
 import { useState } from "react";
-import { Upload } from "lucide-react";
+import { ImagePlus, Sparkles, Upload } from "lucide-react";
 import type { InspirationHypothesisKey, InspirationPhotoAnswer } from "@/build/schema/answers";
 import type { InspirationPhotoField as InspirationPhotoFieldDef } from "@/build/schema/playbook";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DetectionBadge } from "@/build/components/DetectionBadge";
 import { publicCopy, useOptionalPublicLocale } from "@/build/pages/public/publicLocaleContext";
@@ -55,9 +54,11 @@ function HypothesisRow({
   const copy = (text: string) => publicCopy(locale, text);
 
   return (
-    <div className="rounded-md border border-slate-200 bg-white p-3">
+    <div className="rounded-lg border border-stone-300 bg-[#fffdf8] p-3">
       <div className="flex items-center justify-between gap-2">
-        <span className="text-xs font-medium text-slate-700">{label}</span>
+        <span className="text-xs font-semibold uppercase tracking-[0.08em] text-stone-500">
+          {label}
+        </span>
         <DetectionBadge
           state={confirmed ? "confirmed" : "detected"}
           labels={{
@@ -70,7 +71,7 @@ function HypothesisRow({
         value={value}
         onChange={(e) => onChange(e.target.value)}
         placeholder={copy("Not detected — add details if needed")}
-        className="mt-2 w-full min-w-0 rounded-md border border-slate-200 px-2 py-1 text-sm"
+        className="mt-2 w-full min-w-0 rounded-md border border-stone-300 bg-white px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--metre-accent)]"
       />
     </div>
   );
@@ -140,42 +141,68 @@ export function InspirationPhotoField({
   }
 
   return (
-    <div className="rounded-lg border border-dashed border-slate-300 bg-slate-50 p-6">
-      <Upload className="h-6 w-6 text-emerald-700" />
-      <Label htmlFor={field.key} className="mt-4 block font-semibold">
-        {copy(field.label)}
-        <RequiredMark field={field} />
-      </Label>
-      {field.helpText && <p className="mt-2 text-sm text-slate-600">{copy(field.helpText)}</p>}
+    <div className="overflow-hidden rounded-lg border border-stone-300 bg-[#fffdf8]">
+      <div className="p-5">
+        <div className="flex items-start gap-4">
+          <span className="grid h-11 w-11 shrink-0 place-items-center rounded-full bg-[color:var(--metre-accent-soft)] text-[color:var(--metre-accent)]">
+            <Sparkles className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="min-w-0">
+            <Label htmlFor={field.key} className="block text-base font-semibold text-stone-950">
+              {copy(field.label)}
+              <RequiredMark field={field} />
+            </Label>
+            {field.helpText && (
+              <p className="mt-2 text-sm leading-6 text-stone-600">{copy(field.helpText)}</p>
+            )}
+          </div>
+        </div>
 
-      {!answer && (
-        <Input
+        {!answer && (
+          <label
+            htmlFor={field.key}
+            className="mt-5 flex min-h-44 cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-stone-400 bg-white px-4 py-6 text-center transition hover:border-[color:var(--metre-accent)] hover:bg-[color:var(--metre-accent-soft)]"
+          >
+            <ImagePlus className="h-8 w-8 text-stone-500" aria-hidden="true" />
+            <span className="mt-3 text-sm font-semibold text-stone-950">
+              {copy("Choose an inspiration image")}
+            </span>
+            <span className="mt-1 max-w-sm text-xs leading-5 text-stone-500">
+              {copy("Métré will suggest what it notices, then you confirm or adjust it.")}
+            </span>
+          </label>
+        )}
+        <input
           id={field.key}
           type="file"
           accept={field.acceptMimeTypes.join(",")}
-          className="mt-4 w-full min-w-0"
+          className="sr-only"
           disabled={analyzing}
           onChange={(event) => onFileSelected(event.target.files)}
         />
-      )}
 
-      {analyzing && <p className="mt-3 text-sm text-slate-600">{copy("Analyzing the image…")}</p>}
-      {(error || analyzeError) && (
-        <p className="mt-2 text-sm text-rose-700">{copy(error ?? analyzeError ?? "")}</p>
-      )}
+        {analyzing && (
+          <p className="mt-3 text-sm text-stone-600" role="status">
+            {copy("Looking at your inspiration…")}
+          </p>
+        )}
+        {(error || analyzeError) && (
+          <p className="mt-2 text-sm text-rose-700">{copy(error ?? analyzeError ?? "")}</p>
+        )}
+      </div>
 
       {previewUrl && (
         <img
           src={previewUrl}
           alt=""
-          className="mt-4 max-h-48 rounded-md border border-slate-200 object-cover"
+          className="h-56 w-full border-y border-stone-200 object-cover"
         />
       )}
 
       {answer && !analyzing && (
-        <div className="mt-4 space-y-3">
+        <div className="space-y-3 p-5">
           <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
-            {copy("AI observations — review and confirm")}
+            {copy("Here's what we noticed — review and confirm")}
           </p>
 
           <HypothesisRow
@@ -224,8 +251,8 @@ export function InspirationPhotoField({
           />
 
           {answer.suggestedQuestions.length > 0 && (
-            <div className="rounded-md bg-white p-3 text-xs text-slate-600">
-              <p className="font-medium text-slate-700">
+            <div className="rounded-lg border border-stone-200 bg-white p-4 text-sm leading-6 text-stone-600">
+              <p className="font-medium text-stone-800">
                 {copy("Topics to review with the sales team:")}
               </p>
               <ul className="mt-1 list-disc pl-4">

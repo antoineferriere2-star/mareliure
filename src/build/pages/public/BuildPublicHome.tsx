@@ -1,10 +1,8 @@
-import { ArrowRight, FileText, Layers3, Sparkles, Users, Briefcase, Linkedin } from "lucide-react";
+import { ArrowRight, Users, Briefcase, Linkedin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   BuildPublicShell,
   CheckItem,
-  InfoPanel,
-  ObjectCard,
   PublicCtaBand,
   SectionHeader,
   StepLine,
@@ -69,22 +67,22 @@ function BuildPublicHomeContent() {
   return (
     <main>
       {/* HERO */}
-      <section className="overflow-hidden bg-slate-50 px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
+      <section className="overflow-hidden bg-[#f7f3ec] px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
         <div className="mx-auto grid max-w-7xl items-center gap-8 lg:grid-cols-[minmax(0,0.85fr)_1.25fr] lg:gap-10">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
+            <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">
               {t(locale, "home.hero.eyebrow")}
             </p>
-            <h1 className="mt-4 max-w-3xl text-3xl font-semibold tracking-normal text-slate-950 sm:text-4xl lg:text-5xl">
+            <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-normal text-stone-950 sm:text-5xl lg:text-6xl">
               {t(locale, "home.hero.title")}
             </h1>
-            <p className="mt-4 max-w-2xl text-[17px] leading-7 text-slate-700">
+            <p className="mt-5 max-w-2xl text-[18px] leading-8 text-stone-700">
               {t(locale, "home.hero.description")}
             </p>
-            <p className="mt-3 max-w-2xl text-[15px] font-medium leading-6 text-slate-600">
+            <p className="mt-3 max-w-2xl text-[15px] font-medium leading-6 text-stone-600">
               {t(locale, "home.hero.kicker")}
             </p>
-            <p className="mt-2 max-w-2xl text-[13px] leading-5 text-slate-500">
+            <p className="mt-3 max-w-2xl text-[13px] leading-5 text-stone-500">
               {t(locale, "home.hero.deckIntro")}{" "}
               <span
                 className="cursor-help underline decoration-dotted decoration-slate-400 underline-offset-4"
@@ -107,7 +105,7 @@ function BuildPublicHomeContent() {
                 </Button>
               </a>
             </div>
-            <p className="mt-4 max-w-2xl text-[13px] leading-5 text-slate-500">
+            <p className="mt-4 max-w-2xl text-[13px] leading-5 text-stone-500">
               {t(locale, "home.hero.disclaimer")}
             </p>
           </div>
@@ -115,40 +113,84 @@ function BuildPublicHomeContent() {
         </div>
       </section>
 
-      {/* PROBLEM */}
-      <section className="px-4 py-12 sm:px-6 lg:px-8">
+      {/* BUILD THE PROJECT */}
+      <section className="px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader
-            title={t(locale, "home.problem.title")}
-            description={t(locale, "home.problem.description")}
+            eyebrow={copy("Build the project")}
+            title={copy("The intake changes shape as the visitor explains the work.")}
+            description={copy(
+              "Métré keeps the question focused, while the Project Canvas keeps the whole project visible.",
+            )}
           />
-          <div className="mt-8 grid gap-4 md:grid-cols-2">
-            <InfoPanel
-              title={t(locale, "home.problem.classicTitle")}
-              items={problemItems.classic}
-            />
-            <InfoPanel
-              title={t(locale, "home.problem.missingTitle")}
-              items={problemItems.missing}
-            />
+          <div className="mt-10 grid gap-8 lg:grid-cols-[0.8fr_1fr] lg:items-start">
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-stone-500">
+                {t(locale, "home.problem.classicTitle")}
+              </p>
+              <div className="mt-4 divide-y divide-stone-200 border-y border-stone-200">
+                {problemItems.classic.map((item) => (
+                  <p key={item} className="py-3 text-[15px] leading-6 text-stone-600">
+                    {item}
+                  </p>
+                ))}
+              </div>
+            </div>
+            <div>
+              <p className="text-sm font-semibold uppercase tracking-[0.12em] text-stone-500">
+                {t(locale, "home.problem.missingTitle")}
+              </p>
+              <div className="mt-4 grid gap-x-8 gap-y-3 border-y border-stone-200 py-4 sm:grid-cols-2">
+                {problemItems.missing.map((item) => (
+                  <CheckItem key={item}>{item}</CheckItem>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* BEFORE / AFTER (incl. honest-discovery proof points) */}
+      {/* BEFORE / AFTER */}
       <BeforeAfterSection />
 
-      {/* EASIER FOR CUSTOMERS, MORE USEFUL FOR SALES (incl. inspiration photo) */}
-      <section className="bg-slate-50 px-4 py-12 sm:px-6 lg:px-8">
+      {/* KNOW WHAT YOU KNOW */}
+      <section className="bg-[#f7f3ec] px-4 py-14 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader
-            eyebrow={copy("Two sides of the same journey")}
-            title={copy("Easier for your customers. More useful for your sales team.")}
+            eyebrow={copy("Know what you know")}
+            title={copy("Métré does not manufacture certainty.")}
+            description={copy(
+              "Confirmed answers, approximations, calculated lines and open questions stay visibly different.",
+            )}
           />
-          <div className="mt-8 grid gap-4 md:grid-cols-2 md:items-start">
-            <div className="min-w-0 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="mt-8 grid gap-4 md:grid-cols-4">
+            {[
+              ["✓", "Confirmed", "The visitor gave a clear answer."],
+              ["~", "Approximate", "Useful, but still framed as approximate."],
+              ["◇", "Derived", "Calculated or inferred by existing rules."],
+              ["○", "To clarify", "Unknown details become a next step."],
+            ].map(([mark, title, text]) => (
+              <div key={title} className="border-t border-stone-300 pt-4">
+                <p className="text-2xl text-stone-950">{mark}</p>
+                <h3 className="mt-2 text-base font-semibold text-stone-950">{copy(title)}</h3>
+                <p className="mt-2 text-sm leading-6 text-stone-600">{copy(text)}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* PROJECT MOMENTS */}
+      <section className="px-4 py-14 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl">
+          <SectionHeader
+            eyebrow={copy("Project moments")}
+            title={copy("Photos, choices and uncertainty become project context.")}
+          />
+          <div className="mt-8 grid gap-6 md:grid-cols-2 md:items-start">
+            <div className="min-w-0">
               <Users className="h-6 w-6 text-emerald-700" />
-              <h3 className="mt-4 text-lg font-semibold tracking-normal text-slate-950">
+              <h3 className="mt-4 text-lg font-semibold tracking-normal text-stone-950">
                 {copy("For your customers")}
               </h3>
               <div className="mt-4 space-y-2">
@@ -162,16 +204,16 @@ function BuildPublicHomeContent() {
                   <CheckItem key={item}>{copy(item)}</CheckItem>
                 ))}
               </div>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              <p className="mt-6 text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
                 {copy("Live example — start from a photo")}
               </p>
               <div className="mt-2">
                 <InspirationPreview />
               </div>
             </div>
-            <div className="min-w-0 rounded-lg border border-slate-200 bg-white p-6 shadow-sm">
+            <div className="min-w-0">
               <Briefcase className="h-6 w-6 text-emerald-700" />
-              <h3 className="mt-4 text-lg font-semibold tracking-normal text-slate-950">
+              <h3 className="mt-4 text-lg font-semibold tracking-normal text-stone-950">
                 {copy("For your sales team")}
               </h3>
               <div className="mt-4 space-y-2">
@@ -185,7 +227,7 @@ function BuildPublicHomeContent() {
                   <CheckItem key={item}>{copy(item)}</CheckItem>
                 ))}
               </div>
-              <p className="mt-4 text-xs font-semibold uppercase tracking-[0.14em] text-slate-500">
+              <p className="mt-6 text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
                 {copy("Live example")}
               </p>
               <div className="mt-2">
@@ -193,7 +235,7 @@ function BuildPublicHomeContent() {
               </div>
             </div>
           </div>
-          <p className="mt-8 text-center text-[16px] font-medium leading-7 text-slate-700">
+          <p className="mt-8 text-[16px] font-medium leading-7 text-stone-700">
             {copy("Help customers explain the project. Help sales teams act on it.")}
           </p>
         </div>
@@ -250,34 +292,31 @@ function BuildPublicHomeContent() {
 
       <InsideMetreBuildSection />
 
-      {/* POSITIONING */}
-      <section className="bg-slate-50 px-4 py-16 sm:px-6 lg:px-8">
+      {/* MULTI-VERTICAL */}
+      <section className="bg-[#f7f3ec] px-4 py-16 sm:px-6 lg:px-8">
         <div className="mx-auto max-w-7xl">
           <SectionHeader
-            eyebrow={copy("Product")}
-            title={copy("Not a generic form builder.")}
+            eyebrow={copy("One system. Many kinds of projects.")}
+            title={copy("A Canvas for any configurable project, not a deck-only interface.")}
             description={copy(
               "Métré Build uses industry Playbooks to guide customers and turn incomplete inquiries into structured, actionable Project Briefs.",
             )}
           />
-          <div className="mt-8 grid gap-4 md:grid-cols-3">
-            <ObjectCard
-              icon={Layers3}
-              title={copy("Playbook")}
-              text={copy("A reusable industry-specific project discovery method.")}
-            />
-            <ObjectCard
-              icon={Sparkles}
-              title={copy("Guided Project Intake")}
-              text={copy("The guided experience completed by the customer.")}
-            />
-            <ObjectCard
-              icon={FileText}
-              title={copy("Project Brief")}
-              text={copy("The structured, actionable output received by the sales team.")}
-            />
+          <div className="mt-8 grid gap-6 md:grid-cols-3">
+            {[
+              ["Outdoor projects", "Decks, patios, pergolas and exterior upgrades."],
+              ["Home improvement", "Windows, kitchens, bathrooms and remodel scopes."],
+              ["Custom products", "Furniture, millwork, equipment or made-to-order work."],
+            ].map(([title, text]) => (
+              <div key={title} className="border-t border-stone-300 pt-4">
+                <h3 className="text-lg font-semibold tracking-normal text-stone-950">
+                  {copy(title)}
+                </h3>
+                <p className="mt-2 text-[15px] leading-7 text-stone-600">{copy(text)}</p>
+              </div>
+            ))}
           </div>
-          <h3 className="mt-10 text-xl font-semibold tracking-normal text-slate-950">
+          <h3 className="mt-10 text-xl font-semibold tracking-normal text-stone-950">
             {copy("The missing layer between forms and configurators")}
           </h3>
           <div className="mt-4 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">

@@ -820,6 +820,82 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Review my answers": "Revisar mis respuestas",
   Edit: "Editar",
   "Not answered": "Sin responder",
+  "Your project": "Su proyecto",
+  "Live project canvas": "Canvas del proyecto en vivo",
+  "Project canvas": "Canvas del proyecto",
+  "Project Canvas": "Canvas del proyecto",
+  "Project sent": "Proyecto enviado",
+  Project: "Proyecto",
+  "Budget & timing": "Presupuesto y plazo",
+  "To clarify": "Por aclarar",
+  "detail captured": "detalle capturado",
+  "details captured": "detalles capturados",
+  "The project details Métré has captured so far.":
+    "Los detalles del proyecto que Métré ha capturado hasta ahora.",
+  "Your project will take shape as you answer.": "Su proyecto tomará forma a medida que responda.",
+  "Send my project": "Enviar mi proyecto",
+  "Marked to clarify": "Marcado para aclarar",
+  "Image notes captured": "Notas de imagen capturadas",
+  Captured: "Capturado",
+  Approximate: "Aproximado",
+  Derived: "Derivado",
+  "Choose photos or use your camera": "Elija fotos o use la cámara",
+  "Photo limit reached": "Límite de fotos alcanzado",
+  slot: "espacio",
+  slots: "espacios",
+  available: "disponibles",
+  Uploading: "Subiendo",
+  "Uploading…": "Subiendo…",
+  "Maximum of": "Máximo de",
+  "reached. Remove one to add another.": "alcanzado. Quite una para agregar otra.",
+  "Add photos that help the team understand the site before the first call.":
+    "Agregue fotos que ayuden al equipo a entender el sitio antes de la primera llamada.",
+  "Choose an inspiration image": "Elija una imagen de inspiración",
+  "Métré will suggest what it notices, then you confirm or adjust it.":
+    "Métré sugerirá lo que observa; luego usted confirma o ajusta.",
+  "Looking at your inspiration…": "Observando su inspiración…",
+  "Here's what we noticed — review and confirm": "Esto es lo que notamos: revise y confirme",
+  "These answers don't seem to work together": "Estas respuestas no parecen funcionar juntas",
+  "Worth checking": "Conviene revisar",
+  "Select Send my project again to keep your answers as they are.":
+    "Seleccione Enviar mi proyecto de nuevo para mantener sus respuestas tal como están.",
+  "Vague inquiry": "Consulta vaga",
+  "I'd like to replace the old deck behind our house. Maybe composite. Not sure about the size.":
+    "Quisiera reemplazar la terraza vieja detrás de la casa. Quizá con composite. No estoy seguro del tamaño.",
+  Material: "Material",
+  Size: "Tamaño",
+  "Existing site": "Sitio existente",
+  "Existing deck": "Terraza existente",
+  "Sales action": "Acción comercial",
+  "Build the project": "Construir el proyecto",
+  "The intake changes shape as the visitor explains the work.":
+    "El intake cambia de forma a medida que el visitante explica el trabajo.",
+  "Métré keeps the question focused, while the Project Canvas keeps the whole project visible.":
+    "Métré mantiene la pregunta enfocada, mientras el Canvas del proyecto mantiene visible el proyecto completo.",
+  "Know what you know": "Saber lo que se sabe",
+  "Métré does not manufacture certainty.": "Métré no fabrica certeza.",
+  "Confirmed answers, approximations, calculated lines and open questions stay visibly different.":
+    "Las respuestas confirmadas, aproximaciones, líneas calculadas y preguntas abiertas permanecen visiblemente distintas.",
+  "The visitor gave a clear answer.": "El visitante dio una respuesta clara.",
+  "Useful, but still framed as approximate.": "Útil, pero todavía presentado como aproximado.",
+  "Calculated or inferred by existing rules.": "Calculado o inferido por reglas existentes.",
+  "Unknown details become a next step.":
+    "Los detalles desconocidos se convierten en el próximo paso.",
+  "Project moments": "Momentos del proyecto",
+  "Photos, choices and uncertainty become project context.":
+    "Fotos, elecciones e incertidumbre se convierten en contexto del proyecto.",
+  "One system. Many kinds of projects.": "Un sistema. Muchos tipos de proyectos.",
+  "A Canvas for any configurable project, not a deck-only interface.":
+    "Un Canvas para cualquier proyecto configurable, no una interfaz solo para terrazas.",
+  "Outdoor projects": "Proyectos exteriores",
+  "Decks, patios, pergolas and exterior upgrades.":
+    "Terrazas, patios, pérgolas y mejoras exteriores.",
+  "Home improvement": "Mejoras del hogar",
+  "Windows, kitchens, bathrooms and remodel scopes.":
+    "Ventanas, cocinas, baños y alcances de remodelación.",
+  "Custom products": "Productos a medida",
+  "Furniture, millwork, equipment or made-to-order work.":
+    "Mobiliario, carpintería, equipos o trabajos hechos a medida.",
 
   // Fallback shown when the automated analysis is down (AnalysisUnavailableFallback).
   "The automated analysis is down right now.":

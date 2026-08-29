@@ -8,11 +8,10 @@ export const enUSMessages = {
   // Keyword first, benefit intact. The previous wording convinced a visitor
   // already on the page but contained nothing anyone searches for — "lead"
   // and "qualify" are the terms contractors actually type.
-  "home.hero.title":
-    "Qualify contractor leads before the first call — turn vague inquiries into structured project briefs.",
+  "home.hero.title": "Turn vague inquiries into projects your team can act on.",
   "home.hero.description":
-    "Métré Build guides customers through project scope, photos, dimensions, constraints, budget and timing — so your sales team has useful context before the first call.",
-  "home.hero.kicker": "More useful than a contact form. Simpler than a custom configurator.",
+    "Your customers don't need to know how to describe a project. Métré helps them build it with you, then gives your team the structured brief.",
+  "home.hero.kicker": "Answers become a project, not another form submission.",
   "home.hero.deckIntro": "Works with any project-based business — start from a",
   "home.hero.playbookTooltip": "A reusable industry-specific project discovery method.",
   "home.hero.primaryCta": "Try the Live Deck Intake",
@@ -80,11 +79,10 @@ export type TranslationMessages = Record<TranslationKey, string>;
 
 export const esUSMessages: Partial<TranslationMessages> = {
   "home.hero.eyebrow": "Recorrido guiado para empresas que venden proyectos",
-  "home.hero.title":
-    "Califique sus prospectos antes de la primera llamada: convierta consultas vagas en briefs de proyecto estructurados.",
+  "home.hero.title": "Convierta consultas vagas en proyectos sobre los que su equipo puede actuar.",
   "home.hero.description":
-    "Métré Build guía a sus clientes por alcance, fotos, dimensiones, restricciones, presupuesto y plazo para que su equipo comercial tenga contexto útil antes de la primera llamada.",
-  "home.hero.kicker": "Más útil que un formulario. Más simple que un configurador a medida.",
+    "Sus clientes no necesitan saber cómo describir un proyecto. Métré les ayuda a construirlo con usted y luego entrega un brief estructurado a su equipo.",
+  "home.hero.kicker": "Las respuestas se convierten en un proyecto, no en otro formulario enviado.",
   "home.hero.deckIntro": "Funciona con cualquier negocio basado en proyectos — comience desde un",
   "home.hero.playbookTooltip":
     "Un método reutilizable de descubrimiento de proyectos por industria.",

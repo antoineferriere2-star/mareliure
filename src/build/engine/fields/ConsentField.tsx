@@ -11,7 +11,7 @@ export function ConsentField({
   const checked = value === true;
   return (
     <div>
-      <label className="flex gap-3 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm">
+      <label className="flex gap-3 rounded-lg border border-stone-300 bg-[#fffdf8] p-4 text-sm leading-6 text-stone-800">
         <Checkbox checked={checked} onCheckedChange={(next) => onChange(next === true)} />
         <span>{field.consentText}</span>
       </label>

@@ -121,6 +121,12 @@
   --steel: oklch(0.55 0.05 265);
   --concrete: oklch(0.9 0.01 265);
   --blueprint: oklch(0.55 0.1 265);
+  --metre-paper: oklch(0.985 0.012 82);
+  --metre-paper-warm: oklch(0.958 0.019 78);
+  --metre-ink: oklch(0.19 0.028 255);
+  --metre-rule: oklch(0.82 0.018 78);
+  --metre-accent: oklch(0.53 0.12 154);
+  --metre-accent-soft: oklch(0.94 0.055 154);
 }
 
 .dark {
@@ -176,6 +182,12 @@
   --steel: oklch(0.7 0.04 265);
   --concrete: oklch(0.25 0.035 265);
   --blueprint: oklch(0.65 0.08 265);
+  --metre-paper: oklch(0.18 0.025 255);
+  --metre-paper-warm: oklch(0.22 0.025 255);
+  --metre-ink: oklch(0.95 0.006 82);
+  --metre-rule: oklch(0.36 0.026 255);
+  --metre-accent: oklch(0.74 0.11 154);
+  --metre-accent-soft: oklch(0.28 0.06 154);
 }
 
 @layer base {
@@ -189,9 +201,14 @@
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     font-weight: 600;
-    letter-spacing: -0.025em;
+    letter-spacing: 0;
   }
 }
 
@@ -201,11 +218,84 @@
   }
 
   .gradient-construction {
-    background-image: linear-gradient(135deg, var(--color-construction) 0%, oklch(0.35 0.08 265) 100%);
+    background-image: linear-gradient(
+      135deg,
+      var(--color-construction) 0%,
+      oklch(0.35 0.08 265) 100%
+    );
   }
 
   .gradient-hero-mask {
     mask-image: linear-gradient(to right, transparent 0%, black 40%, black 60%, transparent 100%);
-    -webkit-mask-image: linear-gradient(to right, transparent 0%, black 40%, black 60%, transparent 100%);
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent 0%,
+      black 40%,
+      black 60%,
+      transparent 100%
+    );
+  }
+
+  .metre-frame {
+    position: relative;
+    border: 1px solid var(--metre-rule);
+    box-shadow:
+      inset 0 0 0 1px color-mix(in oklab, white 60%, transparent),
+      0 18px 42px color-mix(in oklab, var(--metre-ink) 8%, transparent);
+  }
+
+  .metre-frame::before,
+  .metre-frame::after {
+    content: "";
+    position: absolute;
+    width: 22px;
+    height: 22px;
+    pointer-events: none;
+  }
+
+  .metre-frame::before {
+    left: 10px;
+    top: 10px;
+    border-left: 1px solid color-mix(in oklab, var(--metre-accent) 70%, var(--metre-rule));
+    border-top: 1px solid color-mix(in oklab, var(--metre-accent) 70%, var(--metre-rule));
+  }
+
+  .metre-frame::after {
+    right: 10px;
+    bottom: 10px;
+    border-right: 1px solid color-mix(in oklab, var(--metre-accent) 70%, var(--metre-rule));
+    border-bottom: 1px solid color-mix(in oklab, var(--metre-accent) 70%, var(--metre-rule));
+  }
+
+  .project-canvas {
+    background-image:
+      linear-gradient(color-mix(in oklab, var(--metre-rule) 28%, transparent) 1px, transparent 1px),
+      linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--metre-rule) 24%, transparent) 1px,
+        transparent 1px
+      );
+    background-size: 24px 24px;
+  }
+
+  .project-canvas-item {
+    animation: metre-canvas-enter 180ms ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .project-canvas-item {
+      animation: none;
+    }
+  }
+
+  @keyframes metre-canvas-enter {
+    from {
+      opacity: 0.2;
+      transform: translateY(3px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 }

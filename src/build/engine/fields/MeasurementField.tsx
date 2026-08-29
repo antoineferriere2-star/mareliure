@@ -27,10 +27,10 @@ export function MeasurementField({
         {field.label}
         <RequiredMark field={field} />
         {!labelAlreadyShowsUnit && (
-          <span className="text-xs font-normal text-slate-500"> ({field.unit})</span>
+          <span className="text-sm font-normal text-stone-500"> ({field.unit})</span>
         )}
       </Label>
-      {field.helpText && <p className="mt-1 text-xs text-slate-500">{field.helpText}</p>}
+      {field.helpText && <p className="mt-2 text-sm leading-6 text-stone-600">{field.helpText}</p>}
       <Input
         id={field.key}
         type="number"
@@ -39,7 +39,7 @@ export function MeasurementField({
         value={isNotSure ? "" : stringValue}
         disabled={isNotSure}
         onChange={(event) => onChange(event.target.value === "" ? "" : Number(event.target.value))}
-        className="mt-1"
+        className="mt-3 h-12 rounded-lg border-stone-300 bg-[#fffdf8] text-lg focus-visible:ring-[color:var(--metre-accent)]"
       />
       {field.allowNotSure && (
         <NotSureToggle
