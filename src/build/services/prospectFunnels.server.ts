@@ -102,6 +102,26 @@ function rate(numerator: number, denominator: number): number {
 }
 
 /**
+ * The one blocking step of a funnel, named the way the wizard names it, so the
+ * admin reads "where it stopped" instead of inferring it from a status word.
+ * Read-only derivation: a failed analysis or an interrupted draft generation
+ * both leave the setup row half-filled, and that is exactly what is reported.
+ */
+function funnelIssue(f: {
+  setupStatus: string;
+  hasAnalysis: boolean;
+  hasConfirmedProduct: boolean;
+  hasDraft: boolean;
+  missionId: string | null;
+}): string | null {
+  if (f.setupStatus === "published" && f.missionId) return null;
+  if (!f.hasAnalysis) return "Site analysis never completed — resumes at Your website";
+  if (!f.hasConfirmedProduct) return "Product not confirmed yet — resumes at Your product";
+  if (!f.hasDraft) return "Draft generation interrupted — resumes at Your product";
+  return "Draft built but never published — resumes at Publish";
+}
+
+/**
  * @param workspaceIds ids of the `internal_sales` workspaces, already resolved
  *   by the caller's `internalSalesScope` so there is one definition of
  *   "internal" and no second query keyed on anything else.
