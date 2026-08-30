@@ -25,6 +25,7 @@ const PUBLIC_SURFACE_FILES = [
   "src/build/pages/public/sections/BeforeAfterSection.tsx",
   "src/build/pages/public/sections/InsideMetreBuildSection.tsx",
   "src/build/pages/public/sections/HeroTransformShot.tsx",
+  "src/build/pages/public/sections/MarketingProjectCanvasDemo.tsx",
   "src/build/engine/fields/InspirationPhotoField.tsx",
   "src/build/components/DetectionBadge.tsx",
   "src/build/pages/admin/onboarding/SingleChoiceConfirmStep.tsx",

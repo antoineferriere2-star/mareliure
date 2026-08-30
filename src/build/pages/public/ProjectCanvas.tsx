@@ -38,24 +38,52 @@ export function ProjectCanvas({
   items,
   emptyText,
   className,
+  density = "standard",
+  maxItems,
 }: {
   title: string;
   eyebrow?: string;
   items: ProjectCanvasItem[];
   emptyText: string;
   className?: string;
+  density?: "standard" | "marketing" | "hero";
+  maxItems?: number;
 }) {
-  const groups = groupedItems(items);
+  const visibleItems = typeof maxItems === "number" ? items.slice(0, maxItems) : items;
+  const groups = groupedItems(visibleItems);
+  const isLarge = density !== "standard";
 
   return (
-    <aside className={cn("metre-frame project-canvas rounded-lg bg-[#fffdf8] p-5", className)}>
+    <aside
+      className={cn(
+        "metre-frame project-canvas rounded-lg bg-[#fffdf8]",
+        density === "standard" && "p-5",
+        density === "marketing" && "p-5 sm:p-7",
+        density === "hero" && "p-5 sm:p-7 lg:p-8",
+        className,
+      )}
+    >
       {eyebrow && (
-        <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
+        <p
+          className={cn(
+            "font-semibold uppercase tracking-[0.12em] text-stone-500",
+            isLarge ? "text-xs" : "text-[11px]",
+          )}
+        >
           {eyebrow}
         </p>
       )}
-      <h2 className="mt-1 text-xl font-semibold tracking-normal text-stone-950">{title}</h2>
-      <div className="mt-5 space-y-5">
+      <h2
+        className={cn(
+          "mt-1 font-semibold tracking-normal text-stone-950",
+          density === "standard" && "text-xl",
+          density === "marketing" && "text-2xl",
+          density === "hero" && "text-2xl sm:text-3xl",
+        )}
+      >
+        {title}
+      </h2>
+      <div className={cn("mt-5", isLarge ? "space-y-6" : "space-y-5")}>
         {groups.length === 0 ? (
           <p className="border-l border-stone-300 pl-4 text-sm leading-6 text-stone-600">
             {emptyText}
@@ -63,32 +91,58 @@ export function ProjectCanvas({
         ) : (
           groups.map((group) => (
             <section key={group.title} className="project-canvas-group">
-              <h3 className="text-[11px] font-semibold uppercase tracking-[0.12em] text-stone-500">
+              <h3
+                className={cn(
+                  "font-semibold uppercase tracking-[0.12em] text-stone-500",
+                  isLarge ? "text-xs" : "text-[11px]",
+                )}
+              >
                 {group.title}
               </h3>
-              <dl className="mt-2 space-y-1.5">
+              <dl className={cn("mt-2", isLarge ? "space-y-2" : "space-y-1.5")}>
                 {group.items.map((item) => {
                   const meta = STATUS_META[item.status];
                   return (
                     <div
                       key={item.id}
-                      className="project-canvas-item grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-t border-stone-200 py-2.5 first:border-t-0"
+                      className={cn(
+                        "project-canvas-item grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-t border-stone-200 first:border-t-0",
+                        isLarge ? "py-3.5" : "py-2.5",
+                      )}
                     >
                       <div className="min-w-0">
-                        <dt className="text-[12px] font-medium text-stone-500">{item.label}</dt>
-                        <dd className="mt-0.5 break-words text-[15px] leading-6 text-stone-950">
+                        <dt
+                          className={cn(
+                            "font-medium text-stone-500",
+                            isLarge ? "text-[13px]" : "text-[12px]",
+                          )}
+                        >
+                          {item.label}
+                        </dt>
+                        <dd
+                          className={cn(
+                            "mt-0.5 break-words text-stone-950",
+                            density === "standard" && "text-[15px] leading-6",
+                            density === "marketing" && "text-[17px] leading-7",
+                            density === "hero" && "text-[18px] leading-7 sm:text-xl",
+                          )}
+                        >
                           {item.value}
                         </dd>
                       </div>
                       <span
                         className={cn(
-                          "mt-1 inline-flex h-6 w-6 items-center justify-center rounded-full border border-current text-sm",
+                          "mt-1 inline-flex shrink-0 items-center justify-center border border-current font-semibold",
+                          isLarge
+                            ? "h-8 rounded-full px-2.5 text-xs"
+                            : "h-6 w-6 rounded-full text-sm",
                           meta.className,
                         )}
                         title={meta.label}
                         aria-label={meta.label}
                       >
-                        {meta.mark}
+                        <span aria-hidden="true">{meta.mark}</span>
+                        {isLarge && <span className="ml-1.5">{meta.label}</span>}
                       </span>
                     </div>
                   );
