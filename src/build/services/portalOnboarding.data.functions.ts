@@ -83,6 +83,7 @@ async function loadInFlightRow(sb: Supa, workspaceId: string) {
     .select("*")
     .eq("workspace_id", workspaceId)
     .neq("status", "published")
+    .neq("status", "failed")
     .maybeSingle();
   if (error) fail(500, error.message);
   return data;
