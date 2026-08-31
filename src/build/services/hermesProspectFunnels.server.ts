@@ -654,10 +654,16 @@ async function processRow(
     current = await publishStep(sb, current, userId);
     return toResult(sb, input, current, "published");
   } catch (err) {
-    await markFailed(sb, current.id, step, err);
+    // No playbook attached means the draft never came out of the generator, so
+    // the blocking step is generate — even when the throw happened in publish.
+    // The admin and Hermes then relaunch the step that actually failed.
+    const failedStep: HermesFunnelStep =
+      step === "publish" && !current.playbook_id ? "generate" : step;
+    await markFailed(sb, current.id, failedStep, err);
     const failed = await loadOnboardingById(sb, current.id);
     return toResult(sb, input, failed, "failed", shortError(err));
   }
+
 }
 
 export async function runHermesProspectFunnel(
