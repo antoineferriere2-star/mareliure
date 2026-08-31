@@ -76,8 +76,9 @@ export type TranslationKey = keyof typeof enUSMessages;
 export type TranslationMessages = Record<TranslationKey, string>;
 
 export const esUSMessages: Partial<TranslationMessages> = {
-  "home.hero.eyebrow": "Recorrido guiado para negocios de proyectos configurables",
-  "home.hero.title": "Convierta consultas vagas en proyectos sobre los que su equipo puede actuar.",
+  "home.hero.eyebrow": "Recorrido guiado para contratistas que venden proyectos",
+  "home.hero.title":
+    "Califique a los contratistas interesados antes de la primera llamada: convierta consultas vagas en briefs de proyecto estructurados.",
   "home.hero.description":
     "Sus clientes no necesitan saber cómo describir un proyecto. Métré les ayuda a construirlo con usted y luego entrega un brief estructurado a su equipo.",
   "home.hero.kicker": "Las respuestas se convierten en un proyecto, no en otro formulario enviado.",
