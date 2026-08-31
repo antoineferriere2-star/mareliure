@@ -267,8 +267,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   Elements: "Elementos",
   "Topics to review with the sales team:": "Temas para revisar con el equipo comercial:",
   Confidence: "Confianza",
-  "One guided Mission in, one structured Project Brief out.":
-    "Una Mission guiada entra, un Project Brief estructurado sale.",
+  "One guided Project Intake in, one structured Project Brief out.":
+    "Un Project Intake guiado entra, un Project Brief estructurado sale.",
   Mission: "Mission",
   Completion: "Completitud",
   "Qualification confidence": "Confianza de calificación",
