@@ -1,7 +1,9 @@
 import { ArrowRight, Linkedin } from "lucide-react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { BriefPreview } from "@/build/pages/public/BriefPreview";
-import { BuildPublicShell, PublicCtaBand, SectionHeader } from "./BuildPublicShell";
+import { CONFIDENCE_LABEL_TEXT } from "@/build/schema/briefLabels";
+import type { ProjectBrief, BriefLine } from "@/build/schema/brief";
+import { BuildPublicShell, SectionHeader } from "./BuildPublicShell";
 import { ProjectCanvas } from "./ProjectCanvas";
 import type { ProjectCanvasItem } from "./ProjectCanvasProjection";
 import { MarketingProjectCanvasDemo } from "./sections/MarketingProjectCanvasDemo";
@@ -13,18 +15,13 @@ import { t } from "@/build/i18n";
 import { publicCopy, usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 
 const STATUS_EXAMPLES = [
-  ["✓", "Confirmed", "The visitor gave a clear answer."],
-  ["~", "Approximate", "Useful, but still visibly approximate."],
-  ["◇", "Derived", "Calculated from the project's known context."],
-  ["○", "To clarify", "Unknown details become the next conversation."],
+  ["✓", "Confirmed", "Provided directly by the customer."],
+  ["~", "Approximate", "Useful, but not exact yet."],
+  ["◇", "Derived", "Calculated from known information."],
+  ["○", "To clarify", "Still needs an answer."],
 ] as const;
 
-const VERTICAL_EXAMPLES = [
-  ["DECK", "dimensions · site · material"],
-  ["KITCHEN", "room · inspiration · constraints"],
-  ["WINDOWS", "openings · measurements · existing frames"],
-  ["CUSTOM EQUIPMENT", "use · configuration · environment"],
-] as const;
+type VerticalKey = "deck" | "kitchen" | "windows" | "equipment";
 
 export function BuildPublicHome() {
   return (
@@ -37,6 +34,7 @@ export function BuildPublicHome() {
 function BuildPublicHomeContent() {
   const { locale } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
+  const [activeVertical, setActiveVertical] = useState<VerticalKey>("deck");
 
   const uncertaintyCanvas: ProjectCanvasItem[] = [
     {
@@ -100,6 +98,128 @@ function BuildPublicHomeContent() {
     },
   ];
 
+  const verticals: Array<{
+    id: VerticalKey;
+    name: string;
+    details: string;
+    items: ProjectCanvasItem[];
+  }> = [
+    {
+      id: "deck",
+      name: "DECK",
+      details: "site · dimensions · material · access",
+      items: [
+        {
+          id: "deck-site",
+          group: copy("Site"),
+          label: copy("Existing"),
+          value: copy("Raised timber deck"),
+          status: "confirmed",
+        },
+        {
+          id: "deck-dimensions",
+          group: copy("Dimensions"),
+          label: copy("Area"),
+          value: copy("Approx. 252 sq ft"),
+          status: "approximate",
+        },
+        {
+          id: "deck-access",
+          group: copy("To clarify"),
+          label: copy("Access"),
+          value: copy("Side-yard access"),
+          status: "clarify",
+        },
+      ],
+    },
+    {
+      id: "kitchen",
+      name: "KITCHEN",
+      details: "room · layout · inspiration · constraints",
+      items: [
+        {
+          id: "kitchen-room",
+          group: copy("Room"),
+          label: copy("Room"),
+          value: copy("Kitchen"),
+          status: "confirmed",
+        },
+        {
+          id: "kitchen-layout",
+          group: copy("Layout"),
+          label: copy("Layout"),
+          value: copy("Galley to review"),
+          status: "approximate",
+        },
+        {
+          id: "kitchen-constraints",
+          group: copy("To clarify"),
+          label: copy("Constraints"),
+          value: copy("Plumbing and wall changes"),
+          status: "clarify",
+        },
+      ],
+    },
+    {
+      id: "windows",
+      name: "WINDOWS",
+      details: "openings · dimensions · existing · finish",
+      items: [
+        {
+          id: "windows-openings",
+          group: copy("Openings"),
+          label: copy("Openings"),
+          value: copy("8 existing windows"),
+          status: "confirmed",
+        },
+        {
+          id: "windows-dimensions",
+          group: copy("Dimensions"),
+          label: copy("Sizes"),
+          value: copy("Mixed sizes"),
+          status: "approximate",
+        },
+        {
+          id: "windows-finish",
+          group: copy("To clarify"),
+          label: copy("Finish"),
+          value: copy("Interior trim condition"),
+          status: "clarify",
+        },
+      ],
+    },
+    {
+      id: "equipment",
+      name: "CUSTOM EQUIPMENT",
+      details: "use · configuration · environment · constraints",
+      items: [
+        {
+          id: "equipment-use",
+          group: copy("Use"),
+          label: copy("Use"),
+          value: copy("Commercial workspace"),
+          status: "confirmed",
+        },
+        {
+          id: "equipment-config",
+          group: copy("Configuration"),
+          label: copy("Configuration"),
+          value: copy("Made-to-order"),
+          status: "approximate",
+        },
+        {
+          id: "equipment-environment",
+          group: copy("To clarify"),
+          label: copy("Environment"),
+          value: copy("Site constraints"),
+          status: "clarify",
+        },
+      ],
+    },
+  ];
+  const currentVertical =
+    verticals.find((vertical) => vertical.id === activeVertical) ?? verticals[0];
+
   return (
     <main className="bg-[#f7f3ec] text-stone-950">
       <section className="overflow-hidden px-4 py-10 sm:px-6 lg:px-8 lg:py-14">
@@ -108,7 +228,7 @@ function BuildPublicHomeContent() {
             <p className="text-sm font-semibold uppercase tracking-[0.14em] text-emerald-700">
               {t(locale, "home.hero.eyebrow")}
             </p>
-            <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-normal text-stone-950 sm:text-5xl lg:text-7xl">
+            <h1 className="mt-4 max-w-3xl text-4xl font-semibold leading-tight tracking-normal text-stone-950 sm:text-5xl lg:text-5xl xl:text-6xl">
               {t(locale, "home.hero.title")}
             </h1>
             <p className="mt-5 max-w-2xl text-[18px] leading-8 text-stone-700">
@@ -145,7 +265,7 @@ function BuildPublicHomeContent() {
             eyebrow={copy("Watch the project take shape")}
             title={copy("The customer answers one thing. The project gets clearer.")}
             description={copy(
-              "This is a front-end demonstration only: no backend, no storage, no AI call. It mirrors how the real intake keeps the Project Canvas visible while answers arrive.",
+              "A single answer lands as project information, while the whole project stays visible.",
             )}
           />
           <div className="mt-10">
@@ -164,12 +284,19 @@ function BuildPublicHomeContent() {
                 "A useful sales conversation needs facts, estimates and open questions to stay visibly different.",
               )}
             />
-            <div className="mt-8 grid gap-5 sm:grid-cols-2">
+            <div className="mt-10 divide-y divide-stone-300 border-y border-stone-300">
               {STATUS_EXAMPLES.map(([mark, title, text]) => (
-                <div key={title} className="border-t border-stone-300 pt-4">
-                  <p className="text-2xl text-stone-950">{mark}</p>
-                  <h3 className="mt-2 text-base font-semibold text-stone-950">{copy(title)}</h3>
-                  <p className="mt-2 text-sm leading-6 text-stone-600">{copy(text)}</p>
+                <div
+                  key={title}
+                  className="grid gap-3 py-5 sm:grid-cols-[88px_minmax(0,0.48fr)_1fr] sm:items-baseline"
+                >
+                  <p className="text-3xl font-semibold text-stone-950" aria-hidden="true">
+                    {mark}
+                  </p>
+                  <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-stone-950">
+                    {copy(title)}
+                  </h3>
+                  <p className="text-[16px] leading-7 text-stone-600">{copy(text)}</p>
                 </div>
               ))}
             </div>
@@ -179,6 +306,8 @@ function BuildPublicHomeContent() {
             eyebrow={copy("Example project")}
             items={uncertaintyCanvas}
             emptyText={copy("Project details will appear here.")}
+            density="marketing"
+            maxItems={4}
           />
         </div>
       </section>
@@ -205,6 +334,8 @@ function BuildPublicHomeContent() {
               items={finalCanvas}
               emptyText={copy("Project details will appear here.")}
               className="text-stone-950"
+              density="marketing"
+              maxItems={4}
             />
             <div
               className="hidden text-center text-4xl text-emerald-300 lg:block"
@@ -213,49 +344,74 @@ function BuildPublicHomeContent() {
               →
             </div>
             <div className="min-w-0">
-              <BriefPreview brief={demoJaneMillerBrief} compact />
+              <SalesBriefSnapshot brief={demoJaneMillerBrief} />
             </div>
           </div>
         </div>
       </section>
 
       <section className="bg-[#fffdf8] px-4 py-16 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[0.7fr_1fr] lg:items-start">
-          <SectionHeader
-            eyebrow={copy("One system. Many projects.")}
-            title={copy(
-              "Built for businesses that need to understand the project before they can sell it.",
-            )}
-            description={copy(
-              "The live public demo is deck-focused today. The system itself is for configurable project businesses where the first conversation depends on context.",
-            )}
-          />
-          <div className="divide-y divide-stone-200 border-y border-stone-200">
-            {VERTICAL_EXAMPLES.map(([name, details]) => (
-              <div
-                key={name}
-                className="grid gap-2 py-5 sm:grid-cols-[minmax(120px,0.32fr)_1fr] sm:items-baseline"
-              >
-                <p className="text-sm font-semibold tracking-[0.18em] text-stone-950">{name}</p>
-                <p className="text-[17px] leading-7 text-stone-600">{details}</p>
-              </div>
-            ))}
+        <div className="mx-auto grid max-w-7xl gap-10 lg:grid-cols-[minmax(0,0.86fr)_minmax(0,1fr)] lg:items-start">
+          <div>
+            <SectionHeader
+              eyebrow={copy("One system. Many projects.")}
+              title={copy("Same principle. Different project.")}
+              description={copy(
+                "The live public demo is deck-focused today. The same Project Canvas model fits businesses where the first conversation depends on context.",
+              )}
+            />
+            <div className="mt-10 divide-y divide-stone-200 border-y border-stone-200">
+              {verticals.map((vertical) => (
+                <button
+                  key={vertical.id}
+                  type="button"
+                  aria-pressed={vertical.id === currentVertical.id}
+                  onClick={() => setActiveVertical(vertical.id)}
+                  className="grid w-full gap-2 py-5 text-left transition hover:text-stone-950 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-emerald-700 sm:grid-cols-[minmax(130px,0.34fr)_1fr] sm:items-baseline"
+                >
+                  <span
+                    className={`text-sm font-semibold tracking-[0.18em] ${
+                      vertical.id === currentVertical.id ? "text-emerald-700" : "text-stone-950"
+                    }`}
+                  >
+                    {vertical.name}
+                  </span>
+                  <span className="text-[17px] leading-7 text-stone-600">{vertical.details}</span>
+                </button>
+              ))}
+            </div>
+            <p className="mt-8 text-2xl font-semibold leading-tight text-stone-950">
+              {copy("Same system. Different project.")}
+            </p>
+          </div>
+          <div className="lg:sticky lg:top-28">
+            <ProjectCanvas
+              key={currentVertical.id}
+              title={copy("Project Canvas")}
+              eyebrow={currentVertical.name}
+              items={currentVertical.items}
+              emptyText={copy("Project details will appear here.")}
+              density="marketing"
+              maxItems={3}
+            />
           </div>
         </div>
       </section>
 
       <section className="px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[1fr_0.8fr] lg:items-end">
+        <div className="mx-auto grid max-w-7xl gap-8 border-y border-stone-300 py-8 lg:grid-cols-[1fr_0.62fr] lg:items-center">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-700">
               {copy("Built from field experience")}
             </p>
-            <h2 className="mt-3 max-w-3xl text-2xl font-semibold tracking-normal text-stone-950 md:text-3xl">
+            <blockquote className="mt-3 max-w-3xl text-2xl font-semibold leading-tight tracking-normal text-stone-950 md:text-3xl">
+              “
               {copy(
-                "Built by a construction entrepreneur who got tired of starting every sales call from scratch.",
+                "Sales calls should start with the project already visible, not with another blank discovery call.",
               )}
-            </h2>
-            <p className="mt-4 max-w-3xl text-[16px] leading-7 text-stone-700">
+              ”
+            </blockquote>
+            <p className="mt-4 max-w-3xl text-[15px] leading-7 text-stone-700">
               {copy(
                 "Métré Build was founded by Antoine Ferrière, a construction entrepreneur with more than 15 years of experience across timber construction, renovation and project delivery.",
               )}
@@ -286,22 +442,184 @@ function BuildPublicHomeContent() {
       </section>
 
       <section className="bg-[#fffdf8] px-4 py-12 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-6 border-y border-stone-200 py-8 md:grid-cols-3">
-          {[
-            ["Playbook", "How Métré knows what to understand."],
-            ["Project Intake", "How the customer builds the project."],
-            ["Project Brief", "What sales receives before the first call."],
-          ].map(([title, text]) => (
-            <div key={title} className="min-w-0">
-              <h3 className="text-lg font-semibold tracking-normal text-stone-950">{title}</h3>
-              <p className="mt-2 text-[15px] leading-6 text-stone-600">{copy(text)}</p>
-            </div>
-          ))}
+        <div className="mx-auto max-w-7xl border-y border-stone-200 py-10">
+          <div className="grid gap-5 md:grid-cols-[1fr_auto_1fr_auto_1fr] md:items-center">
+            {[
+              ["Playbook", "How Métré knows what to understand."],
+              ["Project Intake", "How the customer builds the project."],
+              ["Project Brief", "What sales receives before the first call."],
+            ].map(([title, text], index) => (
+              <div key={title} className="contents">
+                <div className="min-w-0">
+                  <h3 className="text-2xl font-semibold tracking-normal text-stone-950">{title}</h3>
+                  <p className="mt-2 text-[15px] leading-6 text-stone-600">{copy(text)}</p>
+                </div>
+                {index < 2 && (
+                  <div className="text-2xl text-emerald-700 md:text-center" aria-hidden="true">
+                    <span className="md:hidden">↓</span>
+                    <span className="hidden md:inline">→</span>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 
-      <PublicCtaBand />
+      <WebsiteToIntakeCta />
       <FaqSection />
     </main>
+  );
+}
+
+function SalesBriefSnapshot({ brief }: { brief: ProjectBrief }) {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
+  const projectLines = brief.confirmedInformation.slice(0, 2);
+  const dimensionLines = brief.assumptionsAndCalculated.slice(0, 1);
+  const missingLines = brief.missingInformation.slice(0, 2);
+
+  return (
+    <article className="rounded-lg border border-stone-700 bg-white p-5 text-stone-950 sm:p-6 lg:p-7">
+      <p className="text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700">
+        {copy("Project Brief")}
+      </p>
+      <h3 className="mt-2 text-2xl font-semibold tracking-normal text-stone-950">
+        {copy(brief.missionName)}
+      </h3>
+      <div className="mt-5 grid gap-3 border-y border-stone-200 py-4 sm:grid-cols-2">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+            {copy("Confidence")}
+          </p>
+          <p className="mt-1 text-lg font-semibold text-stone-950">
+            {copy(CONFIDENCE_LABEL_TEXT[brief.confidence.label])}
+          </p>
+        </div>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">
+            {copy("View")}
+          </p>
+          <p className="mt-1 text-lg font-semibold text-stone-950">{copy("Sales-ready")}</p>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-5">
+        <BriefSnapshotGroup title={copy("Project")} lines={projectLines} />
+        <BriefSnapshotGroup title={copy("Dimensions")} lines={dimensionLines} />
+        <BriefSnapshotGroup title={copy("Missing")} lines={missingLines} />
+      </div>
+      <div className="mt-6 rounded-lg border border-emerald-200 bg-emerald-50 p-4">
+        <p className="text-xs font-semibold uppercase tracking-[0.12em] text-emerald-700">
+          {copy("Recommended next action")}
+        </p>
+        <p className="mt-2 text-[15px] leading-6 text-emerald-950">
+          {copy(brief.suggestedNextAction.value)}
+        </p>
+      </div>
+      <a
+        href="/example-project-brief"
+        className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-emerald-700 hover:underline"
+      >
+        {copy("View a complete Project Brief")}
+        <ArrowRight className="h-4 w-4" aria-hidden="true" />
+      </a>
+    </article>
+  );
+}
+
+function BriefSnapshotGroup({ title, lines }: { title: string; lines: BriefLine[] }) {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
+
+  return (
+    <section>
+      <h4 className="text-xs font-semibold uppercase tracking-[0.12em] text-stone-500">{title}</h4>
+      {lines.length === 0 ? (
+        <p className="mt-2 text-[15px] leading-6 text-stone-600">{copy("None provided.")}</p>
+      ) : (
+        <dl className="mt-2 space-y-2">
+          {lines.map((line) => (
+            <div key={`${line.label}-${line.value}`} className="text-[15px] leading-6">
+              <dt className="inline font-semibold text-stone-950">{copy(line.label)}: </dt>
+              <dd className="inline text-stone-700">{copy(line.value)}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+    </section>
+  );
+}
+
+function WebsiteToIntakeCta() {
+  const { locale } = usePublicLocale();
+  const copy = (text: string) => publicCopy(locale, text);
+  const ctaItems: ProjectCanvasItem[] = [
+    {
+      id: "cta-business",
+      group: copy("Website"),
+      label: copy("Business"),
+      value: copy("Detected from your site"),
+      status: "derived",
+    },
+    {
+      id: "cta-intake",
+      group: copy("Project Intake"),
+      label: copy("First intake"),
+      value: copy("Prepared for review"),
+      status: "approximate",
+    },
+    {
+      id: "cta-next",
+      group: copy("Next to understand"),
+      label: copy("Sales questions"),
+      value: copy("Scope · site · budget"),
+      status: "neutral",
+    },
+  ];
+
+  return (
+    <section className="bg-stone-950 px-4 py-16 text-white sm:px-6 lg:px-8">
+      <div className="mx-auto grid max-w-7xl gap-8 lg:grid-cols-[minmax(0,0.72fr)_auto_minmax(0,1fr)] lg:items-center">
+        <div>
+          <p className="text-sm font-semibold uppercase tracking-[0.16em] text-emerald-200">
+            {copy("Start from your website")}
+          </p>
+          <h2 className="mt-3 text-3xl font-semibold tracking-normal text-white md:text-5xl">
+            {copy("Your website can become the first project intake.")}
+          </h2>
+          <p className="mt-4 max-w-xl text-[17px] leading-7 text-stone-300">
+            {copy(
+              "Analyze your public page first. Métré will show what it can understand before you create an account.",
+            )}
+          </p>
+          <a href="/free-inquiry-audit" className="mt-7 inline-flex">
+            <Button size="lg">
+              {copy("Analyze my website")}
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            </Button>
+          </a>
+        </div>
+        <div className="hidden text-center text-4xl text-emerald-300 lg:block" aria-hidden="true">
+          →
+        </div>
+        <div className="grid gap-4">
+          <div className="rounded-lg border border-stone-700 bg-stone-900 p-5">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-stone-400">
+              {copy("Your website")}
+            </p>
+            <p className="mt-2 text-2xl font-semibold text-white">yourcompany.com</p>
+          </div>
+          <ProjectCanvas
+            title={copy("Your first Project Intake")}
+            eyebrow="Métré"
+            items={ctaItems}
+            emptyText={copy("Project details will appear here.")}
+            density="marketing"
+            maxItems={3}
+            className="text-stone-950"
+          />
+        </div>
+      </div>
+    </section>
   );
 }
