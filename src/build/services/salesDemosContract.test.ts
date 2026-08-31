@@ -18,6 +18,9 @@ const billing = source("src/build/services/billing.data.functions.ts");
 const portal = source("src/build/services/portal.data.functions.ts");
 const entitlements = source("src/build/billing/entitlements.ts");
 const adminFns = source("src/build/services/admin.data.functions.ts");
+const hermesFns = source("src/build/services/hermesProspectFunnels.data.functions.ts");
+const hermesServer = source("src/build/services/hermesProspectFunnels.server.ts");
+const hermesApi = source("src/routes/api/internal/hermes/prospect-funnels.ts");
 
 /** The body of one exported server function, up to the next export. */
 function serverFn(text: string, name: string): string {
@@ -266,6 +269,7 @@ describe("the Project Briefs list can be worked, not just read", () => {
 describe("prospect funnels are tracked without becoming business activity", () => {
   const funnels = source("src/build/services/prospectFunnels.server.ts");
   const dashboard = source("src/routes/_authenticated/build/dashboard.tsx");
+  const migration = source("supabase/migrations/20260831120000_hermes_prospect_funnel_batch.sql");
 
   it("exposes prospectDemos as its own key on the dashboard stats", () => {
     // Separate from `counts` so no existing reader starts including demos.
@@ -289,7 +293,7 @@ describe("prospect funnels are tracked without becoming business activity", () =
     ]) {
       expect(funnels, `${table} not read`).toContain(`.from("${table}")`);
     }
-    expect(funnels).toContain(".from(\"build_missions\")");
+    expect(funnels).toContain('.from("build_missions")');
   });
 
   it("scopes every funnel to the internal workspaces handed to it", () => {
@@ -308,6 +312,7 @@ describe("prospect funnels are tracked without becoming business activity", () =
     expect(funnels).toContain("lastActivityAt");
     expect(funnels).toContain("function funnelIssue");
     expect(funnels).toContain("Draft generation interrupted");
+    expect(funnels).toContain("prospect_last_error");
     expect(dashboard).toContain("f.issue");
     expect(dashboard).toContain("Last activity");
   });
@@ -321,6 +326,36 @@ describe("prospect funnels are tracked without becoming business activity", () =
     expect(funnels).toContain("items,");
     expect(funnels).toContain("recent: items.slice(0, 10)");
     expect(dashboard).toContain("Showing {visible.length} of {demos.items.length}");
+  });
+
+  it("creates and retries Hermes funnels without Browserbase", () => {
+    expect(hermesFns).toContain("createHermesProspectFunnels");
+    expect(hermesFns).toContain("retryHermesProspectFunnel");
+    expect(hermesServer).toContain("runHermesProspectFunnelBatch");
+    expect(hermesServer).toContain("fetchSitePublicHtml");
+    expect(hermesServer).toContain("runDeckSiteAnalysis");
+    expect(hermesServer).toContain("runPlaybookDraftGeneration");
+    expect(hermesServer).toContain('sb.rpc("publish_workspace_onboarding"');
+    expect(hermesServer).not.toContain("Browserbase");
+    expect(dashboard).toContain("Create + publish");
+    expect(dashboard).toContain("Retry");
+    expect(dashboard).toContain("Copy link");
+  });
+
+  it("keeps failed Hermes rows visible without blocking the next prospect", () => {
+    expect(migration).toContain("prospect_last_error");
+    expect(migration).toContain("status NOT IN ('published', 'failed')");
+    expect(migration).toContain("build_workspace_onboarding_prospect_request_uidx");
+    expect(hermesServer).toContain('status: "failed"');
+    expect(hermesServer).toContain("retryHermesProspectFunnelById");
+  });
+
+  it("exposes a token-gated internal API for Hermes agents", () => {
+    expect(hermesApi).toContain('"/api/internal/hermes/prospect-funnels"');
+    expect(hermesApi).toContain("HERMES_PROSPECT_FUNNEL_TOKEN");
+    expect(hermesApi).toContain("HERMES_PROSPECT_FUNNEL_USER_ID");
+    expect(hermesApi).toContain("Authorization");
+    expect(hermesApi).toContain("runHermesProspectFunnelBatch");
   });
 
   it("keeps the panel out of the customer Project Briefs list", () => {

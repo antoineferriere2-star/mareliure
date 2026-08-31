@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { useSuspenseQuery, queryOptions } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useSuspenseQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getBuildDashboardStats } from "@/build/services/admin.data.functions";
 import { callWithFallback } from "@/build/services/buildAdminClient";
+import {
+  createHermesProspectFunnels,
+  retryHermesProspectFunnel,
+} from "@/build/services/hermesProspectFunnels.data.functions";
 
 const dashboardKey = ["build-admin", "dashboard"] as const;
 
@@ -42,7 +46,6 @@ const emptyStats: Stats = {
     recent: [],
   },
 };
-
 
 export const Route = createFileRoute("/_authenticated/build/dashboard")({
   ssr: false,
@@ -138,7 +141,6 @@ function DashboardPage() {
 
       <ProspectFunnelsPanel demos={stats.prospectDemos} />
 
-
       <div className="grid gap-6 lg:grid-cols-2">
         <section className="rounded-lg border border-border bg-card p-4">
           <h2 className="text-sm font-semibold text-foreground">Latest Project Briefs</h2>
@@ -211,8 +213,62 @@ type ProspectFilter = (typeof PROSPECT_FILTERS)[number];
 
 function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
   const c = demos.totals;
+  const queryClient = useQueryClient();
+  const createFunnels = useServerFn(createHermesProspectFunnels);
+  const retryFunnel = useServerFn(retryHermesProspectFunnel);
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<ProspectFilter>("all");
+  const [companyName, setCompanyName] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [product, setProduct] = useState("");
+  const [campaignId, setCampaignId] = useState("hermes-outbound");
+  const [batchText, setBatchText] = useState("");
+  const [notice, setNotice] = useState<string | null>(null);
+
+  const createMutation = useMutation({
+    mutationFn: async () => {
+      const prospects = parseHermesProspects({
+        companyName,
+        websiteUrl,
+        product,
+        campaignId,
+        batchText,
+      });
+      if (prospects.length === 0) {
+        throw new Error("Add at least one prospect website.");
+      }
+      return createFunnels({ data: { prospects } });
+    },
+    onSuccess: async (result) => {
+      const published = result.results.filter((r) => r.status === "published").length;
+      const existing = result.results.filter((r) => r.status === "existing").length;
+      const failed = result.results.filter((r) => r.status === "failed").length;
+      setNotice(`${published} published · ${existing} existing · ${failed} failed`);
+      setCompanyName("");
+      setWebsiteUrl("");
+      setProduct("");
+      setBatchText("");
+      await queryClient.invalidateQueries({ queryKey: dashboardKey });
+    },
+    onError: (error) => {
+      setNotice(error instanceof Error ? error.message : "Unable to create prospect funnel.");
+    },
+  });
+
+  const retryMutation = useMutation({
+    mutationFn: (id: string) => retryFunnel({ data: { id } }),
+    onSuccess: async (result) => {
+      setNotice(
+        result.status === "published"
+          ? `${result.prospectName} published`
+          : `${result.prospectName}: ${result.error ?? result.status}`,
+      );
+      await queryClient.invalidateQueries({ queryKey: dashboardKey });
+    },
+    onError: (error) => {
+      setNotice(error instanceof Error ? error.message : "Unable to retry prospect funnel.");
+    },
+  });
 
   const metrics = [
     { label: "Funnels", value: c.funnels, sub: `${c.ready} ready · ${c.sent} sent` },
@@ -287,6 +343,66 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
         </span>
       </div>
 
+      <form
+        className="mt-4 rounded-md border border-border/70 bg-background p-3"
+        onSubmit={(event) => {
+          event.preventDefault();
+          setNotice(null);
+          createMutation.mutate();
+        }}
+      >
+        <div className="grid gap-2 md:grid-cols-[1fr_1.2fr_0.8fr_0.8fr_auto]">
+          <input
+            value={companyName}
+            onChange={(e) => setCompanyName(e.target.value)}
+            placeholder="Company"
+            className="rounded-md border border-input bg-card px-3 py-2 text-xs"
+            aria-label="Prospect company name"
+          />
+          <input
+            value={websiteUrl}
+            onChange={(e) => setWebsiteUrl(e.target.value)}
+            placeholder="https://prospect.com"
+            className="rounded-md border border-input bg-card px-3 py-2 text-xs"
+            aria-label="Prospect website URL"
+          />
+          <input
+            value={product}
+            onChange={(e) => setProduct(e.target.value)}
+            placeholder="Product, optional"
+            className="rounded-md border border-input bg-card px-3 py-2 text-xs"
+            aria-label="Prospect product"
+          />
+          <input
+            value={campaignId}
+            onChange={(e) => setCampaignId(e.target.value)}
+            placeholder="Campaign"
+            className="rounded-md border border-input bg-card px-3 py-2 text-xs"
+            aria-label="Prospect campaign"
+          />
+          <button
+            type="submit"
+            disabled={createMutation.isPending}
+            className="rounded-md border border-foreground bg-foreground px-3 py-2 text-xs font-medium text-background disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {createMutation.isPending ? "Creating…" : "Create + publish"}
+          </button>
+        </div>
+        <textarea
+          value={batchText}
+          onChange={(e) => setBatchText(e.target.value)}
+          placeholder="Batch import: Company, Website, Product, Campaign — one prospect per line"
+          className="mt-2 min-h-20 w-full rounded-md border border-input bg-card px-3 py-2 text-xs"
+          aria-label="Hermes prospect batch import"
+        />
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-[11px] text-muted-foreground">
+          <span>
+            Hermes can use the internal API too: POST /api/internal/hermes/prospect-funnels
+          </span>
+          {notice ? <span className="font-medium text-foreground">{notice}</span> : null}
+        </div>
+      </form>
+
       {demos.items.length === 0 ? (
         <p className="mt-4 text-xs text-muted-foreground">No prospect funnel yet.</p>
       ) : visible.length === 0 ? (
@@ -302,7 +418,9 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
                 <th className="pb-2 pr-3 font-medium">Tunnel</th>
                 <th className="pb-2 pr-3 font-medium">Funnel</th>
                 <th className="pb-2 pr-3 font-medium">Last activity</th>
-                <th className="pb-2 font-medium">Created</th>
+                <th className="pb-2 pr-3 font-medium">Created</th>
+                <th className="pb-2 pr-3 font-medium">Campaign</th>
+                <th className="pb-2 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -371,6 +489,39 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
                       <div className="text-[11px]">{f.createdByEmail}</div>
                     ) : null}
                   </td>
+                  <td className="py-2 pr-3 text-muted-foreground">
+                    {f.campaignId ?? "—"}
+                    {f.lastErrorAt ? (
+                      <div className="text-[11px]">
+                        failed: {new Date(f.lastErrorAt).toLocaleString()}
+                      </div>
+                    ) : null}
+                  </td>
+                  <td className="py-2">
+                    <div className="flex flex-wrap gap-1">
+                      {f.publicPath ? (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (f.publicPath) copyPublicPath(f.publicPath);
+                          }}
+                          className="rounded-md border border-input px-2 py-1 text-[11px] text-foreground hover:bg-accent"
+                        >
+                          Copy link
+                        </button>
+                      ) : null}
+                      {f.issue ? (
+                        <button
+                          type="button"
+                          onClick={() => retryMutation.mutate(f.id)}
+                          disabled={retryMutation.isPending}
+                          className="rounded-md border border-amber-300 bg-amber-50 px-2 py-1 text-[11px] text-amber-900 hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                          Retry
+                        </button>
+                      ) : null}
+                    </div>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -379,4 +530,60 @@ function ProspectFunnelsPanel({ demos }: { demos: Stats["prospectDemos"] }) {
       )}
     </section>
   );
+}
+
+function newProspectRequestId(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) return crypto.randomUUID();
+  return `hermes-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function splitProspectLine(line: string): string[] {
+  if (line.includes("\t")) return line.split("\t").map((part) => part.trim());
+  if (line.includes(";")) return line.split(";").map((part) => part.trim());
+  return line.split(",").map((part) => part.trim());
+}
+
+function parseHermesProspects(fields: {
+  companyName: string;
+  websiteUrl: string;
+  product: string;
+  campaignId: string;
+  batchText: string;
+}) {
+  const campaignId = fields.campaignId.trim() || null;
+  const singleWebsite = fields.websiteUrl.trim();
+  if (!fields.batchText.trim()) {
+    return singleWebsite
+      ? [
+          {
+            companyName: fields.companyName.trim() || null,
+            websiteUrl: singleWebsite,
+            product: fields.product.trim() || null,
+            campaignId,
+            requestId: newProspectRequestId(),
+          },
+        ]
+      : [];
+  }
+
+  return fields.batchText
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [companyName, websiteUrl, product, lineCampaign] = splitProspectLine(line);
+      return {
+        companyName: companyName || null,
+        websiteUrl: websiteUrl ?? "",
+        product: product || fields.product.trim() || null,
+        campaignId: lineCampaign || campaignId,
+        requestId: newProspectRequestId(),
+      };
+    })
+    .filter((prospect) => prospect.websiteUrl);
+}
+
+function copyPublicPath(path: string) {
+  const origin = typeof window !== "undefined" ? window.location.origin : "https://metre-pro.com";
+  void navigator.clipboard?.writeText(`${origin}${path}`);
 }

@@ -33,6 +33,11 @@ export type ProspectFunnelRow = {
   status: string;
   /** Where the setup wizard stands: started / analyzed / confirmed / published. */
   setupStatus: string;
+  campaignId: string | null;
+  requestId: string | null;
+  lastStep: string | null;
+  lastError: string | null;
+  lastErrorAt: string | null;
   detectedBusinessType: string | null;
   confirmedProduct: string | null;
   missionId: string | null;
@@ -113,8 +118,14 @@ function funnelIssue(f: {
   hasConfirmedProduct: boolean;
   hasDraft: boolean;
   missionId: string | null;
+  lastStep: string | null;
+  lastError: string | null;
 }): string | null {
   if (f.setupStatus === "published" && f.missionId) return null;
+  if (f.setupStatus === "failed") {
+    const step = f.lastStep ? ` at ${f.lastStep}` : "";
+    return f.lastError ? `Failed${step}: ${f.lastError}` : `Failed${step}`;
+  }
   if (!f.hasAnalysis) return "Site analysis never completed — resumes at Your website";
   if (!f.hasConfirmedProduct) return "Product not confirmed yet — resumes at Your product";
   if (!f.hasDraft) return "Draft generation interrupted — resumes at Your product";
@@ -135,7 +146,7 @@ export async function readProspectDemos(
   const { data: onboardings } = await sb
     .from("build_workspace_onboarding")
     .select(
-      "id, workspace_id, mission_id, created_by, status, prospect_company_name, prospect_status, confirmed_business_type, confirmed_product, site_url, final_url, created_at, updated_at, analyzed_at, playbook_id",
+      "id, workspace_id, mission_id, created_by, status, prospect_company_name, prospect_status, prospect_campaign_id, prospect_request_id, prospect_last_step, prospect_last_error, prospect_last_error_at, confirmed_business_type, confirmed_product, site_url, final_url, created_at, updated_at, analyzed_at, playbook_id",
     )
     .in("workspace_id", workspaceIds)
     .order("created_at", { ascending: false });
@@ -170,7 +181,7 @@ export async function readProspectDemos(
   ]);
 
   const missions = new Map(
-    (missionsRes.data ?? []).map((m: Record<string, unknown>) => [m['id'] as string, m]),
+    (missionsRes.data ?? []).map((m: Record<string, unknown>) => [m["id"] as string, m]),
   );
 
   const emailByUser = new Map<string, string>();
@@ -203,8 +214,8 @@ export async function readProspectDemos(
 
   const items: ProspectFunnelRow[] = rows.map((r) => {
     const mission = r.mission_id ? missions.get(r.mission_id) : undefined;
-    const publicToken = (mission?.['public_token'] as string | null) ?? null;
-    const revoked = Boolean(mission?.['public_token_revoked_at']);
+    const publicToken = (mission?.["public_token"] as string | null) ?? null;
+    const revoked = Boolean(mission?.["public_token_revoked_at"]);
     const view = publicToken ? viewsByToken.get(publicToken) : undefined;
     const session = r.mission_id ? sessionsByMission.get(r.mission_id) : undefined;
     const briefs = r.mission_id ? (briefsByMission.get(r.mission_id) ?? 0) : 0;
@@ -222,11 +233,16 @@ export async function readProspectDemos(
       websiteUrl: r.final_url ?? r.site_url ?? null,
       status: r.prospect_status,
       setupStatus: r.status,
+      campaignId: r.prospect_campaign_id ?? null,
+      requestId: r.prospect_request_id ?? null,
+      lastStep: r.prospect_last_step ?? null,
+      lastError: r.prospect_last_error ?? null,
+      lastErrorAt: r.prospect_last_error_at ?? null,
       detectedBusinessType: r.confirmed_business_type ?? null,
       confirmedProduct: r.confirmed_product ?? null,
       missionId: r.mission_id ?? null,
-      missionName: (mission?.['name'] as string | null) ?? null,
-      missionStatus: (mission?.['status'] as string | null) ?? null,
+      missionName: (mission?.["name"] as string | null) ?? null,
+      missionStatus: (mission?.["status"] as string | null) ?? null,
       publicToken,
       publicPath: publicToken ? `/m/${publicToken}` : null,
       publicLinkActive: Boolean(publicToken) && !revoked,
@@ -243,6 +259,8 @@ export async function readProspectDemos(
         hasConfirmedProduct: Boolean(r.confirmed_product),
         hasDraft,
         missionId: r.mission_id ?? null,
+        lastStep: r.prospect_last_step ?? null,
+        lastError: r.prospect_last_error ?? null,
       }),
       funnel: {
         viewed: view?.count ?? 0,
