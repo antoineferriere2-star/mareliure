@@ -4,8 +4,9 @@ export const enUSMessages = {
   "marketing.hero.title": "Turn vague website inquiries into sales-ready project briefs.",
   "marketing.hero.subtitle":
     "Métré Build guides customers through project scope, photos, dimensions, constraints, budget and timing.",
-  "home.hero.eyebrow": "Guided project intake for configurable project businesses",
-  "home.hero.title": "Turn vague inquiries into projects your team can act on.",
+  "home.hero.eyebrow": "Guided project intake for project-based contractors",
+  "home.hero.title":
+    "Qualify contractor leads before the first call — turn vague inquiries into structured project briefs.",
   "home.hero.description":
     "Your customers don't need to know how to describe a project. Métré helps them build it with you, then gives your team the structured brief.",
   "home.hero.kicker": "Answers become a project, not another form submission.",
