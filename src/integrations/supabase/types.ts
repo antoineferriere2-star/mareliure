@@ -661,7 +661,12 @@ export type Database = {
           last_generate_request_id: string | null
           mission_id: string | null
           playbook_id: string | null
+          prospect_campaign_id: string | null
           prospect_company_name: string | null
+          prospect_last_error: string | null
+          prospect_last_error_at: string | null
+          prospect_last_step: string | null
+          prospect_request_id: string | null
           prospect_status: string
           site_url: string | null
           status: string
@@ -683,7 +688,12 @@ export type Database = {
           last_generate_request_id?: string | null
           mission_id?: string | null
           playbook_id?: string | null
+          prospect_campaign_id?: string | null
           prospect_company_name?: string | null
+          prospect_last_error?: string | null
+          prospect_last_error_at?: string | null
+          prospect_last_step?: string | null
+          prospect_request_id?: string | null
           prospect_status?: string
           site_url?: string | null
           status?: string
@@ -705,7 +715,12 @@ export type Database = {
           last_generate_request_id?: string | null
           mission_id?: string | null
           playbook_id?: string | null
+          prospect_campaign_id?: string | null
           prospect_company_name?: string | null
+          prospect_last_error?: string | null
+          prospect_last_error_at?: string | null
+          prospect_last_step?: string | null
+          prospect_request_id?: string | null
           prospect_status?: string
           site_url?: string | null
           status?: string
