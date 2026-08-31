@@ -3,9 +3,9 @@ import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
 import { jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
 
-const title = "Turn Vague Inquiries Into Project Briefs — Métré Build";
+const title = "Qualify Contractor Leads Before the First Call — Métré Build";
 const description =
-  "Métré Build helps website visitors turn incomplete ideas into structured projects, then gives sales teams a Project Brief before the first call.";
+  "Contractors lose the first call rediscovering the project. A guided intake collects scope, dimensions, photos and budget first. See a real brief.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
