@@ -82,10 +82,12 @@ describe("public marketing surface - marketing proposition", () => {
 
     expect(homeSource).toContain('t(locale, "home.hero.eyebrow")');
     expect(homeSource).toContain('t(locale, "home.hero.title")');
-    expect(messagesSource).toContain("Guided project intake for configurable project businesses");
-    // Guard the project-canvas positioning so the homepage does not drift
-    // back toward generic lead-capture language.
-    expect(messagesSource).toContain("Turn vague inquiries into projects your team can act on.");
+    expect(messagesSource).toContain("Guided project intake for project-based contractors");
+    // Guard the contractor positioning so the homepage keeps naming its
+    // target audience instead of drifting back to generic language.
+    expect(messagesSource).toContain(
+      "Qualify contractor leads before the first call — turn vague inquiries into structured project briefs.",
+    );
     expect(messagesSource).toContain("Answers become a project, not another form submission.");
   });
 
