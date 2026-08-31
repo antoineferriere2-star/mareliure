@@ -437,6 +437,39 @@ async function confirmStep(sb: Supa, row: NonNullable<OnboardingRow>, input: Her
   return updated;
 }
 
+/**
+ * Draft generation runs through an AI Gateway, so a share of its failures are
+ * weather, not verdicts: rate limits, timeouts, gateway hiccups, a model
+ * momentarily unavailable. Those must not burn a prospect — Hermes retries them
+ * before classifying the funnel as failed.
+ */
+export const TRANSIENT_AI_ERROR_PATTERNS = [
+  /rate limit/i,
+  /rate_limit/i,
+  /too many requests/i,
+  /\b429\b/,
+  /timed? ?out/i,
+  /timeout/i,
+  /etimedout/i,
+  /econnreset/i,
+  /gateway/i,
+  /bad gateway/i,
+  /\b50[0234]\b/,
+  /temporarily/i,
+  /unavailable/i,
+  /overloaded/i,
+  /capacity/i,
+  /try again/i,
+  /already running/i,
+] as const;
+
+export function isTransientAiError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  return TRANSIENT_AI_ERROR_PATTERNS.some((pattern) => pattern.test(message));
+}
+
+export const DRAFT_GENERATION_ATTEMPTS = 3;
+
 async function generateStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: string) {
   if (row.playbook_id) return row;
   await markStep(sb, row.id, "generate", "confirmed");
@@ -444,6 +477,22 @@ async function generateStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: s
     throw new Error("Confirm the product before generating the draft.");
   }
 
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= DRAFT_GENERATION_ATTEMPTS; attempt += 1) {
+    try {
+      return await generateDraftAttempt(sb, row, userId);
+    } catch (err) {
+      lastError = err;
+      if (!isTransientAiError(err) || attempt === DRAFT_GENERATION_ATTEMPTS) throw err;
+    }
+  }
+  throw lastError instanceof Error ? lastError : new Error("Draft generation did not complete.");
+}
+
+async function generateDraftAttempt(sb: Supa, row: NonNullable<OnboardingRow>, userId: string) {
+  if (!row.confirmed_business_type || !row.confirmed_product) {
+    throw new Error("Confirm the product before generating the draft.");
+  }
   const startedAt = Date.now();
   const requestId = aiRequestId("generate");
   try {
@@ -455,6 +504,7 @@ async function generateStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: s
       row.confirmed_business_type,
       row.confirmed_product,
     );
+
     const latencyMs = Date.now() - startedAt;
     if (result.status === "error" || !result.data) {
       await logAiRun(sb, {
