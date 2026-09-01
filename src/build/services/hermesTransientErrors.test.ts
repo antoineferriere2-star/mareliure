@@ -65,3 +65,20 @@ describe("Hermes internal API surface", () => {
     expect(source).toContain("retry the generate step");
   });
 });
+
+describe("Hermes stale funnel release", () => {
+  it("waits before releasing, then releases at the funnel's own last step", async () => {
+    const { isStaleInFlight, staleStep, STALE_IN_FLIGHT_MINUTES } = await import(
+      "./hermesProspectFunnels.server"
+    );
+    const now = new Date("2026-09-01T16:00:00Z");
+    const fresh = new Date(now.getTime() - 60_000).toISOString();
+    const old = new Date(now.getTime() - (STALE_IN_FLIGHT_MINUTES + 5) * 60_000).toISOString();
+    expect(isStaleInFlight(fresh, now)).toBe(false);
+    expect(isStaleInFlight(old, now)).toBe(true);
+    expect(staleStep({ playbook_id: "p" })).toBe("publish");
+    expect(staleStep({ confirmed_product: "Deck" })).toBe("generate");
+    expect(staleStep({ analyzed_at: old })).toBe("confirm");
+    expect(staleStep({})).toBe("analyze");
+  });
+});
