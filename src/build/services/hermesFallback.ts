@@ -40,6 +40,13 @@ export const AI_UNAVAILABLE_PATTERNS = [
   /fetch failed/i,
 ] as const;
 
+export const HERMES_LOCAL_LOVABLE_API_KEY_PLACEHOLDER = "local-dev-placeholder-not-a-real-key";
+
+export function hasUsableHermesAiKey(value = process.env.LOVABLE_API_KEY): boolean {
+  const key = (value ?? "").trim();
+  return Boolean(key && key !== HERMES_LOCAL_LOVABLE_API_KEY_PLACEHOLDER);
+}
+
 export function isAiUnavailableError(error: unknown): boolean {
   const message = error instanceof Error ? error.message : String(error ?? "");
   if (!message.trim()) return false;
@@ -86,7 +93,11 @@ export function buildFallbackSiteAnalysis(
 
   const facts: DeckSiteAnalysisOutput["facts"] = [];
   if (site.title) {
-    facts.push({ claim: `Website title: ${site.title}`, status: "assumed", sourceQuote: site.title });
+    facts.push({
+      claim: `Website title: ${site.title}`,
+      status: "assumed",
+      sourceQuote: site.title,
+    });
   }
   if (site.metaDescription) {
     facts.push({
@@ -151,7 +162,12 @@ export function buildFallbackPlaybookDraft(businessType: string, product: string
             label: "What is on the site today?",
             type: "single_choice",
             required: false,
-            options: ["Nothing yet", "Existing structure to keep", "Existing structure to remove", "Not sure"],
+            options: [
+              "Nothing yet",
+              "Existing structure to keep",
+              "Existing structure to remove",
+              "Not sure",
+            ],
           },
           { label: "Photos of the area", type: "photo", required: false },
         ],
@@ -176,13 +192,24 @@ export function buildFallbackPlaybookDraft(businessType: string, product: string
             label: "Budget range",
             type: "budget",
             required: false,
-            options: ["Under $5,000", "$5,000-$15,000", "$15,000-$40,000", "$40,000+", "Not sure yet"],
+            options: [
+              "Under $5,000",
+              "$5,000-$15,000",
+              "$15,000-$40,000",
+              "$40,000+",
+              "Not sure yet",
+            ],
           },
           {
             label: "When would you like to start?",
             type: "timeline",
             required: false,
-            options: ["As soon as possible", "Within 3 months", "In 3 to 6 months", "Just exploring"],
+            options: [
+              "As soon as possible",
+              "Within 3 months",
+              "In 3 to 6 months",
+              "Just exploring",
+            ],
           },
         ],
       },

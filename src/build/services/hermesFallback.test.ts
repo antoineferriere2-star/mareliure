@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   buildFallbackPlaybookDraft,
   buildFallbackSiteAnalysis,
+  hasUsableHermesAiKey,
   isAiUnavailableError,
 } from "./hermesFallback";
 import { expandPlaybookDraft } from "@/build/onboarding/expandPlaybookDraft";
@@ -10,6 +11,13 @@ import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import { validateUsMarketDraft } from "@/build/ai/playbookDraftGeneration";
 
 describe("AI availability detection", () => {
+  it("treats the local Lovable placeholder as no usable gateway key", () => {
+    expect(hasUsableHermesAiKey(undefined)).toBe(false);
+    expect(hasUsableHermesAiKey("")).toBe(false);
+    expect(hasUsableHermesAiKey("local-dev-placeholder-not-a-real-key")).toBe(false);
+    expect(hasUsableHermesAiKey("lovable-real-key")).toBe(true);
+  });
+
   it("treats missing credentials and gateway weather as unavailable", () => {
     for (const message of [
       "Missing LOVABLE_API_KEY. Lovable AI Gateway is required.",
@@ -34,7 +42,11 @@ describe("AI availability detection", () => {
 describe("deterministic site analysis", () => {
   it("uses the campaign vertical and page signals", () => {
     const analysis = buildFallbackSiteAnalysis(
-      { title: "Spiro Custom Pools", metaDescription: null, visibleText: "We build patios and decks." },
+      {
+        title: "Spiro Custom Pools",
+        metaDescription: null,
+        visibleText: "We build patios and decks.",
+      },
       { companyName: "Spiro", vertical: "residential pools", businessType: null },
     );
     expect(analysis.businessType).toBe("Residential pools");

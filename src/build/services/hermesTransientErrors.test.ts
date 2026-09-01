@@ -1,8 +1,5 @@
 import { describe, expect, it } from "vitest";
-import {
-  DRAFT_GENERATION_ATTEMPTS,
-  isTransientAiError,
-} from "./hermesProspectFunnels.server";
+import { DRAFT_GENERATION_ATTEMPTS, isTransientAiError } from "./hermesProspectFunnels.server";
 
 describe("Hermes transient draft-generation errors", () => {
   it("retries a few times before giving up", () => {
@@ -36,9 +33,8 @@ describe("Hermes transient draft-generation errors", () => {
 
 describe("Hermes draft-generation backoff", () => {
   it("waits longer between each retry instead of hammering the gateway", async () => {
-    const { DRAFT_RETRY_BACKOFF_MS, draftRetryDelayMs } = await import(
-      "./hermesProspectFunnels.server"
-    );
+    const { DRAFT_RETRY_BACKOFF_MS, draftRetryDelayMs } =
+      await import("./hermesProspectFunnels.server");
     expect(DRAFT_RETRY_BACKOFF_MS.length).toBe(2);
     expect(draftRetryDelayMs(1)).toBeGreaterThan(0);
     expect(draftRetryDelayMs(2)).toBeGreaterThan(draftRetryDelayMs(1));
@@ -68,9 +64,8 @@ describe("Hermes internal API surface", () => {
 
 describe("Hermes stale funnel release", () => {
   it("waits before releasing, then releases at the funnel's own last step", async () => {
-    const { isStaleInFlight, staleStep, STALE_IN_FLIGHT_MINUTES } = await import(
-      "./hermesProspectFunnels.server"
-    );
+    const { isStaleInFlight, staleStep, STALE_IN_FLIGHT_MINUTES } =
+      await import("./hermesProspectFunnels.server");
     const now = new Date("2026-09-01T16:00:00Z");
     const fresh = new Date(now.getTime() - 60_000).toISOString();
     const old = new Date(now.getTime() - (STALE_IN_FLIGHT_MINUTES + 5) * 60_000).toISOString();
