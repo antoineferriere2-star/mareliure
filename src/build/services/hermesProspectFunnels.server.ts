@@ -104,6 +104,25 @@ async function internalWorkspace(sb: Supa, workspaceId?: string | null): Promise
  */
 export const STALE_IN_FLIGHT_MINUTES = 30;
 
+/**
+ * Where an abandoned funnel actually stopped, read from what it managed to
+ * write. A human wizard never sets `prospect_last_step`, so without this the
+ * admin would be told to retry from the very beginning and lose the analysis
+ * and draft already paid for.
+ */
+export function staleStep(row: {
+  prospect_last_step?: string | null;
+  analyzed_at?: string | null;
+  confirmed_product?: string | null;
+  playbook_id?: string | null;
+}): HermesFunnelStep {
+  if (row.prospect_last_step) return row.prospect_last_step as HermesFunnelStep;
+  if (row.playbook_id) return "publish";
+  if (row.confirmed_product) return "generate";
+  if (row.analyzed_at) return "confirm";
+  return "analyze";
+}
+
 export function isStaleInFlight(updatedAt: string | null | undefined, now = new Date()): boolean {
   if (!updatedAt) return true;
   const age = now.getTime() - new Date(updatedAt).getTime();
@@ -113,7 +132,9 @@ export function isStaleInFlight(updatedAt: string | null | undefined, now = new 
 async function activeInFlightRow(sb: Supa, workspaceId: string, exceptId?: string | null) {
   let query = sb
     .from("build_workspace_onboarding")
-    .select("id, prospect_company_name, site_url, final_url, updated_at, prospect_last_step")
+    .select(
+      "id, prospect_company_name, site_url, final_url, updated_at, prospect_last_step, analyzed_at, confirmed_product, playbook_id",
+    )
 
     .eq("workspace_id", workspaceId)
     .neq("status", "published")
@@ -320,7 +341,7 @@ async function createRow(
       await markFailed(
         sb,
         blocker.id,
-        (blocker.prospect_last_step as HermesFunnelStep) ?? "create",
+        staleStep(blocker),
         new Error(
           `Funnel abandoned for more than ${STALE_IN_FLIGHT_MINUTES} minutes — released so the next prospect could run. Retry it from here.`,
         ),
