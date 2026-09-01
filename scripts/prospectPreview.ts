@@ -25,9 +25,14 @@
 import { mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { chromium, type Browser } from "@playwright/test";
+import {
+  PREVIEW_HEIGHT,
+  PREVIEW_WIDTH,
+  renderPreviewHtml,
+} from "../src/build/prospect-preview/template";
 
-const WIDTH = 1600;
-const HEIGHT = 900;
+const WIDTH = PREVIEW_WIDTH;
+const HEIGHT = PREVIEW_HEIGHT;
 const SITE_VIEWPORT = { width: 1280, height: 900 };
 
 interface Options {
@@ -35,8 +40,10 @@ interface Options {
   url: string;
   vertical: string;
   primaryColor: string;
+  intakeTitle?: string;
   out: string;
 }
+
 
 function parseArgs(argv: string[]): Options {
   const flags = new Map<string, string>();
@@ -72,6 +79,7 @@ function parseArgs(argv: string[]): Options {
     url,
     vertical: flags.get("vertical")?.trim() || "project work",
     primaryColor,
+    intakeTitle: flags.get("intake-title")?.trim() || undefined,
     out: flags.get("out")?.trim() || `tmp/prospect-previews/${slug(company)}.png`,
   };
 }
@@ -83,14 +91,6 @@ function slug(text: string): string {
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "") || "prospect"
   );
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
 }
 
 /** Read-only screenshot of the prospect site. Returns null on any failure. */
@@ -118,94 +118,6 @@ async function captureSite(browser: Browser, url: string): Promise<string | null
   }
 }
 
-function composition(options: Options, siteImage: string | null): string {
-  const left = siteImage
-    ? `<img src="${siteImage}" alt="" />`
-    : `<div class="placeholder">
-         <p class="placeholder-title">${escapeHtml(options.company)}</p>
-         <p class="placeholder-url">${escapeHtml(options.url)}</p>
-         <p class="placeholder-note">Website preview unavailable</p>
-       </div>`;
-
-  return `<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <style>
-      * { box-sizing: border-box; margin: 0; }
-      body {
-        width: ${WIDTH}px; height: ${HEIGHT}px; display: grid;
-        grid-template-columns: 1fr 1fr;
-        font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-        background: #f8fafc; color: #0f172a;
-      }
-      .panel { padding: 32px; display: flex; flex-direction: column; gap: 16px; }
-      .panel-label {
-        font-size: 12px; font-weight: 700; letter-spacing: 0.14em;
-        text-transform: uppercase; color: #64748b;
-      }
-      .frame {
-        flex: 1; overflow: hidden; border-radius: 12px; border: 1px solid #e2e8f0;
-        background: #fff; box-shadow: 0 12px 30px rgba(15, 23, 42, 0.1);
-      }
-      .frame img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
-      .placeholder {
-        height: 100%; display: flex; flex-direction: column; justify-content: center;
-        align-items: center; gap: 10px; background: #f1f5f9; text-align: center; padding: 24px;
-      }
-      .placeholder-title { font-size: 26px; font-weight: 700; }
-      .placeholder-url { font-size: 15px; color: #475569; }
-      .placeholder-note { font-size: 13px; color: #94a3b8; }
-      .right { background: ${options.primaryColor}; color: #fff; }
-      .right .panel-label { color: rgba(255, 255, 255, 0.72); }
-      .intake {
-        flex: 1; border-radius: 12px; background: #fff; color: #0f172a; padding: 28px;
-        display: flex; flex-direction: column; gap: 16px;
-        box-shadow: 0 12px 30px rgba(15, 23, 42, 0.24);
-      }
-      .intake h1 { font-size: 24px; line-height: 1.2; }
-      .intake p.lede { font-size: 15px; color: #475569; }
-      .step {
-        border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px;
-        display: flex; align-items: center; gap: 12px; font-size: 14px;
-      }
-      .step span.n {
-        width: 24px; height: 24px; flex: none; border-radius: 999px;
-        background: ${options.primaryColor}; color: #fff; font-size: 12px; font-weight: 700;
-        display: flex; align-items: center; justify-content: center;
-      }
-      .cta {
-        margin-top: auto; border-radius: 10px; padding: 14px; text-align: center;
-        background: ${options.primaryColor}; color: #fff; font-weight: 700; font-size: 15px;
-      }
-      .footer { font-size: 12px; color: rgba(255, 255, 255, 0.78); }
-    </style>
-  </head>
-  <body>
-    <section class="panel">
-      <p class="panel-label">${escapeHtml(options.company)} today</p>
-      <div class="frame">${left}</div>
-    </section>
-    <section class="panel right">
-      <p class="panel-label">With a Métré Project Intake</p>
-      <div class="intake">
-        <h1>Tell us about your ${escapeHtml(options.vertical)} project</h1>
-        <p class="lede">
-          A guided intake that asks what ${escapeHtml(options.company)} needs to quote — and hands
-          your team a Project Brief instead of a name and a phone number.
-        </p>
-        <div class="step"><span class="n">1</span> Project type, size and site conditions</div>
-        <div class="step"><span class="n">2</span> Photos of the space, measured and reviewed</div>
-        <div class="step"><span class="n">3</span> Budget range and timeline, in the visitor's words</div>
-        <div class="step"><span class="n">4</span> Project Brief ready for the sales team</div>
-        <div class="cta">See my project brief</div>
-      </div>
-      <p class="footer">metre-pro.com · Guided project intake for ${escapeHtml(options.vertical)} contractors</p>
-    </section>
-  </body>
-</html>`;
-}
-
 async function main() {
   const options = parseArgs(process.argv.slice(2));
   const outPath = resolve(process.cwd(), options.out);
@@ -219,7 +131,7 @@ async function main() {
     const siteImage = await captureSite(browser, options.url);
     const context = await browser.newContext({ viewport: { width: WIDTH, height: HEIGHT } });
     const page = await context.newPage();
-    await page.setContent(composition(options, siteImage), { waitUntil: "load" });
+    await page.setContent(renderPreviewHtml({ ...options, siteImage }), { waitUntil: "load" });
     await page.screenshot({ path: outPath, type: "png" });
     await context.close();
     console.log(`[prospect-preview] Wrote ${outPath}${siteImage ? "" : " (placeholder panel)"}`);
