@@ -262,7 +262,9 @@ describe("the Project Briefs list can be worked, not just read", () => {
   });
 
   it("searches what a person would actually type", () => {
-    expect(listPage).toContain("d.visitorName, d.summary, d.missionName");
+    // rowTitle() is the resolved project title, never the stored workflow line.
+    expect(listPage).toContain("d.visitorName, rowTitle(d), d.missionName");
+  });
   });
 });
 
