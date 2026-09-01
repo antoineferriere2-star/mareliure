@@ -7,6 +7,12 @@ import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import { playbookSchema } from "@/build/schema/playbook";
 import { runDeckSiteAnalysis } from "@/build/ai/deckSiteAnalysis";
 import { runPlaybookDraftGeneration } from "@/build/ai/playbookDraftGeneration";
+import type { PlaybookDraft } from "@/build/onboarding/expandPlaybookDraft";
+import {
+  buildFallbackPlaybookDraft,
+  buildFallbackSiteAnalysis,
+  isAiUnavailableError,
+} from "./hermesFallback";
 import {
   AI_RUNS_PER_HOUR,
   checkAiRun,
@@ -571,7 +577,12 @@ async function generateStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: s
   let lastError: unknown = null;
   for (let attempt = 1; attempt <= DRAFT_GENERATION_ATTEMPTS; attempt += 1) {
     try {
-      return await generateDraftAttempt(sb, row, userId);
+      return await generateDraftAttempt(
+        sb,
+        row,
+        userId,
+        attempt === DRAFT_GENERATION_ATTEMPTS,
+      );
     } catch (err) {
       lastError = err;
       if (!isTransientAiError(err) || attempt === DRAFT_GENERATION_ATTEMPTS) throw err;
@@ -582,7 +593,12 @@ async function generateStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: s
 }
 
 
-async function generateDraftAttempt(sb: Supa, row: NonNullable<OnboardingRow>, userId: string) {
+async function generateDraftAttempt(
+  sb: Supa,
+  row: NonNullable<OnboardingRow>,
+  userId: string,
+  allowFallback = false,
+) {
   if (!row.confirmed_business_type || !row.confirmed_product) {
     throw new Error("Confirm the product before generating the draft.");
   }
@@ -632,7 +648,7 @@ async function generateDraftAttempt(sb: Supa, row: NonNullable<OnboardingRow>, u
     });
 
     const draftSchema = expandPlaybookDraft(
-      result.data,
+      draftData,
       row.confirmed_business_type,
       row.confirmed_product,
     );
