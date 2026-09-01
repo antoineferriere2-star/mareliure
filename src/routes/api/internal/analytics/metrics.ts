@@ -42,9 +42,14 @@ function countBy<T>(rows: T[], get: (r: T) => string | null | undefined) {
 // ---------- Handler ----------
 
 export async function handleAnalyticsMetrics(request: Request): Promise<Response> {
-  const token = process.env.METRE_ANALYTICS_TOKEN ?? process.env.HERMES_PROSPECT_FUNNEL_TOKEN ?? process.env.HERMES_ADMIN_READ_TOKEN;
-  if (!token) return json(404, { error: "Not found" });
-  if (bearerToken(request) !== token) return json(401, { error: "Unauthorized" });
+  const bearer = bearerToken(request);
+  const tokens = [
+    process.env.METRE_ANALYTICS_TOKEN,
+    process.env.HERMES_PROSPECT_FUNNEL_TOKEN,
+    process.env.HERMES_ADMIN_READ_TOKEN,
+  ].filter(Boolean) as string[];
+  if (tokens.length === 0) return json(404, { error: "Not found" });
+  if (!bearer || !tokens.includes(bearer)) return json(401, { error: "Unauthorized" });
 
   const url = new URL(request.url);
   const days = Math.min(Math.max(parseInt(url.searchParams.get("days") ?? "30", 10) || 30, 7), 90);
