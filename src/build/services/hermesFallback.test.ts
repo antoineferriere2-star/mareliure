@@ -12,8 +12,10 @@ import { validateUsMarketDraft } from "@/build/ai/playbookDraftGeneration";
 
 describe("AI availability detection", () => {
   it("treats the local Lovable placeholder as no usable gateway key", () => {
-    expect(hasUsableHermesAiKey(undefined)).toBe(false);
+    // Explicit values only: reading process.env here would make the result
+    // depend on whether the machine running the tests holds a real key.
     expect(hasUsableHermesAiKey("")).toBe(false);
+    expect(hasUsableHermesAiKey("   ")).toBe(false);
     expect(hasUsableHermesAiKey("local-dev-placeholder-not-a-real-key")).toBe(false);
     expect(hasUsableHermesAiKey("lovable-real-key")).toBe(true);
   });
