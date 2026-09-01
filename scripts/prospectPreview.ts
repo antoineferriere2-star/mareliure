@@ -25,9 +25,14 @@
 import { mkdir } from "node:fs/promises";
 import { dirname, resolve } from "node:path";
 import { chromium, type Browser } from "@playwright/test";
+import {
+  PREVIEW_HEIGHT,
+  PREVIEW_WIDTH,
+  renderPreviewHtml,
+} from "../src/build/prospect-preview/template";
 
-const WIDTH = 1600;
-const HEIGHT = 900;
+const WIDTH = PREVIEW_WIDTH;
+const HEIGHT = PREVIEW_HEIGHT;
 const SITE_VIEWPORT = { width: 1280, height: 900 };
 
 interface Options {
@@ -35,8 +40,10 @@ interface Options {
   url: string;
   vertical: string;
   primaryColor: string;
+  intakeTitle?: string;
   out: string;
 }
+
 
 function parseArgs(argv: string[]): Options {
   const flags = new Map<string, string>();
