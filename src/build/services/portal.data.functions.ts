@@ -92,6 +92,12 @@ export interface WorkspaceDossierRow {
    * Playbook's own declaration of what these lines are.
    */
   budgetAndTiming: string[];
+  /**
+   * `content.projectSummary` — the visitor's project as the Playbook wrote it.
+   * The list titles rows from this, never from `summary`, which on historical
+   * rows holds a workflow sentence ("Draft dossier — …").
+   */
+  projectSummary: string | null;
 }
 
 export const listWorkspaceDossiers = createServerFn({ method: "GET" })
@@ -137,8 +143,20 @@ export const listWorkspaceDossiers = createServerFn({ method: "GET" })
       missionName: d.mission_id ? (missionNames.get(d.mission_id) ?? null) : null,
       assignedToUserId: d.assigned_to_user_id,
       budgetAndTiming: budgetAndTimingLines(d.content),
+      projectSummary: projectSummaryLine(d.content),
     }));
   });
+
+/**
+ * The stored brief's own project summary, when it parses. Same totality rule
+ * as `budgetAndTimingLines`: an unreadable `content` costs the row this line,
+ * never the whole list.
+ */
+function projectSummaryLine(content: unknown): string | null {
+  if (!content || typeof content !== "object") return null;
+  const value = (content as { projectSummary?: unknown }).projectSummary;
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
 
 /**
  * The `budgetAndTiming` lines of a stored brief, as short strings.

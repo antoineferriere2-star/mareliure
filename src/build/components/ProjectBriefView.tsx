@@ -2,6 +2,7 @@
 // the Espace Client portal so a client never sees the raw JSON structure.
 // The portal is English (US) throughout, so every label here is English.
 import type { BriefLine, ProjectBrief } from "@/build/schema/brief";
+import { humanizeRawValue } from "@/build/dossiers/dossierDisplay";
 
 const CONFIDENCE_LABELS: Record<ProjectBrief["confidence"]["label"], string> = {
   low: "Low",
@@ -23,9 +24,11 @@ function LineList({ lines }: { lines: BriefLine[] }) {
     <dl className="space-y-2">
       {lines.map((line, i) => (
         <div key={`${line.label}-${i}`} className="text-sm">
-          <dt className="text-xs font-medium text-muted-foreground">{line.label}</dt>
+          <dt className="text-xs font-medium text-muted-foreground">
+            {humanizeRawValue(line.label)}
+          </dt>
           <dd className="text-foreground">
-            {line.value}{" "}
+            {humanizeRawValue(line.value)}{" "}
             <span className="text-[10px] uppercase text-muted-foreground">
               · {SOURCE_LABELS[line.source]}
             </span>
@@ -41,7 +44,7 @@ export function ProjectBriefView({ brief }: { brief: ProjectBrief }) {
     <div className="space-y-5">
       <section>
         <h3 className="text-sm font-semibold text-foreground">Project summary</h3>
-        <p className="mt-1 text-sm text-foreground">{brief.projectSummary}</p>
+        <p className="mt-1 text-sm text-foreground">{humanizeRawValue(brief.projectSummary)}</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Confidence: {CONFIDENCE_LABELS[brief.confidence.label]}
           {brief.confidence.reasons.length > 0 ? ` — ${brief.confidence.reasons.join(", ")}` : ""}
