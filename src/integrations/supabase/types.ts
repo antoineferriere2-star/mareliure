@@ -848,6 +848,7 @@ export type Database = {
       publish_workspace_onboarding: {
         Args: {
           p_mission_name: string
+          p_onboarding_id?: string
           p_playbook_id: string
           p_published_by: string
           p_validated_draft_schema: Json
