@@ -34,10 +34,17 @@ export type HermesProspectInput = {
   companyName?: string | null;
   websiteUrl: string;
   businessType?: string | null;
+  /**
+   * The trade Hermes is prospecting ("residential pools", "deck builders"...).
+   * Hermes knows it from the campaign, so it stands in for the site analysis
+   * when the analysis stays vague — never over it.
+   */
+  vertical?: string | null;
   product?: string | null;
   campaignId?: string | null;
   requestId?: string | null;
 };
+
 
 export type HermesProspectResult = {
   prospectName: string;
@@ -89,10 +96,46 @@ async function internalWorkspace(sb: Supa, workspaceId?: string | null): Promise
   return chosen.id;
 }
 
+/**
+ * A funnel left half-way by a human wizard or an interrupted run holds the
+ * workspace slot. Past this age Hermes stops waiting on it: the row is marked
+ * failed at its last step so it stays visible and retryable in the admin, and
+ * the new prospect can go through instead of getting a permanent 409.
+ */
+export const STALE_IN_FLIGHT_MINUTES = 30;
+
+/**
+ * Where an abandoned funnel actually stopped, read from what it managed to
+ * write. A human wizard never sets `prospect_last_step`, so without this the
+ * admin would be told to retry from the very beginning and lose the analysis
+ * and draft already paid for.
+ */
+export function staleStep(row: {
+  prospect_last_step?: string | null;
+  analyzed_at?: string | null;
+  confirmed_product?: string | null;
+  playbook_id?: string | null;
+}): HermesFunnelStep {
+  if (row.prospect_last_step) return row.prospect_last_step as HermesFunnelStep;
+  if (row.playbook_id) return "publish";
+  if (row.confirmed_product) return "generate";
+  if (row.analyzed_at) return "confirm";
+  return "analyze";
+}
+
+export function isStaleInFlight(updatedAt: string | null | undefined, now = new Date()): boolean {
+  if (!updatedAt) return true;
+  const age = now.getTime() - new Date(updatedAt).getTime();
+  return Number.isFinite(age) && age > STALE_IN_FLIGHT_MINUTES * 60 * 1000;
+}
+
 async function activeInFlightRow(sb: Supa, workspaceId: string, exceptId?: string | null) {
   let query = sb
     .from("build_workspace_onboarding")
-    .select("id, prospect_company_name, site_url, final_url")
+    .select(
+      "id, prospect_company_name, site_url, final_url, updated_at, prospect_last_step, analyzed_at, confirmed_product, playbook_id",
+    )
+
     .eq("workspace_id", workspaceId)
     .neq("status", "published")
     .neq("status", "failed")
@@ -294,11 +337,23 @@ async function createRow(
 ) {
   const blocker = await activeInFlightRow(sb, workspaceId);
   if (blocker) {
-    fail(
-      409,
-      `Another prospect funnel is already in progress (${prospectDisplayName(blocker.prospect_company_name, blocker.final_url ?? blocker.site_url)}). Finish, publish, fail, or retry it first.`,
-    );
+    if (isStaleInFlight(blocker.updated_at)) {
+      await markFailed(
+        sb,
+        blocker.id,
+        staleStep(blocker),
+        new Error(
+          `Funnel abandoned for more than ${STALE_IN_FLIGHT_MINUTES} minutes — released so the next prospect could run. Retry it from here.`,
+        ),
+      );
+    } else {
+      fail(
+        409,
+        `Another prospect funnel is already in progress (${prospectDisplayName(blocker.prospect_company_name, blocker.final_url ?? blocker.site_url)}). Finish, publish, fail, or retry it first.`,
+      );
+    }
   }
+
 
   const { data, error } = await sb
     .from("build_workspace_onboarding")
@@ -411,14 +466,21 @@ async function confirmStep(sb: Supa, row: NonNullable<OnboardingRow>, input: Her
   await markStep(sb, row.id, "confirm", "analyzed");
 
   const analysis = (row.analysis ?? null) as SiteAnalysis | null;
+  const vertical = normalizeText(input.vertical);
   const business = checkBusinessType(
-    normalizeText(input.businessType) ?? analysis?.businessType ?? HERMES_DEFAULT_BUSINESS_TYPE,
+    normalizeText(input.businessType) ??
+      analysis?.businessType ??
+      vertical ??
+      HERMES_DEFAULT_BUSINESS_TYPE,
   );
   if (!business.ok) throw new Error(business.error);
   const product = checkProduct(
-    normalizeText(input.product) ?? analysis?.products?.[0] ?? HERMES_DEFAULT_PRODUCT,
+    normalizeText(input.product) ??
+      analysis?.products?.[0] ??
+      (vertical ? `${vertical} project` : HERMES_DEFAULT_PRODUCT),
   );
   if (!product.ok) throw new Error(product.error);
+
 
   const { error } = await sb
     .from("build_workspace_onboarding")
@@ -470,6 +532,21 @@ export function isTransientAiError(error: unknown): boolean {
 
 export const DRAFT_GENERATION_ATTEMPTS = 3;
 
+/**
+ * Waiting between attempts, not hammering: a rate-limited or overloaded gateway
+ * needs time, so each retry backs off before asking again. One entry per gap
+ * between attempts, hence ATTEMPTS - 1 delays.
+ */
+export const DRAFT_RETRY_BACKOFF_MS = [1500, 5000] as const;
+
+export function draftRetryDelayMs(attempt: number): number {
+  return DRAFT_RETRY_BACKOFF_MS[attempt - 1] ?? DRAFT_RETRY_BACKOFF_MS.at(-1) ?? 0;
+}
+
+function wait(ms: number): Promise<void> {
+  return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
+}
+
 async function generateStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: string) {
   if (row.playbook_id) return row;
   await markStep(sb, row.id, "generate", "confirmed");
@@ -484,10 +561,12 @@ async function generateStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: s
     } catch (err) {
       lastError = err;
       if (!isTransientAiError(err) || attempt === DRAFT_GENERATION_ATTEMPTS) throw err;
+      await wait(draftRetryDelayMs(attempt));
     }
   }
   throw lastError instanceof Error ? lastError : new Error("Draft generation did not complete.");
 }
+
 
 async function generateDraftAttempt(sb: Supa, row: NonNullable<OnboardingRow>, userId: string) {
   if (!row.confirmed_business_type || !row.confirmed_product) {
@@ -587,7 +666,15 @@ async function generateDraftAttempt(sb: Supa, row: NonNullable<OnboardingRow>, u
 async function publishStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: string) {
   if (row.status === "published" && row.mission_id) return row;
   await markStep(sb, row.id, "publish", "draft_ready");
-  if (!row.playbook_id) throw new Error("Generate the draft before publishing.");
+  // Reaching publish without a playbook means draft generation gave up; say so
+  // instead of an instruction ("generate the draft first") that reads like the
+  // funnel is merely waiting on a human.
+  if (!row.playbook_id) {
+    throw new Error(
+      "Draft generation did not produce a project intake draft — retry the generate step.",
+    );
+  }
+
 
   const { data: playbook, error } = await sb
     .from("build_playbooks")
@@ -769,14 +856,28 @@ export async function runHermesProspectFunnelBatch(
 ): Promise<{ results: HermesProspectResult[] }> {
   const results: HermesProspectResult[] = [];
   for (const input of fields.prospects) {
-    results.push(
-      await runHermesProspectFunnel(sb, {
-        userId: fields.userId,
-        workspaceId: fields.workspaceId,
-        input,
-        retryFailed: fields.retryFailed,
-      }),
-    );
+    try {
+      results.push(
+        await runHermesProspectFunnel(sb, {
+          userId: fields.userId,
+          workspaceId: fields.workspaceId,
+          input,
+          retryFailed: fields.retryFailed,
+        }),
+      );
+    } catch (err) {
+      // One prospect must never take the batch down with it: Hermes gets a
+      // named failure per prospect and keeps the others.
+      results.push({
+        prospectName: prospectDisplayName(input.companyName, input.websiteUrl),
+        websiteUrl: input.websiteUrl,
+        onboardingId: null,
+        status: "failed",
+        setupStatus: null,
+        publicPath: null,
+        error: shortError(err),
+      });
+    }
   }
   return { results };
 }

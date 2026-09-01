@@ -11,6 +11,7 @@ const prospectInput = z.object({
   companyName: z.string().trim().max(200).optional().nullable(),
   websiteUrl: z.string().trim().min(1).max(2048),
   businessType: z.string().trim().max(80).optional().nullable(),
+  vertical: z.string().trim().max(80).optional().nullable(),
   product: z.string().trim().max(80).optional().nullable(),
   campaignId: z.string().trim().max(120).optional().nullable(),
   requestId: z.string().trim().min(8).max(80).optional().nullable(),
