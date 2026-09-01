@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildHermesFallbackPlaybookDraft,
+  buildHermesFallbackSiteAnalysis,
+  canUseDeterministicHermesFallback,
   DRAFT_GENERATION_ATTEMPTS,
+  hasUsableHermesAiKey,
   isTransientAiError,
 } from "./hermesProspectFunnels.server";
+import { getPlaybookPublishIssues } from "@/build/engine/validation";
+import { expandPlaybookDraft } from "@/build/onboarding/expandPlaybookDraft";
 
 describe("Hermes transient draft-generation errors", () => {
   it("retries a few times before giving up", () => {
@@ -36,14 +42,72 @@ describe("Hermes transient draft-generation errors", () => {
 
 describe("Hermes draft-generation backoff", () => {
   it("waits longer between each retry instead of hammering the gateway", async () => {
-    const { DRAFT_RETRY_BACKOFF_MS, draftRetryDelayMs } = await import(
-      "./hermesProspectFunnels.server"
-    );
+    const { DRAFT_RETRY_BACKOFF_MS, draftRetryDelayMs } =
+      await import("./hermesProspectFunnels.server");
     expect(DRAFT_RETRY_BACKOFF_MS.length).toBe(2);
     expect(draftRetryDelayMs(1)).toBeGreaterThan(0);
     expect(draftRetryDelayMs(2)).toBeGreaterThan(draftRetryDelayMs(1));
     // Beyond the last gap the delay stays bounded, never undefined.
     expect(draftRetryDelayMs(9)).toBe(draftRetryDelayMs(2));
+  });
+});
+
+describe("Hermes deterministic AI fallback", () => {
+  it("treats the local Lovable placeholder as no usable gateway key", () => {
+    expect(hasUsableHermesAiKey(undefined)).toBe(false);
+    expect(hasUsableHermesAiKey("")).toBe(false);
+    expect(hasUsableHermesAiKey("local-dev-placeholder-not-a-real-key")).toBe(false);
+    expect(hasUsableHermesAiKey("lovable-real-key")).toBe(true);
+  });
+
+  it("falls back on gateway/config failures without masking workflow mistakes", () => {
+    for (const message of [
+      "Missing LOVABLE_API_KEY",
+      "local-dev-placeholder-not-a-real-key",
+      "401 Unauthorized",
+      "402 credits exhausted",
+      "429 Too Many Requests",
+      "Réponse IA non structurée (parsing échoué).",
+    ]) {
+      expect(canUseDeterministicHermesFallback(new Error(message))).toBe(true);
+    }
+
+    for (const message of [
+      "That draft generation is already running.",
+      "Confirm the product before generating the draft.",
+      'Budget option "1 200 €" is not compatible with the US/USD market.',
+    ]) {
+      expect(canUseDeterministicHermesFallback(new Error(message))).toBe(false);
+    }
+  });
+
+  it("builds a publishable generic starter playbook for the prospect vertical", () => {
+    const draft = buildHermesFallbackPlaybookDraft(
+      "Residential pool contractor",
+      "residential pools project",
+    );
+    const schema = expandPlaybookDraft(
+      draft,
+      "Residential pool contractor",
+      "residential pools project",
+    );
+    expect(schema.sections[0]?.title).toBe("residential pools project intake");
+    expect(getPlaybookPublishIssues(schema)).toEqual([]);
+  });
+
+  it("can synthesize the website analysis from Hermes campaign inputs", () => {
+    const analysis = buildHermesFallbackSiteAnalysis(
+      {
+        companyName: "Premier Pools of Central Florida",
+        websiteUrl: "https://example.com",
+        vertical: "residential pools",
+      },
+      "https://example.com/",
+    );
+    expect(analysis.finalUrl).toBe("https://example.com/");
+    expect(analysis.businessType).toBe("residential pools");
+    expect(analysis.products).toEqual(["residential pools project"]);
+    expect(analysis.facts.map((fact) => fact.status)).toEqual(["assumed", "assumed", "assumed"]);
   });
 });
 
@@ -68,9 +132,8 @@ describe("Hermes internal API surface", () => {
 
 describe("Hermes stale funnel release", () => {
   it("waits before releasing, then releases at the funnel's own last step", async () => {
-    const { isStaleInFlight, staleStep, STALE_IN_FLIGHT_MINUTES } = await import(
-      "./hermesProspectFunnels.server"
-    );
+    const { isStaleInFlight, staleStep, STALE_IN_FLIGHT_MINUTES } =
+      await import("./hermesProspectFunnels.server");
     const now = new Date("2026-09-01T16:00:00Z");
     const fresh = new Date(now.getTime() - 60_000).toISOString();
     const old = new Date(now.getTime() - (STALE_IN_FLIGHT_MINUTES + 5) * 60_000).toISOString();

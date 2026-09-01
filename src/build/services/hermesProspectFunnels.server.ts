@@ -6,7 +6,10 @@ import { expandPlaybookDraft } from "@/build/onboarding/expandPlaybookDraft";
 import { getPlaybookPublishIssues } from "@/build/engine/validation";
 import { playbookSchema } from "@/build/schema/playbook";
 import { runDeckSiteAnalysis } from "@/build/ai/deckSiteAnalysis";
-import { runPlaybookDraftGeneration } from "@/build/ai/playbookDraftGeneration";
+import {
+  runPlaybookDraftGeneration,
+  type PlaybookDraftGenerationOutput,
+} from "@/build/ai/playbookDraftGeneration";
 import {
   AI_RUNS_PER_HOUR,
   checkAiRun,
@@ -45,7 +48,6 @@ export type HermesProspectInput = {
   requestId?: string | null;
 };
 
-
 export type HermesProspectResult = {
   prospectName: string;
   websiteUrl: string;
@@ -60,6 +62,7 @@ type OnboardingRow = Awaited<ReturnType<typeof loadOnboardingById>>;
 
 const HERMES_DEFAULT_PRODUCT = "Deck project";
 const HERMES_DEFAULT_BUSINESS_TYPE = "Deck builder";
+export const HERMES_LOCAL_LOVABLE_API_KEY_PLACEHOLDER = "local-dev-placeholder-not-a-real-key";
 
 function shortError(error: unknown): string {
   return (error instanceof Error ? error.message : String(error || "Unknown error")).slice(0, 700);
@@ -72,6 +75,55 @@ function normalizeText(value: string | null | undefined): string | null {
 
 function aiRequestId(step: HermesFunnelStep): string {
   return `${randomUUID().replace(/-/g, "").slice(0, 32)}-${step.slice(0, 3)}`;
+}
+
+export function hasUsableHermesAiKey(value = process.env.LOVABLE_API_KEY): boolean {
+  const key = (value ?? "").trim();
+  return Boolean(key && key !== HERMES_LOCAL_LOVABLE_API_KEY_PLACEHOLDER);
+}
+
+function fallbackBusinessType(input: HermesProspectInput): string {
+  return (
+    normalizeText(input.businessType) ??
+    normalizeText(input.vertical) ??
+    HERMES_DEFAULT_BUSINESS_TYPE
+  );
+}
+
+function fallbackProduct(input: HermesProspectInput): string {
+  const vertical = normalizeText(input.vertical);
+  return (
+    normalizeText(input.product) ?? (vertical ? `${vertical} project` : HERMES_DEFAULT_PRODUCT)
+  );
+}
+
+export function buildHermesFallbackSiteAnalysis(
+  input: HermesProspectInput,
+  finalUrl: string,
+): SiteAnalysis {
+  const businessType = fallbackBusinessType(input);
+  const product = fallbackProduct(input);
+  const deckContext = /\bdeck/i.test(`${businessType} ${product} ${input.vertical ?? ""}`);
+  const facts = [
+    normalizeText(input.companyName)
+      ? {
+          claim: `Prospect company: ${normalizeText(input.companyName)}`,
+          status: "assumed" as const,
+        }
+      : null,
+    { claim: `Prospecting vertical: ${businessType}`, status: "assumed" as const },
+    { claim: `Default project intake selected: ${product}`, status: "assumed" as const },
+  ].filter(Boolean) as SiteAnalysis["facts"];
+
+  return {
+    finalUrl,
+    businessType,
+    isDeckBusiness: deckContext,
+    deckSignals: deckContext ? ["Hermes campaign context names a deck-related prospect."] : [],
+    products: [product],
+    facts,
+    analyzedAt: new Date().toISOString(),
+  };
 }
 
 function retryStatus(row: NonNullable<OnboardingRow>): string {
@@ -354,7 +406,6 @@ async function createRow(
     }
   }
 
-
   const { data, error } = await sb
     .from("build_workspace_onboarding")
     .insert({
@@ -380,6 +431,31 @@ async function createRow(
   return data;
 }
 
+async function saveAnalysis(
+  sb: Supa,
+  row: NonNullable<OnboardingRow>,
+  analysis: SiteAnalysis,
+  requestId: string | null,
+) {
+  const { error } = await sb
+    .from("build_workspace_onboarding")
+    .update({
+      status: "analyzed",
+      final_url: analysis.finalUrl,
+      analysis: analysis as unknown as Json,
+      analyzed_at: analysis.analyzedAt,
+      last_analyze_request_id: requestId,
+      prospect_last_step: "analyze",
+      prospect_last_error: null,
+      prospect_last_error_at: null,
+    })
+    .eq("id", row.id);
+  if (error) fail(500, error.message);
+  const updated = await loadOnboardingById(sb, row.id);
+  if (!updated) fail(404, "Prospect funnel disappeared during analysis.");
+  return updated;
+}
+
 async function analyzeStep(
   sb: Supa,
   row: NonNullable<OnboardingRow>,
@@ -389,6 +465,11 @@ async function analyzeStep(
   if (row.analysis && row.analyzed_at) return row;
   await markStep(sb, row.id, "analyze", "started");
 
+  const fetched = await fetchSitePublicHtml(row.site_url ?? input.websiteUrl);
+  if (!hasUsableHermesAiKey()) {
+    return saveAnalysis(sb, row, buildHermesFallbackSiteAnalysis(input, fetched.finalUrl), null);
+  }
+
   const startedAt = Date.now();
   const requestId = aiRequestId("analyze");
   try {
@@ -396,7 +477,6 @@ async function analyzeStep(
     if (!decision.allow && decision.reason === "duplicate") {
       throw new Error("That website analysis is already running.");
     }
-    const fetched = await fetchSitePublicHtml(row.site_url ?? input.websiteUrl);
     const result = await runDeckSiteAnalysis(extractSiteText(fetched.html));
     const latencyMs = Date.now() - startedAt;
     if (result.status === "error" || !result.data) {
@@ -409,6 +489,14 @@ async function analyzeStep(
         latencyMs,
         error: result.error ?? "unknown",
       });
+      if (canUseDeterministicHermesFallback(result.error)) {
+        return saveAnalysis(
+          sb,
+          row,
+          buildHermesFallbackSiteAnalysis(input, fetched.finalUrl),
+          null,
+        );
+      }
       throw new Error(result.error ?? "Website analysis did not complete.");
     }
     await logAiRun(sb, {
@@ -430,23 +518,7 @@ async function analyzeStep(
       analyzedAt: new Date().toISOString(),
     };
 
-    const { error } = await sb
-      .from("build_workspace_onboarding")
-      .update({
-        status: "analyzed",
-        final_url: fetched.finalUrl,
-        analysis: analysis as unknown as Json,
-        analyzed_at: analysis.analyzedAt,
-        last_analyze_request_id: requestId,
-        prospect_last_step: "analyze",
-        prospect_last_error: null,
-        prospect_last_error_at: null,
-      })
-      .eq("id", row.id);
-    if (error) fail(500, error.message);
-    const updated = await loadOnboardingById(sb, row.id);
-    if (!updated) fail(404, "Prospect funnel disappeared during analysis.");
-    return updated;
+    return saveAnalysis(sb, row, analysis, requestId);
   } catch (err) {
     await logAiRun(sb, {
       workspaceId: row.workspace_id,
@@ -457,6 +529,9 @@ async function analyzeStep(
       latencyMs: Date.now() - startedAt,
       error: shortError(err),
     });
+    if (canUseDeterministicHermesFallback(err)) {
+      return saveAnalysis(sb, row, buildHermesFallbackSiteAnalysis(input, fetched.finalUrl), null);
+    }
     throw err;
   }
 }
@@ -471,16 +546,13 @@ async function confirmStep(sb: Supa, row: NonNullable<OnboardingRow>, input: Her
     normalizeText(input.businessType) ??
       analysis?.businessType ??
       vertical ??
-      HERMES_DEFAULT_BUSINESS_TYPE,
+      fallbackBusinessType(input),
   );
   if (!business.ok) throw new Error(business.error);
   const product = checkProduct(
-    normalizeText(input.product) ??
-      analysis?.products?.[0] ??
-      (vertical ? `${vertical} project` : HERMES_DEFAULT_PRODUCT),
+    normalizeText(input.product) ?? analysis?.products?.[0] ?? fallbackProduct(input),
   );
   if (!product.ok) throw new Error(product.error);
-
 
   const { error } = await sb
     .from("build_workspace_onboarding")
@@ -530,6 +602,27 @@ export function isTransientAiError(error: unknown): boolean {
   return TRANSIENT_AI_ERROR_PATTERNS.some((pattern) => pattern.test(message));
 }
 
+export const HERMES_DETERMINISTIC_FALLBACK_PATTERNS = [
+  /LOVABLE_API_KEY/i,
+  /local-dev-placeholder-not-a-real-key/i,
+  /invalid api key/i,
+  /unauthorized/i,
+  /\b401\b/,
+  /credits?/i,
+  /\b402\b/,
+  /Réponse IA non structurée/i,
+  /parsing échoué/i,
+] as const;
+
+export function canUseDeterministicHermesFallback(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  if (/already running/i.test(message)) return false;
+  return (
+    HERMES_DETERMINISTIC_FALLBACK_PATTERNS.some((pattern) => pattern.test(message)) ||
+    isTransientAiError(error)
+  );
+}
+
 export const DRAFT_GENERATION_ATTEMPTS = 3;
 
 /**
@@ -547,11 +640,118 @@ function wait(ms: number): Promise<void> {
   return ms > 0 ? new Promise((resolve) => setTimeout(resolve, ms)) : Promise.resolve();
 }
 
+export function buildHermesFallbackPlaybookDraft(
+  businessType: string,
+  product: string,
+): PlaybookDraftGenerationOutput {
+  return {
+    steps: [
+      {
+        title: "Project basics",
+        why: `The ${businessType} team needs to understand the project before the first call.`,
+        fields: [
+          {
+            label: `What type of ${product} is this?`,
+            type: "single_choice",
+            required: true,
+            options: ["New project", "Replacement or upgrade", "Repair or service", "Not sure yet"],
+          },
+          {
+            label: "What should the finished project help you accomplish?",
+            type: "text",
+            required: true,
+          },
+        ],
+      },
+      {
+        title: "Site and scope",
+        why: "Photos, access, and existing conditions help the team spot fit and complexity early.",
+        fields: [
+          {
+            label: "Where will the work happen?",
+            type: "address",
+            required: true,
+          },
+          {
+            label: "What site conditions should the team know about?",
+            type: "multi_choice",
+            required: false,
+            options: [
+              "Easy access",
+              "Limited access",
+              "Existing structure or surface",
+              "Permits may be needed",
+              "Not sure yet",
+            ],
+          },
+          {
+            label: "Add photos of the current space",
+            type: "photo",
+            required: false,
+          },
+        ],
+      },
+      {
+        title: "Budget and timing",
+        why: "Budget range and schedule expectations help the sales team prioritize the right response.",
+        fields: [
+          {
+            label: "Estimated budget range",
+            type: "budget",
+            required: false,
+            options: [
+              "Under $5,000",
+              "$5,000-$15,000",
+              "$15,000-$35,000",
+              "$35,000+",
+              "Not sure yet",
+            ],
+          },
+          {
+            label: "Ideal project timing",
+            type: "timeline",
+            required: false,
+            options: [
+              "As soon as possible",
+              "Within 1-3 months",
+              "Within 3-6 months",
+              "Planning ahead",
+              "Not sure yet",
+            ],
+          },
+        ],
+      },
+      {
+        title: "Decision details",
+        why: "The team gets the context that makes the first conversation useful.",
+        fields: [
+          {
+            label: "What would make this project feel successful?",
+            type: "text",
+            required: false,
+          },
+        ],
+      },
+    ],
+  };
+}
+
 async function generateStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: string) {
   if (row.playbook_id) return row;
   await markStep(sb, row.id, "generate", "confirmed");
   if (!row.confirmed_business_type || !row.confirmed_product) {
     throw new Error("Confirm the product before generating the draft.");
+  }
+
+  if (!hasUsableHermesAiKey()) {
+    return saveDraftPlaybook(
+      sb,
+      row,
+      userId,
+      buildHermesFallbackPlaybookDraft(row.confirmed_business_type, row.confirmed_product),
+      null,
+      "Lovable AI Gateway was not configured; Hermes used the deterministic starter draft.",
+    );
   }
 
   let lastError: unknown = null;
@@ -560,13 +760,79 @@ async function generateStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: s
       return await generateDraftAttempt(sb, row, userId);
     } catch (err) {
       lastError = err;
-      if (!isTransientAiError(err) || attempt === DRAFT_GENERATION_ATTEMPTS) throw err;
+      if (!canUseDeterministicHermesFallback(err)) throw err;
+      if (!isTransientAiError(err) || attempt === DRAFT_GENERATION_ATTEMPTS) break;
       await wait(draftRetryDelayMs(attempt));
     }
+  }
+  if (canUseDeterministicHermesFallback(lastError)) {
+    return saveDraftPlaybook(
+      sb,
+      row,
+      userId,
+      buildHermesFallbackPlaybookDraft(row.confirmed_business_type, row.confirmed_product),
+      null,
+      `AI draft generation failed after retries; Hermes used the deterministic starter draft. Last error: ${shortError(lastError)}`,
+    );
   }
   throw lastError instanceof Error ? lastError : new Error("Draft generation did not complete.");
 }
 
+async function saveDraftPlaybook(
+  sb: Supa,
+  row: NonNullable<OnboardingRow>,
+  userId: string,
+  draft: PlaybookDraftGenerationOutput,
+  requestId: string | null,
+  description: string,
+) {
+  if (!row.confirmed_business_type || !row.confirmed_product) {
+    throw new Error("Confirm the product before generating the draft.");
+  }
+  const draftSchema = expandPlaybookDraft(
+    draft,
+    row.confirmed_business_type,
+    row.confirmed_product,
+  );
+  const name = `${row.confirmed_product} intake`;
+  const { data: playbook, error } = await sb
+    .from("build_playbooks")
+    .insert({
+      name,
+      description,
+      project_type: row.confirmed_product,
+      workspace_id: row.workspace_id,
+      draft_schema: draftSchema as unknown as Json,
+      created_by: userId,
+      is_active: false,
+    })
+    .select("id")
+    .maybeSingle();
+  if (error) fail(500, error.message);
+  if (!playbook) fail(500, "Draft creation failed.");
+
+  const branding = defaultBranding(
+    prospectDisplayName(row.prospect_company_name, row.final_url ?? row.site_url),
+    row.confirmed_product,
+  );
+  const { error: updateError } = await sb
+    .from("build_workspace_onboarding")
+    .update({
+      status: "draft_ready",
+      playbook_id: playbook.id,
+      draft_version: (row.draft_version ?? 0) + 1,
+      branding: branding as unknown as Json,
+      last_generate_request_id: requestId,
+      prospect_last_step: "generate",
+      prospect_last_error: null,
+      prospect_last_error_at: null,
+    })
+    .eq("id", row.id);
+  if (updateError) fail(500, updateError.message);
+  const updated = await loadOnboardingById(sb, row.id);
+  if (!updated) fail(404, "Prospect funnel disappeared during generation.");
+  return updated;
+}
 
 async function generateDraftAttempt(sb: Supa, row: NonNullable<OnboardingRow>, userId: string) {
   if (!row.confirmed_business_type || !row.confirmed_product) {
@@ -606,49 +872,14 @@ async function generateDraftAttempt(sb: Supa, row: NonNullable<OnboardingRow>, u
       latencyMs,
     });
 
-    const draftSchema = expandPlaybookDraft(
+    return saveDraftPlaybook(
+      sb,
+      row,
+      userId,
       result.data,
-      row.confirmed_business_type,
-      row.confirmed_product,
+      requestId,
+      `Hermes prospect draft generated for ${row.confirmed_business_type} / ${row.confirmed_product}.`,
     );
-    const name = `${row.confirmed_product} intake`;
-    const { data: playbook, error } = await sb
-      .from("build_playbooks")
-      .insert({
-        name,
-        description: `Hermes prospect draft generated for ${row.confirmed_business_type} / ${row.confirmed_product}.`,
-        project_type: row.confirmed_product,
-        workspace_id: row.workspace_id,
-        draft_schema: draftSchema as unknown as Json,
-        created_by: userId,
-        is_active: false,
-      })
-      .select("id")
-      .maybeSingle();
-    if (error) fail(500, error.message);
-    if (!playbook) fail(500, "Draft creation failed.");
-
-    const branding = defaultBranding(
-      prospectDisplayName(row.prospect_company_name, row.final_url ?? row.site_url),
-      row.confirmed_product,
-    );
-    const { error: updateError } = await sb
-      .from("build_workspace_onboarding")
-      .update({
-        status: "draft_ready",
-        playbook_id: playbook.id,
-        draft_version: (row.draft_version ?? 0) + 1,
-        branding: branding as unknown as Json,
-        last_generate_request_id: requestId,
-        prospect_last_step: "generate",
-        prospect_last_error: null,
-        prospect_last_error_at: null,
-      })
-      .eq("id", row.id);
-    if (updateError) fail(500, updateError.message);
-    const updated = await loadOnboardingById(sb, row.id);
-    if (!updated) fail(404, "Prospect funnel disappeared during generation.");
-    return updated;
   } catch (err) {
     await logAiRun(sb, {
       workspaceId: row.workspace_id,
@@ -674,7 +905,6 @@ async function publishStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: st
       "Draft generation did not produce a project intake draft — retry the generate step.",
     );
   }
-
 
   const { data: playbook, error } = await sb
     .from("build_playbooks")
@@ -750,7 +980,6 @@ async function processRow(
     const failed = await loadOnboardingById(sb, current.id);
     return toResult(sb, input, failed, "failed", shortError(err));
   }
-
 }
 
 export async function runHermesProspectFunnel(
