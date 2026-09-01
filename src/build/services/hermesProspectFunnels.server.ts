@@ -599,18 +599,29 @@ async function generateDraftAttempt(sb: Supa, row: NonNullable<OnboardingRow>, u
     );
 
     const latencyMs = Date.now() - startedAt;
-    if (result.status === "error" || !result.data) {
-      await logAiRun(sb, {
-        workspaceId: row.workspace_id,
-        userId,
-        action: "generate_draft",
-        requestId,
-        status: "error",
-        latencyMs,
-        error: result.error ?? "unknown",
-      });
-      throw new Error(result.error ?? "Draft generation did not complete.");
+    let draftData: PlaybookDraft | null = result.data ?? null;
+    if (result.status === "error" || !draftData) {
+      // Last resort only: retries already happened upstream. A draft built
+      // deterministically keeps the prospection moving; an admin reviews it
+      // before publication just like an AI-generated one.
+      if (!allowFallback || !isAiUnavailableError(new Error(result.error ?? ""))) {
+        await logAiRun(sb, {
+          workspaceId: row.workspace_id,
+          userId,
+          action: "generate_draft",
+          requestId,
+          status: "error",
+          latencyMs,
+          error: result.error ?? "unknown",
+        });
+        throw new Error(result.error ?? "Draft generation did not complete.");
+      }
+      draftData = buildFallbackPlaybookDraft(
+        row.confirmed_business_type,
+        row.confirmed_product,
+      );
     }
+
     await logAiRun(sb, {
       workspaceId: row.workspace_id,
       userId,
