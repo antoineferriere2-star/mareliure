@@ -397,20 +397,33 @@ async function analyzeStep(
       throw new Error("That website analysis is already running.");
     }
     const fetched = await fetchSitePublicHtml(row.site_url ?? input.websiteUrl);
-    const result = await runDeckSiteAnalysis(extractSiteText(fetched.html));
+    const extracted = extractSiteText(fetched.html);
+    const result = await runDeckSiteAnalysis(extracted);
     const latencyMs = Date.now() - startedAt;
-    if (result.status === "error" || !result.data) {
-      await logAiRun(sb, {
-        workspaceId: row.workspace_id,
-        userId,
-        action: "analyze_site",
-        requestId,
-        status: "error",
-        latencyMs,
-        error: result.error ?? "unknown",
+    let analysisData = result.data ?? null;
+    if (result.status === "error" || !analysisData) {
+      // The AI Engine is preferred, never required: when it is unreachable
+      // (missing/placeholder key, rate limit, gateway weather), Hermes keeps
+      // the funnel alive with a deterministic analysis instead of failing.
+      if (!isAiUnavailableError(new Error(result.error ?? ""))) {
+        await logAiRun(sb, {
+          workspaceId: row.workspace_id,
+          userId,
+          action: "analyze_site",
+          requestId,
+          status: "error",
+          latencyMs,
+          error: result.error ?? "unknown",
+        });
+        throw new Error(result.error ?? "Website analysis did not complete.");
+      }
+      analysisData = buildFallbackSiteAnalysis(extracted, {
+        companyName: row.prospect_company_name,
+        vertical: input.vertical,
+        businessType: input.businessType,
       });
-      throw new Error(result.error ?? "Website analysis did not complete.");
     }
+
     await logAiRun(sb, {
       workspaceId: row.workspace_id,
       userId,
