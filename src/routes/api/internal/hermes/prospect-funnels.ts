@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { admin } from "@/build/services/adminAuth.server";
 import { runHermesProspectFunnelBatch } from "@/build/services/hermesProspectFunnels.server";
+import { ServerFnError } from "@/build/services/serverError";
 
 const MAX_BODY_BYTES = 24 * 1024;
 
@@ -9,6 +10,7 @@ const prospectInput = z.object({
   companyName: z.string().trim().max(200).optional().nullable(),
   websiteUrl: z.string().trim().min(1).max(2048),
   businessType: z.string().trim().max(80).optional().nullable(),
+  vertical: z.string().trim().max(80).optional().nullable(),
   product: z.string().trim().max(80).optional().nullable(),
   campaignId: z.string().trim().max(120).optional().nullable(),
   requestId: z.string().trim().min(8).max(80).optional().nullable(),
@@ -55,15 +57,24 @@ export async function handleHermesProspectFunnels(request: Request): Promise<Res
     return json(503, { error: "Hermes actor is not configured" });
   }
 
-  const sb = await admin();
-  const result = await runHermesProspectFunnelBatch(sb, {
-    userId,
-    workspaceId: parsed.data.workspaceId,
-    prospects: parsed.data.prospects,
-    retryFailed: parsed.data.retryFailed ?? false,
-  });
-  return json(200, result);
+  // Hermes is a machine caller: every outcome must come back as JSON with a
+  // meaningful status, never as the HTML error page the SSR shell would render.
+  try {
+    const sb = await admin();
+    const result = await runHermesProspectFunnelBatch(sb, {
+      userId,
+      workspaceId: parsed.data.workspaceId,
+      prospects: parsed.data.prospects,
+      retryFailed: parsed.data.retryFailed ?? false,
+    });
+    return json(200, result);
+  } catch (err) {
+    const status = err instanceof ServerFnError ? err.status : 500;
+    const message = err instanceof Error ? err.message : "Hermes prospect batch failed";
+    return json(status, { error: message.slice(0, 700) });
+  }
 }
+
 
 export const Route = createFileRoute("/api/internal/hermes/prospect-funnels")({
   server: {

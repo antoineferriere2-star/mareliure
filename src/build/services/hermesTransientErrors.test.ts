@@ -33,3 +33,35 @@ describe("Hermes transient draft-generation errors", () => {
     }
   });
 });
+
+describe("Hermes draft-generation backoff", () => {
+  it("waits longer between each retry instead of hammering the gateway", async () => {
+    const { DRAFT_RETRY_BACKOFF_MS, draftRetryDelayMs } = await import(
+      "./hermesProspectFunnels.server"
+    );
+    expect(DRAFT_RETRY_BACKOFF_MS.length).toBe(2);
+    expect(draftRetryDelayMs(1)).toBeGreaterThan(0);
+    expect(draftRetryDelayMs(2)).toBeGreaterThan(draftRetryDelayMs(1));
+    // Beyond the last gap the delay stays bounded, never undefined.
+    expect(draftRetryDelayMs(9)).toBe(draftRetryDelayMs(2));
+  });
+});
+
+describe("Hermes internal API surface", () => {
+  it("accepts the campaign vertical alongside company, site, and request id", async () => {
+    const source = await import("node:fs").then((fs) =>
+      fs.readFileSync("src/routes/api/internal/hermes/prospect-funnels.ts", "utf8"),
+    );
+    for (const field of ["companyName", "websiteUrl", "vertical", "campaignId", "requestId"]) {
+      expect(source).toContain(`${field}:`);
+    }
+  });
+
+  it("never tells the admin to generate a draft by hand when generation failed", async () => {
+    const source = await import("node:fs").then((fs) =>
+      fs.readFileSync("src/build/services/hermesProspectFunnels.server.ts", "utf8"),
+    );
+    expect(source).not.toContain("Generate the draft before publishing.");
+    expect(source).toContain("retry the generate step");
+  });
+});
