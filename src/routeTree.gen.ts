@@ -65,6 +65,7 @@ import { Route as AuthenticatedBuildPlaybooksIdRouteImport } from './routes/_aut
 import { Route as AuthenticatedBuildMissionsNewRouteImport } from './routes/_authenticated/build/missions.new'
 import { Route as AuthenticatedBuildMissionsIdRouteImport } from './routes/_authenticated/build/missions.$id'
 import { Route as AuthenticatedBuildDossiersIdRouteImport } from './routes/_authenticated/build/dossiers.$id'
+import { Route as ApiInternalHermesProspectFunnelsMetricsRouteImport } from './routes/api/internal/hermes/prospect-funnels.metrics'
 
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
@@ -375,6 +376,12 @@ const AuthenticatedBuildDossiersIdRoute =
     path: '/dossiers/$id',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
+const ApiInternalHermesProspectFunnelsMetricsRoute =
+  ApiInternalHermesProspectFunnelsMetricsRouteImport.update({
+    id: '/metrics',
+    path: '/metrics',
+    getParentRoute: () => ApiInternalHermesProspectFunnelsRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -422,7 +429,7 @@ export interface FileRoutesByFullPath {
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
-  '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRoute
+  '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRouteWithChildren
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -432,6 +439,7 @@ export interface FileRoutesByFullPath {
   '/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
   '/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
   '/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
+  '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -476,7 +484,7 @@ export interface FileRoutesByTo {
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
-  '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRoute
+  '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRouteWithChildren
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -486,6 +494,7 @@ export interface FileRoutesByTo {
   '/build/playbooks': typeof AuthenticatedBuildPlaybooksIndexRoute
   '/build/requests': typeof AuthenticatedBuildRequestsIndexRoute
   '/build/workspaces': typeof AuthenticatedBuildWorkspacesIndexRoute
+  '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -535,7 +544,7 @@ export interface FileRoutesById {
   '/_authenticated/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/_authenticated/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/_authenticated/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
-  '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRoute
+  '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRouteWithChildren
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -545,6 +554,7 @@ export interface FileRoutesById {
   '/_authenticated/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
   '/_authenticated/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
   '/_authenticated/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
+  '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -604,6 +614,7 @@ export interface FileRouteTypes {
     | '/build/playbooks/'
     | '/build/requests/'
     | '/build/workspaces/'
+    | '/api/internal/hermes/prospect-funnels/metrics'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -658,6 +669,7 @@ export interface FileRouteTypes {
     | '/build/playbooks'
     | '/build/requests'
     | '/build/workspaces'
+    | '/api/internal/hermes/prospect-funnels/metrics'
   id:
     | '__root__'
     | '/'
@@ -716,6 +728,7 @@ export interface FileRouteTypes {
     | '/_authenticated/build/playbooks/'
     | '/_authenticated/build/requests/'
     | '/_authenticated/build/workspaces/'
+    | '/api/internal/hermes/prospect-funnels/metrics'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -742,7 +755,7 @@ export interface RootRouteChildren {
   ApiPublicFaqAskRoute: typeof ApiPublicFaqAskRoute
   ApiPublicProjectSummaryRoute: typeof ApiPublicProjectSummaryRoute
   ApiPublicTrackViewRoute: typeof ApiPublicTrackViewRoute
-  ApiInternalHermesProspectFunnelsRoute: typeof ApiInternalHermesProspectFunnelsRoute
+  ApiInternalHermesProspectFunnelsRoute: typeof ApiInternalHermesProspectFunnelsRouteWithChildren
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1143,6 +1156,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildDossiersIdRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
+    '/api/internal/hermes/prospect-funnels/metrics': {
+      id: '/api/internal/hermes/prospect-funnels/metrics'
+      path: '/metrics'
+      fullPath: '/api/internal/hermes/prospect-funnels/metrics'
+      preLoaderRoute: typeof ApiInternalHermesProspectFunnelsMetricsRouteImport
+      parentRoute: typeof ApiInternalHermesProspectFunnelsRoute
+    }
   }
 }
 
@@ -1262,6 +1282,21 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface ApiInternalHermesProspectFunnelsRouteChildren {
+  ApiInternalHermesProspectFunnelsMetricsRoute: typeof ApiInternalHermesProspectFunnelsMetricsRoute
+}
+
+const ApiInternalHermesProspectFunnelsRouteChildren: ApiInternalHermesProspectFunnelsRouteChildren =
+  {
+    ApiInternalHermesProspectFunnelsMetricsRoute:
+      ApiInternalHermesProspectFunnelsMetricsRoute,
+  }
+
+const ApiInternalHermesProspectFunnelsRouteWithChildren =
+  ApiInternalHermesProspectFunnelsRoute._addFileChildren(
+    ApiInternalHermesProspectFunnelsRouteChildren,
+  )
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1286,7 +1321,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiPublicFaqAskRoute: ApiPublicFaqAskRoute,
   ApiPublicProjectSummaryRoute: ApiPublicProjectSummaryRoute,
   ApiPublicTrackViewRoute: ApiPublicTrackViewRoute,
-  ApiInternalHermesProspectFunnelsRoute: ApiInternalHermesProspectFunnelsRoute,
+  ApiInternalHermesProspectFunnelsRoute:
+    ApiInternalHermesProspectFunnelsRouteWithChildren,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
