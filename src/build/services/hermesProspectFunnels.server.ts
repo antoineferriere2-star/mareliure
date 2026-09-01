@@ -825,12 +825,16 @@ async function publishStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: st
       : defaultBranding(await workspaceName(sb, row.workspace_id), row.confirmed_product ?? "Deck");
 
   const missionName = `${branding.displayName} — ${row.confirmed_product ?? "Deck"} Intake`;
+  // Many prospect funnels share the internal sales workspace, so the publish
+  // must name its own funnel: resolving by workspace alone could lock onto
+  // another prospect's abandoned row and report a missing draft.
   const { error: publishError } = await sb.rpc("publish_workspace_onboarding", {
     p_workspace_id: row.workspace_id,
     p_playbook_id: row.playbook_id,
     p_validated_draft_schema: parsedSchema.data as unknown as Json,
     p_published_by: userId,
     p_mission_name: missionName,
+    p_onboarding_id: row.id,
   });
   if (publishError) throw new Error(publishError.message);
 
