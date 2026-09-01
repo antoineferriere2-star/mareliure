@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { resolveDossierTitle } from "@/build/dossiers/dossierDisplay";
 import { useSuspenseQuery, useQuery, queryOptions } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { useMemo, useState } from "react";
@@ -34,6 +35,17 @@ const PAGE_SIZE = 25;
  * everything the list needed to tell two briefs apart.
  */
 type DossierRow = WorkspaceDossierRow;
+
+/** The project name of a row — never its workflow status. */
+function rowTitle(d: DossierRow): string {
+  return resolveDossierTitle({
+    storedSummary: d.summary,
+    projectSummary: d.projectSummary,
+    visitorName: d.visitorName,
+    missionName: d.missionName,
+    id: d.id,
+  });
+}
 
 /**
  * Received date, without the seconds. The list and the setup wizard used to
@@ -90,7 +102,7 @@ function toCsv(rows: DossierRow[]): string {
   const body = rows.map((r) =>
     [
       r.visitorName ?? "",
-      r.summary ?? `Project Brief ${r.id.slice(0, 8)}`,
+      rowTitle(r),
       r.budgetAndTiming.join(" · "),
       r.missionName ?? "",
       r.commercial_status,
@@ -250,7 +262,7 @@ function PortalHomePage() {
       // the trade and the product, so it is the same sentence on every brief
       // from one Intake. The name is what someone actually types.
       res = res.filter((d) =>
-        [d.visitorName, d.summary, d.missionName, ...d.budgetAndTiming]
+        [d.visitorName, rowTitle(d), d.missionName, ...d.budgetAndTiming]
           .filter(Boolean)
           .some((field) => field!.toLowerCase().includes(s)),
       );
@@ -387,7 +399,7 @@ function PortalHomePage() {
                     </Link>
                   </td>
                   <td className="max-w-[22rem] px-4 py-3 text-muted-foreground">
-                    {d.summary ?? `Project Brief ${d.id.slice(0, 8)}`}
+                    {rowTitle(d)}
                   </td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {d.budgetAndTiming.length > 0 ? (

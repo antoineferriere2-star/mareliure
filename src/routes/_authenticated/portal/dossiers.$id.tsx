@@ -17,6 +17,7 @@ import {
   type CommercialStatus,
 } from "@/build/services/portal.data.functions";
 import type { ProjectBrief } from "@/build/schema/brief";
+import { resolveDossierTitle } from "@/build/dossiers/dossierDisplay";
 import type { AiInsights } from "@/build/ai/schema";
 import { ProjectBriefView } from "@/build/components/ProjectBriefView";
 import { AgentBlock } from "@/build/components/AgentFindings";
@@ -146,7 +147,13 @@ function PortalDossierDetailPage() {
           ← Project Briefs
         </Link>
         <h1 className="mt-2 text-2xl font-semibold text-foreground">
-          {dossier.summary ?? `Dossier ${dossier.id.slice(0, 8)}`}
+          {resolveDossierTitle({
+            storedSummary: dossier.summary,
+            projectSummary: brief?.projectSummary ?? null,
+            visitorName: dossier.visitor_name ?? null,
+            missionName: mission?.name ?? null,
+            id: dossier.id,
+          })}
         </h1>
         <p className="mt-1 text-xs text-muted-foreground">
           Received {new Date(dossier.created_at).toLocaleString()}

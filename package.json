@@ -12,6 +12,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",
+    "prospect-preview": "tsx scripts/prospectPreview.ts",
     "seed:deck": "tsx scripts/seedDeckPlaybook.ts",
     "setup:stripe-portal": "tsx scripts/setupStripeBillingPortal.ts",
     "test:e2e": "playwright test",

@@ -452,10 +452,10 @@ export async function handleSubmitSession(
   const brief = generateProjectBrief(schema, updatedSession.answers as Answers, mission);
   const missingCount = brief.missingInformation.length;
   const dossierStatus = missingCount > 0 ? "draft" : "ready";
-  const summary =
-    missingCount > 0
-      ? `Draft dossier — ${missingCount} follow-up item${missingCount > 1 ? "s" : ""} pending.`
-      : "Complete dossier ready for commercial review.";
+  // The stored summary is the visitor's project, never the workflow state:
+  // `dossierStatus` above already carries draft/ready, and a status sentence
+  // here made every brief in the portal read the same.
+  const summary = brief.projectSummary.trim() || null;
 
   const finalAnswersTyped = updatedSession.answers as Answers;
   const proposal = missionProposalSchema.safeParse(mission.proposal ?? {}).success
