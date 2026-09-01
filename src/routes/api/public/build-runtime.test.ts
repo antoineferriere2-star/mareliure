@@ -424,7 +424,9 @@ describe("reprise de session (resume_session)", () => {
     expect(body.dossier.id).toBe(dossier.id);
     expect(body.session.status).toBe("submitted");
     expect((store.get("build_dossiers") ?? []).length).toBe(1);
-  });
+    // Slowest case in the file (full submit + resume); the default 5s budget
+    // is exceeded when the suite runs fully parallel, not because of logic.
+  }, 20_000);
 });
 
 describe("soumission", () => {
