@@ -108,7 +108,7 @@ export function renderPreviewHtml(options: PreviewTemplateOptions): string {
         border-radius: 999px; padding: 3px 12px; border: 1px solid #e2e8f0;
       }
       .shot { height: calc(100% - 34px); overflow: hidden; }
-      .shot img { width: 100%; height: 100%; object-fit: cover; object-position: top; }
+      .shot img { width: 100%; height: auto; display: block; }
       .placeholder {
         height: 100%; display: flex; flex-direction: column; justify-content: center;
         align-items: center; gap: 10px; background: #f1f5f9; text-align: center; padding: 24px;
