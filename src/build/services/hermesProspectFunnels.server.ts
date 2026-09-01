@@ -435,13 +435,14 @@ async function analyzeStep(
 
     const analysis: SiteAnalysis = {
       finalUrl: fetched.finalUrl,
-      businessType: result.data.businessType,
-      isDeckBusiness: result.data.isDeckBusiness,
-      deckSignals: result.data.deckSignals,
-      products: result.data.products,
-      facts: result.data.facts,
+      businessType: analysisData.businessType,
+      isDeckBusiness: analysisData.isDeckBusiness,
+      deckSignals: analysisData.deckSignals,
+      products: analysisData.products,
+      facts: analysisData.facts,
       analyzedAt: new Date().toISOString(),
     };
+
 
     const { error } = await sb
       .from("build_workspace_onboarding")
