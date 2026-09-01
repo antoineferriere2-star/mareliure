@@ -265,7 +265,6 @@ describe("the Project Briefs list can be worked, not just read", () => {
     // rowTitle() is the resolved project title, never the stored workflow line.
     expect(listPage).toContain("d.visitorName, rowTitle(d), d.missionName");
   });
-  });
 });
 
 describe("prospect funnels are tracked without becoming business activity", () => {
