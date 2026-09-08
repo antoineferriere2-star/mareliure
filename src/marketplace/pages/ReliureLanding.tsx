@@ -88,7 +88,7 @@ export function ReliureLanding() {
   return (
     <div className="min-h-screen bg-[#f7f2e8] text-[#241a12]">
       <header className="mx-auto flex max-w-6xl items-center justify-between px-5 py-6 sm:px-8">
-        <span className="font-serif text-xl tracking-tight">Reliure</span>
+        <span className="font-serif text-xl tracking-tight">Ma Reliure</span>
         <Link
           to="/m/$publicToken"
           params={INTAKE_PARAMS}
@@ -174,7 +174,7 @@ export function ReliureLanding() {
       </section>
 
       <footer className="border-t border-[#3b2a1d]/10 px-5 py-10 text-center text-sm text-[#6b5847] sm:px-8">
-        Reliure — une marketplace d'artisans relieurs.
+        Ma Reliure — reliure et restauration de livres, par des artisans sélectionnés.
       </footer>
     </div>
   );

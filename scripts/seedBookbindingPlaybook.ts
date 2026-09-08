@@ -68,7 +68,7 @@ async function main() {
   // receives the Dossiers. Nothing about it is special-cased in the engine.
   const { error: workspaceErr } = await supabase.from("build_workspaces").upsert({
     id: BOOKBINDING_WORKSPACE_ID,
-    name: "Reliure Marketplace",
+    name: "Ma Reliure",
     is_active: true,
   });
   if (workspaceErr) throw workspaceErr;
@@ -144,7 +144,7 @@ async function main() {
         "Merci. Nous examinons votre demande et sélectionnons les relieurs les plus adaptés à votre projet. Vous recevrez leurs propositions par e-mail.",
     } as unknown as Json,
     branding: {
-      displayName: "Reliure",
+      displayName: "Ma Reliure",
     } as unknown as Json,
   });
   if (missionErr) throw missionErr;

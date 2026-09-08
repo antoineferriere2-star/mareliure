@@ -86,6 +86,32 @@ describe("adding French changed nothing for the existing locales", () => {
   });
 });
 
+describe("the runtime never branches on the locale itself", () => {
+  // How the bug this catches actually happened: the step counter read
+  // `locale === "es-US" ? "Paso" : "Step"`. Correct for two locales, and
+  // silently English on a French page the moment a third arrived — invisible to
+  // every coverage test above, because those strings never reached the
+  // dictionary. Translation goes through publicCopy, always; a comparison on
+  // `locale` in a rendering path is the bug, not the missing entry.
+  const SURFACES = [
+    "src/build/pages/public/MissionRuntime.tsx",
+    "src/build/pages/public/VisitorProjectSummaryView.tsx",
+    "src/build/pages/public/ProjectCanvas.tsx",
+  ];
+
+  it.each(SURFACES)("%s picks no copy by comparing the locale", async (path) => {
+    const { readFileSync } = await import("node:fs");
+    const { resolve } = await import("node:path");
+    const body = readFileSync(resolve(process.cwd(), path), "utf8")
+      .replace(/\/\*[\s\S]*?\*\//g, "")
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, "")
+      .replace(/\/\/.*$/gm, "");
+    expect(body, `${path} must not compare locale to a literal`).not.toMatch(
+      /locale\s*===\s*["']/,
+    );
+  });
+});
+
 describe("the runtime chrome list stays honest", () => {
   it("contains the strings the runtime is known to emit", () => {
     // Spot check: if someone empties the list, the coverage tests above pass

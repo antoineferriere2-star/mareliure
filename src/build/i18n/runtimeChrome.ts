@@ -31,6 +31,8 @@ export const RUNTIME_CHROME_STRINGS: readonly string[] = [
   "Back",
   "Continue",
   "Steps",
+  "Step",
+  "of",
   "current step",
   "complete",
   "Review my answers",

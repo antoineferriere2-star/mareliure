@@ -28,6 +28,8 @@ export const FR_PUBLIC_COPY: Record<string, string> = {
   Back: "Retour",
   Continue: "Continuer",
   Steps: "Étapes",
+  Step: "Étape",
+  of: "sur",
   "current step": "étape en cours",
   complete: "terminé",
   "Review my answers": "Revoir mes réponses",

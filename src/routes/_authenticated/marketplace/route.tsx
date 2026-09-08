@@ -31,7 +31,7 @@ function MarketplaceAdminLayout() {
       <header className="border-b border-border bg-card">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-6 px-5 py-4">
           <Link to="/marketplace/cases" className="font-serif text-lg">
-            Reliure · back-office
+            Ma Reliure · back-office
           </Link>
           <nav className="flex gap-1">
             {NAV.map((item) => (

@@ -16,7 +16,7 @@ function CustomerLayout() {
       <header className="border-b border-[#3b2a1d]/10">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-5 py-4">
           <Link to="/mes-livres" className="font-serif text-lg">
-            Reliure
+            Ma Reliure
           </Link>
         </div>
       </header>

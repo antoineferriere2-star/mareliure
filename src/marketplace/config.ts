@@ -28,3 +28,20 @@ export const MARKETPLACE_CURRENCY = "EUR";
 
 /** The Métré vertical this marketplace consumes. */
 export const MARKETPLACE_VERTICAL_ID = "bookbinding";
+
+/**
+ * The brand as the public reads it. The internal vocabulary stays
+ * `bookbinding` / `marketplace_*` / `MARKETPLACE_VERTICAL_ID` — renaming stable
+ * identifiers for a marketing decision is how a schema ends up telling the
+ * story of every rebrand it has lived through.
+ */
+export const MARELIURE_BRAND = "Ma Reliure";
+
+/**
+ * Canonical origin, no trailing slash, no path.
+ *
+ * `www` redirects here permanently and never the other way round, so this is
+ * the single URL that may appear in a canonical tag, an Open Graph `og:url` or
+ * a Supabase Auth Site URL.
+ */
+export const MARELIURE_CANONICAL_ORIGIN = "https://mareliure.fr";

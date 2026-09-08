@@ -655,9 +655,14 @@ function MissionRuntimeContent({
                       copy("Last look before sending")
                     ) : (
                       <>
-                        {locale === "es-US" ? "Paso" : "Step"} {clampedStepIndex + 1}{" "}
-                        {locale === "es-US" ? "de" : "of"} {visibleSteps.length} · {progress}%{" "}
-                        {copy("complete")}
+                        {/* Through copy(), like everything else the visitor
+                            reads. These two were hardcoded ternaries on
+                            es-US, so adding a third locale left them in
+                            English on a page that was otherwise translated —
+                            invisible to every test, because they never
+                            reached the dictionary. */}
+                        {copy("Step")} {clampedStepIndex + 1} {copy("of")}{" "}
+                        {visibleSteps.length} · {progress}% {copy("complete")}
                       </>
                     )}
                   </p>

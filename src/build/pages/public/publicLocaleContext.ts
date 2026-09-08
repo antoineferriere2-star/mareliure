@@ -44,6 +44,12 @@ export function useOptionalPublicLocale() {
 }
 
 export const ES_PUBLIC_COPY: Record<string, string> = {
+  // Step counter. These used to be inline `locale === "es-US" ? … : …`
+  // ternaries in MissionRuntime, which is why they were never in this
+  // dictionary; routing them through publicCopy is what makes a third locale
+  // possible at all.
+  Step: "Paso",
+  of: "de",
   "Your project summary is ready": "El resumen de su proyecto está listo",
   "Your information has been sent to": "Su información ha sido enviada a",
   "No details were provided yet.": "Aún no se proporcionaron detalles.",

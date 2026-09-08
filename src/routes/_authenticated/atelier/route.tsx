@@ -17,7 +17,7 @@ function AtelierLayout() {
       <header className="border-b border-[#3b2a1d]/10">
         <div className="mx-auto flex max-w-6xl items-center gap-6 px-5 py-4">
           <Link to="/atelier" className="font-serif text-lg">
-            Reliure · atelier
+            Ma Reliure · atelier
           </Link>
         </div>
       </header>

@@ -646,6 +646,32 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
               maxFileSizeMb: 8,
               acceptMimeTypes: ["image/jpeg", "image/png", "image/webp"],
             },
+            // §16 asks for "une ou plusieurs références visuelles", and
+            // `inspiration_photo` is single-image by design: one image, one set
+            // of AI hypotheses the visitor confirms. This is the plain
+            // companion — several references, no analysis, nothing to confirm.
+            // Kept as a separate field rather than making the other one
+            // multiple, because the two carry different weight in the Dossier:
+            // one is a reading of the image, these are just what the customer
+            // liked.
+            {
+              key: "inspirationsRef",
+              label: "Autres références visuelles",
+              type: "photo",
+              desirability: "optional",
+              helpText:
+                "Jusqu'à quatre images supplémentaires. Elles seront transmises telles quelles au relieur.",
+              maxFiles: 4,
+              maxFileSizeMb: 8,
+              acceptMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
+              storage: "supabase_storage",
+              briefMapping: {
+                section: "confirmedInformation",
+                label: "Références visuelles",
+                category: "Style",
+                format: "join_comma",
+              },
+            },
           ],
         },
 
