@@ -10,10 +10,11 @@
  * Ces tests lisent les sources de la page. Ils ne prouvent pas que la page est
  * belle ; ils prouvent qu'elle ne ment pas.
  */
-import { readFileSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ARTISANS, BEFORE_AFTER, CRAFTS, COMMITMENTS, STEPS } from "./content";
+import { PHOTOS } from "./photos";
 
 const DIR = resolve(process.cwd(), "src/marketplace/pages");
 const FILES = [
@@ -67,8 +68,18 @@ describe("la landing Ma Reliure ne fabrique rien", () => {
     expect(ARTISANS).toHaveLength(0);
   });
 
-  it("n'affiche aucune réalisation avant / après tant qu'aucune n'est réelle", () => {
-    expect(BEFORE_AFTER).toHaveLength(0);
+  /**
+   * Les deux restaurations affichées ont été faites par un atelier tiers. Sans
+   * crédit visible, la section les présenterait implicitement comme des
+   * chantiers Ma Reliure — la fabrication exacte que le brief interdit. Le
+   * crédit est donc obligatoire, au même titre que les photographies.
+   */
+  it("crédite chaque restauration à l'atelier qui l'a faite", () => {
+    for (const entry of BEFORE_AFTER) {
+      expect(entry.credit.trim().length).toBeGreaterThan(10);
+      expect(entry.before.src).toMatch(/^\/photos\//);
+      expect(entry.after.src).toMatch(/^\/photos\//);
+    }
   });
 
   it.each(FABRICATION_PATTERNS)("ne contient pas $label", ({ pattern }) => {
@@ -83,10 +94,32 @@ describe("les emplacements de photographie s'annoncent comme provisoires", () =>
     expect(photograph).toContain("Photographie à fournir");
   });
 
-  it("décrit la prise de vue attendue pour chaque savoir-faire", () => {
+  it("décrit ce que montre la photographie de chaque savoir-faire", () => {
     for (const craft of CRAFTS) {
-      expect(craft.shotBrief.length).toBeGreaterThan(20);
+      expect(craft.alt.length).toBeGreaterThan(20);
     }
+  });
+});
+
+/**
+ * Une image manquante ne casse rien de bruyant : elle laisse un cadre vide sur
+ * une page qui vend un savoir-faire visuel, et personne ne s'en aperçoit avant
+ * un client. On vérifie donc que chaque fichier déclaré existe vraiment, et
+ * chaque largeur promise avec lui.
+ */
+describe("chaque photographie déclarée existe sur le disque", () => {
+  const PUBLIC = resolve(process.cwd(), "public");
+
+  const declared = Object.entries(PHOTOS).flatMap(([slot, photo]) =>
+    photo.srcSet.split(", ").map((entry) => ({ slot, path: entry.split(" ")[0] })),
+  );
+
+  it("déclare au moins une photographie par emplacement", () => {
+    expect(declared.length).toBeGreaterThanOrEqual(Object.keys(PHOTOS).length);
+  });
+
+  it.each(declared)("$slot : $path", ({ path }) => {
+    expect(existsSync(resolve(PUBLIC, path.replace(/^\//, "")))).toBe(true);
   });
 });
 

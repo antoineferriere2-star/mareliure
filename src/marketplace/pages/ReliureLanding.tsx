@@ -24,12 +24,12 @@ import {
   ANCHORS,
   ARTISANS,
   BEFORE_AFTER,
-  BEFORE_AFTER_SLOTS,
   COMMITMENTS,
   CRAFTS,
   SHOW_UNFILLED_SECTIONS,
   STEPS,
 } from "./landing/content";
+import { PHOTOS, PHOTO_SIZES } from "./landing/photos";
 
 const SHELL = "mx-auto w-full max-w-[78rem] px-5 sm:px-8";
 
@@ -115,8 +115,9 @@ function Hero() {
           <Photograph
             priority
             ratio="tall"
-            alt="Un livre entre les mains d'un relieur, dans son atelier"
-            shotBrief="Gros plan d'un livre ouvert dans un atelier de reliure : mains de l'artisan, cuir, papier ou dorure. Lumière naturelle rasante, fond d'établi."
+            photo={PHOTOS.hero}
+            sizes={PHOTO_SIZES.half}
+            alt="Les mains d'un relieur posant la feuille d'or sur le dos à nerfs d'un ouvrage en cuir"
             className="relative"
           />
         </div>
@@ -171,10 +172,10 @@ function Steps() {
  * cadre ni fond, donc une page de magazine plutôt qu'une pile de cartes.
  */
 const CRAFT_LAYOUT = [
-  { span: "lg:col-span-7", ratio: "landscape", lift: "" },
-  { span: "lg:col-span-5", ratio: "portrait", lift: "lg:mt-24" },
-  { span: "lg:col-span-5", ratio: "portrait", lift: "" },
-  { span: "lg:col-span-7", ratio: "landscape", lift: "lg:mt-24" },
+  { span: "lg:col-span-7", ratio: "landscape", lift: "", sizes: PHOTO_SIZES.sevenOfTwelve },
+  { span: "lg:col-span-5", ratio: "portrait", lift: "lg:mt-24", sizes: PHOTO_SIZES.fiveOfTwelve },
+  { span: "lg:col-span-5", ratio: "portrait", lift: "", sizes: PHOTO_SIZES.fiveOfTwelve },
+  { span: "lg:col-span-7", ratio: "landscape", lift: "lg:mt-24", sizes: PHOTO_SIZES.sevenOfTwelve },
 ] as const;
 
 function Crafts() {
@@ -193,8 +194,9 @@ function Crafts() {
             <article key={craft.title} className={`${layout.span} ${layout.lift} self-start`}>
               <Photograph
                 ratio={layout.ratio}
-                alt={`${craft.title} — ${craft.body}`}
-                shotBrief={craft.shotBrief}
+                photo={craft.photo}
+                sizes={layout.sizes}
+                alt={craft.alt}
               />
               <h3 className="mr-title mt-7 text-[1.875rem] sm:text-[2rem]">{craft.title}</h3>
               <p className="mt-3 max-w-[34rem] text-[1.0625rem] leading-[1.7] text-mr-walnut">
@@ -226,28 +228,13 @@ function PlaceholderNotice({ children }: { children: ReactNode }) {
 /**
  * Avant / après.
  *
- * La liste des cas réels est vide, et le restera jusqu'à ce qu'un atelier
- * livre un travail documenté. On montre donc la disposition et les cadrages
- * attendus, jamais une réalisation inventée (§59).
+ * Deux restaurations réelles, sur des ouvrages nommés et datés, photographiées
+ * par l'atelier qui les a faites. Le crédit sous chaque cas n'est pas une
+ * politesse : ces livres ne sont pas passés par Ma Reliure, et l'omettre
+ * transformerait deux vrais chantiers en deux fausses références (§59).
  */
 function BeforeAfterSection() {
-  const cases = BEFORE_AFTER;
-  if (cases.length === 0 && !SHOW_UNFILLED_SECTIONS) return null;
-
-  const pairs =
-    cases.length > 0
-      ? cases.map((entry) => ({
-          title: entry.title,
-          body: entry.body,
-          before: { src: entry.beforeSrc, alt: entry.beforeAlt, brief: entry.beforeAlt },
-          after: { src: entry.afterSrc, alt: entry.afterAlt, brief: entry.afterAlt },
-        }))
-      : BEFORE_AFTER_SLOTS.map((slot, i) => ({
-          title: "",
-          body: "",
-          before: { src: undefined, alt: `Emplacement avant, cas ${i + 1}`, brief: slot.before },
-          after: { src: undefined, alt: `Emplacement après, cas ${i + 1}`, brief: slot.after },
-        }));
+  if (BEFORE_AFTER.length === 0) return null;
 
   return (
     <section className="border-t border-mr-rule">
@@ -255,44 +242,38 @@ function BeforeAfterSection() {
         <SectionHead
           eyebrow="Transformations"
           title="Quelques livres méritent une seconde histoire."
-          lead="Le même livre, photographié à son arrivée puis à son retour, dans le même cadrage."
+          lead="Le même ouvrage, à son arrivée à l'atelier puis à son retour."
         />
 
-        {cases.length === 0 && (
-          <PlaceholderNotice>
-            Section en attente de cas réels — aucune réalisation n'est affichée tant qu'un atelier
-            n'a pas livré un travail documenté.
-          </PlaceholderNotice>
-        )}
-
-        <div className="mt-12 grid gap-14 lg:mt-16 lg:grid-cols-2 lg:gap-12">
-          {pairs.map((pair, i) => (
-            <div key={i}>
+        <div className="mt-12 grid gap-16 lg:mt-16 lg:grid-cols-2 lg:gap-12">
+          {BEFORE_AFTER.map((entry) => (
+            <article key={entry.title}>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <p className="mr-eyebrow mb-3">Avant</p>
                   <Photograph
-                    src={pair.before.src}
-                    ratio="square"
-                    alt={pair.before.alt}
-                    shotBrief={pair.before.brief}
+                    photo={entry.before}
+                    sizes={PHOTO_SIZES.beforeAfter}
+                    ratio="wide"
+                    alt={entry.beforeAlt}
                   />
                 </div>
                 <div>
                   <p className="mr-eyebrow mb-3">Après</p>
                   <Photograph
-                    src={pair.after.src}
-                    ratio="square"
-                    alt={pair.after.alt}
-                    shotBrief={pair.after.brief}
+                    photo={entry.after}
+                    sizes={PHOTO_SIZES.beforeAfter}
+                    ratio="wide"
+                    alt={entry.afterAlt}
                   />
                 </div>
               </div>
-              {pair.title && <h3 className="mr-title mt-6 text-2xl">{pair.title}</h3>}
-              {pair.body && (
-                <p className="mt-2 text-[1.0625rem] leading-[1.7] text-mr-walnut">{pair.body}</p>
-              )}
-            </div>
+              <h3 className="mr-title mt-7 text-[1.625rem]">{entry.title}</h3>
+              <p className="mt-3 text-[1.0625rem] leading-[1.7] text-mr-walnut">{entry.body}</p>
+              <p className="mt-4 text-[0.8125rem] text-mr-muted">
+                Restauration et photographies : {entry.credit}
+              </p>
+            </article>
           ))}
         </div>
       </div>
@@ -444,8 +425,9 @@ function FinalCta() {
 
           <Photograph
             ratio="square"
-            alt="Détail d'une reliure en cuir, dorure au fer"
-            shotBrief="Détail de matière : grain du cuir, filet doré, coin de plat. Cadrage très serré, lumière rasante."
+            photo={PHOTOS.closing}
+            sizes={PHOTO_SIZES.closing}
+            alt="Une pile de reliures en cuir à dos dorés, sur l'établi d'un atelier"
             className="lg:order-first"
           />
         </div>

@@ -12,18 +12,20 @@
  * prend l'honnêteté tant que les contenus réels n'existent pas.
  */
 
+import { PHOTOS, type PhotoSources } from "./photos";
 /**
- * Affiche les sections dont le contenu réel n'existe pas encore (avant/après,
- * ateliers), sous forme d'emplacements explicitement marqués.
+ * Affiche la section dont le contenu réel n'existe pas encore — les ateliers —
+ * sous forme d'emplacements explicitement marqués.
  *
- * `true` : on voit la mise en page complète, emplacements compris — c'est ce
- * qu'il faut pour juger le design et pour savoir quelles photographies
- * commander.
+ * L'avant/après n'en dépend plus : deux restaurations réelles y sont
+ * documentées et créditées. Il ne reste que les vitrines d'atelier, qui
+ * attendent qu'un premier relieur rejoigne la plateforme.
  *
- * `false` : ces deux sections disparaissent entièrement. C'est le réglage à
- * passer avant d'envoyer du trafic sur le site, si les photographies ne sont
- * pas encore arrivées. Rien d'autre à toucher : le reste de la page se referme
- * proprement.
+ * `true` : on voit la mise en page complète, emplacements compris.
+ *
+ * `false` : la section ateliers disparaît entièrement, et le reste de la page
+ * se referme proprement. C'est le réglage à passer si l'on préfère ne rien
+ * montrer plutôt qu'un emplacement, une fois du trafic envoyé sur le site.
  */
 export const SHOW_UNFILLED_SECTIONS = true;
 
@@ -66,33 +68,35 @@ export const STEPS: readonly LandingStep[] = [
 export interface Craft {
   title: string;
   body: string;
-  /** Ce que la photographie de cette catégorie doit montrer. */
-  shotBrief: string;
+  /** La photographie de la catégorie, et ce qu'elle montre réellement. */
+  photo: PhotoSources;
+  alt: string;
 }
 
 export const CRAFTS: readonly Craft[] = [
   {
     title: "Réparer",
     body: "Un dos fendu, des pages qui se détachent ou une couverture fatiguée.",
-    shotBrief:
-      "Mains d'artisan recousant un cahier sur cousoir, fil de lin, gros plan sur le dos ouvert.",
+    photo: PHOTOS.repair,
+    alt: "Un atelier de reliure : la presse en bois, les cahiers en attente et les outils au mur",
   },
   {
     title: "Restaurer",
     body: "Préserver un ouvrage ancien en respectant son histoire.",
-    shotBrief:
-      "Ouvrage ancien à plat sous une lumière rasante, cuir patiné, comblement de papier japon à la pince.",
+    photo: PHOTOS.restore,
+    alt: "Un ouvrage ancien en cuir, coiffes usées, posé sur l'établi entre les outils de restauration",
   },
   {
     title: "Transformer",
     body: "Donner une nouvelle allure à un livre que vous aimez.",
-    shotBrief:
-      "Toile et papiers décorés étalés sur l'établi, à côté d'un livre en cours de couvrure.",
+    photo: PHOTOS.transform,
+    alt: "Des emboîtages et coffrets en toile, teintes ivoire, bordeaux et vert, empilés sur un établi",
   },
   {
     title: "Créer une édition collector",
     body: "Faire d'un livre courant une pièce unique.",
-    shotBrief: "Dorure au fer chaud sur un dos à nerfs, feuille d'or, détail très serré.",
+    photo: PHOTOS.collector,
+    alt: "Une reliure en maroquin bordeaux à plats de brocart, titre doré au dos",
   },
 ];
 
@@ -121,37 +125,53 @@ export const COMMITMENTS: readonly Commitment[] = [
 ];
 
 /**
- * Une transformation réellement effectuée, photographiée avant et après.
+ * Une restauration réellement effectuée, photographiée avant et après.
  *
- * Le type existe, la liste est vide : c'est exactement l'état de la réalité.
- * Le jour où un atelier livre un cas documenté, on ajoute une entrée et la
- * section se remplit sans qu'une ligne de mise en page bouge.
+ * `credit` n'est pas décoratif. Ces ouvrages n'ont pas transité par Ma Reliure :
+ * les montrer sans dire de quel atelier ils viennent laisserait entendre le
+ * contraire, et ce serait exactement la réalisation inventée que le brief
+ * interdit. Avec le crédit, la section dit une chose vraie — voici du travail
+ * de reliure, fait par un atelier nommé, sur un livre nommé.
  */
 export interface BeforeAfter {
   title: string;
   body: string;
-  beforeSrc?: string;
-  afterSrc?: string;
+  before: PhotoSources;
+  after: PhotoSources;
   beforeAlt: string;
   afterAlt: string;
+  credit: string;
 }
 
-/** Aucune réalisation fictive (§59). Vide jusqu'à ce qu'un vrai cas existe. */
-export const BEFORE_AFTER: readonly BeforeAfter[] = [];
+const FERRIERE = "Atelier Reliure Dorure Ferrière, Orléans";
 
 /**
- * Les emplacements de la section avant/après tant qu'aucun cas réel n'est
- * documenté. Deux briefs de prise de vue, pas deux fausses réalisations : rien
- * ici ne prétend décrire un livre qui aurait existé.
+ * Deux cas réels, documentés et crédités. Rien ici n'est reconstitué : les
+ * photographies viennent de l'atelier, les ouvrages existent, et les états
+ * « avant » sont ceux dans lesquels les livres sont arrivés.
  */
-export const BEFORE_AFTER_SLOTS: readonly { before: string; after: string }[] = [
+export const BEFORE_AFTER: readonly BeforeAfter[] = [
   {
-    before: "Avant — reliure fatiguée, mors fendus, telle qu'elle arrive à l'atelier.",
-    after: "Après — le même ouvrage, même cadrage, même lumière.",
+    title: "Views in Syria, trois volumes, 1830",
+    body: "Dos usés, dorure écaillée, coins éclatés et plats détachés. Après restauration, le décor doré est repris et les trois volumes retrouvent leur tenue.",
+    before: PHOTOS.syriaBefore,
+    after: PHOTOS.syriaAfter,
+    beforeAlt:
+      "Les trois volumes de Views in Syria avant restauration : cuir noir usé, dorure écaillée, coiffes abîmées",
+    afterAlt:
+      "Les trois mêmes volumes après restauration : dorure reprise, cuir nettoyé et teinté, coiffes refaites",
+    credit: FERRIERE,
   },
   {
-    before: "Avant — livre broché courant, couverture souple, tranches à vif.",
-    after: "Après — le même exemplaire relié, même cadrage, même lumière.",
+    title: "Dictionnaire de l'Académie, deux volumes, XVIIIᵉ siècle",
+    body: "Plein cuir épidermé, mors fendus et coins usés. Après restauration et reprise de teinte, les pièces de titre et les fers d'origine sont conservés.",
+    before: PHOTOS.academieBefore,
+    after: PHOTOS.academieAfter,
+    beforeAlt:
+      "Les deux volumes du Dictionnaire de l'Académie avant restauration : cuir marbré épidermé, coins et coiffes usés",
+    afterAlt:
+      "Les deux mêmes volumes après restauration : cuir reteinté, dos à nerfs et dorure rénovée",
+    credit: FERRIERE,
   },
 ];
 
@@ -167,8 +187,8 @@ export interface ArtisanProfile {
   name: string;
   city: string;
   specialties: readonly string[];
-  portraitSrc?: string;
-  portfolioSrcs?: readonly string[];
+  portrait?: PhotoSources;
+  portfolio?: readonly PhotoSources[];
 }
 
 /** Aucun faux artisan en production (§59). */

@@ -15,12 +15,12 @@ import type { ArtisanProfile } from "./content";
 import { Photograph } from "./Photograph";
 
 export function ArtisanCard({ artisan }: { artisan: ArtisanProfile }) {
-  const portfolio = (artisan.portfolioSrcs ?? []).slice(0, 3);
+  const portfolio = (artisan.portfolio ?? []).slice(0, 3);
 
   return (
     <article className="flex flex-col">
       <Photograph
-        src={artisan.portraitSrc}
+        photo={artisan.portrait}
         alt={`L'atelier de ${artisan.name}, à ${artisan.city}`}
         shotBrief="Portrait de l'artisan à l'établi, dans son atelier, lumière naturelle."
         ratio="landscape"
@@ -44,10 +44,10 @@ export function ArtisanCard({ artisan }: { artisan: ArtisanProfile }) {
 
       {portfolio.length > 0 && (
         <div className="mt-6 grid grid-cols-3 gap-2">
-          {portfolio.map((src) => (
+          {portfolio.map((piece) => (
             <Photograph
-              key={src}
-              src={src}
+              key={piece.src}
+              photo={piece}
               alt={`Une reliure réalisée par ${artisan.name}`}
               shotBrief="Pièce réalisée par l'atelier."
               ratio="square"
