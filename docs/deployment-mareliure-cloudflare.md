@@ -6,13 +6,18 @@
 >
 > **État au 8 septembre 2026 : déployé et testé.**
 >
-> URL : **https://mareliure.aferriere.workers.dev**
+> URL publique : **https://mareliure.fr**
+> URL technique : https://mareliure.aferriere.workers.dev
 > Version : `b78dc1d7-8c8b-4295-8ff2-cf9f6b13f570`
 > Supabase : **projet de production `hljxohondjvrkzqicexl`**, sans donnée de
 > démonstration.
 >
-> Le domaine `mareliure.fr` n'est pas encore branché : il exige la bascule des
-> serveurs de noms (§8), et donc la recréation préalable des MX et du SPF OVH.
+> Domaine branché le 8 septembre 2026 : serveurs de noms chez Cloudflare
+> (`finley` / `ingrid.ns.cloudflare.com`), zone active, certificat Google Trust
+> Services valide jusqu'au 7 décembre 2026. La messagerie OVH est intacte.
+>
+> **Deux réglages restent à faire dans le tableau de bord** (§8) : forcer HTTPS,
+> et la redirection `www` vers l'apex.
 
 ---
 
@@ -275,6 +280,36 @@ Cloudflare importe généralement la zone existante automatiquement lors de
 l'ajout du site — **il faut malgré tout vérifier ligne à ligne** avant de
 changer les NS chez OVH.
 
+### Ce qui a réellement été fait le 8 septembre 2026
+
+Les serveurs de noms ont été basculés sur Cloudflare et la zone importée.
+Vérifié auprès des serveurs autoritaires après la bascule : **les 3 MX, le SPF
+et les 3 SRV mail sont intacts**, tous en `DNS only`. Cloudflare avait repris
+davantage que la liste minimale ci-dessus — les SRV `_autodiscover`, `_imaps` et
+`_submission` inclus.
+
+Deux pièges rencontrés, à connaître pour la prochaine fois :
+
+1. **La zone OVH devient inerte** dès la bascule, et OVH l'affiche en bandeau :
+   « Cette zone DNS n'est pas autoritaire pour votre nom de domaine ». Supprimer
+   des enregistrements chez OVH après la bascule ne fait rien. Tout se passe
+   désormais chez Cloudflare.
+2. **Les A/AAAA importés pointaient encore sur l'hébergement OVH** et servaient
+   sa page « Site en construction » à travers le proxy Cloudflare. Ils doivent
+   être supprimés avant d'attacher le Worker : sinon l'API répond
+   `100117 — Hostname already has externally managed DNS records`.
+
+Une fois les quatre enregistrements retirés, les deux domaines ont été attachés
+par l'API Workers :
+
+```
+PUT /accounts/<account_id>/workers/domains
+{ "environment": "production", "hostname": "mareliure.fr",
+  "service": "mareliure", "zone_id": "<zone_id>" }
+```
+
+Cloudflare crée alors ses propres enregistrements et provisionne le certificat.
+
 ### Une fois la zone active chez Cloudflare
 
 `Workers & Pages → mareliure → Settings → Domains & Routes → Add custom domain` :
@@ -288,13 +323,28 @@ Cloudflare crée lui-même les enregistrements nécessaires (`AAAA`/`CNAME`
 proxifiés vers le Worker) et provisionne le certificat TLS. HTTPS et la
 redirection HTTP → HTTPS sont automatiques.
 
-**`www` → apex** : `Rules → Redirect Rules → Create rule`
+### Les deux réglages qui restent
 
-- Si : `Hostname` égal à `www.mareliure.fr`
-- Alors : redirection **dynamique**, `concat("https://mareliure.fr", http.request.uri.path)`
-- Statut **301**, « Preserve query string » activé
+Ils demandent un droit d'écriture sur la zone que le jeton OAuth de `wrangler`
+n'a pas (`zone (read)` seulement) — donc à faire dans le tableau de bord.
 
-Jamais l'inverse : l'apex est la forme canonique.
+**1. Forcer HTTPS.** Constaté après la mise en ligne : `http://mareliure.fr`
+répond 200 en clair au lieu de rediriger.
+
+`SSL/TLS → Edge Certificates → Always Use HTTPS` → **On**
+
+**2. `www` → apex.** Constaté : `www.mareliure.fr` sert l'application au lieu de
+rediriger. Les deux noms sont attachés au Worker, il faut donc une règle.
+
+`Rules → Redirect Rules → Create rule`
+
+- Si : `Hostname` **equals** `www.mareliure.fr`
+- Alors : redirection **Dynamic**,
+  `concat("https://mareliure.fr", http.request.uri.path)`
+- Statut **301**, *Preserve query string* activé
+
+Jamais l'inverse : l'apex est la forme canonique, c'est lui que porte le
+`<link rel="canonical">` de chaque page.
 
 ---
 
@@ -403,6 +453,23 @@ recette de retour arrière, en commentaire à la fin de
 | E-mails qui n'arrivent plus | MX/SPF non recréés dans Cloudflare (§8) |
 
 ---
+
+## 12ter. Sur le domaine public (8 septembre 2026)
+
+`https://mareliure.fr` :
+
+| Test | Résultat |
+| --- | --- |
+| Certificat | Google Trust Services, `CN=mareliure.fr`, valide jusqu'au 7 décembre 2026 |
+| `/` | 200 · `Ma Reliure — Reliure et restauration de livres` · canonical `https://mareliure.fr/` |
+| `/reliure`, `/mes-livres`, `/atelier`, `/marketplace/cases`, `/project-summary/…`, `/auth` | 200 — routes profondes servies directement, 0,15 à 0,56 s |
+| `/m/reliure-marketplace-token-000001` | en-tête « Ma Reliure » · `lang="fr-FR"` · sélecteur masqué · « Étape 1 sur 8 · 13 % terminé » |
+| `get_mission` | Mission servie depuis la production, Playbook 12 étapes |
+| Mobile 375 px | aucun débordement horizontal |
+| Console | aucune erreur |
+| Messagerie | 3 MX résolus après la bascule |
+| `http://mareliure.fr` | **200 en clair — à corriger** (§8) |
+| `https://www.mareliure.fr` | **200, sert l'app au lieu de rediriger — à corriger** (§8) |
 
 ## 12bis. Résultats du premier déploiement (8 septembre 2026)
 
