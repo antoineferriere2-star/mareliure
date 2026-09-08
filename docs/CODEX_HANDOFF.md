@@ -769,14 +769,13 @@ branche dédiée, en commençant par le schéma et sa migration.
 
 Deux tâches plus courtes si l'on préfère commencer petit :
 
-1. rediriger un relieur vers `/atelier` et un client vers `/mes-livres` après
-   connexion — aujourd'hui les deux atterrissent sur le portail client Métré ;
-2. confirmer puis supprimer le dossier de test resté en production.
+1. confirmer puis supprimer le dossier de test resté en production ;
+2. fermer les inscriptions publiques sur le projet de production et corriger
+   son `site_url`, qui pointe encore sur l'URL technique workers.dev.
 
 **Known issues:**
 
 - le modèle commercial du code (devis) ne correspond pas au modèle décidé ;
-- après connexion, relieurs et clients atterrissent sur le portail Métré ;
 - `supabase/config.toml` pointe sur le projet Métré d'origine : toujours
   `supabase link` avant un `db push` ;
 - un `marketplace_case` de test subsiste en production (`under_review`, créé le

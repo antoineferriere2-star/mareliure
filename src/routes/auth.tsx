@@ -6,6 +6,9 @@ import { requireBuildAdmin } from "@/build/services/admin.functions";
 import { requireWorkspaceAccess } from "@/build/services/workspace.functions";
 import { ensureMyWorkspace } from "@/build/services/provisionWorkspace.functions";
 import { resolvePostAuthDestination } from "@/build/services/postAuthRoute";
+import { resolveMarketplacePostAuthDestination } from "@/marketplace/auth/postAuthRoute";
+import { getMyBinderProfile } from "@/marketplace/services/marketplace.data.functions";
+import { isMaReliure } from "@/brand";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -50,21 +53,32 @@ function AuthPage() {
   const checkAdmin = useServerFn(requireBuildAdmin);
   const checkWorkspace = useServerFn(requireWorkspaceAccess);
   const provision = useServerFn(ensureMyWorkspace);
+  const binderProfile = useServerFn(getMyBinderProfile);
 
   // Privileges are always decided server-side: admin check, then workspace
   // membership, then safe idempotent provisioning. Nothing from the browser.
+  //
+  // The two brands answer "where does this account belong?" differently, and
+  // the branch lives here rather than in either resolver — the same seam
+  // src/routes/index.tsx uses to pick a homepage. `isMaReliure` is a build
+  // constant, so the branch not taken is dropped by the bundler.
   const goToHomeRoute = useCallback(
     async (company?: string) => {
       setRouting(true);
       setAccessError(null);
-      const destination = await resolvePostAuthDestination(
-        {
-          checkAdmin: () => checkAdmin(),
-          checkWorkspace: () => checkWorkspace(),
-          provision: () => provision({ data: { company } }),
-        },
-        redirect,
-      );
+      const destination = isMaReliure
+        ? await resolveMarketplacePostAuthDestination({
+            checkAdmin: () => checkAdmin(),
+            getBinderProfile: () => binderProfile(),
+          })
+        : await resolvePostAuthDestination(
+            {
+              checkAdmin: () => checkAdmin(),
+              checkWorkspace: () => checkWorkspace(),
+              provision: () => provision({ data: { company } }),
+            },
+            redirect,
+          );
       setRouting(false);
       if (destination.to === null) {
         setAccessError(destination.error);
@@ -72,7 +86,7 @@ function AuthPage() {
       }
       navigate({ to: destination.to, replace: true });
     },
-    [checkAdmin, checkWorkspace, provision, navigate, redirect],
+    [checkAdmin, checkWorkspace, provision, binderProfile, navigate, redirect],
   );
 
   useEffect(() => {
