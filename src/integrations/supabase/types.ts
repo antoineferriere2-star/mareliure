@@ -976,6 +976,9 @@ export type Database = {
       marketplace_cases: {
         Row: {
           admin_notes: string | null
+          claim_method: string | null
+          claimed_at: string | null
+          customer_user_id: string | null
           created_at: string
           declared_value_band: string | null
           dossier_id: string
@@ -985,11 +988,15 @@ export type Database = {
           mission_id: string | null
           reference: string
           status: string
+          triage_flags: string[]
           triaged_at: string | null
           updated_at: string
         }
         Insert: {
           admin_notes?: string | null
+          claim_method?: string | null
+          claimed_at?: string | null
+          customer_user_id?: string | null
           created_at?: string
           declared_value_band?: string | null
           dossier_id: string
@@ -999,11 +1006,15 @@ export type Database = {
           mission_id?: string | null
           reference: string
           status?: string
+          triage_flags?: string[]
           triaged_at?: string | null
           updated_at?: string
         }
         Update: {
           admin_notes?: string | null
+          claim_method?: string | null
+          claimed_at?: string | null
+          customer_user_id?: string | null
           created_at?: string
           declared_value_band?: string | null
           dossier_id?: string
@@ -1013,6 +1024,7 @@ export type Database = {
           mission_id?: string | null
           reference?: string
           status?: string
+          triage_flags?: string[]
           triaged_at?: string | null
           updated_at?: string
         }
@@ -1116,6 +1128,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      marketplace_ingest_missing_cases: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

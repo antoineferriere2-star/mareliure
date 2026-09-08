@@ -9,8 +9,26 @@ import {
   type PublicLocaleContextValue,
 } from "@/build/pages/public/publicLocaleContext";
 
-export function PublicLocaleProvider({ children }: { children: ReactNode }) {
-  const [locale, setLocaleState] = useState<SupportedLocale>(DEFAULT_LOCALE);
+/**
+ * `lockedLocale` lets a surface declare the language it is written in — today,
+ * a Mission whose Playbook is authored in one language (see
+ * `MissionProposal.defaultLocale`). It is a generic capability, not a rule
+ * about any particular vertical: nothing here knows which Playbook is French.
+ *
+ * The lock deliberately does NOT write to localStorage. A visitor who opens a
+ * French intake and later browses the marketing site must find it in the
+ * language they chose, not in the one an embedded page imposed on them.
+ */
+export function PublicLocaleProvider({
+  children,
+  lockedLocale,
+}: {
+  children: ReactNode;
+  lockedLocale?: SupportedLocale | null;
+}) {
+  const [preferredLocale, setLocaleState] = useState<SupportedLocale>(DEFAULT_LOCALE);
+  const locked = Boolean(lockedLocale);
+  const locale = lockedLocale ?? preferredLocale;
 
   useEffect(() => {
     setLocaleState(resolveSupportedLocale(window.localStorage.getItem(PUBLIC_LOCALE_STORAGE_KEY)));
@@ -18,22 +36,33 @@ export function PublicLocaleProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     document.documentElement.lang = locale;
-    window.localStorage.setItem(PUBLIC_LOCALE_STORAGE_KEY, locale);
   }, [locale]);
+
+  useEffect(() => {
+    // Only the visitor's own choice is persisted. A locked surface leaves the
+    // stored preference exactly as it found it.
+    if (locked) return;
+    window.localStorage.setItem(PUBLIC_LOCALE_STORAGE_KEY, preferredLocale);
+  }, [locked, preferredLocale]);
 
   const value = useMemo<PublicLocaleContextValue>(
     () => ({
       locale,
       setLocale: (nextLocale) => setLocaleState(resolveSupportedLocale(nextLocale)),
+      locked,
     }),
-    [locale],
+    [locale, locked],
   );
 
   return <PublicLocaleContext.Provider value={value}>{children}</PublicLocaleContext.Provider>;
 }
 
 export function PublicLanguageSelect() {
-  const { locale, setLocale } = usePublicLocale();
+  const { locale, setLocale, locked } = usePublicLocale();
+
+  // A surface that dictates its own language has no switcher: offering EN/ES
+  // on a French intake would show two buttons that change nothing.
+  if (locked) return null;
 
   return (
     <div
@@ -64,4 +93,3 @@ export function PublicLanguageSelect() {
     </div>
   );
 }
-

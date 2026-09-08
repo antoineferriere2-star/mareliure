@@ -6,9 +6,23 @@
  * personalization — never business logic (that stays in the Playbook).
  */
 import { z } from "zod";
+import { SUPPORTED_LOCALES } from "@/build/i18n/locales";
 
 export const missionProposalSchema = z.object({
   intro: z.string().max(500).optional(),
+  /**
+   * The language this Mission is written in.
+   *
+   * A generic capability, not a rule about any vertical: a Playbook authored in
+   * French, Spanish or English says so here, and the runtime renders its own
+   * chrome to match instead of leaving "Continue" and "Back" in the visitor's
+   * stored site preference. Absent means "let the visitor choose", which is
+   * every Mission that predates this field.
+   *
+   * Personalization, like everything else in this object — never business
+   * logic, which stays in the Playbook.
+   */
+  defaultLocale: z.enum(SUPPORTED_LOCALES).optional(),
   confirmationText: z.string().max(500).optional(),
   logoUrl: z.string().url().optional(),
   brandColor: z

@@ -88,9 +88,11 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
           {held && (
             <div className="mt-4 rounded-md border border-amber-600/30 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
               <p className="font-medium">Revue manuelle requise</p>
-              {data.case.admin_notes && (
+              {/* Rendered from the stored codes by triageMessages, never by
+                  splitting prose out of a column. */}
+              {data.triageMessages.length > 0 && (
                 <ul className="mt-2 list-disc space-y-1 pl-4">
-                  {data.case.admin_notes.split("\n").map((reason) => (
+                  {data.triageMessages.map((reason) => (
                     <li key={reason}>{reason}</li>
                   ))}
                 </ul>

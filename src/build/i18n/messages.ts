@@ -145,7 +145,21 @@ export const esUSMessages: Partial<TranslationMessages> = {
     "El sistema de medidas controla dimensiones y cálculos en los nuevos recorridos guiados del proyecto.",
 };
 
+/**
+ * French. Deliberately partial: only what a visitor completing a Mission in
+ * French can reach. `t()` falls back to en-US key by key, so an untranslated
+ * marketing string stays English rather than showing a raw key — and the
+ * marketing site never selects fr-FR in the first place.
+ */
+export const frFRMessages: Partial<TranslationMessages> = {
+  "navigation.language": "Langue",
+  "footer.privacy": "Confidentialité",
+  "footer.terms": "Conditions",
+  "footer.legal": "Mentions légales",
+};
+
 export const messagesByLocale: Record<SupportedLocale, Partial<TranslationMessages>> = {
   "en-US": enUSMessages,
   "es-US": esUSMessages,
+  "fr-FR": frFRMessages,
 };

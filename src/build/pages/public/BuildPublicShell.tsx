@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { CheckCircle2, Menu, X } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { useState, type ReactNode } from "react";
-import { t } from "@/build/i18n";
+import { t, type SupportedLocale } from "@/build/i18n";
 import { PublicLanguageSelect, PublicLocaleProvider } from "@/build/pages/public/publicLocale";
 import { usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 import { FaqLauncher } from "@/build/pages/public/FaqLauncher";
@@ -43,6 +43,7 @@ export function BuildPublicShell({
   showFaqLauncher = true,
   chrome = "marketing",
   businessName,
+  lockedLocale,
 }: {
   children: ReactNode;
   /**
@@ -56,9 +57,14 @@ export function BuildPublicShell({
   chrome?: PublicShellChrome;
   /** Shown in the embedded header. Absent until the mission has loaded. */
   businessName?: string | null;
+  /**
+   * The language this surface is written in, when it declares one. Absent on
+   * every marketing page, where the visitor chooses — see PublicLocaleProvider.
+   */
+  lockedLocale?: SupportedLocale | null;
 }) {
   return (
-    <PublicLocaleProvider>
+    <PublicLocaleProvider lockedLocale={lockedLocale}>
       <BuildPublicShellContent
         showFaqLauncher={showFaqLauncher}
         chrome={chrome}

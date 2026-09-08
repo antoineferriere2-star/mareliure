@@ -20,12 +20,20 @@ import {
 import { DeckIsometricSvg } from "./DeckIsometricSvg";
 import { DeckPreviewFallback } from "./DeckPreviewFallback";
 import { publicCopy, usePublicLocale } from "@/build/pages/public/publicLocaleContext";
+import type { SupportedLocale } from "@/build/i18n";
 
-const DISCLAIMER: Record<"en-US" | "es-US", string> = {
+/**
+ * Partial, with en-US as the fallback below. A locale added to the engine must
+ * never be able to blank out a legal disclaimer, and an exhaustive Record makes
+ * adding one a compile error in a file that has nothing to do with it.
+ */
+const DISCLAIMER: Partial<Record<SupportedLocale, string>> = {
   "en-US":
     "This is a simplified visual preview based on your answers. Dimensions, colors and project features are illustrative. It is not a final design, construction plan or technical approval.",
   "es-US":
     "Esta es una vista previa visual simplificada basada en sus respuestas. Las dimensiones, los colores y las características del proyecto son ilustrativos. No es un diseño final, un plano de construcción ni una aprobación técnica.",
+  "fr-FR":
+    "Cet aperçu visuel est simplifié et fondé sur vos réponses. Les dimensions, les couleurs et les caractéristiques du projet sont indicatives. Ce n'est ni un plan définitif, ni un plan de construction, ni une validation technique.",
 };
 
 function nextViewpoint(current: DeckPreviewViewpoint, delta: 1 | -1): DeckPreviewViewpoint {
@@ -135,7 +143,7 @@ export function DeckVisualPreview({
         </p>
       )}
 
-      <p className="text-xs text-slate-500">{DISCLAIMER[locale]}</p>
+      <p className="text-xs text-slate-500">{DISCLAIMER[locale] ?? DISCLAIMER["en-US"]}</p>
     </div>
   );
 }

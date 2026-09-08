@@ -133,6 +133,11 @@ async function main() {
     public_token: BOOKBINDING_PUBLIC_TOKEN,
     published_at: new Date().toISOString(),
     proposal: {
+      // The Playbook is authored in French, so the runtime's own chrome
+      // ("Continue", "Back", validation messages) has to follow. A generic
+      // capability of a Mission — nothing in the runtime knows this particular
+      // Playbook is French. See MissionProposal.defaultLocale.
+      defaultLocale: "fr-FR",
       intro:
         "Quelques questions sur votre livre, et des relieurs sélectionnés vous répondront. Comptez cinq minutes.",
       confirmationText:

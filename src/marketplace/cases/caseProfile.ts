@@ -79,6 +79,36 @@ export const CASE_ANSWER_VALUES = {
   },
 } as const;
 
+/**
+ * The marketplace's OWN vocabulary for what a book is worth.
+ *
+ * Deliberately not the Playbook's option values. `marketplace_cases.
+ * declared_value_band` is a column the marketplace queries, reports on and
+ * constrains with a CHECK; letting the Playbook's `gt_1000` flow into it would
+ * make a wording change in a Métré Playbook a silent schema change here. The
+ * mapping below is the only place the two vocabularies meet, and
+ * caseProfile.test.ts asserts every Playbook value it names still exists.
+ *
+ * `unknown` rather than null: "the owner does not know" is an answer, and a
+ * column that is never null is one fewer branch in every consumer.
+ */
+export const DECLARED_VALUE_BANDS = [
+  "under_100",
+  "100_500",
+  "500_1000",
+  "over_1000",
+  "unknown",
+] as const;
+export type DeclaredValueBand = (typeof DECLARED_VALUE_BANDS)[number];
+
+const DECLARED_VALUE_BY_ANSWER: Record<string, DeclaredValueBand> = {
+  lt_100: "under_100",
+  "100_500": "100_500",
+  "500_1000": "500_1000",
+  gt_1000: "over_1000",
+  inconnue: "unknown",
+};
+
 /** What a budget band means in cents. `null` where the visitor did not commit to one. */
 const BUDGET_BANDS: Record<string, { minCents: number; maxCents: number | null }> = {
   [CASE_ANSWER_VALUES.budget.under150]: { minCents: 0, maxCents: 15_000 },
@@ -103,7 +133,8 @@ export interface CaseProfile {
   material: string | null;
   finishes: string[];
   style: string | null;
-  declaredValue: string | null;
+  /** The marketplace's canonical band, never the Playbook's raw option value. */
+  declaredValueBand: DeclaredValueBand;
   budgetBand: string | null;
   budgetMinCents: number | null;
   budgetMaxCents: number | null;
@@ -203,7 +234,11 @@ export function buildCaseProfile(answers: Answers): CaseProfile {
     material,
     finishes,
     style,
-    declaredValue: str(answers[K.declaredValue]),
+    // An answer the mapping does not know reads as `unknown` rather than
+    // crashing or leaking through: a Playbook may add a band before the
+    // marketplace has decided what it means, and an unrecognised value must
+    // never be silently treated as a low one.
+    declaredValueBand: DECLARED_VALUE_BY_ANSWER[str(answers[K.declaredValue]) ?? ""] ?? "unknown",
     budgetBand,
     budgetMinCents: band?.minCents ?? null,
     budgetMaxCents: band?.maxCents ?? null,

@@ -1,4 +1,12 @@
-export const SUPPORTED_LOCALES = ["en-US", "es-US"] as const;
+/**
+ * `fr-FR` is deliberately absent from PUBLIC_LANGUAGE_OPTIONS (see
+ * publicLocaleContext.ts): the Métré SaaS marketing site is not translated into
+ * French and must not offer a switch that does nothing. A locale being
+ * supported by the engine and a locale being offered by a given surface are two
+ * different statements, and only Missions that declare `proposal.defaultLocale`
+ * currently render in French.
+ */
+export const SUPPORTED_LOCALES = ["en-US", "es-US", "fr-FR"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 export const DEFAULT_LOCALE: SupportedLocale = "en-US";

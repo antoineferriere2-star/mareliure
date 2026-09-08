@@ -23,13 +23,26 @@ import {
   orderQuotesForComparison,
   validateQuote,
 } from "@/marketplace/quotes/rules";
-import { buildCaseView, loadCaseContext, reconcileCaseTriage } from "./caseRepository.server";
+import {
+  decideClaim,
+  extractAccessToken,
+  verifiedEmailFromClaims,
+} from "@/marketplace/cases/ownership";
+import { triageMessages } from "@/marketplace/cases/triage";
+import {
+  assignCaseOwner,
+  buildCaseView,
+  claimCasesByVerifiedEmail,
+  loadCaseContext,
+  reconcileCaseTriage,
+  resolveCaseByAccessToken,
+} from "./caseRepository.server";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
 
 const CASE_LIST_COLUMNS =
-  "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, admin_notes, created_at";
+  "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, admin_notes, customer_user_id, created_at";
 
 /** States that mean a workshop currently has something on its bench. */
 const BUSY_MATCH_STATES = ["invited", "quoted", "selected"];
@@ -64,17 +77,11 @@ async function isAdmin(supabase: Supa, userId: string): Promise<boolean> {
  * Who this request is, from the marketplace's point of view. Resolved server
  * side from the session, never from anything the client sent.
  */
-async function resolveViewer(
-  supabase: Supa,
-  sb: Supa,
-  userId: string,
-  email: string | null,
-): Promise<Viewer> {
+async function resolveViewer(supabase: Supa, sb: Supa, userId: string): Promise<Viewer> {
   if (await isAdmin(supabase, userId)) return { role: "admin" };
   const binder = await findBinderForUser(sb, userId);
   if (binder) return { role: "binder", binderId: binder.id };
-  if (email) return { role: "customer", email };
-  return { role: "anonymous" };
+  return { role: "customer", userId };
 }
 
 /** How many cases each of these workshops is currently holding. */
@@ -237,6 +244,8 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
     return {
       case: caseContext.row,
       view,
+      // Rendered from the stored codes, never from stored prose.
+      triageMessages: triageMessages(caseContext.row.triage_flags ?? []),
       requiredSkills: caseContext.profile.requiredSkills,
       candidates: ranked,
       matches: matches ?? [],
@@ -469,7 +478,7 @@ export const getBinderCase = createServerFn({ method: "GET" })
     const facts = {
       invitedBinderIds: caseContext.invitedBinderIds,
       selectedBinderId: caseContext.selectedBinderId,
-      customerEmail: caseContext.customerEmail,
+      customerUserId: caseContext.customerUserId,
     };
     // Answered on the server, from rows, never from anything the client sent.
     if (!canViewCase(viewer, facts)) fail(403, "Ce dossier ne vous a pas été confié.");
@@ -607,34 +616,34 @@ export const submitBinderQuote = createServerFn({ method: "POST" })
 // Customer — their own books
 // ---------------------------------------------------------------------------
 
-/** Case ids whose Dossier carries this e-mail. The customer's whole world. */
-async function customerCaseIds(sb: Supa, email: string): Promise<Map<string, string>> {
-  const { data: dossiers } = await sb
-    .from("build_dossiers")
-    .select("id")
-    .ilike("visitor_email", email);
-  const dossierIds = (dossiers ?? []).map((d) => d.id);
-  if (dossierIds.length === 0) return new Map();
-  const { data: cases } = await sb
-    .from("marketplace_cases")
-    .select("id, dossier_id")
-    .in("dossier_id", dossierIds);
-  return new Map((cases ?? []).map((c) => [c.id, c.dossier_id]));
+/**
+ * The rapprochement pass. Runs before a customer's own list so an account
+ * created after the fact finds the book it submitted anonymously — and only
+ * ever on cases nobody owns, with an address the identity provider says it
+ * verified. Everything downstream reads customer_user_id and nothing else.
+ */
+async function attachVerifiedEmailCases(
+  sb: Supa,
+  userId: string,
+  claims: Record<string, unknown>,
+): Promise<void> {
+  const verifiedEmail = verifiedEmailFromClaims(claims);
+  if (!verifiedEmail) return;
+  await claimCasesByVerifiedEmail(sb, userId, verifiedEmail);
 }
 
 export const listMyCustomerCases = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
-    const email = (context.claims.email as string | undefined) ?? null;
-    if (!email) return [];
     const sb = await admin();
-    const ids = [...(await customerCaseIds(sb, email)).keys()];
-    if (ids.length === 0) return [];
+    await attachVerifiedEmailCases(sb, context.userId, context.claims);
 
+    // Ownership is the only filter. A case this account has not claimed is
+    // not in this list, whatever e-mail the visitor originally typed.
     const { data: cases } = await sb
       .from("marketplace_cases")
       .select("id, reference, status, dossier_id, created_at")
-      .in("id", ids)
+      .eq("customer_user_id", context.userId)
       .order("created_at", { ascending: false });
 
     const results = [];
@@ -666,16 +675,15 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data }) => {
-    const email = (context.claims.email as string | undefined) ?? null;
     const sb = await admin();
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable");
 
-    const viewer: Viewer = email ? { role: "customer", email } : { role: "anonymous" };
+    const viewer: Viewer = { role: "customer", userId: context.userId };
     const facts = {
       invitedBinderIds: caseContext.invitedBinderIds,
       selectedBinderId: caseContext.selectedBinderId,
-      customerEmail: caseContext.customerEmail,
+      customerUserId: caseContext.customerUserId,
     };
     if (!canViewCase(viewer, facts)) fail(403, "Ce dossier n'est pas le vôtre.");
 
@@ -727,17 +735,16 @@ export const selectQuote = createServerFn({ method: "POST" })
     z.object({ caseId: z.string().uuid(), quoteId: z.string().uuid() }).parse(data),
   )
   .handler(async ({ context, data }) => {
-    const email = (context.claims.email as string | undefined) ?? null;
     const sb = await admin();
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable");
 
-    const viewer: Viewer = email ? { role: "customer", email } : { role: "anonymous" };
+    const viewer: Viewer = { role: "customer", userId: context.userId };
     if (
       !canViewCase(viewer, {
         invitedBinderIds: caseContext.invitedBinderIds,
         selectedBinderId: caseContext.selectedBinderId,
-        customerEmail: caseContext.customerEmail,
+        customerUserId: caseContext.customerUserId,
       })
     ) {
       fail(403, "Ce dossier n'est pas le vôtre.");
@@ -768,4 +775,48 @@ export const selectQuote = createServerFn({ method: "POST" })
     await sb.from("marketplace_cases").update({ status: "binder_selected" }).eq("id", data.caseId);
 
     return { ok: true, binderId: quote!.binder_id };
+  });
+
+/**
+ * Attach an anonymously submitted project to the signed-in account, using the
+ * secure summary link Métré already sent the visitor.
+ *
+ * No new token system: the proof is `build_dossier_access_tokens` — 256-bit,
+ * hashed, expiring, revocable — resolved in caseRepository.server.ts.
+ *
+ * Idempotent: claiming a project this account already owns succeeds and
+ * changes nothing. A project owned by someone else is refused, and ownership
+ * is never transferred by this path — moving a case between accounts is a
+ * support action, not a self-service one.
+ */
+export const claimMarketplaceCase = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    // Accepts the whole link people paste out of their e-mail, not just the
+    // bare token. Bounded so pasting an entire message is rejected cheaply.
+    z.object({ link: z.string().min(1).max(2000) }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    const token = extractAccessToken(data.link);
+    if (!token) fail(422, "Ce lien ne semble pas être un lien de suivi de projet.");
+
+    const sb = await admin();
+    const found = await resolveCaseByAccessToken(sb, token!);
+    // Unknown, revoked, expired, or no case behind it — one answer for all of
+    // them, so this can never be used to probe which tokens exist.
+    if (!found) fail(404, "Ce lien de suivi n'est plus valable.");
+
+    const decision = decideClaim({
+      currentOwnerId: found!.currentOwnerId,
+      requesterId: context.userId,
+    });
+    if (!decision.allowed) fail(409, decision.reason ?? "Ce projet ne peut pas être rattaché.");
+    if (decision.alreadyOwned) return { caseId: found!.caseId, alreadyOwned: true };
+
+    // The conditional write is what actually settles a race between two
+    // accounts claiming the same project at the same moment.
+    const won = await assignCaseOwner(sb, found!.caseId, context.userId, "access_token");
+    if (!won) fail(409, "Ce projet est déjà rattaché à un autre compte.");
+
+    return { caseId: found!.caseId, alreadyOwned: false };
   });

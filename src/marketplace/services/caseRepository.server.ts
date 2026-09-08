@@ -39,9 +39,19 @@ export interface CaseRow {
   manual_review_required: boolean;
   heritage_flag: boolean;
   declared_value_band: string | null;
+  triage_flags: string[];
   triaged_at: string | null;
   admin_notes: string | null;
+  customer_user_id: string | null;
+  claimed_at: string | null;
+  claim_method: string | null;
   created_at: string;
+}
+
+export interface OwnedDossier {
+  dossierId: string;
+  caseId: string;
+  currentOwnerId: string | null;
 }
 
 export interface CaseContext {
@@ -49,6 +59,12 @@ export interface CaseContext {
   brief: ProjectBrief;
   profile: CaseProfile;
   answers: Answers;
+  /** Canonical ownership — the only thing that authorises a customer. */
+  customerUserId: string | null;
+  /**
+   * From the Dossier, for display to the admin and to the chosen relieur only.
+   * Never an authorisation input: see permissions.ts.
+   */
   customerEmail: string | null;
   customerName: string | null;
   invitedBinderIds: string[];
@@ -78,7 +94,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
   const { data: row, error } = await sb
     .from("marketplace_cases")
     .select(
-      "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triaged_at, admin_notes, created_at",
+      "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, created_at",
     )
     .eq("id", caseId)
     .maybeSingle();
@@ -106,11 +122,110 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
     brief: dossier.content as unknown as ProjectBrief,
     profile: buildCaseProfile(answers),
     answers,
+    customerUserId: row.customer_user_id,
     customerEmail: dossier.visitor_email,
     customerName: dossier.visitor_name,
     invitedBinderIds: (matches ?? []).map((m) => m.binder_id),
     selectedBinderId: (matches ?? []).find((m) => m.state === "selected")?.binder_id ?? null,
   };
+}
+
+/**
+ * Resolve Métré's own summary access token to the case behind it.
+ *
+ * This is the possession proof the claim rests on, and it deliberately reuses
+ * `build_dossier_access_tokens` — the 256-bit, hashed, expiring, revocable
+ * token Métré already mints for every submission — rather than introducing a
+ * second token system the marketplace would have to secure, rotate and revoke
+ * on its own.
+ *
+ * Returns null for every failure alike: unknown, revoked, expired, or pointing
+ * at a Dossier with no case. A caller must never be able to tell which,
+ * because that distinction would turn this into an oracle for guessing tokens.
+ */
+export async function resolveCaseByAccessToken(
+  sb: Supa,
+  rawToken: string,
+): Promise<OwnedDossier | null> {
+  const { hashAccessToken } = await import("@/build/services/dossierAccessToken.server");
+
+  const { data: token } = await sb
+    .from("build_dossier_access_tokens")
+    .select("dossier_id, expires_at, revoked_at")
+    .eq("token_hash", hashAccessToken(rawToken))
+    .maybeSingle();
+  if (!token || token.revoked_at) return null;
+  if (token.expires_at && new Date(token.expires_at).getTime() <= Date.now()) return null;
+
+  const { data: row } = await sb
+    .from("marketplace_cases")
+    .select("id, dossier_id, customer_user_id")
+    .eq("dossier_id", token.dossier_id)
+    .maybeSingle();
+  if (!row) return null;
+
+  return { dossierId: row.dossier_id, caseId: row.id, currentOwnerId: row.customer_user_id };
+}
+
+/**
+ * Write the claim, conditionally.
+ *
+ * The `is("customer_user_id", null)` filter is the whole safety property: two
+ * accounts racing to claim the same case cannot both win, whatever the
+ * decision function concluded a moment earlier. A zero-row result means
+ * somebody else got there first, and the caller reports the refusal.
+ */
+export async function assignCaseOwner(
+  sb: Supa,
+  caseId: string,
+  userId: string,
+  method: "access_token" | "verified_email",
+): Promise<boolean> {
+  const { data } = await sb
+    .from("marketplace_cases")
+    .update({
+      customer_user_id: userId,
+      claimed_at: new Date().toISOString(),
+      claim_method: method,
+    })
+    .eq("id", caseId)
+    .is("customer_user_id", null)
+    .select("id");
+  return (data ?? []).length > 0;
+}
+
+/**
+ * Attach every unclaimed case whose Dossier carries this verified address.
+ *
+ * The one place e-mail still does anything. It runs when a customer opens
+ * their own list, so the account they just created finds the book they
+ * submitted before it existed. Only ever touches rows nobody owns, and only
+ * with an address the identity provider says it verified — see
+ * `verifiedEmailFromClaims`.
+ */
+export async function claimCasesByVerifiedEmail(
+  sb: Supa,
+  userId: string,
+  verifiedEmail: string,
+): Promise<number> {
+  const { data: dossiers } = await sb
+    .from("build_dossiers")
+    .select("id")
+    .ilike("visitor_email", verifiedEmail);
+  const dossierIds = (dossiers ?? []).map((d) => d.id);
+  if (dossierIds.length === 0) return 0;
+
+  const { data: claimed } = await sb
+    .from("marketplace_cases")
+    .update({
+      customer_user_id: userId,
+      claimed_at: new Date().toISOString(),
+      claim_method: "verified_email",
+    })
+    .in("dossier_id", dossierIds)
+    .is("customer_user_id", null)
+    .select("id");
+  return (claimed ?? []).length;
 }
 
 /**
@@ -157,6 +272,15 @@ export async function buildCaseView(
  * where `triaged_at IS NULL`.
  */
 export async function reconcileCaseTriage(sb: Supa): Promise<number> {
+  // Repair first, triage second. The ingestion trigger swallows its own
+  // failures so it can never roll back a visitor's submission, which means a
+  // Dossier can exist with no case — and so can every Dossier submitted before
+  // its Mission was enrolled. This makes both whole before anything is
+  // classified. The reference sequence lives in Postgres, so the backfill does
+  // too rather than allocating references from two places.
+  const { error: repairError } = await sb.rpc("marketplace_ingest_missing_cases");
+  if (repairError) throw repairError;
+
   const { data: pending, error } = await sb
     .from("marketplace_cases")
     .select("id, dossier_id")
@@ -181,8 +305,11 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
         manual_review_required: triage.manualReviewRequired,
         heritage_flag: triage.heritageFlag,
         declared_value_band: triage.declaredValueBand,
+        // Stable codes, never sentences. `admin_notes` stays what a human
+        // wrote: an earlier version stuffed generated French in there and the
+        // back-office split it back apart on newlines — prose used as an API.
+        triage_flags: triage.flags,
         triaged_at: new Date().toISOString(),
-        admin_notes: triage.reasons.length > 0 ? triage.reasons.join("\n") : null,
       })
       .eq("id", row.id)
       .is("triaged_at", null);

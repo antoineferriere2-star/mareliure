@@ -1,6 +1,7 @@
 import { createContext, useContext } from "react";
 import { DEFAULT_LOCALE } from "@/build/i18n";
 import type { SupportedLocale } from "@/build/i18n";
+import { FR_PUBLIC_COPY } from "./frPublicCopy";
 
 export type { SupportedLocale } from "@/build/i18n";
 
@@ -9,6 +10,13 @@ export const PUBLIC_LOCALE_STORAGE_KEY = "metre-build-public-locale";
 export interface PublicLocaleContextValue {
   locale: SupportedLocale;
   setLocale: (locale: SupportedLocale) => void;
+  /**
+   * True when the surface itself dictates the language — a Mission that
+   * declares `proposal.defaultLocale`. The visitor's own site-wide preference
+   * is left untouched underneath, and the language switcher hides rather than
+   * offering a choice that would be overridden on the next render.
+   */
+  locked: boolean;
 }
 
 export const PublicLocaleContext = createContext<PublicLocaleContextValue | null>(null);
@@ -32,7 +40,7 @@ export function usePublicLocale() {
 
 export function useOptionalPublicLocale() {
   const context = useContext(PublicLocaleContext);
-  return context ?? { locale: DEFAULT_LOCALE, setLocale: () => undefined };
+  return context ?? { locale: DEFAULT_LOCALE, setLocale: () => undefined, locked: false };
 }
 
 export const ES_PUBLIC_COPY: Record<string, string> = {
@@ -950,9 +958,21 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
     "Preguntas a explorar (a partir de la foto de inspiración)",
 };
 
+const DICTIONARIES: Partial<Record<SupportedLocale, Record<string, string>>> = {
+  "es-US": ES_PUBLIC_COPY,
+  "fr-FR": FR_PUBLIC_COPY,
+};
+
+/**
+ * Whole-string lookup, with the English source as its own fallback.
+ *
+ * A locale with no dictionary — en-US, or any locale added before it is
+ * translated — returns the source untouched, which is exactly what the previous
+ * `if (locale !== "es-US") return text` did for every caller. Adding a language
+ * is now adding a dictionary, not editing this function.
+ */
 export function publicCopy(locale: SupportedLocale, text: string): string {
-  if (locale !== "es-US") return text;
-  return ES_PUBLIC_COPY[text] ?? text;
+  return DICTIONARIES[locale]?.[text] ?? text;
 }
 
 export function publicCopies(locale: SupportedLocale, values: string[]): string[] {

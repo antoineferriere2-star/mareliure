@@ -7,6 +7,14 @@
  * Collapsing the two into one boolean is how a marketplace ends up handing
  * every invited workshop a customer's address.
  *
+ * A customer is authorised by `customer_user_id` and by nothing else. An
+ * earlier version compared `build_dossiers.visitor_email` to the signed-in
+ * address, which made access a property of a string a visitor typed into a
+ * public form: it survived only as long as nobody registered that address, and
+ * it silently followed the address rather than the person. E-mail now does one
+ * job — helping an account find an unclaimed case once, in
+ * `cases/ownership.ts` — and grants nothing afterwards.
+ *
  * Pure and framework-free so it can be exercised without a database. The
  * server functions call it before every read; the UI never decides anything.
  */
@@ -14,7 +22,7 @@
 export type Viewer =
   | { role: "admin" }
   | { role: "binder"; binderId: string }
-  | { role: "customer"; email: string }
+  | { role: "customer"; userId: string }
   | { role: "anonymous" };
 
 export interface CaseAccessFacts {
@@ -22,8 +30,8 @@ export interface CaseAccessFacts {
   invitedBinderIds: readonly string[];
   /** The relieur the customer chose, once they have. */
   selectedBinderId: string | null;
-  /** From build_dossiers.visitor_email. Compared case-insensitively. */
-  customerEmail: string | null;
+  /** `marketplace_cases.customer_user_id` — null until the case is claimed. */
+  customerUserId: string | null;
 }
 
 export function canViewCase(viewer: Viewer, facts: CaseAccessFacts): boolean {
@@ -36,10 +44,9 @@ export function canViewCase(viewer: Viewer, facts: CaseAccessFacts): boolean {
         facts.selectedBinderId === viewer.binderId
       );
     case "customer":
-      return (
-        facts.customerEmail !== null &&
-        facts.customerEmail.trim().toLowerCase() === viewer.email.trim().toLowerCase()
-      );
+      // An unclaimed case belongs to nobody yet, so it opens for nobody.
+      // Claiming is a separate, deliberate act (cases/ownership.ts).
+      return facts.customerUserId !== null && facts.customerUserId === viewer.userId;
     case "anonymous":
       return false;
   }

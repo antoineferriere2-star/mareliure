@@ -29,12 +29,27 @@ import { projectCanvasItemsFromRuntime } from "./ProjectCanvasProjection";
 import { EMPTY_BRANDING, type PublicBranding } from "@/build/branding/missionBranding";
 import { readableTextColor } from "@/build/branding/contrast";
 import { publicCopy, usePublicLocale } from "./publicLocaleContext";
+import { isSupportedLocale, type SupportedLocale } from "@/build/i18n";
 import { MissionRuntimeSkeleton } from "./MissionRuntimeStates";
 
 /** How long the initial load can run before we tell the visitor it's taking
  * longer than usual — long enough to not fire on a normal cold start, short
  * enough that nobody stares at a silent skeleton for a full minute. */
 const SLOW_LOAD_MS = 8000;
+
+/**
+ * The language a Mission declares, or null to let the visitor choose.
+ *
+ * `proposal` arrives as untrusted JSON on a public endpoint, so an unknown or
+ * malformed locale reads as "not declared" rather than throwing on the one
+ * surface a visitor is actively using.
+ */
+function missionLocale(mission: {
+  proposal?: { defaultLocale?: string } | null;
+}): SupportedLocale | null {
+  const declared = mission.proposal?.defaultLocale;
+  return isSupportedLocale(declared) ? declared : null;
+}
 
 type PublicMission = {
   id: string;
@@ -43,7 +58,7 @@ type PublicMission = {
   objective: string | null;
   playbook_id: string | null;
   playbook_name: string | null;
-  proposal: { intro?: string } | null;
+  proposal: { intro?: string; defaultLocale?: string } | null;
   /** The business publishing this intake — what the visitor should see. */
   workspace_name: string | null;
   /** Frozen at publish time. Every field may be null on an Intake published
@@ -178,6 +193,9 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
   // fetched by the content below — so it is lifted here rather than fetched
   // twice.
   const [businessName, setBusinessName] = useState<string | null>(null);
+  // Same lift, same reason: the Mission may declare the language it is written
+  // in, and the shell owns the locale provider that has to apply it.
+  const [missionLocale, setMissionLocale] = useState<SupportedLocale | null>(null);
   return (
     // No FAQ launcher here — this is the actual Guided Project Intake a
     // visitor is completing; a persistent "Questions?" button would
@@ -186,8 +204,17 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
     // `embedded` chrome: this page is normally an iframe inside the
     // business's own website. Métré Build's marketing nav has no business
     // being there.
-    <BuildPublicShell showFaqLauncher={false} chrome="embedded" businessName={businessName}>
-      <MissionRuntimeContent publicToken={publicToken} onBusinessName={setBusinessName} />
+    <BuildPublicShell
+      showFaqLauncher={false}
+      chrome="embedded"
+      businessName={businessName}
+      lockedLocale={missionLocale}
+    >
+      <MissionRuntimeContent
+        publicToken={publicToken}
+        onBusinessName={setBusinessName}
+        onMissionLocale={setMissionLocale}
+      />
     </BuildPublicShell>
   );
 }
@@ -195,9 +222,11 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
 function MissionRuntimeContent({
   publicToken,
   onBusinessName,
+  onMissionLocale,
 }: {
   publicToken: string;
   onBusinessName: (name: string | null) => void;
+  onMissionLocale: (locale: SupportedLocale | null) => void;
 }) {
   const { locale } = usePublicLocale();
   const copy = useCallback((text: string) => publicCopy(locale, text), [locale]);
@@ -245,6 +274,7 @@ function MissionRuntimeContent({
       storeAuth(publicToken, auth);
       setMission(data.mission);
       onBusinessName(data.mission.workspace_name);
+      onMissionLocale(missionLocale(data.mission));
       setSchema(data.playbook_schema);
       setSessionAuth(auth);
       setAnswers(data.session.answers ?? {});
@@ -270,6 +300,7 @@ function MissionRuntimeContent({
         if (cancelled) return;
         setMission(data.mission);
         onBusinessName(data.mission.workspace_name);
+        onMissionLocale(missionLocale(data.mission));
         setSchema(data.playbook_schema);
         setSessionAuth(stored);
         setAnswers(data.session.answers ?? {});
@@ -293,7 +324,7 @@ function MissionRuntimeContent({
     };
     // onBusinessName is a setState setter, so its identity is stable and
     // listing it never re-runs the load.
-  }, [publicToken, reloadKey, onBusinessName]);
+  }, [publicToken, reloadKey, onBusinessName, onMissionLocale]);
 
   function retryLoad() {
     // Bump the effect's dependency rather than clearing storage first — a
