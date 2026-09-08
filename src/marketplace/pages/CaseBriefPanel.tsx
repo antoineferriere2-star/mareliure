@@ -127,7 +127,7 @@ export function CaseBriefPanel({ view }: { view: CaseView }) {
         </Section>
       ) : (
         <p className="mt-8 text-sm text-[#8a7663]">
-          Les coordonnées du client vous seront transmises s'il retient votre proposition.
+          Les coordonnées du client vous seront transmises si Ma Reliure retient votre atelier.
         </p>
       )}
     </div>

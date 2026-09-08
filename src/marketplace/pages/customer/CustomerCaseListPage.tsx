@@ -15,19 +15,21 @@ import { CASE_STATUS_LABELS, isCaseStatus } from "@/marketplace/cases/state";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { formatEuros } from "@/marketplace/pricing/money";
 
 /** What the customer should do next, or what is being done for them. */
-function nextStep(status: string, quoteCount: number): string {
+function nextStep(status: string): string {
   switch (status) {
     case "under_review":
+    case "pricing":
+      return "Ma Reliure prépare le prix de votre projet.";
     case "matching":
-      return "Nous sélectionnons les relieurs adaptés à votre projet.";
-    case "sent_to_binders":
-      return "Les relieurs préparent leur proposition.";
-    case "quotes_received":
-      return `${quoteCount} proposition(s) à comparer.`;
+    case "awaiting_binder_response":
+      return "Nous vérifions la disponibilité des ateliers adaptés.";
+    case "binder_accepted":
+      return "Un atelier est disponible pour votre projet.";
     case "binder_selected":
-      return "Votre relieur est choisi.";
+      return "Votre atelier est confirmé.";
     default:
       return isCaseStatus(status) ? CASE_STATUS_LABELS[status] : status;
   }
@@ -128,9 +130,12 @@ export function CustomerCaseListPage() {
               >
                 <p className="font-serif text-xl text-[#241a12]">{row.title}</p>
                 <p className="mt-1 text-xs text-[#8a7663]">{row.reference}</p>
-                <p className="mt-4 text-sm text-[#4b3a2c]">
-                  {nextStep(row.status, row.quoteCount)}
-                </p>
+                <p className="mt-4 text-sm text-[#4b3a2c]">{nextStep(row.status)}</p>
+                {row.customerPriceCents && (
+                  <p className="mt-2 font-medium text-[#241a12]">
+                    {formatEuros(row.customerPriceCents)}
+                  </p>
+                )}
               </Link>
             </li>
           ))}

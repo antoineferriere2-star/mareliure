@@ -24,9 +24,16 @@ export const CASE_ANSWER_KEYS = {
   title: "titre",
   author: "auteur",
   nature: "nature",
+  height: "hauteur",
+  width: "largeur",
+  thickness: "epaisseur",
   condition: "etat",
+  spineCondition: "etatDos",
+  boardCondition: "etatPlats",
+  sewingCondition: "cahiers",
   material: "materiau",
   finishes: "finitions",
+  bandsCount: "nerfs",
   style: "styleSouhaite",
   declaredValue: "valeurFinanciere",
   budget: "budget",
@@ -53,14 +60,34 @@ export const CASE_ANSWER_VALUES = {
     album: "album",
     other: "autre",
   },
-  condition: { mould: "moisissure", missingPages: "pages_manquantes" },
+  condition: {
+    damagedCover: "couverture_usee",
+    detachedCover: "couverture_detachee",
+    damagedSpine: "dos_abime",
+    detachedPages: "pages_detachees",
+    tornPages: "pages_dechirees",
+    missingPages: "pages_manquantes",
+    damp: "humidite",
+    mould: "moisissure",
+  },
+  spineCondition: { fragile: "fragile", split: "fendu", missing: "manquant" },
+  boardCondition: { worn: "uses", stained: "taches", detached: "detaches" },
+  sewingCondition: { someLoose: "quelques_uns", detached: "desolidarises" },
   material: {
     cloth: "toile",
     decoratedPaper: "papier_decore",
     halfLeather: "demi_cuir",
     fullLeather: "plein_cuir",
   },
-  finishes: { gilding: "dorure", gildedEdges: "tranche_decoree", slipcase: "etui", bands: "nerfs" },
+  finishes: {
+    gilding: "dorure",
+    title: "titre",
+    author: "auteur",
+    decoratedEndpapers: "gardes_decorees",
+    gildedEdges: "tranche_decoree",
+    slipcase: "etui",
+    bands: "nerfs",
+  },
   style: { art: "art", contemporary: "contemporain" },
   declaredValue: {
     under100: "lt_100",
@@ -129,9 +156,16 @@ export interface CaseProfile {
   title: string | null;
   intent: string | null;
   nature: string | null;
+  heightCm: number | null;
+  widthCm: number | null;
+  thicknessCm: number | null;
   condition: string[];
+  spineCondition: string | null;
+  boardCondition: string | null;
+  sewingCondition: string | null;
   material: string | null;
   finishes: string[];
+  bandsCount: number | null;
   style: string | null;
   /** The marketplace's canonical band, never the Playbook's raw option value. */
   declaredValueBand: DeclaredValueBand;
@@ -154,6 +188,12 @@ function str(value: unknown): string | null {
 
 function list(value: unknown): string[] {
   return Array.isArray(value) ? value.filter((v): v is string => typeof v === "string") : [];
+}
+
+function positiveNumber(value: unknown): number | null {
+  const parsed =
+    typeof value === "number" ? value : typeof value === "string" ? Number(value) : NaN;
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
 }
 
 /**
@@ -230,9 +270,16 @@ export function buildCaseProfile(answers: Answers): CaseProfile {
     title: str(answers[K.title]),
     intent,
     nature,
+    heightCm: positiveNumber(answers[K.height]),
+    widthCm: positiveNumber(answers[K.width]),
+    thicknessCm: positiveNumber(answers[K.thickness]),
     condition,
+    spineCondition: str(answers[K.spineCondition]),
+    boardCondition: str(answers[K.boardCondition]),
+    sewingCondition: str(answers[K.sewingCondition]),
     material,
     finishes,
+    bandsCount: positiveNumber(answers[K.bandsCount]),
     style,
     // An answer the mapping does not know reads as `unknown` rather than
     // crashing or leaking through: a Playbook may add a band before the

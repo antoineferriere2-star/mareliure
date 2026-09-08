@@ -311,7 +311,7 @@ describe("the Project Brief a relieur receives", () => {
     const brief = generateProjectBrief(bookbindingPlaybookSchema, collectorAnswers(), MISSION);
     expect(brief.missingInformation).toEqual([]);
     expect(brief.constraints.map((l) => l.label)).toEqual(
-      expect.arrayContaining(["Diagnostic physique", "Devis"]),
+      expect.arrayContaining(["Diagnostic physique", "Prix Ma Reliure"]),
     );
   });
 
@@ -338,7 +338,7 @@ describe("the Project Brief a relieur receives", () => {
 
   it("falls back to inviting up to three relieurs on an ordinary project", () => {
     const brief = generateProjectBrief(bookbindingPlaybookSchema, collectorAnswers(), MISSION);
-    expect(brief.suggestedNextAction.value).toContain("trois relieurs");
+    expect(brief.suggestedNextAction.value).toContain("trois ateliers");
   });
 
   it("summarises the project in a sentence a person would write", () => {

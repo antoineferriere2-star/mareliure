@@ -20,6 +20,17 @@ to already exist and have portal access. It signs in through `/auth` and checks
 that the client reaches `/portal`. Do not use a personal or production customer
 account for this; use a disposable staging client account.
 
+## Optional managed marketplace reference journey
+
+`managed-marketplace-reference.spec.ts` covers the P0.5 journey across three
+separate browser sessions: admin validates 490/400 EUR, sends the fixed offer,
+the workshop accepts, the admin selects it, and the customer sees one 490 EUR
+price plus the selected workshop. It is skipped unless every
+`E2E_MARKETPLACE_*` variable named at the top of the spec is set. Point it only
+at the development Supabase project with a fresh case already owned by the
+disposable customer account and a compatible approved workshop; the scenario
+changes that case and is intentionally not aimed at production.
+
 ## Visitor summary + Deck visual preview (seeded, self-tearing-down)
 
 `visitor-summary-visual-preview.spec.ts` is skipped by default. It runs only

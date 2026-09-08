@@ -99,7 +99,7 @@ function Hero() {
           <div className="mt-9 flex flex-col items-start gap-4">
             <IntakeCta />
             <p className="text-[0.8125rem] text-mr-muted">
-              Gratuit · Sans engagement · Jusqu'à 3 ateliers sélectionnés
+              Gratuit · Sans engagement · Prix expliqué par Ma Reliure
             </p>
           </div>
         </div>
@@ -331,9 +331,9 @@ function Artisans() {
         >
           <h3 className="mr-title text-[1.75rem]">Vous êtes relieur ?</h3>
           <p className="mt-4 text-[1.0625rem] leading-[1.75] text-mr-walnut">
-            Ma Reliure vous adresse des projets décrits, photographiés et déjà cadrés, et jamais
-            plus de trois ateliers par livre. La sélection se fait pour l'instant atelier par
-            atelier, sans candidature en ligne.
+            Ma Reliure vous adresse des projets décrits, photographiés et déjà cadrés, avec une
+            rémunération fixée à l’avance. Vous acceptez ou refusez librement chaque offre selon
+            votre spécialité et votre capacité.
           </p>
         </div>
       </div>
@@ -378,10 +378,8 @@ function Commitments() {
 /**
  * Le prix.
  *
- * Aucun tarif n'est affiché parce qu'aucun n'est connu : les fourchettes
- * réelles viendront des devis, quand il y en aura assez pour qu'une fourchette
- * veuille dire quelque chose. Dire pourquoi le prix varie vaut mieux que
- * d'annoncer un « à partir de » que le premier devis démentira.
+ * Aucun tarif générique n'est affiché : chaque livre reçoit un prix fondé sur
+ * ses caractéristiques et le travail demandé.
  */
 function Pricing() {
   return (
@@ -392,8 +390,8 @@ function Pricing() {
         </h2>
         <p className="max-w-[38rem] text-[1.0625rem] leading-[1.75] text-mr-walnut">
           Chaque projet est unique. La technique, les matériaux, l'état du livre et le temps de
-          travail déterminent le prix. Chaque atelier le détaille dans sa proposition, avant que
-          vous ne vous engagiez.
+          travail déterminent le prix. Ma Reliure l’étudie, fixe un prix unique et vous explique ce
+          qu’il comprend avant la confirmation de l’atelier.
         </p>
       </div>
     </section>

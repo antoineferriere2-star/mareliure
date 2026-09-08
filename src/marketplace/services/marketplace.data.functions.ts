@@ -13,22 +13,19 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin, assertAdmin, type Supa } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
-import { MAX_BINDERS_PER_CASE } from "@/marketplace/config";
+import { MARKETPLACE_CURRENCY, MAX_BINDERS_PER_CASE } from "@/marketplace/config";
 import { canSendToBinders, isCaseStatus, type CaseStatus } from "@/marketplace/cases/state";
 import { planBinderSelection } from "@/marketplace/matching/selection";
 import { rankBinders, type BinderMatchProfile } from "@/marketplace/matching/score";
 import { caseDisclosure, canViewCase, type Viewer } from "@/marketplace/permissions";
-import {
-  canBinderQuote,
-  orderQuotesForComparison,
-  validateQuote,
-} from "@/marketplace/quotes/rules";
 import {
   decideClaim,
   extractAccessToken,
   verifiedEmailFromClaims,
 } from "@/marketplace/cases/ownership";
 import { triageMessages } from "@/marketplace/cases/triage";
+import { suggestManagedPrice, validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
+import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
 import {
   assignCaseOwner,
   buildCaseView,
@@ -42,10 +39,18 @@ const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
 
 const CASE_LIST_COLUMNS =
-  "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, admin_notes, customer_user_id, created_at";
+  "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, admin_notes, customer_user_id, pricing_status, customer_price_cents, binder_payout_cents, created_at";
 
 /** States that mean a workshop currently has something on its bench. */
-const BUSY_MATCH_STATES = ["invited", "quoted", "selected"];
+const BUSY_MATCH_STATES = ["offered", "accepted", "selected", "invited", "quoted"];
+
+export const OFFER_DECLINE_REASONS = [
+  "payout_insufficient",
+  "deadline_impossible",
+  "outside_specialty",
+  "no_capacity",
+  "other",
+] as const;
 
 const uuid = z.object({ caseId: z.string().uuid() });
 
@@ -134,19 +139,18 @@ export const listMarketplaceCases = createServerFn({ method: "GET" })
     if (error) fail(500, error.message);
 
     const ids = (cases ?? []).map((c) => c.id);
-    const counts = new Map<string, { invited: number; quotes: number }>();
+    const counts = new Map<string, { offered: number; accepted: number }>();
     if (ids.length > 0) {
-      const [{ data: matches }, { data: quotes }] = await Promise.all([
-        sb.from("marketplace_case_matches").select("case_id").in("case_id", ids),
-        sb.from("marketplace_quotes").select("case_id").in("case_id", ids).eq("state", "submitted"),
-      ]);
+      const { data: matches } = await sb
+        .from("marketplace_case_matches")
+        .select("case_id, state")
+        .in("case_id", ids);
       for (const row of matches ?? []) {
-        const entry = counts.get(row.case_id) ?? { invited: 0, quotes: 0 };
-        counts.set(row.case_id, { ...entry, invited: entry.invited + 1 });
-      }
-      for (const row of quotes ?? []) {
-        const entry = counts.get(row.case_id) ?? { invited: 0, quotes: 0 };
-        counts.set(row.case_id, { ...entry, quotes: entry.quotes + 1 });
+        const entry = counts.get(row.case_id) ?? { offered: 0, accepted: 0 };
+        counts.set(row.case_id, {
+          offered: entry.offered + 1,
+          accepted: entry.accepted + (row.state === "accepted" ? 1 : 0),
+        });
       }
     }
 
@@ -168,8 +172,8 @@ export const listMarketplaceCases = createServerFn({ method: "GET" })
     return (cases ?? []).map((row) => ({
       ...row,
       title: titles.get(row.dossier_id) ?? row.reference,
-      invitedCount: counts.get(row.id)?.invited ?? 0,
-      quoteCount: counts.get(row.id)?.quotes ?? 0,
+      invitedCount: counts.get(row.id)?.offered ?? 0,
+      acceptedCount: counts.get(row.id)?.accepted ?? 0,
     }));
   });
 
@@ -209,7 +213,11 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
       ratingAvg: b.rating_avg,
     }));
 
-    const ranked = rankBinders(caseContext.profile, profiles).map((entry) => {
+    const ranked = rankBinders(
+      caseContext.profile,
+      profiles,
+      caseContext.row.binder_payout_cents,
+    ).map((entry) => {
       const row = binderRows.find((b) => b.id === entry.binder.id)!;
       return {
         id: row.id,
@@ -233,13 +241,33 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
 
     const { data: matches } = await sb
       .from("marketplace_case_matches")
-      .select("binder_id, state, match_score, invited_at, responded_at, decline_reason")
+      .select(
+        "binder_id, state, match_score, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, responded_at, decline_reason_code, decline_reason_detail",
+      )
       .eq("case_id", data.caseId);
 
-    const { data: quotes } = await sb
+    const { data: offers } = await sb
       .from("marketplace_quotes")
       .select("*")
       .eq("case_id", data.caseId);
+    const managedMatches = (matches ?? []).map((match) => {
+      const offer = (offers ?? []).find((candidate) => candidate.binder_id === match.binder_id);
+      return offer
+        ? {
+            ...match,
+            state: offer.state,
+            binder_payout_cents: offer.binder_payout_cents,
+            currency: offer.currency,
+            offered_at: offer.offered_at,
+            expires_at: offer.expires_at,
+            accepted_at: offer.accepted_at,
+            declined_at: offer.declined_at,
+            selected_at: offer.selected_at,
+            decline_reason_code: offer.decline_reason_code,
+            decline_reason_detail: offer.decline_reason_detail,
+          }
+        : match;
+    });
 
     return {
       case: caseContext.row,
@@ -248,8 +276,8 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
       triageMessages: triageMessages(caseContext.row.triage_flags ?? []),
       requiredSkills: caseContext.profile.requiredSkills,
       candidates: ranked,
-      matches: matches ?? [],
-      quotes: quotes ?? [],
+      matches: managedMatches,
+      offers: offers ?? [],
       remainingInvitations: Math.max(0, MAX_BINDERS_PER_CASE - caseContext.invitedBinderIds.length),
     };
   });
@@ -264,11 +292,109 @@ export const clearCaseManualReview = createServerFn({ method: "POST" })
     // recorded by moving the case on, never by deleting the reasons.
     const { error } = await sb
       .from("marketplace_cases")
-      .update({ manual_review_required: false, status: "matching" })
+      .update({ manual_review_required: false, status: "pricing" })
       .eq("id", data.caseId)
       .eq("status", "under_review");
     if (error) fail(500, error.message);
     return { ok: true };
+  });
+
+export const generateMarketplacePricing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => uuid.parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const caseContext = await loadCaseContext(sb, data.caseId);
+    if (!caseContext) fail(404, "Dossier introuvable");
+
+    const suggestion = suggestManagedPrice(caseContext.profile);
+    const now = new Date().toISOString();
+    const { error } = await sb
+      .from("marketplace_cases")
+      .update({
+        pricing_status: "suggested",
+        suggested_customer_price_cents: suggestion.suggestedCustomerPriceCents,
+        suggested_binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+        customer_price_cents: suggestion.suggestedCustomerPriceCents,
+        binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+        pricing_confidence: suggestion.confidence,
+        pricing_reason_codes: suggestion.reasons,
+        pricing_rule_version: suggestion.ruleVersion,
+        pricing_generated_at: now,
+        status: caseContext.row.status === "under_review" ? "under_review" : "pricing",
+      })
+      .eq("id", data.caseId);
+    if (error) fail(500, error.message);
+    await sb.from("marketplace_events").insert({
+      case_id: data.caseId,
+      actor_user_id: context.userId,
+      event_type: "pricing_generated",
+      metadata: {
+        customer_price_cents: suggestion.suggestedCustomerPriceCents,
+        binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+        rule_version: suggestion.ruleVersion,
+      },
+    });
+    return suggestion;
+  });
+
+const managedPriceInput = z.object({
+  caseId: z.string().uuid(),
+  customerPriceCents: z.number().int().positive(),
+  binderPayoutCents: z.number().int().positive(),
+  priceIncludes: z.array(z.string().trim().min(1).max(160)).max(20).default([]),
+});
+
+export const saveMarketplacePricing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => managedPriceInput.parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
+    if (!validation.valid) fail(422, validation.errors.join(" "));
+    const sb = await admin();
+    const { error } = await sb
+      .from("marketplace_cases")
+      .update({
+        customer_price_cents: data.customerPriceCents,
+        binder_payout_cents: data.binderPayoutCents,
+        price_includes: data.priceIncludes,
+      })
+      .eq("id", data.caseId)
+      .neq("pricing_status", "validated");
+    if (error) fail(500, error.message);
+    await sb.from("marketplace_events").insert({
+      case_id: data.caseId,
+      actor_user_id: context.userId,
+      event_type: "pricing_edited",
+      metadata: {
+        customer_price_cents: data.customerPriceCents,
+        binder_payout_cents: data.binderPayoutCents,
+      },
+    });
+    return validation;
+  });
+
+export const validateMarketplacePricing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => managedPriceInput.parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
+    if (!validation.valid) fail(422, validation.errors.join(" "));
+    const sb = await admin();
+    const { data: result, error } = await sb.rpc("marketplace_validate_pricing", {
+      p_case_id: data.caseId,
+      p_customer_price_cents: data.customerPriceCents,
+      p_binder_payout_cents: data.binderPayoutCents,
+      p_price_includes: data.priceIncludes,
+      p_minimum_margin_bps: PRICING_POLICY.minimumMarginBps,
+      p_minimum_margin_cents: PRICING_POLICY.minimumMarginCents,
+      p_actor_user_id: context.userId,
+    });
+    if (error) fail(409, error.message);
+    return { case: result, validation };
   });
 
 export const sendCaseToBinders = createServerFn({ method: "POST" })
@@ -295,19 +421,24 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
         status: status as CaseStatus,
         manualReviewRequired: caseContext.row.manual_review_required,
         reviewCleared: false,
+        pricingValidated: caseContext.row.pricing_status === "validated",
       })
     ) {
       fail(
         409,
         caseContext.row.manual_review_required
           ? "Ce dossier est en attente de revue manuelle."
-          : "Ce dossier n'est plus au stade de la sélection.",
+          : caseContext.row.pricing_status !== "validated"
+            ? "Le prix doit être validé avant de solliciter un atelier."
+            : "Ce dossier n'est plus au stade de la sélection.",
       );
     }
+    if (!caseContext.row.binder_payout_cents)
+      fail(409, "La rémunération atelier validée est absente.");
 
     const { data: candidates } = await sb
       .from("marketplace_binders")
-      .select("id, status")
+      .select(BINDER_LIST_COLUMNS)
       .in("id", data.binderIds);
 
     const decision = planBinderSelection({
@@ -317,10 +448,38 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
     });
     if (!decision.allowed) fail(422, decision.problems.join(" "));
 
+    const [skills, load] = await Promise.all([
+      skillsByBinder(sb, decision.binderIds),
+      activeLoadByBinder(sb, decision.binderIds),
+    ]);
+    const scoreByBinder = new Map(
+      rankBinders(
+        caseContext.profile,
+        (candidates ?? []).map((binder) => ({
+          id: binder.id,
+          status: binder.status,
+          skills: skills.get(binder.id) ?? [],
+          acceptedProjectTypes: binder.accepted_project_types ?? [],
+          minProjectCents: binder.min_project_cents,
+          maxProjectCents: binder.max_project_cents,
+          capacitySlots: binder.capacity_slots,
+          activeLoad: load.get(binder.id) ?? 0,
+          responseRate: binder.response_rate,
+          ratingAvg: binder.rating_avg,
+        })),
+        caseContext.row.binder_payout_cents,
+      ).map((entry) => [entry.binder.id, entry.total]),
+    );
+    const offeredAt = new Date().toISOString();
     const { error } = await sb.from("marketplace_case_matches").insert(
       decision.binderIds.map((binderId) => ({
         case_id: data.caseId,
         binder_id: binderId,
+        state: "offered",
+        binder_payout_cents: caseContext.row.binder_payout_cents,
+        currency: MARKETPLACE_CURRENCY,
+        offered_at: offeredAt,
+        match_score: scoreByBinder.get(binderId) ?? null,
       })),
     );
     // The database enforces the same ceiling with a trigger. Reaching it here
@@ -334,13 +493,63 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
       );
     }
 
+    const { error: offerError } = await sb.from("marketplace_quotes").insert(
+      decision.binderIds.map((binderId) => ({
+        case_id: data.caseId,
+        binder_id: binderId,
+        description: "Offre Ma Reliure",
+        amount_cents: caseContext.row.customer_price_cents!,
+        currency: MARKETPLACE_CURRENCY,
+        lead_time_weeks: null,
+        state: "offered",
+        customer_price_cents: caseContext.row.customer_price_cents,
+        binder_payout_cents: caseContext.row.binder_payout_cents,
+        offered_at: offeredAt,
+      })),
+    );
+    if (offerError) {
+      await sb
+        .from("marketplace_case_matches")
+        .delete()
+        .eq("case_id", data.caseId)
+        .eq("offered_at", offeredAt);
+      fail(500, offerError.message);
+    }
+
     const { error: statusError } = await sb
       .from("marketplace_cases")
-      .update({ status: "sent_to_binders" })
+      .update({ status: "awaiting_binder_response" })
       .eq("id", data.caseId);
     if (statusError) fail(500, statusError.message);
 
-    return { invited: decision.binderIds.length };
+    await sb.from("marketplace_events").insert(
+      decision.binderIds.map((binderId) => ({
+        case_id: data.caseId,
+        binder_id: binderId,
+        actor_user_id: context.userId,
+        event_type: "offer_sent",
+        metadata: { binder_payout_cents: caseContext.row.binder_payout_cents },
+      })),
+    );
+
+    return { offered: decision.binderIds.length };
+  });
+
+export const selectBinderOffer = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ caseId: z.string().uuid(), binderId: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: result, error } = await sb.rpc("marketplace_select_binder_offer", {
+      p_case_id: data.caseId,
+      p_binder_id: data.binderId,
+      p_actor_user_id: context.userId,
+    });
+    if (error) fail(409, error.message);
+    return result;
   });
 
 export const listMarketplaceBinders = createServerFn({ method: "GET" })
@@ -409,21 +618,17 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
 
     const { data: matches, error } = await sb
       .from("marketplace_case_matches")
-      .select("case_id, state, invited_at")
+      .select("case_id, state, offered_at, invited_at, binder_payout_cents, currency")
       .eq("binder_id", binder!.id)
       .order("invited_at", { ascending: false });
     if (error) fail(500, error.message);
     if (!matches || matches.length === 0) return [];
 
     const caseIds = matches.map((m) => m.case_id);
-    const [{ data: cases }, { data: quotes }] = await Promise.all([
-      sb.from("marketplace_cases").select("id, reference, status, dossier_id").in("id", caseIds),
-      sb
-        .from("marketplace_quotes")
-        .select("case_id, amount_cents, lead_time_weeks, state")
-        .eq("binder_id", binder!.id)
-        .in("case_id", caseIds),
-    ]);
+    const { data: cases } = await sb
+      .from("marketplace_cases")
+      .select("id, reference, status, dossier_id")
+      .in("id", caseIds);
 
     // Titles again come from the Dossier the case points at, never from a copy.
     const titles = new Map<string, string>();
@@ -446,19 +651,28 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
       photoCount.set(row.id, Array.isArray(photos) ? photos.length : 0);
     }
 
+    const { data: offers } = await sb
+      .from("marketplace_quotes")
+      .select(
+        "case_id, binder_id, state, customer_price_cents, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail",
+      )
+      .in("case_id", caseIds)
+      .eq("binder_id", binder!.id);
+
     return matches.map((match) => {
       const row = (cases ?? []).find((c) => c.id === match.case_id);
-      const quote = (quotes ?? []).find((q) => q.case_id === match.case_id) ?? null;
+      const offer = (offers ?? []).find((candidate) => candidate.case_id === match.case_id);
       return {
         caseId: match.case_id,
-        state: match.state,
-        invitedAt: match.invited_at,
+        state: offer?.state ?? match.state,
+        offeredAt: offer?.offered_at ?? match.offered_at ?? match.invited_at,
+        binderPayoutCents: offer?.binder_payout_cents ?? match.binder_payout_cents,
+        currency: offer?.currency ?? match.currency,
         reference: row?.reference ?? "",
         caseStatus: row?.status ?? "",
         title: titles.get(match.case_id) ?? row?.reference ?? "",
         summary: summaries.get(match.case_id) ?? "",
         photoCount: photoCount.get(match.case_id) ?? 0,
-        quote,
       };
     });
   });
@@ -486,70 +700,38 @@ export const getBinderCase = createServerFn({ method: "GET" })
     const disclosure = caseDisclosure(viewer, facts);
     const view = await buildCaseView(sb, caseContext, disclosure);
 
-    const { data: match } = await sb
-      .from("marketplace_case_matches")
-      .select("state")
-      .eq("case_id", data.caseId)
-      .eq("binder_id", binder!.id)
-      .maybeSingle();
-
-    const { data: myQuote } = await sb
+    const { data: offer } = await sb
       .from("marketplace_quotes")
-      .select("*")
+      .select(
+        "state, customer_price_cents, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail",
+      )
       .eq("case_id", data.caseId)
       .eq("binder_id", binder!.id)
       .maybeSingle();
 
     return {
       view,
-      matchState: match?.state ?? null,
+      offer: offer ?? null,
       caseStatus: caseContext.row.status,
-      myQuote: myQuote ?? null,
-      canQuote: canBinderQuote({
-        caseStatus: caseContext.row.status,
-        matchState: match?.state ?? null,
-      }),
+      canRespond: offer?.state === "offered",
     };
   });
 
-export const declineBinderCase = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
-    z.object({ caseId: z.string().uuid(), reason: z.string().max(500).optional() }).parse(data),
-  )
-  .handler(async ({ context, data }) => {
-    const sb = await admin();
-    const binder = await findBinderForUser(sb, context.userId);
-    if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
-
-    const { error } = await sb
-      .from("marketplace_case_matches")
-      .update({
-        state: "declined",
-        responded_at: new Date().toISOString(),
-        decline_reason: data.reason ?? null,
-      })
-      .eq("case_id", data.caseId)
-      .eq("binder_id", binder!.id)
-      .eq("state", "invited");
-    if (error) fail(500, error.message);
-    return { ok: true };
-  });
-
-export const submitBinderQuote = createServerFn({ method: "POST" })
+export const respondToBinderOffer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) =>
     z
       .object({
         caseId: z.string().uuid(),
-        description: z.string().min(1).max(4000),
-        technique: z.string().max(300).optional().nullable(),
-        materials: z.string().max(300).optional().nullable(),
-        options: z.string().max(500).optional().nullable(),
-        amountCents: z.number().int(),
-        leadTimeWeeks: z.number().int(),
-        caveats: z.string().max(1000).optional().nullable(),
-        validUntil: z.string().max(20).optional().nullable(),
+        accept: z.boolean(),
+        reasonCode: z.enum(OFFER_DECLINE_REASONS).optional().nullable(),
+        reasonDetail: z.string().trim().max(500).optional().nullable(),
+      })
+      .superRefine((value, ctx) => {
+        if (!value.accept && !value.reasonCode)
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Un motif de refus est requis." });
+        if (!value.accept && value.reasonCode === "other" && !value.reasonDetail)
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: "Précisez le motif du refus." });
       })
       .parse(data),
   )
@@ -557,59 +739,16 @@ export const submitBinderQuote = createServerFn({ method: "POST" })
     const sb = await admin();
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
-
-    const caseContext = await loadCaseContext(sb, data.caseId);
-    if (!caseContext) fail(404, "Dossier introuvable");
-
-    const { data: match } = await sb
-      .from("marketplace_case_matches")
-      .select("state")
-      .eq("case_id", data.caseId)
-      .eq("binder_id", binder!.id)
-      .maybeSingle();
-
-    const permission = canBinderQuote({
-      caseStatus: caseContext.row.status,
-      matchState: match?.state ?? null,
+    const { data: result, error } = await sb.rpc("marketplace_respond_to_offer", {
+      p_case_id: data.caseId,
+      p_binder_id: binder!.id,
+      p_accept: data.accept,
+      p_reason_code: data.reasonCode ?? null,
+      p_reason_detail: data.reasonDetail ?? null,
+      p_actor_user_id: context.userId,
     });
-    if (!permission.allowed) fail(403, permission.reason ?? "Proposition impossible.");
-
-    const problems = validateQuote(data);
-    if (problems.length > 0) fail(422, problems.join(" "));
-
-    // One live proposal per relieur per case (unique index): a revised price
-    // replaces the previous one rather than giving the customer four offers.
-    const { error } = await sb.from("marketplace_quotes").upsert(
-      {
-        case_id: data.caseId,
-        binder_id: binder!.id,
-        description: data.description,
-        technique: data.technique ?? null,
-        materials: data.materials ?? null,
-        options: data.options ?? null,
-        amount_cents: data.amountCents,
-        lead_time_weeks: data.leadTimeWeeks,
-        caveats: data.caveats ?? null,
-        valid_until: data.validUntil ?? null,
-        state: "submitted",
-      },
-      { onConflict: "case_id,binder_id" },
-    );
-    if (error) fail(500, error.message);
-
-    await sb
-      .from("marketplace_case_matches")
-      .update({ state: "quoted", responded_at: new Date().toISOString() })
-      .eq("case_id", data.caseId)
-      .eq("binder_id", binder!.id);
-
-    await sb
-      .from("marketplace_cases")
-      .update({ status: "quotes_received" })
-      .eq("id", data.caseId)
-      .eq("status", "sent_to_binders");
-
-    return { ok: true };
+    if (error) fail(409, error.message);
+    return result;
   });
 
 // ---------------------------------------------------------------------------
@@ -642,7 +781,9 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
     // not in this list, whatever e-mail the visitor originally typed.
     const { data: cases } = await sb
       .from("marketplace_cases")
-      .select("id, reference, status, dossier_id, created_at")
+      .select(
+        "id, reference, status, dossier_id, created_at, customer_price_cents, pricing_currency",
+      )
       .eq("customer_user_id", context.userId)
       .order("created_at", { ascending: false });
 
@@ -654,18 +795,14 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
         .eq("id", row.dossier_id)
         .maybeSingle();
       const content = dossier?.content as { missionName?: unknown } | null;
-      const { count } = await sb
-        .from("marketplace_quotes")
-        .select("id", { count: "exact", head: true })
-        .eq("case_id", row.id)
-        .eq("state", "submitted");
       results.push({
         id: row.id,
         reference: row.reference,
         status: row.status,
         createdAt: row.created_at,
         title: typeof content?.missionName === "string" ? content.missionName : row.reference,
-        quoteCount: count ?? 0,
+        customerPriceCents: row.customer_price_cents,
+        currency: row.pricing_currency,
       });
     }
     return results;
@@ -689,92 +826,45 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
 
     const view = await buildCaseView(sb, caseContext, caseDisclosure(viewer, facts));
 
-    const { data: quotes } = await sb
-      .from("marketplace_quotes")
-      .select("*")
+    const { data: selected } = await sb
+      .from("marketplace_case_matches")
+      .select("binder_id, selected_at")
       .eq("case_id", data.caseId)
-      .in("state", ["submitted", "selected"]);
-
-    const binderIds = (quotes ?? []).map((q) => q.binder_id);
-    const { data: binders } = binderIds.length
+      .eq("state", "selected")
+      .maybeSingle();
+    const { data: binder } = selected
       ? await sb
           .from("marketplace_binders")
           .select(
             "id, display_name, workshop_name, city, bio, avatar_path, years_experience, rating_avg, rating_count",
           )
-          .in("id", binderIds)
-      : { data: [] };
-    const skills = await skillsByBinder(sb, binderIds);
+          .eq("id", selected.binder_id)
+          .maybeSingle()
+      : { data: null };
+    const skills = binder ? await skillsByBinder(sb, [binder.id]) : new Map<string, string[]>();
 
-    // Ordered by the shared rule (chronological, never by price) and then
-    // rehydrated, so the customer-facing order can never drift from the one the
-    // rule test pins down.
-    const byId = new Map((quotes ?? []).map((q) => [q.id, q]));
-    const offers = orderQuotesForComparison(
-      (quotes ?? []).map((q) => ({
-        id: q.id,
-        amountCents: q.amount_cents,
-        leadTimeWeeks: q.lead_time_weeks,
-        submittedAt: q.created_at,
-      })),
-    ).map((ordered) => {
-      const quote = byId.get(ordered.id)!;
-      const binder = (binders ?? []).find((row) => row.id === quote.binder_id);
-      return {
-        ...quote,
-        binder: binder ? { ...binder, skills: skills.get(binder.id) ?? [] } : null,
-      };
-    });
-
-    return { case: caseContext.row, view, offers };
-  });
-
-export const selectQuote = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
-    z.object({ caseId: z.string().uuid(), quoteId: z.string().uuid() }).parse(data),
-  )
-  .handler(async ({ context, data }) => {
-    const sb = await admin();
-    const caseContext = await loadCaseContext(sb, data.caseId);
-    if (!caseContext) fail(404, "Dossier introuvable");
-
-    const viewer: Viewer = { role: "customer", userId: context.userId };
-    if (
-      !canViewCase(viewer, {
-        invitedBinderIds: caseContext.invitedBinderIds,
-        selectedBinderId: caseContext.selectedBinderId,
-        customerUserId: caseContext.customerUserId,
-      })
-    ) {
-      fail(403, "Ce dossier n'est pas le vôtre.");
-    }
-    if (caseContext.selectedBinderId) fail(409, "Un relieur a déjà été choisi pour ce dossier.");
-
-    const { data: quote } = await sb
-      .from("marketplace_quotes")
-      .select("id, binder_id, case_id, state")
-      .eq("id", data.quoteId)
-      .eq("case_id", data.caseId)
-      .maybeSingle();
-    if (!quote) fail(404, "Proposition introuvable");
-    if (quote!.state !== "submitted") fail(409, "Cette proposition n'est plus disponible.");
-
-    await sb.from("marketplace_quotes").update({ state: "selected" }).eq("id", data.quoteId);
-    await sb
-      .from("marketplace_quotes")
-      .update({ state: "rejected" })
-      .eq("case_id", data.caseId)
-      .neq("id", data.quoteId)
-      .eq("state", "submitted");
-    await sb
-      .from("marketplace_case_matches")
-      .update({ state: "selected" })
-      .eq("case_id", data.caseId)
-      .eq("binder_id", quote!.binder_id);
-    await sb.from("marketplace_cases").update({ status: "binder_selected" }).eq("id", data.caseId);
-
-    return { ok: true, binderId: quote!.binder_id };
+    return {
+      case: {
+        id: caseContext.row.id,
+        reference: caseContext.row.reference,
+        status: caseContext.row.status,
+        customerPriceCents:
+          caseContext.row.pricing_status === "validated"
+            ? caseContext.row.customer_price_cents
+            : null,
+        currency: caseContext.row.pricing_currency,
+        priceIncludes: caseContext.row.price_includes,
+        createdAt: caseContext.row.created_at,
+      },
+      view,
+      selectedBinder: binder
+        ? {
+            ...binder,
+            skills: skills.get(binder.id) ?? [],
+            selectedAt: selected?.selected_at ?? null,
+          }
+        : null,
+    };
   });
 
 /**

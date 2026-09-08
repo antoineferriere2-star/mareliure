@@ -7,13 +7,14 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listMyBinderCases } from "@/marketplace/services/marketplace.data.functions";
-import { formatEuros } from "@/marketplace/orders/commission";
+import { formatEuros } from "@/marketplace/pricing/money";
 
 const GROUPS = [
-  { key: "invited", title: "Nouveaux projets" },
-  { key: "quoted", title: "Propositions envoyées" },
+  { key: "offered", title: "Nouvelles offres" },
+  { key: "accepted", title: "Disponibilités confirmées" },
   { key: "selected", title: "Commandes en cours" },
-  { key: "declined", title: "Déclinés" },
+  { key: "declined", title: "Offres refusées" },
+  { key: "cancelled", title: "Offres clôturées" },
 ] as const;
 
 export function BinderDashboardPage() {
@@ -57,8 +58,8 @@ export function BinderDashboardPage() {
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{row.summary}</p>
                     <p className="mt-3 text-xs text-muted-foreground">
                       {row.reference} · {row.photoCount} photo(s)
-                      {row.quote &&
-                        ` · proposé ${formatEuros(row.quote.amount_cents)} sous ${row.quote.lead_time_weeks} sem.`}
+                      {row.binderPayoutCents &&
+                        ` · rémunération ${formatEuros(row.binderPayoutCents)}`}
                     </p>
                   </Link>
                 </li>

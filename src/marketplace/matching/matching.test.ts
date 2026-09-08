@@ -45,14 +45,18 @@ describe("the score rewards the workshop that can actually do the work", () => {
     expect(scoreBinder(vague, binder({ skills: [] })).breakdown.skills).toBe(40);
   });
 
-  it("drops a workshop whose floor is above the stated budget", () => {
+  it("drops a workshop whose floor is above the validated payout", () => {
     const expensive = binder({ minProjectCents: 100_000 });
-    expect(scoreBinder(COLLECTOR, expensive).breakdown.budget).toBe(0);
+    expect(scoreBinder(COLLECTOR, expensive, 40_000).breakdown.payout).toBe(0);
   });
 
-  it("ignores budget entirely when the visitor did not name one", () => {
-    const unsure = buildCaseProfile({ intention: "collector", budget: "ne_sais_pas" });
-    expect(scoreBinder(unsure, binder({ minProjectCents: 100_000 })).breakdown.budget).toBe(15);
+  it("does not use the visitor budget as a matching input", () => {
+    const lowBudget = buildCaseProfile({ intention: "collector", budget: "lt_150" });
+    const highBudget = buildCaseProfile({ intention: "collector", budget: "gt_700" });
+    const workshop = binder({ minProjectCents: 30_000 });
+    expect(scoreBinder(lowBudget, workshop, 40_000).breakdown.payout).toBe(
+      scoreBinder(highBudget, workshop, 40_000).breakdown.payout,
+    );
   });
 
   it("treats a workshop with no history as average, not as bad", () => {

@@ -1,7 +1,7 @@
 /**
  * Demonstration data for the Reliure marketplace: six workshops and eight
  * submitted projects, enough to exercise the matching screen, the relieur
- * dashboard and the customer's comparison without waiting for real traffic.
+ * dashboard and the managed pricing screen without waiting for real traffic.
  *
  * Run with: npm run seed:marketplace-demo   (after npm run seed:bookbinding)
  *
@@ -27,6 +27,8 @@ import { bookbindingPlaybookSchema } from "../src/build/playbooks/bookbindingPla
 import type { Answers } from "../src/build/schema/answers";
 import { BOOKBINDING_MISSION_ID, BOOKBINDING_WORKSPACE_ID } from "../src/build/constants";
 import type { Database, Json } from "../src/integrations/supabase/types";
+import { buildCaseProfile } from "../src/marketplace/cases/caseProfile";
+import { suggestManagedPrice } from "../src/marketplace/pricing/pricing.engine";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -511,6 +513,23 @@ async function main() {
       visitor_name: String(demo.answers.name),
     });
     if (dossierError) throw dossierError;
+
+    const suggestion = suggestManagedPrice(buildCaseProfile(demo.answers));
+    const { error: pricingError } = await supabase
+      .from("marketplace_cases")
+      .update({
+        pricing_status: "suggested",
+        suggested_customer_price_cents: suggestion.suggestedCustomerPriceCents,
+        suggested_binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+        customer_price_cents: suggestion.suggestedCustomerPriceCents,
+        binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+        pricing_confidence: suggestion.confidence,
+        pricing_reason_codes: suggestion.reasons,
+        pricing_rule_version: suggestion.ruleVersion,
+        pricing_generated_at: submittedAt,
+      })
+      .eq("dossier_id", dossierId);
+    if (pricingError) throw pricingError;
 
     console.log(`  · ${demo.label} — ${brief.missionName}`);
   }

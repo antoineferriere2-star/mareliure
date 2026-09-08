@@ -43,25 +43,23 @@ export interface LandingStep {
 }
 
 /**
- * Trois étapes, pas six. Six décrivaient notre processus ; trois décrivent ce
- * que la personne aura à faire — et la troisième est déjà une décision qui lui
- * appartient.
+ * Trois étapes, pas six. Elles décrivent le parcours réellement opéré par Ma Reliure.
  */
 export const STEPS: readonly LandingStep[] = [
   {
     index: "01",
-    title: "Présentez votre livre",
-    body: "Quelques photos et quelques questions suffisent.",
+    title: "Décrivez votre livre",
+    body: "Ajoutez des photos, ses dimensions, son état et le projet souhaité.",
   },
   {
     index: "02",
-    title: "Nous sélectionnons les ateliers",
-    body: "Jusqu'à trois relieurs dont le savoir-faire correspond à votre projet.",
+    title: "Ma Reliure fixe le prix",
+    body: "Nous étudions le travail, les matériaux et la complexité avant de vous présenter un prix unique.",
   },
   {
     index: "03",
-    title: "Choisissez votre proposition",
-    body: "Comparez les approches, les matériaux, le délai et le prix.",
+    title: "Un atelier accepte",
+    body: "Nous sollicitons des relieurs adaptés ; l’atelier retenu confirme sa disponibilité au prix prévu.",
   },
 ];
 
@@ -111,12 +109,12 @@ export const COMMITMENTS: readonly Commitment[] = [
     body: "Nous vérifions chaque atelier avant son arrivée sur Ma Reliure.",
   },
   {
-    title: "Trois propositions maximum",
-    body: "Votre projet n'est jamais envoyé à une foule d'artisans.",
+    title: "Un prix unique",
+    body: "Ma Reliure fixe le prix à partir du travail demandé, avant la confirmation de l’atelier.",
   },
   {
-    title: "Paiement sécurisé",
-    body: "Vous choisissez l'atelier avant de vous engager.",
+    title: "Atelier disponible",
+    body: "Le relieur retenu accepte la mission et sa rémunération avant que le projet lui soit confié.",
   },
   {
     title: "Suivi du livre",

@@ -55,6 +55,7 @@ Chaque champ porte : `key`, `label`, `helpText`, `desirability`
 atterrit dans le Dossier).
 
 Au niveau racine :
+
 - `validationRules[]` — les règles de cohérence inter-champs (le
   « Vérificateur »), `severity: error` (bloque) ou `warning` (avertit une fois) ;
 - `briefConfig` — `summaryFragments`, `calculatedFields`, `derivedLines`,
@@ -68,14 +69,14 @@ donnée.
 
 ### A.4 Le moteur (`src/build/engine/`, pur, sans framework)
 
-| Module | Rôle |
-| --- | --- |
-| `conditions.ts` | Évalue `ConditionGroup` (`all` = ET, `any` = OU). 10 opérateurs. |
-| `validation.ts` | `validateField`, `computeVisibleSteps`, `getPlaybookPublishIssues` (contrôles sémantiques de publication). |
-| `consistency.ts` | Le Vérificateur : n'évalue une règle **que** si tous les champs qu'elle lit ont déjà été présentés. |
-| `brief.ts` | `generateProjectBrief` — 8 passes produisant le `ProjectBrief` canonique. |
+| Module              | Rôle                                                                                                       |
+| ------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `conditions.ts`     | Évalue `ConditionGroup` (`all` = ET, `any` = OU). 10 opérateurs.                                           |
+| `validation.ts`     | `validateField`, `computeVisibleSteps`, `getPlaybookPublishIssues` (contrôles sémantiques de publication). |
+| `consistency.ts`    | Le Vérificateur : n'évalue une règle **que** si tous les champs qu'elle lit ont déjà été présentés.        |
+| `brief.ts`          | `generateProjectBrief` — 8 passes produisant le `ProjectBrief` canonique.                                  |
 | `visitorSummary.ts` | Transforme le `ProjectBrief` interne en `VisitorProjectSummary` visiteur (retire confiance + next action). |
-| `fields/*.tsx` | 13 composants React, un par type, **aucun ne connaît de métier**. |
+| `fields/*.tsx`      | 13 composants React, un par type, **aucun ne connaît de métier**.                                          |
 
 `conditions.ts`, `validation.ts` et `consistency.ts` sont importés **à la fois**
 par le client (retour immédiat) et par le serveur (autorité au submit) : les
@@ -94,16 +95,16 @@ deux ne peuvent pas diverger.
   rate-limit par IP (60/h anonyme, 300/h par session), corps limité à 32 Ko
   (12 Mo pour une photo), IP hachée avec sel.
 - Submit idempotent : trois garde-fous (statut, `UPDATE ... WHERE
-  status='in_progress'`, index unique sur `session_id`).
+status='in_progress'`, index unique sur `session_id`).
 
 ### A.6 Photos
 
 Deux buckets, deux usages, **les deux réellement implémentés** :
 
-| Bucket | Type de champ | Limites | Lecture |
-| --- | --- | --- | --- |
-| `build-project-photos` | `photo` avec `storage: "supabase_storage"` | 8 Mo, 12 fichiers, jpeg/png/webp/heic/heif | workspace uniquement, URL signée |
-| `build-inspiration-photos` | `inspiration_photo` | 8 Mo, jpeg/png/webp | agent vision + workspace |
+| Bucket                     | Type de champ                              | Limites                                    | Lecture                          |
+| -------------------------- | ------------------------------------------ | ------------------------------------------ | -------------------------------- |
+| `build-project-photos`     | `photo` avec `storage: "supabase_storage"` | 8 Mo, 12 fichiers, jpeg/png/webp/heic/heif | workspace uniquement, URL signée |
+| `build-inspiration-photos` | `inspiration_photo`                        | 8 Mo, jpeg/png/webp                        | agent vision + workspace         |
 
 > ⚠️ Le commentaire d'en-tête de `photoField` dans `schema/playbook.ts` affirme
 > encore que seul `filename_only` est implémenté et que `supabase_storage` est
@@ -164,24 +165,24 @@ exclusivement l'abonnement SaaS Métré (plans, quotas, entitlements, sync).
 
 Aucune de ces briques n'est modifiée par la marketplace.
 
-| Brique | Chemin |
-| --- | --- |
-| Schéma Playbook | `src/build/schema/playbook.ts` |
-| Réponses / Brief / Résumé visiteur | `src/build/schema/{answers,brief,visitorSummary}.ts` |
-| Moteur conditions | `src/build/engine/conditions.ts` |
-| Moteur validation + contrôles de publication | `src/build/engine/validation.ts` |
-| Vérificateur | `src/build/engine/consistency.ts` |
-| Générateur de Dossier | `src/build/engine/brief.ts` |
-| Résumé visiteur | `src/build/engine/visitorSummary.ts` |
-| Les 13 composants de champ | `src/build/engine/fields/*` |
-| Runtime public | `src/build/pages/public/MissionRuntime.tsx`, `/m/:publicToken` |
-| API runtime (7 actions) | `src/routes/api/public/build-runtime.ts` |
-| Project Canvas + projection | `src/build/pages/public/ProjectCanvas*.{tsx,ts}` |
-| Stockage photos (2 buckets) | `src/build/storage/*` |
-| Rendu de Dossier | `src/build/components/ProjectBriefView.tsx` |
-| Lien sécurisé de résumé | `/project-summary/:accessToken` |
-| Modèle d'autorisation | `assertAdmin` + `admin()` + RLS deny-all |
-| Pattern de seed | `scripts/seedDeckPlaybook.ts` |
+| Brique                                       | Chemin                                                         |
+| -------------------------------------------- | -------------------------------------------------------------- |
+| Schéma Playbook                              | `src/build/schema/playbook.ts`                                 |
+| Réponses / Brief / Résumé visiteur           | `src/build/schema/{answers,brief,visitorSummary}.ts`           |
+| Moteur conditions                            | `src/build/engine/conditions.ts`                               |
+| Moteur validation + contrôles de publication | `src/build/engine/validation.ts`                               |
+| Vérificateur                                 | `src/build/engine/consistency.ts`                              |
+| Générateur de Dossier                        | `src/build/engine/brief.ts`                                    |
+| Résumé visiteur                              | `src/build/engine/visitorSummary.ts`                           |
+| Les 13 composants de champ                   | `src/build/engine/fields/*`                                    |
+| Runtime public                               | `src/build/pages/public/MissionRuntime.tsx`, `/m/:publicToken` |
+| API runtime (7 actions)                      | `src/routes/api/public/build-runtime.ts`                       |
+| Project Canvas + projection                  | `src/build/pages/public/ProjectCanvas*.{tsx,ts}`               |
+| Stockage photos (2 buckets)                  | `src/build/storage/*`                                          |
+| Rendu de Dossier                             | `src/build/components/ProjectBriefView.tsx`                    |
+| Lien sécurisé de résumé                      | `/project-summary/:accessToken`                                |
+| Modèle d'autorisation                        | `assertAdmin` + `admin()` + RLS deny-all                       |
+| Pattern de seed                              | `scripts/seedDeckPlaybook.ts`                                  |
 
 **Conséquence directe** : la marketplace ne code ni tunnel, ni conditions, ni
 validation, ni upload photo, ni génération de dossier. Elle publie un Playbook
@@ -224,18 +225,18 @@ volontairement autonome pour rester exécutable hors requête HTTP.
 **Aucune extension du moteur n'est nécessaire pour le P0.** Vérifié champ par
 champ contre le cahier des charges :
 
-| Besoin marketplace | Couvert par | Vérification |
-| --- | --- | --- |
-| Intention de projet pilotant la suite | `single_choice` + `displayWhen` | Deck fait déjà `entryMode` |
-| État du livre multi-sélection | `multi_choice` + `minSelected` | ✔ |
-| Dimensions H × L × ép. | 3 × `measurement`, `unit: "cm"` | `cm` est dans `measurementUnit` |
-| Budget en tranches € | `budget` `mode: "ranges"`, `currency: "EUR"` | `currency` est un `string`, pas un enum |
-| Délai | `timeline` | ✔ |
-| Photos du livre stockées | `photo` + `storage: "supabase_storage"` | ✔ (cf. A.6) |
-| Photos d'inspiration | `inspiration_photo` | ✔ |
-| Cas patrimonial → message | `derivedLines` + `alwaysIncludeLines` | ✔ |
-| Cas > 1 000 € → revue manuelle | `derivedLines` (ligne de Dossier) **puis** lecture côté marketplace | cf. D.3 |
-| Canvas « le projet prend forme » | `briefMapping.category` alimente les groupes du Canvas | ✔, zéro code |
+| Besoin marketplace                    | Couvert par                                                         | Vérification                            |
+| ------------------------------------- | ------------------------------------------------------------------- | --------------------------------------- |
+| Intention de projet pilotant la suite | `single_choice` + `displayWhen`                                     | Deck fait déjà `entryMode`              |
+| État du livre multi-sélection         | `multi_choice` + `minSelected`                                      | ✔                                       |
+| Dimensions H × L × ép.                | 3 × `measurement`, `unit: "cm"`                                     | `cm` est dans `measurementUnit`         |
+| Budget en tranches €                  | `budget` `mode: "ranges"`, `currency: "EUR"`                        | `currency` est un `string`, pas un enum |
+| Délai                                 | `timeline`                                                          | ✔                                       |
+| Photos du livre stockées              | `photo` + `storage: "supabase_storage"`                             | ✔ (cf. A.6)                             |
+| Photos d'inspiration                  | `inspiration_photo`                                                 | ✔                                       |
+| Cas patrimonial → message             | `derivedLines` + `alwaysIncludeLines`                               | ✔                                       |
+| Cas > 1 000 € → revue manuelle        | `derivedLines` (ligne de Dossier) **puis** lecture côté marketplace | cf. D.3                                 |
+| Canvas « le projet prend forme »      | `briefMapping.category` alimente les groupes du Canvas              | ✔, zéro code                            |
 
 > **`mm` n'existe pas** dans `measurementUnit` (`ft | in | m | cm | sqft | sqm`).
 > Le brief d'intention demandait « cm ou mm selon ce que le moteur supporte
@@ -247,7 +248,7 @@ champ contre le cahier des charges :
 
 Le moteur ne connaît que `en-US` et `es-US`. Le Playbook Reliure est écrit
 **en français dans sa donnée** (labels, options, aides, libellés de Dossier) —
-c'est de la donnée, le moteur s'en moque. En revanche le *chrome* du runtime
+c'est de la donnée, le moteur s'en moque. En revanche le _chrome_ du runtime
 (« Continue », « Back », « Your project ») reste anglais tant que `fr-FR`
 n'existe pas.
 
@@ -273,8 +274,8 @@ Deux propriétés qui ont demandé un peu de soin :
 - **Le sélecteur de langue disparaît sur une surface verrouillée**, au lieu
   d'afficher deux boutons EN/ES qui ne changeraient rien.
 
-`PUBLIC_LANGUAGE_OPTIONS` reste EN/ES : le moteur *supportant* une langue et une
-surface *l'offrant* sont deux affirmations différentes. Ajouter un bouton FR au
+`PUBLIC_LANGUAGE_OPTIONS` reste EN/ES : le moteur _supportant_ une langue et une
+surface _l'offrant_ sont deux affirmations différentes. Ajouter un bouton FR au
 site marketing Métré, qui n'est pas traduit, serait une régression du SaaS — un
 test le verrouille, et le comportement a été vérifié au navigateur.
 
@@ -295,7 +296,7 @@ src/marketplace/
   binders/       profils artisans, compétences, portfolio
   cases/         le pont Dossier Métré <-> transaction
   matching/      score + sélection admin (<= 3)
-  quotes/        propositions des relieurs
+  quotes/        offres à prix fixé par Ma Reliure
   orders/        commandes, commission
   payments/      Stripe Connect — ISOLÉ de src/build/billing/
   shipments/     transport saisi manuellement
@@ -325,11 +326,11 @@ marketplace_cases              id, dossier_id UNIQUE ──► build_dossiers(id
                                mission_id, reference (RL-###), status,
                                manual_review_required, heritage_flag,
                                declared_value_band, admin_notes
-marketplace_case_matches       case_id, binder_id, state(invited|declined|quoted|
-                               selected), invited_at, responded_at   UNIQUE(case,binder)
-marketplace_quotes             case_id, binder_id, description, technique,
-                               materials, options, amount_cents, currency,
-                               lead_time_weeks, caveats, valid_until, state
+marketplace_case_matches       case_id, binder_id, score, état d'invitation
+                               (offered|accepted|declined|selected), dates
+marketplace_quotes             case_id, binder_id, customer_price_cents,
+                               binder_payout_cents, offered_at, accepted_at,
+                               declined_at, selected_at, state
 marketplace_orders             case_id, quote_id, binder_id, customer_user_id,
                                amount_cents, commission_bps, commission_cents,
                                status, stripe_payment_intent_id
@@ -350,8 +351,8 @@ marketplace_disputes           order_id, opened_by, reason, state
 réponses, les photos, le brief et le résumé visiteur restent dans
 `build_dossiers` / `build_runtime_sessions` / les buckets Storage : une seule
 source de vérité pour la qualification. Le seul instantané figé sera, plus
-tard, celui du **devis accepté** au moment de la commande — parce que c'est un
-document contractuel, pas parce que c'est pratique.
+tard, celui de l'**offre acceptée** au moment de la commande — parce que c'est
+un document contractuel, pas parce que c'est pratique.
 
 ### D.3 Comment un Dossier devient un dossier marketplace
 
@@ -402,11 +403,11 @@ Le moteur n'apprend pas la règle des 1 000 €.
 
 ### D.4 Autorisations marketplace
 
-| Acteur | Voit |
-| --- | --- |
-| Admin (`user_roles.admin`) | tout |
-| Relieur | uniquement les cas où il a une ligne `marketplace_case_matches`, ou dont il est l'artisan de la commande |
-| Client | uniquement les cas dont `marketplace_cases.customer_user_id` est son compte |
+| Acteur                     | Voit                                                                                                     |
+| -------------------------- | -------------------------------------------------------------------------------------------------------- |
+| Admin (`user_roles.admin`) | tout                                                                                                     |
+| Relieur                    | uniquement les cas où il a une ligne `marketplace_case_matches`, ou dont il est l'artisan de la commande |
+| Client                     | uniquement les cas dont `marketplace_cases.customer_user_id` est son compte                              |
 
 **La propriété client est une relation, pas une adresse.** Une première version
 comparait `build_dossiers.visitor_email` à l'adresse du compte connecté : l'accès
@@ -454,8 +455,8 @@ département), rien de plus.
 - `matching/score.ts` — score 0–100 depuis le Brief + les compétences.
   Déterministe, pas d'IA. L'admin garde le dernier mot.
 - `matching/selection.ts` — la règle des **3 relieurs maximum**.
-- `orders/commission.ts` — **une seule** constante `DEFAULT_COMMISSION_BPS = 1500`
-  (15 % en points de base, pour ne jamais manipuler de flottant sur de l'argent).
+- `pricing/` — suggestion déterministe séparée du prix validé par un humain ;
+  aucun montant n'est décidé automatiquement.
 - `cases/state.ts` — transitions d'états, séparées des statuts de qualification.
 - `cases/permissions.ts` — qui voit quoi, testable sans base.
 
@@ -465,8 +466,8 @@ Les statuts de **qualification** appartiennent à Métré et ne bougent pas :
 `build_dossiers.status` (`draft | ready`) et `commercial_status`.
 
 Les statuts de **transaction** appartiennent à la marketplace :
-`under_review -> matching -> sent_to_binders -> quotes_received ->
-binder_selected -> awaiting_payment -> paid -> shipping_to_binder ->
+`under_review -> pricing -> matching -> awaiting_binder_response ->
+binder_accepted -> binder_selected -> awaiting_payment -> paid -> shipping_to_binder ->
 received_by_binder -> in_progress -> awaiting_approval -> shipping_to_customer
 -> delivered -> completed`, plus `cancelled`. Aucun doublon avec les statuts
 Métré : ils décrivent des choses différentes (« ce dossier est-il complet ? »
@@ -476,23 +477,23 @@ vs « où en est la transaction ? »).
 
 ## E. Mapping Métré → marketplace
 
-| Objet Métré | Objet marketplace | Relation |
-| --- | --- | --- |
-| `build_playbooks` (Reliure) | — | l'expertise reliure, propriété de la plateforme |
-| `build_playbook_versions` | — | version immuable pointée par la Mission |
-| `build_missions` (Mission Reliure) | `marketplace_intake_missions` | inscription d'une Mission au flux marketplace |
-| `/m/:publicToken` | CTA « Présenter mon livre » | la marketplace **lance** le runtime, ne le réimplémente pas |
-| `build_runtime_sessions.answers` | — | jamais copié |
-| `build_dossiers` | `marketplace_cases.dossier_id` | 1 ↔ 1, par référence |
-| `ProjectBrief` (`content`) | vue dossier relieur | projeté, filtré, jamais dupliqué |
-| `VisitorProjectSummary` | espace client « Mes livres » | réutilisé tel quel |
-| Photos (`build-project-photos`) | galerie du dossier relieur | URL signée, même bucket |
-| `build_dossier_access_tokens` | lien de suivi client | réutilisé |
-| `next_questions` | « Informations manquantes » du dossier relieur | réutilisé |
-| `build_workspaces` | le workspace **de la marketplace elle-même** | la marketplace est un client de Métré |
-| `user_roles.admin` | back-office marketplace | réutilisé |
-| — | `marketplace_binders` | n'existe pas côté Métré |
-| `src/build/billing/*` (SaaS) | `src/marketplace/payments/*` | **strictement disjoints** |
+| Objet Métré                        | Objet marketplace                              | Relation                                                    |
+| ---------------------------------- | ---------------------------------------------- | ----------------------------------------------------------- |
+| `build_playbooks` (Reliure)        | —                                              | l'expertise reliure, propriété de la plateforme             |
+| `build_playbook_versions`          | —                                              | version immuable pointée par la Mission                     |
+| `build_missions` (Mission Reliure) | `marketplace_intake_missions`                  | inscription d'une Mission au flux marketplace               |
+| `/m/:publicToken`                  | CTA « Présenter mon livre »                    | la marketplace **lance** le runtime, ne le réimplémente pas |
+| `build_runtime_sessions.answers`   | —                                              | jamais copié                                                |
+| `build_dossiers`                   | `marketplace_cases.dossier_id`                 | 1 ↔ 1, par référence                                        |
+| `ProjectBrief` (`content`)         | vue dossier relieur                            | projeté, filtré, jamais dupliqué                            |
+| `VisitorProjectSummary`            | espace client « Mes livres »                   | réutilisé tel quel                                          |
+| Photos (`build-project-photos`)    | galerie du dossier relieur                     | URL signée, même bucket                                     |
+| `build_dossier_access_tokens`      | lien de suivi client                           | réutilisé                                                   |
+| `next_questions`                   | « Informations manquantes » du dossier relieur | réutilisé                                                   |
+| `build_workspaces`                 | le workspace **de la marketplace elle-même**   | la marketplace est un client de Métré                       |
+| `user_roles.admin`                 | back-office marketplace                        | réutilisé                                                   |
+| —                                  | `marketplace_binders`                          | n'existe pas côté Métré                                     |
+| `src/build/billing/*` (SaaS)       | `src/marketplace/payments/*`                   | **strictement disjoints**                                   |
 
 ---
 
@@ -530,7 +531,7 @@ opaque. Stripe **Connect** (comptes connectés, onboarding, `application_fee`,
 `transfer_data`, payouts, webhooks Connect) n'est **pas démontré** sur ce
 chemin.
 
-**Conséquence pour le plan** : le P1 paiement commence par un *spike* qui
+**Conséquence pour le plan** : le P1 paiement commence par un _spike_ qui
 répond à une seule question — « la passerelle Lovable accepte-t-elle les appels
 Connect ? ». Si non, il faudra une clé Stripe restreinte dédiée à la
 marketplace, dans un module `src/marketplace/payments/` avec son **propre**
@@ -579,11 +580,11 @@ démonstration existent en seed uniquement et sont marquées comme telles.
 5. `scripts/seedBookbindingPlaybook.ts` + `npm run seed:bookbinding`.
 6. Mission Reliure publiée sur `/m/:publicToken` (aucune route nouvelle).
 
-### P0 — Marketplace (le Dossier devient une transaction)
+### P0 — Marketplace initiale (historique avant le modèle géré)
 
 7. Migration marketplace + types Supabase.
 8. `marketplace_cases` + ingestion depuis `build_dossiers` (trigger + réconciliation).
-9. Modules purs : score de matching, sélection <= 3, commission, transitions,
+9. Modules purs : score de matching, sélection <= 3, partage initial, transitions,
    permissions — tous testés.
 10. Profils relieurs + compétences + portfolio.
 11. Back-office admin : liste des demandes, écran de matching (Brief à gauche,
@@ -593,6 +594,14 @@ démonstration existent en seed uniquement et sont marquées comme telles.
 14. Comparaison client (3 offres max, jamais « meilleur prix »).
 15. Landing `/reliure` — « Donnez une nouvelle vie aux livres auxquels vous tenez ».
 
+### P0.5 — Marketplace gérée
+
+16. Suggestion déterministe et validation humaine du prix Ma Reliure.
+17. Offre à rémunération fixe à trois ateliers compatibles maximum.
+18. Acceptation ou refus motivé par l'atelier.
+19. Sélection d'un atelier par l'admin ; prix unique côté client.
+20. Journal d'événements exploitable pour les futurs indicateurs.
+
 **Critère de sortie du P0** = le scénario §71 : ouvrir la Mission, qualifier un
 livre, charger des photos, traverser des branches conditionnelles, soumettre,
 obtenir un Project Brief correct, retrouver le dossier dans le back-office.
@@ -600,13 +609,13 @@ obtenir un Project Brief correct, retrouver le dossier dans le back-office.
 
 ### P1 — Transaction
 
-16. Commande + commission.
-17. *Spike* Stripe Connect via la passerelle Lovable (F.3), puis paiement.
-18. Messagerie par dossier.
-19. Transport saisi manuellement (`marketplace_shipments`).
-20. Constats d'état (3 types).
-21. Avenants.
-22. Avis (uniquement après commande terminée et vérifiée).
+21. Commande et paiement.
+22. _Spike_ Stripe Connect via la passerelle Lovable (F.3), puis paiement.
+23. Messagerie par dossier.
+24. Transport saisi manuellement (`marketplace_shipments`).
+25. Constats d'état (3 types).
+26. Avenants.
+27. Avis (uniquement après commande terminée et vérifiée).
 
 ### P2 — Finition
 
@@ -619,8 +628,8 @@ obtenir un Project Brief correct, retrouver le dossier dans le back-office.
 
 ### Ce que nous ne construisons pas
 
-Application native · matching IA · enchères · plus de 3 devis · pricing
-automatique · diagnostic patrimonial IA · API transporteur · assurance ·
+Application native · matching IA · enchères · plus de 3 ateliers sollicités · pricing
+IA · diagnostic patrimonial IA · API transporteur · assurance ·
 i18n complexe · abonnement relieur · wallet · séquestre maison · vidéo live.
 
 ---
@@ -631,35 +640,35 @@ i18n complexe · abonnement relieur · wallet · séquestre maison · vidéo liv
 
 ### Livré sur `feat/reliure-marketplace-mvp`
 
-| Point du plan | Où |
-| --- | --- |
-| 1. Audit | ce document |
-| 2. Verticale `bookbinding` | `src/build/verticals/registry.ts` (+ test) |
-| 3. Playbook Reliure | `src/build/playbooks/bookbindingPlaybookSchema.ts` |
-| 4. Tests du Playbook | `bookbindingPlaybook.test.ts` (27 tests) |
-| 5. Seed / publication | `scripts/seedBookbindingPlaybook.ts`, `npm run seed:bookbinding` |
-| 6. Mission Reliure | seedée sur `/m/:publicToken`, aucune route nouvelle |
-| 7. Migration marketplace | `supabase/migrations/20260908120000_marketplace_reliure.sql` + types |
-| 8. Ingestion Dossier → cas | trigger `build_dossiers_marketplace_ingest` + `reconcileCaseTriage` |
-| 9. Modules purs testés | `src/marketplace/{cases,matching,orders,quotes}` + `permissions.ts` |
-| 10. Relieurs, compétences, portfolio | migration + `binders/skills.ts` + seed de démonstration |
-| 11. Back-office matching | `/marketplace/cases`, `/marketplace/cases/:id` |
-| 12. Vue dossier relieur | `/atelier`, `/atelier/cases/:id` |
-| 13. Devis | `submitBinderQuote` + `quotes/rules.ts` |
-| 14. Comparaison client | `/mes-livres`, `/mes-livres/:id` |
-| 15. Landing | `/reliure` |
-| 63. Seed de démonstration | `npm run seed:marketplace-demo` (6 relieurs, 8 projets) |
+| Point du plan                        | Où                                                                   |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| 1. Audit                             | ce document                                                          |
+| 2. Verticale `bookbinding`           | `src/build/verticals/registry.ts` (+ test)                           |
+| 3. Playbook Reliure                  | `src/build/playbooks/bookbindingPlaybookSchema.ts`                   |
+| 4. Tests du Playbook                 | `bookbindingPlaybook.test.ts` (27 tests)                             |
+| 5. Seed / publication                | `scripts/seedBookbindingPlaybook.ts`, `npm run seed:bookbinding`     |
+| 6. Mission Reliure                   | seedée sur `/m/:publicToken`, aucune route nouvelle                  |
+| 7. Migration marketplace             | `supabase/migrations/20260908120000_marketplace_reliure.sql` + types |
+| 8. Ingestion Dossier → cas           | trigger `build_dossiers_marketplace_ingest` + `reconcileCaseTriage`  |
+| 9. Modules purs testés               | `src/marketplace/{cases,matching,orders,quotes}` + `permissions.ts`  |
+| 10. Relieurs, compétences, portfolio | migration + `binders/skills.ts` + seed de démonstration              |
+| 11. Back-office matching             | `/marketplace/cases`, `/marketplace/cases/:id`                       |
+| 12. Vue dossier relieur              | `/atelier`, `/atelier/cases/:id`                                     |
+| 13. Offre à prix fixé                | `sendCaseToBinders` + `respondToBinderOffer`                         |
+| 14. Prix unique client               | `/mes-livres`, `/mes-livres/:id`                                     |
+| 15. Landing                          | `/reliure`                                                           |
+| 63. Seed de démonstration            | `npm run seed:marketplace-demo` (6 relieurs, 8 projets)              |
 
 Tests : **1 102 verts sur 98 fichiers**, dont les **974 tests existants
 inchangés** — non-régression Métré vérifiée avant et après (§65).
 
 ### Durcissements du 8 septembre 2026 (avant application de la migration)
 
-| Point | Résultat |
-| --- | --- |
+| Point                          | Résultat                                                                                                                                                                                                       |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Triage sur données structurées | déjà le cas ; vocabulaire `declared_value_band` rendu propriétaire de la marketplace, raisons transformées en codes (`triage_flags`), et `triageContract.test.ts` interdit désormais toute dépendance au Brief |
-| Propriété client | `customer_user_id` + claim par le token d'accès Métré existant (D.4) ; l'e-mail ne fait plus qu'un rapprochement initial, sur adresse vérifiée uniquement |
-| `fr-FR` | livré comme capacité générique d'une Mission (C.4) |
+| Propriété client               | `customer_user_id` + claim par le token d'accès Métré existant (D.4) ; l'e-mail ne fait plus qu'un rapprochement initial, sur adresse vérifiée uniquement                                                      |
+| `fr-FR`                        | livré comme capacité générique d'une Mission (C.4)                                                                                                                                                             |
 
 Deux défauts réels trouvés en relisant la migration, et corrigés :
 
@@ -668,13 +677,13 @@ Deux défauts réels trouvés en relisant la migration, et corrigés :
   `ON DELETE SET NULL` : la suppression aurait laissé `claimed_at` en place et
   violé le CHECK. Rendue unidirectionnelle.
 - **Le plafond de trois relieurs ne tenait pas.** Le trigger était `BEFORE
-  INSERT` ; un `BEFORE ROW` ne voit pas les autres lignes de son propre INSERT,
+INSERT` ; un `BEFORE ROW` ne voit pas les autres lignes de son propre INSERT,
   donc une insertion de quatre lignes passait intégralement. Passé en `AFTER
-  INSERT`, il voit les lignes déjà insérées et annule la transaction. La
+INSERT`, il voit les lignes déjà insérées et annule la transaction. La
   garantie annoncée en D.5 est maintenant réelle.
 
 Ajoutés au passage : CHECK sur tous les statuts, index uniques partiels
-garantissant un seul relieur et un seul devis sélectionnés, `REVOKE` sur les
+garantissant un seul relieur et une seule offre sélectionnés, `REVOKE` sur les
 fonctions `SECURITY DEFINER`, recette de rollback, gestion d'exception dans le
 trigger d'ingestion (une erreur de la marketplace ne peut plus annuler la
 soumission d'un visiteur) et `marketplace_ingest_missing_cases()` pour réparer
@@ -728,7 +737,49 @@ Le scénario §71 se déroule ensuite sur `/m/reliure-marketplace-token-000001`.
   fluide, mais `/_authenticated` redirige vers `/auth` en perdant le jeton ;
   porter le jeton à travers l’authentification est un travail de P1, pas un
   prérequis du jalon.
+
 ---
+
+## Managed marketplace & pricing model
+
+Depuis le P0.5, Ma Reliure n'organise plus une mise en concurrence de prix.
+Le parcours transactionnel est : réponses structurées du Playbook → suggestion
+de prix → validation humaine → offre à rémunération fixe envoyée à trois
+ateliers compatibles au maximum → acceptation ou refus → sélection d'un seul
+atelier par l'admin. Le client voit un prix Ma Reliure unique et l'atelier
+retenu ; il ne choisit plus entre plusieurs propositions.
+
+Le moteur pur se trouve dans `src/marketplace/pricing/`. Il ne lit que le
+`CaseProfile` construit depuis `build_runtime_sessions.answers`, jamais le
+texte du Project Brief. La politique contient la version des règles, la marge
+cible, la marge minimale et l'arrondi. Une suggestion produit séparément le
+prix client et la rémunération atelier, accompagnés d'un niveau de confiance
+et de codes de raisons stables. L'admin peut modifier les deux montants ; la
+validation refuse un montant atelier supérieur au prix client ou une marge
+inférieure à la politique configurée.
+
+`marketplace_cases` porte la suggestion et le couple validé. Une ligne
+`marketplace_case_matches` conserve le score et l'invitation, tandis que la
+ligne homologue de `marketplace_quotes` est l'offre atelier : elle capture
+`customer_price_cents`, `binder_payout_cents` et les dates de réponse, puis
+évolue entre `offered`, `accepted`, `declined`, `expired`, `cancelled` et
+`selected`. Plusieurs ateliers peuvent accepter, mais l'index existant et
+`marketplace_select_binder_offer()` imposent un seul atelier sélectionné. Les
+anciens états `invited`/`quoted` et les colonnes descriptives historiques sont
+conservés en lecture seule ; aucun montant historique n'est converti
+automatiquement en prix Ma Reliure.
+
+Les frontières de divulgation sont explicites : l'admin reçoit les deux
+montants et la marge calculée, l'atelier seulement sa rémunération, le client
+seulement son prix et le profil de l'atelier retenu. `marketplace_events` garde
+un journal append-only (`pricing_generated`, `pricing_edited`,
+`pricing_validated`, `offer_sent`, `offer_accepted`, `offer_declined`,
+`binder_selected`) sans réponse structurée, Brief ni donnée de contact.
+
+Les opérations qui tranchent un état concurrent sont des fonctions SQL
+réservées au rôle de service : validation du prix, réponse atelier et sélection
+finale. Paiement, Stripe Connect, séquestre, avenant et matching IA restent P1
+et ne font pas partie de ce modèle.
 
 ## Règle de décision permanente
 

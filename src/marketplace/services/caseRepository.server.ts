@@ -45,6 +45,19 @@ export interface CaseRow {
   customer_user_id: string | null;
   claimed_at: string | null;
   claim_method: string | null;
+  pricing_status: string;
+  suggested_customer_price_cents: number | null;
+  suggested_binder_payout_cents: number | null;
+  customer_price_cents: number | null;
+  binder_payout_cents: number | null;
+  pricing_currency: string;
+  pricing_confidence: string | null;
+  pricing_reason_codes: string[];
+  pricing_rule_version: string | null;
+  price_includes: string[];
+  pricing_generated_at: string | null;
+  pricing_validated_at: string | null;
+  pricing_validated_by: string | null;
   created_at: string;
 }
 
@@ -94,7 +107,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
   const { data: row, error } = await sb
     .from("marketplace_cases")
     .select(
-      "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, created_at",
+      "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_rule_version, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at",
     )
     .eq("id", caseId)
     .maybeSingle();

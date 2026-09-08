@@ -34,7 +34,7 @@ export interface MatchScore {
   breakdown: {
     skills: number;
     projectType: number;
-    budget: number;
+    payout: number;
     heritage: number;
     workload: number;
     trackRecord: number;
@@ -46,7 +46,7 @@ export interface MatchScore {
 const WEIGHTS = {
   skills: 40,
   projectType: 15,
-  budget: 15,
+  payout: 15,
   heritage: 10,
   workload: 10,
   trackRecord: 10,
@@ -61,25 +61,23 @@ function clamp01(value: number): number {
 }
 
 /**
- * Does the relieur's price range overlap the budget the visitor named?
- *
- * A visitor who did not name a budget scores full marks rather than zero: not
- * knowing what a reliure costs is the normal case, and penalising every
- * relieur equally for it only adds noise.
+ * Does the fixed workshop payout fall inside the workshop's declared range?
+ * The visitor's budget is intentionally absent: Ma Reliure owns the price.
  */
-function budgetFit(profile: CaseProfile, binder: BinderMatchProfile): number {
-  if (profile.budgetMinCents === null) return 1;
-  const caseMin = profile.budgetMinCents;
-  const caseMax = profile.budgetMaxCents ?? Number.MAX_SAFE_INTEGER;
+function payoutFit(binderPayoutCents: number | null, binder: BinderMatchProfile): number {
+  if (binderPayoutCents === null) return 1;
   const binderMin = binder.minProjectCents ?? 0;
   const binderMax = binder.maxProjectCents ?? Number.MAX_SAFE_INTEGER;
-
-  if (binderMin > caseMax) return 0; // the workshop's floor is above the budget
-  if (binderMax < caseMin) return 0.5; // it could take it, but it is below its usual range
+  if (binderPayoutCents < binderMin) return 0;
+  if (binderPayoutCents > binderMax) return 0.5;
   return 1;
 }
 
-export function scoreBinder(profile: CaseProfile, binder: BinderMatchProfile): MatchScore {
+export function scoreBinder(
+  profile: CaseProfile,
+  binder: BinderMatchProfile,
+  binderPayoutCents: number | null = null,
+): MatchScore {
   const missingSkills = profile.requiredSkills.filter((skill) => !binder.skills.includes(skill));
   const skillCoverage =
     profile.requiredSkills.length === 0
@@ -109,7 +107,7 @@ export function scoreBinder(profile: CaseProfile, binder: BinderMatchProfile): M
   const breakdown = {
     skills: WEIGHTS.skills * clamp01(skillCoverage),
     projectType: acceptsType ? WEIGHTS.projectType : 0,
-    budget: WEIGHTS.budget * budgetFit(profile, binder),
+    payout: WEIGHTS.payout * payoutFit(binderPayoutCents, binder),
     heritage: WEIGHTS.heritage * heritageFit,
     workload: WEIGHTS.workload * workload,
     trackRecord: WEIGHTS.trackRecord * trackRecord,
@@ -118,7 +116,7 @@ export function scoreBinder(profile: CaseProfile, binder: BinderMatchProfile): M
   const total = Math.round(
     breakdown.skills +
       breakdown.projectType +
-      breakdown.budget +
+      breakdown.payout +
       breakdown.heritage +
       breakdown.workload +
       breakdown.trackRecord,
@@ -129,7 +127,7 @@ export function scoreBinder(profile: CaseProfile, binder: BinderMatchProfile): M
     breakdown: {
       skills: Math.round(breakdown.skills),
       projectType: Math.round(breakdown.projectType),
-      budget: Math.round(breakdown.budget),
+      payout: Math.round(breakdown.payout),
       heritage: Math.round(breakdown.heritage),
       workload: Math.round(breakdown.workload),
       trackRecord: Math.round(breakdown.trackRecord),
@@ -150,9 +148,10 @@ export interface RankedBinder extends MatchScore {
 export function rankBinders(
   profile: CaseProfile,
   binders: readonly BinderMatchProfile[],
+  binderPayoutCents: number | null = null,
 ): RankedBinder[] {
   return binders
     .filter((binder) => binder.status === "approved")
-    .map((binder) => ({ binder, ...scoreBinder(profile, binder) }))
+    .map((binder) => ({ binder, ...scoreBinder(profile, binder, binderPayoutCents) }))
     .sort((a, b) => b.total - a.total || a.binder.id.localeCompare(b.binder.id));
 }

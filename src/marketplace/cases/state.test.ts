@@ -26,9 +26,10 @@ describe("the transaction's states", () => {
   it("walks the happy path from ingestion to completion", () => {
     const path = [
       "under_review",
+      "pricing",
       "matching",
-      "sent_to_binders",
-      "quotes_received",
+      "awaiting_binder_response",
+      "binder_accepted",
       "binder_selected",
       "awaiting_payment",
       "paid",
@@ -46,13 +47,13 @@ describe("the transaction's states", () => {
 
   it("refuses jumps that skip the work", () => {
     expect(canTransitionCase("under_review", "paid")).toBe(false);
-    expect(canTransitionCase("delivered", "quotes_received")).toBe(false);
+    expect(canTransitionCase("delivered", "binder_accepted")).toBe(false);
     expect(canTransitionCase("completed", "in_progress")).toBe(false);
   });
 
   it("allows going back to matching while no one has been chosen", () => {
-    expect(canTransitionCase("sent_to_binders", "matching")).toBe(true);
-    expect(canTransitionCase("quotes_received", "matching")).toBe(true);
+    expect(canTransitionCase("awaiting_binder_response", "matching")).toBe(true);
+    expect(canTransitionCase("binder_accepted", "matching")).toBe(true);
   });
 
   it("stops offering cancellation once the customer has paid", () => {
@@ -66,19 +67,48 @@ describe("the transaction's states", () => {
 describe("a case held for manual review reaches no relieur", () => {
   it("is blocked until a human clears it", () => {
     expect(
-      canSendToBinders({ status: "matching", manualReviewRequired: true, reviewCleared: false }),
+      canSendToBinders({
+        status: "matching",
+        manualReviewRequired: true,
+        reviewCleared: false,
+        pricingValidated: true,
+      }),
     ).toBe(false);
     expect(
-      canSendToBinders({ status: "matching", manualReviewRequired: true, reviewCleared: true }),
+      canSendToBinders({
+        status: "matching",
+        manualReviewRequired: true,
+        reviewCleared: true,
+        pricingValidated: true,
+      }),
     ).toBe(true);
   });
 
-  it("is otherwise sendable from the two states that mean 'not yet sent'", () => {
-    for (const status of ["under_review", "matching"] as const) {
-      expect(canSendToBinders({ status, manualReviewRequired: false, reviewCleared: false })).toBe(
-        true,
-      );
-    }
+  it("requires both a validated price and the matching state", () => {
+    expect(
+      canSendToBinders({
+        status: "pricing",
+        manualReviewRequired: false,
+        reviewCleared: false,
+        pricingValidated: true,
+      }),
+    ).toBe(false);
+    expect(
+      canSendToBinders({
+        status: "matching",
+        manualReviewRequired: false,
+        reviewCleared: false,
+        pricingValidated: false,
+      }),
+    ).toBe(false);
+    expect(
+      canSendToBinders({
+        status: "matching",
+        manualReviewRequired: false,
+        reviewCleared: false,
+        pricingValidated: true,
+      }),
+    ).toBe(true);
   });
 
   it("cannot be sent again once the transaction has moved on", () => {
@@ -87,6 +117,7 @@ describe("a case held for manual review reaches no relieur", () => {
         status: "binder_selected",
         manualReviewRequired: false,
         reviewCleared: true,
+        pricingValidated: true,
       }),
     ).toBe(false);
   });

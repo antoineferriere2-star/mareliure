@@ -7,17 +7,19 @@
  * is wrong for both — the very duplication §49 warns against.
  *
  * Transitions are declared rather than implied, so an impossible jump (paid ->
- * matching, delivered -> quotes_received) fails a test instead of leaving a
+ * matching, delivered -> binder_selected) fails a test instead of leaving a
  * case in a state no screen can render.
  */
 
 export const CASE_STATUSES = [
   /** Ingested from a Dossier, not yet looked at by anyone. */
   "under_review",
-  /** Cleared for matching; the admin is choosing relieurs. */
+  /** Cleared for a Ma Reliure price suggestion and validation. */
+  "pricing",
+  /** Price validated; the admin is choosing relieurs. */
   "matching",
-  "sent_to_binders",
-  "quotes_received",
+  "awaiting_binder_response",
+  "binder_accepted",
   "binder_selected",
   "awaiting_payment",
   "paid",
@@ -36,9 +38,10 @@ export type CaseStatus = (typeof CASE_STATUSES)[number];
 /** Human labels for the back-office. French, like everything a person reads here. */
 export const CASE_STATUS_LABELS: Record<CaseStatus, string> = {
   under_review: "À examiner",
+  pricing: "Prix à valider",
   matching: "Sélection des relieurs",
-  sent_to_binders: "Envoyé aux relieurs",
-  quotes_received: "Propositions reçues",
+  awaiting_binder_response: "Réponse des ateliers attendue",
+  binder_accepted: "Atelier disponible",
   binder_selected: "Relieur choisi",
   awaiting_payment: "En attente de paiement",
   paid: "Payé",
@@ -57,10 +60,11 @@ export const CASE_STATUS_LABELS: Record<CaseStatus, string> = {
  * every entry below rather than repeated in each list.
  */
 const TRANSITIONS: Record<CaseStatus, readonly CaseStatus[]> = {
-  under_review: ["matching"],
-  matching: ["sent_to_binders"],
-  sent_to_binders: ["quotes_received", "matching"],
-  quotes_received: ["binder_selected", "matching"],
+  under_review: ["pricing"],
+  pricing: ["matching"],
+  matching: ["awaiting_binder_response"],
+  awaiting_binder_response: ["binder_accepted", "matching"],
+  binder_accepted: ["binder_selected", "matching"],
   binder_selected: ["awaiting_payment"],
   awaiting_payment: ["paid"],
   paid: ["shipping_to_binder"],
@@ -77,9 +81,10 @@ const TRANSITIONS: Record<CaseStatus, readonly CaseStatus[]> = {
 /** Once the customer has paid, cancelling is a refund conversation, not a status change. */
 const CANCELLABLE: readonly CaseStatus[] = [
   "under_review",
+  "pricing",
   "matching",
-  "sent_to_binders",
-  "quotes_received",
+  "awaiting_binder_response",
+  "binder_accepted",
   "binder_selected",
   "awaiting_payment",
 ];
@@ -106,7 +111,8 @@ export function canSendToBinders(input: {
   status: CaseStatus;
   manualReviewRequired: boolean;
   reviewCleared: boolean;
+  pricingValidated: boolean;
 }): boolean {
   if (input.manualReviewRequired && !input.reviewCleared) return false;
-  return input.status === "matching" || input.status === "under_review";
+  return input.pricingValidated && input.status === "matching";
 }

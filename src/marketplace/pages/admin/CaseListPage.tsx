@@ -90,7 +90,7 @@ function CaseRow({ row }: { row: Row }) {
           </span>
         </span>
         <span className="shrink-0 text-xs text-muted-foreground">
-          {row.invitedCount} invité(s) · {row.quoteCount} proposition(s)
+          {row.invitedCount} atelier(s) sollicité(s)
         </span>
       </Link>
     </li>

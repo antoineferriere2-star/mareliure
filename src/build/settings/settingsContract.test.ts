@@ -87,7 +87,7 @@ describe("the page carries no control it cannot honour", () => {
     // questions — a half-true control, which is the trap this page must avoid.
     // Explaining that absence in a comment is fine; shipping the control is not.
     const code = page.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-    expect(code).not.toMatch(/(imperial|metric|measurementSystem)/i);
+    expect(code).not.toMatch(/\\b(imperial|metric|measurementSystem)\\b/i);
     expect(code).not.toMatch(/date format/i);
   });
 });

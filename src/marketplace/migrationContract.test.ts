@@ -10,7 +10,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { CASE_STATUSES } from "./cases/state";
 import { DECLARED_VALUE_BANDS } from "./cases/caseProfile";
 import { CLAIM_METHODS } from "./cases/ownership";
 import { QUOTE_STATES } from "./quotes/rules";
@@ -19,7 +18,25 @@ import { MAX_BINDERS_PER_CASE } from "./config";
 const SQL = readFileSync(
   resolve(process.cwd(), "supabase/migrations/20260908120000_marketplace_reliure.sql"),
   "utf8",
-);
+).replace(/\r\n/g, "\n");
+
+const LEGACY_CASE_STATUSES = [
+  "under_review",
+  "matching",
+  "sent_to_binders",
+  "quotes_received",
+  "binder_selected",
+  "awaiting_payment",
+  "paid",
+  "shipping_to_binder",
+  "received_by_binder",
+  "in_progress",
+  "awaiting_approval",
+  "shipping_to_customer",
+  "delivered",
+  "completed",
+  "cancelled",
+] as const;
 
 /** The SQL with comments stripped — comments say the right things; statements must too. */
 const STATEMENTS = SQL.replace(/^\s*--.*$/gm, "").replace(/--.*$/gm, "");
@@ -133,9 +150,9 @@ describe("CHECK constraints mirror the TypeScript vocabularies", () => {
     return [...clause.matchAll(/'([a-z0-9_]+)'/g)].map((m) => m[1]);
   }
 
-  it("case statuses match CASE_STATUSES", () => {
+  it("pins the statuses introduced by the first marketplace migration", () => {
     expect(new Set(constrainedValues("marketplace_cases_status_check"))).toEqual(
-      new Set(CASE_STATUSES),
+      new Set(LEGACY_CASE_STATUSES),
     );
   });
 

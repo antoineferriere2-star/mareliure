@@ -731,12 +731,12 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
         },
 
         // ---------------------------------------------------------------
-        // 11. Budget and timing. A budget is not a quote.
+        // 11. Budget and timing. A budget is not the managed price.
         // ---------------------------------------------------------------
         {
           id: "budget-delai",
           title: "Budget et délai",
-          why: "Une fourchette permet d'orienter vers les bons ateliers. Ce n'est ni un engagement, ni un devis.",
+          why: "Cette fourchette aide Ma Reliure à comprendre vos attentes. Le prix sera fixé après étude du projet.",
           fields: [
             {
               key: "budget",
@@ -745,7 +745,7 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
               desirability: "required",
               currency: "EUR",
               mode: "ranges",
-              helpText: "Indicatif. Les relieurs proposeront leur propre prix.",
+              helpText: "Indicatif. Ma Reliure fixera le prix après étude du travail demandé.",
               ranges: [
                 { value: "lt_150", label: "Moins de 150 €" },
                 { value: "150_250", label: "150 – 250 €" },
@@ -1077,9 +1077,9 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
       },
       {
         section: "constraints",
-        label: "Devis",
+        label: "Prix Ma Reliure",
         value:
-          "Toute proposition reste sous réserve de confirmation après inspection physique de l'ouvrage.",
+          "Le périmètre pourra être confirmé après inspection physique de l'ouvrage en atelier.",
         category: "Réserves",
       },
     ],
@@ -1113,7 +1113,7 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
       {
         label: "Suggested next action",
         value:
-          "Sélectionner jusqu'à trois relieurs dont les compétences correspondent au projet, puis les inviter à proposer.",
+          "Calculer puis valider le prix Ma Reliure avant de solliciter jusqu'à trois ateliers avec une rémunération fixe.",
       },
     ],
   },

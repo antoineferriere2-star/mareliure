@@ -942,33 +942,60 @@ export type Database = {
       }
       marketplace_case_matches: {
         Row: {
+          accepted_at: string | null
           binder_id: string
+          binder_payout_cents: number | null
           case_id: string
+          currency: string
           decline_reason: string | null
+          decline_reason_code: string | null
+          decline_reason_detail: string | null
+          declined_at: string | null
+          expires_at: string | null
           id: string
           invited_at: string
           match_score: number | null
+          offered_at: string | null
           responded_at: string | null
+          selected_at: string | null
           state: string
         }
         Insert: {
+          accepted_at?: string | null
           binder_id: string
+          binder_payout_cents?: number | null
           case_id: string
+          currency?: string
           decline_reason?: string | null
+          decline_reason_code?: string | null
+          decline_reason_detail?: string | null
+          declined_at?: string | null
+          expires_at?: string | null
           id?: string
           invited_at?: string
           match_score?: number | null
+          offered_at?: string | null
           responded_at?: string | null
+          selected_at?: string | null
           state?: string
         }
         Update: {
+          accepted_at?: string | null
           binder_id?: string
+          binder_payout_cents?: number | null
           case_id?: string
+          currency?: string
           decline_reason?: string | null
+          decline_reason_code?: string | null
+          decline_reason_detail?: string | null
+          declined_at?: string | null
+          expires_at?: string | null
           id?: string
           invited_at?: string
           match_score?: number | null
+          offered_at?: string | null
           responded_at?: string | null
+          selected_at?: string | null
           state?: string
         }
         Relationships: []
@@ -976,9 +1003,11 @@ export type Database = {
       marketplace_cases: {
         Row: {
           admin_notes: string | null
+          binder_payout_cents: number | null
           claim_method: string | null
           claimed_at: string | null
           customer_user_id: string | null
+          customer_price_cents: number | null
           created_at: string
           declared_value_band: string | null
           dossier_id: string
@@ -986,17 +1015,30 @@ export type Database = {
           id: string
           manual_review_required: boolean
           mission_id: string | null
+          price_includes: string[]
+          pricing_confidence: string | null
+          pricing_currency: string
+          pricing_generated_at: string | null
+          pricing_reason_codes: string[]
+          pricing_rule_version: string | null
+          pricing_status: string
+          pricing_validated_at: string | null
+          pricing_validated_by: string | null
           reference: string
           status: string
+          suggested_binder_payout_cents: number | null
+          suggested_customer_price_cents: number | null
           triage_flags: string[]
           triaged_at: string | null
           updated_at: string
         }
         Insert: {
           admin_notes?: string | null
+          binder_payout_cents?: number | null
           claim_method?: string | null
           claimed_at?: string | null
           customer_user_id?: string | null
+          customer_price_cents?: number | null
           created_at?: string
           declared_value_band?: string | null
           dossier_id: string
@@ -1004,17 +1046,30 @@ export type Database = {
           id?: string
           manual_review_required?: boolean
           mission_id?: string | null
+          price_includes?: string[]
+          pricing_confidence?: string | null
+          pricing_currency?: string
+          pricing_generated_at?: string | null
+          pricing_reason_codes?: string[]
+          pricing_rule_version?: string | null
+          pricing_status?: string
+          pricing_validated_at?: string | null
+          pricing_validated_by?: string | null
           reference: string
           status?: string
+          suggested_binder_payout_cents?: number | null
+          suggested_customer_price_cents?: number | null
           triage_flags?: string[]
           triaged_at?: string | null
           updated_at?: string
         }
         Update: {
           admin_notes?: string | null
+          binder_payout_cents?: number | null
           claim_method?: string | null
           claimed_at?: string | null
           customer_user_id?: string | null
+          customer_price_cents?: number | null
           created_at?: string
           declared_value_band?: string | null
           dossier_id?: string
@@ -1022,11 +1077,52 @@ export type Database = {
           id?: string
           manual_review_required?: boolean
           mission_id?: string | null
+          price_includes?: string[]
+          pricing_confidence?: string | null
+          pricing_currency?: string
+          pricing_generated_at?: string | null
+          pricing_reason_codes?: string[]
+          pricing_rule_version?: string | null
+          pricing_status?: string
+          pricing_validated_at?: string | null
+          pricing_validated_by?: string | null
           reference?: string
           status?: string
+          suggested_binder_payout_cents?: number | null
+          suggested_customer_price_cents?: number | null
           triage_flags?: string[]
           triaged_at?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_events: {
+        Row: {
+          actor_user_id: string | null
+          binder_id: string | null
+          case_id: string
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          actor_user_id?: string | null
+          binder_id?: string | null
+          case_id: string
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          actor_user_id?: string | null
+          binder_id?: string | null
+          case_id?: string
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
         }
         Relationships: []
       }
@@ -1050,51 +1146,78 @@ export type Database = {
       }
       marketplace_quotes: {
         Row: {
+          accepted_at: string | null
           amount_cents: number
           binder_id: string
+          binder_payout_cents: number | null
           case_id: string
           caveats: string | null
           created_at: string
           currency: string
-          description: string
+          customer_price_cents: number | null
+          decline_reason_code: string | null
+          decline_reason_detail: string | null
+          declined_at: string | null
+          description: string | null
+          expires_at: string | null
           id: string
-          lead_time_weeks: number
+          lead_time_weeks: number | null
           materials: string | null
           options: string | null
+          offered_at: string | null
+          selected_at: string | null
           state: string
           technique: string | null
           updated_at: string
           valid_until: string | null
         }
         Insert: {
+          accepted_at?: string | null
           amount_cents: number
           binder_id: string
+          binder_payout_cents?: number | null
           case_id: string
           caveats?: string | null
           created_at?: string
           currency?: string
-          description: string
+          customer_price_cents?: number | null
+          decline_reason_code?: string | null
+          decline_reason_detail?: string | null
+          declined_at?: string | null
+          description?: string | null
           id?: string
-          lead_time_weeks: number
+          expires_at?: string | null
+          lead_time_weeks?: number | null
           materials?: string | null
           options?: string | null
+          offered_at?: string | null
+          selected_at?: string | null
           state?: string
           technique?: string | null
           updated_at?: string
           valid_until?: string | null
         }
         Update: {
+          accepted_at?: string | null
           amount_cents?: number
           binder_id?: string
+          binder_payout_cents?: number | null
           case_id?: string
           caveats?: string | null
           created_at?: string
           currency?: string
-          description?: string
+          customer_price_cents?: number | null
+          decline_reason_code?: string | null
+          decline_reason_detail?: string | null
+          declined_at?: string | null
+          description?: string | null
+          expires_at?: string | null
           id?: string
-          lead_time_weeks?: number
+          lead_time_weeks?: number | null
           materials?: string | null
           options?: string | null
+          offered_at?: string | null
+          selected_at?: string | null
           state?: string
           technique?: string | null
           updated_at?: string
@@ -1131,6 +1254,37 @@ export type Database = {
       marketplace_ingest_missing_cases: {
         Args: Record<PropertyKey, never>
         Returns: number
+      }
+      marketplace_respond_to_offer: {
+        Args: {
+          p_accept: boolean
+          p_actor_user_id: string
+          p_binder_id: string
+          p_case_id: string
+          p_reason_code: string | null
+          p_reason_detail: string | null
+        }
+        Returns: Database["public"]["Tables"]["marketplace_quotes"]["Row"]
+      }
+      marketplace_select_binder_offer: {
+        Args: {
+          p_actor_user_id: string
+          p_binder_id: string
+          p_case_id: string
+        }
+        Returns: Database["public"]["Tables"]["marketplace_quotes"]["Row"]
+      }
+      marketplace_validate_pricing: {
+        Args: {
+          p_actor_user_id: string
+          p_binder_payout_cents: number
+          p_case_id: string
+          p_customer_price_cents: number
+          p_minimum_margin_bps: number
+          p_minimum_margin_cents: number
+          p_price_includes: string[]
+        }
+        Returns: Database["public"]["Tables"]["marketplace_cases"]["Row"]
       }
       has_role: {
         Args: {
