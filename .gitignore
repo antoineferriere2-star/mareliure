@@ -43,3 +43,10 @@ dist-ssr
 *.sw?
 tmp/
 supabase/.temp/
+
+# Prospection et notes internes — données personnelles, jamais dans Git
+/data/
+*prospects*.csv
+/.hermes/
+# Artefact Windows d'une redirection ratée
+/nul
