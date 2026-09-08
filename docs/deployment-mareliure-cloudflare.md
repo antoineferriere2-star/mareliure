@@ -4,9 +4,16 @@
 > `mareliure.fr` reste enregistré chez OVH ; l'application tourne sur Cloudflare
 > Workers.
 >
-> **État au 8 septembre 2026 : vérifié en local sur le runtime Cloudflare, pas
-> encore déployé.** Il manque un accès au compte Cloudflare (§7) et une décision
-> sur les serveurs de noms (§8).
+> **État au 8 septembre 2026 : déployé et testé.**
+>
+> URL : **https://mareliure.aferriere.workers.dev**
+> Version : `d0e7adba-a25e-4048-aae3-ea3c703c0dc4`
+>
+> Ce déploiement pointe sur le **Supabase de test** (`qwfhebtxeubfmvvdsqdt`, avec
+> ses 6 relieurs de démonstration et ses 8 projets `@example.com`). C'est une
+> version de validation, pas une mise en ligne. Le domaine `mareliure.fr` n'est
+> pas encore branché : il exige la bascule des serveurs de noms (§8), et donc la
+> recréation préalable des MX et du SPF OVH.
 
 ---
 
@@ -193,16 +200,28 @@ provoquer une panne.
 
 ---
 
-## 7. Compte Cloudflare — prérequis
-
-`wrangler` n'est pas authentifié sur cette machine. Deux voies :
+## 7. Compte Cloudflare
 
 ```bash
 npx wrangler login          # OAuth, ouvre le navigateur
 ```
 
-ou un jeton d'API (Cloudflare Dashboard → My Profile → API Tokens → *Edit
-Cloudflare Workers*), exposé en `CLOUDFLARE_API_TOKEN`.
+ou un jeton d'API (*Edit Cloudflare Workers*) exposé en `CLOUDFLARE_API_TOKEN`.
+
+### Le sous-domaine workers.dev
+
+Un compte neuf n'en a pas, et `wrangler deploy` échoue avec
+« You need to register a workers.dev subdomain ». Il est **à l'échelle du
+compte**, pas du Worker, et se fixe une fois :
+
+```bash
+# via l'API, avec le jeton OAuth de wrangler
+PUT /client/v4/accounts/<account_id>/workers/subdomain  {"subdomain": "..."}
+```
+
+Ouvrir la page *Workers & Pages* du tableau de bord en crée un automatiquement,
+mais le nom est alors subi. Celui de ce compte est **`aferriere`**, d'où l'URL
+`https://mareliure.aferriere.workers.dev`.
 
 Le plan Free suffit pour commencer (§4).
 
@@ -382,6 +401,33 @@ recette de retour arrière, en commentaire à la fin de
 | E-mails qui n'arrivent plus | MX/SPF non recréés dans Cloudflare (§8) |
 
 ---
+
+## 12bis. Résultats du premier déploiement (8 septembre 2026)
+
+Sur `https://mareliure.aferriere.workers.dev` :
+
+| Test | Résultat |
+| --- | --- |
+| `/` | 200 · `<title>Ma Reliure — Reliure et restauration de livres</title>` · canonical et `og:url` = `https://mareliure.fr/` · `og:locale` = `fr_FR` |
+| `/reliure`, `/mes-livres`, `/atelier`, `/marketplace/cases`, `/project-summary/…`, `/auth`, `/demo/deck-project` | 200 — **routes profondes servies directement**, 0,16 à 0,70 s |
+| `/m/reliure-marketplace-token-000001` | 200 · en-tête « MA RELIURE » · `lang="fr-FR"` · sélecteur de langue masqué · « Étape 1 sur 8 · 13 % terminé » |
+| `get_mission` | Mission servie, Playbook 12 étapes, `defaultLocale: fr-FR`, marque « Ma Reliure » |
+| `start_session` | session créée en base (`randomBytes` + `createHash` + écriture Supabase depuis le Worker) |
+| Gate d'authentification | `/marketplace/cases` redirige vers `/auth` |
+| Mobile 375 px et 390 px | rendu correct, **aucun débordement horizontal** |
+| Console | aucune erreur |
+| Démarrage du Worker | 9 ms |
+
+> Une erreur d'hydratation React #418 a été observée juste après le premier
+> déploiement. Elle provenait du bundle client de la version précédente, encore
+> servi ; elle a disparu après redéploiement du build courant, et ne se
+> reproduit ni sur workerd en local, ni dans un onglet neuf. Consignée parce
+> qu'elle réapparaîtrait à l'identique si un build et son SSR se désynchronisaient.
+
+Ce qui **n'a pas** été testé, faute de domaine branché et de projet de
+production : le tunnel complet avec envoi de photos, la création d'un
+`marketplace_case` réel de bout en bout, la redirection `www`, et le certificat
+sur `mareliure.fr`.
 
 ## 12. Tests à dérouler après le premier déploiement
 

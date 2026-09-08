@@ -19,8 +19,8 @@
     "setup:stripe-portal": "tsx scripts/setupStripeBillingPortal.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
-    "deploy:mareliure": "wrangler deploy --name mareliure",
-    "secrets:mareliure": "wrangler secret bulk --name mareliure"
+    "deploy:mareliure": "npx wrangler deploy --name mareliure",
+    "secrets:mareliure": "npx wrangler secret bulk --name mareliure"
   },
   "dependencies": {
     "@ai-sdk/openai-compatible": "^3.0.14",
