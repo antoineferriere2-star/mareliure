@@ -741,67 +741,77 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Date:** 8 septembre 2026
 
-**Branch:** `feat/reliure-marketplace-mvp` (poussée sur `mareliure/main` et
-`mareliure/feat/reliure-marketplace-mvp`, mêmes commits)
+**Branch:** `feat/reliure-marketplace-mvp` — `mareliure/main` et
+`mareliure/feat/reliure-marketplace-mvp` pointent sur le même commit.
+
+**Commit:** `a4aff05`. Working tree propre.
+
+**Production:** Worker version `59d66164-3a37-46ba-897e-88fe4011614c`,
+<https://mareliure.fr>. Un compte administrateur existe et le back-office a été
+ouvert avec.
 
 **Completed:**
 
-- **Refonte éditoriale de la landing** (`77897a2`) : Fraunces auto-hébergée
-  (67 Ko, subset latin), palette `mr-*` séparée du système Métré, hero 50/50,
-  trois étapes au lieu de six, composition asymétrique des savoir-faire,
-  section engagements, prix, CTA final. Composants sous `pages/landing/`.
-- **Photographies réelles** (`1570297`) : hero, quatre savoir-faire, fin de
+- **Refonte éditoriale de la landing** (`77897a2`) — Fraunces auto-hébergée
+  (67 Ko), palette `mr-*` séparée du système Métré, hero 50/50, trois étapes,
+  composition asymétrique des savoir-faire, engagements, prix, CTA final.
+- **Photographies réelles** (`1570297`) — hero, quatre savoir-faire, fin de
   page ; deux restaurations avant/après de l'atelier Reliure Dorure Ferrière,
-  créditées. WebP 480/800/1200/1600, `sizes` mesurés, hero prioritaire.
-- **Fiche du premier atelier référencé** (`3e95331`) : Reliure Dorure Ferrière,
-  François Ferrière, Orléans, depuis 1982, cinq savoir-faire, quatre pièces.
-  Plus aucun emplacement « photographie à fournir » sur la page.
-- **Documentation d'alternance** (`ddcd3dd`, `ab0321e`) : ce document,
+  créditées. WebP responsive, `sizes` mesurés, hero prioritaire.
+- **Fiche du premier atelier référencé** (`3e95331`) — Reliure Dorure Ferrière,
+  Orléans, depuis 1982. Plus aucun emplacement de photo sur la page.
+- **Documentation d'alternance** (`ddcd3dd`, `ab0321e`) — ce document,
   `AGENTS.md`, `README.md`, `.gitignore`.
-- **Correctif de production sur la cible Supabase du navigateur** : voir
-  ci-dessous. C'est le point le plus important de cette session.
-- **Parcours authentifié vérifié au navigateur** pour la première fois : admin,
-  atelier et client, boucle complète. Détail en §D.
-- **`fetchPriority`** : l'attribut était écrit en minuscules, React le
-  refusait, la priorité de chargement du hero n'était donc jamais posée.
-- **`.gitattributes`** : `eol=lf`, pour que `npm run lint` puisse passer sur une
-  machine Windows.
+- **Correctif de production sur la cible Supabase du navigateur** (`41305ce`).
+  `vite.config.ts` résolvait la configuration cliente depuis `process.env`
+  seul ; Vite ne charge jamais les fichiers `.env` là-dedans, donc le repli codé
+  en dur — le projet Métré d'origine — l'emportait. Le bundle servi sur
+  mareliure.fr pointait le navigateur vers la mauvaise base pendant que le
+  serveur parlait à la bonne. Résolution par `loadEnv`, et
+  `scripts/buildMaReliure.mjs` relit les fichiers produits pour refuser un
+  bundle mal ciblé. `deploy:mareliure` passe obligatoirement par lui.
+- **Redirection après connexion par rôle** (`7a023c9`) — administrateur →
+  `/marketplace/cases`, relieur → `/atelier`, tout autre compte →
+  `/mes-livres`. Le résolveur du moteur Métré n'est pas touché : un second
+  résolveur vit dans `src/marketplace/auth/`, et le choix se fait à la route.
+  Aucun espace de travail Métré n'est plus provisionné pour un client.
+- **Configuration d'authentification de production** (`a4aff05`) — `site_url`
+  corrigé vers `https://mareliure.fr`, inscriptions publiques fermées. Voir §H
+  pour la conséquence.
+- **`fetchPriority`** écrit en minuscules : React refusait l'attribut, la
+  priorité du hero n'était jamais posée. Corrigé.
+- **`.gitattributes`** avec `eol=lf`, pour que `npm run lint` puisse passer sur
+  une machine Windows.
+- **Les trois espaces authentifiés ont été exercés dans un navigateur** pour la
+  première fois — boucle complète admin → atelier → cliente. Détail en §D.
 
-**Le bug de production corrigé.** `vite.config.ts` figeait la configuration
-Supabase du navigateur à partir de `process.env` seul. Vite ne charge jamais les
-fichiers `.env` dans `process.env` : la valeur configurée était donc ignorée et
-le repli codé en dur — le projet Métré d'origine — l'emportait silencieusement.
-Le bundle servi sur mareliure.fr pointait le navigateur vers la mauvaise base
-pendant que le serveur parlait à la bonne. Rien ne le montrait, parce que la
-landing est statique et que le runtime passe par des server functions ; la
-première connexion d'un client l'aurait révélé. La configuration est désormais
-résolue via `loadEnv`, et `scripts/buildMaReliure.mjs` relit les fichiers
-JavaScript produits pour refuser un bundle qui viserait un autre projet.
-
-**In progress:** rien. Working tree propre hors fichiers non suivis ignorés.
+**In progress:** rien.
 
 **Next recommended task:**
 
-Découper le passage du modèle « devis » au modèle décidé — Ma Reliure fixe
-`customer_price` et propose `binder_payout`, l'atelier accepte ou refuse (§E).
-C'est le dernier écart entre le produit décrit et le code. Il touche le schéma,
-la machine à états, les server functions et les trois écrans : à faire sur une
-branche dédiée, en commençant par le schéma et sa migration.
+Passer du modèle « devis » au modèle décidé : Ma Reliure fixe `customer_price`
+et propose `binder_payout`, l'atelier **accepte ou refuse** (§E). C'est le
+dernier écart entre le produit décrit et le code. Il touche le schéma, la
+machine à états, les server functions et les trois écrans — branche dédiée,
+en commençant par le schéma et sa migration.
 
-Deux tâches plus courtes si l'on préfère commencer petit :
+Deux tâches courtes si l'on préfère commencer petit :
 
-1. confirmer puis supprimer le dossier de test resté en production ;
+1. supprimer le dossier de test resté en production (`under_review`, créé le
+   8 septembre à 15:08 UTC) — à confirmer avec le propriétaire avant ;
 2. rouvrir les inscriptions en production avant la première mise en relation
-   réelle — elles sont fermées aujourd'hui, et une cliente ne peut pas
-   revendiquer son dossier sans compte (§H).
+   réelle, en réglant l'envoi des e-mails de confirmation en même temps (§H).
 
 **Known issues:**
 
 - le modèle commercial du code (devis) ne correspond pas au modèle décidé ;
+- **les inscriptions publiques sont fermées en production** : une cliente ne
+  peut pas revendiquer son dossier sans compte (§H) ;
 - `supabase/config.toml` pointe sur le projet Métré d'origine : toujours
   `supabase link` avant un `db push` ;
-- un `marketplace_case` de test subsiste en production (`under_review`, créé le
-  8 septembre à 15:08 UTC) ;
+- un `marketplace_case` de test subsiste en production ;
+- l'inscription de l'administrateur a laissé un espace de travail Métré vide en
+  production — sans effet, et ne se reproduira plus depuis `7a023c9` ;
 - deux réglages Cloudflare restent à poser à la main (§J) ;
 - la fiche atelier est en dur dans `pages/landing/content.ts` ; elle devra lire
   `marketplace_binders` quand un deuxième atelier arrivera ;
@@ -812,6 +822,8 @@ Deux tâches plus courtes si l'on préfère commencer petit :
 
 - `src/build/engine/`, `src/build/schema/`, `src/build/pages/public/` pour un
   besoin propre à la reliure — passer par le Playbook ou `src/marketplace/` ;
+- `src/build/services/postAuthRoute.ts` : il répond juste pour Métré ; la
+  réponse Ma Reliure vit dans `src/marketplace/auth/postAuthRoute.ts` ;
 - les politiques RLS `build_*` ;
 - le preset Nitro (`cloudflare-module`) ;
 - les valeurs d'option du Playbook Reliure : ce sont des clés machine lues par
