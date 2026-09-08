@@ -1,0 +1,25 @@
+# Fins de ligne
+#
+# Le dépôt est formaté en LF, et Prettier — donc `npm run lint` — l'exige. Sur
+# une machine Windows avec `core.autocrlf=true` (le défaut de Git for Windows),
+# la copie de travail arrive en CRLF et ESLint signale « Delete ␍ » sur chaque
+# ligne de chaque fichier : plus de 40 000 erreurs qui n'ont rien à voir avec le
+# code, et un `npm run lint` qui n'a jamais pu passer.
+#
+# `eol=lf` impose LF à la copie de travail quelle que soit la configuration
+# locale. Sur un dépôt déjà cloné en CRLF, appliquer une fois :
+#
+#     git add --renormalize .
+#
+# ou simplement recloner.
+* text=auto eol=lf
+
+# Fichiers binaires : jamais de conversion.
+*.woff2 binary
+*.webp  binary
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.gif   binary
+*.ico   binary
+*.pdf   binary

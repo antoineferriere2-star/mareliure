@@ -187,7 +187,7 @@ Ne pas renommer les identifiants stables pour une décision marketing.
 
 ## D. État fonctionnel
 
-Constaté sur le code au commit `3e95331`. `PARTIEL` signifie : le code existe
+Constaté sur le code au commit `0e6f0b7`. `PARTIEL` signifie : le code existe
 et les tests unitaires passent, mais quelque chose de nommé manque.
 
 | Fonction                                                | État        | Chemin principal                                             | Tests                                                     |
@@ -208,23 +208,38 @@ et les tests unitaires passent, mais quelque chose de nommé manque.
 | Matching (score + sélection ≤ 3)                        | **OK**      | `matching/score.ts`, `matching/selection.ts`                 | `matching.test.ts`                                        |
 | Commission (bps, centiemes entiers)                     | **OK**      | `orders/commission.ts`                                       | `commission.test.ts`                                      |
 | Garde-fou secrets                                       | **OK**      | `secretsContract.test.ts`                                    | lui-même                                                  |
-| Écran admin (dossiers, relieurs, matching)              | **PARTIEL** | `pages/admin/`                                               | logique testée, **UI jamais ouverte dans un navigateur**  |
-| Espace atelier                                          | **PARTIEL** | `pages/binder/`                                              | idem                                                      |
-| Espace client (« Mes livres »)                          | **PARTIEL** | `pages/customer/`                                            | idem                                                      |
+| Écran admin (dossiers, relieurs, matching)              | **OK**      | `pages/admin/`                                               | logique testée + parcours complet vérifié au navigateur   |
+| Espace atelier                                          | **OK**      | `pages/binder/`                                              | idem                                                      |
+| Espace client (« Mes livres »)                          | **OK**      | `pages/customer/`                                            | idem                                                      |
 | Devis relieur                                           | **PARTIEL** | `quotes/rules.ts`, `submitBinderQuote`                       | `rules.test.ts` — **modèle commercial obsolète, voir §E** |
 | Pricing Ma Reliure (`customer_price` / `binder_payout`) | **NON**     | —                                                            | —                                                         |
 | Stripe Connect / paiements                              | **NON**     | —                                                            | —                                                         |
 | Expédition, inspection, avenants, avis                  | **NON**     | —                                                            | —                                                         |
 | Fiche atelier alimentée par la base                     | **NON**     | vitrine en dur dans `pages/landing/content.ts`               | —                                                         |
 
-### Le trou le plus important
+### Le parcours vérifié au navigateur
 
-Les trois espaces authentifiés (admin, atelier, client) **n'ont jamais été
-exercés dans un navigateur**. Trois tentatives d'automatisation ont échoué
-(champs React contrôlés non soumis, injection de session `localStorage` non
-prise en compte, appel direct des server functions cassé par la sérialisation
-TanStack). Le code compile, les règles sont testées unitairement, mais
-personne n'a vu ces pages fonctionner de bout en bout.
+Boucle complète exercée le 8 septembre 2026 sur la base de développement, avec
+trois comptes réels :
+
+1. **admin** — ouverture de RL-007, lecture du Brief projeté (état, matière,
+   valeur déclarée, réserves du Vérificateur avec leur provenance), levée de la
+   revue manuelle (`clearCaseManualReview`), sélection de trois relieurs parmi
+   cinq classés, envoi (`sendCaseToBinders`). Le plafond de trois se referme :
+   « 0 invitation(s) restante(s) », les invités passent en « Déjà invité », et
+   leur score baisse parce que leur charge en cours a augmenté ;
+2. **atelier** — le relieur invité voit exactement le dossier sur lequel il a
+   été invité, et rien d'autre. Les coordonnées du client lui sont refusées
+   (« vous seront transmises s'il retient votre proposition »). Proposition
+   soumise (`submitBinderQuote`), affichée avec la réserve d'inspection ;
+3. **cliente** — connexion, revendication automatique par e-mail vérifié de son
+   propre dossier, lecture du détail.
+
+Aucune requête en échec sur ces parcours.
+
+Ce qui manque encore : après connexion, un relieur et un client atterrissent
+sur le portail client Métré, pas sur `/atelier` ni `/mes-livres`. Il faut y
+naviguer à la main. C'est une redirection à écrire, pas une panne.
 
 ---
 
@@ -272,24 +287,24 @@ règle.
 
 ## F. Workflow cible et état
 
-| Étape                  | État                                          |
-| ---------------------- | --------------------------------------------- |
-| Visitor → Métré Intake | **OK**                                        |
-| Project Brief          | **OK**                                        |
-| Marketplace Case       | **OK** (trigger d'ingestion)                  |
-| Pricing                | **NON**                                       |
-| Validation admin       | **PARTIEL** (écran présent, jamais exercé)    |
-| Matching               | **OK** (logique) / **PARTIEL** (écran)        |
-| Binder Offer           | **PARTIEL**, et sur le mauvais modèle (devis) |
-| Binder accepts         | **NON**                                       |
-| Customer price         | **NON**                                       |
-| Payment                | **NON**                                       |
-| Shipment               | **NON**                                       |
-| Inspection             | **NON**                                       |
-| Work                   | **NON**                                       |
-| Amendment              | **NON**                                       |
-| Return                 | **NON**                                       |
-| Review                 | **NON**                                       |
+| Étape                  | État                                       |
+| ---------------------- | ------------------------------------------ |
+| Visitor → Métré Intake | **OK**                                     |
+| Project Brief          | **OK**                                     |
+| Marketplace Case       | **OK** (trigger d'ingestion)               |
+| Pricing                | **NON**                                    |
+| Validation admin       | **OK**                                     |
+| Matching               | **OK**                                     |
+| Binder Offer           | **OK**, mais sur le mauvais modèle (devis) |
+| Binder accepts         | **NON**                                    |
+| Customer price         | **NON**                                    |
+| Payment                | **NON**                                    |
+| Shipment               | **NON**                                    |
+| Inspection             | **NON**                                    |
+| Work                   | **NON**                                    |
+| Amendment              | **NON**                                    |
+| Return                 | **NON**                                    |
+| Review                 | **NON**                                    |
 
 ---
 
@@ -440,15 +455,32 @@ génère `.output/server/wrangler.json` et `.wrangler/deploy/config.json` au
 build. C'est pour cela que le script de déploiement passe `--name mareliure`.
 
 ```bash
-# construire pour Ma Reliure
-VITE_PUBLIC_BRAND=mareliure npm run build
+# construire pour Ma Reliure — lit .env.production.mareliure et vérifie l'artefact
+npm run build:mareliure
 
-# déployer
-npm run deploy:mareliure          # npx wrangler deploy --name mareliure
+# construire puis déployer
+npm run deploy:mareliure
 
 # pousser les secrets serveur
 npm run secrets:mareliure         # npx wrangler secret bulk --name mareliure
 ```
+
+### Ne jamais déployer un `npm run build` nu
+
+La configuration Supabase du **navigateur** est figée dans le bundle au moment
+du build. Un build lancé sans elle ne plante pas : il en prend une autre,
+silencieusement.
+
+C'est arrivé. Pendant une journée, mareliure.fr a servi un bundle qui pointait
+le navigateur vers le projet Métré d'origine, pendant que le serveur parlait au
+bon. Rien ne s'est vu — la landing est statique et le runtime passe par des
+server functions — et ça se serait vu à la première connexion d'un client.
+
+`scripts/buildMaReliure.mjs` referme ce trou : il lit
+`.env.production.mareliure`, refuse de démarrer si la marque ou le projet
+manquent, puis **relit les fichiers JavaScript produits** et échoue s'ils
+référencent un autre projet que celui attendu. Une vérification sur l'artefact,
+pas sur l'intention. `deploy:mareliure` passe obligatoirement par lui.
 
 Limites de l'offre gratuite à surveiller : 100 000 requêtes/jour et **10 ms de
 CPU par requête**. Le script fait environ 1,1 Mo gzip pour un plafond de 3 Mo.
@@ -542,7 +574,7 @@ pourquoi il l'est.
 Format du bloc :
 
 ```markdown
-## Latest handoff
+### (exemple) Latest handoff
 
 Agent:
 Date:
@@ -594,7 +626,8 @@ npm run seed:bookbinding    # Playbook Reliure + Mission
 npm run seed:marketplace-demo
 npm run seed:deck
 
-npm run deploy:mareliure    # wrangler deploy --name mareliure
+npm run build:mareliure     # build de production + vérification du bundle
+npm run deploy:mareliure    # build:mareliure puis wrangler deploy
 npm run secrets:mareliure   # wrangler secret bulk --name mareliure
 ```
 
@@ -602,13 +635,35 @@ npm run secrets:mareliure   # wrangler secret bulk --name mareliure
 
 ## O. Tests
 
-| Commande            | Dernier résultat connu (8 septembre 2026, commit `3e95331`)                        |
-| ------------------- | ---------------------------------------------------------------------------------- |
-| `npm test`          | **1349 tests, 105 fichiers, tous verts**                                           |
-| `npm run typecheck` | **propre**                                                                         |
-| `npm run lint`      | **propre**                                                                         |
-| `npm run build`     | **OK** (`VITE_PUBLIC_BRAND=mareliure`)                                             |
-| `npm run test:e2e`  | **non exécuté récemment** — `playwright.config.ts` et 3 specs existent sous `e2e/` |
+| Commande                  | Dernier résultat connu (8 septembre 2026)                  |
+| ------------------------- | ---------------------------------------------------------- |
+| `npm test`                | **1349 tests, 105 fichiers, tous verts**                   |
+| `npm run typecheck`       | **propre**                                                 |
+| `npm run lint`            | **échoue sur une copie de travail CRLF — voir ci-dessous** |
+| `npm run build:mareliure` | **OK**, bundle vérifié                                     |
+| `npm run test:e2e`        | **non exécuté récemment** — 3 specs sous `e2e/`            |
+
+### Le lint et les fins de ligne
+
+Le dépôt est stocké en LF et Prettier l'exige. Sur Windows, Git for Windows
+sort les fichiers en CRLF par défaut (`core.autocrlf=true`) : ESLint signale
+alors `Delete ␍` sur chaque ligne de chaque fichier — plus de 40 000 erreurs
+qui ne disent rien du code.
+
+Le piège est qu'un lint restreint aux fichiers qu'on vient de formater passe :
+Prettier les a réécrits en LF. Seul `npm run lint` sur tout le dépôt révèle le
+problème, et il ressemble alors à une catastrophe alors qu'il n'y a rien à
+corriger dans le code.
+
+`.gitattributes` impose désormais `eol=lf`. Sur un clone déjà en CRLF,
+appliquer une fois :
+
+```bash
+git add --renormalize .
+```
+
+Ne **jamais** lancer `eslint . --fix` pour faire taire ces erreurs : cela
+réécrirait tous les fichiers du dépôt.
 
 Tests structurants à ne pas affaiblir :
 
@@ -619,11 +674,9 @@ Tests structurants à ne pas affaiblir :
 - `src/marketplace/cases/triageContract.test.ts` — un changement de libellé
   français ne modifie aucun triage ;
 - `src/build/i18n/runtimeChrome.test.ts` — couverture FR/EN/ES et interdiction
-  des comparaisons `locale === "…"` dans le runtime ;
-- `src/marketplace/pages/landing/landingHonesty.test.ts` — la landing
-  n'invente rien.
-
----
+  des comparaisons de locale en dur dans le runtime ;
+- `src/marketplace/pages/landing/landingHonesty.test.ts` — la landing n'invente
+  rien, et chaque photographie déclarée existe sur le disque.
 
 ## P. À ne pas casser
 
@@ -670,54 +723,69 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 **Branch:** `feat/reliure-marketplace-mvp` (poussée sur `mareliure/main` et
 `mareliure/feat/reliure-marketplace-mvp`, mêmes commits)
 
-**Commit:** `ddcd3dd` — ce document. Le travail livré est aux commits
-`77897a2` (refonte de la landing), `1570297` (photographies), `3e95331`
-(fiche atelier).
-
 **Completed:**
 
-- Refonte éditoriale complète de la landing `/` (`77897a2`) : direction
-  typographique (Fraunces auto-hébergée, 67 Ko, subset latin), palette `mr-*`
-  séparée du système Métré, hero 50/50, trois étapes au lieu de six,
-  composition asymétrique des savoir-faire, section engagements, prix, CTA
-  final. Nouveaux composants sous `src/marketplace/pages/landing/`.
-- Photographies réelles (`1570297`) : six images fournies par le propriétaire
-  pour le hero, les quatre savoir-faire et la fin de page ; deux restaurations
-  réelles avant/après issues de l'atelier Reliure Dorure Ferrière, créditées.
-  Encodage WebP responsive 480/800/1200/1600, `sizes` mesurés, hero prioritaire,
-  reste différé.
-- Fiche du premier atelier référencé (`3e95331`) : Reliure Dorure Ferrière,
-  François Ferrière, Orléans, depuis 1982, cinq savoir-faire, quatre pièces
-  photographiées. Données et images autorisées par l'atelier.
-- Déployé et vérifié en production à chaque étape. Dernière version Cloudflare :
-  `3c8ca5bd-d7c9-491c-ba07-857afb19819d`.
+- **Refonte éditoriale de la landing** (`77897a2`) : Fraunces auto-hébergée
+  (67 Ko, subset latin), palette `mr-*` séparée du système Métré, hero 50/50,
+  trois étapes au lieu de six, composition asymétrique des savoir-faire,
+  section engagements, prix, CTA final. Composants sous `pages/landing/`.
+- **Photographies réelles** (`1570297`) : hero, quatre savoir-faire, fin de
+  page ; deux restaurations avant/après de l'atelier Reliure Dorure Ferrière,
+  créditées. WebP 480/800/1200/1600, `sizes` mesurés, hero prioritaire.
+- **Fiche du premier atelier référencé** (`3e95331`) : Reliure Dorure Ferrière,
+  François Ferrière, Orléans, depuis 1982, cinq savoir-faire, quatre pièces.
+  Plus aucun emplacement « photographie à fournir » sur la page.
+- **Documentation d'alternance** (`ddcd3dd`, `ab0321e`) : ce document,
+  `AGENTS.md`, `README.md`, `.gitignore`.
+- **Correctif de production sur la cible Supabase du navigateur** : voir
+  ci-dessous. C'est le point le plus important de cette session.
+- **Parcours authentifié vérifié au navigateur** pour la première fois : admin,
+  atelier et client, boucle complète. Détail en §D.
+- **`fetchPriority`** : l'attribut était écrit en minuscules, React le
+  refusait, la priorité de chargement du hero n'était donc jamais posée.
+- **`.gitattributes`** : `eol=lf`, pour que `npm run lint` puisse passer sur une
+  machine Windows.
 
-**In progress:** rien. Le working tree ne contient que des fichiers non suivis
-et sans rapport (`data/`, CSV de prospection, `.hermes/`), désormais ignorés.
+**Le bug de production corrigé.** `vite.config.ts` figeait la configuration
+Supabase du navigateur à partir de `process.env` seul. Vite ne charge jamais les
+fichiers `.env` dans `process.env` : la valeur configurée était donc ignorée et
+le repli codé en dur — le projet Métré d'origine — l'emportait silencieusement.
+Le bundle servi sur mareliure.fr pointait le navigateur vers la mauvaise base
+pendant que le serveur parlait à la bonne. Rien ne le montrait, parce que la
+landing est statique et que le runtime passe par des server functions ; la
+première connexion d'un client l'aurait révélé. La configuration est désormais
+résolue via `loadEnv`, et `scripts/buildMaReliure.mjs` relit les fichiers
+JavaScript produits pour refuser un bundle qui viserait un autre projet.
+
+**In progress:** rien. Working tree propre hors fichiers non suivis ignorés.
 
 **Next recommended task:**
 
-1. **Ouvrir les trois espaces authentifiés dans un navigateur** (admin,
-   atelier, client) et corriger ce qui casse. C'est le seul pan du P0 jamais
-   vérifié, et rien ne devrait avancer avant.
-2. Puis : découper le passage du modèle « devis » au modèle « prix fixé par
-   Ma Reliure, l'atelier accepte ou refuse » (§E), sur une branche dédiée.
+Découper le passage du modèle « devis » au modèle décidé — Ma Reliure fixe
+`customer_price` et propose `binder_payout`, l'atelier accepte ou refuse (§E).
+C'est le dernier écart entre le produit décrit et le code. Il touche le schéma,
+la machine à états, les server functions et les trois écrans : à faire sur une
+branche dédiée, en commençant par le schéma et sa migration.
+
+Deux tâches plus courtes si l'on préfère commencer petit :
+
+1. rediriger un relieur vers `/atelier` et un client vers `/mes-livres` après
+   connexion — aujourd'hui les deux atterrissent sur le portail client Métré ;
+2. confirmer puis supprimer le dossier de test resté en production.
 
 **Known issues:**
 
-- les écrans admin / atelier / client n'ont jamais été exercés dans un
-  navigateur ;
-- le modèle commercial du code (devis) ne correspond pas au modèle décidé
-  (prix fixe + acceptation) ;
-- `supabase/config.toml` pointe sur le projet Métré d'origine, pas sur un
-  projet Ma Reliure : toujours `supabase link` avant un `db push` ;
+- le modèle commercial du code (devis) ne correspond pas au modèle décidé ;
+- après connexion, relieurs et clients atterrissent sur le portail Métré ;
+- `supabase/config.toml` pointe sur le projet Métré d'origine : toujours
+  `supabase link` avant un `db push` ;
 - un `marketplace_case` de test subsiste en production (`under_review`, créé le
-  8 septembre à 15:08 UTC) — à confirmer et supprimer ;
+  8 septembre à 15:08 UTC) ;
 - deux réglages Cloudflare restent à poser à la main (§J) ;
 - la fiche atelier est en dur dans `pages/landing/content.ts` ; elle devra lire
   `marketplace_binders` quand un deuxième atelier arrivera ;
-- le jeton de gestion Supabase n'a plus accès au projet de développement
-  `qwfhebtxeubfmvvdsqdt`.
+- le jeton de gestion Supabase n'a plus accès au projet de développement ;
+- le tableau de bord admin Métré déborde horizontalement sous 900 px.
 
 **Do not touch:**
 
@@ -727,4 +795,6 @@ et sans rapport (`data/`, CSV de prospection, `.hermes/`), désormais ignorés.
 - le preset Nitro (`cloudflare-module`) ;
 - les valeurs d'option du Playbook Reliure : ce sont des clés machine lues par
   `caseProfile.ts`, pas des libellés ;
+- le repli codé en dur de `vite.config.ts` : c'est la bonne valeur pour le
+  déploiement Métré, et seulement pour lui ;
 - Stripe Connect (§Q).

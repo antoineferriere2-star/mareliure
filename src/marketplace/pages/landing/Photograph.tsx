@@ -84,10 +84,11 @@ export function Photograph({
           alt={alt}
           loading={priority ? "eager" : "lazy"}
           decoding={priority ? "sync" : "async"}
-          // `fetchPriority` n'est pas encore dans les types React ; l'attribut
-          // est pourtant compris par tous les navigateurs qui nous intéressent,
-          // et c'est lui qui fait démarrer l'image du hero avant le reste.
-          {...(priority ? ({ fetchpriority: "high" } as Record<string, string>) : {})}
+          // React 19 connaît `fetchPriority`. L'écrire en minuscules comme
+          // l'attribut HTML fait échouer la reconnaissance : React émet
+          // « Invalid DOM property » et ne pose rien — la priorité du hero
+          // était donc silencieusement perdue.
+          fetchPriority={priority ? "high" : undefined}
           className="h-full w-full object-cover"
         />
       </figure>
