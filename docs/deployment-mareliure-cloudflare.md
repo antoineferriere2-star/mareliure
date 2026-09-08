@@ -8,7 +8,8 @@
 >
 > URL publique : **https://mareliure.fr**
 > URL technique : https://mareliure.aferriere.workers.dev
-> Version : `b78dc1d7-8c8b-4295-8ff2-cf9f6b13f570`
+> Version : `b83b8dad-4be3-44ee-9b0c-3a9283fbf0d0` (refonte éditoriale de la
+> landing ; la version précédente était `b78dc1d7-8c8b-4295-8ff2-cf9f6b13f570`)
 > Supabase : **projet de production `hljxohondjvrkzqicexl`**, sans donnée de
 > démonstration.
 >
