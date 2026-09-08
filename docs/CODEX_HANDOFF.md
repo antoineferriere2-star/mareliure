@@ -670,7 +670,9 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 **Branch:** `feat/reliure-marketplace-mvp` (poussée sur `mareliure/main` et
 `mareliure/feat/reliure-marketplace-mvp`, mêmes commits)
 
-**Commit:** `3e95331` avant ce document
+**Commit:** `ddcd3dd` — ce document. Le travail livré est aux commits
+`77897a2` (refonte de la landing), `1570297` (photographies), `3e95331`
+(fiche atelier).
 
 **Completed:**
 
