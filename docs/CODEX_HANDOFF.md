@@ -380,6 +380,27 @@ Le jeton de gestion utilisé pour l'audit n'a **plus** accès au projet
 `qwfhebtxeubfmvvdsqdt` (« account does not have the necessary privileges ») :
 son état n'a pas pu être vérifié.
 
+### Configuration d'authentification en production
+
+| Réglage              | Valeur                 |
+| -------------------- | ---------------------- |
+| `site_url`           | `https://mareliure.fr` |
+| `disable_signup`     | `true`                 |
+| `mailer_autoconfirm` | `false`                |
+
+> **Les inscriptions publiques sont fermées.** C'était le bon réglage le jour
+> où le seul compte à créer était celui de l'administrateur, sur un site sans
+> client. Ce ne l'est plus dès qu'un premier livre arrive : **une cliente qui
+> reçoit son lien de suivi ne peut pas revendiquer son dossier sans se créer un
+> compte**, et un relieur ne peut pas s'inscrire non plus. À rouvrir avant la
+> première mise en relation réelle, via l'API de gestion ou le tableau de bord
+> Supabase (`Authentication → Sign In / Providers → Allow new users to sign up`).
+>
+> `mailer_autoconfirm` reste à `false`, donc une inscription demandera une
+> confirmation par e-mail — expédiée par l'expéditeur Supabase par défaut, dont
+> la délivrabilité est faible. Ce point est à traiter en même temps que la
+> réouverture, pas après.
+
 ### Commandes
 
 ```bash
@@ -770,8 +791,9 @@ branche dédiée, en commençant par le schéma et sa migration.
 Deux tâches plus courtes si l'on préfère commencer petit :
 
 1. confirmer puis supprimer le dossier de test resté en production ;
-2. fermer les inscriptions publiques sur le projet de production et corriger
-   son `site_url`, qui pointe encore sur l'URL technique workers.dev.
+2. rouvrir les inscriptions en production avant la première mise en relation
+   réelle — elles sont fermées aujourd'hui, et une cliente ne peut pas
+   revendiquer son dossier sans compte (§H).
 
 **Known issues:**
 
