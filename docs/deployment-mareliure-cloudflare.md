@@ -7,13 +7,12 @@
 > **État au 8 septembre 2026 : déployé et testé.**
 >
 > URL : **https://mareliure.aferriere.workers.dev**
-> Version : `d0e7adba-a25e-4048-aae3-ea3c703c0dc4`
+> Version : `b78dc1d7-8c8b-4295-8ff2-cf9f6b13f570`
+> Supabase : **projet de production `hljxohondjvrkzqicexl`**, sans donnée de
+> démonstration.
 >
-> Ce déploiement pointe sur le **Supabase de test** (`qwfhebtxeubfmvvdsqdt`, avec
-> ses 6 relieurs de démonstration et ses 8 projets `@example.com`). C'est une
-> version de validation, pas une mise en ligne. Le domaine `mareliure.fr` n'est
-> pas encore branché : il exige la bascule des serveurs de noms (§8), et donc la
-> recréation préalable des MX et du SPF OVH.
+> Le domaine `mareliure.fr` n'est pas encore branché : il exige la bascule des
+> serveurs de noms (§8), et donc la recréation préalable des MX et du SPF OVH.
 
 ---
 
@@ -327,15 +326,18 @@ de déploiement ne se justifie pas pour un dépôt à un seul contributeur.
 
 ### Environnements
 
-| Environnement | Projet | Statut |
-| --- | --- | --- |
-| Local / test | `qwfhebtxeubfmvvdsqdt` | **provisoire** — contient 6 relieurs `is_demo` et 8 projets `@example.com` |
-| Production | à créer | **n'existe pas encore** |
+| Environnement | Projet | Région | Statut |
+| --- | --- | --- | --- |
+| Test / bac à sable | `qwfhebtxeubfmvvdsqdt` | eu-west-2 | 6 relieurs `is_demo`, 8 projets `@example.com`. Sert aux essais, jamais au public. |
+| **Production** | **`hljxohondjvrkzqicexl`** | eu-west-1 | **En service.** Schéma complet, Playbook publié, **aucune donnée de démonstration**. |
 
-> Ce point ne doit pas être maquillé : **il n'y a pas d'environnement de
-> production isolé aujourd'hui.** Le premier déploiement pointera sur le projet
-> de test tant qu'un projet de production n'est pas créé — et devra être
-> présenté comme tel, pas comme une mise en ligne.
+La production a été vérifiée vide après le test de mise en service : 0 dossier,
+0 session, 0 cas, 0 relieur. Seuls la Mission et la version publiée du Playbook
+y figurent.
+
+> Le plan Free met un projet en pause après une semaine sans activité. Sans
+> trafic, le site répondra par une erreur au réveil. À surveiller le jour où
+> `mareliure.fr` est public.
 
 ### Créer le projet de production
 
@@ -424,10 +426,44 @@ Sur `https://mareliure.aferriere.workers.dev` :
 > reproduit ni sur workerd en local, ni dans un onglet neuf. Consignée parce
 > qu'elle réapparaîtrait à l'identique si un build et son SSR se désynchronisaient.
 
-Ce qui **n'a pas** été testé, faute de domaine branché et de projet de
-production : le tunnel complet avec envoi de photos, la création d'un
-`marketplace_case` réel de bout en bout, la redirection `www`, et le certificat
-sur `mareliure.fr`.
+### Parcours visiteur complet, sur la production
+
+Déroulé par l'API publique, exactement comme le fait un navigateur :
+
+| Étape | Résultat |
+| --- | --- |
+| Ouverture de la Mission | marque « Ma Reliure », locale `fr-FR` |
+| Envoi de 4 photos | déposées dans Supabase Storage **à travers le Worker** |
+| Réponses | belle reliure, demi-cuir vert foncé, 5 nerfs, dorure, budget 250–400 € |
+| Soumission | Dossier créé, nommé « Le Comte de Monte-Cristo » |
+| Project Brief | Matière « Demi-cuir » · Couleur « Vert foncé » · Finitions « Nerfs, Dorure, Titre au dos, Nom de l'auteur au dos » · 5 nerfs · Format « 21.8 × 14.2 × 4.8 » · Budget « 250 – 400 € » · 4 photos · confiance **high 90** |
+| Ingestion | `marketplace_case` **RL-001** créé automatiquement par le trigger, lié au Dossier, 4 photos dans le résumé visiteur |
+
+Les lignes créées ont ensuite été **supprimées** (dossier, session, objets
+Storage) : une base de production neuve ne doit pas garder les traces de sa
+propre mise en service. Vérifié après nettoyage : 0 dossier, 0 session, 0 cas.
+
+### Ce qui n'a PAS été vérifié
+
+Le back-office admin, l'espace atelier et la comparaison client **n'ont pas été
+exercés dans un navigateur**. Trois approches ont échoué pour des raisons
+d'outillage, non d'application :
+
+1. connexion par l'interface — le formulaire ne se soumet pas sous pilotage
+   automatique (entrées React contrôlées) ;
+2. injection d'une session dans `localStorage` — non reprise par le client ;
+3. appel direct des server functions — elles attendent une sérialisation propre
+   au client TanStack qu'une requête fabriquée à la main ne fournit pas.
+
+Le RPC de réconciliation a été appelé isolément et fonctionne. La logique
+sous-jacente (triage, score de matching, plafond de trois relieurs,
+autorisations, règles de devis) est couverte par les tests unitaires. Mais
+**l'assemblage UI ↔ server functions reste à valider à la main**, par une
+personne qui se connecte et clique. C'est le premier point à faire au prochain
+passage.
+
+Restent également non vérifiés, faute de domaine branché : la redirection `www`
+et le certificat sur `mareliure.fr`.
 
 ## 12. Tests à dérouler après le premier déploiement
 
