@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ReliureLanding } from "@/marketplace/pages/ReliureLanding";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
+import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 
 /**
  * Ma Reliure's public landing.
@@ -36,7 +37,7 @@ export const Route = createFileRoute("/reliure")({
       { name: "twitter:title", content: TITLE },
       { name: "twitter:description", content: DESCRIPTION },
     ],
-    links: [{ rel: "canonical", href: MARELIURE_CANONICAL_HOME }],
+    links: [{ rel: "canonical", href: MARELIURE_CANONICAL_HOME }, EDITORIAL_FONT_PRELOAD],
   }),
   component: ReliureLanding,
 });

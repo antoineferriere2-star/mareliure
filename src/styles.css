@@ -299,3 +299,116 @@
     }
   }
 }
+
+/* ---------------------------------------------------------------------------
+ * Ma Reliure — l'identité de la marketplace
+ *
+ * Un jeu de tokens séparé, volontairement. Le système Métré au-dessus décrit un
+ * logiciel de chantier ; Ma Reliure s'adresse à quelqu'un qui tient à un livre.
+ * Les deux marques partagent un runtime, pas une palette — d'où le préfixe
+ * `mr-` : rien ici ne peut déteindre sur une page Métré.
+ *
+ * L'accent est rare par construction : le bordeaux et le laiton n'ont ni fond
+ * ni variante, seulement un usage de trait et de filet. On ne peut pas en
+ * couvrir une section sans l'écrire à la main.
+ * ------------------------------------------------------------------------ */
+
+@font-face {
+  font-family: "Fraunces";
+  /* Subset latin de la variable Fraunces (axes opsz + wght), 67 Ko, servi par
+     notre propre domaine : pas de requête vers un tiers, pas de préconnexion à
+     payer, et rien à déclarer côté données personnelles. Le subset latin couvre
+     l'intégralité du français, œ compris.
+
+     Fraunces, par Phaedra Charles et Flavia Zimbardi — SIL Open Font License
+     1.1, qui autorise l'auto-hébergement à condition de ne pas vendre la
+     police seule et de conserver cette attribution. */
+  src: url("/fonts/fraunces-latin-var.woff2") format("woff2-variations");
+  font-weight: 400 700;
+  font-style: normal;
+  /* `swap` : le texte s'affiche immédiatement dans la serif système, puis
+     bascule. Jamais de titre invisible pendant le chargement. */
+  font-display: swap;
+}
+
+@theme {
+  /* Serif expressive, réservée aux grands titres et aux citations.
+     La sans-serif de l'interface reste la pile système : sobre, et gratuite. */
+  --font-editorial: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+
+  /* Papiers */
+  --color-mr-paper: #f7f3ea;
+  --color-mr-paper-deep: #ede5d6;
+
+  /* Encres */
+  --color-mr-ink: #1b1410;
+  --color-mr-walnut: #3a2a1e;
+  --color-mr-muted: #6b5b4b;
+  --color-mr-rule: #d7ccb9;
+
+  /* Accents — rares. Un filet, un mot, un chiffre : jamais un aplat. */
+  --color-mr-bordeaux: #6b2028;
+  --color-mr-brass: #a98c55;
+}
+
+@layer utilities {
+  /* Les grands titres. `opsz` pousse la Fraunces vers ses formes d'affichage :
+     contrastes plus francs, empattements plus fins — ce qui distingue un titre
+     de magazine d'un paragraphe agrandi. */
+  .mr-display {
+    font-family: var(--font-editorial);
+    font-variation-settings: "opsz" 120;
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    line-height: 1.04;
+  }
+
+  /* Titres intermédiaires : même police, réglages de texte courant. */
+  .mr-title {
+    font-family: var(--font-editorial);
+    font-variation-settings: "opsz" 40;
+    font-weight: 400;
+    letter-spacing: -0.01em;
+    line-height: 1.15;
+  }
+
+  /* Surtitre de section : petite capitale espacée, en sans-serif.
+     C'est le seul endroit où la page hausse la voix sans grossir. */
+  .mr-eyebrow {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--color-mr-muted);
+  }
+
+  /* Grain de papier. Deux trames très basses fréquences, quelques pour cent
+     d'opacité : à l'œil c'est une matière, au calcul c'est un dégradé CSS —
+     aucune image, aucun octet transféré.
+
+     La trame est un ::before positionné, donc elle se peint après les fonds
+     ordinaires : le contenu de la section doit être dans un enfant `relative`
+     pour passer par-dessus. */
+  .mr-grain {
+    position: relative;
+  }
+
+  .mr-grain::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background-image:
+      repeating-linear-gradient(
+        0deg,
+        color-mix(in oklab, var(--color-mr-ink) 2.5%, transparent) 0 1px,
+        transparent 1px 3px
+      ),
+      repeating-linear-gradient(
+        90deg,
+        color-mix(in oklab, var(--color-mr-ink) 2%, transparent) 0 1px,
+        transparent 1px 4px
+      );
+    opacity: 0.55;
+  }
+}

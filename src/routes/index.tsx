@@ -5,6 +5,7 @@ import { ReliureLanding } from "@/marketplace/pages/ReliureLanding";
 import { jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
 import { isMaReliure } from "@/brand";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
+import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 
 /**
  * The root of whichever brand this deployment serves — see `src/brand.ts`.
@@ -42,7 +43,7 @@ function maReliureHead() {
       { name: "twitter:title", content: reliureTitle },
       { name: "twitter:description", content: reliureDescription },
     ],
-    links: [{ rel: "canonical", href: MARELIURE_CANONICAL_HOME }],
+    links: [{ rel: "canonical", href: MARELIURE_CANONICAL_HOME }, EDITORIAL_FONT_PRELOAD],
   };
 }
 
