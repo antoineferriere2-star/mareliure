@@ -62,6 +62,17 @@ export const PHOTOS = {
   syriaAfter: sources("syrie-apres", [480, 800, 1200]),
   academieBefore: sources("academie-avant", [480, 800, 1200]),
   academieAfter: sources("academie-apres", [480, 800, 1200]),
+
+  /**
+   * Les pièces de l'atelier Ferrière, pour sa vitrine.
+   *
+   * `reliure-bordeaux`, plus haut, vient de la même série : c'est une reliure
+   * de cet atelier, arrivée par un autre chemin.
+   */
+  ferriereBaudelaire: sources("ferriere-baudelaire", [480, 800, 1024]),
+  ferriereOmnia: sources("ferriere-omnia", [320, 640]),
+  ferriereDoublures: sources("ferriere-doublures", [320, 640]),
+  ferriereLarousse: sources("ferriere-larousse", [320, 640]),
 } as const;
 
 /**
@@ -82,6 +93,11 @@ export const PHOTO_SIZES = {
   fiveOfTwelve: "(min-width: 1024px) 493px, calc(100vw - 2.5rem)",
   /** Fin de page : la colonne de 0,85fr. */
   closing: "(min-width: 1024px) 537px, calc(100vw - 2.5rem)",
-  /** Avant / après : deux carrés côte à côte, dans une demi-page au-delà de 1024 px. */
+  /** Avant / après : deux cadres côte à côte, dans une demi-page au-delà de 1024 px. */
   beforeAfter: "(min-width: 1024px) 290px, calc(50vw - 1.6rem)",
+  /** Vitrine d'atelier : un tiers de page au-delà de 1024 px, la moitié au-delà de 640. */
+  artisanCard:
+    "(min-width: 1024px) 384px, (min-width: 640px) calc(50vw - 2.5rem), calc(100vw - 2.5rem)",
+  /** Pièce de portfolio : trois par vitrine. */
+  artisanPiece: "(min-width: 1024px) 120px, (min-width: 640px) 16vw, 30vw",
 } as const;

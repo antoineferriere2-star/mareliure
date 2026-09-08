@@ -64,8 +64,23 @@ const FABRICATION_PATTERNS: readonly { label: string; pattern: RegExp }[] = [
 ];
 
 describe("la landing Ma Reliure ne fabrique rien", () => {
-  it("n'affiche aucun atelier tant qu'aucun n'est réel", () => {
-    expect(ARTISANS).toHaveLength(0);
+  /**
+   * Un atelier de vitrine — « Atelier Dupont, Lyon » posé pour meubler la
+   * grille — est le mensonge le moins visible et le plus coûteux de la page.
+   * On ne peut pas prouver par un test qu'un atelier existe ; on peut exiger
+   * que chaque fiche porte les faits qu'un atelier réel fournit lui-même, et
+   * qu'aucune n'invente d'ancienneté.
+   */
+  it("ne référence que des ateliers décrits par des faits vérifiables", () => {
+    for (const artisan of ARTISANS) {
+      expect(artisan.name.trim().length).toBeGreaterThan(3);
+      expect(artisan.city.trim().length).toBeGreaterThan(1);
+      expect(artisan.specialties.length).toBeGreaterThan(0);
+      if (artisan.since !== undefined) {
+        expect(artisan.since).toBeGreaterThan(1800);
+        expect(artisan.since).toBeLessThanOrEqual(new Date().getFullYear());
+      }
+    }
   });
 
   /**

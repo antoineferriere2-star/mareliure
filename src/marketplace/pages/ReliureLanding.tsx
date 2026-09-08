@@ -308,19 +308,22 @@ function Artisans() {
           </PlaceholderNotice>
         )}
 
-        <div className="mt-12 grid gap-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-12">
-          {hasArtisans
-            ? ARTISANS.map((artisan) => <ArtisanCard key={artisan.id} artisan={artisan} />)
-            : [0, 1, 2].map((i) => (
-                <div key={i} className={i === 2 ? "hidden lg:block" : undefined}>
-                  <Photograph
-                    ratio="landscape"
-                    alt={`Emplacement de la vitrine d'atelier ${i + 1}`}
-                    shotBrief="Portrait de l'artisan à l'établi, dans son atelier, lumière naturelle. Puis nom, ville, savoir-faire et deux ou trois pièces."
-                  />
-                </div>
-              ))}
-        </div>
+        {hasArtisans && (
+          // Un seul atelier référencé : trois colonnes laisseraient deux vides,
+          // ce qui se lit comme un manque plutôt que comme un début. On lui
+          // donne alors la largeur d'une vitrine, pas d'une vignette.
+          <div
+            className={
+              ARTISANS.length === 1
+                ? "mt-12 max-w-xl lg:mt-16"
+                : "mt-12 grid gap-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-12"
+            }
+          >
+            {ARTISANS.map((artisan) => (
+              <ArtisanCard key={artisan.id} artisan={artisan} />
+            ))}
+          </div>
+        )}
 
         <div
           id={ANCHORS.binders}

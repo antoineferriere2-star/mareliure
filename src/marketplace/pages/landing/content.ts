@@ -184,15 +184,60 @@ export const BEFORE_AFTER: readonly BeforeAfter[] = [
  */
 export interface ArtisanProfile {
   id: string;
+  /** Le nom de l'atelier — c'est lui qui est référencé, pas une personne. */
   name: string;
+  /** L'artisan qui le tient, quand l'atelier accepte d'être nommé. */
+  artisan?: string;
   city: string;
+  /** Année d'installation. Affichée seulement parce qu'elle est vérifiable. */
+  since?: number;
   specialties: readonly string[];
-  portrait?: PhotoSources;
-  portfolio?: readonly PhotoSources[];
+  /** L'image de tête de la vitrine : l'atelier, l'artisan, ou une de ses pièces. */
+  image?: PhotoSources;
+  imageAlt?: string;
+  portfolio?: readonly { photo: PhotoSources; alt: string }[];
 }
 
-/** Aucun faux artisan en production (§59). */
-export const ARTISANS: readonly ArtisanProfile[] = [];
+/**
+ * Les ateliers référencés.
+ *
+ * Un seul pour l'instant, et il est réel : Reliure Dorure Ferrière, à Orléans.
+ * Tout ce qui est affiché ici — la ville, l'année, les savoir-faire, les
+ * pièces photographiées — vient de l'atelier lui-même, qui a autorisé l'usage
+ * de ses images. Rien n'est estimé, rien n'est arrondi, et il n'y a ni note ni
+ * avis parce qu'aucun n'existe (§59).
+ *
+ * Le jour où un deuxième atelier arrive, ces données viendront de
+ * `marketplace_binders` et non d'un fichier. Ce tableau est la vitrine d'un
+ * lancement, pas la source de vérité.
+ */
+export const ARTISANS: readonly ArtisanProfile[] = [
+  {
+    id: "reliure-dorure-ferriere",
+    name: "Reliure Dorure Ferrière",
+    artisan: "François Ferrière",
+    city: "Orléans",
+    since: 1982,
+    specialties: ["Reliure", "Restauration", "Dorure", "Cartonnage", "Pose de cuir"],
+    image: PHOTOS.ferriereBaudelaire,
+    imageAlt:
+      "Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à l'or et à l'argent, sur Le Spleen de Paris de Baudelaire",
+    portfolio: [
+      {
+        photo: PHOTOS.ferriereOmnia,
+        alt: "Trois volumes en demi-cuir à coins, plats marbrés et pièces de titre bordeaux",
+      },
+      {
+        photo: PHOTOS.ferriereDoublures,
+        alt: "Les doublures d'une reliure, en brocart de soie pourpre et or",
+      },
+      {
+        photo: PHOTOS.ferriereLarousse,
+        alt: "Deux volumes du Grand Dictionnaire Universel en plein cuir noir, dos à nerfs dorés",
+      },
+    ],
+  },
+];
 
 /**
  * Le préchargement de la serif éditoriale.
