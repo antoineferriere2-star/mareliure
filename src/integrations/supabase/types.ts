@@ -808,6 +808,288 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_binder_portfolio: {
+        Row: {
+          after_photo_path: string | null
+          before_photo_path: string | null
+          binder_id: string
+          created_at: string
+          description: string | null
+          id: string
+          materials: string[]
+          position: number
+          techniques: string[]
+          title: string
+          year: number | null
+        }
+        Insert: {
+          after_photo_path?: string | null
+          before_photo_path?: string | null
+          binder_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          materials?: string[]
+          position?: number
+          techniques?: string[]
+          title: string
+          year?: number | null
+        }
+        Update: {
+          after_photo_path?: string | null
+          before_photo_path?: string | null
+          binder_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          materials?: string[]
+          position?: number
+          techniques?: string[]
+          title?: string
+          year?: number | null
+        }
+        Relationships: []
+      }
+      marketplace_binder_skills: {
+        Row: {
+          binder_id: string
+          skill_slug: string
+        }
+        Insert: {
+          binder_id: string
+          skill_slug: string
+        }
+        Update: {
+          binder_id?: string
+          skill_slug?: string
+        }
+        Relationships: []
+      }
+      marketplace_binders: {
+        Row: {
+          accepted_project_types: string[]
+          avatar_path: string | null
+          bio: string | null
+          capacity_slots: number
+          city: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_demo: boolean
+          max_project_cents: number | null
+          min_project_cents: number | null
+          postal_code: string | null
+          rating_avg: number | null
+          rating_count: number
+          response_rate: number | null
+          status: string
+          stripe_account_id: string | null
+          training: string | null
+          updated_at: string
+          user_id: string | null
+          workshop_name: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          accepted_project_types?: string[]
+          avatar_path?: string | null
+          bio?: string | null
+          capacity_slots?: number
+          city?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          is_demo?: boolean
+          max_project_cents?: number | null
+          min_project_cents?: number | null
+          postal_code?: string | null
+          rating_avg?: number | null
+          rating_count?: number
+          response_rate?: number | null
+          status?: string
+          stripe_account_id?: string | null
+          training?: string | null
+          updated_at?: string
+          user_id?: string | null
+          workshop_name?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          accepted_project_types?: string[]
+          avatar_path?: string | null
+          bio?: string | null
+          capacity_slots?: number
+          city?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_demo?: boolean
+          max_project_cents?: number | null
+          min_project_cents?: number | null
+          postal_code?: string | null
+          rating_avg?: number | null
+          rating_count?: number
+          response_rate?: number | null
+          status?: string
+          stripe_account_id?: string | null
+          training?: string | null
+          updated_at?: string
+          user_id?: string | null
+          workshop_name?: string | null
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
+      marketplace_case_matches: {
+        Row: {
+          binder_id: string
+          case_id: string
+          decline_reason: string | null
+          id: string
+          invited_at: string
+          match_score: number | null
+          responded_at: string | null
+          state: string
+        }
+        Insert: {
+          binder_id: string
+          case_id: string
+          decline_reason?: string | null
+          id?: string
+          invited_at?: string
+          match_score?: number | null
+          responded_at?: string | null
+          state?: string
+        }
+        Update: {
+          binder_id?: string
+          case_id?: string
+          decline_reason?: string | null
+          id?: string
+          invited_at?: string
+          match_score?: number | null
+          responded_at?: string | null
+          state?: string
+        }
+        Relationships: []
+      }
+      marketplace_cases: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          declared_value_band: string | null
+          dossier_id: string
+          heritage_flag: boolean
+          id: string
+          manual_review_required: boolean
+          mission_id: string | null
+          reference: string
+          status: string
+          triaged_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          declared_value_band?: string | null
+          dossier_id: string
+          heritage_flag?: boolean
+          id?: string
+          manual_review_required?: boolean
+          mission_id?: string | null
+          reference: string
+          status?: string
+          triaged_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          declared_value_band?: string | null
+          dossier_id?: string
+          heritage_flag?: boolean
+          id?: string
+          manual_review_required?: boolean
+          mission_id?: string | null
+          reference?: string
+          status?: string
+          triaged_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_intake_missions: {
+        Row: {
+          created_at: string
+          mission_id: string
+          vertical_id: string
+        }
+        Insert: {
+          created_at?: string
+          mission_id: string
+          vertical_id?: string
+        }
+        Update: {
+          created_at?: string
+          mission_id?: string
+          vertical_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_quotes: {
+        Row: {
+          amount_cents: number
+          binder_id: string
+          case_id: string
+          caveats: string | null
+          created_at: string
+          currency: string
+          description: string
+          id: string
+          lead_time_weeks: number
+          materials: string | null
+          options: string | null
+          state: string
+          technique: string | null
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          amount_cents: number
+          binder_id: string
+          case_id: string
+          caveats?: string | null
+          created_at?: string
+          currency?: string
+          description: string
+          id?: string
+          lead_time_weeks: number
+          materials?: string | null
+          options?: string | null
+          state?: string
+          technique?: string | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          binder_id?: string
+          case_id?: string
+          caveats?: string | null
+          created_at?: string
+          currency?: string
+          description?: string
+          id?: string
+          lead_time_weeks?: number
+          materials?: string | null
+          options?: string | null
+          state?: string
+          technique?: string | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string

@@ -48,6 +48,15 @@ complet de Playbook exprimé en donnée — il remplace l'ancien
 crée la Mission Deck toujours publique (`/demo/deck-project`, token fixe
 `DECK_DEMO_PUBLIC_TOKEN` dans `src/build/constants.ts`).
 
+Le Playbook Bookbinding (`src/build/playbooks/bookbindingPlaybookSchema.ts`,
+publié par `scripts/seedBookbindingPlaybook.ts`) est la seconde verticale
+curatée. Il est la preuve que le moteur ne connaît aucun métier : un domaine
+entièrement différent, en français, avec ses propres branches et ses propres
+pièges, sans une ligne de code ajoutée dans `engine/`. Il alimente la
+marketplace Reliure — voir `docs/reliure-marketplace-architecture.md` et
+`src/marketplace/`, qui consomme le Dossier produit ici et n'entre jamais dans
+le moteur.
+
 ## Runtime public
 
 - La seule surface publique est `/m/:publicToken` (voir

@@ -35,5 +35,14 @@ describe("matchVertical", () => {
   it("recognises experimental trades so we can name them", () => {
     expect(matchVertical("pergola installation")?.id).toBe("pergola");
     expect(matchVertical("Paver patios")?.id).toBe("patio");
+    expect(matchVertical("Atelier de reliure d'art")?.id).toBe("bookbinding");
+    expect(matchVertical("Fine bookbinding and rebinding")?.id).toBe("bookbinding");
+  });
+
+  it("does not read a bookbinding word out of an unrelated trade", () => {
+    // The marketplace vertical must not hijack a deck builder's site because
+    // a page happens to mention gilding or a surname.
+    expect(matchVertical("Reliurey Construction")).toBeNull();
+    expect(matchVertical("Composite decking and railings")?.id).toBe("deck");
   });
 });

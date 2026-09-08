@@ -9,113 +9,84 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as TermsRouteImport } from './routes/terms'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as PrivateBetaRouteImport } from './routes/private-beta'
-import { Route as PrivacyRouteImport } from './routes/privacy'
-import { Route as PricingRouteImport } from './routes/pricing'
-import { Route as HowItWorksRouteImport } from './routes/how-it-works'
-import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
-import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
-import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
-import { Route as ContactRouteImport } from './routes/contact'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProjectSummaryAccessTokenRouteImport } from './routes/project-summary.$accessToken'
-import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
-import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
-import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ContactRouteImport } from './routes/contact'
+import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
+import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
+import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
+import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as PricingRouteImport } from './routes/pricing'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PrivateBetaRouteImport } from './routes/private-beta'
+import { Route as ReliureRouteImport } from './routes/reliure'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TermsRouteImport } from './routes/terms'
+import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
 import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
-import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
+import { Route as AuthenticatedMarketplaceRouteRouteImport } from './routes/_authenticated/marketplace/route'
+import { Route as AuthenticatedMesLivresRouteRouteImport } from './routes/_authenticated/mes-livres/route'
+import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
+import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
+import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
+import { Route as ProjectSummaryAccessTokenRouteImport } from './routes/project-summary.$accessToken'
+import { Route as AuthenticatedAtelierIndexRouteImport } from './routes/_authenticated/atelier/index'
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
-import { Route as ApiPublicTrackViewRouteImport } from './routes/api/public/track-view'
-import { Route as ApiPublicProjectSummaryRouteImport } from './routes/api/public/project-summary'
-import { Route as ApiPublicFaqAskRouteImport } from './routes/api/public/faq-ask'
-import { Route as ApiPublicContactRouteImport } from './routes/api/public/contact'
-import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
-import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
-import { Route as ApiPublicAnalyzeSiteRouteImport } from './routes/api/public/analyze-site'
-import { Route as AuthenticatedPortalTeamRouteImport } from './routes/_authenticated/portal/team'
-import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
-import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
-import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authenticated/portal/missions'
-import { Route as AuthenticatedPortalDemosRouteImport } from './routes/_authenticated/portal/demos'
-import { Route as AuthenticatedPortalBillingRouteImport } from './routes/_authenticated/portal/billing'
-import { Route as AuthenticatedBuildSettingsRouteImport } from './routes/_authenticated/build/settings'
-import { Route as AuthenticatedBuildOnboardingRouteImport } from './routes/_authenticated/build/onboarding'
-import { Route as AuthenticatedBuildMissionsRouteImport } from './routes/_authenticated/build/missions'
-import { Route as AuthenticatedBuildKnowledgeRouteImport } from './routes/_authenticated/build/knowledge'
-import { Route as AuthenticatedBuildDashboardRouteImport } from './routes/_authenticated/build/dashboard'
 import { Route as AuthenticatedBuildActivityRouteImport } from './routes/_authenticated/build/activity'
-import { Route as AuthenticatedBuildWorkspacesIndexRouteImport } from './routes/_authenticated/build/workspaces.index'
-import { Route as AuthenticatedBuildRequestsIndexRouteImport } from './routes/_authenticated/build/requests.index'
-import { Route as AuthenticatedBuildPlaybooksIndexRouteImport } from './routes/_authenticated/build/playbooks.index'
-import { Route as AuthenticatedBuildMissionsIndexRouteImport } from './routes/_authenticated/build/missions.index'
+import { Route as AuthenticatedBuildDashboardRouteImport } from './routes/_authenticated/build/dashboard'
+import { Route as AuthenticatedBuildKnowledgeRouteImport } from './routes/_authenticated/build/knowledge'
+import { Route as AuthenticatedBuildMissionsRouteImport } from './routes/_authenticated/build/missions'
+import { Route as AuthenticatedBuildOnboardingRouteImport } from './routes/_authenticated/build/onboarding'
+import { Route as AuthenticatedBuildSettingsRouteImport } from './routes/_authenticated/build/settings'
+import { Route as AuthenticatedMarketplaceIndexRouteImport } from './routes/_authenticated/marketplace/index'
+import { Route as AuthenticatedMarketplaceBindersRouteImport } from './routes/_authenticated/marketplace/binders'
+import { Route as AuthenticatedMesLivresIndexRouteImport } from './routes/_authenticated/mes-livres/index'
+import { Route as AuthenticatedMesLivresCaseIdRouteImport } from './routes/_authenticated/mes-livres/$caseId'
+import { Route as AuthenticatedPortalIndexRouteImport } from './routes/_authenticated/portal/index'
+import { Route as AuthenticatedPortalBillingRouteImport } from './routes/_authenticated/portal/billing'
+import { Route as AuthenticatedPortalDemosRouteImport } from './routes/_authenticated/portal/demos'
+import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authenticated/portal/missions'
+import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
+import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
+import { Route as AuthenticatedPortalTeamRouteImport } from './routes/_authenticated/portal/team'
+import { Route as ApiPublicAnalyzeSiteRouteImport } from './routes/api/public/analyze-site'
+import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
+import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
+import { Route as ApiPublicContactRouteImport } from './routes/api/public/contact'
+import { Route as ApiPublicFaqAskRouteImport } from './routes/api/public/faq-ask'
+import { Route as ApiPublicProjectSummaryRouteImport } from './routes/api/public/project-summary'
+import { Route as ApiPublicTrackViewRouteImport } from './routes/api/public/track-view'
+import { Route as AuthenticatedAtelierCasesCaseIdRouteImport } from './routes/_authenticated/atelier/cases.$caseId'
 import { Route as AuthenticatedBuildDossiersIndexRouteImport } from './routes/_authenticated/build/dossiers.index'
-import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
-import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
-import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
-import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
-import { Route as ApiInternalHermesProspectFunnelsRouteImport } from './routes/api/internal/hermes/prospect-funnels'
-import { Route as ApiInternalAnalyticsMetricsRouteImport } from './routes/api/internal/analytics/metrics'
-import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
-import { Route as AuthenticatedPortalDemosNewRouteImport } from './routes/_authenticated/portal/demos.new'
-import { Route as AuthenticatedBuildRequestsIdRouteImport } from './routes/_authenticated/build/requests.$id'
-import { Route as AuthenticatedBuildPlaybooksIdRouteImport } from './routes/_authenticated/build/playbooks.$id'
-import { Route as AuthenticatedBuildMissionsNewRouteImport } from './routes/_authenticated/build/missions.new'
-import { Route as AuthenticatedBuildMissionsIdRouteImport } from './routes/_authenticated/build/missions.$id'
 import { Route as AuthenticatedBuildDossiersIdRouteImport } from './routes/_authenticated/build/dossiers.$id'
+import { Route as AuthenticatedBuildMissionsIndexRouteImport } from './routes/_authenticated/build/missions.index'
+import { Route as AuthenticatedBuildMissionsIdRouteImport } from './routes/_authenticated/build/missions.$id'
+import { Route as AuthenticatedBuildMissionsNewRouteImport } from './routes/_authenticated/build/missions.new'
+import { Route as AuthenticatedBuildPlaybooksIndexRouteImport } from './routes/_authenticated/build/playbooks.index'
+import { Route as AuthenticatedBuildPlaybooksIdRouteImport } from './routes/_authenticated/build/playbooks.$id'
+import { Route as AuthenticatedBuildRequestsIndexRouteImport } from './routes/_authenticated/build/requests.index'
+import { Route as AuthenticatedBuildRequestsIdRouteImport } from './routes/_authenticated/build/requests.$id'
+import { Route as AuthenticatedBuildWorkspacesIndexRouteImport } from './routes/_authenticated/build/workspaces.index'
+import { Route as AuthenticatedMarketplaceCasesIndexRouteImport } from './routes/_authenticated/marketplace/cases.index'
+import { Route as AuthenticatedMarketplaceCasesCaseIdRouteImport } from './routes/_authenticated/marketplace/cases.$caseId'
+import { Route as AuthenticatedPortalDemosNewRouteImport } from './routes/_authenticated/portal/demos.new'
+import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
+import { Route as ApiInternalAnalyticsMetricsRouteImport } from './routes/api/internal/analytics/metrics'
+import { Route as ApiInternalHermesProspectFunnelsRouteImport } from './routes/api/internal/hermes/prospect-funnels'
+import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
+import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
+import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
 import { Route as ApiInternalHermesProspectFunnelsMetricsRouteImport } from './routes/api/internal/hermes/prospect-funnels.metrics'
 
-const TermsRoute = TermsRouteImport.update({
-  id: '/terms',
-  path: '/terms',
+const IndexRoute = IndexRouteImport.update({
+  id: '/',
+  path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivateBetaRoute = PrivateBetaRouteImport.update({
-  id: '/private-beta',
-  path: '/private-beta',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PrivacyRoute = PrivacyRouteImport.update({
-  id: '/privacy',
-  path: '/privacy',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const PricingRoute = PricingRouteImport.update({
-  id: '/pricing',
-  path: '/pricing',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HowItWorksRoute = HowItWorksRouteImport.update({
-  id: '/how-it-works',
-  path: '/how-it-works',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FreeInquiryAuditRoute = FreeInquiryAuditRouteImport.update({
-  id: '/free-inquiry-audit',
-  path: '/free-inquiry-audit',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ExampleProjectBriefRoute = ExampleProjectBriefRouteImport.update({
-  id: '/example-project-brief',
-  path: '/example-project-brief',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DeckBuildersRoute = DeckBuildersRouteImport.update({
-  id: '/deck-builders',
-  path: '/deck-builders',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ContactRoute = ContactRouteImport.update({
-  id: '/contact',
-  path: '/contact',
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -123,13 +94,98 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
-const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
-  id: '/_authenticated',
+const ContactRoute = ContactRouteImport.update({
+  id: '/contact',
+  path: '/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const DeckBuildersRoute = DeckBuildersRouteImport.update({
+  id: '/deck-builders',
+  path: '/deck-builders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ExampleProjectBriefRoute = ExampleProjectBriefRouteImport.update({
+  id: '/example-project-brief',
+  path: '/example-project-brief',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FreeInquiryAuditRoute = FreeInquiryAuditRouteImport.update({
+  id: '/free-inquiry-audit',
+  path: '/free-inquiry-audit',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: '/how-it-works',
+  path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PricingRoute = PricingRouteImport.update({
+  id: '/pricing',
+  path: '/pricing',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivateBetaRoute = PrivateBetaRouteImport.update({
+  id: '/private-beta',
+  path: '/private-beta',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReliureRoute = ReliureRouteImport.update({
+  id: '/reliure',
+  path: '/reliure',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAtelierRouteRoute =
+  AuthenticatedAtelierRouteRouteImport.update({
+    id: '/atelier',
+    path: '/atelier',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedBuildRouteRoute = AuthenticatedBuildRouteRouteImport.update({
+  id: '/build',
+  path: '/build',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMarketplaceRouteRoute =
+  AuthenticatedMarketplaceRouteRouteImport.update({
+    id: '/marketplace',
+    path: '/marketplace',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedMesLivresRouteRoute =
+  AuthenticatedMesLivresRouteRouteImport.update({
+    id: '/mes-livres',
+    path: '/mes-livres',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const AuthenticatedPortalRouteRoute =
+  AuthenticatedPortalRouteRouteImport.update({
+    id: '/portal',
+    path: '/portal',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
+const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
+  id: '/demo/deck-project',
+  path: '/demo/deck-project',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MPublicTokenRoute = MPublicTokenRouteImport.update({
+  id: '/m/$publicToken',
+  path: '/m/$publicToken',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ProjectSummaryAccessTokenRoute =
@@ -138,131 +194,21 @@ const ProjectSummaryAccessTokenRoute =
     path: '/project-summary/$accessToken',
     getParentRoute: () => rootRouteImport,
   } as any)
-const MPublicTokenRoute = MPublicTokenRouteImport.update({
-  id: '/m/$publicToken',
-  path: '/m/$publicToken',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
-  id: '/demo/deck-project',
-  path: '/demo/deck-project',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedPortalRouteRoute =
-  AuthenticatedPortalRouteRouteImport.update({
-    id: '/portal',
-    path: '/portal',
-    getParentRoute: () => AuthenticatedRouteRoute,
-  } as any)
-const AuthenticatedBuildRouteRoute = AuthenticatedBuildRouteRouteImport.update({
-  id: '/build',
-  path: '/build',
-  getParentRoute: () => AuthenticatedRouteRoute,
-} as any)
-const AuthenticatedPortalIndexRoute =
-  AuthenticatedPortalIndexRouteImport.update({
+const AuthenticatedAtelierIndexRoute =
+  AuthenticatedAtelierIndexRouteImport.update({
     id: '/',
     path: '/',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
   } as any)
 const AuthenticatedBuildIndexRoute = AuthenticatedBuildIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedBuildRouteRoute,
 } as any)
-const ApiPublicTrackViewRoute = ApiPublicTrackViewRouteImport.update({
-  id: '/api/public/track-view',
-  path: '/api/public/track-view',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicProjectSummaryRoute = ApiPublicProjectSummaryRouteImport.update({
-  id: '/api/public/project-summary',
-  path: '/api/public/project-summary',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicFaqAskRoute = ApiPublicFaqAskRouteImport.update({
-  id: '/api/public/faq-ask',
-  path: '/api/public/faq-ask',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicContactRoute = ApiPublicContactRouteImport.update({
-  id: '/api/public/contact',
-  path: '/api/public/contact',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicBuildRuntimeRoute = ApiPublicBuildRuntimeRouteImport.update({
-  id: '/api/public/build-runtime',
-  path: '/api/public/build-runtime',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicBuildPublicIntakeRoute =
-  ApiPublicBuildPublicIntakeRouteImport.update({
-    id: '/api/public/build-public-intake',
-    path: '/api/public/build-public-intake',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiPublicAnalyzeSiteRoute = ApiPublicAnalyzeSiteRouteImport.update({
-  id: '/api/public/analyze-site',
-  path: '/api/public/analyze-site',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthenticatedPortalTeamRoute = AuthenticatedPortalTeamRouteImport.update({
-  id: '/team',
-  path: '/team',
-  getParentRoute: () => AuthenticatedPortalRouteRoute,
-} as any)
-const AuthenticatedPortalSetupRoute =
-  AuthenticatedPortalSetupRouteImport.update({
-    id: '/setup',
-    path: '/setup',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalSettingsRoute =
-  AuthenticatedPortalSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalMissionsRoute =
-  AuthenticatedPortalMissionsRouteImport.update({
-    id: '/missions',
-    path: '/missions',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalDemosRoute =
-  AuthenticatedPortalDemosRouteImport.update({
-    id: '/demos',
-    path: '/demos',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalBillingRoute =
-  AuthenticatedPortalBillingRouteImport.update({
-    id: '/billing',
-    path: '/billing',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedBuildSettingsRoute =
-  AuthenticatedBuildSettingsRouteImport.update({
-    id: '/settings',
-    path: '/settings',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
-  } as any)
-const AuthenticatedBuildOnboardingRoute =
-  AuthenticatedBuildOnboardingRouteImport.update({
-    id: '/onboarding',
-    path: '/onboarding',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
-  } as any)
-const AuthenticatedBuildMissionsRoute =
-  AuthenticatedBuildMissionsRouteImport.update({
-    id: '/missions',
-    path: '/missions',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
-  } as any)
-const AuthenticatedBuildKnowledgeRoute =
-  AuthenticatedBuildKnowledgeRouteImport.update({
-    id: '/knowledge',
-    path: '/knowledge',
+const AuthenticatedBuildActivityRoute =
+  AuthenticatedBuildActivityRouteImport.update({
+    id: '/activity',
+    path: '/activity',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
 const AuthenticatedBuildDashboardRoute =
@@ -271,28 +217,147 @@ const AuthenticatedBuildDashboardRoute =
     path: '/dashboard',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedBuildActivityRoute =
-  AuthenticatedBuildActivityRouteImport.update({
-    id: '/activity',
-    path: '/activity',
+const AuthenticatedBuildKnowledgeRoute =
+  AuthenticatedBuildKnowledgeRouteImport.update({
+    id: '/knowledge',
+    path: '/knowledge',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedBuildWorkspacesIndexRoute =
-  AuthenticatedBuildWorkspacesIndexRouteImport.update({
-    id: '/workspaces/',
-    path: '/workspaces/',
+const AuthenticatedBuildMissionsRoute =
+  AuthenticatedBuildMissionsRouteImport.update({
+    id: '/missions',
+    path: '/missions',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedBuildRequestsIndexRoute =
-  AuthenticatedBuildRequestsIndexRouteImport.update({
-    id: '/requests/',
-    path: '/requests/',
+const AuthenticatedBuildOnboardingRoute =
+  AuthenticatedBuildOnboardingRouteImport.update({
+    id: '/onboarding',
+    path: '/onboarding',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedBuildPlaybooksIndexRoute =
-  AuthenticatedBuildPlaybooksIndexRouteImport.update({
-    id: '/playbooks/',
-    path: '/playbooks/',
+const AuthenticatedBuildSettingsRoute =
+  AuthenticatedBuildSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedMarketplaceIndexRoute =
+  AuthenticatedMarketplaceIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMarketplaceRouteRoute,
+  } as any)
+const AuthenticatedMarketplaceBindersRoute =
+  AuthenticatedMarketplaceBindersRouteImport.update({
+    id: '/binders',
+    path: '/binders',
+    getParentRoute: () => AuthenticatedMarketplaceRouteRoute,
+  } as any)
+const AuthenticatedMesLivresIndexRoute =
+  AuthenticatedMesLivresIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedMesLivresRouteRoute,
+  } as any)
+const AuthenticatedMesLivresCaseIdRoute =
+  AuthenticatedMesLivresCaseIdRouteImport.update({
+    id: '/$caseId',
+    path: '/$caseId',
+    getParentRoute: () => AuthenticatedMesLivresRouteRoute,
+  } as any)
+const AuthenticatedPortalIndexRoute =
+  AuthenticatedPortalIndexRouteImport.update({
+    id: '/',
+    path: '/',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalBillingRoute =
+  AuthenticatedPortalBillingRouteImport.update({
+    id: '/billing',
+    path: '/billing',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalDemosRoute =
+  AuthenticatedPortalDemosRouteImport.update({
+    id: '/demos',
+    path: '/demos',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalMissionsRoute =
+  AuthenticatedPortalMissionsRouteImport.update({
+    id: '/missions',
+    path: '/missions',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalSettingsRoute =
+  AuthenticatedPortalSettingsRouteImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalSetupRoute =
+  AuthenticatedPortalSetupRouteImport.update({
+    id: '/setup',
+    path: '/setup',
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const AuthenticatedPortalTeamRoute = AuthenticatedPortalTeamRouteImport.update({
+  id: '/team',
+  path: '/team',
+  getParentRoute: () => AuthenticatedPortalRouteRoute,
+} as any)
+const ApiPublicAnalyzeSiteRoute = ApiPublicAnalyzeSiteRouteImport.update({
+  id: '/api/public/analyze-site',
+  path: '/api/public/analyze-site',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicBuildPublicIntakeRoute =
+  ApiPublicBuildPublicIntakeRouteImport.update({
+    id: '/api/public/build-public-intake',
+    path: '/api/public/build-public-intake',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicBuildRuntimeRoute = ApiPublicBuildRuntimeRouteImport.update({
+  id: '/api/public/build-runtime',
+  path: '/api/public/build-runtime',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicContactRoute = ApiPublicContactRouteImport.update({
+  id: '/api/public/contact',
+  path: '/api/public/contact',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicFaqAskRoute = ApiPublicFaqAskRouteImport.update({
+  id: '/api/public/faq-ask',
+  path: '/api/public/faq-ask',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicProjectSummaryRoute = ApiPublicProjectSummaryRouteImport.update({
+  id: '/api/public/project-summary',
+  path: '/api/public/project-summary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiPublicTrackViewRoute = ApiPublicTrackViewRouteImport.update({
+  id: '/api/public/track-view',
+  path: '/api/public/track-view',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAtelierCasesCaseIdRoute =
+  AuthenticatedAtelierCasesCaseIdRouteImport.update({
+    id: '/cases/$caseId',
+    path: '/cases/$caseId',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedBuildDossiersIndexRoute =
+  AuthenticatedBuildDossiersIndexRouteImport.update({
+    id: '/dossiers/',
+    path: '/dossiers/',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedBuildDossiersIdRoute =
+  AuthenticatedBuildDossiersIdRouteImport.update({
+    id: '/dossiers/$id',
+    path: '/dossiers/$id',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
 const AuthenticatedBuildMissionsIndexRoute =
@@ -301,62 +366,22 @@ const AuthenticatedBuildMissionsIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedBuildMissionsRoute,
   } as any)
-const AuthenticatedBuildDossiersIndexRoute =
-  AuthenticatedBuildDossiersIndexRouteImport.update({
-    id: '/dossiers/',
-    path: '/dossiers/',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
+const AuthenticatedBuildMissionsIdRoute =
+  AuthenticatedBuildMissionsIdRouteImport.update({
+    id: '/$id',
+    path: '/$id',
+    getParentRoute: () => AuthenticatedBuildMissionsRoute,
   } as any)
-const LovableEmailTransactionalPreviewRoute =
-  LovableEmailTransactionalPreviewRouteImport.update({
-    id: '/lovable/email/transactional/preview',
-    path: '/lovable/email/transactional/preview',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
-  id: '/lovable/email/auth/webhook',
-  path: '/lovable/email/auth/webhook',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
-  id: '/lovable/email/auth/preview',
-  path: '/lovable/email/auth/preview',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const ApiPublicPaymentsWebhookRoute =
-  ApiPublicPaymentsWebhookRouteImport.update({
-    id: '/api/public/payments/webhook',
-    path: '/api/public/payments/webhook',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiInternalHermesProspectFunnelsRoute =
-  ApiInternalHermesProspectFunnelsRouteImport.update({
-    id: '/api/internal/hermes/prospect-funnels',
-    path: '/api/internal/hermes/prospect-funnels',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const ApiInternalAnalyticsMetricsRoute =
-  ApiInternalAnalyticsMetricsRouteImport.update({
-    id: '/api/internal/analytics/metrics',
-    path: '/api/internal/analytics/metrics',
-    getParentRoute: () => rootRouteImport,
-  } as any)
-const AuthenticatedPortalDossiersIdRoute =
-  AuthenticatedPortalDossiersIdRouteImport.update({
-    id: '/dossiers/$id',
-    path: '/dossiers/$id',
-    getParentRoute: () => AuthenticatedPortalRouteRoute,
-  } as any)
-const AuthenticatedPortalDemosNewRoute =
-  AuthenticatedPortalDemosNewRouteImport.update({
+const AuthenticatedBuildMissionsNewRoute =
+  AuthenticatedBuildMissionsNewRouteImport.update({
     id: '/new',
     path: '/new',
-    getParentRoute: () => AuthenticatedPortalDemosRoute,
+    getParentRoute: () => AuthenticatedBuildMissionsRoute,
   } as any)
-const AuthenticatedBuildRequestsIdRoute =
-  AuthenticatedBuildRequestsIdRouteImport.update({
-    id: '/requests/$id',
-    path: '/requests/$id',
+const AuthenticatedBuildPlaybooksIndexRoute =
+  AuthenticatedBuildPlaybooksIndexRouteImport.update({
+    id: '/playbooks/',
+    path: '/playbooks/',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
 const AuthenticatedBuildPlaybooksIdRoute =
@@ -365,23 +390,81 @@ const AuthenticatedBuildPlaybooksIdRoute =
     path: '/playbooks/$id',
     getParentRoute: () => AuthenticatedBuildRouteRoute,
   } as any)
-const AuthenticatedBuildMissionsNewRoute =
-  AuthenticatedBuildMissionsNewRouteImport.update({
+const AuthenticatedBuildRequestsIndexRoute =
+  AuthenticatedBuildRequestsIndexRouteImport.update({
+    id: '/requests/',
+    path: '/requests/',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedBuildRequestsIdRoute =
+  AuthenticatedBuildRequestsIdRouteImport.update({
+    id: '/requests/$id',
+    path: '/requests/$id',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedBuildWorkspacesIndexRoute =
+  AuthenticatedBuildWorkspacesIndexRouteImport.update({
+    id: '/workspaces/',
+    path: '/workspaces/',
+    getParentRoute: () => AuthenticatedBuildRouteRoute,
+  } as any)
+const AuthenticatedMarketplaceCasesIndexRoute =
+  AuthenticatedMarketplaceCasesIndexRouteImport.update({
+    id: '/cases/',
+    path: '/cases/',
+    getParentRoute: () => AuthenticatedMarketplaceRouteRoute,
+  } as any)
+const AuthenticatedMarketplaceCasesCaseIdRoute =
+  AuthenticatedMarketplaceCasesCaseIdRouteImport.update({
+    id: '/cases/$caseId',
+    path: '/cases/$caseId',
+    getParentRoute: () => AuthenticatedMarketplaceRouteRoute,
+  } as any)
+const AuthenticatedPortalDemosNewRoute =
+  AuthenticatedPortalDemosNewRouteImport.update({
     id: '/new',
     path: '/new',
-    getParentRoute: () => AuthenticatedBuildMissionsRoute,
+    getParentRoute: () => AuthenticatedPortalDemosRoute,
   } as any)
-const AuthenticatedBuildMissionsIdRoute =
-  AuthenticatedBuildMissionsIdRouteImport.update({
-    id: '/$id',
-    path: '/$id',
-    getParentRoute: () => AuthenticatedBuildMissionsRoute,
-  } as any)
-const AuthenticatedBuildDossiersIdRoute =
-  AuthenticatedBuildDossiersIdRouteImport.update({
+const AuthenticatedPortalDossiersIdRoute =
+  AuthenticatedPortalDossiersIdRouteImport.update({
     id: '/dossiers/$id',
     path: '/dossiers/$id',
-    getParentRoute: () => AuthenticatedBuildRouteRoute,
+    getParentRoute: () => AuthenticatedPortalRouteRoute,
+  } as any)
+const ApiInternalAnalyticsMetricsRoute =
+  ApiInternalAnalyticsMetricsRouteImport.update({
+    id: '/api/internal/analytics/metrics',
+    path: '/api/internal/analytics/metrics',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiInternalHermesProspectFunnelsRoute =
+  ApiInternalHermesProspectFunnelsRouteImport.update({
+    id: '/api/internal/hermes/prospect-funnels',
+    path: '/api/internal/hermes/prospect-funnels',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicPaymentsWebhookRoute =
+  ApiPublicPaymentsWebhookRouteImport.update({
+    id: '/api/public/payments/webhook',
+    path: '/api/public/payments/webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
+  id: '/lovable/email/auth/preview',
+  path: '/lovable/email/auth/preview',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailAuthWebhookRoute = LovableEmailAuthWebhookRouteImport.update({
+  id: '/lovable/email/auth/webhook',
+  path: '/lovable/email/auth/webhook',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LovableEmailTransactionalPreviewRoute =
+  LovableEmailTransactionalPreviewRouteImport.update({
+    id: '/lovable/email/transactional/preview',
+    path: '/lovable/email/transactional/preview',
+    getParentRoute: () => rootRouteImport,
   } as any)
 const ApiInternalHermesProspectFunnelsMetricsRoute =
   ApiInternalHermesProspectFunnelsMetricsRouteImport.update({
@@ -401,9 +484,13 @@ export interface FileRoutesByFullPath {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
+  '/reliure': typeof ReliureRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/build': typeof AuthenticatedBuildRouteRouteWithChildren
+  '/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
+  '/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
@@ -414,6 +501,8 @@ export interface FileRoutesByFullPath {
   '/build/missions': typeof AuthenticatedBuildMissionsRouteWithChildren
   '/build/onboarding': typeof AuthenticatedBuildOnboardingRoute
   '/build/settings': typeof AuthenticatedBuildSettingsRoute
+  '/marketplace/binders': typeof AuthenticatedMarketplaceBindersRoute
+  '/mes-livres/$caseId': typeof AuthenticatedMesLivresCaseIdRoute
   '/portal/billing': typeof AuthenticatedPortalBillingRoute
   '/portal/demos': typeof AuthenticatedPortalDemosRouteWithChildren
   '/portal/missions': typeof AuthenticatedPortalMissionsRoute
@@ -427,13 +516,18 @@ export interface FileRoutesByFullPath {
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
   '/api/public/track-view': typeof ApiPublicTrackViewRoute
+  '/atelier/': typeof AuthenticatedAtelierIndexRoute
   '/build/': typeof AuthenticatedBuildIndexRoute
+  '/marketplace/': typeof AuthenticatedMarketplaceIndexRoute
+  '/mes-livres/': typeof AuthenticatedMesLivresIndexRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
+  '/atelier/cases/$caseId': typeof AuthenticatedAtelierCasesCaseIdRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
+  '/marketplace/cases/$caseId': typeof AuthenticatedMarketplaceCasesCaseIdRoute
   '/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
@@ -447,6 +541,7 @@ export interface FileRoutesByFullPath {
   '/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
   '/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
   '/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
+  '/marketplace/cases/': typeof AuthenticatedMarketplaceCasesIndexRoute
   '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
 }
 export interface FileRoutesByTo {
@@ -460,6 +555,7 @@ export interface FileRoutesByTo {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
+  '/reliure': typeof ReliureRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
@@ -470,6 +566,8 @@ export interface FileRoutesByTo {
   '/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
   '/build/onboarding': typeof AuthenticatedBuildOnboardingRoute
   '/build/settings': typeof AuthenticatedBuildSettingsRoute
+  '/marketplace/binders': typeof AuthenticatedMarketplaceBindersRoute
+  '/mes-livres/$caseId': typeof AuthenticatedMesLivresCaseIdRoute
   '/portal/billing': typeof AuthenticatedPortalBillingRoute
   '/portal/demos': typeof AuthenticatedPortalDemosRouteWithChildren
   '/portal/missions': typeof AuthenticatedPortalMissionsRoute
@@ -483,13 +581,18 @@ export interface FileRoutesByTo {
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
   '/api/public/track-view': typeof ApiPublicTrackViewRoute
+  '/atelier': typeof AuthenticatedAtelierIndexRoute
   '/build': typeof AuthenticatedBuildIndexRoute
+  '/marketplace': typeof AuthenticatedMarketplaceIndexRoute
+  '/mes-livres': typeof AuthenticatedMesLivresIndexRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
+  '/atelier/cases/$caseId': typeof AuthenticatedAtelierCasesCaseIdRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
+  '/marketplace/cases/$caseId': typeof AuthenticatedMarketplaceCasesCaseIdRoute
   '/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
@@ -503,6 +606,7 @@ export interface FileRoutesByTo {
   '/build/playbooks': typeof AuthenticatedBuildPlaybooksIndexRoute
   '/build/requests': typeof AuthenticatedBuildRequestsIndexRoute
   '/build/workspaces': typeof AuthenticatedBuildWorkspacesIndexRoute
+  '/marketplace/cases': typeof AuthenticatedMarketplaceCasesIndexRoute
   '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
 }
 export interface FileRoutesById {
@@ -518,9 +622,13 @@ export interface FileRoutesById {
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
+  '/reliure': typeof ReliureRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/_authenticated/build': typeof AuthenticatedBuildRouteRouteWithChildren
+  '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
+  '/_authenticated/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
@@ -531,6 +639,8 @@ export interface FileRoutesById {
   '/_authenticated/build/missions': typeof AuthenticatedBuildMissionsRouteWithChildren
   '/_authenticated/build/onboarding': typeof AuthenticatedBuildOnboardingRoute
   '/_authenticated/build/settings': typeof AuthenticatedBuildSettingsRoute
+  '/_authenticated/marketplace/binders': typeof AuthenticatedMarketplaceBindersRoute
+  '/_authenticated/mes-livres/$caseId': typeof AuthenticatedMesLivresCaseIdRoute
   '/_authenticated/portal/billing': typeof AuthenticatedPortalBillingRoute
   '/_authenticated/portal/demos': typeof AuthenticatedPortalDemosRouteWithChildren
   '/_authenticated/portal/missions': typeof AuthenticatedPortalMissionsRoute
@@ -544,13 +654,18 @@ export interface FileRoutesById {
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
   '/api/public/track-view': typeof ApiPublicTrackViewRoute
+  '/_authenticated/atelier/': typeof AuthenticatedAtelierIndexRoute
   '/_authenticated/build/': typeof AuthenticatedBuildIndexRoute
+  '/_authenticated/marketplace/': typeof AuthenticatedMarketplaceIndexRoute
+  '/_authenticated/mes-livres/': typeof AuthenticatedMesLivresIndexRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
+  '/_authenticated/atelier/cases/$caseId': typeof AuthenticatedAtelierCasesCaseIdRoute
   '/_authenticated/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/_authenticated/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/_authenticated/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
   '/_authenticated/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/_authenticated/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
+  '/_authenticated/marketplace/cases/$caseId': typeof AuthenticatedMarketplaceCasesCaseIdRoute
   '/_authenticated/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/_authenticated/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
@@ -564,6 +679,7 @@ export interface FileRoutesById {
   '/_authenticated/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
   '/_authenticated/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
   '/_authenticated/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
+  '/_authenticated/marketplace/cases/': typeof AuthenticatedMarketplaceCasesIndexRoute
   '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
 }
 export interface FileRouteTypes {
@@ -579,9 +695,13 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/private-beta'
+    | '/reliure'
     | '/sitemap.xml'
     | '/terms'
+    | '/atelier'
     | '/build'
+    | '/marketplace'
+    | '/mes-livres'
     | '/portal'
     | '/demo/deck-project'
     | '/m/$publicToken'
@@ -592,6 +712,8 @@ export interface FileRouteTypes {
     | '/build/missions'
     | '/build/onboarding'
     | '/build/settings'
+    | '/marketplace/binders'
+    | '/mes-livres/$caseId'
     | '/portal/billing'
     | '/portal/demos'
     | '/portal/missions'
@@ -605,13 +727,18 @@ export interface FileRouteTypes {
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
     | '/api/public/track-view'
+    | '/atelier/'
     | '/build/'
+    | '/marketplace/'
+    | '/mes-livres/'
     | '/portal/'
+    | '/atelier/cases/$caseId'
     | '/build/dossiers/$id'
     | '/build/missions/$id'
     | '/build/missions/new'
     | '/build/playbooks/$id'
     | '/build/requests/$id'
+    | '/marketplace/cases/$caseId'
     | '/portal/demos/new'
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
@@ -625,6 +752,7 @@ export interface FileRouteTypes {
     | '/build/playbooks/'
     | '/build/requests/'
     | '/build/workspaces/'
+    | '/marketplace/cases/'
     | '/api/internal/hermes/prospect-funnels/metrics'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -638,6 +766,7 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/private-beta'
+    | '/reliure'
     | '/sitemap.xml'
     | '/terms'
     | '/demo/deck-project'
@@ -648,6 +777,8 @@ export interface FileRouteTypes {
     | '/build/knowledge'
     | '/build/onboarding'
     | '/build/settings'
+    | '/marketplace/binders'
+    | '/mes-livres/$caseId'
     | '/portal/billing'
     | '/portal/demos'
     | '/portal/missions'
@@ -661,13 +792,18 @@ export interface FileRouteTypes {
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
     | '/api/public/track-view'
+    | '/atelier'
     | '/build'
+    | '/marketplace'
+    | '/mes-livres'
     | '/portal'
+    | '/atelier/cases/$caseId'
     | '/build/dossiers/$id'
     | '/build/missions/$id'
     | '/build/missions/new'
     | '/build/playbooks/$id'
     | '/build/requests/$id'
+    | '/marketplace/cases/$caseId'
     | '/portal/demos/new'
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
@@ -681,6 +817,7 @@ export interface FileRouteTypes {
     | '/build/playbooks'
     | '/build/requests'
     | '/build/workspaces'
+    | '/marketplace/cases'
     | '/api/internal/hermes/prospect-funnels/metrics'
   id:
     | '__root__'
@@ -695,9 +832,13 @@ export interface FileRouteTypes {
     | '/pricing'
     | '/privacy'
     | '/private-beta'
+    | '/reliure'
     | '/sitemap.xml'
     | '/terms'
+    | '/_authenticated/atelier'
     | '/_authenticated/build'
+    | '/_authenticated/marketplace'
+    | '/_authenticated/mes-livres'
     | '/_authenticated/portal'
     | '/demo/deck-project'
     | '/m/$publicToken'
@@ -708,6 +849,8 @@ export interface FileRouteTypes {
     | '/_authenticated/build/missions'
     | '/_authenticated/build/onboarding'
     | '/_authenticated/build/settings'
+    | '/_authenticated/marketplace/binders'
+    | '/_authenticated/mes-livres/$caseId'
     | '/_authenticated/portal/billing'
     | '/_authenticated/portal/demos'
     | '/_authenticated/portal/missions'
@@ -721,13 +864,18 @@ export interface FileRouteTypes {
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
     | '/api/public/track-view'
+    | '/_authenticated/atelier/'
     | '/_authenticated/build/'
+    | '/_authenticated/marketplace/'
+    | '/_authenticated/mes-livres/'
     | '/_authenticated/portal/'
+    | '/_authenticated/atelier/cases/$caseId'
     | '/_authenticated/build/dossiers/$id'
     | '/_authenticated/build/missions/$id'
     | '/_authenticated/build/missions/new'
     | '/_authenticated/build/playbooks/$id'
     | '/_authenticated/build/requests/$id'
+    | '/_authenticated/marketplace/cases/$caseId'
     | '/_authenticated/portal/demos/new'
     | '/_authenticated/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
@@ -741,6 +889,7 @@ export interface FileRouteTypes {
     | '/_authenticated/build/playbooks/'
     | '/_authenticated/build/requests/'
     | '/_authenticated/build/workspaces/'
+    | '/_authenticated/marketplace/cases/'
     | '/api/internal/hermes/prospect-funnels/metrics'
   fileRoutesById: FileRoutesById
 }
@@ -756,6 +905,7 @@ export interface RootRouteChildren {
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivateBetaRoute: typeof PrivateBetaRoute
+  ReliureRoute: typeof ReliureRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
@@ -778,81 +928,11 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/terms': {
-      id: '/terms'
-      path: '/terms'
-      fullPath: '/terms'
-      preLoaderRoute: typeof TermsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/private-beta': {
-      id: '/private-beta'
-      path: '/private-beta'
-      fullPath: '/private-beta'
-      preLoaderRoute: typeof PrivateBetaRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/privacy': {
-      id: '/privacy'
-      path: '/privacy'
-      fullPath: '/privacy'
-      preLoaderRoute: typeof PrivacyRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/pricing': {
-      id: '/pricing'
-      path: '/pricing'
-      fullPath: '/pricing'
-      preLoaderRoute: typeof PricingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/how-it-works': {
-      id: '/how-it-works'
-      path: '/how-it-works'
-      fullPath: '/how-it-works'
-      preLoaderRoute: typeof HowItWorksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/free-inquiry-audit': {
-      id: '/free-inquiry-audit'
-      path: '/free-inquiry-audit'
-      fullPath: '/free-inquiry-audit'
-      preLoaderRoute: typeof FreeInquiryAuditRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/example-project-brief': {
-      id: '/example-project-brief'
-      path: '/example-project-brief'
-      fullPath: '/example-project-brief'
-      preLoaderRoute: typeof ExampleProjectBriefRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/deck-builders': {
-      id: '/deck-builders'
-      path: '/deck-builders'
-      fullPath: '/deck-builders'
-      preLoaderRoute: typeof DeckBuildersRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/contact': {
-      id: '/contact'
-      path: '/contact'
-      fullPath: '/contact'
-      preLoaderRoute: typeof ContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
+    '/': {
+      id: '/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -862,39 +942,95 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof IndexRouteImport
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/project-summary/$accessToken': {
-      id: '/project-summary/$accessToken'
-      path: '/project-summary/$accessToken'
-      fullPath: '/project-summary/$accessToken'
-      preLoaderRoute: typeof ProjectSummaryAccessTokenRouteImport
+    '/contact': {
+      id: '/contact'
+      path: '/contact'
+      fullPath: '/contact'
+      preLoaderRoute: typeof ContactRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/m/$publicToken': {
-      id: '/m/$publicToken'
-      path: '/m/$publicToken'
-      fullPath: '/m/$publicToken'
-      preLoaderRoute: typeof MPublicTokenRouteImport
+    '/deck-builders': {
+      id: '/deck-builders'
+      path: '/deck-builders'
+      fullPath: '/deck-builders'
+      preLoaderRoute: typeof DeckBuildersRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/demo/deck-project': {
-      id: '/demo/deck-project'
-      path: '/demo/deck-project'
-      fullPath: '/demo/deck-project'
-      preLoaderRoute: typeof DemoDeckProjectRouteImport
+    '/example-project-brief': {
+      id: '/example-project-brief'
+      path: '/example-project-brief'
+      fullPath: '/example-project-brief'
+      preLoaderRoute: typeof ExampleProjectBriefRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/_authenticated/portal': {
-      id: '/_authenticated/portal'
-      path: '/portal'
-      fullPath: '/portal'
-      preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
+    '/free-inquiry-audit': {
+      id: '/free-inquiry-audit'
+      path: '/free-inquiry-audit'
+      fullPath: '/free-inquiry-audit'
+      preLoaderRoute: typeof FreeInquiryAuditRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/how-it-works': {
+      id: '/how-it-works'
+      path: '/how-it-works'
+      fullPath: '/how-it-works'
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/pricing': {
+      id: '/pricing'
+      path: '/pricing'
+      fullPath: '/pricing'
+      preLoaderRoute: typeof PricingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/private-beta': {
+      id: '/private-beta'
+      path: '/private-beta'
+      fullPath: '/private-beta'
+      preLoaderRoute: typeof PrivateBetaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reliure': {
+      id: '/reliure'
+      path: '/reliure'
+      fullPath: '/reliure'
+      preLoaderRoute: typeof ReliureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/atelier': {
+      id: '/_authenticated/atelier'
+      path: '/atelier'
+      fullPath: '/atelier'
+      preLoaderRoute: typeof AuthenticatedAtelierRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/build': {
@@ -904,144 +1040,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/_authenticated/portal/': {
-      id: '/_authenticated/portal/'
+    '/_authenticated/marketplace': {
+      id: '/_authenticated/marketplace'
+      path: '/marketplace'
+      fullPath: '/marketplace'
+      preLoaderRoute: typeof AuthenticatedMarketplaceRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/mes-livres': {
+      id: '/_authenticated/mes-livres'
+      path: '/mes-livres'
+      fullPath: '/mes-livres'
+      preLoaderRoute: typeof AuthenticatedMesLivresRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/portal': {
+      id: '/_authenticated/portal'
+      path: '/portal'
+      fullPath: '/portal'
+      preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/demo/deck-project': {
+      id: '/demo/deck-project'
+      path: '/demo/deck-project'
+      fullPath: '/demo/deck-project'
+      preLoaderRoute: typeof DemoDeckProjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/m/$publicToken': {
+      id: '/m/$publicToken'
+      path: '/m/$publicToken'
+      fullPath: '/m/$publicToken'
+      preLoaderRoute: typeof MPublicTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/project-summary/$accessToken': {
+      id: '/project-summary/$accessToken'
+      path: '/project-summary/$accessToken'
+      fullPath: '/project-summary/$accessToken'
+      preLoaderRoute: typeof ProjectSummaryAccessTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/atelier/': {
+      id: '/_authenticated/atelier/'
       path: '/'
-      fullPath: '/portal/'
-      preLoaderRoute: typeof AuthenticatedPortalIndexRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
+      fullPath: '/atelier/'
+      preLoaderRoute: typeof AuthenticatedAtelierIndexRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
     }
     '/_authenticated/build/': {
       id: '/_authenticated/build/'
       path: '/'
       fullPath: '/build/'
       preLoaderRoute: typeof AuthenticatedBuildIndexRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
-    '/api/public/track-view': {
-      id: '/api/public/track-view'
-      path: '/api/public/track-view'
-      fullPath: '/api/public/track-view'
-      preLoaderRoute: typeof ApiPublicTrackViewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/project-summary': {
-      id: '/api/public/project-summary'
-      path: '/api/public/project-summary'
-      fullPath: '/api/public/project-summary'
-      preLoaderRoute: typeof ApiPublicProjectSummaryRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/faq-ask': {
-      id: '/api/public/faq-ask'
-      path: '/api/public/faq-ask'
-      fullPath: '/api/public/faq-ask'
-      preLoaderRoute: typeof ApiPublicFaqAskRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/contact': {
-      id: '/api/public/contact'
-      path: '/api/public/contact'
-      fullPath: '/api/public/contact'
-      preLoaderRoute: typeof ApiPublicContactRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/build-runtime': {
-      id: '/api/public/build-runtime'
-      path: '/api/public/build-runtime'
-      fullPath: '/api/public/build-runtime'
-      preLoaderRoute: typeof ApiPublicBuildRuntimeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/build-public-intake': {
-      id: '/api/public/build-public-intake'
-      path: '/api/public/build-public-intake'
-      fullPath: '/api/public/build-public-intake'
-      preLoaderRoute: typeof ApiPublicBuildPublicIntakeRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/analyze-site': {
-      id: '/api/public/analyze-site'
-      path: '/api/public/analyze-site'
-      fullPath: '/api/public/analyze-site'
-      preLoaderRoute: typeof ApiPublicAnalyzeSiteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/portal/team': {
-      id: '/_authenticated/portal/team'
-      path: '/team'
-      fullPath: '/portal/team'
-      preLoaderRoute: typeof AuthenticatedPortalTeamRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/setup': {
-      id: '/_authenticated/portal/setup'
-      path: '/setup'
-      fullPath: '/portal/setup'
-      preLoaderRoute: typeof AuthenticatedPortalSetupRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/settings': {
-      id: '/_authenticated/portal/settings'
-      path: '/settings'
-      fullPath: '/portal/settings'
-      preLoaderRoute: typeof AuthenticatedPortalSettingsRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/missions': {
-      id: '/_authenticated/portal/missions'
-      path: '/missions'
-      fullPath: '/portal/missions'
-      preLoaderRoute: typeof AuthenticatedPortalMissionsRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/demos': {
-      id: '/_authenticated/portal/demos'
-      path: '/demos'
-      fullPath: '/portal/demos'
-      preLoaderRoute: typeof AuthenticatedPortalDemosRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/billing': {
-      id: '/_authenticated/portal/billing'
-      path: '/billing'
-      fullPath: '/portal/billing'
-      preLoaderRoute: typeof AuthenticatedPortalBillingRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/build/settings': {
-      id: '/_authenticated/build/settings'
-      path: '/settings'
-      fullPath: '/build/settings'
-      preLoaderRoute: typeof AuthenticatedBuildSettingsRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
-    '/_authenticated/build/onboarding': {
-      id: '/_authenticated/build/onboarding'
-      path: '/onboarding'
-      fullPath: '/build/onboarding'
-      preLoaderRoute: typeof AuthenticatedBuildOnboardingRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
-    '/_authenticated/build/missions': {
-      id: '/_authenticated/build/missions'
-      path: '/missions'
-      fullPath: '/build/missions'
-      preLoaderRoute: typeof AuthenticatedBuildMissionsRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
-    '/_authenticated/build/knowledge': {
-      id: '/_authenticated/build/knowledge'
-      path: '/knowledge'
-      fullPath: '/build/knowledge'
-      preLoaderRoute: typeof AuthenticatedBuildKnowledgeRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
-    }
-    '/_authenticated/build/dashboard': {
-      id: '/_authenticated/build/dashboard'
-      path: '/dashboard'
-      fullPath: '/build/dashboard'
-      preLoaderRoute: typeof AuthenticatedBuildDashboardRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
     '/_authenticated/build/activity': {
@@ -1051,25 +1103,186 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildActivityRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/build/workspaces/': {
-      id: '/_authenticated/build/workspaces/'
-      path: '/workspaces'
-      fullPath: '/build/workspaces/'
-      preLoaderRoute: typeof AuthenticatedBuildWorkspacesIndexRouteImport
+    '/_authenticated/build/dashboard': {
+      id: '/_authenticated/build/dashboard'
+      path: '/dashboard'
+      fullPath: '/build/dashboard'
+      preLoaderRoute: typeof AuthenticatedBuildDashboardRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/build/requests/': {
-      id: '/_authenticated/build/requests/'
-      path: '/requests'
-      fullPath: '/build/requests/'
-      preLoaderRoute: typeof AuthenticatedBuildRequestsIndexRouteImport
+    '/_authenticated/build/knowledge': {
+      id: '/_authenticated/build/knowledge'
+      path: '/knowledge'
+      fullPath: '/build/knowledge'
+      preLoaderRoute: typeof AuthenticatedBuildKnowledgeRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/build/playbooks/': {
-      id: '/_authenticated/build/playbooks/'
-      path: '/playbooks'
-      fullPath: '/build/playbooks/'
-      preLoaderRoute: typeof AuthenticatedBuildPlaybooksIndexRouteImport
+    '/_authenticated/build/missions': {
+      id: '/_authenticated/build/missions'
+      path: '/missions'
+      fullPath: '/build/missions'
+      preLoaderRoute: typeof AuthenticatedBuildMissionsRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/onboarding': {
+      id: '/_authenticated/build/onboarding'
+      path: '/onboarding'
+      fullPath: '/build/onboarding'
+      preLoaderRoute: typeof AuthenticatedBuildOnboardingRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/settings': {
+      id: '/_authenticated/build/settings'
+      path: '/settings'
+      fullPath: '/build/settings'
+      preLoaderRoute: typeof AuthenticatedBuildSettingsRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/marketplace/': {
+      id: '/_authenticated/marketplace/'
+      path: '/'
+      fullPath: '/marketplace/'
+      preLoaderRoute: typeof AuthenticatedMarketplaceIndexRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRouteRoute
+    }
+    '/_authenticated/marketplace/binders': {
+      id: '/_authenticated/marketplace/binders'
+      path: '/binders'
+      fullPath: '/marketplace/binders'
+      preLoaderRoute: typeof AuthenticatedMarketplaceBindersRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRouteRoute
+    }
+    '/_authenticated/mes-livres/': {
+      id: '/_authenticated/mes-livres/'
+      path: '/'
+      fullPath: '/mes-livres/'
+      preLoaderRoute: typeof AuthenticatedMesLivresIndexRouteImport
+      parentRoute: typeof AuthenticatedMesLivresRouteRoute
+    }
+    '/_authenticated/mes-livres/$caseId': {
+      id: '/_authenticated/mes-livres/$caseId'
+      path: '/$caseId'
+      fullPath: '/mes-livres/$caseId'
+      preLoaderRoute: typeof AuthenticatedMesLivresCaseIdRouteImport
+      parentRoute: typeof AuthenticatedMesLivresRouteRoute
+    }
+    '/_authenticated/portal/': {
+      id: '/_authenticated/portal/'
+      path: '/'
+      fullPath: '/portal/'
+      preLoaderRoute: typeof AuthenticatedPortalIndexRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/billing': {
+      id: '/_authenticated/portal/billing'
+      path: '/billing'
+      fullPath: '/portal/billing'
+      preLoaderRoute: typeof AuthenticatedPortalBillingRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/demos': {
+      id: '/_authenticated/portal/demos'
+      path: '/demos'
+      fullPath: '/portal/demos'
+      preLoaderRoute: typeof AuthenticatedPortalDemosRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/missions': {
+      id: '/_authenticated/portal/missions'
+      path: '/missions'
+      fullPath: '/portal/missions'
+      preLoaderRoute: typeof AuthenticatedPortalMissionsRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/settings': {
+      id: '/_authenticated/portal/settings'
+      path: '/settings'
+      fullPath: '/portal/settings'
+      preLoaderRoute: typeof AuthenticatedPortalSettingsRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/setup': {
+      id: '/_authenticated/portal/setup'
+      path: '/setup'
+      fullPath: '/portal/setup'
+      preLoaderRoute: typeof AuthenticatedPortalSetupRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/_authenticated/portal/team': {
+      id: '/_authenticated/portal/team'
+      path: '/team'
+      fullPath: '/portal/team'
+      preLoaderRoute: typeof AuthenticatedPortalTeamRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/api/public/analyze-site': {
+      id: '/api/public/analyze-site'
+      path: '/api/public/analyze-site'
+      fullPath: '/api/public/analyze-site'
+      preLoaderRoute: typeof ApiPublicAnalyzeSiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/build-public-intake': {
+      id: '/api/public/build-public-intake'
+      path: '/api/public/build-public-intake'
+      fullPath: '/api/public/build-public-intake'
+      preLoaderRoute: typeof ApiPublicBuildPublicIntakeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/build-runtime': {
+      id: '/api/public/build-runtime'
+      path: '/api/public/build-runtime'
+      fullPath: '/api/public/build-runtime'
+      preLoaderRoute: typeof ApiPublicBuildRuntimeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/contact': {
+      id: '/api/public/contact'
+      path: '/api/public/contact'
+      fullPath: '/api/public/contact'
+      preLoaderRoute: typeof ApiPublicContactRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/faq-ask': {
+      id: '/api/public/faq-ask'
+      path: '/api/public/faq-ask'
+      fullPath: '/api/public/faq-ask'
+      preLoaderRoute: typeof ApiPublicFaqAskRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/project-summary': {
+      id: '/api/public/project-summary'
+      path: '/api/public/project-summary'
+      fullPath: '/api/public/project-summary'
+      preLoaderRoute: typeof ApiPublicProjectSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/track-view': {
+      id: '/api/public/track-view'
+      path: '/api/public/track-view'
+      fullPath: '/api/public/track-view'
+      preLoaderRoute: typeof ApiPublicTrackViewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/atelier/cases/$caseId': {
+      id: '/_authenticated/atelier/cases/$caseId'
+      path: '/cases/$caseId'
+      fullPath: '/atelier/cases/$caseId'
+      preLoaderRoute: typeof AuthenticatedAtelierCasesCaseIdRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/build/dossiers/': {
+      id: '/_authenticated/build/dossiers/'
+      path: '/dossiers'
+      fullPath: '/build/dossiers/'
+      preLoaderRoute: typeof AuthenticatedBuildDossiersIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/dossiers/$id': {
+      id: '/_authenticated/build/dossiers/$id'
+      path: '/dossiers/$id'
+      fullPath: '/build/dossiers/$id'
+      preLoaderRoute: typeof AuthenticatedBuildDossiersIdRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
     '/_authenticated/build/missions/': {
@@ -1079,74 +1292,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildMissionsIndexRouteImport
       parentRoute: typeof AuthenticatedBuildMissionsRoute
     }
-    '/_authenticated/build/dossiers/': {
-      id: '/_authenticated/build/dossiers/'
-      path: '/dossiers'
-      fullPath: '/build/dossiers/'
-      preLoaderRoute: typeof AuthenticatedBuildDossiersIndexRouteImport
-      parentRoute: typeof AuthenticatedBuildRouteRoute
+    '/_authenticated/build/missions/$id': {
+      id: '/_authenticated/build/missions/$id'
+      path: '/$id'
+      fullPath: '/build/missions/$id'
+      preLoaderRoute: typeof AuthenticatedBuildMissionsIdRouteImport
+      parentRoute: typeof AuthenticatedBuildMissionsRoute
     }
-    '/lovable/email/transactional/preview': {
-      id: '/lovable/email/transactional/preview'
-      path: '/lovable/email/transactional/preview'
-      fullPath: '/lovable/email/transactional/preview'
-      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/webhook': {
-      id: '/lovable/email/auth/webhook'
-      path: '/lovable/email/auth/webhook'
-      fullPath: '/lovable/email/auth/webhook'
-      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/lovable/email/auth/preview': {
-      id: '/lovable/email/auth/preview'
-      path: '/lovable/email/auth/preview'
-      fullPath: '/lovable/email/auth/preview'
-      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/public/payments/webhook': {
-      id: '/api/public/payments/webhook'
-      path: '/api/public/payments/webhook'
-      fullPath: '/api/public/payments/webhook'
-      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/internal/hermes/prospect-funnels': {
-      id: '/api/internal/hermes/prospect-funnels'
-      path: '/api/internal/hermes/prospect-funnels'
-      fullPath: '/api/internal/hermes/prospect-funnels'
-      preLoaderRoute: typeof ApiInternalHermesProspectFunnelsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/api/internal/analytics/metrics': {
-      id: '/api/internal/analytics/metrics'
-      path: '/api/internal/analytics/metrics'
-      fullPath: '/api/internal/analytics/metrics'
-      preLoaderRoute: typeof ApiInternalAnalyticsMetricsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/_authenticated/portal/dossiers/$id': {
-      id: '/_authenticated/portal/dossiers/$id'
-      path: '/dossiers/$id'
-      fullPath: '/portal/dossiers/$id'
-      preLoaderRoute: typeof AuthenticatedPortalDossiersIdRouteImport
-      parentRoute: typeof AuthenticatedPortalRouteRoute
-    }
-    '/_authenticated/portal/demos/new': {
-      id: '/_authenticated/portal/demos/new'
+    '/_authenticated/build/missions/new': {
+      id: '/_authenticated/build/missions/new'
       path: '/new'
-      fullPath: '/portal/demos/new'
-      preLoaderRoute: typeof AuthenticatedPortalDemosNewRouteImport
-      parentRoute: typeof AuthenticatedPortalDemosRoute
+      fullPath: '/build/missions/new'
+      preLoaderRoute: typeof AuthenticatedBuildMissionsNewRouteImport
+      parentRoute: typeof AuthenticatedBuildMissionsRoute
     }
-    '/_authenticated/build/requests/$id': {
-      id: '/_authenticated/build/requests/$id'
-      path: '/requests/$id'
-      fullPath: '/build/requests/$id'
-      preLoaderRoute: typeof AuthenticatedBuildRequestsIdRouteImport
+    '/_authenticated/build/playbooks/': {
+      id: '/_authenticated/build/playbooks/'
+      path: '/playbooks'
+      fullPath: '/build/playbooks/'
+      preLoaderRoute: typeof AuthenticatedBuildPlaybooksIndexRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
     '/_authenticated/build/playbooks/$id': {
@@ -1156,26 +1320,96 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedBuildPlaybooksIdRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
     }
-    '/_authenticated/build/missions/new': {
-      id: '/_authenticated/build/missions/new'
-      path: '/new'
-      fullPath: '/build/missions/new'
-      preLoaderRoute: typeof AuthenticatedBuildMissionsNewRouteImport
-      parentRoute: typeof AuthenticatedBuildMissionsRoute
-    }
-    '/_authenticated/build/missions/$id': {
-      id: '/_authenticated/build/missions/$id'
-      path: '/$id'
-      fullPath: '/build/missions/$id'
-      preLoaderRoute: typeof AuthenticatedBuildMissionsIdRouteImport
-      parentRoute: typeof AuthenticatedBuildMissionsRoute
-    }
-    '/_authenticated/build/dossiers/$id': {
-      id: '/_authenticated/build/dossiers/$id'
-      path: '/dossiers/$id'
-      fullPath: '/build/dossiers/$id'
-      preLoaderRoute: typeof AuthenticatedBuildDossiersIdRouteImport
+    '/_authenticated/build/requests/': {
+      id: '/_authenticated/build/requests/'
+      path: '/requests'
+      fullPath: '/build/requests/'
+      preLoaderRoute: typeof AuthenticatedBuildRequestsIndexRouteImport
       parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/requests/$id': {
+      id: '/_authenticated/build/requests/$id'
+      path: '/requests/$id'
+      fullPath: '/build/requests/$id'
+      preLoaderRoute: typeof AuthenticatedBuildRequestsIdRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/build/workspaces/': {
+      id: '/_authenticated/build/workspaces/'
+      path: '/workspaces'
+      fullPath: '/build/workspaces/'
+      preLoaderRoute: typeof AuthenticatedBuildWorkspacesIndexRouteImport
+      parentRoute: typeof AuthenticatedBuildRouteRoute
+    }
+    '/_authenticated/marketplace/cases/': {
+      id: '/_authenticated/marketplace/cases/'
+      path: '/cases'
+      fullPath: '/marketplace/cases/'
+      preLoaderRoute: typeof AuthenticatedMarketplaceCasesIndexRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRouteRoute
+    }
+    '/_authenticated/marketplace/cases/$caseId': {
+      id: '/_authenticated/marketplace/cases/$caseId'
+      path: '/cases/$caseId'
+      fullPath: '/marketplace/cases/$caseId'
+      preLoaderRoute: typeof AuthenticatedMarketplaceCasesCaseIdRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRouteRoute
+    }
+    '/_authenticated/portal/demos/new': {
+      id: '/_authenticated/portal/demos/new'
+      path: '/new'
+      fullPath: '/portal/demos/new'
+      preLoaderRoute: typeof AuthenticatedPortalDemosNewRouteImport
+      parentRoute: typeof AuthenticatedPortalDemosRoute
+    }
+    '/_authenticated/portal/dossiers/$id': {
+      id: '/_authenticated/portal/dossiers/$id'
+      path: '/dossiers/$id'
+      fullPath: '/portal/dossiers/$id'
+      preLoaderRoute: typeof AuthenticatedPortalDossiersIdRouteImport
+      parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/api/internal/analytics/metrics': {
+      id: '/api/internal/analytics/metrics'
+      path: '/api/internal/analytics/metrics'
+      fullPath: '/api/internal/analytics/metrics'
+      preLoaderRoute: typeof ApiInternalAnalyticsMetricsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/internal/hermes/prospect-funnels': {
+      id: '/api/internal/hermes/prospect-funnels'
+      path: '/api/internal/hermes/prospect-funnels'
+      fullPath: '/api/internal/hermes/prospect-funnels'
+      preLoaderRoute: typeof ApiInternalHermesProspectFunnelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/payments/webhook': {
+      id: '/api/public/payments/webhook'
+      path: '/api/public/payments/webhook'
+      fullPath: '/api/public/payments/webhook'
+      preLoaderRoute: typeof ApiPublicPaymentsWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/preview': {
+      id: '/lovable/email/auth/preview'
+      path: '/lovable/email/auth/preview'
+      fullPath: '/lovable/email/auth/preview'
+      preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/auth/webhook': {
+      id: '/lovable/email/auth/webhook'
+      path: '/lovable/email/auth/webhook'
+      fullPath: '/lovable/email/auth/webhook'
+      preLoaderRoute: typeof LovableEmailAuthWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/lovable/email/transactional/preview': {
+      id: '/lovable/email/transactional/preview'
+      path: '/lovable/email/transactional/preview'
+      fullPath: '/lovable/email/transactional/preview'
+      preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/internal/hermes/prospect-funnels/metrics': {
       id: '/api/internal/hermes/prospect-funnels/metrics'
@@ -1186,6 +1420,22 @@ declare module '@tanstack/react-router' {
     }
   }
 }
+
+interface AuthenticatedAtelierRouteRouteChildren {
+  AuthenticatedAtelierIndexRoute: typeof AuthenticatedAtelierIndexRoute
+  AuthenticatedAtelierCasesCaseIdRoute: typeof AuthenticatedAtelierCasesCaseIdRoute
+}
+
+const AuthenticatedAtelierRouteRouteChildren: AuthenticatedAtelierRouteRouteChildren =
+  {
+    AuthenticatedAtelierIndexRoute: AuthenticatedAtelierIndexRoute,
+    AuthenticatedAtelierCasesCaseIdRoute: AuthenticatedAtelierCasesCaseIdRoute,
+  }
+
+const AuthenticatedAtelierRouteRouteWithChildren =
+  AuthenticatedAtelierRouteRoute._addFileChildren(
+    AuthenticatedAtelierRouteRouteChildren,
+  )
 
 interface AuthenticatedBuildMissionsRouteChildren {
   AuthenticatedBuildMissionsIdRoute: typeof AuthenticatedBuildMissionsIdRoute
@@ -1248,6 +1498,44 @@ const AuthenticatedBuildRouteRouteWithChildren =
     AuthenticatedBuildRouteRouteChildren,
   )
 
+interface AuthenticatedMarketplaceRouteRouteChildren {
+  AuthenticatedMarketplaceBindersRoute: typeof AuthenticatedMarketplaceBindersRoute
+  AuthenticatedMarketplaceIndexRoute: typeof AuthenticatedMarketplaceIndexRoute
+  AuthenticatedMarketplaceCasesCaseIdRoute: typeof AuthenticatedMarketplaceCasesCaseIdRoute
+  AuthenticatedMarketplaceCasesIndexRoute: typeof AuthenticatedMarketplaceCasesIndexRoute
+}
+
+const AuthenticatedMarketplaceRouteRouteChildren: AuthenticatedMarketplaceRouteRouteChildren =
+  {
+    AuthenticatedMarketplaceBindersRoute: AuthenticatedMarketplaceBindersRoute,
+    AuthenticatedMarketplaceIndexRoute: AuthenticatedMarketplaceIndexRoute,
+    AuthenticatedMarketplaceCasesCaseIdRoute:
+      AuthenticatedMarketplaceCasesCaseIdRoute,
+    AuthenticatedMarketplaceCasesIndexRoute:
+      AuthenticatedMarketplaceCasesIndexRoute,
+  }
+
+const AuthenticatedMarketplaceRouteRouteWithChildren =
+  AuthenticatedMarketplaceRouteRoute._addFileChildren(
+    AuthenticatedMarketplaceRouteRouteChildren,
+  )
+
+interface AuthenticatedMesLivresRouteRouteChildren {
+  AuthenticatedMesLivresCaseIdRoute: typeof AuthenticatedMesLivresCaseIdRoute
+  AuthenticatedMesLivresIndexRoute: typeof AuthenticatedMesLivresIndexRoute
+}
+
+const AuthenticatedMesLivresRouteRouteChildren: AuthenticatedMesLivresRouteRouteChildren =
+  {
+    AuthenticatedMesLivresCaseIdRoute: AuthenticatedMesLivresCaseIdRoute,
+    AuthenticatedMesLivresIndexRoute: AuthenticatedMesLivresIndexRoute,
+  }
+
+const AuthenticatedMesLivresRouteRouteWithChildren =
+  AuthenticatedMesLivresRouteRoute._addFileChildren(
+    AuthenticatedMesLivresRouteRouteChildren,
+  )
+
 interface AuthenticatedPortalDemosRouteChildren {
   AuthenticatedPortalDemosNewRoute: typeof AuthenticatedPortalDemosNewRoute
 }
@@ -1291,12 +1579,20 @@ const AuthenticatedPortalRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAtelierRouteRoute: typeof AuthenticatedAtelierRouteRouteWithChildren
   AuthenticatedBuildRouteRoute: typeof AuthenticatedBuildRouteRouteWithChildren
+  AuthenticatedMarketplaceRouteRoute: typeof AuthenticatedMarketplaceRouteRouteWithChildren
+  AuthenticatedMesLivresRouteRoute: typeof AuthenticatedMesLivresRouteRouteWithChildren
   AuthenticatedPortalRouteRoute: typeof AuthenticatedPortalRouteRouteWithChildren
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAtelierRouteRoute: AuthenticatedAtelierRouteRouteWithChildren,
   AuthenticatedBuildRouteRoute: AuthenticatedBuildRouteRouteWithChildren,
+  AuthenticatedMarketplaceRouteRoute:
+    AuthenticatedMarketplaceRouteRouteWithChildren,
+  AuthenticatedMesLivresRouteRoute:
+    AuthenticatedMesLivresRouteRouteWithChildren,
   AuthenticatedPortalRouteRoute: AuthenticatedPortalRouteRouteWithChildren,
 }
 
@@ -1330,6 +1626,7 @@ const rootRouteChildren: RootRouteChildren = {
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   PrivateBetaRoute: PrivateBetaRoute,
+  ReliureRoute: ReliureRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,

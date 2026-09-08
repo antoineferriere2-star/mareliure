@@ -71,6 +71,30 @@ export const VERTICALS: readonly Vertical[] = [
     keywords: ["fence", "fences", "fencing", "railing", "railings"],
     canonicalProduct: "Fence",
   },
+  // A hand-written Playbook exists for this one
+  // (src/build/playbooks/bookbindingPlaybookSchema.ts), which would normally
+  // argue for self_service. It stays experimental until it has actually run
+  // in production, because selfServiceVerticals() feeds the sentence Métré
+  // shows its own SaaS prospects — deck builders would be told the product
+  // also does bookbinding, which is true of the engine and useless to them.
+  {
+    id: "bookbinding",
+    label: "Bookbinding",
+    availability: "experimental",
+    keywords: [
+      "bookbinding",
+      "bookbinder",
+      "rebinding",
+      "reliure",
+      "reliures",
+      "relieur",
+      "relieurs",
+      "relieuse",
+      "dorure",
+      "doreur",
+    ],
+    canonicalProduct: "Bookbinding",
+  },
 ];
 
 function words(text: string): string[] {
