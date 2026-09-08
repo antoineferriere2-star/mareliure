@@ -141,6 +141,9 @@ dictionnaire de chaînes entières indexé par la source anglaise
 (`ES_PUBLIC_COPY` + `publicCopy(locale, text)`), avec repli sur la source.
 **Il n'y a pas de français.**
 
+> État à l'audit. `fr-FR` a depuis été ajouté — voir C.4, qui décrit l'extension
+> et ce qu'elle ne change pas pour le SaaS.
+
 ### A.10 Verticales
 
 `src/build/verticals/registry.ts` : registre **descriptif**, jamais un verrou.
@@ -240,7 +243,7 @@ champ contre le cahier des charges :
 > cahier des charges (`218 × 142 × 48 mm`) se lira `21,8 × 14,2 × 4,8 cm`.
 > Aucun nouveau type de champ n'est créé pour ça.
 
-### C.4 Extension différée : locale `fr-FR` (P2)
+### C.4 Locale `fr-FR` — livrée (obligatoire avant toute bêta externe)
 
 Le moteur ne connaît que `en-US` et `es-US`. Le Playbook Reliure est écrit
 **en français dans sa donnée** (labels, options, aides, libellés de Dossier) —
@@ -248,16 +251,38 @@ c'est de la donnée, le moteur s'en moque. En revanche le *chrome* du runtime
 (« Continue », « Back », « Your project ») reste anglais tant que `fr-FR`
 n'existe pas.
 
-L'extension propre, quand elle viendra, est en trois touches et **n'entre pas
-dans le moteur** :
-1. `fr-FR` dans `SUPPORTED_LOCALES` ;
-2. un `FR_PUBLIC_COPY` et une branche dans `publicCopy` ;
-3. une locale par défaut au niveau Mission (dans `missionProposalSchema`, qui
-   est déjà le réceptacle des personnalisations non métier) — capacité
-   générique, pas une exception Reliure.
+L'extension a été faite, en trois touches, et **aucune n'entre dans le moteur** :
 
-`PUBLIC_LANGUAGE_OPTIONS` reste EN/ES : ajouter un bouton FR au sélecteur du
-site marketing Métré serait une régression du produit SaaS.
+1. `fr-FR` rejoint `SUPPORTED_LOCALES` ;
+2. `publicCopy` devient une table de dictionnaires au lieu d'un
+   `if (locale !== "es-US")` — ajouter une langue est désormais ajouter un
+   dictionnaire, plus modifier une fonction. Le français vit dans
+   `frPublicCopy.ts`, à part, parce que `publicLocaleContext.ts` faisait déjà
+   960 lignes ;
+3. une Mission déclare la langue dans laquelle elle est écrite, via
+   `MissionProposal.defaultLocale`. **Capacité générique** : rien dans le
+   runtime ne sait qu'un Playbook donné est français, et une Mission espagnole
+   ou anglaise passerait par exactement le même chemin.
+
+Deux propriétés qui ont demandé un peu de soin :
+
+- **La locale verrouillée n'écrit pas dans `localStorage`.** Ouvrir un intake
+  français ne doit pas basculer en français le site marketing que le visiteur
+  consultera ensuite. Le provider distingue la préférence du visiteur, persistée,
+  de la langue imposée par la surface, qui ne l'est pas.
+- **Le sélecteur de langue disparaît sur une surface verrouillée**, au lieu
+  d'afficher deux boutons EN/ES qui ne changeraient rien.
+
+`PUBLIC_LANGUAGE_OPTIONS` reste EN/ES : le moteur *supportant* une langue et une
+surface *l'offrant* sont deux affirmations différentes. Ajouter un bouton FR au
+site marketing Métré, qui n'est pas traduit, serait une régression du SaaS — un
+test le verrouille, et le comportement a été vérifié au navigateur.
+
+La couverture est mesurée, pas supposée : `src/build/i18n/runtimeChrome.ts`
+énumère chaque chaîne que le runtime peut afficher (chrome, Canvas, champs,
+messages de validation, erreurs d'API), et `runtimeChrome.test.ts` échoue tant
+qu'une seule n'est pas traduite — ou qu'une traduction perd le `{field}` ou le
+`{n0}` que le runtime réinjecte.
 
 ---
 
@@ -349,10 +374,31 @@ ordinaire (Deck, client SaaS) n'y figure pas et ne produit aucun cas. Une
 fonction serveur de réconciliation rattrape les Dossiers antérieurs à
 l'inscription.
 
-`manual_review_required` est calculé **côté marketplace** à l'ingestion, en
-lisant les lignes du `ProjectBrief` déjà produites par le Playbook (le Playbook
-pose une `derivedLine` « Valeur déclarée » ; la marketplace décide ce qu'elle en
-fait). Le moteur n'apprend pas la règle des 1 000 €.
+`manual_review_required` est calculé **côté marketplace**, à partir des
+**réponses structurées** (`build_runtime_sessions.answers`) — jamais en lisant
+le texte du `ProjectBrief`.
+
+C'est une règle dure, et elle a son propre test. Le Brief est un document écrit
+pour un humain : ses libellés sont des phrases françaises, et elles seront
+reformulées. Si le triage les parsait, une relecture éditoriale du Playbook
+suffirait à désarmer la revue manuelle sur les ouvrages à plus de 1 000 € —
+sans erreur, sans log, sans test rouge. `triageContract.test.ts` réécrit tous
+les libellés du Playbook et exige un triage identique au bit près, puis lit la
+source des modules de triage pour interdire tout import du Brief.
+
+Deux conséquences de conception :
+
+- **`declared_value_band` appartient à la marketplace**, pas au Playbook :
+  `under_100 | 100_500 | 500_1000 | over_1000 | unknown`, avec un CHECK en base
+  et une seule table de correspondance depuis les valeurs d'option du Playbook
+  (`caseProfile.ts`). Une valeur inconnue devient `unknown`, jamais une valeur
+  basse.
+- **Les raisons du triage sont des codes**, pas des phrases : `triage_flags`
+  contient `declared_value_over_1000`, `heritage_book`, `suspected_mould`, et
+  le français est produit à l'affichage. `admin_notes` redevient ce qu'un
+  humain écrit.
+
+Le moteur n'apprend pas la règle des 1 000 €.
 
 ### D.4 Autorisations marketplace
 
@@ -360,7 +406,38 @@ fait). Le moteur n'apprend pas la règle des 1 000 €.
 | --- | --- |
 | Admin (`user_roles.admin`) | tout |
 | Relieur | uniquement les cas où il a une ligne `marketplace_case_matches`, ou dont il est l'artisan de la commande |
-| Client | uniquement ses propres cas (via `build_dossiers.visitor_email` / le compte lié) |
+| Client | uniquement les cas dont `marketplace_cases.customer_user_id` est son compte |
+
+**La propriété client est une relation, pas une adresse.** Une première version
+comparait `build_dossiers.visitor_email` à l'adresse du compte connecté : l'accès
+dépendait alors d'une chaîne saisie dans un formulaire public, il suivait
+l'adresse plutôt que la personne, et il tenait tant que personne d'autre ne
+l'enregistrait. `customer_user_id` est désormais la seule autorisation client, et
+un dossier que personne n'a réclamé ne s'ouvre pour personne.
+
+Le rattachement (« claim ») réutilise la primitive que Métré fournit déjà —
+`build_dossier_access_tokens`, le lien sécurisé de récapitulatif : 256 bits,
+haché, expirable, révocable. Aucun second système de token n'est créé.
+
+```
+soumission anonyme → Dossier → lien sécurisé envoyé par e-mail
+                                        ↓
+                        connexion / création du compte
+                                        ↓
+              claim (collage du lien)  →  customer_user_id
+```
+
+Trois propriétés, toutes testées : le claim est **idempotent** (réclamer ce qu'on
+possède déjà réussit sans rien changer), il ne **transfère jamais** un dossier
+d'un compte à un autre, et l'écriture est conditionnée par
+`is("customer_user_id", null)` — ce qui tranche une course entre deux comptes,
+quelle qu'ait été la décision prise une milliseconde plus tôt.
+
+L'e-mail garde un seul rôle : rapprocher une fois un compte créé après coup d'un
+dossier que personne ne possède, et **uniquement** si le fournisseur d'identité
+déclare l'adresse vérifiée. Si la confirmation d'e-mail est désactivée sur le
+projet, ce rapprochement ne se produit jamais — c'est le bon sens de l'échec :
+le client passe par son lien, et personne n'hérite du livre d'un inconnu.
 
 Le contrôle est **côté serveur**, dans les server functions marketplace, jamais
 dans l'UI. Aucun relieur n'obtient un accès direct à `build_dossiers` : une
@@ -474,13 +551,13 @@ séquestre ».
 - Une migration qui touche une politique `build_*` est interdite. Les tables
   marketplace apportent leurs propres politiques.
 
-### F.5 Langue
+### F.5 Langue — résolu
 
-Le chrome du runtime restera anglais tant que `fr-FR` n'existe pas (C.4).
-C'est **assumé pour le P0** : le premier jalon (§71) est « qualifier réellement
-un livre et produire un Dossier correct », pas « tout est en français ». Le
-Playbook, lui, est intégralement en français, donc l'écrasante majorité du
-texte que lit le visiteur l'est aussi.
+Le chrome du runtime est en français depuis que `fr-FR` existe (C.4). Le risque
+résiduel n'est plus l'anglais résiduel mais la **dérive** : une chaîne ajoutée à
+un composant sans être ajoutée au dictionnaire. D'où l'énumération explicite
+dans `runtimeChrome.ts` et le test qui la garde — le mécanisme échoue bruyamment
+plutôt que de laisser une page à moitié traduite.
 
 ### F.6 Preuves sociales
 
@@ -576,32 +653,81 @@ i18n complexe · abonnement relieur · wallet · séquestre maison · vidéo liv
 Tests : **1 102 verts sur 98 fichiers**, dont les **974 tests existants
 inchangés** — non-régression Métré vérifiée avant et après (§65).
 
+### Durcissements du 8 septembre 2026 (avant application de la migration)
+
+| Point | Résultat |
+| --- | --- |
+| Triage sur données structurées | déjà le cas ; vocabulaire `declared_value_band` rendu propriétaire de la marketplace, raisons transformées en codes (`triage_flags`), et `triageContract.test.ts` interdit désormais toute dépendance au Brief |
+| Propriété client | `customer_user_id` + claim par le token d'accès Métré existant (D.4) ; l'e-mail ne fait plus qu'un rapprochement initial, sur adresse vérifiée uniquement |
+| `fr-FR` | livré comme capacité générique d'une Mission (C.4) |
+
+Deux défauts réels trouvés en relisant la migration, et corrigés :
+
+- **`marketplace_cases_claim_complete` aurait empêché de supprimer un compte.**
+  La contrainte était symétrique alors que `customer_user_id` est
+  `ON DELETE SET NULL` : la suppression aurait laissé `claimed_at` en place et
+  violé le CHECK. Rendue unidirectionnelle.
+- **Le plafond de trois relieurs ne tenait pas.** Le trigger était `BEFORE
+  INSERT` ; un `BEFORE ROW` ne voit pas les autres lignes de son propre INSERT,
+  donc une insertion de quatre lignes passait intégralement. Passé en `AFTER
+  INSERT`, il voit les lignes déjà insérées et annule la transaction. La
+  garantie annoncée en D.5 est maintenant réelle.
+
+Ajoutés au passage : CHECK sur tous les statuts, index uniques partiels
+garantissant un seul relieur et un seul devis sélectionnés, `REVOKE` sur les
+fonctions `SECURITY DEFINER`, recette de rollback, gestion d'exception dans le
+trigger d'ingestion (une erreur de la marketplace ne peut plus annuler la
+soumission d'un visiteur) et `marketplace_ingest_missing_cases()` pour réparer
+un dossier manqué. `migrationContract.test.ts` vérifie mécaniquement l'ensemble.
+
 ### Ce qui reste à faire à la main
 
 Le dépôt local n'a pas de `SUPABASE_SERVICE_ROLE_KEY`, donc **aucun runtime de
-Mission ne fonctionne en local** — y compris la démo Deck préexistante. Pour
-dérouler le scénario §71 de bout en bout il faut, sur un projet Supabase réel :
+Mission ne fonctionne en local** — y compris la démo Deck préexistante.
 
-1. appliquer `supabase/migrations/20260908120000_marketplace_reliure.sql` ;
-2. `npm run seed:bookbinding` ;
-3. `npm run seed:marketplace-demo` (facultatif, données de démonstration) ;
-4. ouvrir `/m/reliure-marketplace-token-000001`.
+Il n'existe pas non plus de `supabase/bootstrap.sql`, malgré ce qu'annonce
+`src/build/README.md` : un projet Supabase vierge exige de rejouer les
+57 migrations dans l'ordre, ce que seul `supabase db push` (CLI) fait
+correctement.
 
-Ces trois premières étapes touchent une base de données réelle : elles n'ont
-pas été exécutées ici et attendent une décision explicite.
+Sur un nouveau projet dédié, dans cet ordre :
+
+```bash
+# 1. Pointer le dépôt sur le nouveau projet
+npx supabase login                 # access token du compte
+npx supabase link --project-ref <REF>
+
+# 2. Rejouer tout le schéma, migration marketplace comprise
+npx supabase db push
+
+# 3. Publier le Playbook Reliure et sa Mission
+npm run seed:bookbinding
+
+# 4. Données de démonstration (6 relieurs, 8 projets)
+npm run seed:marketplace-demo
+```
+
+Les étapes 3 et 4 exigent `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` et
+`SUPABASE_SERVICE_ROLE_KEY` du nouveau projet dans `.env`. Le runtime web
+(`vite dev`) exige les mêmes, plus les variantes `VITE_`.
+
+Le scénario §71 se déroule ensuite sur `/m/reliure-marketplace-token-000001`.
 
 ### Écarts assumés par rapport au cahier des charges
 
 - **`mm` → `cm`** : le moteur ne connaît pas le millimètre (C.3).
-- **Chrome du runtime en anglais** tant que `fr-FR` n'existe pas (C.4, F.5).
 - **`storage: "supabase_storage"`** : le commentaire du schéma affirmait que ce
-  mode n'était pas implémenté ; c'était faux et le commentaire a été corrigé
-  (A.6). Aucun comportement n'a changé.
+  mode n’était pas implémenté ; c’était faux et le commentaire a été corrigé
+  (A.6). Aucun comportement n’a changé.
 - **Commande, Stripe, transport, constats, avenants, avis** : P1, non
-  construits — §71 interdit d'écrire du code Stripe avant que le premier jalon
-  tourne, et §74 interdit de construire ce qui n'est pas nécessaire aux
+  construits — §71 interdit d’écrire du code Stripe avant que le premier jalon
+  tourne, et §74 interdit de construire ce qui n’est pas nécessaire aux
   50 premières transactions.
-
+- **Lien profond de rattachement** : le claim se fait en collant le lien de
+  suivi dans `/mes-livres`. Une route `/mes-livres/rattacher/:token` serait plus
+  fluide, mais `/_authenticated` redirige vers `/auth` en perdant le jeton ;
+  porter le jeton à travers l’authentification est un travail de P1, pas un
+  prérequis du jalon.
 ---
 
 ## Règle de décision permanente
