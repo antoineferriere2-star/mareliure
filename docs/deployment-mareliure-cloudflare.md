@@ -1,0 +1,398 @@
+# Ma Reliure — déploiement sur Cloudflare Workers
+
+> Remplace l'ancien document OVH : l'hébergement OVH est abandonné. Le domaine
+> `mareliure.fr` reste enregistré chez OVH ; l'application tourne sur Cloudflare
+> Workers.
+>
+> **État au 8 septembre 2026 : vérifié en local sur le runtime Cloudflare, pas
+> encore déployé.** Il manque un accès au compte Cloudflare (§7) et une décision
+> sur les serveurs de noms (§8).
+
+---
+
+## 1. Pourquoi Cloudflare, et ce que cela ne change pas
+
+Le dépôt était **déjà** configuré pour Cloudflare : Nitro utilise le preset
+`cloudflare-module` par défaut et génère une configuration `wrangler`. Déployer
+là ne demande donc aucune modification d'architecture — c'est la cible native du
+projet, pas une adaptation.
+
+TanStack Start, le moteur Métré, les server functions, Supabase : rien n'est
+touché.
+
+---
+
+## 2. Ce que produit le build
+
+```bash
+npm ci
+npm run build          # preset cloudflare-module par défaut
+```
+
+Sortie :
+
+| Chemin | Contenu |
+| --- | --- |
+| `.output/server/index.mjs` | le Worker (entrée `main`) |
+| `.output/server/wrangler.json` | configuration générée **à chaque build** |
+| `.output/public/` | assets statiques, servis par le binding `ASSETS` |
+| `.wrangler/deploy/config.json` | pointeur que `wrangler` lit depuis la racine |
+
+Configuration générée :
+
+```json
+{
+  "compatibility_date": "2026-09-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "index.mjs",
+  "assets": { "binding": "ASSETS", "directory": "../public" },
+  "no_bundle": true
+}
+```
+
+`nodejs_compat` est **indispensable** : le runtime public utilise `node:crypto`
+(`randomBytes`, `createHash`, `timingSafeEqual`) pour les secrets de session et
+le hachage d'IP. Le flag est posé automatiquement par le preset.
+
+### Le nom du Worker
+
+Le preset le déduit du dépôt d'origine et produit `antoineoppe-m-tr-build-ai`.
+La surface de configuration exposée par `@lovable.dev/vite-tanstack-config` ne
+permet pas de le fixer, et le fichier généré est réécrit à chaque build : le nom
+est donc passé au déploiement.
+
+```bash
+npm run deploy:mareliure     # wrangler deploy --name mareliure
+```
+
+---
+
+## 3. Vérifié en local sur le runtime Cloudflare
+
+`wrangler dev` exécute **workerd**, le même moteur qu'en production. Résultats
+du 8 septembre 2026 :
+
+| Test | Résultat |
+| --- | --- |
+| `GET /` | 200 — `<title>Ma Reliure — Reliure et restauration de livres</title>`, canonical `https://mareliure.fr/` |
+| `GET /reliure` | 200 |
+| `GET /m/reliure-marketplace-token-000001` | 200 |
+| `GET /mes-livres`, `/marketplace/cases`, `/project-summary/abc` | 200 — **routes profondes servies directement** |
+| `POST /api/public/build-runtime` `get_mission` | Mission servie, Playbook 12 étapes, `defaultLocale: fr-FR` |
+| `POST /api/public/build-runtime` `start_session` | session créée, secret de 64 caractères hex |
+
+Le dernier test est le plus significatif : il exerce `randomBytes(32)`,
+`createHash`, et une écriture Supabase en service-role **depuis le Worker**.
+`nodejs_compat` fonctionne.
+
+Reproduire :
+
+```bash
+npm run build
+npx wrangler dev --name mareliure --port 8788 --local
+```
+
+`wrangler dev` lit les secrets depuis `.dev.vars` (ignoré par git).
+
+---
+
+## 4. Le risque à surveiller : le plafond CPU du plan Free
+
+| Plan | Requêtes | CPU par requête |
+| --- | --- | --- |
+| Workers **Free** | 100 000 / jour | **10 ms** |
+| Workers Paid ($5/mois) | 10 M inclus | 30 s |
+
+Mesures locales sur `/` à chaud : **5 à 10 ms de temps mural**. Ce n'est pas du
+temps CPU — l'attente réseau (Supabase) n'est pas comptée par Cloudflare — mais
+c'est assez proche du plafond pour qu'on ne puisse pas affirmer que le plan Free
+suffira. Le rendu serveur de la landing et l'initialisation d'un bundle de
+5,1 Mo consomment du CPU réel, surtout au premier appel d'un isolate.
+
+Ce qui joue en notre faveur : `/m/$publicToken` et `/_authenticated/*` sont en
+`ssr: false`, donc le serveur y fait très peu de travail, et les routes API sont
+dominées par l'attente de Supabase.
+
+**Conduite à tenir** : déployer sur Free, puis surveiller les erreurs
+« Worker exceeded CPU time limit » (code 1102) dans les logs. Si elles
+apparaissent sur `/`, passer au plan Paid à 5 $/mois. Ne pas réécrire
+l'application pour économiser des millisecondes avant d'avoir constaté le
+problème.
+
+---
+
+## 5. Variables d'environnement — deux natures à ne pas confondre
+
+C'est l'erreur la plus facile à commettre ici.
+
+### Variables de BUILD (`VITE_*`)
+
+Elles sont **figées dans le JavaScript** au moment du `npm run build`. Les
+définir sur Cloudflare après coup ne change rien : le bundle est déjà écrit.
+Elles doivent être présentes **là où le build s'exécute** (poste local, ou
+Workers Builds — §9).
+
+| Variable | Rôle |
+| --- | --- |
+| `VITE_PUBLIC_BRAND` | `mareliure` — fait servir la homepage Ma Reliure à `/` (§6) |
+| `VITE_SUPABASE_URL` | projet Supabase lu par le navigateur |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | clé publiable (publique par conception) |
+| `VITE_SUPABASE_PROJECT_ID` | idem |
+
+### Secrets d'EXÉCUTION (Worker)
+
+Chiffrés par Cloudflare, jamais dans `wrangler.json`, jamais dans le dépôt.
+
+| Secret | Rôle |
+| --- | --- |
+| `SUPABASE_URL` | lu côté serveur |
+| `SUPABASE_PUBLISHABLE_KEY` | vérification des JWT (`requireSupabaseAuth`) |
+| `SUPABASE_PROJECT_ID` | — |
+| `SUPABASE_SERVICE_ROLE_KEY` | **contourne la RLS** — jamais côté client |
+| `IP_HASH_SALT` | sel du hachage d'IP du rate limiting |
+
+Les poser :
+
+```bash
+wrangler secret put SUPABASE_SERVICE_ROLE_KEY --name mareliure
+wrangler secret put SUPABASE_URL --name mareliure
+wrangler secret put SUPABASE_PUBLISHABLE_KEY --name mareliure
+wrangler secret put SUPABASE_PROJECT_ID --name mareliure
+wrangler secret put IP_HASH_SALT --name mareliure
+```
+
+Chaque commande demande la valeur en interactif : elle ne passe ni par un
+fichier, ni par l'historique du shell.
+
+**Garde-fou automatique** : `src/marketplace/secretsContract.test.ts` échoue si
+la clé service-role devient lisible depuis le bundle client. À lancer après
+chaque build :
+
+```bash
+npm run build && npx vitest run src/marketplace/secretsContract.test.ts
+```
+
+---
+
+## 6. `/` sert la homepage Ma Reliure
+
+Pas de redirection `/ → /reliure` : elle ferait du canonical un chemin, et
+coûterait un aller-retour sur la page qui doit charger le plus vite.
+
+`src/brand.ts` lit `VITE_PUBLIC_BRAND` **au build**. `metre` par défaut, donc
+tout déploiement Métré Build existant est inchangé. Sur `mareliure` :
+
+- `/` rend `ReliureLanding` ;
+- le canonical et `og:url` valent `https://mareliure.fr/` ;
+- `/reliure` rend la même page et pointe son canonical vers `/`, pour ne pas
+  scinder l'autorité du domaine entre deux URL.
+
+Une valeur inconnue retombe sur `metre` sans lever d'erreur : une faute de
+frappe dans une variable de déploiement doit servir la page par défaut, pas
+provoquer une panne.
+
+---
+
+## 7. Compte Cloudflare — prérequis
+
+`wrangler` n'est pas authentifié sur cette machine. Deux voies :
+
+```bash
+npx wrangler login          # OAuth, ouvre le navigateur
+```
+
+ou un jeton d'API (Cloudflare Dashboard → My Profile → API Tokens → *Edit
+Cloudflare Workers*), exposé en `CLOUDFLARE_API_TOKEN`.
+
+Le plan Free suffit pour commencer (§4).
+
+---
+
+## 8. DNS — le point qui demande une décision
+
+### Ce qui existe aujourd'hui
+
+| Type | Valeur actuelle |
+| --- | --- |
+| NS | `dns200.anycast.me`, `ns200.anycast.me` (OVH) |
+| A `@` | `188.165.53.185` (cluster mutualisé OVH) |
+| MX | `mx1.mail.ovh.net` (1), `mx2` (5), `mx3` (100) |
+| TXT | `v=spf1 include:mx.ovh.com -all` |
+| TXT | `1|www.mareliure.fr` (marqueur de redirection OVH) |
+
+### Ce que Cloudflare exige
+
+Pour attacher un domaine personnalisé à un Worker, **la zone doit être active
+chez Cloudflare** : les serveurs de noms doivent pointer vers Cloudflare. On ne
+peut pas garder le DNS chez OVH et se contenter d'un enregistrement `A` — un
+Worker n'a pas d'adresse IP fixe à cibler.
+
+Il faut donc, dans **OVH Manager → Noms de domaine → mareliure.fr → Serveurs
+DNS** : remplacer les serveurs OVH par les deux serveurs que Cloudflare
+attribuera lors de l'ajout du site (`Add a site` dans le tableau de bord
+Cloudflare). Cloudflare les donne à ce moment-là ; ils sont propres à chaque
+compte et **ne peuvent pas être devinés à l'avance**.
+
+### ⚠️ L'e-mail casse si on oublie ceci
+
+`mareliure.fr` a une messagerie OVH active. Basculer les serveurs de noms rend
+la zone OVH inopérante : **les MX et le SPF doivent être recréés à l'identique
+dans Cloudflare**, sinon plus aucun e-mail n'arrive.
+
+À recréer dans la zone Cloudflare, avec le **proxy désactivé** (nuage gris) pour
+tout ce qui concerne le courrier :
+
+| Type | Nom | Valeur | Priorité | Proxy |
+| --- | --- | --- | --- | --- |
+| MX | `@` | `mx1.mail.ovh.net` | 1 | — |
+| MX | `@` | `mx2.mail.ovh.net` | 5 | — |
+| MX | `@` | `mx3.mail.ovh.net` | 100 | — |
+| TXT | `@` | `v=spf1 include:mx.ovh.com -all` | — | — |
+
+Vérifier aussi, avant de basculer, la présence d'un DKIM
+(`<sélecteur>._domainkey`) et d'un DMARC (`_dmarc`) dans la zone OVH : s'ils
+existent, les recopier également.
+
+Cloudflare importe généralement la zone existante automatiquement lors de
+l'ajout du site — **il faut malgré tout vérifier ligne à ligne** avant de
+changer les NS chez OVH.
+
+### Une fois la zone active chez Cloudflare
+
+`Workers & Pages → mareliure → Settings → Domains & Routes → Add custom domain` :
+
+| Domaine | Rôle |
+| --- | --- |
+| `mareliure.fr` | l'application |
+| `www.mareliure.fr` | redirigé (voir ci-dessous) |
+
+Cloudflare crée lui-même les enregistrements nécessaires (`AAAA`/`CNAME`
+proxifiés vers le Worker) et provisionne le certificat TLS. HTTPS et la
+redirection HTTP → HTTPS sont automatiques.
+
+**`www` → apex** : `Rules → Redirect Rules → Create rule`
+
+- Si : `Hostname` égal à `www.mareliure.fr`
+- Alors : redirection **dynamique**, `concat("https://mareliure.fr", http.request.uri.path)`
+- Statut **301**, « Preserve query string » activé
+
+Jamais l'inverse : l'apex est la forme canonique.
+
+---
+
+## 9. Déploiement depuis GitHub
+
+Le dépôt est `antoineferriere2-star/mareliure` (branche `main`). Le dépôt Métré
+d'origine reste l'`origin` local, comme upstream.
+
+**Workers Builds** (`Workers & Pages → mareliure → Settings → Build`) permet un
+déploiement sur `git push` :
+
+| Champ | Valeur |
+| --- | --- |
+| Repository | `antoineferriere2-star/mareliure` |
+| Branch | `main` |
+| Build command | `npm ci && npm run build` |
+| Deploy command | `npx wrangler deploy --name mareliure` |
+| Build variables | `VITE_PUBLIC_BRAND`, `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `VITE_SUPABASE_PROJECT_ID` |
+
+Les `VITE_*` doivent être des **variables de build**, pas des secrets de Worker :
+elles sont consommées pendant `npm run build`, pas à l'exécution.
+
+Pas de GitHub Actions : Workers Builds couvre le besoin, et une seconde chaîne
+de déploiement ne se justifie pas pour un dépôt à un seul contributeur.
+
+---
+
+## 10. Supabase
+
+### Environnements
+
+| Environnement | Projet | Statut |
+| --- | --- | --- |
+| Local / test | `qwfhebtxeubfmvvdsqdt` | **provisoire** — contient 6 relieurs `is_demo` et 8 projets `@example.com` |
+| Production | à créer | **n'existe pas encore** |
+
+> Ce point ne doit pas être maquillé : **il n'y a pas d'environnement de
+> production isolé aujourd'hui.** Le premier déploiement pointera sur le projet
+> de test tant qu'un projet de production n'est pas créé — et devra être
+> présenté comme tel, pas comme une mise en ligne.
+
+### Créer le projet de production
+
+```bash
+# 1. Rejouer le schéma (57 migrations + marketplace)
+npx supabase link --project-ref <REF_PROD>
+npx supabase db push
+
+# 2. Publier le Playbook et la Mission — SANS les données de démonstration
+npm run seed:bookbinding
+```
+
+**Ne pas lancer `seed:marketplace-demo` en production.**
+
+### Authentication
+
+`Authentication → URL Configuration` :
+
+| Champ | Valeur |
+| --- | --- |
+| Site URL | `https://mareliure.fr` |
+| Redirect URLs | `https://mareliure.fr/**` |
+| Redirect URLs | `http://localhost:8080/**` |
+
+Le port local est **8080**. Pas de wildcard plus large que le domaine.
+
+`Authentication → Providers → Email` : garder la **confirmation d'e-mail
+activée**. Le rattachement d'un dossier par adresse vérifiée ne se déclenche que
+si le fournisseur d'identité déclare l'adresse vérifiée ; la désactiver coupe ce
+chemin silencieusement.
+
+---
+
+## 11. Mise à jour, rollback, logs
+
+```bash
+# Mise à jour
+git push mareliure main          # si Workers Builds est branché
+# ou, manuellement :
+npm ci && npm run build && npm run deploy:mareliure
+
+# Rollback — Cloudflare conserve les versions
+wrangler deployments list --name mareliure
+wrangler rollback --name mareliure
+
+# Logs en direct
+wrangler tail --name mareliure
+```
+
+Une migration Supabase se joue **avant** le déploiement qui en dépend. Elle ne
+se rollback pas avec le Worker : la migration marketplace porte sa propre
+recette de retour arrière, en commentaire à la fin de
+`supabase/migrations/20260908120000_marketplace_reliure.sql`.
+
+### Symptômes fréquents
+
+| Symptôme | Cause probable |
+| --- | --- |
+| Erreur 1102 « exceeded CPU time » | plafond du plan Free (§4) — passer au plan Paid |
+| « Missing Supabase environment variable » | un secret de Worker n'a pas été posé (§5) |
+| La homepage affiche Métré Build | `VITE_PUBLIC_BRAND` absent **au moment du build** |
+| `node:crypto` introuvable | `nodejs_compat` absent de `compatibility_flags` |
+| E-mails qui n'arrivent plus | MX/SPF non recréés dans Cloudflare (§8) |
+
+---
+
+## 12. Tests à dérouler après le premier déploiement
+
+1. `https://mareliure.fr` → 200, TLS valide, homepage Ma Reliure.
+2. `https://www.mareliure.fr` → 301 vers l'apex.
+3. `https://mareliure.fr/m/reliure-marketplace-token-000001` → runtime en
+   français, sélecteur de langue masqué.
+4. Tunnel complet : réponses, photos, branches conditionnelles, soumission,
+   Project Brief.
+5. `marketplace_case` créé, triage, matching, vue atelier, devis, comparaison.
+6. Rafraîchissement direct sur `/mes-livres/<id>`, `/atelier/cases/<id>`,
+   `/marketplace/cases/<id>`.
+7. Authentification : connexion, redirections Supabase.
+8. Rendu à 375 px, 390 px et desktop.

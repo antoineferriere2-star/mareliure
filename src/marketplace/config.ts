@@ -45,3 +45,12 @@ export const MARELIURE_BRAND = "Ma Reliure";
  * a Supabase Auth Site URL.
  */
 export const MARELIURE_CANONICAL_ORIGIN = "https://mareliure.fr";
+
+/**
+ * The homepage's canonical URL, with its trailing slash.
+ *
+ * `/reliure` points its canonical here too: on a Ma Reliure deployment the two
+ * paths render the same landing, and telling search engines they are two pages
+ * would split the domain's authority between them.
+ */
+export const MARELIURE_CANONICAL_HOME = `${MARELIURE_CANONICAL_ORIGIN}/`;

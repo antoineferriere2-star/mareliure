@@ -1,25 +1,64 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
+import { ReliureLanding } from "@/marketplace/pages/ReliureLanding";
 import { jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
+import { isMaReliure } from "@/brand";
+import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 
-const title = "Qualify Contractor Leads Before the First Call — Métré Build";
-const description =
+/**
+ * The root of whichever brand this deployment serves — see `src/brand.ts`.
+ *
+ * On a Ma Reliure deployment `/` *is* the marketplace homepage: no redirect to
+ * /reliure, so the canonical stays `https://mareliure.fr/` and the first page a
+ * visitor loads costs no extra round trip. On every other deployment this is
+ * unchanged Métré Build.
+ *
+ * `isMaReliure` is a build-time constant, so the branch the deployment does not
+ * take is dropped by the bundler rather than shipped and skipped.
+ */
+
+const metreTitle = "Qualify Contractor Leads Before the First Call — Métré Build";
+const metreDescription =
   "Contractors lose the first call rediscovering the project. A guided intake collects scope, dimensions, photos and budget first. See a real brief.";
 
-export const Route = createFileRoute("/")({
-  head: () => ({
+const reliureTitle = "Ma Reliure — Reliure et restauration de livres";
+const reliureDescription =
+  "Confiez votre livre à l'artisan adapté à votre projet de reliure, restauration ou transformation.";
+
+function maReliureHead() {
+  return {
     meta: [
-      { title },
-      { name: "description", content: description },
-      { property: "og:title", content: title },
-      { property: "og:description", content: description },
+      { title: reliureTitle },
+      { name: "description", content: reliureDescription },
+      { name: "robots", content: "index, follow" },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Ma Reliure" },
+      { property: "og:title", content: reliureTitle },
+      { property: "og:description", content: reliureDescription },
+      { property: "og:url", content: MARELIURE_CANONICAL_HOME },
+      { property: "og:locale", content: "fr_FR" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: reliureTitle },
+      { name: "twitter:description", content: reliureDescription },
+    ],
+    links: [{ rel: "canonical", href: MARELIURE_CANONICAL_HOME }],
+  };
+}
+
+function metreHead() {
+  return {
+    meta: [
+      { title: metreTitle },
+      { name: "description", content: metreDescription },
+      { property: "og:title", content: metreTitle },
+      { property: "og:description", content: metreDescription },
       { property: "og:type", content: "website" },
       { property: "og:url", content: `${SITE_URL}/` },
       { property: "og:image", content: `${SITE_URL}/og-image.png` },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: title },
-      { name: "twitter:description", content: description },
+      { name: "twitter:title", content: metreTitle },
+      { name: "twitter:description", content: metreDescription },
       { name: "twitter:image", content: `${SITE_URL}/og-image.png` },
     ],
     links: [{ rel: "canonical", href: `${SITE_URL}/` }],
@@ -31,7 +70,7 @@ export const Route = createFileRoute("/")({
         name: "Métré Build",
         url: `${SITE_URL}/`,
         image: `${SITE_URL}/og-image.png`,
-        description,
+        description: metreDescription,
         applicationCategory: "BusinessApplication",
         operatingSystem: "Web",
         offers: {
@@ -45,7 +84,11 @@ export const Route = createFileRoute("/")({
         isPartOf: { "@id": WEBSITE_ID },
       }),
     ],
-  }),
+  };
+}
+
+export const Route = createFileRoute("/")({
+  head: () => (isMaReliure ? maReliureHead() : metreHead()),
   component: HomeRoute,
 });
 
@@ -61,5 +104,5 @@ function HomeRoute() {
       window.location.replace(`/auth${window.location.hash}`);
     }
   }, []);
-  return <BuildPublicHome />;
+  return isMaReliure ? <ReliureLanding /> : <BuildPublicHome />;
 }
