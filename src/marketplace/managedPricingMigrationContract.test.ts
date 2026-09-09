@@ -14,6 +14,17 @@ const SERVICE = readFileSync(
   "utf8",
 );
 
+/**
+ * La migration est rejouable : chaque colonne est posée sous `IF NOT EXISTS`.
+ *
+ * Le contrat doit porter sur la garantie — la colonne est ajoutée — et non sur
+ * l'orthographe exacte du SQL. Sinon poser une garde, qui ne change rien à ce
+ * que le test protège, le fait échouer.
+ */
+function ajouteColonne(column: string): RegExp {
+  return new RegExp(`ADD COLUMN (?:IF NOT EXISTS )?${column}\\b`);
+}
+
 describe("managed pricing migration", () => {
   it("adds a complete price pair and prevents inverted amounts", () => {
     for (const column of [
@@ -24,7 +35,7 @@ describe("managed pricing migration", () => {
       "pricing_rule_version",
       "pricing_validated_at",
     ])
-      expect(STATEMENTS).toContain(`ADD COLUMN ${column}`);
+      expect(STATEMENTS).toMatch(ajouteColonne(column));
     expect(STATEMENTS).toContain("binder_payout_cents <= customer_price_cents");
   });
 
@@ -38,7 +49,7 @@ describe("managed pricing migration", () => {
   });
 
   it("stores fixed-payout offers and all required decline reasons", () => {
-    expect(STATEMENTS).toContain("ADD COLUMN binder_payout_cents INTEGER");
+    expect(STATEMENTS).toMatch(ajouteColonne("binder_payout_cents INTEGER"));
     expect(STATEMENTS).toContain("ALTER TABLE public.marketplace_quotes");
     for (const column of [
       "customer_price_cents",
@@ -47,7 +58,7 @@ describe("managed pricing migration", () => {
       "declined_at",
       "offered_at",
     ])
-      expect(STATEMENTS).toContain(`ADD COLUMN ${column}`);
+      expect(STATEMENTS).toMatch(ajouteColonne(column));
     for (const value of ["offered", "accepted", "declined", "expired", "cancelled", "selected"])
       expect(STATEMENTS).toContain(`'${value}'`);
     for (const reason of [
@@ -61,7 +72,7 @@ describe("managed pricing migration", () => {
   });
 
   it("records events behind deny-all RLS", () => {
-    expect(STATEMENTS).toContain("CREATE TABLE public.marketplace_events (");
+    expect(STATEMENTS).toMatch(/CREATE TABLE (?:IF NOT EXISTS )?public\.marketplace_events \(/);
     expect(STATEMENTS).toContain(
       "ALTER TABLE public.marketplace_events ENABLE ROW LEVEL SECURITY;",
     );

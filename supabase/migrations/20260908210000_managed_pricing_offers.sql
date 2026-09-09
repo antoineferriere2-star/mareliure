@@ -3,20 +3,40 @@
 -- managed offer shown to an atelier: Ma Reliure fixes both amounts and the
 -- atelier only accepts or declines.
 
+-- Rejouable : chaque objet est créé sous garde et chaque contrainte est
+-- supprimée avant d'être posée. Une reprise après échec partiel ne doit jamais
+-- buter sur « already exists ».
 ALTER TABLE public.marketplace_cases
-  ADD COLUMN pricing_status TEXT NOT NULL DEFAULT 'pending',
-  ADD COLUMN suggested_customer_price_cents INTEGER,
-  ADD COLUMN suggested_binder_payout_cents INTEGER,
-  ADD COLUMN customer_price_cents INTEGER,
-  ADD COLUMN binder_payout_cents INTEGER,
-  ADD COLUMN pricing_currency TEXT NOT NULL DEFAULT 'EUR',
-  ADD COLUMN pricing_confidence TEXT,
-  ADD COLUMN pricing_reason_codes TEXT[] NOT NULL DEFAULT '{}',
-  ADD COLUMN pricing_rule_version TEXT,
-  ADD COLUMN price_includes TEXT[] NOT NULL DEFAULT '{}',
-  ADD COLUMN pricing_generated_at TIMESTAMPTZ,
-  ADD COLUMN pricing_validated_at TIMESTAMPTZ,
-  ADD COLUMN pricing_validated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL;
+  DROP CONSTRAINT IF EXISTS marketplace_cases_pricing_status_check,
+  DROP CONSTRAINT IF EXISTS marketplace_cases_pricing_confidence_check,
+  DROP CONSTRAINT IF EXISTS marketplace_cases_suggested_prices_check,
+  DROP CONSTRAINT IF EXISTS marketplace_cases_validated_prices_check,
+  DROP CONSTRAINT IF EXISTS marketplace_cases_status_check;
+
+ALTER TABLE public.marketplace_case_matches
+  DROP CONSTRAINT IF EXISTS marketplace_case_matches_payout_check,
+  DROP CONSTRAINT IF EXISTS marketplace_case_matches_decline_code_check,
+  DROP CONSTRAINT IF EXISTS marketplace_case_matches_state_check;
+
+ALTER TABLE public.marketplace_quotes
+  DROP CONSTRAINT IF EXISTS marketplace_quotes_state_check,
+  DROP CONSTRAINT IF EXISTS marketplace_quotes_managed_price_check,
+  DROP CONSTRAINT IF EXISTS marketplace_quotes_decline_code_check;
+
+ALTER TABLE public.marketplace_cases
+  ADD COLUMN IF NOT EXISTS pricing_status TEXT NOT NULL DEFAULT 'pending',
+  ADD COLUMN IF NOT EXISTS suggested_customer_price_cents INTEGER,
+  ADD COLUMN IF NOT EXISTS suggested_binder_payout_cents INTEGER,
+  ADD COLUMN IF NOT EXISTS customer_price_cents INTEGER,
+  ADD COLUMN IF NOT EXISTS binder_payout_cents INTEGER,
+  ADD COLUMN IF NOT EXISTS pricing_currency TEXT NOT NULL DEFAULT 'EUR',
+  ADD COLUMN IF NOT EXISTS pricing_confidence TEXT,
+  ADD COLUMN IF NOT EXISTS pricing_reason_codes TEXT[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS pricing_rule_version TEXT,
+  ADD COLUMN IF NOT EXISTS price_includes TEXT[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS pricing_generated_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS pricing_validated_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS pricing_validated_by UUID REFERENCES auth.users(id) ON DELETE SET NULL;
 
 ALTER TABLE public.marketplace_cases
   ADD CONSTRAINT marketplace_cases_pricing_status_check
@@ -41,7 +61,7 @@ ALTER TABLE public.marketplace_cases
     )
   );
 
-ALTER TABLE public.marketplace_cases DROP CONSTRAINT marketplace_cases_status_check;
+ALTER TABLE public.marketplace_cases DROP CONSTRAINT IF EXISTS marketplace_cases_status_check;
 ALTER TABLE public.marketplace_cases ADD CONSTRAINT marketplace_cases_status_check CHECK (status IN (
   'under_review', 'pricing', 'matching', 'awaiting_binder_response',
   'binder_accepted', 'binder_selected', 'awaiting_payment', 'paid',
@@ -53,15 +73,15 @@ ALTER TABLE public.marketplace_cases ADD CONSTRAINT marketplace_cases_status_che
 ));
 
 ALTER TABLE public.marketplace_case_matches
-  ADD COLUMN binder_payout_cents INTEGER,
-  ADD COLUMN currency TEXT NOT NULL DEFAULT 'EUR',
-  ADD COLUMN offered_at TIMESTAMPTZ,
-  ADD COLUMN expires_at TIMESTAMPTZ,
-  ADD COLUMN accepted_at TIMESTAMPTZ,
-  ADD COLUMN declined_at TIMESTAMPTZ,
-  ADD COLUMN selected_at TIMESTAMPTZ,
-  ADD COLUMN decline_reason_code TEXT,
-  ADD COLUMN decline_reason_detail TEXT;
+  ADD COLUMN IF NOT EXISTS binder_payout_cents INTEGER,
+  ADD COLUMN IF NOT EXISTS currency TEXT NOT NULL DEFAULT 'EUR',
+  ADD COLUMN IF NOT EXISTS offered_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS declined_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS selected_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS decline_reason_code TEXT,
+  ADD COLUMN IF NOT EXISTS decline_reason_detail TEXT;
 
 ALTER TABLE public.marketplace_case_matches
   ADD CONSTRAINT marketplace_case_matches_payout_check
@@ -74,7 +94,7 @@ ALTER TABLE public.marketplace_case_matches
   );
 
 ALTER TABLE public.marketplace_case_matches
-  DROP CONSTRAINT marketplace_case_matches_state_check;
+  DROP CONSTRAINT IF EXISTS marketplace_case_matches_state_check;
 ALTER TABLE public.marketplace_case_matches
   ADD CONSTRAINT marketplace_case_matches_state_check CHECK (state IN (
     'offered', 'accepted', 'declined', 'expired', 'cancelled', 'selected',
@@ -82,7 +102,7 @@ ALTER TABLE public.marketplace_case_matches
     'invited', 'quoted'
   ));
 
-CREATE INDEX marketplace_case_matches_offer_state_idx
+CREATE INDEX IF NOT EXISTS marketplace_case_matches_offer_state_idx
   ON public.marketplace_case_matches(case_id, state);
 
 -- A quote is now one managed offer per case/atelier. The descriptive fields
@@ -91,17 +111,17 @@ CREATE INDEX marketplace_case_matches_offer_state_idx
 ALTER TABLE public.marketplace_quotes
   ALTER COLUMN description DROP NOT NULL,
   ALTER COLUMN lead_time_weeks DROP NOT NULL,
-  ADD COLUMN customer_price_cents INTEGER,
-  ADD COLUMN binder_payout_cents INTEGER,
-  ADD COLUMN offered_at TIMESTAMPTZ,
-  ADD COLUMN expires_at TIMESTAMPTZ,
-  ADD COLUMN accepted_at TIMESTAMPTZ,
-  ADD COLUMN declined_at TIMESTAMPTZ,
-  ADD COLUMN selected_at TIMESTAMPTZ,
-  ADD COLUMN decline_reason_code TEXT,
-  ADD COLUMN decline_reason_detail TEXT;
+  ADD COLUMN IF NOT EXISTS customer_price_cents INTEGER,
+  ADD COLUMN IF NOT EXISTS binder_payout_cents INTEGER,
+  ADD COLUMN IF NOT EXISTS offered_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS expires_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS accepted_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS declined_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS selected_at TIMESTAMPTZ,
+  ADD COLUMN IF NOT EXISTS decline_reason_code TEXT,
+  ADD COLUMN IF NOT EXISTS decline_reason_detail TEXT;
 
-ALTER TABLE public.marketplace_quotes DROP CONSTRAINT marketplace_quotes_state_check;
+ALTER TABLE public.marketplace_quotes DROP CONSTRAINT IF EXISTS marketplace_quotes_state_check;
 ALTER TABLE public.marketplace_quotes
   ADD CONSTRAINT marketplace_quotes_state_check CHECK (state IN (
     'offered', 'accepted', 'declined', 'expired', 'cancelled', 'selected',
@@ -124,10 +144,10 @@ ALTER TABLE public.marketplace_quotes
     )
   );
 
-CREATE INDEX marketplace_quotes_offer_state_idx
+CREATE INDEX IF NOT EXISTS marketplace_quotes_offer_state_idx
   ON public.marketplace_quotes(case_id, state);
 
-CREATE TABLE public.marketplace_events (
+CREATE TABLE IF NOT EXISTS public.marketplace_events (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   case_id UUID NOT NULL REFERENCES public.marketplace_cases(id) ON DELETE CASCADE,
   binder_id UUID REFERENCES public.marketplace_binders(id) ON DELETE SET NULL,
@@ -140,12 +160,13 @@ CREATE TABLE public.marketplace_events (
 );
 GRANT ALL ON public.marketplace_events TO service_role;
 ALTER TABLE public.marketplace_events ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "No direct access to marketplace_events" ON public.marketplace_events;
 CREATE POLICY "No direct access to marketplace_events"
   ON public.marketplace_events FOR ALL TO anon, authenticated
   USING (false) WITH CHECK (false);
-CREATE INDEX marketplace_events_case_idx
+CREATE INDEX IF NOT EXISTS marketplace_events_case_idx
   ON public.marketplace_events(case_id, created_at);
-CREATE INDEX marketplace_events_type_idx
+CREATE INDEX IF NOT EXISTS marketplace_events_type_idx
   ON public.marketplace_events(event_type, created_at);
 
 CREATE OR REPLACE FUNCTION public.marketplace_validate_pricing(
@@ -341,6 +362,7 @@ BEGIN
   RETURN NEW;
 END;
 $$;
+DROP TRIGGER IF EXISTS marketplace_cases_record_completion ON public.marketplace_cases;
 CREATE TRIGGER marketplace_cases_record_completion
   AFTER UPDATE OF status ON public.marketplace_cases
   FOR EACH ROW EXECUTE FUNCTION public.marketplace_record_case_completion();
@@ -359,3 +381,33 @@ GRANT EXECUTE ON FUNCTION public.marketplace_respond_to_offer(UUID, UUID, BOOLEA
   TO service_role;
 GRANT EXECUTE ON FUNCTION public.marketplace_select_binder_offer(UUID, UUID, UUID)
   TO service_role;
+
+-- ---------------------------------------------------------------------------
+-- Retour arrière
+--
+-- À n'exécuter que si aucune offre n'a encore été acceptée : les colonnes
+-- supprimées emportent les prix validés avec elles.
+--
+-- DROP TRIGGER IF EXISTS marketplace_cases_record_completion ON public.marketplace_cases;
+-- DROP FUNCTION IF EXISTS public.marketplace_record_case_completion();
+-- DROP FUNCTION IF EXISTS public.marketplace_select_binder_offer(UUID, UUID, UUID);
+-- DROP FUNCTION IF EXISTS public.marketplace_respond_to_offer(UUID, UUID, BOOLEAN, TEXT, TEXT, UUID);
+-- DROP FUNCTION IF EXISTS public.marketplace_validate_pricing(UUID, INTEGER, INTEGER, TEXT[], INTEGER, INTEGER, UUID);
+-- DROP TABLE IF EXISTS public.marketplace_events;
+--
+-- ALTER TABLE public.marketplace_quotes
+--   DROP CONSTRAINT IF EXISTS marketplace_quotes_decline_code_check,
+--   DROP CONSTRAINT IF EXISTS marketplace_quotes_managed_price_check;
+-- ALTER TABLE public.marketplace_case_matches
+--   DROP CONSTRAINT IF EXISTS marketplace_case_matches_decline_code_check,
+--   DROP CONSTRAINT IF EXISTS marketplace_case_matches_payout_check;
+-- ALTER TABLE public.marketplace_cases
+--   DROP CONSTRAINT IF EXISTS marketplace_cases_validated_prices_check,
+--   DROP CONSTRAINT IF EXISTS marketplace_cases_suggested_prices_check,
+--   DROP CONSTRAINT IF EXISTS marketplace_cases_pricing_confidence_check,
+--   DROP CONSTRAINT IF EXISTS marketplace_cases_pricing_status_check;
+--
+-- Les colonnes ajoutées se retirent une à une avec
+-- ALTER TABLE ... DROP COLUMN IF EXISTS ..., et les CHECK de statut se
+-- reposent depuis 20260908120000_marketplace_reliure.sql.
+-- ---------------------------------------------------------------------------

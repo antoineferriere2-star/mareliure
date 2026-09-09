@@ -59,7 +59,7 @@ export const STEPS: readonly LandingStep[] = [
   {
     index: "03",
     title: "Un atelier accepte",
-    body: "Nous sollicitons des relieurs adaptés ; l’atelier retenu confirme sa disponibilité au prix prévu.",
+    body: "Nous sollicitons des relieurs adaptés ; l'atelier retenu confirme sa disponibilité au prix prévu.",
   },
 ];
 
@@ -110,7 +110,7 @@ export const COMMITMENTS: readonly Commitment[] = [
   },
   {
     title: "Un prix unique",
-    body: "Ma Reliure fixe le prix à partir du travail demandé, avant la confirmation de l’atelier.",
+    body: "Ma Reliure fixe le prix à partir du travail demandé, avant la confirmation de l'atelier.",
   },
   {
     title: "Atelier disponible",

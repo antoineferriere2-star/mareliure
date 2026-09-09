@@ -332,7 +332,7 @@ function Artisans() {
           <h3 className="mr-title text-[1.75rem]">Vous êtes relieur ?</h3>
           <p className="mt-4 text-[1.0625rem] leading-[1.75] text-mr-walnut">
             Ma Reliure vous adresse des projets décrits, photographiés et déjà cadrés, avec une
-            rémunération fixée à l’avance. Vous acceptez ou refusez librement chaque offre selon
+            rémunération fixée à l'avance. Vous acceptez ou refusez librement chaque offre selon
             votre spécialité et votre capacité.
           </p>
         </div>
@@ -390,8 +390,8 @@ function Pricing() {
         </h2>
         <p className="max-w-[38rem] text-[1.0625rem] leading-[1.75] text-mr-walnut">
           Chaque projet est unique. La technique, les matériaux, l'état du livre et le temps de
-          travail déterminent le prix. Ma Reliure l’étudie, fixe un prix unique et vous explique ce
-          qu’il comprend avant la confirmation de l’atelier.
+          travail déterminent le prix. Ma Reliure l'étudie, fixe un prix unique et vous explique ce
+          qu'il comprend avant la confirmation de l'atelier.
         </p>
       </div>
     </section>
