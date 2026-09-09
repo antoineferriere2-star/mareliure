@@ -86,3 +86,47 @@ export function jsonLdScript(schema: unknown) {
     children: JSON.stringify(schema),
   };
 }
+
+// ---------------------------------------------------------------------------
+// Ma Reliure
+// ---------------------------------------------------------------------------
+
+/**
+ * L'identité déclarée aux moteurs par le déploiement Ma Reliure.
+ *
+ * Elle existe parce que la racine servait `organizationSchema` sans condition :
+ * mareliure.fr annonçait à Google être Métré Build, hébergé sur metre-pro.com.
+ * Deux marques partagent le code, jamais l'identité.
+ *
+ * Volontairement minimale. Pas d'adresse, pas de téléphone, pas de note, pas
+ * d'effectif : les données structurées sont lues par des machines qui les
+ * republient, et une donnée inventée y devient une affirmation publique.
+ */
+export const MARELIURE_SITE_URL = "https://mareliure.fr";
+export const MARELIURE_ORGANIZATION_ID = `${MARELIURE_SITE_URL}/#organization`;
+export const MARELIURE_WEBSITE_ID = `${MARELIURE_SITE_URL}/#website`;
+
+export const mareliureOrganizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": MARELIURE_ORGANIZATION_ID,
+  name: "Ma Reliure",
+  url: `${MARELIURE_SITE_URL}/`,
+  logo: {
+    "@type": "ImageObject",
+    url: `${MARELIURE_SITE_URL}/mareliure-icon.svg`,
+  },
+  description:
+    "Service de reliure, restauration et création de livres, confié à des artisans relieurs indépendants installés en France.",
+  areaServed: { "@type": "Country", name: "France" },
+} as const;
+
+export const mareliureWebsiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": MARELIURE_WEBSITE_ID,
+  name: "Ma Reliure",
+  url: `${MARELIURE_SITE_URL}/`,
+  inLanguage: "fr-FR",
+  publisher: { "@id": MARELIURE_ORGANIZATION_ID },
+} as const;

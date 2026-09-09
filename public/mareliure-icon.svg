@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Ma Reliure">
+  <!--
+    Un dos de reliure à nerfs, vu de face.
+
+    Pas une lettre : « MR » se referme à 16 px et un « R » seul ne dit rien.
+    Pas un livre ouvert non plus — c'est l'icône générique de la lecture, pas
+    de la reliure. Ce qu'on voit ici est ce qu'un relieur fabrique et ce qu'un
+    client regarde quand son livre revient : le dos, ses nerfs, sa pièce de
+    titre.
+
+    Quatre bandes, dont une en bordeaux à la place de la pièce de titre. À
+    16 px les nerfs deviennent des filets d'un pixel et la pièce reste le seul
+    point de couleur — ce qui est exactement son rôle sur un vrai dos.
+  -->
+  <rect width="32" height="32" rx="3" fill="#17130f" />
+  <!-- Nerfs -->
+  <rect x="9" y="7" width="14" height="2" rx="1" fill="#fbfaf7" />
+  <rect x="9" y="18" width="14" height="2" rx="1" fill="#fbfaf7" />
+  <rect x="9" y="23" width="14" height="2" rx="1" fill="#fbfaf7" />
+  <!-- Pièce de titre -->
+  <rect x="9" y="11" width="14" height="4" rx="1" fill="#7a2230" />
+</svg>
