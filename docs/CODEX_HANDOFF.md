@@ -459,6 +459,32 @@ assets construits.
 
 ## J. Cloudflare
 
+> ### ⚠ `main` n'est pas déployable en l'état
+>
+> Depuis la fusion du pricing géré, le code de `main` lit
+> `customer_price_cents`, `binder_payout_cents`, `pricing_status` et la table
+> `marketplace_events`. **La base de production ne les a pas** : la migration
+> `20260908210000_managed_pricing_offers` est appliquée sur le projet de
+> développement, pas sur `hljxohondjvrkzqicexl`.
+>
+> Déployer `main` avant d'appliquer cette migration casse les trois espaces
+> authentifiés en production. La landing publique, elle, ne lit rien de tout
+> cela et resterait intacte — c'est précisément ce qui rend la panne facile à
+> ne pas voir.
+>
+> Ordre obligatoire : appliquer la migration sur la production, **puis**
+> déployer.
+>
+> ```bash
+> npx supabase link --project-ref hljxohondjvrkzqicexl
+> npx supabase db push --linked
+> npx supabase link --project-ref qwfhebtxeubfmvvdsqdt   # revenir sur le dev
+> ```
+>
+> La migration est additive et conserve les anciens statuts : l'appliquer sur
+> une production qui tourne encore l'ancien code ne casse rien. C'est
+> l'inverse — déployer sans elle — qui casse.
+
 |               |                                                                               |
 | ------------- | ----------------------------------------------------------------------------- |
 | Hébergement   | Cloudflare Workers (offre gratuite)                                           |
@@ -739,95 +765,81 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent:** Claude Code (Opus 5)
 
-**Date:** 8 septembre 2026
+**Date:** 9 septembre 2026
 
-**Branch:** `feat/reliure-marketplace-mvp` — `mareliure/main` et
-`mareliure/feat/reliure-marketplace-mvp` pointent sur le même commit.
+**Branch:** `main` — `feat/reliure-marketplace-mvp` et
+`feat/managed-pricing-offers` pointent sur le même commit.
 
-**Commit:** `a4aff05`. Working tree propre.
+**Commit:** `52d0861`.
 
-**Production:** Worker version `59d66164-3a37-46ba-897e-88fe4011614c`,
-<https://mareliure.fr>. Un compte administrateur existe et le back-office a été
-ouvert avec.
+**Production:** Worker version `59d66164-3a37-46ba-897e-88fe4011614c`. Elle sert
+encore le code d'avant le pricing géré. **Ne pas déployer `main` avant d'avoir
+appliqué la migration sur la base de production — voir l'encadré du §J.**
 
 **Completed:**
 
-- **Refonte éditoriale de la landing** (`77897a2`) — Fraunces auto-hébergée
-  (67 Ko), palette `mr-*` séparée du système Métré, hero 50/50, trois étapes,
-  composition asymétrique des savoir-faire, engagements, prix, CTA final.
-- **Photographies réelles** (`1570297`) — hero, quatre savoir-faire, fin de
-  page ; deux restaurations avant/après de l'atelier Reliure Dorure Ferrière,
-  créditées. WebP responsive, `sizes` mesurés, hero prioritaire.
-- **Fiche du premier atelier référencé** (`3e95331`) — Reliure Dorure Ferrière,
-  Orléans, depuis 1982. Plus aucun emplacement de photo sur la page.
-- **Documentation d'alternance** (`ddcd3dd`, `ab0321e`) — ce document,
-  `AGENTS.md`, `README.md`, `.gitignore`.
-- **Correctif de production sur la cible Supabase du navigateur** (`41305ce`).
-  `vite.config.ts` résolvait la configuration cliente depuis `process.env`
-  seul ; Vite ne charge jamais les fichiers `.env` là-dedans, donc le repli codé
-  en dur — le projet Métré d'origine — l'emportait. Le bundle servi sur
-  mareliure.fr pointait le navigateur vers la mauvaise base pendant que le
-  serveur parlait à la bonne. Résolution par `loadEnv`, et
-  `scripts/buildMaReliure.mjs` relit les fichiers produits pour refuser un
-  bundle mal ciblé. `deploy:mareliure` passe obligatoirement par lui.
-- **Redirection après connexion par rôle** (`7a023c9`) — administrateur →
-  `/marketplace/cases`, relieur → `/atelier`, tout autre compte →
-  `/mes-livres`. Le résolveur du moteur Métré n'est pas touché : un second
-  résolveur vit dans `src/marketplace/auth/`, et le choix se fait à la route.
-  Aucun espace de travail Métré n'est plus provisionné pour un client.
-- **Configuration d'authentification de production** (`a4aff05`) — `site_url`
-  corrigé vers `https://mareliure.fr`, inscriptions publiques fermées. Voir §H
-  pour la conséquence.
-- **`fetchPriority`** écrit en minuscules : React refusait l'attribut, la
-  priorité du hero n'était jamais posée. Corrigé.
-- **`.gitattributes`** avec `eol=lf`, pour que `npm run lint` puisse passer sur
-  une machine Windows.
-- **Les trois espaces authentifiés ont été exercés dans un navigateur** pour la
-  première fois — boucle complète admin → atelier → cliente. Détail en §D.
+- **Pricing géré fusionné dans `main`.** Le travail de fond vient de Codex sur
+  la branche `feat/managed-pricing-offers` : modèle `customer_price` /
+  `binder_payout`, l'atelier accepte ou refuse, moteur de suggestion
+  déterministe dans `src/marketplace/pricing/`, fonctions Postgres atomiques,
+  table d'événements, refonte des trois surfaces, copie de la landing alignée.
+- **Réintégration** (`52d0861`). La branche était partie d'une base périmée de
+  quatre commits. Trois écarts annulés : la connaissance Ma Reliure introduite
+  dans `src/build/services/postAuthRoute.ts` (le moteur revient à sa version,
+  le routage repasse par `src/marketplace/auth/`), un second script de build ne
+  différant que par une majuscule et dépourvu de la vérification d'artefact, et
+  une migration non rejouable — 31 `ADD COLUMN` nus, contraintes, index, table,
+  politique et déclencheur sans garde, sans recette de retour arrière. Tout est
+  sous garde et réversible.
+- **Migration appliquée sur le projet de développement** `qwfhebtxeubfmvvdsqdt`
+  et vérifiée : colonnes de prix sur `marketplace_cases`, colonnes d'offre sur
+  `marketplace_case_matches`, table `marketplace_events` présente.
 
-**In progress:** rien.
+**In progress:** rien. Working tree propre.
 
 **Next recommended task:**
 
-Passer du modèle « devis » au modèle décidé : Ma Reliure fixe `customer_price`
-et propose `binder_payout`, l'atelier **accepte ou refuse** (§E). C'est le
-dernier écart entre le produit décrit et le code. Il touche le schéma, la
-machine à états, les server functions et les trois écrans — branche dédiée,
-en commençant par le schéma et sa migration.
-
-Deux tâches courtes si l'on préfère commencer petit :
-
-1. supprimer le dossier de test resté en production (`under_review`, créé le
-   8 septembre à 15:08 UTC) — à confirmer avec le propriétaire avant ;
-2. rouvrir les inscriptions en production avant la première mise en relation
-   réelle, en réglant l'envoi des e-mails de confirmation en même temps (§H).
+1. **Appliquer la migration sur la production, puis déployer** (§J). Tant que ce
+   n'est pas fait, `main` ne doit pas partir en production.
+2. **Dérouler le parcours pricing dans un navigateur** sur le dev : l'admin
+   valide un prix, l'atelier accepte ou refuse, la cliente voit un prix unique.
+   Les tests lisent le SQL, ils ne l'exécutent pas — cette étape n'a pas encore
+   été faite pour le nouveau modèle.
+3. **Architecture éditoriale** : cinq univers publics (Sauver, Relier, Embellir,
+   Créer, Protéger), pages SEO spécialisées, refonte de la homepage autour de
+   « Que voulez-vous faire de votre livre ? ». Audit fait, deux décisions
+   prises : la homepage garde **trois** étapes tant que l'expédition n'existe
+   pas, et le Playbook gagne deux intentions — `personnaliser` et `proteger` —
+   **par ajout, jamais par renommage** : `reparer`, `restaurer`, `couverture`,
+   `belle_reliure`, `collector`, `ne_sais_pas` sont des clés machine que neuf
+   dossiers portent déjà, et sur lesquelles `caseProfile.ts` et
+   `pricing.rules.ts` s'accrochent.
+4. **Logistique d'expédition** : rien n'existe, ni table ni fournisseur. Le
+   comparatif Sendcloud / Boxtal et les livrables A–I sont demandés avant toute
+   intégration. À noter : il n'existe aucune notion de commande — les
+   expéditions se rattacheront à `marketplace_cases`.
 
 **Known issues:**
 
-- le modèle commercial du code (devis) ne correspond pas au modèle décidé ;
-- **les inscriptions publiques sont fermées en production** : une cliente ne
-  peut pas revendiquer son dossier sans compte (§H) ;
-- `supabase/config.toml` pointe sur le projet Métré d'origine : toujours
-  `supabase link` avant un `db push` ;
+- `main` n'est pas déployable tant que la migration n'est pas en production ;
+- le parcours du pricing géré n'a jamais été exercé dans un navigateur ;
+- les inscriptions publiques sont fermées en production (§H) ;
 - un `marketplace_case` de test subsiste en production ;
-- l'inscription de l'administrateur a laissé un espace de travail Métré vide en
-  production — sans effet, et ne se reproduira plus depuis `7a023c9` ;
-- deux réglages Cloudflare restent à poser à la main (§J) ;
-- la fiche atelier est en dur dans `pages/landing/content.ts` ; elle devra lire
-  `marketplace_binders` quand un deuxième atelier arrivera ;
-- le jeton de gestion Supabase n'a plus accès au projet de développement ;
-- le tableau de bord admin Métré déborde horizontalement sous 900 px.
+- `supabase/config.toml` pointe sur le projet Métré d'origine : le CLI est
+  maintenant lié au dev, mais toujours vérifier la cible avant un `db push` ;
+- `rating_avg`, `rating_count` et `response_rate` existent sur
+  `marketplace_binders` et sont vides : une page publique ne doit les afficher
+  que non nuls ;
+- deux réglages Cloudflare restent à poser à la main (§J).
 
 **Do not touch:**
 
-- `src/build/engine/`, `src/build/schema/`, `src/build/pages/public/` pour un
-  besoin propre à la reliure — passer par le Playbook ou `src/marketplace/` ;
-- `src/build/services/postAuthRoute.ts` : il répond juste pour Métré ; la
-  réponse Ma Reliure vit dans `src/marketplace/auth/postAuthRoute.ts` ;
+- `src/build/` pour un besoin propre à la reliure — Playbook ou
+  `src/marketplace/` ;
+- `src/build/services/postAuthRoute.ts` : la réponse Ma Reliure vit dans
+  `src/marketplace/auth/postAuthRoute.ts` ;
+- les valeurs d'option du Playbook : clés machine, on ajoute sans renommer ;
 - les politiques RLS `build_*` ;
 - le preset Nitro (`cloudflare-module`) ;
-- les valeurs d'option du Playbook Reliure : ce sont des clés machine lues par
-  `caseProfile.ts`, pas des libellés ;
-- le repli codé en dur de `vite.config.ts` : c'est la bonne valeur pour le
-  déploiement Métré, et seulement pour lui ;
+- le repli codé en dur de `vite.config.ts` : bonne valeur pour Métré seul ;
 - Stripe Connect (§Q).
