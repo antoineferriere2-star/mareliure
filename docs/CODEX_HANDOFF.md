@@ -793,7 +793,7 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 **Branch :** `managed-pricing`, poussée sur `mareliure/main` et
 `mareliure/feat/managed-pricing-offers`.
 
-**Commit :** `undefined`.
+**Commit :** `1741180`.
 
 **Production :** inchangée. Worker `59d66164-3a37-46ba-897e-88fe4011614c`,
 code d'avant le pricing géré. **Deux migrations manquent en production**
