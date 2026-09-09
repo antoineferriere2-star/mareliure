@@ -2,6 +2,7 @@
  * The relieur roster. Approval is a human act (§51): a workshop only starts
  * receiving projects once someone has looked at its portfolio and said yes.
  */
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -80,6 +81,15 @@ export function BinderListPage() {
                 <span className="text-xs text-muted-foreground">
                   {STATUS_LABELS[binder.status] ?? binder.status}
                 </span>
+                {/* L'entrée de la session tarifaire : on ouvre la fiche d'un
+                    atelier depuis la liste, en face de la personne. */}
+                <Link
+                  to="/marketplace/pricing/$binderId"
+                  params={{ binderId: binder.id }}
+                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground transition hover:text-foreground"
+                >
+                  Sa grille
+                </Link>
                 {binder.status !== "approved" ? (
                   <Button
                     size="sm"

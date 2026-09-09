@@ -37,14 +37,28 @@ export function CustomerCasePage({ caseId }: { caseId: string }) {
   return (
     <div className="space-y-10">
       <CaseBriefPanel view={data.view} />
+      {/* Un prix n'apparaît ici qu'une fois validé par un humain — le serveur
+          ne renvoie même pas les autres. Tant qu'il n'y en a pas, on dit ce
+          qui se passe réellement plutôt que d'afficher un montant provisoire :
+          un chiffre lu une fois devient une promesse, et personne ne retient
+          qu'il était « en cours ». Pas de prix vaut mieux qu'un faux prix. */}
       <section className="rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-6">
-        <p className="text-sm text-[#6b5847]">Prix fixé par Ma Reliure</p>
+        <p className="text-sm text-[#6b5847]">
+          {data.case.customerPriceCents ? "Prix fixé par Ma Reliure" : "Votre estimation"}
+        </p>
         {data.case.customerPriceCents ? (
           <p className="mt-1 font-serif text-3xl text-[#241a12]">
             {formatEuros(data.case.customerPriceCents)}
           </p>
         ) : (
-          <p className="mt-2 font-serif text-xl text-[#241a12]">Prix en cours de préparation</p>
+          <>
+            <p className="mt-2 font-serif text-xl text-[#241a12]">
+              Votre projet est en cours d’étude.
+            </p>
+            <p className="mt-2 text-sm leading-6 text-[#4b3a2c]">
+              Nous devons confirmer le travail nécessaire avant de vous présenter votre prix.
+            </p>
+          </>
         )}
         {data.case.priceIncludes.length > 0 && (
           <p className="mt-3 text-sm leading-6 text-[#6b5847]">

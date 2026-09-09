@@ -8,6 +8,7 @@
 import { Link } from "@tanstack/react-router";
 import { BOOKBINDING_PUBLIC_TOKEN } from "@/build/constants";
 import { MARELIURE_BRAND } from "@/marketplace/config";
+import { isMaReliure } from "@/brand";
 import { ANCHORS } from "./content";
 
 /**
@@ -59,10 +60,29 @@ export function IntakeCta({
   );
 }
 
+/**
+ * Où vit la landing sur ce déploiement.
+ *
+ * Sur Ma Reliure c'est la racine ; sur Métré Build la landing reliure est une
+ * page parmi d'autres. La distinction compte dès qu'une seconde page publique
+ * existe : depuis `/tarifs`, une ancre nue comme `#savoir-faire` ne désigne
+ * rien et le lien ne fait rien. Préfixée par la landing, elle y ramène.
+ *
+ * `isMaReliure` est une constante de compilation : la branche non retenue est
+ * retirée du bundle.
+ */
+const LANDING_PATH = isMaReliure ? "/" : "/reliure";
+
+/**
+ * Les ancres sont absolues plutôt que relatives. Sur la landing elles se
+ * comportent exactement comme avant ; ailleurs elles y reviennent au lieu de
+ * rester inertes.
+ */
 const NAV = [
-  { href: `#${ANCHORS.howItWorks}`, label: "Comment ça marche" },
-  { href: `#${ANCHORS.crafts}`, label: "Les savoir-faire" },
-  { href: `#${ANCHORS.binders}`, label: "Pour les relieurs" },
+  { href: `${LANDING_PATH}#${ANCHORS.howItWorks}`, label: "Comment ça marche" },
+  { href: `${LANDING_PATH}#${ANCHORS.crafts}`, label: "Les savoir-faire" },
+  { href: "/tarifs", label: "Tarifs" },
+  { href: `${LANDING_PATH}#${ANCHORS.binders}`, label: "Pour les relieurs" },
 ] as const;
 
 /**
@@ -99,7 +119,13 @@ export function LandingHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-mr-rule/70 bg-mr-paper">
       <div className="mx-auto flex max-w-[78rem] items-center justify-between gap-6 px-5 py-4 sm:px-8 sm:py-5">
-        <a href="#top" className="shrink-0" aria-label={`${MARELIURE_BRAND} — accueil`}>
+        {/* Absolu pour la même raison que les ancres : depuis /tarifs, `#top`
+            ne ramènerait pas à l'accueil, il ne ferait rien. */}
+        <a
+          href={`${LANDING_PATH}#top`}
+          className="shrink-0"
+          aria-label={`${MARELIURE_BRAND} — accueil`}
+        >
           <Wordmark />
         </a>
 

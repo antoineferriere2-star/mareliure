@@ -22,6 +22,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
 import { Route as ReliureRouteImport } from './routes/reliure'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
 import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
@@ -70,6 +71,8 @@ import { Route as AuthenticatedBuildRequestsIdRouteImport } from './routes/_auth
 import { Route as AuthenticatedBuildWorkspacesIndexRouteImport } from './routes/_authenticated/build/workspaces.index'
 import { Route as AuthenticatedMarketplaceCasesIndexRouteImport } from './routes/_authenticated/marketplace/cases.index'
 import { Route as AuthenticatedMarketplaceCasesCaseIdRouteImport } from './routes/_authenticated/marketplace/cases.$caseId'
+import { Route as AuthenticatedMarketplacePricingIndexRouteImport } from './routes/_authenticated/marketplace/pricing.index'
+import { Route as AuthenticatedMarketplacePricingBinderIdRouteImport } from './routes/_authenticated/marketplace/pricing.$binderId'
 import { Route as AuthenticatedPortalDemosNewRouteImport } from './routes/_authenticated/portal/demos.new'
 import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
 import { Route as ApiInternalAnalyticsMetricsRouteImport } from './routes/api/internal/analytics/metrics'
@@ -142,6 +145,11 @@ const ReliureRoute = ReliureRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TarifsRoute = TarifsRouteImport.update({
+  id: '/tarifs',
+  path: '/tarifs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsRoute = TermsRouteImport.update({
@@ -420,6 +428,18 @@ const AuthenticatedMarketplaceCasesCaseIdRoute =
     path: '/cases/$caseId',
     getParentRoute: () => AuthenticatedMarketplaceRouteRoute,
   } as any)
+const AuthenticatedMarketplacePricingIndexRoute =
+  AuthenticatedMarketplacePricingIndexRouteImport.update({
+    id: '/pricing/',
+    path: '/pricing/',
+    getParentRoute: () => AuthenticatedMarketplaceRouteRoute,
+  } as any)
+const AuthenticatedMarketplacePricingBinderIdRoute =
+  AuthenticatedMarketplacePricingBinderIdRouteImport.update({
+    id: '/pricing/$binderId',
+    path: '/pricing/$binderId',
+    getParentRoute: () => AuthenticatedMarketplaceRouteRoute,
+  } as any)
 const AuthenticatedPortalDemosNewRoute =
   AuthenticatedPortalDemosNewRouteImport.update({
     id: '/new',
@@ -486,6 +506,7 @@ export interface FileRoutesByFullPath {
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
   '/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/build': typeof AuthenticatedBuildRouteRouteWithChildren
@@ -528,6 +549,7 @@ export interface FileRoutesByFullPath {
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/marketplace/cases/$caseId': typeof AuthenticatedMarketplaceCasesCaseIdRoute
+  '/marketplace/pricing/$binderId': typeof AuthenticatedMarketplacePricingBinderIdRoute
   '/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
@@ -542,6 +564,7 @@ export interface FileRoutesByFullPath {
   '/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
   '/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
   '/marketplace/cases/': typeof AuthenticatedMarketplaceCasesIndexRoute
+  '/marketplace/pricing/': typeof AuthenticatedMarketplacePricingIndexRoute
   '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
 }
 export interface FileRoutesByTo {
@@ -557,6 +580,7 @@ export interface FileRoutesByTo {
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/m/$publicToken': typeof MPublicTokenRoute
@@ -593,6 +617,7 @@ export interface FileRoutesByTo {
   '/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/marketplace/cases/$caseId': typeof AuthenticatedMarketplaceCasesCaseIdRoute
+  '/marketplace/pricing/$binderId': typeof AuthenticatedMarketplacePricingBinderIdRoute
   '/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
@@ -607,6 +632,7 @@ export interface FileRoutesByTo {
   '/build/requests': typeof AuthenticatedBuildRequestsIndexRoute
   '/build/workspaces': typeof AuthenticatedBuildWorkspacesIndexRoute
   '/marketplace/cases': typeof AuthenticatedMarketplaceCasesIndexRoute
+  '/marketplace/pricing': typeof AuthenticatedMarketplacePricingIndexRoute
   '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
 }
 export interface FileRoutesById {
@@ -624,6 +650,7 @@ export interface FileRoutesById {
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
   '/_authenticated/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/_authenticated/build': typeof AuthenticatedBuildRouteRouteWithChildren
@@ -666,6 +693,7 @@ export interface FileRoutesById {
   '/_authenticated/build/playbooks/$id': typeof AuthenticatedBuildPlaybooksIdRoute
   '/_authenticated/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/_authenticated/marketplace/cases/$caseId': typeof AuthenticatedMarketplaceCasesCaseIdRoute
+  '/_authenticated/marketplace/pricing/$binderId': typeof AuthenticatedMarketplacePricingBinderIdRoute
   '/_authenticated/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/_authenticated/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
@@ -680,6 +708,7 @@ export interface FileRoutesById {
   '/_authenticated/build/requests/': typeof AuthenticatedBuildRequestsIndexRoute
   '/_authenticated/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
   '/_authenticated/marketplace/cases/': typeof AuthenticatedMarketplaceCasesIndexRoute
+  '/_authenticated/marketplace/pricing/': typeof AuthenticatedMarketplacePricingIndexRoute
   '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
 }
 export interface FileRouteTypes {
@@ -697,6 +726,7 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/reliure'
     | '/sitemap.xml'
+    | '/tarifs'
     | '/terms'
     | '/atelier'
     | '/build'
@@ -739,6 +769,7 @@ export interface FileRouteTypes {
     | '/build/playbooks/$id'
     | '/build/requests/$id'
     | '/marketplace/cases/$caseId'
+    | '/marketplace/pricing/$binderId'
     | '/portal/demos/new'
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
@@ -753,6 +784,7 @@ export interface FileRouteTypes {
     | '/build/requests/'
     | '/build/workspaces/'
     | '/marketplace/cases/'
+    | '/marketplace/pricing/'
     | '/api/internal/hermes/prospect-funnels/metrics'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -768,6 +800,7 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/reliure'
     | '/sitemap.xml'
+    | '/tarifs'
     | '/terms'
     | '/demo/deck-project'
     | '/m/$publicToken'
@@ -804,6 +837,7 @@ export interface FileRouteTypes {
     | '/build/playbooks/$id'
     | '/build/requests/$id'
     | '/marketplace/cases/$caseId'
+    | '/marketplace/pricing/$binderId'
     | '/portal/demos/new'
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
@@ -818,6 +852,7 @@ export interface FileRouteTypes {
     | '/build/requests'
     | '/build/workspaces'
     | '/marketplace/cases'
+    | '/marketplace/pricing'
     | '/api/internal/hermes/prospect-funnels/metrics'
   id:
     | '__root__'
@@ -834,6 +869,7 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/reliure'
     | '/sitemap.xml'
+    | '/tarifs'
     | '/terms'
     | '/_authenticated/atelier'
     | '/_authenticated/build'
@@ -876,6 +912,7 @@ export interface FileRouteTypes {
     | '/_authenticated/build/playbooks/$id'
     | '/_authenticated/build/requests/$id'
     | '/_authenticated/marketplace/cases/$caseId'
+    | '/_authenticated/marketplace/pricing/$binderId'
     | '/_authenticated/portal/demos/new'
     | '/_authenticated/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
@@ -890,6 +927,7 @@ export interface FileRouteTypes {
     | '/_authenticated/build/requests/'
     | '/_authenticated/build/workspaces/'
     | '/_authenticated/marketplace/cases/'
+    | '/_authenticated/marketplace/pricing/'
     | '/api/internal/hermes/prospect-funnels/metrics'
   fileRoutesById: FileRoutesById
 }
@@ -907,6 +945,7 @@ export interface RootRouteChildren {
   PrivateBetaRoute: typeof PrivateBetaRoute
   ReliureRoute: typeof ReliureRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TarifsRoute: typeof TarifsRoute
   TermsRoute: typeof TermsRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
@@ -1017,6 +1056,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/tarifs': {
+      id: '/tarifs'
+      path: '/tarifs'
+      fullPath: '/tarifs'
+      preLoaderRoute: typeof TarifsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms': {
@@ -1355,6 +1401,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketplaceCasesCaseIdRouteImport
       parentRoute: typeof AuthenticatedMarketplaceRouteRoute
     }
+    '/_authenticated/marketplace/pricing/': {
+      id: '/_authenticated/marketplace/pricing/'
+      path: '/pricing'
+      fullPath: '/marketplace/pricing/'
+      preLoaderRoute: typeof AuthenticatedMarketplacePricingIndexRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRouteRoute
+    }
+    '/_authenticated/marketplace/pricing/$binderId': {
+      id: '/_authenticated/marketplace/pricing/$binderId'
+      path: '/pricing/$binderId'
+      fullPath: '/marketplace/pricing/$binderId'
+      preLoaderRoute: typeof AuthenticatedMarketplacePricingBinderIdRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRouteRoute
+    }
     '/_authenticated/portal/demos/new': {
       id: '/_authenticated/portal/demos/new'
       path: '/new'
@@ -1502,7 +1562,9 @@ interface AuthenticatedMarketplaceRouteRouteChildren {
   AuthenticatedMarketplaceBindersRoute: typeof AuthenticatedMarketplaceBindersRoute
   AuthenticatedMarketplaceIndexRoute: typeof AuthenticatedMarketplaceIndexRoute
   AuthenticatedMarketplaceCasesCaseIdRoute: typeof AuthenticatedMarketplaceCasesCaseIdRoute
+  AuthenticatedMarketplacePricingBinderIdRoute: typeof AuthenticatedMarketplacePricingBinderIdRoute
   AuthenticatedMarketplaceCasesIndexRoute: typeof AuthenticatedMarketplaceCasesIndexRoute
+  AuthenticatedMarketplacePricingIndexRoute: typeof AuthenticatedMarketplacePricingIndexRoute
 }
 
 const AuthenticatedMarketplaceRouteRouteChildren: AuthenticatedMarketplaceRouteRouteChildren =
@@ -1511,8 +1573,12 @@ const AuthenticatedMarketplaceRouteRouteChildren: AuthenticatedMarketplaceRouteR
     AuthenticatedMarketplaceIndexRoute: AuthenticatedMarketplaceIndexRoute,
     AuthenticatedMarketplaceCasesCaseIdRoute:
       AuthenticatedMarketplaceCasesCaseIdRoute,
+    AuthenticatedMarketplacePricingBinderIdRoute:
+      AuthenticatedMarketplacePricingBinderIdRoute,
     AuthenticatedMarketplaceCasesIndexRoute:
       AuthenticatedMarketplaceCasesIndexRoute,
+    AuthenticatedMarketplacePricingIndexRoute:
+      AuthenticatedMarketplacePricingIndexRoute,
   }
 
 const AuthenticatedMarketplaceRouteRouteWithChildren =
@@ -1628,6 +1694,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivateBetaRoute: PrivateBetaRoute,
   ReliureRoute: ReliureRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TarifsRoute: TarifsRoute,
   TermsRoute: TermsRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
   MPublicTokenRoute: MPublicTokenRoute,

@@ -8,6 +8,7 @@ import {
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -26,12 +27,14 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   const queryKey = ["marketplace", "binder", "case", caseId] as const;
   const [reasonCode, setReasonCode] = useState<(typeof DECLINE_REASONS)[number][0]>("no_capacity");
   const [reasonDetail, setReasonDetail] = useState("");
+  const [minimumPayout, setMinimumPayout] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
 
   const { data, isPending, error } = useQuery({
     queryKey,
     queryFn: () => fetchCase({ data: { caseId } }),
   });
+  const floorCents = Math.round(Number.parseFloat(minimumPayout.replace(",", ".")) * 100);
   const answer = useMutation({
     mutationFn: (accept: boolean) =>
       respond({
@@ -40,6 +43,10 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
           accept,
           reasonCode: accept ? null : reasonCode,
           reasonDetail: accept ? null : reasonDetail,
+          minimumRequiredPayoutCents:
+            !accept && reasonCode === "payout_insufficient" && Number.isFinite(floorCents)
+              ? floorCents
+              : null,
         },
       }),
     onSuccess: async () => {
@@ -102,6 +109,30 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
                   </option>
                 ))}
               </select>
+              {/* Demandé seulement après « rémunération insuffisante », et
+                  facultatif. C'est la donnée la plus honnête du référentiel :
+                  révélée par une décision réelle plutôt que déclarée dans un
+                  entretien. Elle n'a aucun effet sur l'issue de cette offre —
+                  répondre ne rouvre pas la négociation. */}
+              {reasonCode === "payout_insufficient" && (
+                <div className="mt-3">
+                  <Label htmlFor="minimum-payout">
+                    À quelle rémunération auriez-vous accepté ? (facultatif)
+                  </Label>
+                  <Input
+                    id="minimum-payout"
+                    className="mt-1"
+                    inputMode="decimal"
+                    value={minimumPayout}
+                    onChange={(event) => setMinimumPayout(event.target.value)}
+                    placeholder="en euros"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Cela ne rouvre pas cette proposition. Nous nous en servons pour ajuster nos
+                    prix.
+                  </p>
+                </div>
+              )}
               <Textarea
                 className="mt-3"
                 rows={3}

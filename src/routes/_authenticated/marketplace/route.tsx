@@ -5,7 +5,7 @@
  */
 import { createFileRoute, Outlet, Link, redirect, isRedirect } from "@tanstack/react-router";
 import { requireBuildAdmin } from "@/build/services/admin.functions";
-import { BookMarked, Inbox } from "lucide-react";
+import { BookMarked, Inbox, Receipt } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/marketplace")({
   ssr: false,
@@ -23,6 +23,7 @@ export const Route = createFileRoute("/_authenticated/marketplace")({
 const NAV = [
   { to: "/marketplace/cases", label: "Demandes", icon: Inbox },
   { to: "/marketplace/binders", label: "Relieurs", icon: BookMarked },
+  { to: "/marketplace/pricing", label: "Tarifs", icon: Receipt },
 ] as const;
 
 function MarketplaceAdminLayout() {
