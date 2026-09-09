@@ -53,12 +53,22 @@ export function canViewCase(viewer: Viewer, facts: CaseAccessFacts): boolean {
 }
 
 /**
- * `full` includes the customer's name, e-mail, phone and precise address.
- * `project_only` is the same case with all of that removed — the project, the
- * photos, the budget, the timing and the town, which is everything a relieur
- * needs to decide whether to propose (§55).
+ * Trois niveaux, parce qu'il y a trois audiences et non deux.
+ *
+ * `full` — l'administration et le client : tout, coordonnées et budget annoncé
+ * compris. L'admin fixe le prix, le budget est une de ses entrées ; le client
+ * regarde ses propres réponses.
+ *
+ * `assigned` — l'atelier retenu : les coordonnées, parce qu'un livre doit
+ * voyager, mais jamais le budget annoncé. Ma Reliure fixe le prix et propose
+ * une rémunération ; ce que le client disait vouloir mettre ne sert plus qu'à
+ * reconstituer la marge.
+ *
+ * `project_only` — l'atelier sollicité mais pas encore retenu : le projet, les
+ * photos, le délai et la ville. Les coordonnées se gagnent en étant choisi,
+ * pas en étant invité (§55).
  */
-export type CaseDisclosure = "full" | "project_only" | "none";
+export type CaseDisclosure = "full" | "assigned" | "project_only" | "none";
 
 export function caseDisclosure(viewer: Viewer, facts: CaseAccessFacts): CaseDisclosure {
   if (!canViewCase(viewer, facts)) return "none";
@@ -67,8 +77,9 @@ export function caseDisclosure(viewer: Viewer, facts: CaseAccessFacts): CaseDisc
     case "customer":
       return "full";
     case "binder":
-      // Contact details are earned by being chosen, not by being invited.
-      return facts.selectedBinderId === viewer.binderId ? "full" : "project_only";
+      // Contact details are earned by being chosen, not by being invited —
+      // mais un atelier ne voit le budget du client à aucun moment.
+      return facts.selectedBinderId === viewer.binderId ? "assigned" : "project_only";
     case "anonymous":
       return "none";
   }

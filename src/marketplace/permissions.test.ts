@@ -76,11 +76,22 @@ describe("how much of the case each viewer sees", () => {
     expect(caseDisclosure(INVITED, CLAIMED)).toBe("project_only");
   });
 
+  /**
+   * L'atelier retenu obtient `assigned` et non `full` : les coordonnées, parce
+   * qu'un livre doit voyager, mais jamais le budget annoncé par le client, qui
+   * ne servirait qu'à reconstituer la marge de Ma Reliure.
+   */
   it("gives contact details only once the customer has chosen that relieur", () => {
-    expect(caseDisclosure(INVITED, { ...CLAIMED, selectedBinderId: "binder-a" })).toBe("full");
+    expect(caseDisclosure(INVITED, { ...CLAIMED, selectedBinderId: "binder-a" })).toBe("assigned");
     expect(caseDisclosure(INVITED, { ...CLAIMED, selectedBinderId: "binder-b" })).toBe(
       "project_only",
     );
+  });
+
+  it("ne donne jamais la divulgation complète à un atelier", () => {
+    for (const selected of ["binder-a", "binder-b", null]) {
+      expect(caseDisclosure(INVITED, { ...CLAIMED, selectedBinderId: selected })).not.toBe("full");
+    }
   });
 
   it("gives the admin and the owning customer everything", () => {

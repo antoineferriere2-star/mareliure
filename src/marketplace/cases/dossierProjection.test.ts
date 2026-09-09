@@ -47,11 +47,25 @@ function view(disclosure: "full" | "project_only") {
 describe("what an invited relieur sees", () => {
   const relieur = view("project_only");
 
-  it("gets the project, the photos and the budget", () => {
+  it("gets the project and the photos", () => {
     expect(relieur.title).toBe("Le Comte de Monte-Cristo");
     expect(relieur.project.map((l) => l.label)).toContain("Matière");
     expect(relieur.photos).toHaveLength(1);
-    expect(relieur.budgetAndTiming.map((l) => l.label)).toContain("Budget envisagé");
+  });
+
+  /**
+   * Cette attente était l'inverse tant que l'atelier chiffrait : le budget du
+   * client était alors ce qu'il devait viser. Dans le modèle géré, Ma Reliure
+   * fixe le prix et propose une rémunération — le budget annoncé ne sert plus
+   * qu'à reconstituer la marge, et à faire juger une offre à l'aune d'un
+   * chiffre qui n'est pas celui de l'atelier.
+   */
+  it("ne voit pas le budget annoncé par le client", () => {
+    expect(relieur.budgetAndTiming.map((l) => l.label)).not.toContain("Budget envisagé");
+  });
+
+  it("garde le délai souhaité, qui est une contrainte de travail", () => {
+    expect(relieur.budgetAndTiming.map((l) => l.label)).toContain("Délai souhaité");
   });
 
   it("gets the town, because a book has to be shipped somewhere", () => {
@@ -88,6 +102,11 @@ describe("what the admin, or the chosen relieur, sees", () => {
 
   it("still carries the same project lines", () => {
     expect(full.project.map((l) => l.label)).toContain("Matière");
+  });
+
+  /** L'admin fixe le prix : le budget annoncé est une de ses entrées. */
+  it("garde le budget annoncé, qui informe la décision de prix", () => {
+    expect(full.budgetAndTiming.map((l) => l.label)).toContain("Budget envisagé");
   });
 });
 

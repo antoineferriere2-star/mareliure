@@ -29,6 +29,21 @@ export const CONTACT_FIELD_KEYS: readonly string[] = [
 
 const CONTACT_CATEGORY = "Contact";
 
+/**
+ * Le budget annoncé par le client ne regarde pas l'atelier.
+ *
+ * Ma Reliure fixe le prix et propose une rémunération ; l'atelier accepte ou
+ * refuse. Lui montrer ce que le client disait vouloir mettre lui donne de quoi
+ * reconstituer la marge, et lui fait juger une offre à l'aune d'un chiffre qui
+ * n'est pas le sien. Sur un dossier réel de la base de développement, le Brief
+ * annonçait « 250 – 400 € » là où le prix client était 440 € et l'offre 355 € :
+ * trois nombres dont un seul concerne l'atelier.
+ *
+ * Le délai souhaité, lui, reste : c'est une contrainte de travail, pas une
+ * information de négociation.
+ */
+const CUSTOMER_ONLY_FIELD_KEYS: readonly string[] = [CASE_ANSWER_KEYS.budget];
+
 export interface CaseViewLine {
   label: string;
   value: string;
@@ -69,6 +84,10 @@ export interface CaseView {
   manualReviewRequired: boolean;
 }
 
+function isCustomerOnlyLine(line: BriefLine): boolean {
+  return line.fieldKey !== undefined && CUSTOMER_ONLY_FIELD_KEYS.includes(line.fieldKey);
+}
+
 function isContactLine(line: BriefLine): boolean {
   return (
     (line.fieldKey !== undefined && CONTACT_FIELD_KEYS.includes(line.fieldKey)) ||
@@ -100,13 +119,16 @@ export interface ProjectCaseInput {
 
 export function projectCase(input: ProjectCaseInput): CaseView {
   const { brief, profile, disclosure } = input;
-  const full = disclosure === "full";
+  // Les coordonnées suivent la divulgation ; le budget annoncé n'appartient
+  // qu'à Ma Reliure et au client, jamais à un atelier, retenu ou non.
+  const showsContact = disclosure === "full" || disclosure === "assigned";
+  const showsCustomerBudget = disclosure === "full";
 
   const projectLines = [...brief.confirmedInformation, ...brief.assumptionsAndCalculated]
-    .filter((line) => full || !isContactLine(line))
+    .filter((line) => showsContact || !isContactLine(line))
     .map(toViewLine);
 
-  const contact: CaseContact | null = full
+  const contact: CaseContact | null = showsContact
     ? {
         name: findValue(brief.confirmedInformation, "name"),
         email: findValue(brief.confirmedInformation, "email"),
@@ -123,7 +145,9 @@ export function projectCase(input: ProjectCaseInput): CaseView {
     summary: brief.projectSummary,
     project: projectLines,
     constraints: brief.constraints.map(toViewLine),
-    budgetAndTiming: brief.budgetAndTiming.map(toViewLine),
+    budgetAndTiming: brief.budgetAndTiming
+      .filter((line) => showsCustomerBudget || !isCustomerOnlyLine(line))
+      .map(toViewLine),
     missingInformation: brief.missingInformation.map(toViewLine),
     photos: input.photos,
     // The town, never the street: enough to judge shipping, not enough to
