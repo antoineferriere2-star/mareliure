@@ -53,6 +53,9 @@ npm run build
 | `AGENTS.md`                                | consignes courtes pour les agents automatisés                                                                                               |
 | `CLAUDE.md`                                | vocabulaire produit imposé et anti-patterns refusés                                                                                         |
 | `docs/reliure-marketplace-architecture.md` | décisions d'architecture de la marketplace                                                                                                  |
+| `docs/pricing-reference-system.md`         | comment un prix se construit, et pourquoi le moteur préfère s'abstenir                                                                      |
+| `docs/content-assets.md`                   | provenance et autorisation de chaque image publiée                                                                                          |
+| `docs/shipping-pickup-point-spec.md`       | expédition en point relais — spécifié, non commencé                                                                                         |
 | `docs/deployment-mareliure-cloudflare.md`  | déploiement Cloudflare Workers, DNS, secrets                                                                                                |
 
 ## Construit avec

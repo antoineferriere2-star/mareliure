@@ -479,17 +479,24 @@ assets construits.
 >
 > Depuis la fusion du pricing géré, le code de `main` lit
 > `customer_price_cents`, `binder_payout_cents`, `pricing_status` et la table
-> `marketplace_events`. **La base de production ne les a pas** : la migration
-> `20260908210000_managed_pricing_offers` est appliquée sur le projet de
-> développement, pas sur `hljxohondjvrkzqicexl`.
+> `marketplace_events`. Depuis le référentiel tarifaire il lit en plus
+> `marketplace_binder_rates`, `marketplace_work_items` et
+> `marketplace_pricebook`. **La base de production n'a rien de tout cela** :
+> **deux** migrations sont appliquées sur le projet de développement et pas sur
+> `hljxohondjvrkzqicexl` —
+> `20260908210000_managed_pricing_offers` et
+> `20260909120000_pricing_reference_system`.
 >
-> Déployer `main` avant d'appliquer cette migration casse les trois espaces
+> Vérifié le 9 septembre 2026 : `marketplace_cases.pricing_status` renvoie 400,
+> `marketplace_events` renvoie 404 sur la production.
+>
+> Déployer `main` avant d'appliquer ces migrations casse les trois espaces
 > authentifiés en production. La landing publique, elle, ne lit rien de tout
 > cela et resterait intacte — c'est précisément ce qui rend la panne facile à
 > ne pas voir.
 >
-> Ordre obligatoire : appliquer la migration sur la production, **puis**
-> déployer.
+> Ordre obligatoire : appliquer les deux migrations sur la production, **puis**
+> déployer. `supabase db push` les applique dans l'ordre.
 >
 > ```bash
 > npx supabase link --project-ref hljxohondjvrkzqicexl
@@ -497,9 +504,9 @@ assets construits.
 > npx supabase link --project-ref qwfhebtxeubfmvvdsqdt   # revenir sur le dev
 > ```
 >
-> La migration est additive et conserve les anciens statuts : l'appliquer sur
-> une production qui tourne encore l'ancien code ne casse rien. C'est
-> l'inverse — déployer sans elle — qui casse.
+> Les deux migrations sont additives et rejouables, et conservent les anciens
+> statuts : les appliquer sur une production qui tourne encore l'ancien code ne
+> casse rien. C'est l'inverse — déployer sans elles — qui casse.
 
 |               |                                                                               |
 | ------------- | ----------------------------------------------------------------------------- |
@@ -779,92 +786,171 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 ## Latest handoff
 
-**Agent:** Claude Code (Opus 5)
+**Agent :** Claude Code (Opus 5)
 
-**Date:** 9 septembre 2026
+**Date :** 9 septembre 2026
 
-**Branch:** `main` — `feat/reliure-marketplace-mvp` et
-`feat/managed-pricing-offers` alignées.
+**Branch :** `managed-pricing`, poussée sur `mareliure/main` et
+`mareliure/feat/managed-pricing-offers`.
 
-**Commit:** `e5e4041`.
+**Commit :** `6c37986`.
 
-**Production:** Worker `59d66164-3a37-46ba-897e-88fe4011614c`, code d'avant le
-pricing géré. **Ne pas déployer `main` avant d'avoir appliqué la migration sur
-la base de production — encadré du §J.**
+**Production :** inchangée. Worker `59d66164-3a37-46ba-897e-88fe4011614c`,
+code d'avant le pricing géré. **Deux migrations manquent en production**
+(§J) — voir « Known issues ».
 
-**Completed:**
+---
 
-- **Pricing géré fusionné et vérifié.** Le fond vient de Codex ; la
-  réintégration (`52d0861`) a annulé trois écarts : connaissance Ma Reliure
-  dans `src/build/services/postAuthRoute.ts`, second script de build sans
-  vérification d'artefact, migration non rejouable.
-- **Migration appliquée sur le projet de développement** et parcours complet
-  déroulé au navigateur : suggestion 440 € client / 355 € atelier avec ses
-  raisons, validation, offre, acceptation, sélection, prix unique côté cliente.
-- **Un atelier ne voit plus le budget annoncé** (`a2e06e0`). La divulgation
-  avait deux niveaux pour trois audiences ; elle en a trois — `full`,
-  `assigned`, `project_only`.
-- **Six univers publics** remplacent les quatre catégories techniques
-  (`e5e4041`) : Réparer, Restaurer, Relier, Embellir, Transformer, Protéger.
-  Mêmes mots et même ordre que les intentions du Playbook.
-- **Playbook version 5 publiée** (`fcf9903`), Mission repointée, versions 1 à 4
-  intactes. Deux intentions ajoutées — `personnaliser`, `proteger` — par ajout
-  pur ; `couverture` retiré de la liste mais conservé partout ailleurs.
-- **`briefLabel`**, capacité générique ajoutée au moteur : une option peut se
-  lire autrement dans un Dossier que dans la question qui l'a posée. Sans
-  métier, avec ses tests.
-- **Quatre preuves** sous le premier écran, dont l'argument national qui
-  n'existait nulle part.
-- **Parcours client** en trois étapes visibles (`journey.ts`), deux déclarées
-  et masquées tant que paiement et expédition n'existent pas.
-- **`quotes/rules.ts` supprimé** ; « Offre Ma Reliure » devient « Proposition
-  de projet ».
+### Completed
 
-**In progress:** rien. Working tree propre. 1368 tests, typecheck propre.
+**Les prix inventés sont partis.** Le moteur portait une quinzaine de montants
+codés en dur — 140 € pour une réparation, 200 € pour une belle reliure, 80 €
+pour un demi-cuir — posés pour qu'il produise un résultat. Aucun relieur ne les
+avait vus, et rien dans le code ne les distinguait d'un tarif de terrain :
+même type, même colonne, même confiance « haute ».
 
-**Next recommended task:**
+Ils sont retirés de `pricing.rules.ts`, qui ne porte plus que des décisions
+commerciales : marge cible, plancher, arrondi. Décider sa marge n'est pas
+inventer un tarif.
 
-1. **Migration en production, puis déploiement.** Rien de ce qui précède n'est
-   en ligne.
-2. **Logistique d'expédition.** Rien n'existe : ni table `marketplace_shipments`,
-   ni fournisseur, ni notion de commande — les expéditions se rattacheront à
-   `marketplace_cases`. Le comparatif Sendcloud / Boxtal et les livrables A–I
-   sont demandés **avant** toute intégration.
-3. **Pages ateliers** `/ateliers/:slug`. `marketplace_binders` couvre déjà
-   l'essentiel ; manquent huit colonnes : `slug`, `short_bio`, `styles`,
-   `typical_lead_time`, `workshop_photos[]`, `seo_title`, `seo_description`, et
-   `featured` sur le portfolio.
-4. **Pages SEO éditoriales** — restauration, reliure cuir, dorure, collector,
-   protection.
+**Le moteur s'abstient au lieu de deviner.** Sans référence terrain il rend
+`status: "manual_review"` et **tous les montants à `null`** — pas un chiffrage
+prudent, un refus de chiffrer. Un travail non tarifé, un ouvrage patrimonial,
+un travail sur étude ou aucun travail identifié suffisent à déclencher ce
+refus, sans rattrapage possible.
 
-**Known issues:**
+**Trois objets qu'on ne confond plus** (migration
+`20260909120000_pricing_reference_system`) :
 
-- `main` n'est pas déployable tant que la migration n'est pas en production ;
-- la grille tarifaire de `PAYOUT_RULES` est un point de départ posé pour que le
-  moteur produise quelque chose, **pas un tarif** : à calibrer avec un relieur
-  réel avant qu'un prix atteigne un client ;
-- les inscriptions publiques sont fermées en production (§H) ;
-- un `marketplace_case` de test subsiste en production ;
-- `rating_avg`, `rating_count` et `response_rate` existent sur
-  `marketplace_binders` et sont vides : une page publique ne doit les afficher
-  que non nuls ;
-- la fiche atelier est en dur dans `pages/landing/content.ts` ;
-- deux réglages Cloudflare restent à poser à la main (§J).
+| Table                      | Nature                                               |
+| -------------------------- | ---------------------------------------------------- |
+| `marketplace_work_items`   | ce que le métier sait faire — 45 travaux, 8 familles |
+| `marketplace_binder_rates` | ce que chaque relieur demande — **observation**      |
+| `marketplace_pricebook`    | ce que Ma Reliure paie et vend — **décision**        |
 
-**Do not touch:**
+**Provenance sur chaque montant.** `REAL_VERIFIED` · `ADMIN_VALIDATED` ·
+`DEMO` · `PLACEHOLDER` · `TEST_ONLY`. Deux fonctions décident de tout :
+`canReachCustomer` (deux provenances) et `countsAsReference` (une seule).
+Un prix décidé par Ma Reliure ne compte pas dans une médiane — se citer
+soi-même comme source revient à confirmer ses propres hypothèses.
 
+Une contrainte SQL empêche `REAL_VERIFIED` sans `verified_at` **et**
+`verified_by`. Sans elle, ce serait une case à cocher.
+
+**La confiance change de sens.** Elle se calculait sur le nombre de réponses du
+visiteur : « haute » voulait dire « le parcours est bien rempli », pas « nous
+savons ce que ce travail coûte ». Elle porte maintenant sur le nombre
+d'ateliers, la fraîcheur des données, la dispersion et l'exactitude de la
+correspondance — et elle ne fait que descendre.
+
+**`briefLabel` a une petite sœur : `workResolver.ts`.** L'ancien moteur sautait
+des réponses aux montants ; le raisonnement du métier — « ce livre demande une
+recouture complète et un demi-cuir » — n'existait nulle part et ne pouvait donc
+pas se discuter avec un relieur. Il existe maintenant, nommé, avant tout
+montant.
+
+**L'approximation est déclarée, jamais compensée.** Faute de tarif exact
+(travail × format × complexité), le moteur se rabat sur la classe courante
+**sans appliquer le moindre coefficient** : majorer de 10 % pour un grand
+format serait exactement le geste qu'on vient de bannir.
+
+**Trois écrans d'administration** sous `Admin → Tarifs` :
+la grille d'un atelier (pensée pour vingt minutes en face de quelqu'un), le
+référentiel (qui montre autant les trous que les travaux couverts), et le
+simulateur (qu'on ouvre devant un relieur, marge comprise).
+
+**Le refus d'un atelier devient un signal.** Après un refus pour rémunération
+insuffisante, l'atelier peut dire à quel montant il aurait accepté
+(`minimum_required_payout_cents`). Donnée révélée par une décision réelle
+plutôt que déclarée en entretien. Aucun effet sur l'offre, aucun effet
+automatique sur le Pricebook.
+
+**`/tarifs`** répond à la recherche la plus fréquente du domaine sans afficher
+un seul montant : elle explique ce qui fait le prix. Une fourchette n'y
+apparaîtra qu'une fois relevée auprès de trois ateliers
+(`isPublishableRange`). Aucune donnée structurée `Offer` — annoncer un prix à
+un moteur de recherche est un engagement.
+
+**Le client ne voit un prix qu'une fois validé par un humain.** Sinon « Votre
+projet est en cours d'étude ». Le serveur ne renvoie même pas les autres.
+
+**Documentation :** `docs/pricing-reference-system.md`,
+`docs/content-assets.md` (provenance des images, atelier Ferrière),
+`docs/shipping-pickup-point-spec.md` (spécifié, non commencé).
+
+**Tests :** 1392 (110 fichiers), typecheck propre, lint propre, build vert.
+`noFabricatedPrices.test.ts` lit le texte des fichiers du domaine pour que les
+montants ne reviennent pas — grossier, mais c'est le seul test qui attrape la
+récidive.
+
+---
+
+### In progress
+
+Rien. Working tree propre.
+
+---
+
+### Next recommended task
+
+1. **Remplir le référentiel.** Ce n'est pas du code : c'est s'asseoir avec un
+   relieur. Le référentiel est **vide**, donc chaque projet part en revue
+   manuelle. Premier atelier à interroger : Reliure Dorure Ferrière (Orléans),
+   déjà présent sur la plateforme. Trois ateliers font fonctionner le moteur,
+   six le rendent confiant.
+2. **Les deux migrations en production**, puis déploiement (§J).
+3. **Spike Stripe Connect** (§Q) — _après validation explicite_. STOP avant
+   toute implémentation.
+4. **Comparatif Sendcloud / Boxtal** et livrables A–I — _après le spike
+   paiement_. Voir `docs/shipping-pickup-point-spec.md`.
+
+---
+
+### Known issues
+
+- **`main` n'est pas déployable.** Deux migrations manquent sur
+  `hljxohondjvrkzqicexl` : `20260908210000_managed_pricing_offers` et
+  `20260909120000_pricing_reference_system`. Vérifié le 9 septembre 2026 —
+  `marketplace_cases.pricing_status` renvoie 400, `marketplace_events` 404.
+- **Le référentiel tarifaire est vide.** Comportement correct, mais aucun
+  projet ne peut être chiffré automatiquement tant qu'il l'est.
+- Le Pricebook est vide : aucun prix n'a encore été arrêté.
+- Les inscriptions publiques sont fermées en production (§H).
+- Un `marketplace_case` de test subsiste en production (1 ligne).
+- `rating_avg`, `rating_count`, `response_rate` existent et sont vides : une
+  page publique ne doit les afficher que non nuls.
+- La fiche atelier est en dur dans `pages/landing/content.ts`.
+- Deux réglages Cloudflare restent à poser à la main (§J).
+- Pages ateliers `/ateliers/:slug` : huit colonnes manquent sur
+  `marketplace_binders` (`slug`, `short_bio`, `styles`, `typical_lead_time`,
+  `workshop_photos[]`, `seo_title`, `seo_description`, `featured`).
+
+---
+
+### Do not touch
+
+- **`src/marketplace/pricing/pricing.rules.ts` ne doit plus jamais porter de
+  montant de travail.** Un test lit le fichier. Les tarifs viennent des
+  grilles, point.
+- **`testReferences.fixture.ts`** : jeu d'essai `TEST_ONLY`. Rien dans `src/`
+  hors des tests ne l'importe, et un test le vérifie. Il n'agrège que si
+  `MARKETPLACE_ALLOW_TEST_RATES=true` et que l'environnement n'est pas marqué
+  production.
+- **Les seuils `PUBLISHABLE_MINIMUM_REFERENCES` (3) et
+  `QUARTILE_MINIMUM_REFERENCES` (5)** : ils protègent contre la précision
+  inventée. Les baisser rendrait une page publique malhonnête.
 - `src/build/` pour un besoin propre à la reliure — Playbook ou
   `src/marketplace/`. Une capacité générique y est recevable, sans métier et
-  avec ses tests : c'est ce qu'est `briefLabel` ;
+  avec ses tests : c'est ce qu'est `briefLabel`.
 - `src/build/services/postAuthRoute.ts` : la réponse Ma Reliure vit dans
-  `src/marketplace/auth/postAuthRoute.ts` ;
-- **les valeurs d'option du Playbook** : clés machine lues par `caseProfile.ts`
-  et `pricing.rules.ts`. On ajoute, on retire d'une liste, on ne renomme
-  jamais. Une version publiée ne se modifie pas en place — on en publie une
-  nouvelle et on repointe la Mission ;
-- `MAX_BINDERS_PER_CASE = 3` : règle interne qui protège les ateliers d'un
-  travail en série. Jamais vendue au client comme une promesse ;
-- les politiques RLS `build_*` ;
-- le preset Nitro (`cloudflare-module`) ;
-- le repli codé en dur de `vite.config.ts` : bonne valeur pour Métré seul ;
-- Stripe Connect (§Q).
+  `src/marketplace/auth/postAuthRoute.ts`.
+- **Les valeurs d'option du Playbook** et **les clés de
+  `catalog.ts`** : identifiants machine lus par `caseProfile.ts`,
+  `workResolver.ts` et les grilles en base. On ajoute, on retire d'une liste,
+  on ne renomme **jamais**. Une version publiée de Playbook ne se modifie pas
+  en place.
+- `MAX_BINDERS_PER_CASE = 3` : règle interne, jamais vendue au client.
+- Les politiques RLS `build_*` et `marketplace_*` (deny-all, service_role only).
+- Le preset Nitro (`cloudflare-module`).
+- Le repli codé en dur de `vite.config.ts` : bonne valeur pour Métré seul.
+- Stripe Connect (§Q) et l'expédition — spécifiés, pas commencés.

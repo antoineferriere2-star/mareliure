@@ -30,7 +30,13 @@ Before modifying Ma Reliure:
 4. Never commit credentials. `.env*` is ignored except `.env.example`, and
    `src/marketplace/secretsContract.test.ts` fails if a secret reaches the
    client bundle.
-5. Run `npm test` and `npm run typecheck` before handing work back, then update
+5. **Never invent a price.** No amount belongs in `src/marketplace/pricing/`
+   outside the commercial policy (target margin, floor, rounding). Real
+   amounts come from binder rate cards; without them the engine returns
+   `manual_review` and no figure at all. `noFabricatedPrices.test.ts` reads the
+   files to enforce it. Same rule for images: nothing ships that is not
+   registered in `docs/content-assets.md` with an identifiable authorisation.
+6. Run `npm test` and `npm run typecheck` before handing work back, then update
    the `## Latest handoff` block.
 
 `CLAUDE.md` at the repository root carries the product vocabulary rules and
