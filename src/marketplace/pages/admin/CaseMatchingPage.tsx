@@ -23,7 +23,9 @@ import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
-import { PRICING_REASON_LABELS } from "@/marketplace/pricing/pricing.rules";
+import { workItemLabel } from "@/marketplace/pricing/catalog";
+import { CONFIDENCE_LABELS, type PricingConfidence } from "@/marketplace/pricing/confidence";
+import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -48,6 +50,10 @@ function PricingPanel({
     price_includes: string[];
     pricing_confidence: string | null;
     pricing_reason_codes: string[];
+    pricing_components: PricingComponent[] | null;
+    pricing_low_estimate_cents: number | null;
+    pricing_high_estimate_cents: number | null;
+    pricing_reference_count: number | null;
   };
   refresh: () => Promise<unknown>;
 }) {
@@ -94,15 +100,65 @@ function PricingPanel({
           {row.pricing_status === "validated" ? "Validé" : "À valider"}
         </span>
       </div>
-      {row.pricing_confidence && (
-        <p className="mt-2 text-xs text-muted-foreground">
-          Suggestion {row.pricing_confidence} ·{" "}
-          {row.pricing_reason_codes
-            .map(
-              (code) => PRICING_REASON_LABELS[code as keyof typeof PRICING_REASON_LABELS] ?? code,
-            )
-            .join(", ")}
-        </p>
+      {/* La décomposition, réservée à l'administration. Un client n'a pas à
+          lire ce que nous payons l'atelier — mais quiconque valide un prix
+          doit pouvoir dire d'où vient chaque euro, et sur combien d'ateliers
+          il repose. */}
+      {row.pricing_status === "manual_review" ? (
+        <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3">
+          <p className="text-sm font-medium text-amber-900">Le moteur n’a pas chiffré ce projet.</p>
+          <p className="mt-1 text-xs leading-5 text-amber-800">
+            Il ne dispose pas des tarifs de référence nécessaires, ou le projet demande une étude.
+            Le prix doit être arrêté à la main.
+          </p>
+        </div>
+      ) : (
+        row.pricing_confidence && (
+          <div className="mt-3 space-y-2">
+            <p className="text-xs text-muted-foreground">
+              Confiance{" "}
+              {CONFIDENCE_LABELS[row.pricing_confidence as PricingConfidence] ??
+                row.pricing_confidence}
+              {row.pricing_reference_count
+                ? ` · ${row.pricing_reference_count} ateliers de référence`
+                : ""}
+            </p>
+            {(row.pricing_components ?? []).length > 0 && (
+              <table className="w-full text-xs">
+                <tbody>
+                  {(row.pricing_components ?? []).map((component) => (
+                    <tr key={component.workItemKey} className="border-b border-border/50">
+                      <td className="py-1 pr-2">
+                        {component.label ?? workItemLabel(component.workItemKey)}
+                        {component.approximated && (
+                          <span
+                            className="ml-1 text-amber-700"
+                            title={component.approximationNote ?? ""}
+                          >
+                            ≈
+                          </span>
+                        )}
+                      </td>
+                      <td className="py-1 text-right text-muted-foreground">
+                        {component.referenceCount} ate.
+                      </td>
+                      <td className="py-1 pl-2 text-right tabular-nums">
+                        {formatEuros(component.referencePayoutCents)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            )}
+            {row.pricing_low_estimate_cents !== null &&
+              row.pricing_high_estimate_cents !== null && (
+                <p className="text-xs text-muted-foreground">
+                  Fourchette observée : {formatEuros(row.pricing_low_estimate_cents)} –{" "}
+                  {formatEuros(row.pricing_high_estimate_cents)}
+                </p>
+              )}
+          </div>
+        )
       )}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div>
@@ -146,13 +202,17 @@ function PricingPanel({
         <p className="mt-1 text-xs text-destructive">{result.errors.join(" ")}</p>
       )}
       <div className="mt-4 flex flex-wrap gap-2">
-        {row.pricing_status === "pending" && (
+        {(row.pricing_status === "pending" || row.pricing_status === "manual_review") && (
           <Button
             variant="outline"
             disabled={generation.isPending}
             onClick={() => generation.mutate()}
           >
-            Calculer une suggestion
+            {/* Une abstention n'est pas définitive : dès qu'un relieur a
+                rempli sa grille, le même dossier peut être rechiffré. */}
+            {row.pricing_status === "manual_review"
+              ? "Reprendre le calcul"
+              : "Calculer une suggestion"}
           </Button>
         )}
         {row.pricing_status !== "validated" && (

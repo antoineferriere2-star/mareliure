@@ -1,26 +1,41 @@
-import { CASE_ANSWER_VALUES } from "@/marketplace/cases/caseProfile";
-import { PAYOUT_RULES, PRICING_POLICY } from "./pricing.rules";
+/**
+ * Le moteur tarifaire.
+ *
+ * Il ne contient aucun montant. C'est sa propriété la plus importante et elle
+ * est délibérée : la version précédente en portait une quinzaine — 140 € pour
+ * une réparation, 200 € pour une belle reliure — posés pour que le calcul
+ * produise quelque chose. Ces chiffres n'avaient été vus par aucun relieur, et
+ * rien ne les distinguait d'un tarif relevé sur le terrain.
+ *
+ * Désormais les montants n'ont qu'une origine : les grilles des artisans,
+ * agrégées par `rateCard.ts`. Quand elles ne couvrent pas le projet, le moteur
+ * ne dégrade pas sa réponse — il s'abstient et rend `manual_review`. Un prix
+ * absent se rattrape par un coup de téléphone ; un prix faux se rattrape
+ * beaucoup plus mal.
+ *
+ * Ce que Ma Reliure décide, en revanche, lui appartient : la marge cible et
+ * l'arrondi vivent dans `PRICING_POLICY`. Décider sa marge n'est pas inventer
+ * un tarif.
+ *
+ * Le pipeline : réponses structurées → travaux → tarifs de référence →
+ * rémunération → prix client → marge → fourchette → confiance → validation
+ * humaine. La dernière étape n'est pas ici : le moteur suggère, il ne valide
+ * jamais.
+ */
+import { workItemLabel } from "./catalog";
+import { assessConfidence } from "./confidence";
+import { PRICING_POLICY } from "./pricing.rules";
 import type {
-  PricingInput,
+  PricingComponent,
   PricingPolicy,
-  PricingReasonCode,
   PricingSuggestion,
   PricingValidation,
+  ReferenceLookup,
 } from "./pricing.types";
-
-function roundUp(value: number, increment: number): number {
-  return Math.ceil(value / increment) * increment;
-}
-
-function add(
-  current: number,
-  amount: number,
-  reason: PricingReasonCode,
-  reasons: PricingReasonCode[],
-): number {
-  reasons.push(reason);
-  return current + amount;
-}
+import { customerPriceForMargin, marginOf } from "./pricebook";
+import type { RateAggregate } from "./rateCard";
+import { resolveWork } from "./workResolver";
+import type { CaseProfile } from "@/marketplace/cases/caseProfile";
 
 export function validateManagedPrice(
   customerPriceCents: number,
@@ -35,9 +50,7 @@ export function validateManagedPrice(
   if (binderPayoutCents > customerPriceCents)
     errors.push("La rémunération atelier ne peut pas dépasser le prix client.");
 
-  const marginCents = customerPriceCents - binderPayoutCents;
-  const marginBps =
-    customerPriceCents > 0 ? Math.floor((marginCents * 10_000) / customerPriceCents) : 0;
+  const { marginCents, marginBps } = marginOf(customerPriceCents, binderPayoutCents);
   const minimumMarginCents = Math.max(
     policy.minimumMarginCents,
     Math.ceil((customerPriceCents * policy.minimumMarginBps) / 10_000),
@@ -48,83 +61,165 @@ export function validateManagedPrice(
   return { valid: errors.length === 0, marginCents, marginBps, minimumMarginCents, errors };
 }
 
-/** Deterministic suggestion from structured answers only. */
+/**
+ * Cherche le tarif de référence d'un travail, du plus précis au plus général.
+ *
+ * Exiger la correspondance exacte rendrait le système inutilisable : quatre
+ * formats fois trois complexités fois quarante-sept travaux, personne ne
+ * remplit ça en vingt minutes. On se rabat donc sur la classe courante, mais
+ * **sans appliquer le moindre coefficient** : majorer de 10 % pour un grand
+ * format serait exactement le geste qu'on vient de bannir. L'approximation est
+ * déclarée, elle élargit la fourchette et elle coûte des points de confiance.
+ */
+function lookupAggregate(
+  aggregates: readonly RateAggregate[],
+  workItemKey: string,
+  sizeClass: string,
+  complexityClass: string,
+): { aggregate: RateAggregate; note: string | null } | null {
+  const candidates = aggregates.filter((a) => a.workItemKey === workItemKey);
+  if (candidates.length === 0) return null;
+
+  const exact = candidates.find(
+    (a) => a.sizeClass === sizeClass && a.complexityClass === complexityClass,
+  );
+  if (exact) return { aggregate: exact, note: null };
+
+  const sameComplexity = candidates.find(
+    (a) => a.sizeClass === "standard" && a.complexityClass === complexityClass,
+  );
+  if (sameComplexity)
+    return { aggregate: sameComplexity, note: "tarif du format courant, faute de référence" };
+
+  const sameSize = candidates.find(
+    (a) => a.sizeClass === sizeClass && a.complexityClass === "standard",
+  );
+  if (sameSize)
+    return { aggregate: sameSize, note: "tarif de complexité courante, faute de référence" };
+
+  const generic = candidates.find(
+    (a) => a.sizeClass === "standard" && a.complexityClass === "standard",
+  );
+  if (generic)
+    return {
+      aggregate: generic,
+      note: "tarif courant, ni le format ni la complexité ne sont couverts",
+    };
+
+  return null;
+}
+
+function abstain(
+  reason: string[],
+  work: ReturnType<typeof resolveWork>,
+  policy: PricingPolicy,
+  components: PricingComponent[] = [],
+): PricingSuggestion {
+  return {
+    status: "manual_review",
+    suggestedBinderPayoutCents: null,
+    suggestedCustomerPriceCents: null,
+    lowEstimateCents: null,
+    highEstimateCents: null,
+    marginCents: null,
+    marginBps: null,
+    confidence: "manual_review",
+    referenceCount: 0,
+    components,
+    workItemKeys: work.workItemKeys,
+    sizeClass: work.sizeClass,
+    complexityClass: work.complexityClass,
+    factors: reason,
+    ruleVersion: policy.version,
+  };
+}
+
 export function suggestManagedPrice(
-  input: PricingInput,
+  profile: CaseProfile,
+  references: ReferenceLookup,
   policy: PricingPolicy = PRICING_POLICY,
 ): PricingSuggestion {
-  const V = CASE_ANSWER_VALUES;
-  const reasons: PricingReasonCode[] = ["BASE_WORK"];
-  let payout = PAYOUT_RULES.baseByIntent[input.intent ?? ""] ?? PAYOUT_RULES.defaultBase;
+  const work = resolveWork(profile);
 
-  if (input.material === V.material.halfLeather)
-    payout = add(payout, PAYOUT_RULES.material.demi_cuir, "HALF_LEATHER", reasons);
-  else if (input.material === V.material.fullLeather)
-    payout = add(payout, PAYOUT_RULES.material.plein_cuir, "FULL_LEATHER", reasons);
-  else if (input.material === V.material.decoratedPaper)
-    payout = add(payout, PAYOUT_RULES.material.papier_decore, "DECORATED_PAPER", reasons);
+  const components: PricingComponent[] = [];
+  const uncovered: string[] = [];
+  const usedAggregates: RateAggregate[] = [];
 
-  if (
-    input.condition.includes(V.condition.damagedSpine) ||
-    input.spineCondition === V.spineCondition.fragile ||
-    input.spineCondition === V.spineCondition.split ||
-    input.spineCondition === V.spineCondition.missing
-  )
-    payout = add(payout, PAYOUT_RULES.damagedSpine, "DAMAGED_SPINE", reasons);
+  for (const key of work.workItemKeys) {
+    const found = lookupAggregate(references.aggregates, key, work.sizeClass, work.complexityClass);
+    if (!found) {
+      uncovered.push(key);
+      continue;
+    }
+    usedAggregates.push(found.aggregate);
+    components.push({
+      workItemKey: key,
+      label: workItemLabel(key),
+      referencePayoutCents: found.aggregate.medianCents,
+      lowCents: found.aggregate.minimumCents,
+      highCents: found.aggregate.maximumCents,
+      referenceCount: found.aggregate.referenceCount,
+      approximated: found.note !== null,
+      approximationNote: found.note,
+    });
+  }
 
-  if (input.boardCondition === V.boardCondition.detached)
-    payout = add(payout, PAYOUT_RULES.detachedBoards, "DETACHED_BOARDS", reasons);
-  if (
-    input.sewingCondition === V.sewingCondition.someLoose ||
-    input.sewingCondition === V.sewingCondition.detached
-  )
-    payout = add(payout, PAYOUT_RULES.sewingRepair, "SEWING_REPAIR", reasons);
-  const pageRepairConditions: readonly string[] = [
-    V.condition.detachedPages,
-    V.condition.tornPages,
-    V.condition.missingPages,
-  ];
-  if (input.condition.some((value) => pageRepairConditions.includes(value)))
-    payout = add(payout, PAYOUT_RULES.pageRepair, "PAGE_REPAIR", reasons);
+  const assessment = assessConfidence({
+    aggregates: usedAggregates,
+    uncoveredWorkItemKeys: uncovered,
+    workItemKeys: work.workItemKeys,
+    missingAnswers: work.missingAnswers,
+    heritage: profile.heritage,
+  });
 
-  if (input.finishes.includes(V.finishes.gilding))
-    payout = add(payout, PAYOUT_RULES.gilding, "GILDING", reasons);
-  if (input.finishes.includes(V.finishes.title))
-    payout = add(payout, PAYOUT_RULES.title, "TITLE", reasons);
-  if (input.finishes.includes(V.finishes.author))
-    payout = add(payout, PAYOUT_RULES.author, "AUTHOR", reasons);
-  if (input.finishes.includes(V.finishes.bands))
-    payout = add(payout, PAYOUT_RULES.raisedBands, "RAISED_BANDS", reasons);
-  if (input.finishes.includes(V.finishes.slipcase))
-    payout = add(payout, PAYOUT_RULES.slipcase, "SLIPCASE", reasons);
-  if ((input.heightCm ?? 0) > 35 || (input.widthCm ?? 0) > 27)
-    payout = add(payout, PAYOUT_RULES.largeFormat, "LARGE_FORMAT", reasons);
-  if ((input.thicknessCm ?? 0) > 12)
-    payout = add(payout, PAYOUT_RULES.thickVolume, "THICK_VOLUME", reasons);
+  if (assessment.confidence === "manual_review")
+    return abstain(assessment.factors, work, policy, components);
 
-  const completeness = [
-    input.intent,
-    input.heightCm,
-    input.widthCm,
-    input.thicknessCm,
-    input.material,
-    input.spineCondition,
-    input.sewingCondition,
-  ].filter((value) => value !== null).length;
-  const confidence = completeness >= 6 ? "high" : completeness >= 4 ? "medium" : "low";
-  if (confidence === "low") reasons.push("INCOMPLETE_DETAILS");
+  const payout = components.reduce((sum, c) => sum + c.referencePayoutCents, 0);
+  const lowEstimate = components.reduce((sum, c) => sum + c.lowCents, 0);
+  const highEstimate = components.reduce((sum, c) => sum + c.highCents, 0);
 
-  const rawCustomerPrice = Math.ceil((payout * 10_000) / (10_000 - policy.targetMarginBps));
-  const customerPrice = roundUp(rawCustomerPrice, policy.roundingIncrementCents);
+  // Une somme de médianes peut sortir à zéro si toutes les grilles retenues
+  // sont à zéro. Cela ne devrait pas arriver — `validateRate` l'interdit à la
+  // saisie — mais chiffrer un projet à zéro euro serait pire que s'abstenir.
+  if (payout <= 0)
+    return abstain(
+      ["Les tarifs de référence retenus ne produisent aucun montant."],
+      work,
+      policy,
+      components,
+    );
+
+  const customerPrice = customerPriceForMargin(
+    payout,
+    policy.targetMarginBps,
+    policy.roundingIncrementCents,
+  );
   const validation = validateManagedPrice(customerPrice, payout, policy);
 
   return {
-    suggestedCustomerPriceCents: customerPrice,
+    status: "suggested",
     suggestedBinderPayoutCents: payout,
-    suggestedMarginCents: validation.marginCents,
-    suggestedMarginBps: validation.marginBps,
-    confidence,
-    reasons,
+    suggestedCustomerPriceCents: customerPrice,
+    lowEstimateCents: customerPriceForMargin(
+      lowEstimate,
+      policy.targetMarginBps,
+      policy.roundingIncrementCents,
+    ),
+    highEstimateCents: customerPriceForMargin(
+      highEstimate,
+      policy.targetMarginBps,
+      policy.roundingIncrementCents,
+    ),
+    marginCents: validation.marginCents,
+    marginBps: validation.marginBps,
+    confidence: assessment.confidence,
+    referenceCount: assessment.referenceCount,
+    components,
+    workItemKeys: work.workItemKeys,
+    sizeClass: work.sizeClass,
+    complexityClass: work.complexityClass,
+    factors: assessment.factors,
     ruleVersion: policy.version,
   };
 }

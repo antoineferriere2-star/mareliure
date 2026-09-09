@@ -29,6 +29,27 @@ import { BOOKBINDING_MISSION_ID, BOOKBINDING_WORKSPACE_ID } from "../src/build/c
 import type { Database, Json } from "../src/integrations/supabase/types";
 import { buildCaseProfile } from "../src/marketplace/cases/caseProfile";
 import { suggestManagedPrice } from "../src/marketplace/pricing/pricing.engine";
+import { aggregateRates, type BinderRate } from "../src/marketplace/pricing/rateCard";
+import { TEST_BINDERS, TEST_RATES } from "../src/marketplace/pricing/testReferences.fixture";
+
+/**
+ * Agrège le jeu d'essai pour que les dossiers de démonstration ressortent
+ * chiffrés. `includeTestData` est explicite ici et seulement ici : ce script
+ * refuse de tourner ailleurs que sur une base de démonstration.
+ */
+function aggregatesOf(rates: readonly (BinderRate & { binderName: string })[]) {
+  const combinations = new Set(
+    rates.map((rate) => `${rate.workItemKey}|${rate.sizeClass}|${rate.complexityClass}`),
+  );
+  return [...combinations]
+    .map((combination) => {
+      const [key, size, complexity] = combination.split("|");
+      return aggregateRates(rates, key, size as BinderRate["sizeClass"], complexity as BinderRate["complexityClass"], {
+        includeTestData: true,
+      });
+    })
+    .filter((aggregate) => aggregate !== null);
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -475,6 +496,37 @@ async function main() {
   }
   console.log(`Seeded ${BINDERS.length} demonstration relieurs.`);
 
+  // ---- Rate cards ---------------------------------------------------------
+  // Le jeu d'essai de la Phase 25 : trois ateliers, un demi-cuir à 320 / 350 /
+  // 410 €. Il vit en base plutôt qu'en dur dans le moteur, ce qui est tout le
+  // propos du chantier — et il est marqué TEST_ONLY, donc invisible pour
+  // l'agrégation tant que MARKETPLACE_ALLOW_TEST_RATES ne l'autorise pas.
+  const seededBinderIds = BINDERS.map((_, index) => demoId("binder", index));
+  const rateRows = TEST_RATES.map((rate, index) => ({
+    id: demoId("rate", index),
+    // Les trois premiers ateliers de démonstration portent la grille d'essai.
+    binder_id: seededBinderIds[TEST_BINDERS.findIndex((b) => b.id === rate.binderId)] ?? seededBinderIds[0],
+    work_item_key: rate.workItemKey,
+    minimum_payout_cents: rate.minimumPayoutCents,
+    typical_payout_cents: rate.typicalPayoutCents,
+    maximum_payout_cents: rate.maximumPayoutCents,
+    size_class: rate.sizeClass,
+    complexity_class: rate.complexityClass,
+    effective_from: rate.effectiveFrom,
+    status: "active",
+    source: rate.source,
+    provenance: rate.provenance,
+  }));
+  const { error: rateError } = await supabase
+    .from("marketplace_binder_rates")
+    .upsert(rateRows, { onConflict: "id" });
+  if (rateError) throw rateError;
+  console.log(`Seeded ${rateRows.length} TEST_ONLY rate lines across 3 relieurs.`);
+
+  const demoAggregates = aggregatesOf(
+    TEST_RATES.map((rate) => ({ ...rate, binderName: rate.binderName })),
+  );
+
   // ---- Projects -----------------------------------------------------------
   for (const [index, demo] of CASES.entries()) {
     const sessionId = demoId("session", index);
@@ -514,17 +566,27 @@ async function main() {
     });
     if (dossierError) throw dossierError;
 
-    const suggestion = suggestManagedPrice(buildCaseProfile(demo.answers));
+    // Le moteur ne chiffre plus à partir de montants codés en dur : il lit le
+    // référentiel. Sur une base de démonstration sans grille saisie, il
+    // s'abstient — et c'est le comportement juste, pas une régression du seed.
+    const suggestion = suggestManagedPrice(buildCaseProfile(demo.answers), {
+      aggregates: demoAggregates,
+    });
+    const abstained = suggestion.status === "manual_review";
     const { error: pricingError } = await supabase
       .from("marketplace_cases")
       .update({
-        pricing_status: "suggested",
+        pricing_status: abstained ? "manual_review" : "suggested",
         suggested_customer_price_cents: suggestion.suggestedCustomerPriceCents,
         suggested_binder_payout_cents: suggestion.suggestedBinderPayoutCents,
         customer_price_cents: suggestion.suggestedCustomerPriceCents,
         binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+        pricing_low_estimate_cents: suggestion.lowEstimateCents,
+        pricing_high_estimate_cents: suggestion.highEstimateCents,
         pricing_confidence: suggestion.confidence,
-        pricing_reason_codes: suggestion.reasons,
+        pricing_reason_codes: suggestion.workItemKeys,
+        pricing_components: suggestion.components as unknown as Json,
+        pricing_reference_count: suggestion.referenceCount,
         pricing_rule_version: suggestion.ruleVersion,
         pricing_generated_at: submittedAt,
       })

@@ -808,6 +808,162 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_binder_rates: {
+        Row: {
+          binder_id: string
+          complexity_class: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          estimated_hours: number | null
+          id: string
+          maximum_payout_cents: number
+          minimum_payout_cents: number
+          notes: string | null
+          provenance: string
+          size_class: string
+          source: string
+          status: string
+          typical_payout_cents: number
+          verified_at: string | null
+          verified_by: string | null
+          work_item_key: string
+        }
+        Insert: {
+          binder_id: string
+          complexity_class?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          estimated_hours?: number | null
+          id?: string
+          maximum_payout_cents: number
+          minimum_payout_cents: number
+          notes?: string | null
+          provenance: string
+          size_class?: string
+          source: string
+          status?: string
+          typical_payout_cents: number
+          verified_at?: string | null
+          verified_by?: string | null
+          work_item_key: string
+        }
+        Update: {
+          binder_id?: string
+          complexity_class?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          estimated_hours?: number | null
+          id?: string
+          maximum_payout_cents?: number
+          minimum_payout_cents?: number
+          notes?: string | null
+          provenance?: string
+          size_class?: string
+          source?: string
+          status?: string
+          typical_payout_cents?: number
+          verified_at?: string | null
+          verified_by?: string | null
+          work_item_key?: string
+        }
+        Relationships: []
+      }
+      marketplace_pricebook: {
+        Row: {
+          complexity_class: string
+          created_at: string
+          customer_price_cents: number
+          id: string
+          notes: string | null
+          pricing_method: string
+          reference_binder_payout_cents: number
+          reference_count_at_validation: number
+          size_class: string
+          status: string
+          target_margin_bps: number
+          target_margin_cents: number
+          validated_at: string | null
+          validated_by: string | null
+          version: number
+          work_item_key: string
+        }
+        Insert: {
+          complexity_class?: string
+          created_at?: string
+          customer_price_cents: number
+          id?: string
+          notes?: string | null
+          pricing_method?: string
+          reference_binder_payout_cents: number
+          reference_count_at_validation?: number
+          size_class?: string
+          status?: string
+          target_margin_bps: number
+          target_margin_cents: number
+          validated_at?: string | null
+          validated_by?: string | null
+          version?: number
+          work_item_key: string
+        }
+        Update: {
+          complexity_class?: string
+          created_at?: string
+          customer_price_cents?: number
+          id?: string
+          notes?: string | null
+          pricing_method?: string
+          reference_binder_payout_cents?: number
+          reference_count_at_validation?: number
+          size_class?: string
+          status?: string
+          target_margin_bps?: number
+          target_margin_cents?: number
+          validated_at?: string | null
+          validated_by?: string | null
+          version?: number
+          work_item_key?: string
+        }
+        Relationships: []
+      }
+      marketplace_work_items: {
+        Row: {
+          active: boolean
+          created_at: string
+          family: string
+          hint: string | null
+          key: string
+          label: string
+          requires_study: boolean
+          role: string
+          sort_order: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          family: string
+          hint?: string | null
+          key: string
+          label: string
+          requires_study?: boolean
+          role: string
+          sort_order?: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          family?: string
+          hint?: string | null
+          key?: string
+          label?: string
+          requires_study?: boolean
+          role?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
       marketplace_binder_portfolio: {
         Row: {
           after_photo_path: string | null
@@ -954,6 +1110,7 @@ export type Database = {
           expires_at: string | null
           id: string
           invited_at: string
+          minimum_required_payout_cents?: number | null
           match_score: number | null
           offered_at: string | null
           responded_at: string | null
@@ -973,6 +1130,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           invited_at?: string
+          minimum_required_payout_cents?: number | null
           match_score?: number | null
           offered_at?: string | null
           responded_at?: string | null
@@ -992,6 +1150,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           invited_at?: string
+          minimum_required_payout_cents?: number | null
           match_score?: number | null
           offered_at?: string | null
           responded_at?: string | null
@@ -1016,6 +1175,10 @@ export type Database = {
           manual_review_required: boolean
           mission_id: string | null
           price_includes: string[]
+          pricing_components?: Json
+          pricing_low_estimate_cents?: number | null
+          pricing_high_estimate_cents?: number | null
+          pricing_reference_count?: number
           pricing_confidence: string | null
           pricing_currency: string
           pricing_generated_at: string | null
@@ -1047,6 +1210,10 @@ export type Database = {
           manual_review_required?: boolean
           mission_id?: string | null
           price_includes?: string[]
+          pricing_components?: Json
+          pricing_low_estimate_cents?: number | null
+          pricing_high_estimate_cents?: number | null
+          pricing_reference_count?: number
           pricing_confidence?: string | null
           pricing_currency?: string
           pricing_generated_at?: string | null
@@ -1078,6 +1245,10 @@ export type Database = {
           manual_review_required?: boolean
           mission_id?: string | null
           price_includes?: string[]
+          pricing_components?: Json
+          pricing_low_estimate_cents?: number | null
+          pricing_high_estimate_cents?: number | null
+          pricing_reference_count?: number
           pricing_confidence?: string | null
           pricing_currency?: string
           pricing_generated_at?: string | null

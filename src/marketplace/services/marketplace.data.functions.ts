@@ -11,6 +11,7 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import type { Json } from "@/integrations/supabase/types";
 import { admin, assertAdmin, type Supa } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { MARKETPLACE_CURRENCY, MAX_BINDERS_PER_CASE } from "@/marketplace/config";
@@ -34,6 +35,7 @@ import {
   reconcileCaseTriage,
   resolveCaseByAccessToken,
 } from "./caseRepository.server";
+import { loadAggregates } from "./pricingRepository.server";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -308,18 +310,34 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable");
 
-    const suggestion = suggestManagedPrice(caseContext.profile);
+    // Le moteur ne chiffre qu'à partir des grilles réellement saisies par des
+    // relieurs. Sans référentiel, il n'invente rien : il rend `manual_review`,
+    // et c'est cet état-là qu'on enregistre.
+    const suggestion = suggestManagedPrice(caseContext.profile, {
+      aggregates: await loadAggregates(sb),
+    });
+    const abstained = suggestion.status === "manual_review";
     const now = new Date().toISOString();
     const { error } = await sb
       .from("marketplace_cases")
       .update({
-        pricing_status: "suggested",
+        pricing_status: abstained ? "manual_review" : "suggested",
         suggested_customer_price_cents: suggestion.suggestedCustomerPriceCents,
         suggested_binder_payout_cents: suggestion.suggestedBinderPayoutCents,
-        customer_price_cents: suggestion.suggestedCustomerPriceCents,
-        binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+        // On ne pré-remplit le prix retenu que lorsqu'il y a une suggestion.
+        // Écrire un null effacerait une saisie manuelle en cours.
+        ...(abstained
+          ? {}
+          : {
+              customer_price_cents: suggestion.suggestedCustomerPriceCents,
+              binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+            }),
+        pricing_low_estimate_cents: suggestion.lowEstimateCents,
+        pricing_high_estimate_cents: suggestion.highEstimateCents,
         pricing_confidence: suggestion.confidence,
-        pricing_reason_codes: suggestion.reasons,
+        pricing_reason_codes: suggestion.workItemKeys,
+        pricing_components: suggestion.components as unknown as Json,
+        pricing_reference_count: suggestion.referenceCount,
         pricing_rule_version: suggestion.ruleVersion,
         pricing_generated_at: now,
         status: caseContext.row.status === "under_review" ? "under_review" : "pricing",
@@ -329,10 +347,13 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
     await sb.from("marketplace_events").insert({
       case_id: data.caseId,
       actor_user_id: context.userId,
-      event_type: "pricing_generated",
+      event_type: abstained ? "pricing_manual_review" : "pricing_generated",
       metadata: {
         customer_price_cents: suggestion.suggestedCustomerPriceCents,
         binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+        reference_count: suggestion.referenceCount,
+        work_items: suggestion.workItemKeys,
+        factors: suggestion.factors,
         rule_version: suggestion.ruleVersion,
       },
     });
@@ -726,6 +747,12 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
         accept: z.boolean(),
         reasonCode: z.enum(OFFER_DECLINE_REASONS).optional().nullable(),
         reasonDetail: z.string().trim().max(500).optional().nullable(),
+        /**
+         * « J'aurais accepté à tant. » La donnée la plus honnête du système :
+         * révélée par une décision réelle plutôt que déclarée dans un
+         * entretien. Elle n'a de sens qu'après un refus pour rémunération.
+         */
+        minimumRequiredPayoutCents: z.number().int().positive().optional().nullable(),
       })
       .superRefine((value, ctx) => {
         if (!value.accept && !value.reasonCode)
@@ -748,6 +775,28 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
       p_actor_user_id: context.userId,
     });
     if (error) fail(409, error.message);
+
+    // Enregistré à côté de la réponse, jamais dans la procédure : ce montant
+    // n'a aucun effet sur l'issue de l'offre. Il alimente l'analyse tarifaire
+    // et rien d'autre — le Pricebook ne bouge que par décision humaine.
+    const wantsMore =
+      !data.accept &&
+      data.reasonCode === "payout_insufficient" &&
+      typeof data.minimumRequiredPayoutCents === "number";
+    if (wantsMore) {
+      await sb
+        .from("marketplace_case_matches")
+        .update({ minimum_required_payout_cents: data.minimumRequiredPayoutCents })
+        .eq("case_id", data.caseId)
+        .eq("binder_id", binder!.id);
+      await sb.from("marketplace_events").insert({
+        case_id: data.caseId,
+        binder_id: binder!.id,
+        actor_user_id: context.userId,
+        event_type: "payout_floor_declared",
+        metadata: { minimum_required_payout_cents: data.minimumRequiredPayoutCents },
+      });
+    }
     return result;
   });
 

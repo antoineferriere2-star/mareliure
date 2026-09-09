@@ -1,24 +1,9 @@
 import type { CaseProfile } from "@/marketplace/cases/caseProfile";
+import type { ComplexityClass, SizeClass } from "./catalog";
+import type { PricingConfidence } from "./confidence";
+import type { RateAggregate } from "./rateCard";
 
-export type PricingConfidence = "low" | "medium" | "high";
-
-export type PricingReasonCode =
-  | "BASE_WORK"
-  | "HALF_LEATHER"
-  | "FULL_LEATHER"
-  | "DECORATED_PAPER"
-  | "DAMAGED_SPINE"
-  | "DETACHED_BOARDS"
-  | "SEWING_REPAIR"
-  | "PAGE_REPAIR"
-  | "GILDING"
-  | "TITLE"
-  | "AUTHOR"
-  | "RAISED_BANDS"
-  | "SLIPCASE"
-  | "LARGE_FORMAT"
-  | "THICK_VOLUME"
-  | "INCOMPLETE_DETAILS";
+export type { PricingConfidence };
 
 export interface PricingPolicy {
   version: string;
@@ -28,13 +13,45 @@ export interface PricingPolicy {
   roundingIncrementCents: number;
 }
 
+/**
+ * Une ligne de la décomposition : un travail, son tarif de référence, et d'où
+ * ce tarif sort. `approximated` dit qu'on a dû se rabattre sur une classe
+ * voisine faute de référence exacte — jamais qu'on a appliqué un coefficient
+ * inventé pour compenser.
+ */
+export interface PricingComponent {
+  workItemKey: string;
+  label: string;
+  referencePayoutCents: number;
+  lowCents: number;
+  highCents: number;
+  referenceCount: number;
+  approximated: boolean;
+  approximationNote: string | null;
+}
+
 export interface PricingSuggestion {
-  suggestedCustomerPriceCents: number;
-  suggestedBinderPayoutCents: number;
-  suggestedMarginCents: number;
-  suggestedMarginBps: number;
+  /**
+   * `manual_review` est un refus de chiffrer, pas un chiffrage prudent. Dans
+   * ce cas tous les montants sont `null` : il n'y a rien à arrondir, rien à
+   * afficher, rien à valider par inadvertance.
+   */
+  status: "suggested" | "manual_review";
+  suggestedBinderPayoutCents: number | null;
+  suggestedCustomerPriceCents: number | null;
+  lowEstimateCents: number | null;
+  highEstimateCents: number | null;
+  marginCents: number | null;
+  marginBps: number | null;
   confidence: PricingConfidence;
-  reasons: PricingReasonCode[];
+  /** Le plus petit nombre d'ateliers sur lequel repose un des travaux. */
+  referenceCount: number;
+  components: PricingComponent[];
+  workItemKeys: string[];
+  sizeClass: SizeClass;
+  complexityClass: ComplexityClass;
+  /** Ce qui explique la note de confiance, en français, pour l'administration. */
+  factors: string[];
   ruleVersion: string;
 }
 
@@ -44,6 +61,11 @@ export interface PricingValidation {
   marginBps: number;
   minimumMarginCents: number;
   errors: string[];
+}
+
+/** Ce que le moteur sait du marché au moment où il chiffre. */
+export interface ReferenceLookup {
+  aggregates: readonly RateAggregate[];
 }
 
 export type PricingInput = Pick<
@@ -59,4 +81,5 @@ export type PricingInput = Pick<
   | "material"
   | "finishes"
   | "bandsCount"
+  | "heritage"
 >;

@@ -16,6 +16,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import type { ProjectBrief } from "@/build/schema/brief";
 import type { Answers } from "@/build/schema/answers";
+import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
 import { extractPhotoReferences } from "@/build/engine/visitorSummary";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 import { buildCaseProfile, type CaseProfile } from "@/marketplace/cases/caseProfile";
@@ -53,6 +54,10 @@ export interface CaseRow {
   pricing_currency: string;
   pricing_confidence: string | null;
   pricing_reason_codes: string[];
+  pricing_components: PricingComponent[] | null;
+  pricing_low_estimate_cents: number | null;
+  pricing_high_estimate_cents: number | null;
+  pricing_reference_count: number | null;
   pricing_rule_version: string | null;
   price_includes: string[];
   pricing_generated_at: string | null;
@@ -107,7 +112,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
   const { data: row, error } = await sb
     .from("marketplace_cases")
     .select(
-      "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_rule_version, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at",
+      "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at",
     )
     .eq("id", caseId)
     .maybeSingle();
