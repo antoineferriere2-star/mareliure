@@ -475,38 +475,39 @@ assets construits.
 
 ## J. Cloudflare
 
-> ### ⚠ `main` n'est pas déployable en l'état
+> ### ✅ Les deux migrations sont en production
 >
-> Depuis la fusion du pricing géré, le code de `main` lit
-> `customer_price_cents`, `binder_payout_cents`, `pricing_status` et la table
-> `marketplace_events`. Depuis le référentiel tarifaire il lit en plus
-> `marketplace_binder_rates`, `marketplace_work_items` et
-> `marketplace_pricebook`. **La base de production n'a rien de tout cela** :
-> **deux** migrations sont appliquées sur le projet de développement (le 9 septembre 2026) et pas sur
-> `hljxohondjvrkzqicexl` —
+> Appliquées le 9 septembre 2026 sur `hljxohondjvrkzqicexl` :
 > `20260908210000_managed_pricing_offers` et
-> `20260909120000_pricing_reference_system`.
+> `20260909120000_pricing_reference_system`. 59 migrations locales,
+> 59 enregistrées en production.
 >
-> Vérifié le 9 septembre 2026 : `marketplace_cases.pricing_status` renvoie 400,
-> `marketplace_events` renvoie 404 sur la production.
+> **Par l'API de gestion, pas par le CLI.** Le CLI ne joint la base de
+> production qu'en IPv6 (`db.<ref>.supabase.co`), que ce réseau ne route pas,
+> et il ne peut emprunter le pooler IPv4 sans le mot de passe Postgres — que
+> `supabase link` ne demande plus. La voie qui fonctionne, avec
+> `SUPABASE_ACCESS_TOKEN` (voir `.env.supabase`) :
 >
-> Déployer `main` avant d'appliquer ces migrations casse les trois espaces
-> authentifiés en production. La landing publique, elle, ne lit rien de tout
-> cela et resterait intacte — c'est précisément ce qui rend la panne facile à
-> ne pas voir.
->
-> Ordre obligatoire : appliquer les deux migrations sur la production, **puis**
-> déployer. `supabase db push` les applique dans l'ordre.
->
-> ```bash
-> npx supabase link --project-ref hljxohondjvrkzqicexl
-> npx supabase db push --linked
-> npx supabase link --project-ref qwfhebtxeubfmvvdsqdt   # revenir sur le dev
+> ```
+> POST https://api.supabase.com/v1/projects/<ref>/database/query
+> body: { "query": "<le SQL>" }
 > ```
 >
-> Les deux migrations sont additives et rejouables, et conservent les anciens
-> statuts : les appliquer sur une production qui tourne encore l'ancien code ne
-> casse rien. C'est l'inverse — déployer sans elles — qui casse.
+> Elle sert aussi à lire `supabase_migrations.schema_migrations`, ce que l'API
+> REST ne permet pas — le schéma n'est pas exposé. **Toujours comparer
+> l'historique réel aux fichiers locaux avant de pousser** : si la production
+> annonçait 59 migrations en attente au lieu de 2, rejouer les 56 héritées de
+> Métré sur une base qui tourne ne serait pas anodin.
+>
+> Vérifié après coup : les quatre tables répondent, `pricing_status` accepte
+> `manual_review`, les 45 travaux du catalogue sont semés, les trois nouvelles
+> tables sont en `USING (false) WITH CHECK (false)` — une écriture avec la clé
+> publique rend 401 — et aucune donnée d'essai n'a suivi : 0 grille, 0 entrée
+> de Pricebook, 0 relieur.
+>
+> **Le déploiement Cloudflare, lui, n'a pas été fait.** La production sert
+> toujours le code d'avant le pricing géré, et la base est en avance sur lui —
+> ce qui est le bon sens de l'écart.
 
 |               |                                                                               |
 | ------------- | ----------------------------------------------------------------------------- |
@@ -795,9 +796,13 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Commit :** `1741180`.
 
-**Production :** inchangée. Worker `59d66164-3a37-46ba-897e-88fe4011614c`,
-code d'avant le pricing géré. **Deux migrations manquent en production**
-(§J) — voir « Known issues ».
+**Production :** **base à jour, code non déployé.** Les deux migrations sont
+appliquées sur `hljxohondjvrkzqicexl` depuis le 9 septembre 2026 (§J). Le
+Worker `59d66164-3a37-46ba-897e-88fe4011614c` sert toujours le code d'avant le
+pricing géré — la base est en avance sur lui, ce qui est le bon sens de
+l'écart : elle est additive, l'ancien code l'ignore.
+
+**Il ne reste donc qu'à déployer.**
 
 ---
 
@@ -916,12 +921,16 @@ Rien. Working tree propre.
 
 ### Next recommended task
 
-1. **Remplir le référentiel.** Ce n'est pas du code : c'est s'asseoir avec un
+1. **Déployer.** La base de production porte le schéma, le Worker non. Rien
+   du travail des trois derniers jours n'est en ligne. `npm run
+deploy:mareliure` (§J), après avoir vérifié que le bundle vise bien
+   `hljxohondjvrkzqicexl` — `scripts/buildMaReliure.mjs` le contrôle et refuse
+   de livrer sinon.
+2. **Remplir le référentiel.** Ce n'est pas du code : c'est s'asseoir avec un
    relieur. Le référentiel est **vide**, donc chaque projet part en revue
    manuelle. Premier atelier à interroger : Reliure Dorure Ferrière (Orléans),
    déjà présent sur la plateforme. Trois ateliers font fonctionner le moteur,
    six le rendent confiant.
-2. **Les deux migrations en production**, puis déploiement (§J).
 3. **Spike Stripe Connect** (§Q) — _après validation explicite_. STOP avant
    toute implémentation.
 4. **Comparatif Sendcloud / Boxtal** et livrables A–I — _après le spike
@@ -931,10 +940,11 @@ Rien. Working tree propre.
 
 ### Known issues
 
-- **`main` n'est pas déployable.** Deux migrations manquent sur
-  `hljxohondjvrkzqicexl` : `20260908210000_managed_pricing_offers` et
-  `20260909120000_pricing_reference_system`. Vérifié le 9 septembre 2026 —
-  `marketplace_cases.pricing_status` renvoie 400, `marketplace_events` 404.
+- **Rien n'est déployé.** La base de production est à jour, le Worker sert le
+  code d'avant le pricing géré. C'est le seul écart qui reste entre `main` et
+  la production.
+- **Le CLI Supabase ne joint pas la production depuis ce poste** (IPv6 non
+  routé, pooler IPv4 sans mot de passe). Passer par l'API de gestion (§J).
 - **Le référentiel tarifaire est vide en production.** Sur le dev il porte le
   jeu d'essai TEST_ONLY (3 ateliers, 6 combinaisons, 40 travaux sur 45 non
   couverts). Aucun tarif réel n'a encore été relevé auprès d'un relieur.

@@ -1,6 +1,7 @@
 # Le référentiel tarifaire de Ma Reliure
 
-> État au 9 septembre 2026. Le référentiel est **vide en production** : aucun
+> État au 9 septembre 2026. Les deux migrations sont appliquées en production.
+> Le référentiel y est **vide** : aucun
 > tarif n'a encore été relevé auprès d'un relieur réel, donc le moteur refuse de
 > chiffrer et chaque projet part en revue manuelle. C'est le comportement voulu.
 >
