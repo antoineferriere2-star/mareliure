@@ -49,6 +49,10 @@ export const CASE_ANSWER_VALUES = {
     recover: "couverture",
     fineBinding: "belle_reliure",
     collector: "collector",
+    // Ajoutées avec la refonte des univers publics. `recover` reste au-dessus
+    // sans être proposé au visiteur : des dossiers le portent déjà.
+    personalise: "personnaliser",
+    protect: "proteger",
     undecided: "ne_sais_pas",
   },
   nature: {

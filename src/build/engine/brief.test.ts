@@ -389,3 +389,57 @@ describe("the Dossier never shows a stored value where a person expects a word",
     expect(offenders.map((l) => `${l.label}: ${l.value}`)).toEqual([]);
   });
 });
+
+describe("an option may read differently in the Brief than in the question", () => {
+  /**
+   * Une option répond à une question posée : « Que souhaitez-vous faire ? »
+   * appelle « Le réparer ». Un Dossier, lui, énonce — « Type de projet : Le
+   * réparer » ne se lit pas.
+   *
+   * Sans `briefLabel`, il fallait choisir entre une question qui sonne juste et
+   * un Dossier qui sonne juste. Rien ici ne connaît de métier : c'est le
+   * Playbook qui décide s'il en déclare un.
+   */
+  const schema = playbookSchema.parse({
+    schemaVersion: 1,
+    sections: [
+      {
+        id: "s1",
+        title: "Project",
+        steps: [
+          {
+            id: "step1",
+            title: "Details",
+            fields: [
+              {
+                key: "intent",
+                label: "What do you want?",
+                type: "single_choice",
+                desirability: "required",
+                options: [
+                  { value: "fix", label: "Fix it", briefLabel: "Repair" },
+                  { value: "keep", label: "Keep it as it is" },
+                ],
+                briefMapping: {
+                  section: "confirmedInformation",
+                  label: "Intent",
+                  format: "option_label",
+                },
+              },
+            ],
+          },
+        ],
+      },
+    ],
+  }) as PlaybookSchema;
+
+  it("prefers the brief label when the Playbook declares one", () => {
+    const brief = generateProjectBrief(schema, { intent: "fix" }, { name: "M" });
+    expect(findLine(brief.confirmedInformation, "Intent")?.value).toBe("Repair");
+  });
+
+  it("falls back to the question label when it does not", () => {
+    const brief = generateProjectBrief(schema, { intent: "keep" }, { name: "M" });
+    expect(findLine(brief.confirmedInformation, "Intent")?.value).toBe("Keep it as it is");
+  });
+});

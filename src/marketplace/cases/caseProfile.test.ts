@@ -42,10 +42,32 @@ describe("every option value the marketplace branches on still exists", () => {
     ["budget", CASE_ANSWER_KEYS.budget, CASE_ANSWER_VALUES.budget],
   ];
 
+  /**
+   * Une valeur peut cesser d'être proposée sans cesser d'exister : elle reste
+   * dans les réponses déjà données. `couverture` en est là depuis la refonte
+   * des univers publics — neuf dossiers le portent, et le domaine doit
+   * continuer de savoir le lire.
+   *
+   * Ce que ce test protège n'est donc pas « le Playbook offre encore cette
+   * valeur », mais « le Playbook n'a renommé aucune valeur sur laquelle la
+   * marketplace s'accroche ». Les retraits sont déclarés ici, un par un : en
+   * ajouter un doit être un geste conscient, pas un effet de bord.
+   */
+  const RETIRED_VALUES: ReadonlySet<string> = new Set([CASE_ANSWER_VALUES.intent.recover]);
+
   it.each(cases)("%s", (_name, key, values) => {
     const declared = optionValues(key);
     for (const value of Object.values(values)) {
+      if (RETIRED_VALUES.has(value)) continue;
       expect(declared, `${key} should offer "${value}"`).toContain(value);
+    }
+  });
+
+  it("les valeurs retirées ne sont plus proposées, mais restent connues du domaine", () => {
+    const declaredIntents = optionValues(CASE_ANSWER_KEYS.intent);
+    for (const retired of RETIRED_VALUES) {
+      expect(declaredIntents).not.toContain(retired);
+      expect(Object.values(CASE_ANSWER_VALUES.intent)).toContain(retired);
     }
   });
 });

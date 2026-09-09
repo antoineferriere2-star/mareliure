@@ -343,7 +343,9 @@ describe("the Project Brief a relieur receives", () => {
 
   it("summarises the project in a sentence a person would write", () => {
     const brief = generateProjectBrief(bookbindingPlaybookSchema, collectorAnswers(), MISSION);
-    expect(brief.projectSummary).toContain("Créer une édition collector");
+    // Le Dossier énonce (« Transformation »), la question appelait (« Le
+    // transformer ») : c'est ce que `briefLabel` sépare.
+    expect(brief.projectSummary).toContain("Transformation");
     expect(brief.projectSummary).toContain("Le Comte de Monte-Cristo");
     expect(brief.projectSummary).toContain("demi-cuir");
   });

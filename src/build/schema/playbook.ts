@@ -46,6 +46,19 @@ export type ConditionGroup = z.infer<typeof conditionGroup>;
 export const fieldOption = z.object({
   value: z.string().min(1),
   label: z.string().min(1),
+  /**
+   * Comment cette option se lit dans un Dossier, quand elle ne peut pas s'y
+   * lire comme dans la question.
+   *
+   * Une option répond à une question posée : « Que souhaitez-vous faire de
+   * votre livre ? » appelle « Le réparer ». Le Dossier, lui, énonce — « Type
+   * de projet : Le réparer » ne se lit pas. Sans ce champ, il faut choisir
+   * entre une question qui sonne juste et un Dossier qui sonne juste.
+   *
+   * Facultatif et générique : le moteur retombe sur `label`, et aucun métier
+   * n'est nommé ici.
+   */
+  briefLabel: z.string().min(1).optional(),
   reassurance: z.string().optional(),
   isNotSure: z.boolean().optional(),
 });

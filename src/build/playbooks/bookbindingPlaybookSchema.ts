@@ -41,8 +41,27 @@ const DAMAGE_VALUES = [
 /** The intents that lead to a physical diagnosis rather than a design conversation. */
 const REPAIR_INTENTS = ["reparer", "restaurer", "couverture"] as const;
 
-/** The intents where the visitor is choosing an appearance, so style questions apply. */
-const DESIGN_INTENTS = ["couverture", "belle_reliure", "collector"] as const;
+/**
+ * The intents where the visitor is choosing an appearance, so style questions
+ * apply.
+ *
+ * `personnaliser` et `proteger` rejoignent ce groupe plutôt que d'ouvrir leurs
+ * propres étapes : embellir un livre, c'est choisir une matière, une couleur et
+ * des finitions — exactement ce que ces trois étapes demandent déjà. Et
+ * « Étui de protection » est depuis toujours une des finitions proposées, donc
+ * un projet de protection s'exprime dans les questions existantes.
+ *
+ * `couverture` y reste bien qu'il ne soit plus proposé au visiteur : neuf
+ * dossiers le portent, et une valeur retirée d'une liste ne disparaît pas des
+ * réponses déjà données.
+ */
+const DESIGN_INTENTS = [
+  "couverture",
+  "belle_reliure",
+  "collector",
+  "personnaliser",
+  "proteger",
+] as const;
 
 export const bookbindingPlaybookSchema: PlaybookSchema = {
   schemaVersion: 1,
@@ -56,45 +75,63 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
         // ---------------------------------------------------------------
         {
           id: "intention",
-          title: "Que souhaitez-vous faire de ce livre ?",
-          why: "Réparer un livre abîmé et créer une édition collector ne demandent ni les mêmes informations, ni les mêmes artisans.",
+          title: "Que souhaitez-vous faire de votre livre ?",
+          why: "Réparer un livre abîmé et créer une édition unique ne demandent ni les mêmes informations, ni les mêmes savoir-faire.",
           fields: [
             {
               key: "intention",
               label: "Que souhaitez-vous faire ?",
               type: "single_choice",
               desirability: "required",
+              // Les libellés parlent du besoin du propriétaire, jamais de la
+              // technique : « Le personnaliser » plutôt que « dorure et
+              // décor ». Les valeurs, elles, sont des clés machine lues par
+              // caseProfile.ts et pricing.rules.ts — on en ajoute, on n'en
+              // renomme jamais.
               options: [
                 {
                   value: "reparer",
-                  label: "Réparer un livre abîmé",
+                  label: "Le réparer",
+                  briefLabel: "Réparation",
                   reassurance:
                     "Le livre est fatigué et vous voulez pouvoir le manipuler à nouveau.",
                 },
                 {
                   value: "restaurer",
-                  label: "Restaurer un livre ancien",
+                  label: "Le restaurer",
+                  briefLabel: "Restauration",
                   reassurance:
                     "L'objectif est de conserver l'ouvrage au plus près de son état d'origine.",
                 },
                 {
-                  value: "couverture",
-                  label: "Refaire sa couverture",
-                  reassurance: "Le corps du livre va bien, c'est l'extérieur qui doit être repris.",
+                  value: "belle_reliure",
+                  label: "Le faire relier",
+                  briefLabel: "Reliure",
+                  reassurance:
+                    "Lui donner une couverture durable : toile, demi-cuir ou plein cuir.",
                 },
                 {
-                  value: "belle_reliure",
-                  label: "Créer une belle reliure",
-                  reassurance: "Habiller un livre courant d'une reliure durable et soignée.",
+                  value: "personnaliser",
+                  label: "Le personnaliser",
+                  briefLabel: "Personnalisation",
+                  reassurance: "Dorure, titrage, décor, matières, couleurs ou gardes choisies.",
                 },
                 {
                   value: "collector",
-                  label: "Créer une édition collector",
-                  reassurance: "Une pièce unique : matières choisies, dorure, étui éventuel.",
+                  label: "Le transformer",
+                  briefLabel: "Transformation",
+                  reassurance: "En faire une pièce unique : matières choisies, dorure, étui.",
+                },
+                {
+                  value: "proteger",
+                  label: "Le protéger",
+                  briefLabel: "Protection sur mesure",
+                  reassurance: "Un étui, une chemise, une boîte ou un coffret sur mesure.",
                 },
                 {
                   value: "ne_sais_pas",
                   label: "Je ne sais pas encore",
+                  briefLabel: "Projet à préciser",
                   reassurance: "Décrivez le livre, un relieur vous dira ce qui est possible.",
                   isNotSure: true,
                 },
@@ -371,7 +408,7 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
         {
           id: "photos",
           title: "Photographiez votre livre",
-          why: "Un relieur lit une photo bien mieux qu'une description. C'est ce qui permet une proposition sérieuse sans déplacement.",
+          why: "Un relieur lit une photo bien mieux qu'une description. C'est ce qui permet d'estimer le travail sans que vous ayez à vous déplacer.",
           fields: [
             {
               key: "photos",
@@ -550,7 +587,7 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
         {
           id: "finitions",
           title: "Les finitions",
-          why: "Chaque finition est un geste d'atelier facturé séparément. Les nommer maintenant évite un devis à retoucher.",
+          why: "Chaque finition est un geste d'atelier qui compte dans le prix. Les nommer maintenant permet de vous annoncer un prix juste du premier coup.",
           displayWhen: {
             any: DESIGN_INTENTS.map((value) => ({
               fieldKey: "intention",
@@ -663,7 +700,13 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
                 "Jusqu'à quatre images supplémentaires. Elles seront transmises telles quelles au relieur.",
               maxFiles: 4,
               maxFileSizeMb: 8,
-              acceptMimeTypes: ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"],
+              acceptMimeTypes: [
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "image/heic",
+                "image/heif",
+              ],
               storage: "supabase_storage",
               briefMapping: {
                 section: "confirmedInformation",

@@ -31,7 +31,9 @@ function isBlank(value: AnswerValue | undefined): boolean {
 function optionLabel(field: PlaybookField, raw: string): string {
   if ("options" in field) {
     const opt = field.options.find((o) => o.value === raw);
-    if (opt) return opt.label;
+    // `briefLabel` quand le Playbook en déclare un : une option formulée pour
+    // répondre à une question ne se lit pas toujours dans un énoncé.
+    if (opt) return opt.briefLabel ?? opt.label;
   }
   if (field.type === "budget" && field.ranges) {
     const range = field.ranges.find((r) => r.value === raw);

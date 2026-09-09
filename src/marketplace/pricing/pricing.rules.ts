@@ -34,6 +34,10 @@ export const PAYOUT_RULES = {
     couverture: 16_000,
     belle_reliure: 20_000,
     collector: 23_000,
+    // Embellir un livre déjà relié : de la dorure et du décor, pas une reliure
+    // complète. Protéger : un étui ou une boîte, du cartonnage sur mesure.
+    personnaliser: 9_000,
+    proteger: 11_000,
     ne_sais_pas: 18_000,
   } as Record<string, number>,
   defaultBase: 18_000,
