@@ -532,3 +532,75 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* ===========================================================================
+   Le tunnel — surfaces thématisables
+   ===========================================================================
+
+   Le Guided Project Intake est le même runtime pour toutes les marques. Ses
+   surfaces étaient pourtant écrites en dur : `bg-[#f7f3ec]`, `bg-white`,
+   `border-stone-300`. Un visiteur de Ma Reliure décrivait donc le livre auquel
+   il tient sur un fond qui n'était celui d'aucune de nos pages.
+
+   Ces variables sont la capacité générique qui manquait — le pendant, pour la
+   couleur, de ce que `briefLabel` est pour le texte. Le moteur nomme des rôles
+   (le fond, le panneau, le filet) ; le déploiement dit ce qu'ils valent. Aucun
+   métier ne descend dans `src/build/`.
+
+   Les valeurs par défaut sont exactement celles qui étaient en dur : un
+   déploiement Métré ne change pas d'un pixel. */
+:root {
+  --intake-surface: #f7f3ec;
+  --intake-panel: #ffffff;
+  --intake-ink: oklch(0.147 0.004 49.25);
+  --intake-muted: oklch(0.553 0.013 58.071);
+  --intake-rule: oklch(0.869 0.005 56.366);
+  --intake-radius: 0.5rem;
+  --intake-panel-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --intake-display: inherit;
+}
+
+/* Ma Reliure : le tunnel prend le papier, l'encre et le bordeaux de la page
+   qui y mène. Les angles se ferment — la landing n'a pas un seul arrondi — et
+   les titres passent à la serif éditoriale, qui est le seul signe de marque
+   que la page s'autorise. L'ombre portée disparaît : un panneau posé sur un
+   filet se distingue mieux qu'un panneau qui lévite. */
+.brand-mareliure {
+  --intake-surface: #f2eee5;
+  --intake-panel: #fbfaf7;
+  --intake-ink: #17130f;
+  --intake-muted: #6d655a;
+  --intake-rule: #ddd6c9;
+  --intake-radius: 2px;
+  --intake-panel-shadow: none;
+  --intake-display: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+  /* L'accent par défaut du runtime est le vert de Métré. Une Mission qui
+     déclare le sien le remplace ; celle-ci n'en déclare pas, et le bordeaux
+     est le bon défaut sur ce déploiement. */
+  --metre-accent: #7a2230;
+  --metre-accent-soft: color-mix(in oklab, #7a2230 10%, white);
+}
+
+@layer utilities {
+  .intake-surface {
+    background-color: var(--intake-surface);
+    color: var(--intake-ink);
+  }
+  .intake-panel {
+    background-color: var(--intake-panel);
+    border-color: var(--intake-rule);
+    border-radius: var(--intake-radius);
+    box-shadow: var(--intake-panel-shadow);
+  }
+  .intake-rule {
+    border-color: var(--intake-rule);
+  }
+  .intake-muted {
+    color: var(--intake-muted);
+  }
+  /* La serif ne sort que sur les titres, et seulement là où la marque en
+     déclare une : sur Métré, `inherit` laisse la sans-serif en place. */
+  .intake-display {
+    font-family: var(--intake-display);
+  }
+}

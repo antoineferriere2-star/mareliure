@@ -40,6 +40,8 @@ const BRAND = isMaReliure
         "Confiez votre livre à un artisan relieur. Réparation, restauration, nouvelle reliure ou création : Ma Reliure évalue votre projet et le confie à l'atelier adapté, partout en France.",
       author: "Ma Reliure",
       icon: "/mareliure-icon.svg?v=20260909",
+      // Porte les valeurs des tokens de surface du tunnel — voir styles.css.
+      themeClass: "brand-mareliure",
       schemas: [mareliureOrganizationSchema, mareliureWebsiteSchema],
     }
   : {
@@ -49,6 +51,7 @@ const BRAND = isMaReliure
         "Métré Build turns vague website inquiries into structured Project Briefs your team can act on.",
       author: "Métré Build",
       icon: "/metre-icon.svg?v=20260727",
+      themeClass: undefined,
       schemas: [organizationSchema, websiteSchema],
     };
 
@@ -153,7 +156,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang={BRAND.lang}>
+    <html lang={BRAND.lang} className={BRAND.themeClass}>
       <head>
         <HeadContent />
       </head>

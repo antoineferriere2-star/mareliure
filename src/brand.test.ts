@@ -64,8 +64,20 @@ describe("la racine du document ne code aucune marque en dur", () => {
     expect(head).not.toContain("organizationSchema)");
   });
 
+  /**
+   * Sur la garantie, pas sur l'orthographe : la première version cherchait
+   * `<html lang={BRAND.lang}>` mot pour mot et a cassé en ajoutant un
+   * `className` sur la même balise. Un test qui tombe quand on ajoute un
+   * attribut ne protège pas la langue, il protège une ligne.
+   */
   it("déclare la langue du document plutôt que de la supposer anglaise", () => {
-    expect(code).toContain("<html lang={BRAND.lang}>");
-    expect(code).not.toContain('<html lang="en">');
+    expect(code).toMatch(/<html[^>]*lang=\{BRAND\.lang\}/);
+    expect(code).not.toMatch(/<html[^>]*lang="en"/);
+  });
+
+  /** L'habillage du tunnel descend du document, pas d'une page. */
+  it("porte la classe de thème qui habille le tunnel", () => {
+    expect(code).toMatch(/<html[^>]*className=\{BRAND\.themeClass\}/);
+    expect(code).toContain('themeClass: "brand-mareliure"');
   });
 });

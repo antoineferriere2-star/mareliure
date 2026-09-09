@@ -8,6 +8,7 @@ import { PublicLanguageSelect, PublicLocaleProvider } from "@/build/pages/public
 import { usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 import { FaqLauncher } from "@/build/pages/public/FaqLauncher";
 import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
+import { isMaReliure } from "@/brand";
 
 /**
  * One entry per industry vertical Métré Build can serve. Only "published"
@@ -102,13 +103,13 @@ function BuildPublicShellContent({
 
   if (chrome === "embedded") {
     return (
-      <div className="min-h-screen bg-white text-slate-950">
-        <header className="border-b border-slate-200 bg-white">
+      <div className="intake-surface min-h-screen">
+        <header className="intake-rule border-b">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
             {/* Not a link: inside an iframe on the business's own site there is
                 nowhere useful to navigate to, and any destination here would
                 lead the visitor away from the intake. */}
-            <span className="truncate text-sm font-semibold text-slate-900">
+            <span className="intake-display truncate text-base font-semibold">
               {businessName || " "}
             </span>
             <PublicLanguageSelect />
@@ -117,13 +118,19 @@ function BuildPublicShellContent({
 
         {children}
 
-        <footer className="border-t border-slate-200 bg-white">
-          <div className="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs text-slate-500 sm:px-6">
+        <footer className="intake-rule border-t">
+          <div className="intake-muted mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-3 px-4 py-4 text-xs sm:px-6">
             {/* Métré Build processes what the visitor submits, so its privacy
                 and terms have to stay reachable even on an embedded surface.
                 The attribution is deliberately quiet — it is a credit, not a
-                call to action, and it never competes with the business. */}
-            <span>Project intake powered by Métré Build</span>
+                call to action, and it never competes with the business.
+
+                It disappears where it would be false rather than quiet: on a
+                deployment that *is* the operator, "powered by" credits a third
+                party the visitor never dealt with, and names a product they
+                have never heard of on the one screen where they are handing
+                over something of theirs. */}
+            {!isMaReliure && <span>Project intake powered by Métré Build</span>}
             <span className="flex gap-4">
               <a href="/privacy" target="_blank" rel="noreferrer" className="hover:text-slate-900">
                 {t(locale, "footer.privacy")}
@@ -138,6 +145,10 @@ function BuildPublicShellContent({
     );
   }
 
+  // Le chrome `marketing` est le site de Métré Build lui-même : il n'est
+  // jamais servi sous une autre marque, et il garde donc ses propres surfaces.
+  // Seul le chrome `embedded` — celui que le visiteur d'un client traverse —
+  // prend les tokens thématisables.
   return (
     <div className="min-h-screen bg-white text-slate-950">
       <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur">

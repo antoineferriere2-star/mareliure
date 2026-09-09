@@ -351,12 +351,18 @@ function MissionRuntimeContent({
   const accentStyle = accent
     ? { backgroundColor: accent, color: readableTextColor(accent) }
     : undefined;
-  const accentVariables = {
-    "--metre-accent": accent ?? "oklch(0.53 0.12 154)",
-    "--metre-accent-soft": accent
-      ? `color-mix(in oklab, ${accent} 12%, white)`
-      : "oklch(0.94 0.055 154)",
-  } as CSSProperties;
+  // Posées seulement quand la Mission déclare une couleur. Le repli était
+  // écrit ici, en style inline, ce qui battait toute feuille de style : un
+  // déploiement pouvait redéfinir `--metre-accent`, la valeur inline gagnait
+  // et la barre de progression restait verte. Sans Mission qui en décide, la
+  // variable retombe sur ce que le document a défini — le vert de Métré dans
+  // `:root`, autre chose sous une autre marque.
+  const accentVariables = accent
+    ? ({
+        "--metre-accent": accent,
+        "--metre-accent-soft": `color-mix(in oklab, ${accent} 12%, white)`,
+      } as CSSProperties)
+    : undefined;
   const progress =
     visibleSteps.length > 0 ? Math.round(((clampedStepIndex + 1) / visibleSteps.length) * 100) : 0;
   const isLastStep = clampedStepIndex >= visibleSteps.length - 1;
@@ -540,7 +546,7 @@ function MissionRuntimeContent({
 
   return (
     <main
-      className="min-h-screen bg-[#f7f3ec] px-4 py-5 text-stone-950 sm:px-6 lg:px-8 lg:py-8"
+      className="intake-surface min-h-screen px-4 py-5 sm:px-6 lg:px-8 lg:py-8"
       style={accentVariables}
     >
       {loading && (
@@ -585,7 +591,7 @@ function MissionRuntimeContent({
               description={copy("The project details Métré has captured so far.")}
               emptyText={copy("Your project will take shape as you answer.")}
             />
-            <section className="mt-4 rounded-lg border border-stone-300 bg-white p-5 shadow-sm sm:p-6 lg:mt-0 lg:p-8">
+            <section className="intake-panel mt-4 border p-5 sm:p-6 lg:mt-0 lg:p-8">
               {/* The customer's accent, where they expect to see it: their own
                   name and their own progress. Never the page background — a dark
                   brand colour behind body text is unreadable, and we do not get
@@ -661,8 +667,8 @@ function MissionRuntimeContent({
                             English on a page that was otherwise translated —
                             invisible to every test, because they never
                             reached the dictionary. */}
-                        {copy("Step")} {clampedStepIndex + 1} {copy("of")}{" "}
-                        {visibleSteps.length} · {progress}% {copy("complete")}
+                        {copy("Step")} {clampedStepIndex + 1} {copy("of")} {visibleSteps.length} ·{" "}
+                        {progress}% {copy("complete")}
                       </>
                     )}
                   </p>
