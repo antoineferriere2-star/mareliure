@@ -4,6 +4,7 @@ import { getMyCustomerCase } from "@/marketplace/services/marketplace.data.funct
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { formatEuros } from "@/marketplace/pricing/money";
+import { visibleJourney } from "@/marketplace/cases/journey";
 
 function customerMessage(status: string): string {
   switch (status) {
@@ -51,6 +52,35 @@ export function CustomerCasePage({ caseId }: { caseId: string }) {
           </p>
         )}
         <p className="mt-5 text-sm leading-6 text-[#4b3a2c]">{customerMessage(data.case.status)}</p>
+      </section>
+
+      {/* Le parcours, réduit aux étapes qui existent : `journey.ts` retire
+          d'office la commande et l'expédition tant qu'elles ne sont pas
+          construites. Une étape franchie porte un filet laiton plein, une
+          étape à venir un filet creux — pas de coche, pas de pourcentage : on
+          raconte où en est un livre, on ne remplit pas une barre. */}
+      <section>
+        <h2 className="font-serif text-2xl">Où en est votre livre</h2>
+        <ol className="mt-5 space-y-6">
+          {visibleJourney(data.case.status).map((stage) => (
+            <li key={stage.id} className="flex gap-4">
+              <span
+                aria-hidden="true"
+                className={`mt-2 h-px w-8 shrink-0 ${stage.done ? "bg-[#a98c55]" : "bg-[#3b2a1d]/20"}`}
+              />
+              <div>
+                <p
+                  className={`font-serif text-lg ${stage.done ? "text-[#241a12]" : "text-[#6b5847]"}`}
+                >
+                  {stage.title}
+                </p>
+                <p className="mt-1 text-sm leading-6 text-[#4b3a2c]">
+                  {stage.done ? stage.reached : stage.upcoming}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
 
       {data.selectedBinder && (

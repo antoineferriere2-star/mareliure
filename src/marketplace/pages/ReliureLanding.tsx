@@ -26,6 +26,7 @@ import {
   BEFORE_AFTER,
   COMMITMENTS,
   CRAFTS,
+  PROOFS,
   SHOW_UNFILLED_SECTIONS,
   STEPS,
 } from "./landing/content";
@@ -92,14 +93,14 @@ function Hero() {
           </h1>
 
           <p className="mt-7 max-w-[34rem] text-[1.0625rem] leading-[1.75] text-mr-walnut sm:text-[1.1875rem] sm:leading-[1.7]">
-            Photographiez votre livre, racontez-nous ce que vous souhaitez. Nous sélectionnons les
-            relieurs dont le savoir-faire correspond à votre projet.
+            Réparation, restauration, nouvelle reliure ou création : présentez votre livre et
+            découvrez ce qu'il est possible de faire.
           </p>
 
           <div className="mt-9 flex flex-col items-start gap-4">
             <IntakeCta />
             <p className="text-[0.8125rem] text-mr-muted">
-              Gratuit · Sans engagement · Prix expliqué par Ma Reliure
+              Gratuit · Quelques minutes · Sans engagement
             </p>
           </div>
         </div>
@@ -121,6 +122,34 @@ function Hero() {
             className="relative"
           />
         </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * Ce que Ma Reliure apporte, juste après le premier écran.
+ *
+ * Quatre phrases sur un filet, sans cadre ni fond : la page doit pouvoir se
+ * lire d'un balayage, pas se parcourir comme une grille de cartes. Elles
+ * répondent aux quatre questions qu'on se pose avant de confier un livre —
+ * combien, à qui, pourquoi celui-là, et comment si je n'ai personne près de
+ * chez moi.
+ *
+ * La dernière est la plus importante et n'existait nulle part : le métier est
+ * traditionnellement local, et quelqu'un sans relieur dans sa ville renonce.
+ */
+function Proofs() {
+  return (
+    <section className={`${SHELL} border-t border-mr-rule pb-4 pt-14 sm:pb-8 sm:pt-16`}>
+      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
+        {PROOFS.map((proof) => (
+          <div key={proof.title}>
+            <span aria-hidden="true" className="block h-px w-10 bg-mr-brass" />
+            <h2 className="mt-5 text-[1.0625rem] font-semibold text-mr-ink">{proof.title}</h2>
+            <p className="mt-3 text-[0.9375rem] leading-[1.7] text-mr-walnut">{proof.body}</p>
+          </div>
+        ))}
       </div>
     </section>
   );
@@ -172,10 +201,18 @@ function Steps() {
  * cadre ni fond, donc une page de magazine plutôt qu'une pile de cartes.
  */
 const CRAFT_LAYOUT = [
+  // Réparer
   { span: "lg:col-span-7", ratio: "landscape", lift: "", sizes: PHOTO_SIZES.sevenOfTwelve },
+  // Restaurer
   { span: "lg:col-span-5", ratio: "portrait", lift: "lg:mt-24", sizes: PHOTO_SIZES.fiveOfTwelve },
-  { span: "lg:col-span-5", ratio: "portrait", lift: "", sizes: PHOTO_SIZES.fiveOfTwelve },
+  // Relier
+  { span: "lg:col-span-5", ratio: "landscape", lift: "", sizes: PHOTO_SIZES.fiveOfTwelve },
+  // Embellir
   { span: "lg:col-span-7", ratio: "landscape", lift: "lg:mt-24", sizes: PHOTO_SIZES.sevenOfTwelve },
+  // Transformer
+  { span: "lg:col-span-7", ratio: "landscape", lift: "", sizes: PHOTO_SIZES.sevenOfTwelve },
+  // Protéger
+  { span: "lg:col-span-5", ratio: "portrait", lift: "lg:mt-24", sizes: PHOTO_SIZES.fiveOfTwelve },
 ] as const;
 
 function Crafts() {
@@ -183,8 +220,8 @@ function Crafts() {
     <section id={ANCHORS.crafts} className={`${SHELL} scroll-mt-24 py-20 sm:py-24 lg:py-32`}>
       <SectionHead
         eyebrow="Les savoir-faire"
-        title="Ce qu'un relieur peut faire"
-        lead="Quatre façons d'intervenir sur un livre. La bonne dépend de son état, de son histoire et de ce que vous en attendez."
+        title="Que voulez-vous faire de votre livre ?"
+        lead="Six façons d'intervenir. La bonne dépend de son état, de son histoire et de ce que vous en attendez — et c'est la première question que nous vous poserons."
       />
 
       <div className="mt-14 grid gap-14 sm:gap-16 lg:mt-20 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-4">
@@ -202,6 +239,9 @@ function Crafts() {
               <p className="mt-3 max-w-[34rem] text-[1.0625rem] leading-[1.7] text-mr-walnut">
                 {craft.body}
               </p>
+              {craft.credit && (
+                <p className="mt-3 text-[0.8125rem] text-mr-muted">Photographie : {craft.credit}</p>
+              )}
             </article>
           );
         })}
@@ -443,6 +483,7 @@ export function ReliureLanding() {
       <LandingHeader />
       <main>
         <Hero />
+        <Proofs />
         <Steps />
         <Crafts />
         <BeforeAfterSection />

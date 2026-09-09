@@ -63,38 +63,111 @@ export const STEPS: readonly LandingStep[] = [
   },
 ];
 
+/**
+ * L'atelier dont les photographies illustrent cette page.
+ *
+ * Déclaré ici plutôt qu'à côté des restaurations, parce que les univers s'en
+ * servent aussi — et qu'une constante lue avant sa déclaration ne compile pas.
+ */
+const FERRIERE = "Atelier Reliure Dorure Ferrière, Orléans";
+
+export interface Proof {
+  title: string;
+  body: string;
+}
+
+/**
+ * Ce que Ma Reliure apporte, en quatre phrases, juste sous le premier écran.
+ *
+ * Aucune ne promet un nombre d'ateliers, une pluralité d'offres ni une mise en
+ * concurrence : le client n'achète pas l'accès à un carnet d'adresses, il
+ * confie son livre à Ma Reliure.
+ *
+ * La quatrième est la plus importante commercialement et n'existait nulle part
+ * sur le site : le métier est traditionnellement local, et quelqu'un qui n'a
+ * pas de relieur dans sa ville renonce. Dire que le bon artisan n'est pas
+ * forcément le plus proche, c'est lever la contrainte qui fait abandonner.
+ */
+export const PROOFS: readonly Proof[] = [
+  {
+    title: "Prix clair",
+    body: "Vous connaissez le prix de votre projet avant de vous engager.",
+  },
+  {
+    title: "Artisans indépendants sélectionnés",
+    body: "Ma Reliure travaille avec des ateliers indépendants installés en France et spécialisés dans différents savoir-faire.",
+  },
+  {
+    title: "Le bon savoir-faire",
+    body: "Chaque projet est confié à l'atelier dont les compétences correspondent au travail à réaliser.",
+  },
+  {
+    title: "Partout en France",
+    body: "Le bon artisan n'est pas forcément le plus proche. Ma Reliure permet de confier votre livre à l'atelier adapté, où qu'il soit en France.",
+  },
+];
+
 export interface Craft {
   title: string;
   body: string;
-  /** La photographie de la catégorie, et ce qu'elle montre réellement. */
+  /** La photographie de l'univers, et ce qu'elle montre réellement. */
   photo: PhotoSources;
   alt: string;
+  /** L'atelier dont la pièce est photographiée, quand ce n'est pas la nôtre. */
+  credit?: string;
 }
 
+/**
+ * Six univers, écrits du point de vue de quelqu'un qui tient un livre.
+ *
+ * Ils remplacent quatre catégories qui parlaient technique — « Créer une
+ * édition collector » — par six besoins que le propriétaire du livre
+ * reconnaît. Ce sont les mêmes mots que les intentions du Playbook, pour qu'il
+ * retrouve à l'entrée du tunnel exactement ce qu'il a lu sur la page.
+ *
+ * Trois sont illustrés par des pièces de l'atelier Ferrière, faute d'images à
+ * nous. Elles sont créditées, comme les restaurations : aucune n'est présentée
+ * comme une réalisation de Ma Reliure.
+ */
 export const CRAFTS: readonly Craft[] = [
   {
     title: "Réparer",
-    body: "Un dos fendu, des pages qui se détachent ou une couverture fatiguée.",
+    body: "Un dos fendu, des pages qui se détachent, une couverture fatiguée. Un livre abîmé n'est pas un livre perdu.",
     photo: PHOTOS.repair,
     alt: "Un atelier de reliure : la presse en bois, les cahiers en attente et les outils au mur",
   },
   {
     title: "Restaurer",
-    body: "Préserver un ouvrage ancien en respectant son histoire.",
+    body: "Préserver un ouvrage ancien en respectant son histoire, plutôt que de la remplacer.",
     photo: PHOTOS.restore,
     alt: "Un ouvrage ancien en cuir, coiffes usées, posé sur l'établi entre les outils de restauration",
   },
   {
-    title: "Transformer",
-    body: "Donner une nouvelle allure à un livre que vous aimez.",
-    photo: PHOTOS.transform,
-    alt: "Des emboîtages et coffrets en toile, teintes ivoire, bordeaux et vert, empilés sur un établi",
+    title: "Relier",
+    body: "Donner au livre une couverture durable : pleine toile, demi-cuir à coins ou plein cuir.",
+    photo: PHOTOS.ferriereOmnia,
+    alt: "Trois volumes en demi-cuir à coins, plats marbrés et pièces de titre bordeaux",
+    credit: FERRIERE,
   },
   {
-    title: "Créer une édition collector",
-    body: "Faire d'un livre courant une pièce unique.",
+    title: "Embellir",
+    body: "Un titre, un nom d'auteur, des nerfs, des filets, une garde choisie. Quelques traits d'or suffisent parfois.",
+    photo: PHOTOS.closing,
+    alt: "Une pile de reliures en cuir aux dos ornés de filets et de fleurons dorés",
+    credit: FERRIERE,
+  },
+  {
+    title: "Transformer",
+    body: "Faire de votre édition préférée une pièce unique : matières choisies, décor, dorure.",
     photo: PHOTOS.collector,
     alt: "Une reliure en maroquin bordeaux à plats de brocart, titre doré au dos",
+    credit: FERRIERE,
+  },
+  {
+    title: "Protéger",
+    body: "Un étui, une chemise, une boîte ou un coffret sur mesure, pour protéger sans transformer.",
+    photo: PHOTOS.transform,
+    alt: "Des emboîtages et coffrets en toile, teintes ivoire, bordeaux et vert, empilés sur un établi",
   },
 ];
 
@@ -140,8 +213,6 @@ export interface BeforeAfter {
   afterAlt: string;
   credit: string;
 }
-
-const FERRIERE = "Atelier Reliure Dorure Ferrière, Orléans";
 
 /**
  * Deux cas réels, documentés et crédités. Rien ici n'est reconstitué : les

@@ -12,8 +12,18 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { DECLARED_VALUE_BANDS } from "./cases/caseProfile";
 import { CLAIM_METHODS } from "./cases/ownership";
-import { QUOTE_STATES } from "./quotes/rules";
+
 import { MAX_BINDERS_PER_CASE } from "./config";
+
+/**
+ * Les états qu'un devis pouvait prendre dans le premier modèle.
+ *
+ * Ils vivaient dans `quotes/rules.ts`, supprimé avec ce modèle. Ils restent
+ * ici parce que ce fichier vérifie une migration déjà appliquée, dont les
+ * contraintes sont de l'histoire : un fichier de migration ne se réécrit pas,
+ * et son contrat doit continuer de décrire ce qu'il a réellement posé.
+ */
+const QUOTE_STATES = ["submitted", "selected", "rejected", "expired", "withdrawn"] as const;
 
 const SQL = readFileSync(
   resolve(process.cwd(), "supabase/migrations/20260908120000_marketplace_reliure.sql"),

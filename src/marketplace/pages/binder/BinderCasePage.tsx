@@ -60,7 +60,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
       <CaseBriefPanel view={data.view} />
       <aside className="space-y-6">
         <section className="rounded-lg border border-border bg-card p-5">
-          <h2 className="font-serif text-lg">Offre Ma Reliure</h2>
+          <h2 className="font-serif text-lg">Proposition de projet</h2>
           {offer?.binder_payout_cents ? (
             <>
               <p className="mt-3 text-sm text-muted-foreground">Votre rémunération fixe</p>

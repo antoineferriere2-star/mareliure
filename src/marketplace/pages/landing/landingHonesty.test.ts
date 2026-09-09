@@ -13,7 +13,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { ARTISANS, BEFORE_AFTER, CRAFTS, COMMITMENTS, STEPS } from "./content";
+import { ARTISANS, BEFORE_AFTER, CRAFTS, COMMITMENTS, PROOFS, STEPS } from "./content";
 import { PHOTOS } from "./photos";
 
 const DIR = resolve(process.cwd(), "src/marketplace/pages");
@@ -143,14 +143,37 @@ describe("la page dit bien ce que le brief demande", () => {
     expect(STEPS).toHaveLength(3);
   });
 
-  it("porte les quatre savoir-faire et les quatre engagements", () => {
+  /**
+   * Les six univers sont les mêmes mots, dans le même ordre, que les six
+   * intentions du Playbook. Un visiteur qui lit « Protéger » sur la page doit
+   * retrouver « Le protéger » à la première question du tunnel : c'est ce qui
+   * fait qu'il se reconnaît au lieu de recommencer sa réflexion.
+   */
+  it("porte les six univers, dans l'ordre du tunnel", () => {
     expect(CRAFTS.map((c) => c.title)).toEqual([
       "Réparer",
       "Restaurer",
+      "Relier",
+      "Embellir",
       "Transformer",
-      "Créer une édition collector",
+      "Protéger",
     ]);
+  });
+
+  it("porte les quatre engagements et les quatre preuves", () => {
     expect(COMMITMENTS).toHaveLength(4);
+    expect(PROOFS).toHaveLength(4);
+  });
+
+  /**
+   * Une photographie qui n'est pas la nôtre doit dire à qui elle est. Sans
+   * cela, une pièce d'un autre atelier illustrant un univers se lit comme une
+   * réalisation de Ma Reliure (§59).
+   */
+  it("crédite chaque photographie d'atelier tiers", () => {
+    for (const craft of CRAFTS) {
+      if (craft.credit !== undefined) expect(craft.credit.trim().length).toBeGreaterThan(10);
+    }
   });
 
   it("n'ouvre qu'une seule porte : la Mission Métré", () => {
