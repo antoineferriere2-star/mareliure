@@ -20,7 +20,7 @@ import {
 } from "@/marketplace/services/marketplace.data.functions";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
-import { CASE_STATUS_LABELS, isCaseStatus } from "@/marketplace/cases/state";
+import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { PRICING_REASON_LABELS } from "@/marketplace/pricing/pricing.rules";
@@ -310,7 +310,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
                       <span className="truncate font-medium">
                         {candidate?.workshopName ?? candidate?.displayName ?? "Atelier"}
                       </span>
-                      <span className="shrink-0">{offer.state}</span>
+                      <span className="shrink-0">{offerStateLabel(offer.state)}</span>
                     </div>
                     {offer.binder_payout_cents && (
                       <p className="mt-1 text-muted-foreground">

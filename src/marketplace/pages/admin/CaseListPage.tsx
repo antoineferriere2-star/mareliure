@@ -9,10 +9,16 @@ import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { listMarketplaceCases } from "@/marketplace/services/marketplace.data.functions";
-import { CASE_STATUS_LABELS, isCaseStatus } from "@/marketplace/cases/state";
+import {
+  CASE_STATUS_LABELS,
+  isCaseStatus,
+  LEGACY_CASE_STATUS_LABELS,
+} from "@/marketplace/cases/state";
 
 function statusLabel(status: string): string {
-  return isCaseStatus(status) ? CASE_STATUS_LABELS[status] : status;
+  if (isCaseStatus(status)) return CASE_STATUS_LABELS[status];
+  // Les dossiers d'avant le modèle géré portent encore leur ancien statut.
+  return LEGACY_CASE_STATUS_LABELS[status] ?? status;
 }
 
 export function CaseListPage() {

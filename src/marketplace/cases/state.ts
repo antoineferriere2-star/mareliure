@@ -56,6 +56,37 @@ export const CASE_STATUS_LABELS: Record<CaseStatus, string> = {
 };
 
 /**
+ * Les états d'une offre faite à un atelier, et ce qu'un humain doit en lire.
+ *
+ * Ils viennent de la contrainte posée sur `marketplace_quotes` par la migration
+ * du pricing géré. Sans cette table, le back-office affichait `offered`,
+ * `accepted` et `selected` tels quels — de l'anglais de base de données sur un
+ * écran français.
+ *
+ * Les statuts d'avant le modèle géré (`sent_to_binders`, `quotes_received`)
+ * sont traduits ici aussi : ils ne peuvent plus être produits, mais neuf
+ * dossiers les portent encore et l'écran doit rester lisible.
+ */
+export const OFFER_STATE_LABELS: Record<string, string> = {
+  offered: "Offre envoyée",
+  accepted: "Acceptée",
+  declined: "Refusée",
+  expired: "Expirée",
+  cancelled: "Annulée",
+  selected: "Atelier retenu",
+};
+
+export const LEGACY_CASE_STATUS_LABELS: Record<string, string> = {
+  sent_to_binders: "Envoyé aux relieurs (ancien modèle)",
+  quotes_received: "Propositions reçues (ancien modèle)",
+};
+
+/** Le libellé d'un état d'offre, ou l'état brut si le vocabulaire évolue sans nous. */
+export function offerStateLabel(state: string): string {
+  return OFFER_STATE_LABELS[state] ?? state;
+}
+
+/**
  * Cancelling is allowed from anywhere before money moves, so it is added to
  * every entry below rather than repeated in each list.
  */
