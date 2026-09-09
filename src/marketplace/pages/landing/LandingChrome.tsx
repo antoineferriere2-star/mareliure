@@ -135,7 +135,7 @@ export function LandingHeader() {
               <li key={item.href}>
                 <a
                   href={item.href}
-                  className="text-sm text-mr-muted underline-offset-[6px] transition-colors hover:text-mr-ink hover:underline"
+                  className="mr-tap mr-small text-mr-graphite underline-offset-[6px] transition-colors hover:text-mr-ink hover:underline"
                 >
                   {item.label}
                 </a>
@@ -151,32 +151,66 @@ export function LandingHeader() {
 }
 
 /**
- * Les pages légales n'existent pas encore. Elles sont annoncées, pas liées :
- * un lien vers la page Contact actuelle enverrait une lectrice française sur
- * une page Métré Build en anglais, et un lien mort serait pire que l'aveu.
+ * Le pied de page.
+ *
+ * Institutionnel plutôt que « designer » : quelqu'un qui envisage de confier
+ * un livre auquel il tient y cherche des preuves d'existence, pas une
+ * signature graphique. D'où quatre colonnes nommées, un texte à 15 px et non
+ * à 12, et aucune ligne sous le seuil de contraste — l'ancien pied de page
+ * tombait à 2,6:1, ce qui revenait à écrire les mentions légales à l'encre
+ * sympathique.
+ *
+ * Les entrées non liées sont annoncées, pas cliquables. Un lien mort ou un
+ * renvoi vers une page Métré Build en anglais coûterait plus cher que l'aveu.
  */
-const LEGAL_PENDING = ["Mentions légales", "Confidentialité", "CGU / CGV", "Contact"] as const;
+const SERVICE_LINKS = [
+  { href: `${LANDING_PATH}#${ANCHORS.howItWorks}`, label: "Comment ça marche" },
+  { href: `${LANDING_PATH}#${ANCHORS.crafts}`, label: "Les savoir-faire" },
+  { href: "/tarifs", label: "Tarifs" },
+  { href: `${LANDING_PATH}#${ANCHORS.binders}`, label: "Pour les relieurs" },
+] as const;
+
+const PRESTATIONS = [
+  "Réparation",
+  "Restauration",
+  "Reliure",
+  "Dorure",
+  "Protection sur mesure",
+] as const;
+
+/** Annoncées, jamais liées : aucune de ces pages n'existe encore. */
+const PENDING = ["Mentions légales", "CGV", "Confidentialité", "Contact"] as const;
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-mr-rule bg-mr-paper-deep">
-      <div className="mx-auto max-w-[78rem] px-5 py-14 sm:px-8 sm:py-16">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr]">
+    <footer className="border-t border-mr-rule bg-mr-paper-warm">
+      <div className="mx-auto max-w-[80rem] px-5 py-16 sm:px-8 sm:py-20">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>
             <Wordmark />
-            <p className="mt-5 max-w-xs text-sm leading-6 text-mr-muted">
-              Reliure, restauration et création, confiées à des ateliers sélectionnés.
+            <p className="mr-small mt-6 max-w-[20rem] text-mr-graphite">
+              Reliure, restauration et création, confiées à des ateliers indépendants installés en
+              France.
             </p>
           </div>
 
-          <nav aria-label="Pied de page">
-            <h2 className="mr-eyebrow">Le service</h2>
-            <ul className="mt-4 space-y-3">
-              {NAV.map((item) => (
+          <div>
+            <h2 className="mr-eyebrow text-mr-graphite">Prestations</h2>
+            <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
+              {PRESTATIONS.map((label) => (
+                <li key={label}>{label}</li>
+              ))}
+            </ul>
+          </div>
+
+          <nav aria-label="Le service">
+            <h2 className="mr-eyebrow text-mr-graphite">Le service</h2>
+            <ul className="mr-small mt-5 space-y-3">
+              {SERVICE_LINKS.map((item) => (
                 <li key={item.href}>
                   <a
                     href={item.href}
-                    className="text-sm text-mr-walnut underline-offset-4 hover:underline"
+                    className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline"
                   >
                     {item.label}
                   </a>
@@ -186,20 +220,19 @@ export function LandingFooter() {
           </nav>
 
           <div>
-            <h2 className="mr-eyebrow">Informations</h2>
-            <ul className="mt-4 space-y-3">
-              {LEGAL_PENDING.map((label) => (
-                <li key={label} className="text-sm text-mr-muted">
-                  {label}
-                  <span className="ml-2 text-xs text-mr-muted/70">en préparation</span>
+            <h2 className="mr-eyebrow text-mr-graphite">Informations</h2>
+            <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
+              {PENDING.map((label) => (
+                <li key={label}>
+                  {label} <span className="text-mr-muted">— en préparation</span>
                 </li>
               ))}
             </ul>
           </div>
         </div>
 
-        <p className="mt-12 border-t border-mr-rule pt-6 text-xs text-mr-muted">
-          {MARELIURE_BRAND} — reliure et restauration de livres, par des artisans sélectionnés.
+        <p className="mr-small mt-14 border-t border-mr-rule pt-8 text-mr-graphite">
+          {MARELIURE_BRAND} — reliure et restauration de livres, par des artisans indépendants.
         </p>
       </div>
     </footer>

@@ -38,40 +38,63 @@ listées dans `src/marketplace/pages/landing/photos.ts`. Les noms de fichiers
 disent l'emplacement, pas le sujet : quand une photographie est remplacée,
 c'est l'emplacement qui reste stable.
 
+## Retrait du 9 septembre 2026 — cinq images générées
+
+Cinq fichiers ont été supprimés du dépôt. Ils étaient enregistrés ici comme
+`REAL_PORTFOLIO` de l'atelier Ferrière, autorisation confirmée. Ils ne
+l'étaient pas : ils ont été générés.
+
+| Fichier           | Emplacement           | Ce qui le trahissait                                                                           |
+| ----------------- | --------------------- | ---------------------------------------------------------------------------------------------- |
+| `mains-dorure`    | hero                  | Le fer à dorer n'a pas de géométrie cohérente ; la main droite ne se résout pas.               |
+| `atelier-presse`  | univers « Réparer »   | La vis de la presse n'engage rien, le plateau flotte, les outils fondent dans l'étagère.       |
+| `livre-ancien`    | univers « Restaurer » | Les nerfs ne correspondent pas au corps d'ouvrage ; les plioirs ne sont pas des objets.        |
+| `reliures-dorees` | univers « Embellir »  | Les fers se répètent avec une régularité impossible ; les corps d'ouvrage fusionnent.          |
+| `coffrets-toile`  | univers « Protéger »  | Un couvercle est simultanément ouvert et fermé. **Créditée « Atelier Ferrière » sur la page.** |
+
+La dernière ligne est la faute la plus grave, et elle explique pourquoi ce
+registre existe : on attribuait à un atelier réel une pièce qu'il n'avait pas
+faite, d'un objet qui n'existe pas. Un registre rempli sans regarder les
+images ne vaut rien — il donne seulement à une erreur l'apparence d'une
+vérification.
+
+**Ce qui a changé dans la méthode.** Ouvrir chaque fichier et le regarder est
+désormais la première étape, avant d'écrire une ligne ici. Un test
+(`landingHonesty.test.ts`) interdit nommément le retour de ces cinq fichiers,
+sur le disque comme dans le code : il ne sait pas juger une image, mais il
+empêche un `revert` distrait de les réintroduire en silence.
+
+---
+
+## Registre
+
 ### Atelier Reliure Dorure Ferrière — Orléans
 
-**Propriétaire :** Reliure Dorure Ferrière (`reliure-ferriere.fr`)
+**Propriétaire :** Reliure Dorure Ferrière (`reliure-ferriere.fr`)  
 **Autorisation :** confirmée par le titulaire des droits, oralement et par
-écrit dans le fil de développement du 8 septembre 2026.
-**Usage autorisé :** mareliure.fr et réseaux sociaux de Ma Reliure.
-**Crédit à afficher :** « Atelier Ferrière » ou « Reliure Dorure Ferrière ».
-**Date d'ajout :** 8 septembre 2026.
+écrit dans le fil de développement du 8 septembre 2026.  
+**Usage autorisé :** mareliure.fr et réseaux sociaux de Ma Reliure.  
+**Crédit à afficher :** « Atelier Reliure Dorure Ferrière, Orléans ».  
+**Vérification visuelle :** chaque fichier ouvert et examiné le 9 septembre 2026.
 
-| Fichier                             | Nature           | Sujet                                      | Crédité en page |
-| ----------------------------------- | ---------------- | ------------------------------------------ | --------------- |
-| `mains-dorure`                      | `REAL_PORTFOLIO` | Pose de la feuille d'or sur un dos à nerfs | Non (hero)      |
-| `atelier-presse`                    | `REAL_PORTFOLIO` | La presse, les cahiers en attente          | Non             |
-| `livre-ancien`                      | `REAL_PORTFOLIO` | Ouvrage ancien et outils de restauration   | Non             |
-| `coffrets-toile`                    | `REAL_PORTFOLIO` | Coffrets et emboîtages en toile            | Oui             |
-| `reliure-bordeaux`                  | `REAL_PORTFOLIO` | Reliure cuir, brocart et dorure            | Oui             |
-| `reliures-dorees`                   | `REAL_PORTFOLIO` | Pile de dos dorés sur l'établi             | Oui             |
-| `syrie-avant` / `syrie-apres`       | `REAL_PORTFOLIO` | Restauration documentée, avant/après       | Oui             |
-| `academie-avant` / `academie-apres` | `REAL_PORTFOLIO` | Restauration documentée, avant/après       | Oui             |
-| `ferriere-baudelaire`               | `REAL_PORTFOLIO` | Pièce de l'atelier                         | Oui             |
-| `ferriere-omnia`                    | `REAL_PORTFOLIO` | Pièce de l'atelier                         | Oui             |
-| `ferriere-doublures`                | `REAL_PORTFOLIO` | Doublures décorées                         | Oui             |
-| `ferriere-larousse`                 | `REAL_PORTFOLIO` | Pièce de l'atelier                         | Oui             |
+Ces neuf images ont en commun ce qui manquait aux cinq autres : un éclairage
+d'atelier plat, des fonds neutres, une usure réelle, des lettres dorées
+lisibles — « VIEWS IN SYRIA », « VENISE / RENÉ BARDOT » — et des défauts de
+prise de vue que personne ne fabrique.
 
-**Note sur les crédits partiels.** Trois images ne portent pas de crédit
-visible : le hero et deux illustrations d'univers. C'est délibéré — elles
-montrent un geste et un lieu, pas une pièce finie attribuable. Les six images
-qui montrent un ouvrage terminé sont créditées, ainsi que les quatre
-avant/après, parce que ce sont elles qui pourraient être prises pour des
-réalisations de Ma Reliure.
+| Fichier                             | Nature           | Sujet                                                         | Où                 | Crédité |
+| ----------------------------------- | ---------------- | ------------------------------------------------------------- | ------------------ | ------- |
+| `ferriere-baudelaire`               | `REAL_PORTFOLIO` | Reliure de création, mosaïque de cuir, sur Le Spleen de Paris | Hero               | Oui     |
+| `syrie-avant` / `syrie-apres`       | `REAL_PORTFOLIO` | Views in Syria, 3 vol., 1830 — avant/après restauration       | Réalisations       | Oui     |
+| `academie-avant` / `academie-apres` | `REAL_PORTFOLIO` | Dictionnaire de l'Académie, 2 vol., XVIIIᵉ — avant/après      | Réalisations       | Oui     |
+| `reliure-bordeaux`                  | `REAL_PORTFOLIO` | Maroquin bordeaux à plats de brocart, titré « Venise »        | Atelier            | Oui     |
+| `ferriere-omnia`                    | `REAL_PORTFOLIO` | Trois volumes en demi-cuir à coins                            | Atelier, portfolio | Oui     |
+| `ferriere-doublures`                | `REAL_PORTFOLIO` | Doublures décorées                                            | Atelier, portfolio | Oui     |
+| `ferriere-larousse`                 | `REAL_PORTFOLIO` | Volumes reliés, dos ornés                                     | Atelier, portfolio | Oui     |
 
-**Note sur les avant/après.** Ce sont de vrais ouvrages, vraiment restaurés.
-C'est la seule raison pour laquelle la section avant/après existe : sans
-chantier réel, elle n'aurait pas été construite.
+**Toutes créditées, sans exception.** Aucun de ces ouvrages n'est passé par Ma
+Reliure : les montrer sans dire d'où ils viennent laisserait croire le
+contraire.
 
 ---
 

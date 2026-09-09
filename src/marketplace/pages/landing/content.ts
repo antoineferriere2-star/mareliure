@@ -109,12 +109,10 @@ export const PROOFS: readonly Proof[] = [
 
 export interface Craft {
   title: string;
+  /** Ce que le besoin recouvre, en une phrase que le propriétaire reconnaît. */
   body: string;
-  /** La photographie de l'univers, et ce qu'elle montre réellement. */
-  photo: PhotoSources;
-  alt: string;
-  /** L'atelier dont la pièce est photographiée, quand ce n'est pas la nôtre. */
-  credit?: string;
+  /** Les travaux concrets, pour qui veut savoir ce qu'il achète. */
+  detail: string;
 }
 
 /**
@@ -125,49 +123,43 @@ export interface Craft {
  * reconnaît. Ce sont les mêmes mots que les intentions du Playbook, pour qu'il
  * retrouve à l'entrée du tunnel exactement ce qu'il a lu sur la page.
  *
- * Trois sont illustrés par des pièces de l'atelier Ferrière, faute d'images à
- * nous. Elles sont créditées, comme les restaurations : aucune n'est présentée
- * comme une réalisation de Ma Reliure.
+ * Sans photographie, délibérément. Quatre des six étaient illustrés par des
+ * images générées ; les retirer aurait laissé une grille à deux images et
+ * quatre trous. Plutôt que de meubler, la section devient ce qu'elle aurait dû
+ * être dès le départ : une liste de besoins qu'on lit, où le titre et la
+ * phrase font le travail. Les photographies réelles servent là où elles
+ * prouvent quelque chose — l'avant/après et l'atelier.
  */
 export const CRAFTS: readonly Craft[] = [
   {
     title: "Réparer",
-    body: "Un dos fendu, des pages qui se détachent, une couverture fatiguée. Un livre abîmé n'est pas un livre perdu.",
-    photo: PHOTOS.repair,
-    alt: "Un atelier de reliure : la presse en bois, les cahiers en attente et les outils au mur",
+    body: "Un livre abîmé n'est pas un livre perdu.",
+    detail: "Dos fendu, mors rompus, coiffes usées, pages détachées, couture à reprendre.",
   },
   {
     title: "Restaurer",
     body: "Préserver un ouvrage ancien en respectant son histoire, plutôt que de la remplacer.",
-    photo: PHOTOS.restore,
-    alt: "Un ouvrage ancien en cuir, coiffes usées, posé sur l'établi entre les outils de restauration",
+    detail: "Cuir d'origine, papier, cartonnage, reliure ancienne. Sur étude pour le patrimonial.",
   },
   {
     title: "Relier",
-    body: "Donner au livre une couverture durable : pleine toile, demi-cuir à coins ou plein cuir.",
-    photo: PHOTOS.ferriereOmnia,
-    alt: "Trois volumes en demi-cuir à coins, plats marbrés et pièces de titre bordeaux",
-    credit: FERRIERE,
+    body: "Donner au livre une couverture durable, faite pour être ouverte pendant un siècle.",
+    detail: "Pleine toile, demi-toile, dos cuir, demi-cuir à coins, plein cuir.",
   },
   {
     title: "Embellir",
-    body: "Un titre, un nom d'auteur, des nerfs, des filets, une garde choisie. Quelques traits d'or suffisent parfois.",
-    photo: PHOTOS.closing,
-    alt: "Une pile de reliures en cuir aux dos ornés de filets et de fleurons dorés",
-    credit: FERRIERE,
+    body: "Quelques traits d'or suffisent parfois à changer un livre.",
+    detail: "Titrage, nom d'auteur, tomaison, filets, fleurons, nerfs, gardes décorées, tranches.",
   },
   {
     title: "Transformer",
-    body: "Faire de votre édition préférée une pièce unique : matières choisies, décor, dorure.",
-    photo: PHOTOS.collector,
-    alt: "Une reliure en maroquin bordeaux à plats de brocart, titre doré au dos",
-    credit: FERRIERE,
+    body: "Faire de votre édition préférée une pièce unique.",
+    detail: "Reliure de création, nouvelle couverture, mosaïque de cuir, décor sur mesure.",
   },
   {
     title: "Protéger",
-    body: "Un étui, une chemise, une boîte ou un coffret sur mesure, pour protéger sans transformer.",
-    photo: PHOTOS.transform,
-    alt: "Des emboîtages et coffrets en toile, teintes ivoire, bordeaux et vert, empilés sur un établi",
+    body: "Mettre un livre à l'abri sans rien lui faire subir.",
+    detail: "Étui, chemise, boîte ou coffret, montés sur mesure autour de l'ouvrage.",
   },
 ];
 
@@ -176,22 +168,67 @@ export interface Commitment {
   body: string;
 }
 
+/**
+ * Ce que Ma Reliure garantit sur le trajet d'un livre.
+ *
+ * Quatre engagements, numérotés, sans icône. Une icône devant chacun les
+ * ferait lire comme des arguments ; numérotés, ils se lisent comme des
+ * conditions.
+ *
+ * Le quatrième est écrit au futur assumé plutôt qu'au présent : l'expédition
+ * n'est pas construite, et promettre un suivi qui n'existe pas serait la
+ * première chose qu'un client découvrirait comme fausse.
+ */
 export const COMMITMENTS: readonly Commitment[] = [
   {
-    title: "Ateliers sélectionnés",
-    body: "Nous vérifions chaque atelier avant son arrivée sur Ma Reliure.",
+    title: "Prix connu avant engagement",
+    body: "Nous étudions le travail, puis nous vous annonçons un prix ferme. Vous décidez ensuite.",
   },
   {
-    title: "Un prix unique",
-    body: "Ma Reliure fixe le prix à partir du travail demandé, avant la confirmation de l'atelier.",
+    title: "Atelier choisi selon le travail",
+    body: "Chaque projet va à l'artisan dont le savoir-faire correspond, pas au premier disponible.",
   },
   {
-    title: "Atelier disponible",
-    body: "Le relieur retenu accepte la mission et sa rémunération avant que le projet lui soit confié.",
+    title: "Un seul interlocuteur",
+    body: "Vous ne négociez pas avec l'atelier. Ma Reliure porte le projet du début à la fin.",
   },
   {
-    title: "Suivi du livre",
-    body: "Les principales étapes sont documentées jusqu'au retour.",
+    title: "Votre livre documenté",
+    body: "Son état est photographié avant le départ, et les étapes du travail vous sont rendues.",
+  },
+];
+
+export interface PriceFactor {
+  title: string;
+  body: string;
+}
+
+/**
+ * Ce qui fait le prix, dans l'ordre où cela pèse réellement sur le temps de
+ * travail — pas dans l'ordre où un client le remarque. L'état passe donc avant
+ * la matière, ce qui est contre-intuitif et vrai : reprendre une couture coûte
+ * plus cher que choisir un beau cuir.
+ *
+ * Aucun montant. La page n'en portera que lorsque le référentiel couvrira un
+ * travail avec assez d'ateliers de référence pour qu'une fourchette soit
+ * relevée plutôt qu'estimée.
+ */
+export const PRICE_FACTORS: readonly PriceFactor[] = [
+  {
+    title: "L'état du livre",
+    body: "Le premier facteur, et de loin. Un livre complet qu'on habille coûte moins qu'un livre en morceaux qu'on remet debout.",
+  },
+  {
+    title: "La structure à refaire",
+    body: "Recoudre l'ensemble des cahiers n'a rien à voir avec en reprendre trois. C'est le travail le plus long, et le moins visible une fois le livre fermé.",
+  },
+  {
+    title: "Le format",
+    body: "Un in-folio ne se manipule pas comme un livre de poche : plus de matière, d'autres outils, souvent une presse par ouvrage.",
+  },
+  {
+    title: "Les matières et la dorure",
+    body: "Toile, papier décoré, demi-cuir, plein cuir. La dorure se compte au fer et à la ligne, posée à la main, sans droit à l'erreur.",
   },
 ];
 
@@ -288,9 +325,11 @@ export const ARTISANS: readonly ArtisanProfile[] = [
     city: "Orléans",
     since: 1982,
     specialties: ["Reliure", "Restauration", "Dorure", "Cartonnage", "Pose de cuir"],
-    image: PHOTOS.ferriereBaudelaire,
+    // Le Spleen de Paris ouvre la page ; l'atelier montre une autre pièce.
+    // La même image deux fois ferait croire à un portfolio d'une seule reliure.
+    image: PHOTOS.ferriereVenise,
     imageAlt:
-      "Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à l'or et à l'argent, sur Le Spleen de Paris de Baudelaire",
+      "Une reliure en maroquin bordeaux à plats de brocart, titrée « Venise » à l'or au dos",
     portfolio: [
       {
         photo: PHOTOS.ferriereOmnia,

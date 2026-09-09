@@ -331,84 +331,204 @@
   font-display: swap;
 }
 
+/* ===========================================================================
+   Ma Reliure — le système
+   ===========================================================================
+
+   Un service premium contemporain autour d'un métier artisanal. Deux mondes,
+   et le système existe pour qu'aucun des deux n'écrase l'autre : la matière et
+   le geste viennent des photographies, la clarté et la confiance viennent de
+   la typographie et de l'espace.
+
+   Trois disciplines tiennent l'ensemble :
+
+   1. **La serif est un signe, pas une voix.** Fraunces ne sort que pour les
+      grands titres et le nom de la marque. Tout ce qui s'utilise — navigation,
+      boutons, corps, étiquettes, prix, étapes — est en sans-serif. Quand la
+      serif porte aussi les libellés, la page cesse d'être une marque et
+      devient un décor.
+
+   2. **Un seul accent, et il est rare.** Le bordeaux ne remplit jamais une
+      surface : un lien actif, un filet, un mot. Le laiton a été retiré — deux
+      accents, c'est zéro accent.
+
+   3. **Rien ne simule une matière.** Le grain de papier en dégradés CSS a été
+      supprimé : il imitait ce que les vraies photographies apportent déjà, et
+      c'est exactement le genre d'ornement qui fait « fabriqué ».
+*/
+
 @theme {
-  /* Serif expressive, réservée aux grands titres et aux citations.
-     La sans-serif de l'interface reste la pile système : sobre, et gratuite. */
+  /* Serif éditoriale, réservée aux grands titres et au nom de la marque.
+     La sans-serif reste la pile système : neutre, humaine sur chaque
+     plateforme, et zéro octet transféré sur une page dont les photographies
+     sont déjà le poids principal. */
   --font-editorial: "Fraunces", "Iowan Old Style", "Palatino Linotype", Georgia, serif;
 
-  /* Papiers */
-  --color-mr-paper: #f7f3ea;
-  --color-mr-paper-deep: #ede5d6;
+  /* --- Papiers ------------------------------------------------------------
+     Trois fonds, pas un. Le beige unique donnait à chaque section le même
+     poids, donc aucune n'en avait. L'ivoire porte la lecture, la pierre
+     marque une respiration, l'encre crée la rupture. */
+  --color-mr-paper: #fbfaf7;
+  --color-mr-paper-warm: #f2eee5;
+  --color-mr-paper-deep: #e8e2d6;
 
-  /* Encres */
-  --color-mr-ink: #1b1410;
-  --color-mr-walnut: #3a2a1e;
-  --color-mr-muted: #6b5b4b;
-  --color-mr-rule: #d7ccb9;
+  /* --- Encres -------------------------------------------------------------
+     Presque noir, légèrement brun : le noir pur sur un papier chaud vibre. */
+  --color-mr-ink: #17130f;
+  --color-mr-graphite: #3c352d;
+  --color-mr-muted: #6d655a;
+  --color-mr-rule: #ddd6c9;
+  --color-mr-rule-strong: #c6bcaa;
 
-  /* Accents — rares. Un filet, un mot, un chiffre : jamais un aplat. */
-  --color-mr-bordeaux: #6b2028;
-  --color-mr-brass: #a98c55;
+  /* --- Accent -------------------------------------------------------------
+     Un seul. Jamais un aplat : un lien, un filet, un mot. */
+  --color-mr-bordeaux: #7a2230;
+  --color-mr-bordeaux-soft: #9a4451;
+
+  /* --- Rythme vertical ----------------------------------------------------
+     Trois tailles de section, et rien entre les deux. Une échelle à trois
+     crans se lit ; une valeur inventée par section ne se lit pas. */
+  --spacing-section-sm: 4.5rem;
+  --spacing-section: 6.5rem;
+  --spacing-section-lg: 9rem;
 }
 
 @layer utilities {
-  /* Les grands titres. `opsz` pousse la Fraunces vers ses formes d'affichage :
-     contrastes plus francs, empattements plus fins — ce qui distingue un titre
-     de magazine d'un paragraphe agrandi. */
+  /* --- Titres -------------------------------------------------------------
+     `opsz` pousse la Fraunces vers ses formes d'affichage : contrastes plus
+     francs, empattements plus fins. C'est ce qui distingue un titre d'un
+     paragraphe agrandi. */
   .mr-display {
     font-family: var(--font-editorial);
     font-variation-settings: "opsz" 120;
     font-weight: 400;
-    letter-spacing: -0.015em;
-    line-height: 1.04;
+    letter-spacing: -0.02em;
+    line-height: 1.02;
+    font-size: clamp(2.5rem, 1.4rem + 3.4vw, 4.25rem);
   }
 
-  /* Titres intermédiaires : même police, réglages de texte courant. */
   .mr-title {
     font-family: var(--font-editorial);
-    font-variation-settings: "opsz" 40;
+    font-variation-settings: "opsz" 60;
     font-weight: 400;
-    letter-spacing: -0.01em;
-    line-height: 1.15;
+    letter-spacing: -0.015em;
+    line-height: 1.1;
+    font-size: clamp(1.75rem, 1.2rem + 1.8vw, 2.625rem);
   }
 
-  /* Surtitre de section : petite capitale espacée, en sans-serif.
-     C'est le seul endroit où la page hausse la voix sans grossir. */
-  .mr-eyebrow {
-    font-size: 0.6875rem;
+  /* Titre de troisième niveau : en sans-serif, délibérément. C'est le niveau
+     où le texte redevient fonctionnel — un nom d'étape, un engagement, un
+     libellé — et où la serif commencerait à décorer. */
+  .mr-heading {
     font-weight: 600;
-    letter-spacing: 0.2em;
+    letter-spacing: -0.005em;
+    line-height: 1.3;
+    font-size: 1.0625rem;
+  }
+
+  /* --- Textes -------------------------------------------------------------
+     17 px de corps, 19 px pour un chapô. La sophistication ne vient pas d'un
+     texte illisible : les 15 px précédents faisaient « magazine de luxe » et
+     se lisaient mal à 40 ans.
+
+     Aucun de ces utilitaires ne fixe de couleur. Ils l'ont fait, et deux
+     mécanismes réglaient alors la même propriété : la règle de cette feuille
+     l'emportait sur l'utilitaire Tailwind posé au point d'appel, et le chapô
+     de la section sombre s'affichait en graphite sur encre — 1,53:1,
+     illisible, sans que rien dans le JSX ne le laisse voir. La couleur
+     descend maintenant par héritage depuis la section, ce qui la rend juste
+     par construction plutôt que par vigilance.
+
+     Surtitre et métadonnée font l'exception, par la même logique : plutôt
+     qu'une couleur fixe, une part de la couleur héritée. Ils s'éclaircissent
+     sur le papier et s'assombrissent sur l'encre en gardant leur écart. */
+  .mr-lead {
+    font-size: clamp(1.0625rem, 1rem + 0.3vw, 1.1875rem);
+    line-height: 1.65;
+  }
+
+  .mr-body {
+    font-size: 1.0625rem;
+    line-height: 1.7;
+  }
+
+  .mr-small {
+    font-size: 0.9375rem;
+    line-height: 1.6;
+  }
+
+  /* Surtitre : 13 px, pas 11. Espacé, mais encore lisible — au-delà, une
+     capitale espacée cesse d'être un signal et devient un obstacle. */
+  .mr-eyebrow {
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
-    color: var(--color-mr-muted);
+    color: color-mix(in oklab, currentColor 78%, transparent);
   }
 
-  /* Grain de papier. Deux trames très basses fréquences, quelques pour cent
-     d'opacité : à l'œil c'est une matière, au calcul c'est un dégradé CSS —
-     aucune image, aucun octet transféré.
-
-     La trame est un ::before positionné, donc elle se peint après les fonds
-     ordinaires : le contenu de la section doit être dans un enfant `relative`
-     pour passer par-dessus. */
-  .mr-grain {
-    position: relative;
+  /* Métadonnée : crédit photo, mention d'atelier. Le plus petit niveau
+     autorisé, et il reste au-dessus de 13 px. */
+  .mr-meta {
+    font-size: 0.8125rem;
+    line-height: 1.5;
+    color: color-mix(in oklab, currentColor 78%, transparent);
   }
 
-  .mr-grain::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    pointer-events: none;
-    background-image:
-      repeating-linear-gradient(
-        0deg,
-        color-mix(in oklab, var(--color-mr-ink) 2.5%, transparent) 0 1px,
-        transparent 1px 3px
-      ),
-      repeating-linear-gradient(
-        90deg,
-        color-mix(in oklab, var(--color-mr-ink) 2%, transparent) 0 1px,
-        transparent 1px 4px
-      );
-    opacity: 0.55;
+  /* --- Liens --------------------------------------------------------------
+     Le seul endroit où l'accent apparaît couramment. Soulignement décalé
+     plutôt que couleur seule : la couleur ne suffit jamais à signaler un lien. */
+  .mr-link {
+    color: var(--color-mr-bordeaux);
+    text-decoration: underline;
+    text-underline-offset: 0.28em;
+    text-decoration-thickness: 1px;
+    text-decoration-color: color-mix(in oklab, var(--color-mr-bordeaux) 35%, transparent);
+    transition: text-decoration-color 160ms ease;
+  }
+
+  .mr-link:hover {
+    text-decoration-color: currentColor;
+  }
+
+  /* --- Focus --------------------------------------------------------------
+     Une règle de portée plutôt qu'une classe à poser sur chaque élément.
+     La classe existait et n'était appliquée qu'à trois liens sur quinze : les
+     douze autres n'avaient aucun anneau visible, ce qui rend la page
+     inutilisable au clavier. Une classe qu'il faut penser à écrire est une
+     classe qu'on oublie ; une règle qui descend du conteneur ne s'oublie pas.
+
+     `:focus-visible` seul, pour que le clic à la souris ne dessine pas
+     d'anneau — c'est ce qui pousse les gens à les supprimer. */
+  .mr-site :is(a, button, input, select, textarea, summary, [tabindex]):focus-visible {
+    outline: 2px solid var(--color-mr-bordeaux);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  /* Sur l'encre, le bordeaux ne se détache pas assez : l'anneau passe au
+     papier. Même geste, contraste inversé. */
+  .mr-site .bg-mr-ink :is(a, button):focus-visible {
+    outline-color: var(--color-mr-paper);
+  }
+
+  /* Cible de pointage : 24 px de haut au minimum, y compris pour un lien de
+     navigation qui ne fait que 19 px de texte. Le remplissage est vertical et
+     invisible — il agrandit la cible sans écarter les libellés. */
+  .mr-tap {
+    display: inline-block;
+    padding-block: 0.375rem;
+  }
+}
+
+/* Animations : légères, et supprimées dès que le système le demande. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

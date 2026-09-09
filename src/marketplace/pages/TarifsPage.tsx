@@ -64,7 +64,7 @@ const FACTORS: readonly Factor[] = [
 
 export function TarifsPage() {
   return (
-    <div className="min-h-screen bg-mr-paper text-mr-ink">
+    <div className="mr-site min-h-screen bg-mr-paper text-mr-graphite">
       <LandingHeader />
       <main>
         <section className="border-b border-mr-ink/10 py-16 sm:py-24">

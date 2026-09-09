@@ -1,20 +1,29 @@
 /**
- * Le visage public de la marketplace.
+ * Le visage public de Ma Reliure.
  *
  * Son seul travail est d'amener quelqu'un à presser « Présenter mon livre »,
- * qui ouvre la Mission Métré sur /m/:publicToken — le même runtime que la
- * démo Deck, pas un second. Rien de la qualification ne vit ici.
+ * qui ouvre la Mission Métré sur /m/:publicToken — le même runtime que toutes
+ * les autres Missions. Rien de la qualification ne vit ici.
  *
- * La page est écrite comme un magazine et non comme une application : une
- * serif qui a du caractère pour les titres, la pile système pour tout ce qui
- * s'utilise, des filets plutôt que des cartes, et de la photographie partout
- * où quelqu'un doit sentir une matière. Les emplacements de photo sont
- * assumés tant que les vraies images n'existent pas — voir `Photograph`.
+ * La page a été recomposée le 9 septembre 2026 autour de trois constats.
+ *
+ * **Cinq des quatorze photographies étaient générées**, dont le hero et quatre
+ * des six univers. Elles ont été retirées. Ce qui reste est vrai, et la page
+ * compose avec : les images ne servent plus à illustrer, elles servent à
+ * prouver. D'où leur concentration sur l'avant/après et l'atelier, et leur
+ * absence complète des six besoins.
+ *
+ * **La serif était la voix, pas un signe.** Elle ne sort plus que pour les
+ * grands titres et le nom de la marque ; tout ce qui s'utilise est en
+ * sans-serif, à une taille qui se lit.
+ *
+ * **Huit écrans de image → titre → texte.** Les sections ont maintenant des
+ * structures différentes parce qu'elles disent des choses différentes : une
+ * liste pour les besoins, une galerie pour les preuves, une colonne large pour
+ * l'atelier, un tableau pour les engagements.
  *
  * Aucun chiffre de cette page n'est inventé. Ni note, ni compteur de projets,
- * ni nombre d'artisans, parce qu'aucun de ces nombres n'est réel (§59). Le
- * jour où ils le seront, leur place est ici ; d'ici là, leur absence est le
- * design honnête.
+ * ni nombre d'artisans, parce qu'aucun n'est réel.
  */
 import type { ReactNode } from "react";
 import { IntakeCta, LandingFooter, LandingHeader } from "./landing/LandingChrome";
@@ -26,19 +35,21 @@ import {
   BEFORE_AFTER,
   COMMITMENTS,
   CRAFTS,
+  PRICE_FACTORS,
   PROOFS,
   SHOW_UNFILLED_SECTIONS,
   STEPS,
 } from "./landing/content";
 import { PHOTOS, PHOTO_SIZES } from "./landing/photos";
 
-const SHELL = "mx-auto w-full max-w-[78rem] px-5 sm:px-8";
+/** Un seul conteneur pour toute la page. Les variations se font en colonnes. */
+const SHELL = "mx-auto w-full max-w-[80rem] px-5 sm:px-8";
 
 /**
- * Le surtitre, le titre et le chapô d'une section.
+ * L'ouverture d'une section : surtitre, titre, chapô.
  *
- * Toutes les sections ouvrent de la même façon ; c'est ce qui donne à la page
- * son rythme de magazine. La variante `tone` sert l'unique section sombre.
+ * Alignée à gauche partout. Centrer un titre est le réflexe qui fait ressembler
+ * une page à un gabarit — le lecteur perd le bord sur lequel son œil revient.
  */
 function SectionHead({
   eyebrow,
@@ -49,78 +60,73 @@ function SectionHead({
 }: {
   eyebrow: string;
   title: ReactNode;
-  lead?: string;
+  lead?: ReactNode;
   tone?: "ink" | "paper";
   className?: string;
 }) {
   return (
     <div className={`max-w-[46rem] ${className}`}>
-      <p className={`mr-eyebrow ${tone === "paper" ? "text-mr-brass" : ""}`}>{eyebrow}</p>
-      <h2
-        className={`mr-display mt-5 text-[2.125rem] sm:text-[2.75rem] lg:text-[3.25rem] ${
-          tone === "paper" ? "text-mr-paper" : "text-mr-ink"
-        }`}
-      >
+      {/* Le surtitre et le chapô prennent la couleur de la section : rien à
+          régler ici. Seul le titre remonte au contraste plein, parce qu'un
+          titre atténué n'ouvre pas une section, il la referme. */}
+      <p className="mr-eyebrow">{eyebrow}</p>
+      <h2 className={`mr-title mt-4 ${tone === "paper" ? "text-mr-paper" : "text-mr-ink"}`}>
         {title}
       </h2>
-      {lead && (
-        <p
-          className={`mt-6 text-[1.0625rem] leading-[1.75] ${
-            tone === "paper" ? "text-mr-paper/75" : "text-mr-walnut"
-          }`}
-        >
-          {lead}
-        </p>
-      )}
+      {lead && <p className="mr-lead mt-5">{lead}</p>}
     </div>
   );
 }
 
 /**
- * Le premier écran. Moitié texte, moitié photographie sur grand écran ;
- * texte puis photographie sur téléphone, dans cet ordre — on ne fait pas
- * attendre une phrase derrière une image qui charge.
+ * Le premier écran.
+ *
+ * Il doit répondre à trois questions en cinq secondes : ce que nous faisons,
+ * pour qui, et comment on commence. Le texte occupe sept colonnes sur douze —
+ * assez pour que le titre respire sans que l'image devienne un décor de fond.
+ *
+ * L'image est la reliure de création de l'atelier Ferrière sur Le Spleen de
+ * Paris : c'est un objet réel, contemporain, et il dit à lui seul que la
+ * reliure n'est pas un métier de musée. C'est précisément ce qu'une photo
+ * d'établi brun ne disait pas.
  */
 function Hero() {
   return (
-    <section className={`${SHELL} pb-16 pt-10 sm:pb-24 sm:pt-16 lg:pb-28 lg:pt-20`}>
-      <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
-        <div>
+    <section className={`${SHELL} pt-14 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-28`}>
+      <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-14">
+        <div className="lg:col-span-7">
           <p className="mr-eyebrow">Reliure · Restauration · Création</p>
-
-          <h1 className="mr-display mt-6 text-[2.625rem] sm:text-[3.5rem] lg:text-[4.25rem]">
+          <h1 className="mr-display mt-6 text-mr-ink">
             Donnez une nouvelle vie aux livres auxquels vous tenez.
           </h1>
-
-          <p className="mt-7 max-w-[34rem] text-[1.0625rem] leading-[1.75] text-mr-walnut sm:text-[1.1875rem] sm:leading-[1.7]">
-            Réparation, restauration, nouvelle reliure ou création : présentez votre livre et
-            découvrez ce qu'il est possible de faire.
+          <p className="mr-lead mt-7 max-w-[34rem]">
+            Réparation, restauration, nouvelle reliure ou création : présentez votre livre en
+            quelques minutes. Ma Reliure évalue votre projet et le confie à l’artisan adapté.
           </p>
-
-          <div className="mt-9 flex flex-col items-start gap-4">
+          <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
             <IntakeCta />
-            <p className="text-[0.8125rem] text-mr-muted">
-              Gratuit · Quelques minutes · Sans engagement
-            </p>
+            <a href={`#${ANCHORS.crafts}`} className="mr-link mr-tap text-[1.0625rem]">
+              Découvrir les possibilités
+            </a>
           </div>
+          {/* Une ligne, pas trois badges. Trois cartes de réassurance sous un
+              CTA sont le signe le plus sûr d'un gabarit. */}
+          <p className="mr-small mt-8 max-w-[34rem]">
+            Prix communiqué avant engagement <span aria-hidden="true">·</span> Artisans indépendants{" "}
+            <span aria-hidden="true">·</span> Prise en charge partout en France
+          </p>
         </div>
-
-        {/* Le filet laiton décalé derrière l'image : une reliure a une tranche,
-            une page de magazine a une marge. C'est tout l'accent que s'autorise
-            le premier écran. */}
-        <div className="relative">
-          <div
-            aria-hidden="true"
-            className="absolute -bottom-3 -left-3 hidden h-full w-full border border-mr-brass/35 sm:block"
-          />
+        <div className="lg:col-span-5">
           <Photograph
+            photo={PHOTOS.ferriereBaudelaire}
+            sizes={PHOTO_SIZES.hero}
+            ratio="landscape"
             priority
-            ratio="tall"
-            photo={PHOTOS.hero}
-            sizes={PHOTO_SIZES.half}
-            alt="Les mains d'un relieur posant la feuille d'or sur le dos à nerfs d'un ouvrage en cuir"
-            className="relative"
+            alt="Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à l’or et à l’argent, sur Le Spleen de Paris de Baudelaire"
           />
+          <p className="mr-meta mt-3">
+            Le Spleen de Paris, reliure de création — Atelier Reliure Dorure Ferrière, Orléans
+          </p>
         </div>
       </div>
     </section>
@@ -128,61 +134,31 @@ function Hero() {
 }
 
 /**
- * Ce que Ma Reliure apporte, juste après le premier écran.
+ * La promesse, puis les trois étapes.
  *
- * Quatre phrases sur un filet, sans cadre ni fond : la page doit pouvoir se
- * lire d'un balayage, pas se parcourir comme une grille de cartes. Elles
- * répondent aux quatre questions qu'on se pose avant de confier un livre —
- * combien, à qui, pourquoi celui-là, et comment si je n'ai personne près de
- * chez moi.
- *
- * La dernière est la plus importante et n'existait nulle part : le métier est
- * traditionnellement local, et quelqu'un sans relieur dans sa ville renonce.
+ * Fond pierre : c'est la première rupture de la page, et elle arrive tôt pour
+ * signaler que le site est un service et pas un portfolio. Les étapes sont
+ * horizontales, numérotées, séparées par des filets — jamais des cartes.
  */
-function Proofs() {
+function HowItWorks() {
   return (
-    <section className={`${SHELL} border-t border-mr-rule pb-4 pt-14 sm:pb-8 sm:pt-16`}>
-      <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
-        {PROOFS.map((proof) => (
-          <div key={proof.title}>
-            <span aria-hidden="true" className="block h-px w-10 bg-mr-brass" />
-            <h2 className="mt-5 text-[1.0625rem] font-semibold text-mr-ink">{proof.title}</h2>
-            <p className="mt-3 text-[0.9375rem] leading-[1.7] text-mr-walnut">{proof.body}</p>
-          </div>
-        ))}
-      </div>
-    </section>
-  );
-}
-
-/**
- * Trois étapes, très espacées. Le chiffre est traité comme un folio de
- * magazine — grand, en serif, très clair — plutôt que comme une pastille
- * numérotée : une pastille numérotée ressemble à une démarche administrative,
- * ce que la personne redoute justement en confiant un livre.
- */
-function Steps() {
-  return (
-    <section
-      id={ANCHORS.howItWorks}
-      className="mr-grain scroll-mt-24 border-y border-mr-rule bg-mr-paper-deep"
-    >
-      <div className={`${SHELL} relative py-20 sm:py-24 lg:py-28`}>
+    <section id={ANCHORS.howItWorks} className="scroll-mt-24 bg-mr-paper-warm">
+      <div className={`${SHELL} py-section-sm sm:py-section`}>
         <SectionHead
           eyebrow="Comment ça marche"
-          title="Trois étapes, et votre livre est entre de bonnes mains."
+          title={
+            <>
+              Vous présentez le livre.
+              <br className="hidden sm:block" /> Nous organisons la suite.
+            </>
+          }
         />
-
-        <ol className="mt-14 grid gap-12 sm:gap-14 lg:mt-20 lg:grid-cols-3 lg:gap-12">
+        <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8 lg:mt-16 lg:gap-12">
           {STEPS.map((step) => (
-            <li key={step.index} className="border-t border-mr-ink/15 pt-7">
-              <span className="mr-display block text-[3.25rem] leading-none text-mr-ink/25">
-                {step.index}
-              </span>
-              <h3 className="mr-title mt-6 text-[1.75rem]">{step.title}</h3>
-              <p className="mt-3 max-w-[26rem] text-[1.0625rem] leading-[1.7] text-mr-walnut">
-                {step.body}
-              </p>
+            <li key={step.index} className="border-t border-mr-rule-strong pt-5">
+              <span className="mr-meta tabular-nums">{step.index}</span>
+              <h3 className="mr-heading mt-3 text-mr-ink">{step.title}</h3>
+              <p className="mr-body mt-2 max-w-[24rem]">{step.body}</p>
             </li>
           ))}
         </ol>
@@ -192,128 +168,93 @@ function Steps() {
 }
 
 /**
- * Une composition, pas quatre rectangles.
+ * Les six besoins.
  *
- * Les colonnes alternent large/étroit puis étroit/large, et les deux blocs de
- * droite descendent d'un cran : l'œil suit une diagonale au lieu de balayer
- * une grille. Sur téléphone la composition se déplie en une colonne — mais
- * chaque entrée reste une photographie suivie d'un titre en serif, sans
- * cadre ni fond, donc une page de magazine plutôt qu'une pile de cartes.
+ * Sans photographie. Quatre des six étaient illustrés par des images générées ;
+ * les retirer aurait laissé une grille à deux images et quatre trous, et
+ * remplir ces trous aurait été exactement la faute qu'on vient de corriger.
+ *
+ * La liste éditoriale fait mieux que la grille de photos qu'elle remplace : un
+ * visiteur qui cherche « on peut réparer mon livre ? » balaye six titres et
+ * trouve sa réponse, là où six images l'obligeaient à interpréter. Le
+ * `detail` nomme les travaux réels — c'est le vocabulaire du catalogue, donc
+ * celui qu'il retrouvera dans le tunnel.
  */
-const CRAFT_LAYOUT = [
-  // Réparer
-  { span: "lg:col-span-7", ratio: "landscape", lift: "", sizes: PHOTO_SIZES.sevenOfTwelve },
-  // Restaurer
-  { span: "lg:col-span-5", ratio: "portrait", lift: "lg:mt-24", sizes: PHOTO_SIZES.fiveOfTwelve },
-  // Relier
-  { span: "lg:col-span-5", ratio: "landscape", lift: "", sizes: PHOTO_SIZES.fiveOfTwelve },
-  // Embellir
-  { span: "lg:col-span-7", ratio: "landscape", lift: "lg:mt-24", sizes: PHOTO_SIZES.sevenOfTwelve },
-  // Transformer
-  { span: "lg:col-span-7", ratio: "landscape", lift: "", sizes: PHOTO_SIZES.sevenOfTwelve },
-  // Protéger
-  { span: "lg:col-span-5", ratio: "portrait", lift: "lg:mt-24", sizes: PHOTO_SIZES.fiveOfTwelve },
-] as const;
-
 function Crafts() {
   return (
-    <section id={ANCHORS.crafts} className={`${SHELL} scroll-mt-24 py-20 sm:py-24 lg:py-32`}>
+    <section id={ANCHORS.crafts} className={`${SHELL} scroll-mt-24 py-section-sm sm:py-section`}>
       <SectionHead
         eyebrow="Les savoir-faire"
         title="Que voulez-vous faire de votre livre ?"
-        lead="Six façons d'intervenir. La bonne dépend de son état, de son histoire et de ce que vous en attendez — et c'est la première question que nous vous poserons."
+        lead="Six façons d’intervenir. La bonne dépend de son état, de son histoire et de ce que vous en attendez — et c’est la première question que nous vous poserons."
       />
-
-      <div className="mt-14 grid gap-14 sm:gap-16 lg:mt-20 lg:grid-cols-12 lg:gap-x-10 lg:gap-y-4">
-        {CRAFTS.map((craft, i) => {
-          const layout = CRAFT_LAYOUT[i];
-          return (
-            <article key={craft.title} className={`${layout.span} ${layout.lift} self-start`}>
-              <Photograph
-                ratio={layout.ratio}
-                photo={craft.photo}
-                sizes={layout.sizes}
-                alt={craft.alt}
-              />
-              <h3 className="mr-title mt-7 text-[1.875rem] sm:text-[2rem]">{craft.title}</h3>
-              <p className="mt-3 max-w-[34rem] text-[1.0625rem] leading-[1.7] text-mr-walnut">
-                {craft.body}
-              </p>
-              {craft.credit && (
-                <p className="mt-3 text-[0.8125rem] text-mr-muted">Photographie : {craft.credit}</p>
-              )}
-            </article>
-          );
-        })}
-      </div>
+      <dl className="mt-12 grid gap-x-14 gap-y-0 sm:grid-cols-2 lg:mt-16">
+        {CRAFTS.map((craft) => (
+          <div key={craft.title} className="border-t border-mr-rule py-7">
+            <dt className="font-editorial text-[1.5rem] leading-tight text-mr-ink">
+              {craft.title}
+            </dt>
+            <dd>
+              <p className="mr-body mt-2">{craft.body}</p>
+              <p className="mr-meta mt-3">{craft.detail}</p>
+            </dd>
+          </div>
+        ))}
+      </dl>
     </section>
   );
 }
 
 /**
- * Un avertissement d'emplacement.
+ * Les réalisations.
  *
- * Il s'adresse à nous, pas au visiteur — d'où le filet bordeaux et la casse
- * technique : impossible de le confondre avec du contenu, impossible de le
- * laisser passer en production sans le voir.
- */
-function PlaceholderNotice({ children }: { children: ReactNode }) {
-  return (
-    <p className="mt-8 border-l-2 border-mr-bordeaux/60 py-1 pl-4 font-mono text-[0.6875rem] uppercase leading-5 tracking-[0.14em] text-mr-bordeaux/80">
-      {children}
-    </p>
-  );
-}
-
-/**
- * Avant / après.
+ * La seule section qui prouve quelque chose, et la seule dont les images ont
+ * une raison d'être grandes. Deux restaurations réelles, avant et après, sur
+ * des ouvrages nommés, par un atelier nommé.
  *
- * Deux restaurations réelles, sur des ouvrages nommés et datés, photographiées
- * par l'atelier qui les a faites. Le crédit sous chaque cas n'est pas une
- * politesse : ces livres ne sont pas passés par Ma Reliure, et l'omettre
- * transformerait deux vrais chantiers en deux fausses références (§59).
+ * Le crédit n'est pas une politesse : ces livres ne sont pas passés par Ma
+ * Reliure. Le taire laisserait croire le contraire.
  */
-function BeforeAfterSection() {
-  if (BEFORE_AFTER.length === 0) return null;
-
+function Realisations() {
   return (
-    <section className="border-t border-mr-rule">
-      <div className={`${SHELL} py-20 sm:py-24 lg:py-28`}>
+    <section className="bg-mr-paper-warm">
+      <div className={`${SHELL} py-section-sm sm:py-section`}>
         <SectionHead
-          eyebrow="Transformations"
-          title="Quelques livres méritent une seconde histoire."
-          lead="Le même ouvrage, à son arrivée à l'atelier puis à son retour."
+          eyebrow="Réalisations"
+          title="Le même ouvrage, à son arrivée et à son retour."
+          lead="Deux restaurations conduites par l’atelier Reliure Dorure Ferrière, à Orléans."
         />
-
-        <div className="mt-12 grid gap-16 lg:mt-16 lg:grid-cols-2 lg:gap-12">
-          {BEFORE_AFTER.map((entry) => (
-            <article key={entry.title}>
+        <div className="mt-12 grid gap-14 lg:mt-16 lg:grid-cols-2 lg:gap-12">
+          {BEFORE_AFTER.map((item) => (
+            <figure key={item.title}>
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <div>
-                  <p className="mr-eyebrow mb-3">Avant</p>
+                  <p className="mr-eyebrow mb-2">Avant</p>
                   <Photograph
-                    photo={entry.before}
+                    photo={item.before}
                     sizes={PHOTO_SIZES.beforeAfter}
-                    ratio="wide"
-                    alt={entry.beforeAlt}
+                    ratio="landscape"
+                    alt={item.beforeAlt}
                   />
                 </div>
                 <div>
-                  <p className="mr-eyebrow mb-3">Après</p>
+                  <p className="mr-eyebrow mb-2">Après</p>
                   <Photograph
-                    photo={entry.after}
+                    photo={item.after}
                     sizes={PHOTO_SIZES.beforeAfter}
-                    ratio="wide"
-                    alt={entry.afterAlt}
+                    ratio="landscape"
+                    alt={item.afterAlt}
                   />
                 </div>
               </div>
-              <h3 className="mr-title mt-7 text-[1.625rem]">{entry.title}</h3>
-              <p className="mt-3 text-[1.0625rem] leading-[1.7] text-mr-walnut">{entry.body}</p>
-              <p className="mt-4 text-[0.8125rem] text-mr-muted">
-                Restauration et photographies : {entry.credit}
-              </p>
-            </article>
+              <figcaption className="mt-6">
+                <h3 className="font-editorial text-[1.375rem] leading-snug text-mr-ink">
+                  {item.title}
+                </h3>
+                <p className="mr-body mt-2">{item.body}</p>
+                <p className="mr-meta mt-3">Restauration et photographies : {item.credit}</p>
+              </figcaption>
+            </figure>
           ))}
         </div>
       </div>
@@ -322,94 +263,67 @@ function BeforeAfterSection() {
 }
 
 /**
- * Les ateliers.
+ * L'atelier.
  *
- * `ARTISANS` est vide : aucun relieur n'a encore rejoint la plateforme, et
- * afficher un faux atelier serait le mensonge le plus coûteux de la page. La
- * section garde son texte, qui décrit une méthode de sélection bien réelle,
- * et montre les emplacements des vitrines à venir.
+ * Une preuve humaine, pas un catalogue. Un seul atelier est référencé et il est
+ * réel ; en afficher une grille suggérerait un réseau qui n'existe pas encore,
+ * et inviterait à choisir — ce que le client ne fait pas dans ce modèle.
+ *
+ * L'appel à l'action le dit : on découvre comment nous choisissons, on ne
+ * sélectionne pas un artisan.
  */
 function Artisans() {
-  const hasArtisans = ARTISANS.length > 0;
-  if (!hasArtisans && !SHOW_UNFILLED_SECTIONS) return null;
-
+  if (!SHOW_UNFILLED_SECTIONS && ARTISANS.length === 0) return null;
   return (
-    <section className="border-t border-mr-rule bg-mr-paper-deep">
-      <div className={`${SHELL} py-20 sm:py-24 lg:py-28`}>
-        <SectionHead
-          eyebrow="Les ateliers"
-          title="Le bon livre, entre les bonnes mains."
-          lead="Chaque atelier est sélectionné pour son savoir-faire, ses techniques et le type de projets qu'il souhaite recevoir."
-        />
-
-        {!hasArtisans && (
-          <PlaceholderNotice>
-            Aucun atelier n'est affiché tant qu'un relieur réel n'a pas rejoint Ma Reliure.
-          </PlaceholderNotice>
-        )}
-
-        {hasArtisans && (
-          // Un seul atelier référencé : trois colonnes laisseraient deux vides,
-          // ce qui se lit comme un manque plutôt que comme un début. On lui
-          // donne alors la largeur d'une vitrine, pas d'une vignette.
-          <div
-            className={
-              ARTISANS.length === 1
-                ? "mt-12 max-w-xl lg:mt-16"
-                : "mt-12 grid gap-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-12"
-            }
-          >
-            {ARTISANS.map((artisan) => (
-              <ArtisanCard key={artisan.id} artisan={artisan} />
-            ))}
-          </div>
-        )}
-
-        <div
-          id={ANCHORS.binders}
-          className="mt-20 max-w-[46rem] scroll-mt-24 border-t border-mr-ink/15 pt-10"
-        >
-          <h3 className="mr-title text-[1.75rem]">Vous êtes relieur ?</h3>
-          <p className="mt-4 text-[1.0625rem] leading-[1.75] text-mr-walnut">
-            Ma Reliure vous adresse des projets décrits, photographiés et déjà cadrés, avec une
-            rémunération fixée à l'avance. Vous acceptez ou refusez librement chaque offre selon
-            votre spécialité et votre capacité.
-          </p>
-        </div>
+    <section className={`${SHELL} py-section-sm sm:py-section`}>
+      <SectionHead
+        eyebrow="Les ateliers"
+        title="Derrière chaque projet, un artisan."
+        lead="Ma Reliure travaille avec des ateliers indépendants installés en France, choisis pour leurs savoir-faire et le type de travail qu’ils souhaitent recevoir."
+      />
+      <div className="mt-12 lg:mt-16">
+        {ARTISANS.map((artisan) => (
+          <ArtisanCard key={artisan.id} artisan={artisan} />
+        ))}
       </div>
+      <p id={ANCHORS.binders} className="mr-body mt-12 max-w-[38rem] scroll-mt-24">
+        Vous tenez un atelier de reliure ?{" "}
+        <a href="mailto:contact@mareliure.fr" className="mr-link">
+          Écrivez-nous
+        </a>{" "}
+        — nous cherchons des relieurs installés en France, quel que soit leur savoir-faire dominant.
+      </p>
     </section>
   );
 }
 
 /**
- * Le seul moment sombre de la page.
+ * Les engagements, sur fond d'encre.
  *
- * L'ancienne version couvrait la section d'un brun profond et y serrait quatre
- * colonnes : sombre et dense, donc lourde. Ici le fond reste sombre — un
- * contraste au milieu d'une page ivoire se lit comme une pause, pas comme un
- * bloc — mais il respire deux fois plus, et le laiton n'y apparaît qu'en
- * filet au-dessus de chaque engagement.
+ * La seule rupture sombre de la page, et elle tombe au moment où le visiteur
+ * se demande s'il peut confier un objet auquel il tient. Numérotés, sans
+ * icône : une icône devant chaque phrase les ferait lire comme des arguments,
+ * un numéro les fait lire comme des conditions.
  */
 function Commitments() {
   return (
-    <section className="bg-mr-ink">
-      <div className={`${SHELL} py-24 sm:py-28 lg:py-36`}>
+    <section className="bg-mr-ink text-mr-paper">
+      <div className={`${SHELL} py-section sm:py-section-lg`}>
         <SectionHead
-          tone="paper"
           eyebrow="Nos engagements"
-          title="Vous confiez plus qu'un objet."
+          title="Vous confiez plus qu’un objet."
           lead="Un livre part de chez vous, passe des semaines dans un atelier, et revient. Voici ce que nous garantissons sur ce trajet."
+          tone="paper"
         />
-
-        <div className="mt-16 grid gap-x-12 gap-y-14 sm:grid-cols-2 lg:mt-24 lg:grid-cols-4">
-          {COMMITMENTS.map((item) => (
-            <div key={item.title}>
-              <span aria-hidden="true" className="block h-px w-10 bg-mr-brass" />
-              <h3 className="mt-6 text-[1.0625rem] font-semibold text-mr-paper">{item.title}</h3>
-              <p className="mt-3 text-[0.9375rem] leading-[1.7] text-mr-paper/70">{item.body}</p>
-            </div>
+        <ol className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-4">
+          {COMMITMENTS.map((commitment, index) => (
+            <li key={commitment.title} className="border-t border-mr-paper/25 pt-5">
+              <span className="mr-meta tabular-nums">{String(index + 1).padStart(2, "0")}</span>
+              <h3 className="mr-heading mt-3 text-mr-paper">{commitment.title}</h3>
+              <p className="mr-body mt-2">{commitment.body}</p>
+            </li>
           ))}
-        </div>
+        </ol>
       </div>
     </section>
   );
@@ -418,59 +332,98 @@ function Commitments() {
 /**
  * Le prix.
  *
- * Aucun tarif générique n'est affiché : chaque livre reçoit un prix fondé sur
- * ses caractéristiques et le travail demandé.
+ * Pédagogique, jamais tabulaire. Une grille à trois colonnes — Basic, Pro,
+ * Premium — dirait que le travail est standardisé, ce qu'il n'est pas, et
+ * afficherait des montants que nous n'avons pas relevés.
+ *
+ * La composition en 5/7 met la promesse à gauche et les facteurs à droite :
+ * on lit d'abord pourquoi il n'y a pas de grille, ensuite ce qui fait varier.
  */
 function Pricing() {
   return (
-    <section className={`${SHELL} py-20 sm:py-24`}>
-      <div className="grid gap-8 border-t border-mr-rule pt-12 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
-        <h2 className="mr-title text-[1.875rem] sm:text-[2.25rem]">
-          Un travail artisanal, un prix expliqué.
-        </h2>
-        <p className="max-w-[38rem] text-[1.0625rem] leading-[1.75] text-mr-walnut">
-          Chaque projet est unique. La technique, les matériaux, l'état du livre et le temps de
-          travail déterminent le prix. Ma Reliure l'étudie, fixe un prix unique et vous explique ce
-          qu'il comprend avant la confirmation de l'atelier.
-        </p>
+    <section className={`${SHELL} py-section-sm sm:py-section`}>
+      <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
+        <div className="lg:col-span-5">
+          <SectionHead eyebrow="Tarifs" title="Un travail artisanal, un prix expliqué." />
+          <p className="mr-body mt-6">
+            Chaque livre est différent. Nous ne publions pas de grille tarifaire, parce qu’une
+            grille donnerait un chiffre faux à la plupart des projets. Nous regardons le travail à
+            faire, puis nous annonçons un prix ferme.
+          </p>
+          <div className="mt-8">
+            <IntakeCta size="compact" />
+          </div>
+        </div>
+        <dl className="lg:col-span-7">
+          {PRICE_FACTORS.map((factor) => (
+            <div key={factor.title} className="border-t border-mr-rule py-6">
+              <dt className="mr-heading text-mr-ink">{factor.title}</dt>
+              <dd className="mr-body mt-2">{factor.body}</dd>
+            </div>
+          ))}
+        </dl>
       </div>
     </section>
   );
 }
 
 /**
- * La fin de page.
+ * L'argument national.
  *
- * Le seul endroit où le bordeaux prend une phrase entière. Il est resté rare
- * pendant toute la page pour pouvoir servir exactement ici, sur la ligne qui
- * demande de confier le livre.
+ * Il lève la contrainte qui fait abandonner : le métier est traditionnellement
+ * local, et quelqu'un qui n'a pas de relieur dans sa ville renonce. Traité en
+ * typographie et en filets, jamais en carte de France ni en illustration
+ * isométrique — nous n'avons pas d'ateliers à y placer.
+ *
+ * Le trajet est écrit au futur là où il l'est réellement : l'expédition n'est
+ * pas construite.
+ */
+function Reach() {
+  return (
+    <section className="bg-mr-paper-warm">
+      <div className={`${SHELL} py-section-sm sm:py-section`}>
+        <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
+          <div className="lg:col-span-6">
+            <p className="mr-eyebrow">Partout en France</p>
+            <h2 className="mr-title mt-4 text-mr-ink">
+              Le bon artisan n’est pas forcément le plus proche.
+            </h2>
+          </div>
+          <div className="lg:col-span-6 lg:pt-14">
+            <p className="mr-lead">
+              Un relieur peut exceller en dorure et ne jamais toucher à une reliure ancienne. Ma
+              Reliure choisit l’atelier pour ce que votre livre demande, et organise son
+              acheminement — vous n’avez pas à trouver, ni à négocier, ni à convoyer.
+            </p>
+            <p className="mr-small mt-6">
+              L’organisation de l’envoi et du retour est en cours de mise en place. D’ici là, nous
+              convenons du transport avec vous, projet par projet.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+/**
+ * L'appel final.
+ *
+ * Texte seul, beaucoup d'air. Une image ici ne dirait rien de plus que celles
+ * déjà vues, et un grand bloc décoratif affaiblirait la seule chose qui compte
+ * à cet endroit : le bouton.
  */
 function FinalCta() {
   return (
-    <section className="border-t border-mr-rule">
-      <div className={`${SHELL} py-20 sm:py-24 lg:py-28`}>
-        <div className="grid items-center gap-12 lg:grid-cols-[1fr_0.85fr] lg:gap-20">
-          <div className="lg:order-last">
-            <h2 className="mr-display text-[2.375rem] sm:text-[3rem] lg:text-[3.5rem]">
-              Il a déjà une histoire.
-              <br />
-              <span className="text-mr-bordeaux">Confiez la suite à un artisan.</span>
-            </h2>
-            <p className="mt-7 max-w-[34rem] text-[1.0625rem] leading-[1.75] text-mr-walnut">
-              Présentez-nous votre livre en quelques minutes.
-            </p>
-            <div className="mt-9">
-              <IntakeCta />
-            </div>
-          </div>
-
-          <Photograph
-            ratio="square"
-            photo={PHOTOS.closing}
-            sizes={PHOTO_SIZES.closing}
-            alt="Une pile de reliures en cuir à dos dorés, sur l'établi d'un atelier"
-            className="lg:order-first"
-          />
+    <section className={`${SHELL} py-section sm:py-section-lg`}>
+      <div className="max-w-[34rem]">
+        <h2 className="mr-title text-mr-ink">
+          Il a déjà une histoire.
+          <br /> Confiez-nous la suite.
+        </h2>
+        <p className="mr-lead mt-6">Présentez-nous votre livre en quelques minutes.</p>
+        <div className="mt-9">
+          <IntakeCta />
         </div>
       </div>
     </section>
@@ -479,17 +432,29 @@ function FinalCta() {
 
 export function ReliureLanding() {
   return (
-    <div id="top" className="min-h-screen bg-mr-paper text-mr-ink antialiased">
+    <div id="top" className="mr-site min-h-screen bg-mr-paper text-mr-graphite">
       <LandingHeader />
       <main>
         <Hero />
-        <Proofs />
-        <Steps />
+        {/* Les quatre preuves, en filet sous le premier écran. Elles répondent
+            à « pourquoi passer par vous » avant que la page explique comment. */}
+        <section className={`${SHELL} border-t border-mr-rule py-12 sm:py-14`}>
+          <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10">
+            {PROOFS.map((proof) => (
+              <div key={proof.title}>
+                <h2 className="mr-heading text-mr-ink">{proof.title}</h2>
+                <p className="mr-small mt-2">{proof.body}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+        <HowItWorks />
         <Crafts />
-        <BeforeAfterSection />
+        <Realisations />
         <Artisans />
         <Commitments />
         <Pricing />
+        <Reach />
         <FinalCta />
       </main>
       <LandingFooter />

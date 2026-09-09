@@ -1,18 +1,23 @@
 /**
  * Les photographies de la landing.
  *
- * Elles viennent d'être fournies : la page n'illustre plus la reliure, elle la
- * montre. Chaque image est déclarée une fois ici, avec les largeurs réellement
- * encodées, pour que personne n'ait à retenir quel fichier existe.
+ * Neuf images, toutes réelles, toutes venues de l'atelier Reliure Dorure
+ * Ferrière à Orléans. Cinq autres ont été retirées le 9 septembre 2026 : elles
+ * étaient générées, et elles se voyaient — une presse dont la vis n'engageait
+ * rien, des coffrets dont les couvercles étaient à la fois ouverts et fermés,
+ * un fer à dorer sans géométrie. Elles donnaient à la page la chaleur brune et
+ * le flou de studio qui font reconnaître une image fabriquée, et l'une d'elles
+ * était créditée à l'atelier, qui ne l'avait pas faite.
+ *
+ * D'où la règle : **une case vide vaut mieux qu'une fausse image.** Le site
+ * compose désormais avec ce qu'il a, et les sections qui n'ont pas de
+ * photographie légitime n'en montrent aucune.
  *
  * Encodage : WebP, qualité 76, largeurs 480 / 800 / 1200 (et 1600 quand la
- * source le permet), jamais au-dessus de la taille d'origine — agrandir une
- * photo coûte des octets et ne rend rien. Un téléphone télécharge la variante
- * 480, soit une vingtaine de kilo-octets par image.
- *
- * Le `sizes` ne vit pas ici mais au point d'appel : il décrit la place que
- * l'image occupe dans une mise en page donnée, et la même photographie peut
- * servir à deux endroits de largeurs différentes.
+ * source le permet), jamais au-dessus de la taille d'origine. Le `sizes` ne
+ * vit pas ici mais au point d'appel : il décrit la place que l'image occupe
+ * dans une mise en page donnée, et la même photographie peut servir à deux
+ * endroits de largeurs différentes.
  */
 
 /** Ce qu'un `<img>` a besoin de savoir : une source par défaut, et le jeu complet. */
@@ -31,73 +36,41 @@ function sources(name: string, widths: readonly number[]): PhotoSources {
   };
 }
 
-/**
- * Le nom de chaque entrée dit où elle sert, pas ce qu'elle représente : quand
- * une photographie est remplacée, c'est l'emplacement qui reste stable.
- */
 export const PHOTOS = {
-  /** Hero : mains de l'artisan posant la feuille d'or sur un dos à nerfs. */
-  hero: sources("mains-dorure", [480, 800, 1200]),
-  /** Réparer : l'atelier, la presse, les cahiers en attente. */
-  repair: sources("atelier-presse", [480, 800, 1200, 1600]),
-  /** Restaurer : un ouvrage ancien fatigué, entouré des outils de restauration. */
-  restore: sources("livre-ancien", [480, 800, 1200]),
-  /** Transformer : coffrets et emboîtages en toile, teintes neuves. */
-  transform: sources("coffrets-toile", [480, 800, 1200]),
-  /** Édition collector : une pièce unique, cuir, brocart et dorure. */
-  collector: sources("reliure-bordeaux", [480, 800]),
-  /** Fin de page : une pile de dos dorés, sur l'établi. */
-  closing: sources("reliures-dorees", [480, 800, 1200, 1600]),
-
   /**
    * Les deux restaurations documentées, avant et après.
    *
-   * Photographies de l'atelier Reliure Dorure Ferrière (Orléans), fournies
-   * avec les droits d'usage. Ce sont de vrais ouvrages, vraiment restaurés :
-   * c'est la seule raison pour laquelle la section avant/après peut exister.
-   * La page les crédite, sinon les montrer ici laisserait croire qu'il s'agit
-   * de chantiers passés par Ma Reliure.
+   * Ce sont de vrais ouvrages, vraiment restaurés. C'est la seule raison pour
+   * laquelle une section avant/après peut exister — et, depuis le retrait des
+   * images générées, ce sont elles qui portent la preuve du site.
    */
   syriaBefore: sources("syrie-avant", [480, 800, 1200]),
   syriaAfter: sources("syrie-apres", [480, 800, 1200]),
   academieBefore: sources("academie-avant", [480, 800, 1200]),
   academieAfter: sources("academie-apres", [480, 800, 1200]),
 
-  /**
-   * Les pièces de l'atelier Ferrière, pour sa vitrine.
-   *
-   * `reliure-bordeaux`, plus haut, vient de la même série : c'est une reliure
-   * de cet atelier, arrivée par un autre chemin.
-   */
+  /** Les pièces de l'atelier Ferrière. */
   ferriereBaudelaire: sources("ferriere-baudelaire", [480, 800, 1024]),
   ferriereOmnia: sources("ferriere-omnia", [320, 640]),
   ferriereDoublures: sources("ferriere-doublures", [320, 640]),
   ferriereLarousse: sources("ferriere-larousse", [320, 640]),
+  /** Maroquin bordeaux à plats de brocart, titré « Venise ». */
+  ferriereVenise: sources("reliure-bordeaux", [480, 800]),
 } as const;
 
 /**
  * Les largeurs d'affichage, mesurées sur la mise en page réelle plutôt
- * qu'estimées : le conteneur plafonne à 78rem (1248 px) avec 2,5rem de marges,
- * et la grille des savoir-faire découpe 12 colonnes séparées de 2,5rem.
- *
- * Un `sizes` faux ne casse rien de visible — il fait juste télécharger une
- * image deux fois trop lourde sur un téléphone, ce qui est exactement le genre
- * de dette qu'on ne remarque jamais.
+ * qu'estimées : le conteneur plafonne à 80rem (1280 px) avec 2,5rem de marges.
+ * Un `sizes` trop généreux fait télécharger une variante inutilement lourde ;
+ * trop avare, il rend l'image floue.
  */
 export const PHOTO_SIZES = {
-  /** Hero : la moitié du conteneur au-delà de 1024 px. */
-  half: "(min-width: 1024px) 592px, calc(100vw - 2.5rem)",
-  /** Savoir-faire, bloc large : 7 colonnes sur 12. */
-  sevenOfTwelve: "(min-width: 1024px) 704px, calc(100vw - 2.5rem)",
-  /** Savoir-faire, bloc étroit : 5 colonnes sur 12. */
-  fiveOfTwelve: "(min-width: 1024px) 493px, calc(100vw - 2.5rem)",
-  /** Fin de page : la colonne de 0,85fr. */
-  closing: "(min-width: 1024px) 537px, calc(100vw - 2.5rem)",
-  /** Avant / après : deux cadres côte à côte, dans une demi-page au-delà de 1024 px. */
-  beforeAfter: "(min-width: 1024px) 290px, calc(50vw - 1.6rem)",
-  /** Vitrine d'atelier : un tiers de page au-delà de 1024 px, la moitié au-delà de 640. */
-  artisanCard:
-    "(min-width: 1024px) 384px, (min-width: 640px) calc(50vw - 2.5rem), calc(100vw - 2.5rem)",
-  /** Pièce de portfolio : trois par vitrine. */
-  artisanPiece: "(min-width: 1024px) 120px, (min-width: 640px) 16vw, 30vw",
+  /** Pleine largeur d'une colonne de 7/12 sur grand écran. */
+  hero: "(min-width: 1024px) 47vw, 100vw",
+  /** Les deux volets d'un avant/après, côte à côte. */
+  beforeAfter: "(min-width: 1024px) 300px, (min-width: 640px) 45vw, 100vw",
+  /** La pièce de tête d'un atelier. */
+  artisan: "(min-width: 1024px) 44vw, 100vw",
+  /** Une vignette de portfolio. */
+  thumb: "(min-width: 1024px) 220px, 45vw",
 } as const;

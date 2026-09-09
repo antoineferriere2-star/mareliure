@@ -109,10 +109,55 @@ describe("les emplacements de photographie s'annoncent comme provisoires", () =>
     expect(photograph).toContain("Photographie à fournir");
   });
 
-  it("décrit ce que montre la photographie de chaque savoir-faire", () => {
+  /**
+   * Les six besoins n'ont plus de photographie, et c'est le résultat d'une
+   * faute : quatre des six étaient illustrés par des images générées. Les
+   * remplacer par d'autres images aurait reproduit exactement l'erreur, alors
+   * que le titre et la phrase suffisent à faire choisir.
+   */
+  it("décrit chaque savoir-faire par des mots, pas par une image", () => {
     for (const craft of CRAFTS) {
-      expect(craft.alt.length).toBeGreaterThan(20);
+      expect(craft.body.length).toBeGreaterThan(20);
+      expect(craft.detail.length).toBeGreaterThan(20);
+      expect(craft).not.toHaveProperty("photo");
     }
+  });
+});
+
+/**
+ * Le garde-fou qui manquait le jour où cinq images générées sont entrées.
+ *
+ * Elles ne se distinguaient d'une vraie photographie ni par leur type, ni par
+ * leur nom, ni par leur déclaration — l'une d'elles était même créditée à un
+ * atelier qui ne l'avait pas faite. Un test ne peut pas regarder une image et
+ * juger si une presse s'assemble ; il peut en revanche interdire nommément
+ * celles qu'on a identifiées, pour qu'un `git revert` distrait ne les
+ * réintroduise pas en silence.
+ */
+describe("les images retirées ne peuvent pas revenir", () => {
+  const RETIREES = [
+    "mains-dorure",
+    "atelier-presse",
+    "livre-ancien",
+    "reliures-dorees",
+    "coffrets-toile",
+  ];
+
+  it("n'est plus référencée nulle part dans la landing", () => {
+    const sources = [
+      readFileSync(resolve(DIR, "landing/photos.ts"), "utf8"),
+      readFileSync(resolve(DIR, "landing/content.ts"), "utf8"),
+      readFileSync(resolve(DIR, "ReliureLanding.tsx"), "utf8"),
+    ].join("\n");
+    // Le manifeste explique en commentaire pourquoi elles sont parties ; seul
+    // le code compte.
+    const code = sources.replace(/\/\*[\s\S]*?\*\//g, "").replace(/\/\/.*$/gm, "");
+    for (const nom of RETIREES) expect(code, `${nom} est de retour`).not.toContain(nom);
+  });
+
+  it("n'existe plus sur le disque", () => {
+    for (const nom of RETIREES)
+      expect(existsSync(resolve(process.cwd(), "public/photos", `${nom}-800.webp`))).toBe(false);
   });
 });
 
@@ -167,12 +212,13 @@ describe("la page dit bien ce que le brief demande", () => {
 
   /**
    * Une photographie qui n'est pas la nôtre doit dire à qui elle est. Sans
-   * cela, une pièce d'un autre atelier illustrant un univers se lit comme une
-   * réalisation de Ma Reliure (§59).
+   * cela, une pièce d'un autre atelier se lit comme une réalisation de Ma
+   * Reliure (§59). Les seules images qui restent sur la page sont celles d'un
+   * atelier tiers : elles portent toutes un crédit.
    */
-  it("crédite chaque photographie d'atelier tiers", () => {
-    for (const craft of CRAFTS) {
-      if (craft.credit !== undefined) expect(craft.credit.trim().length).toBeGreaterThan(10);
+  it("crédite chaque restauration montrée", () => {
+    for (const item of BEFORE_AFTER) {
+      expect(item.credit.trim().length).toBeGreaterThan(10);
     }
   });
 
