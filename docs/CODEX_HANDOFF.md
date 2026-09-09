@@ -74,11 +74,14 @@ Ma Reliure n'est **pas** un comparateur de devis, pas une enchère, et pas un
 moteur où les artisans se battent sur le prix. Le client ne compare pas
 plusieurs prix de relieurs.
 
-> **Écart connu entre ce positionnement et le code actuel.** Le P0 livré
-> implémente encore un modèle de _devis_ : le relieur saisit son prix
-> (`submitBinderQuote`), le client choisit parmi les propositions
-> (`selectQuote`). Le passage au modèle « prix fixé par Ma Reliure, l'atelier
-> accepte ou refuse » n'est **pas fait**. Voir §E et §D.
+> **Le code applique ce positionnement depuis le 9 septembre 2026.** Le modèle
+> de devis — le relieur saisissait son prix, le client comparait — a été
+> remplacé par l'offre gérée : Ma Reliure fixe `customer_price`, propose
+> `binder_payout`, l'atelier accepte ou refuse. Voir §E.
+>
+> Ce qui reste à faire n'est plus le modèle mais son épreuve du réel : le
+> parcours n'a pas encore été déroulé dans un navigateur, et la migration
+> n'est appliquée que sur le projet de développement.
 
 Contrainte éditoriale permanente : **ne rien fabriquer**. Aucun nombre de
 clients, aucune note, aucun avis, aucune réalisation, aucun nom d'artisan,
@@ -190,32 +193,32 @@ Ne pas renommer les identifiants stables pour une décision marketing.
 Constaté sur le code au commit `0e6f0b7`. `PARTIEL` signifie : le code existe
 et les tests unitaires passent, mais quelque chose de nommé manque.
 
-| Fonction                                                | État        | Chemin principal                                             | Tests                                                     |
-| ------------------------------------------------------- | ----------- | ------------------------------------------------------------ | --------------------------------------------------------- |
-| Landing Ma Reliure                                      | **OK**      | `src/marketplace/pages/ReliureLanding.tsx`, `pages/landing/` | `landingHonesty.test.ts`                                  |
-| Marque `/` par environnement                            | **OK**      | `src/brand.ts`, `src/routes/index.tsx`                       | —                                                         |
-| Playbook Reliure                                        | **OK**      | `src/build/playbooks/bookbindingPlaybookSchema.ts`           | `playbookIntegrity.test.ts`                               |
-| Runtime Mission                                         | **OK**      | `src/build/pages/public/MissionRuntime.tsx`                  | plusieurs                                                 |
-| Localisation `fr-FR`                                    | **OK**      | `src/build/i18n/runtimeChrome.ts`                            | `runtimeChrome.test.ts`                                   |
-| Upload de photos                                        | **OK**      | `src/build/engine/fields/`, Supabase Storage                 | —                                                         |
-| Project Canvas                                          | **OK**      | `src/build/pages/public/ProjectCanvas.tsx`                   | `ProjectCanvas.test.ts`                                   |
-| Project Brief                                           | **OK**      | `src/build/engine/brief.ts`                                  | `brief.test.ts`                                           |
-| Ingestion `marketplace_cases`                           | **OK**      | trigger `build_dossiers_marketplace_ingest`                  | `migrationContract.test.ts`                               |
-| Lecture du Dossier par la marketplace                   | **OK**      | `cases/caseProfile.ts`, `cases/dossierProjection.ts`         | `caseProfile.test.ts`, `dossierProjection.test.ts`        |
-| Triage (drapeaux)                                       | **OK**      | `cases/triage.ts`                                            | `triage.test.ts`, `triageContract.test.ts`                |
-| Machine à états du dossier                              | **OK**      | `cases/state.ts`                                             | `state.test.ts`                                           |
-| Propriété client (claim par jeton)                      | **OK**      | `cases/ownership.ts`, `permissions.ts`                       | `ownership.test.ts`, `permissions.test.ts`                |
-| Matching (score + sélection ≤ 3)                        | **OK**      | `matching/score.ts`, `matching/selection.ts`                 | `matching.test.ts`                                        |
-| Commission (bps, centiemes entiers)                     | **OK**      | `orders/commission.ts`                                       | `commission.test.ts`                                      |
-| Garde-fou secrets                                       | **OK**      | `secretsContract.test.ts`                                    | lui-même                                                  |
-| Écran admin (dossiers, relieurs, matching)              | **OK**      | `pages/admin/`                                               | logique testée + parcours complet vérifié au navigateur   |
-| Espace atelier                                          | **OK**      | `pages/binder/`                                              | idem                                                      |
-| Espace client (« Mes livres »)                          | **OK**      | `pages/customer/`                                            | idem                                                      |
-| Devis relieur                                           | **PARTIEL** | `quotes/rules.ts`, `submitBinderQuote`                       | `rules.test.ts` — **modèle commercial obsolète, voir §E** |
-| Pricing Ma Reliure (`customer_price` / `binder_payout`) | **NON**     | —                                                            | —                                                         |
-| Stripe Connect / paiements                              | **NON**     | —                                                            | —                                                         |
-| Expédition, inspection, avenants, avis                  | **NON**     | —                                                            | —                                                         |
-| Fiche atelier alimentée par la base                     | **NON**     | vitrine en dur dans `pages/landing/content.ts`               | —                                                         |
+| Fonction                                                | État    | Chemin principal                                             | Tests                                                        |
+| ------------------------------------------------------- | ------- | ------------------------------------------------------------ | ------------------------------------------------------------ |
+| Landing Ma Reliure                                      | **OK**  | `src/marketplace/pages/ReliureLanding.tsx`, `pages/landing/` | `landingHonesty.test.ts`                                     |
+| Marque `/` par environnement                            | **OK**  | `src/brand.ts`, `src/routes/index.tsx`                       | —                                                            |
+| Playbook Reliure                                        | **OK**  | `src/build/playbooks/bookbindingPlaybookSchema.ts`           | `playbookIntegrity.test.ts`                                  |
+| Runtime Mission                                         | **OK**  | `src/build/pages/public/MissionRuntime.tsx`                  | plusieurs                                                    |
+| Localisation `fr-FR`                                    | **OK**  | `src/build/i18n/runtimeChrome.ts`                            | `runtimeChrome.test.ts`                                      |
+| Upload de photos                                        | **OK**  | `src/build/engine/fields/`, Supabase Storage                 | —                                                            |
+| Project Canvas                                          | **OK**  | `src/build/pages/public/ProjectCanvas.tsx`                   | `ProjectCanvas.test.ts`                                      |
+| Project Brief                                           | **OK**  | `src/build/engine/brief.ts`                                  | `brief.test.ts`                                              |
+| Ingestion `marketplace_cases`                           | **OK**  | trigger `build_dossiers_marketplace_ingest`                  | `migrationContract.test.ts`                                  |
+| Lecture du Dossier par la marketplace                   | **OK**  | `cases/caseProfile.ts`, `cases/dossierProjection.ts`         | `caseProfile.test.ts`, `dossierProjection.test.ts`           |
+| Triage (drapeaux)                                       | **OK**  | `cases/triage.ts`                                            | `triage.test.ts`, `triageContract.test.ts`                   |
+| Machine à états du dossier                              | **OK**  | `cases/state.ts`                                             | `state.test.ts`                                              |
+| Propriété client (claim par jeton)                      | **OK**  | `cases/ownership.ts`, `permissions.ts`                       | `ownership.test.ts`, `permissions.test.ts`                   |
+| Matching (score + sélection ≤ 3)                        | **OK**  | `matching/score.ts`, `matching/selection.ts`                 | `matching.test.ts`                                           |
+| Commission (bps, centiemes entiers)                     | **OK**  | `orders/commission.ts`                                       | `commission.test.ts`                                         |
+| Garde-fou secrets                                       | **OK**  | `secretsContract.test.ts`                                    | lui-même                                                     |
+| Écran admin (dossiers, relieurs, matching)              | **OK**  | `pages/admin/`                                               | logique testée + parcours complet vérifié au navigateur      |
+| Espace atelier                                          | **OK**  | `pages/binder/`                                              | idem                                                         |
+| Espace client (« Mes livres »)                          | **OK**  | `pages/customer/`                                            | idem                                                         |
+| Offre gérée (accepte / refuse)                          | **OK**  | `quotes/rules.ts` (lecture historique), fonctions Postgres   | `managedMarketplaceContract.test.ts`                         |
+| Pricing Ma Reliure (`customer_price` / `binder_payout`) | **OK**  | `src/marketplace/pricing/`                                   | `pricing.test.ts`, `managedPricingMigrationContract.test.ts` |
+| Stripe Connect / paiements                              | **NON** | —                                                            | —                                                            |
+| Expédition, inspection, avenants, avis                  | **NON** | —                                                            | —                                                            |
+| Fiche atelier alimentée par la base                     | **NON** | vitrine en dur dans `pages/landing/content.ts`               | —                                                            |
 
 ### Le parcours vérifié au navigateur
 
@@ -263,16 +266,29 @@ admin**. Aucune décision de prix entièrement automatique.
 
 ### Ce que le code fait aujourd'hui
 
-Le modèle inverse. `marketplace_quotes` stocke un montant saisi par le relieur ;
-`submitBinderQuote` l'enregistre ; `selectQuote` laisse le client en choisir un.
-`quotes/rules.ts` valide un devis et ordonne les propositions « pour
-comparaison ».
+Exactement cela, depuis `52d0861`.
 
-**Le passage au modèle cible est une refonte à part entière**, pas un
-renommage : il touche le schéma (`marketplace_quotes` → une offre par
-appariement, avec `customer_price`, `binder_payout`, `accepted_at` /
-`declined_at`), la machine à états, les server functions et les trois écrans.
-Ne pas le commencer sans l'avoir découpé.
+`src/marketplace/pricing/` calcule une suggestion déterministe à partir des
+réponses structurées du Dossier — `pricing.rules.ts` porte la grille,
+`pricing.engine.ts` l'applique, `pricing.types.ts` déclare des codes de raison
+stables séparés de leurs libellés français. La marge minimale est vérifiée en
+base, pas seulement dans le code.
+
+`marketplace_quotes` ne stocke plus un devis mais l'offre gérée présentée à un
+atelier : `customer_price_cents`, `binder_payout_cents`, `accepted_at`,
+`declined_at` et un motif de refus parmi une liste fermée. Trois fonctions
+Postgres rendent atomiques la validation du prix, la réponse de l'atelier et la
+sélection ; `marketplace_events` journalise le tout derrière une RLS deny-all.
+
+> **La grille tarifaire est un point de départ, pas un tarif.** Les montants de
+> `PAYOUT_RULES` — 140 € de base en réparation, 180 € de supplément plein cuir,
+> etc. — ont été posés pour que le moteur produise quelque chose, pas parce
+> qu'ils sont justes. Ils doivent être calibrés avec un relieur réel avant
+> qu'un prix atteigne un client. La validation humaine exigée par ce chapitre
+> est ce qui rend cet état acceptable en attendant.
+
+`quotes/rules.ts` subsiste pour lire les dossiers antérieurs. Aucune server
+function active n'y crée plus de prix d'atelier.
 
 ### Règle non négociable
 
@@ -287,24 +303,24 @@ règle.
 
 ## F. Workflow cible et état
 
-| Étape                  | État                                       |
-| ---------------------- | ------------------------------------------ |
-| Visitor → Métré Intake | **OK**                                     |
-| Project Brief          | **OK**                                     |
-| Marketplace Case       | **OK** (trigger d'ingestion)               |
-| Pricing                | **NON**                                    |
-| Validation admin       | **OK**                                     |
-| Matching               | **OK**                                     |
-| Binder Offer           | **OK**, mais sur le mauvais modèle (devis) |
-| Binder accepts         | **NON**                                    |
-| Customer price         | **NON**                                    |
-| Payment                | **NON**                                    |
-| Shipment               | **NON**                                    |
-| Inspection             | **NON**                                    |
-| Work                   | **NON**                                    |
-| Amendment              | **NON**                                    |
-| Return                 | **NON**                                    |
-| Review                 | **NON**                                    |
+| Étape                  | État                                     |
+| ---------------------- | ---------------------------------------- |
+| Visitor → Métré Intake | **OK**                                   |
+| Project Brief          | **OK**                                   |
+| Marketplace Case       | **OK** (trigger d'ingestion)             |
+| Pricing                | **OK** (suggestion + validation humaine) |
+| Validation admin       | **OK**                                   |
+| Matching               | **OK**                                   |
+| Binder Offer           | **OK**                                   |
+| Binder accepts         | **OK**                                   |
+| Customer price         | **OK**                                   |
+| Payment                | **NON**                                  |
+| Shipment               | **NON**                                  |
+| Inspection             | **NON**                                  |
+| Work                   | **NON**                                  |
+| Amendment              | **NON**                                  |
+| Return                 | **NON**                                  |
+| Review                 | **NON**                                  |
 
 ---
 
