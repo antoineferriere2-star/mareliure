@@ -784,77 +784,86 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 **Date:** 9 septembre 2026
 
 **Branch:** `main` — `feat/reliure-marketplace-mvp` et
-`feat/managed-pricing-offers` pointent sur le même commit.
+`feat/managed-pricing-offers` alignées.
 
-**Commit:** `52d0861`.
+**Commit:** `e5e4041`.
 
-**Production:** Worker version `59d66164-3a37-46ba-897e-88fe4011614c`. Elle sert
-encore le code d'avant le pricing géré. **Ne pas déployer `main` avant d'avoir
-appliqué la migration sur la base de production — voir l'encadré du §J.**
+**Production:** Worker `59d66164-3a37-46ba-897e-88fe4011614c`, code d'avant le
+pricing géré. **Ne pas déployer `main` avant d'avoir appliqué la migration sur
+la base de production — encadré du §J.**
 
 **Completed:**
 
-- **Pricing géré fusionné dans `main`.** Le travail de fond vient de Codex sur
-  la branche `feat/managed-pricing-offers` : modèle `customer_price` /
-  `binder_payout`, l'atelier accepte ou refuse, moteur de suggestion
-  déterministe dans `src/marketplace/pricing/`, fonctions Postgres atomiques,
-  table d'événements, refonte des trois surfaces, copie de la landing alignée.
-- **Réintégration** (`52d0861`). La branche était partie d'une base périmée de
-  quatre commits. Trois écarts annulés : la connaissance Ma Reliure introduite
-  dans `src/build/services/postAuthRoute.ts` (le moteur revient à sa version,
-  le routage repasse par `src/marketplace/auth/`), un second script de build ne
-  différant que par une majuscule et dépourvu de la vérification d'artefact, et
-  une migration non rejouable — 31 `ADD COLUMN` nus, contraintes, index, table,
-  politique et déclencheur sans garde, sans recette de retour arrière. Tout est
-  sous garde et réversible.
-- **Migration appliquée sur le projet de développement** `qwfhebtxeubfmvvdsqdt`
-  et vérifiée : colonnes de prix sur `marketplace_cases`, colonnes d'offre sur
-  `marketplace_case_matches`, table `marketplace_events` présente.
+- **Pricing géré fusionné et vérifié.** Le fond vient de Codex ; la
+  réintégration (`52d0861`) a annulé trois écarts : connaissance Ma Reliure
+  dans `src/build/services/postAuthRoute.ts`, second script de build sans
+  vérification d'artefact, migration non rejouable.
+- **Migration appliquée sur le projet de développement** et parcours complet
+  déroulé au navigateur : suggestion 440 € client / 355 € atelier avec ses
+  raisons, validation, offre, acceptation, sélection, prix unique côté cliente.
+- **Un atelier ne voit plus le budget annoncé** (`a2e06e0`). La divulgation
+  avait deux niveaux pour trois audiences ; elle en a trois — `full`,
+  `assigned`, `project_only`.
+- **Six univers publics** remplacent les quatre catégories techniques
+  (`e5e4041`) : Réparer, Restaurer, Relier, Embellir, Transformer, Protéger.
+  Mêmes mots et même ordre que les intentions du Playbook.
+- **Playbook version 5 publiée** (`fcf9903`), Mission repointée, versions 1 à 4
+  intactes. Deux intentions ajoutées — `personnaliser`, `proteger` — par ajout
+  pur ; `couverture` retiré de la liste mais conservé partout ailleurs.
+- **`briefLabel`**, capacité générique ajoutée au moteur : une option peut se
+  lire autrement dans un Dossier que dans la question qui l'a posée. Sans
+  métier, avec ses tests.
+- **Quatre preuves** sous le premier écran, dont l'argument national qui
+  n'existait nulle part.
+- **Parcours client** en trois étapes visibles (`journey.ts`), deux déclarées
+  et masquées tant que paiement et expédition n'existent pas.
+- **`quotes/rules.ts` supprimé** ; « Offre Ma Reliure » devient « Proposition
+  de projet ».
 
-**In progress:** rien. Working tree propre.
+**In progress:** rien. Working tree propre. 1368 tests, typecheck propre.
 
 **Next recommended task:**
 
-1. **Appliquer la migration sur la production, puis déployer** (§J). Tant que ce
-   n'est pas fait, `main` ne doit pas partir en production.
-2. **Dérouler le parcours pricing dans un navigateur** sur le dev : l'admin
-   valide un prix, l'atelier accepte ou refuse, la cliente voit un prix unique.
-   Les tests lisent le SQL, ils ne l'exécutent pas — cette étape n'a pas encore
-   été faite pour le nouveau modèle.
-3. **Architecture éditoriale** : cinq univers publics (Sauver, Relier, Embellir,
-   Créer, Protéger), pages SEO spécialisées, refonte de la homepage autour de
-   « Que voulez-vous faire de votre livre ? ». Audit fait, deux décisions
-   prises : la homepage garde **trois** étapes tant que l'expédition n'existe
-   pas, et le Playbook gagne deux intentions — `personnaliser` et `proteger` —
-   **par ajout, jamais par renommage** : `reparer`, `restaurer`, `couverture`,
-   `belle_reliure`, `collector`, `ne_sais_pas` sont des clés machine que neuf
-   dossiers portent déjà, et sur lesquelles `caseProfile.ts` et
-   `pricing.rules.ts` s'accrochent.
-4. **Logistique d'expédition** : rien n'existe, ni table ni fournisseur. Le
-   comparatif Sendcloud / Boxtal et les livrables A–I sont demandés avant toute
-   intégration. À noter : il n'existe aucune notion de commande — les
-   expéditions se rattacheront à `marketplace_cases`.
+1. **Migration en production, puis déploiement.** Rien de ce qui précède n'est
+   en ligne.
+2. **Logistique d'expédition.** Rien n'existe : ni table `marketplace_shipments`,
+   ni fournisseur, ni notion de commande — les expéditions se rattacheront à
+   `marketplace_cases`. Le comparatif Sendcloud / Boxtal et les livrables A–I
+   sont demandés **avant** toute intégration.
+3. **Pages ateliers** `/ateliers/:slug`. `marketplace_binders` couvre déjà
+   l'essentiel ; manquent huit colonnes : `slug`, `short_bio`, `styles`,
+   `typical_lead_time`, `workshop_photos[]`, `seo_title`, `seo_description`, et
+   `featured` sur le portfolio.
+4. **Pages SEO éditoriales** — restauration, reliure cuir, dorure, collector,
+   protection.
 
 **Known issues:**
 
 - `main` n'est pas déployable tant que la migration n'est pas en production ;
-- le parcours du pricing géré n'a jamais été exercé dans un navigateur ;
+- la grille tarifaire de `PAYOUT_RULES` est un point de départ posé pour que le
+  moteur produise quelque chose, **pas un tarif** : à calibrer avec un relieur
+  réel avant qu'un prix atteigne un client ;
 - les inscriptions publiques sont fermées en production (§H) ;
 - un `marketplace_case` de test subsiste en production ;
-- `supabase/config.toml` pointe sur le projet Métré d'origine : le CLI est
-  maintenant lié au dev, mais toujours vérifier la cible avant un `db push` ;
 - `rating_avg`, `rating_count` et `response_rate` existent sur
   `marketplace_binders` et sont vides : une page publique ne doit les afficher
   que non nuls ;
+- la fiche atelier est en dur dans `pages/landing/content.ts` ;
 - deux réglages Cloudflare restent à poser à la main (§J).
 
 **Do not touch:**
 
 - `src/build/` pour un besoin propre à la reliure — Playbook ou
-  `src/marketplace/` ;
+  `src/marketplace/`. Une capacité générique y est recevable, sans métier et
+  avec ses tests : c'est ce qu'est `briefLabel` ;
 - `src/build/services/postAuthRoute.ts` : la réponse Ma Reliure vit dans
   `src/marketplace/auth/postAuthRoute.ts` ;
-- les valeurs d'option du Playbook : clés machine, on ajoute sans renommer ;
+- **les valeurs d'option du Playbook** : clés machine lues par `caseProfile.ts`
+  et `pricing.rules.ts`. On ajoute, on retire d'une liste, on ne renomme
+  jamais. Une version publiée ne se modifie pas en place — on en publie une
+  nouvelle et on repointe la Mission ;
+- `MAX_BINDERS_PER_CASE = 3` : règle interne qui protège les ateliers d'un
+  travail en série. Jamais vendue au client comme une promesse ;
 - les politiques RLS `build_*` ;
 - le preset Nitro (`cloudflare-module`) ;
 - le repli codé en dur de `vite.config.ts` : bonne valeur pour Métré seul ;
