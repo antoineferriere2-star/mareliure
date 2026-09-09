@@ -16,6 +16,9 @@ const SECTION_TITLES: Record<
     | "missionName"
     | "status"
     | "projectSummary"
+    // Le résumé découpé accompagne `projectSummary` ; ce n'est pas une section
+    // du Dossier et il n'a pas de titre à porter.
+    | "projectSummaryParts"
     | "confidence"
     | "suggestedNextAction"
   >,

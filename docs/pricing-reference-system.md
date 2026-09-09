@@ -1,8 +1,15 @@
 # Le référentiel tarifaire de Ma Reliure
 
-> État au 9 septembre 2026. Le référentiel est **vide** : aucun tarif n'a
-> encore été relevé auprès d'un relieur réel. Le moteur refuse donc de chiffrer
-> et chaque projet part en revue manuelle. C'est le comportement voulu.
+> État au 9 septembre 2026. Le référentiel est **vide en production** : aucun
+> tarif n'a encore été relevé auprès d'un relieur réel, donc le moteur refuse de
+> chiffrer et chaque projet part en revue manuelle. C'est le comportement voulu.
+>
+> Sur la base de développement, les deux migrations sont appliquées et le jeu
+> d'essai TEST_ONLY tourne : 3 ateliers, 6 combinaisons couvertes, 40 travaux
+> sur 45 sans tarif. Le cas de référence y est vérifié de bout en bout —
+> demi-cuir format courant, **3 ateliers, 320 / 350 / 410 €** — et le dossier
+> RL-005 en ressort chiffré à 425 € atelier / 520 € client, fourchette
+> 440–710 €.
 
 ---
 
@@ -151,6 +158,13 @@ Deux seuils :
   quartiles. Un premier quartile sur trois valeurs est une précision inventée.
 
 La médiane prime toujours sur la moyenne.
+
+**Trois statistiques, une seule quantité.** `minimumCents`, `medianCents` et
+`maximumCents` portent toutes sur le tarif courant : avec trois ateliers à 320,
+350 et 410 €, on lit 320 / 350 / 410. Le plus bas minimum et le plus haut
+maximum déclarés vivent à part — `floorCents` / `ceilingCents` — et servent à
+borner une estimation. Les mélanger produisait « minimum 300 € » là où aucun
+atelier ne demande 300 € pour ce travail.
 
 ---
 

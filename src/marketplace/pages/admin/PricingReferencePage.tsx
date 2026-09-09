@@ -70,9 +70,9 @@ export function PricingReferencePage() {
                   <th className="px-3 py-2 font-medium">Travail</th>
                   <th className="px-3 py-2 font-medium">Format</th>
                   <th className="px-3 py-2 text-right font-medium">Ateliers</th>
-                  <th className="px-3 py-2 text-right font-medium">Minimum</th>
+                  <th className="px-3 py-2 text-right font-medium">Le moins cher</th>
                   <th className="px-3 py-2 text-right font-medium">Médiane</th>
-                  <th className="px-3 py-2 text-right font-medium">Maximum</th>
+                  <th className="px-3 py-2 text-right font-medium">Le plus cher</th>
                 </tr>
               </thead>
               <tbody>
@@ -127,8 +127,16 @@ export function PricingReferencePage() {
                                 </li>
                               ))}
                             </ul>
+                            {/* Deux lignes qui ne disent pas la même chose. Le
+                                tableau montre la dispersion des tarifs courants
+                                entre ateliers ; l'enveloppe ajoute la marge que
+                                chacun se donne sur ses propres lignes. */}
+                            <p className="mt-2 text-xs text-muted-foreground">
+                              Enveloppe déclarée : {formatEuros(aggregate.floorCents)} –{" "}
+                              {formatEuros(aggregate.ceilingCents)}
+                            </p>
                             {aggregate.q1Cents !== null && (
-                              <p className="mt-2 text-xs text-muted-foreground">
+                              <p className="mt-1 text-xs text-muted-foreground">
                                 Quartiles : {formatEuros(aggregate.q1Cents)} –{" "}
                                 {formatEuros(aggregate.q3Cents!)}
                               </p>

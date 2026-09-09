@@ -64,6 +64,45 @@ describe("what an invited relieur sees", () => {
     expect(relieur.budgetAndTiming.map((l) => l.label)).not.toContain("Budget envisagé");
   });
 
+  /**
+   * Le budget avait deux portes, et une seule était fermée.
+   *
+   * La ligne « Budget envisagé » était bien retirée, mais la phrase de résumé
+   * du Dossier se terminait par « Budget 250 – 400 € » — et c'est elle que
+   * l'atelier lit en premier, en tête de page comme dans sa liste de projets.
+   * Filtrer une surface sur deux ne filtre rien.
+   */
+  it("ne le lit pas non plus dans la phrase de résumé", () => {
+    expect(relieur.summary).not.toMatch(/budget/i);
+    expect(relieur.summary).not.toContain("250");
+    // Le reste du résumé survit : on retire une phrase, on ne tronque pas tout.
+    expect(relieur.summary).toContain("Monte-Cristo");
+    expect(relieur.summary.length).toBeGreaterThan(40);
+  });
+
+  /**
+   * Le cas qui compte le plus, parce que c'est celui de tous les dossiers déjà
+   * en base : un Project Brief est stocké tel quel, donc ceux écrits avant que
+   * le moteur découpe son résumé n'ont pas de parts. Le repli doit filtrer
+   * quand même — la première version retombait sur le résumé complet, et
+   * laissait le budget visible sur exactement les dossiers réels.
+   */
+  it("filtre aussi un Dossier ancien, qui n'a pas de résumé découpé", () => {
+    const brief = generateProjectBrief(bookbindingPlaybookSchema, ANSWERS, { name: "Ma Reliure" });
+    const ancien = projectCase({
+      reference: "RL-003",
+      brief: { ...brief, projectSummaryParts: undefined },
+      profile: buildCaseProfile(ANSWERS),
+      disclosure: "project_only",
+      photos: [],
+      manualReviewRequired: false,
+    });
+
+    expect(ancien.summary).not.toMatch(/budget/i);
+    expect(ancien.summary).not.toContain("250");
+    expect(ancien.summary).toContain("Monte-Cristo");
+  });
+
   it("garde le délai souhaité, qui est une contrainte de travail", () => {
     expect(relieur.budgetAndTiming.map((l) => l.label)).toContain("Délai souhaité");
   });
@@ -107,6 +146,10 @@ describe("what the admin, or the chosen relieur, sees", () => {
   /** L'admin fixe le prix : le budget annoncé est une de ses entrées. */
   it("garde le budget annoncé, qui informe la décision de prix", () => {
     expect(full.budgetAndTiming.map((l) => l.label)).toContain("Budget envisagé");
+  });
+
+  it("garde aussi la phrase de résumé complète", () => {
+    expect(full.summary).toMatch(/budget/i);
   });
 });
 

@@ -117,6 +117,53 @@ export interface ProjectCaseInput {
   manualReviewRequired: boolean;
 }
 
+/**
+ * Le résumé, amputé des phrases qui citent une réponse réservée au client.
+ *
+ * Deux chemins, parce qu'un Project Brief est **stocké** dans
+ * `build_dossiers.content` et relu tel quel : les Dossiers déjà en base ont été
+ * écrits avant que le moteur découpe son résumé, et ils ne porteront jamais de
+ * `projectSummaryParts`.
+ *
+ * Le chemin nominal filtre les parts par les clés de réponse qu'elles ont
+ * interpolées — précis, et sans découper de la prose à l'aveugle.
+ *
+ * Le repli est plus grossier et doit l'être : il retire toute phrase qui
+ * contient la valeur retenue, telle qu'elle est écrite dans la ligne du Brief.
+ * Il peut emporter une phrase de trop ; il ne peut pas en laisser passer une.
+ * L'inverse — retomber sur le résumé complet — était la première version de ce
+ * code, et elle laissait le budget visible sur tous les dossiers existants,
+ * c'est-à-dire sur tous les vrais.
+ */
+export function disclosedSummary(brief: ProjectBrief, disclosure: CaseDisclosure): string {
+  return summaryFor(brief, disclosure === "full");
+}
+
+function summaryFor(brief: ProjectBrief, showsCustomerBudget: boolean): string {
+  if (showsCustomerBudget) return brief.projectSummary;
+
+  const parts = brief.projectSummaryParts;
+  if (parts && parts.length > 0)
+    return parts
+      .filter((part) => !part.fieldKeys.some((key) => CUSTOMER_ONLY_FIELD_KEYS.includes(key)))
+      .map((part) => part.text)
+      .join(" ");
+
+  const withheld = brief.budgetAndTiming
+    .filter(isCustomerOnlyLine)
+    .map((line) => line.value.trim())
+    .filter((value) => value.length > 2);
+  if (withheld.length === 0) return brief.projectSummary;
+
+  // Les fragments sont assemblés par une espace et se terminent par un point ;
+  // découper là redonne à peu près les phrases d'origine.
+  return brief.projectSummary
+    .split(/(?<=\.)\s+/)
+    .filter((sentence) => !withheld.some((value) => sentence.includes(value)))
+    .join(" ")
+    .trim();
+}
+
 export function projectCase(input: ProjectCaseInput): CaseView {
   const { brief, profile, disclosure } = input;
   // Les coordonnées suivent la divulgation ; le budget annoncé n'appartient
@@ -142,7 +189,12 @@ export function projectCase(input: ProjectCaseInput): CaseView {
     // The Playbook names the Dossier after the book; the reference is the
     // fallback for a submission that predates that or came from elsewhere.
     title: profile.title?.trim() || brief.missionName.trim() || input.reference,
-    summary: brief.projectSummary,
+    // Le résumé est refiltré, pas seulement les lignes. Le budget annoncé
+    // était retiré du champ « Budget » et restait dans la phrase d'ouverture —
+    // « … Matière souhaitée : demi-cuir. Budget 250 – 400 €. » — que tout
+    // atelier lisait, y compris dans sa liste de projets. Un filtre qui ne
+    // couvre qu'une des deux surfaces ne filtre rien.
+    summary: summaryFor(brief, showsCustomerBudget),
     project: projectLines,
     constraints: brief.constraints.map(toViewLine),
     budgetAndTiming: brief.budgetAndTiming

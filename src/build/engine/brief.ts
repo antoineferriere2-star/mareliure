@@ -109,6 +109,19 @@ function interpolate(template: string, tokens: Record<string, string>): string {
   );
 }
 
+/**
+ * Les jetons qu'un gabarit interpole, dans l'ordre où ils apparaissent.
+ *
+ * Même expression que `interpolate`, et c'est volontaire : si l'une accepte une
+ * syntaxe que l'autre ignore, une phrase pourrait citer une réponse sans le
+ * déclarer, et un filtre d'audience laisserait passer ce qu'il devait retenir.
+ */
+function templateFields(template: string): string[] {
+  return [...template.matchAll(/\{\{\s*([a-zA-Z0-9_]+)(\|lower)?\s*\}\}/g)].map(
+    (match) => match[1],
+  );
+}
+
 function buildTokens(
   allFields: PlaybookField[],
   answers: Answers,
@@ -299,12 +312,27 @@ export function generateProjectBrief(
   }
 
   // 6. Project summary.
+  //
+  // Each fragment is kept alongside the answers it interpolated, not only the
+  // joined sentence. A consumer that must withhold one answer from an audience
+  // can then drop the fragments that quote it, instead of doing surgery on
+  // generated prose — the marketplace hides the visitor's budget from
+  // workshops, and the budget was leaking through this sentence while the
+  // field itself was correctly filtered.
+  //
+  // Generic on purpose: the engine reports which field keys a sentence used
+  // and knows nothing about what any of them mean.
   const summaryParts = schema.briefConfig.summaryFragments
     .filter((f) => evaluateConditionGroup(f.when, answers))
-    .map((f) => interpolate(f.template, tokens).trim())
-    .filter(Boolean);
+    .map((f) => ({
+      text: interpolate(f.template, tokens).trim(),
+      fieldKeys: templateFields(f.template),
+    }))
+    .filter((part) => part.text !== "");
   const projectSummary =
-    summaryParts.length > 0 ? summaryParts.join(" ") : schema.briefConfig.emptySummaryFallback;
+    summaryParts.length > 0
+      ? summaryParts.map((part) => part.text).join(" ")
+      : schema.briefConfig.emptySummaryFallback;
 
   // 7. Confidence — a generic, engine-level heuristic (not playbook-configurable).
   const recommendedFields = allVisibleFields.filter((f) => f.desirability === "recommended");
@@ -354,6 +382,7 @@ export function generateProjectBrief(
       : mission.name,
     status: schema.briefConfig.statusLabel ?? "ready",
     projectSummary,
+    projectSummaryParts: summaryParts,
     confirmedInformation: sections.confirmedInformation,
     assumptionsAndCalculated: sections.assumptionsAndCalculated,
     constraints: sections.constraints,

@@ -75,6 +75,13 @@ export const TEST_RATES: readonly (BinderRate & { binderName: string })[] = [
   rate("r-b-titrage", B.id, B.name, "dorure_titrage", 4_000, 4_500, 5_500),
   rate("r-c-titrage", C.id, C.name, "dorure_titrage", 5_000, 5_500, 6_500),
 
+  // Nom d'auteur : 25 / 30 / 35 €. Il accompagne presque toujours le titrage,
+  // et sans lui aucun dossier de démonstration ne se chiffrait — un seul
+  // travail non couvert suffit à faire renoncer le moteur.
+  rate("r-a-auteur", A.id, A.name, "dorure_auteur", 2_000, 2_500, 3_000),
+  rate("r-b-auteur", B.id, B.name, "dorure_auteur", 2_500, 3_000, 3_500),
+  rate("r-c-auteur", C.id, C.name, "dorure_auteur", 3_000, 3_500, 4_000),
+
   // Le même demi-cuir en grand format, pour éprouver la recherche par classe.
   { ...rate("r-a-demi-l", A.id, A.name, "demi_cuir", 36_000, 39_000, 45_000), sizeClass: "large" },
   { ...rate("r-b-demi-l", B.id, B.name, "demi_cuir", 40_000, 43_000, 50_000), sizeClass: "large" },

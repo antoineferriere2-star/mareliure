@@ -482,7 +482,7 @@ assets construits.
 > `marketplace_events`. Depuis le référentiel tarifaire il lit en plus
 > `marketplace_binder_rates`, `marketplace_work_items` et
 > `marketplace_pricebook`. **La base de production n'a rien de tout cela** :
-> **deux** migrations sont appliquées sur le projet de développement et pas sur
+> **deux** migrations sont appliquées sur le projet de développement (le 9 septembre 2026) et pas sur
 > `hljxohondjvrkzqicexl` —
 > `20260908210000_managed_pricing_offers` et
 > `20260909120000_pricing_reference_system`.
@@ -793,7 +793,7 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 **Branch :** `managed-pricing`, poussée sur `mareliure/main` et
 `mareliure/feat/managed-pricing-offers`.
 
-**Commit :** `6c37986`.
+**Commit :** `undefined`.
 
 **Production :** inchangée. Worker `59d66164-3a37-46ba-897e-88fe4011614c`,
 code d'avant le pricing géré. **Deux migrations manquent en production**
@@ -874,11 +874,34 @@ un moteur de recherche est un engagement.
 **Le client ne voit un prix qu'une fois validé par un humain.** Sinon « Votre
 projet est en cours d'étude ». Le serveur ne renvoie même pas les autres.
 
+**Le budget du client fuyait vers les ateliers, par deux portes.** La ligne
+« Budget envisagé » était bien retirée, mais la phrase d'ouverture du Dossier se
+terminait par « Budget 250 – 400 € » — en tête de fiche **et** dans la liste de
+projets de l'atelier, qui lisait `content.projectSummary` brut sans passer par la
+divulgation. Filtrer une surface sur deux ne filtre rien.
+
+Corrigé par une capacité générique du moteur, `projectSummaryParts` : le Brief
+expose son résumé phrase par phrase avec les clés de réponse que chacune a
+interpolées, et un consommateur retire celles qui citent ce qu'il ne doit pas
+montrer. Sans métier dans le moteur, comme `briefLabel`.
+
+Le repli compte autant que le chemin nominal : un Project Brief est **stocké**
+dans `build_dossiers.content`, donc les Dossiers déjà en base — les neuf vrais
+compris — n'auront jamais de parts. Pour eux, on retire toute phrase contenant
+la valeur retenue : plus grossier, mais il peut emporter une phrase de trop, pas
+en laisser passer une.
+
+**L'agrégat ne confond plus deux dispersions.** `minimumCents` /
+`medianCents` / `maximumCents` portent tous sur le **tarif courant** — avec
+320 / 350 / 410 on lit 320 / 350 / 410. Le plancher et le plafond déclarés
+vivent à part (`floorCents` / `ceilingCents`) et bornent l'estimation. Mélangés,
+ils affichaient « minimum 300 € » là où aucun atelier ne demande 300 €.
+
 **Documentation :** `docs/pricing-reference-system.md`,
 `docs/content-assets.md` (provenance des images, atelier Ferrière),
 `docs/shipping-pickup-point-spec.md` (spécifié, non commencé).
 
-**Tests :** 1392 (110 fichiers), typecheck propre, lint propre, build vert.
+**Tests :** 1406 (112 fichiers), typecheck propre, lint propre, build vert.
 `noFabricatedPrices.test.ts` lit le texte des fichiers du domaine pour que les
 montants ne reviennent pas — grossier, mais c'est le seul test qui attrape la
 récidive.
@@ -912,8 +935,9 @@ Rien. Working tree propre.
   `hljxohondjvrkzqicexl` : `20260908210000_managed_pricing_offers` et
   `20260909120000_pricing_reference_system`. Vérifié le 9 septembre 2026 —
   `marketplace_cases.pricing_status` renvoie 400, `marketplace_events` 404.
-- **Le référentiel tarifaire est vide.** Comportement correct, mais aucun
-  projet ne peut être chiffré automatiquement tant qu'il l'est.
+- **Le référentiel tarifaire est vide en production.** Sur le dev il porte le
+  jeu d'essai TEST_ONLY (3 ateliers, 6 combinaisons, 40 travaux sur 45 non
+  couverts). Aucun tarif réel n'a encore été relevé auprès d'un relieur.
 - Le Pricebook est vide : aucun prix n'a encore été arrêté.
 - Les inscriptions publiques sont fermées en production (§H).
 - Un `marketplace_case` de test subsiste en production (1 ligne).

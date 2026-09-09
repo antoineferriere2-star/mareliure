@@ -156,8 +156,11 @@ export function suggestManagedPrice(
       workItemKey: key,
       label: workItemLabel(key),
       referencePayoutCents: found.aggregate.medianCents,
-      lowCents: found.aggregate.minimumCents,
-      highCents: found.aggregate.maximumCents,
+      // La fourchette prend l'enveloppe déclarée, pas la dispersion entre
+      // ateliers : elle répond à « au mieux combien, au pire combien », alors
+      // que min/médiane/max répondent à « que demande le métier ».
+      lowCents: found.aggregate.floorCents,
+      highCents: found.aggregate.ceilingCents,
       referenceCount: found.aggregate.referenceCount,
       approximated: found.note !== null,
       approximationNote: found.note,

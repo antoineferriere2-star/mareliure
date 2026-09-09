@@ -25,6 +25,8 @@ import {
   verifiedEmailFromClaims,
 } from "@/marketplace/cases/ownership";
 import { triageMessages } from "@/marketplace/cases/triage";
+import { disclosedSummary } from "@/marketplace/cases/dossierProjection";
+import type { ProjectBrief } from "@/build/schema/brief";
 import { suggestManagedPrice, validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
 import {
@@ -666,8 +668,14 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
         projectSummary?: unknown;
       } | null;
       if (typeof content?.missionName === "string") titles.set(row.id, content.missionName);
+      // Par la même règle que la fiche, et non par une lecture directe du
+      // Dossier. La liste affichait le résumé brut, budget du client compris,
+      // alors que la fiche le retirait : deux surfaces, une seule filtrée.
       if (typeof content?.projectSummary === "string")
-        summaries.set(row.id, content.projectSummary);
+        summaries.set(
+          row.id,
+          disclosedSummary(dossier!.content as unknown as ProjectBrief, "project_only"),
+        );
       const photos = (dossier?.visitor_summary as { photos?: unknown[] } | null)?.photos;
       photoCount.set(row.id, Array.isArray(photos) ? photos.length : 0);
     }

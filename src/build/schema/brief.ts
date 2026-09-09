@@ -34,6 +34,16 @@ export interface ProjectBrief {
   missionName: string;
   status: string;
   projectSummary: string;
+  /**
+   * Le résumé morceau par morceau, chacun avec les clés de réponse qu'il a
+   * interpolées. Permet à un consommateur de retirer une phrase qui cite une
+   * réponse qu'il n'a pas le droit de montrer à son audience.
+   *
+   * Optionnel : les Dossiers générés avant cette capacité n'en ont pas, et ils
+   * sont stockés tels quels en base. Un consommateur retombe sur
+   * `projectSummary`.
+   */
+  projectSummaryParts?: { text: string; fieldKeys: string[] }[];
   confirmedInformation: BriefLine[];
   assumptionsAndCalculated: BriefLine[];
   constraints: BriefLine[];

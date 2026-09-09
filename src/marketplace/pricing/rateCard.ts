@@ -93,6 +93,20 @@ export interface RateAggregate {
   q3Cents: number | null;
   /** Écart max/min rapporté à la médiane, en points de base. */
   dispersionBps: number;
+  /**
+   * L'enveloppe déclarée : le plus bas minimum et le plus haut maximum de
+   * toutes les grilles retenues.
+   *
+   * Distincte de `minimumCents` / `maximumCents`, et il ne faut surtout pas
+   * les confondre. Les trois statistiques ci-dessus décrivent **une seule
+   * quantité** — le tarif courant — et répondent à « que demande le métier
+   * pour ce travail ». Le plancher et le plafond mêlent deux dispersions
+   * différentes, celle entre ateliers et celle interne à chaque atelier ; ils
+   * ne veulent donc rien dire comme statistique, mais ils bornent honnêtement
+   * une estimation : au mieux ceci, au pire cela.
+   */
+  floorCents: number;
+  ceilingCents: number;
   /** Date de la contribution la plus ancienne retenue. */
   oldestEffectiveFrom: string;
   contributions: RateContribution[];
@@ -177,10 +191,17 @@ export function aggregateRates(
   const retained = [...latestByBinder.values()].sort(
     (a, b) => a.typicalPayoutCents - b.typicalPayoutCents,
   );
+  // Les trois statistiques portent toutes sur le **tarif courant**, et sur lui
+  // seul. Prendre le minimum des minimums et le maximum des maximums
+  // mélangerait deux dispersions — entre ateliers, et à l'intérieur de chacun
+  // — et produirait une fourchette que personne ne saurait interpréter :
+  // « minimum 300 € » ne dirait ni ce que demande l'atelier le moins cher, ni
+  // ce que coûte le travail le plus simple. Ici, avec trois ateliers à 320,
+  // 350 et 410 €, on lit 320 / 350 / 410.
   const typicals = retained.map((rate) => rate.typicalPayoutCents);
   const medianCents = percentile(typicals, 0.5);
-  const minimumCents = Math.min(...retained.map((rate) => rate.minimumPayoutCents));
-  const maximumCents = Math.max(...retained.map((rate) => rate.maximumPayoutCents));
+  const minimumCents = typicals[0];
+  const maximumCents = typicals[typicals.length - 1];
   const enough = retained.length >= QUARTILE_MINIMUM_REFERENCES;
 
   return {
@@ -191,6 +212,8 @@ export function aggregateRates(
     minimumCents,
     medianCents,
     maximumCents,
+    floorCents: Math.min(...retained.map((rate) => rate.minimumPayoutCents)),
+    ceilingCents: Math.max(...retained.map((rate) => rate.maximumPayoutCents)),
     q1Cents: enough ? percentile(typicals, 0.25) : null,
     q3Cents: enough ? percentile(typicals, 0.75) : null,
     dispersionBps:

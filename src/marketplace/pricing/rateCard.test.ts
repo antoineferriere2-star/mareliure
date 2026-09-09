@@ -40,12 +40,36 @@ describe("l'agrégation des grilles", () => {
 
     expect(aggregate).not.toBeNull();
     expect(aggregate!.referenceCount).toBe(3);
+    expect(aggregate!.minimumCents).toBe(32_000);
     expect(aggregate!.medianCents).toBe(35_000);
-    expect(aggregate!.minimumCents).toBe(30_000);
-    expect(aggregate!.maximumCents).toBe(47_000);
+    expect(aggregate!.maximumCents).toBe(41_000);
     expect(aggregate!.contributions.map((c) => c.typicalPayoutCents)).toEqual([
       32_000, 35_000, 41_000,
     ]);
+  });
+
+  /**
+   * La distinction qui a failli passer inaperçue. Les trois statistiques
+   * portent sur **une seule quantité**, le tarif courant, et répondent à « que
+   * demande le métier ». Le plancher et le plafond mêlent deux dispersions —
+   * entre ateliers et à l'intérieur de chacun — et ne veulent rien dire comme
+   * statistique ; ils bornent une estimation, c'est tout.
+   *
+   * Les confondre donnait « minimum 300 € » là où aucun atelier ne demande
+   * 300 € pour ce travail.
+   */
+  it("ne confond pas la dispersion entre ateliers et l'enveloppe déclarée", () => {
+    const aggregate = aggregateRates(verified, "demi_cuir", "standard", "standard")!;
+
+    // Trois statistiques sur le tarif courant.
+    expect([aggregate.minimumCents, aggregate.medianCents, aggregate.maximumCents]).toEqual([
+      32_000, 35_000, 41_000,
+    ]);
+    // L'enveloppe, plus large, et nommée autrement.
+    expect(aggregate.floorCents).toBe(30_000);
+    expect(aggregate.ceilingCents).toBe(47_000);
+    expect(aggregate.floorCents).toBeLessThan(aggregate.minimumCents);
+    expect(aggregate.ceilingCents).toBeGreaterThan(aggregate.maximumCents);
   });
 
   /**
