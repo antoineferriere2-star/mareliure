@@ -790,15 +790,15 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Opus 5)
 
-**Date :** 9 septembre 2026
+**Date :** 10 septembre 2026
 
 **Branch :** `managed-pricing`, poussée sur `mareliure/main` et
 `mareliure/feat/managed-pricing-offers`.
 
-**Commit :** `ed14250`.
+**Commit :** `afc2d57`.
 
 **Production :** **alignée sur `main`.** Déployée le 10 septembre 2026, Worker
-`mareliure` version `e4defa03-1984-4b9d-a4dc-4d4007d3bfde`, commit `ed14250`.
+`mareliure` version `5428cfbb-c9b1-4c0d-8026-be10e7efd350`, commit `afc2d57`.
 Les deux migrations sont appliquées sur `hljxohondjvrkzqicexl` (§J).
 
 Vérifié après déploiement, sur `mareliure.fr` et sur l'URL `workers.dev` :
@@ -834,6 +834,15 @@ vérifie le format d'une clé.
   votre choix ». Le consentement nomme Ma Reliure et l'atelier retenu.
   `src/marketplace/missionPositioning.test.ts` refuse le retour de ces
   formulations. Publié sur le dev (v6) et en production (v2).
+- **Pages légales de Ma Reliure** (`afc2d57`) — `/confidentialite`,
+  `/conditions`, `/mentions-legales`. Le pied du tunnel ouvrait les pages
+  anglaises de Métré Build sur l'écran du consentement ; il ouvre maintenant
+  celles-ci, sur Ma Reliure seulement. Éditeur OPPE SAS, contact
+  `contact@oppe.fr`, déclarés une fois dans
+  `src/marketplace/legal/legalEntity.ts`. `legal.test.ts` confronte les
+  affirmations des pages au code : durée du lien de récapitulatif (90 jours),
+  domaine d'envoi, passerelle d'IA, empreinte d'IP salée. L'adresse
+  `contact@mareliure.fr`, publiée sans que la boîte existe, a disparu.
 
 ---
 
@@ -975,9 +984,18 @@ Rien. Working tree propre.
   2 en production. **Ne jamais raisonner sur un numéro de
   version sans préciser la base** ; comparer les schémas, pas les numéros.
   Un seed n'est publié qu'une fois lancé contre chaque base.
-- **Les liens Confidentialité et CGU du pied de tunnel** mènent aux pages Métré
-  Build, en anglais. Laissés en place : les retirer supprimerait le seul accès
-  légal du parcours, et les pages Ma Reliure n'existent pas.
+- **Les e-mails partent au nom de « Métré Build »**, depuis
+  `noreply@notify.metre-pro.fr`, y compris pour un visiteur de Ma Reliure
+  (`src/lib/email-templates/send-email.ts`). Fuite de marque, non corrigée ;
+  la politique de confidentialité nomme ce domaine parce que c'est le vrai.
+  Si l'expéditeur change, `legal.test.ts` échouera : c'est voulu.
+- **Les durées de conservation ne sont pas fixées.** La page de
+  confidentialité le dit (« en cours de fixation ») ; seule la durée du lien
+  de récapitulatif est affirmée. À décider, puis à écrire.
+- **Le directeur de la publication n'est pas nommé** : les mentions légales
+  disent « le représentant légal de OPPE SAS ». Un nom est attendu.
+- **Les textes légaux sont exacts, pas relus par un juriste.** Pas de
+  conditions générales de vente : elles viendront avec le paiement.
 - **Le CLI Supabase ne joint pas la production depuis ce poste** (IPv6 non
   routé, pooler IPv4 sans mot de passe). Passer par l'API de gestion (§J).
 - **Le référentiel tarifaire est vide en production.** Sur le dev il porte le
