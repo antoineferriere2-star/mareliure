@@ -73,3 +73,21 @@ just more test code:
 
 Building that harness is a separate, deliberate piece of work — flagged here
 rather than done partially and left half-safe.
+
+## Optional order-tracking journey (Ma Reliure)
+
+`project-thread.spec.ts` covers the order-tracking scenario from start to
+finish across three browser sessions, with no e-mail or phone number exchanged
+between the customer and the workshop: Ma Reliure confirms the order; the
+workshop confirms reception, posts a message, starts the work and asks for a
+leather colour with one photo per option; the customer chooses Bordeaux; the
+workshop sees the confirmed choice and asks the customer to confirm the text to
+gild; the customer confirms it; the workshop posts a progress photo and marks
+the work finished; the customer reads "Votre livre est terminé". It also checks
+that a phone number is refused in the thread.
+
+It is skipped unless every `E2E_PROJECT_*` variable named at the top of the spec
+is set. Point it only at the development Supabase project, with a case already
+in `binder_selected`, owned by the disposable customer account, whose selected
+workshop is the disposable workshop account. The scenario moves that case
+forward and cannot be replayed on the same case.

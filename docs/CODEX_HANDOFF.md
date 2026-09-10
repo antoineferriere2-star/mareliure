@@ -792,10 +792,18 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Date :** 10 septembre 2026
 
-**Branch :** `managed-pricing`, poussée sur `mareliure/main` et
-`mareliure/feat/managed-pricing-offers`.
+**Branch :** `feat/project-thread`, ouverte depuis `feat/pricing-admin-console`
+et poussée sur `mareliure/feat/project-thread`. **Rien de ces deux branches
+n'est en production** : `main` et mareliure.fr restent sur `afc2d57`.
 
-**Commit :** `afc2d57`.
+**Commits :** console de prix `e0b595e` ; suivi de commande `b5abc05`
+(conception), `151d153` (socle), `84e7da5` (écrans), puis cette passation.
+
+**Migrations appliquées sur le dev seulement** (`qwfhebtxeubfmvvdsqdt`) :
+`20260910120000_pricing_admin_console` et `20260911120000_project_thread`.
+**Avant tout merge sur `main`**, les appliquer en production par l'API de
+gestion (§J) : sans elles, la console de prix, « Mes livres » et « Mon atelier »
+échouent en production.
 
 **Production :** **alignée sur `main`.** Déployée le 10 septembre 2026, Worker
 `mareliure` version `5428cfbb-c9b1-4c0d-8026-be10e7efd350`, commit `afc2d57`.
@@ -843,6 +851,27 @@ vérifie le format d'une clé.
   affirmations des pages au code : durée du lien de récapitulatif (90 jours),
   domaine d'envoi, passerelle d'IA, empreinte d'IP salée. L'adresse
   `contact@mareliure.fr`, publiée sans que la boîte existe, a disparu.
+
+**Sur les branches, pas encore déployé :**
+
+- **Console de prix** (`e0b595e`, `/marketplace/pricing` et
+  `/marketplace/pricing/simulator`) — trois couches jamais fusionnées :
+  benchmark web (repère, jamais public, 39 relevés sourcés), grilles d'ateliers
+  (observation), Pricebook (décision, HT/TVA/TTC, modes, travaux inclus,
+  historique avec raison du changement, visibilité publique distincte de la
+  publication). Composition d'un prix sans total partiel ni coefficient
+  implicite ; validation d'un dossier avec photographie figée. Fuite corrigée :
+  « Mes livres » renvoyait un prix suggéré non validé.
+- **Suivi de commande** (`151d153`, `84e7da5`) — conception dans
+  `docs/order-tracking-design.md`. Un fil par projet (client, atelier retenu,
+  Ma Reliure), décisions structurées figées en base (couleur, papier, texte à
+  dorer…), photos par URL signée vers un bucket privé, imprévus réservés à
+  l'atelier et à Ma Reliure, avancement déclaré (Ma Reliure confirme la
+  commande ; l'atelier confirme la réception, commence, termine), statut
+  `work_finished`. Espaces refondus : « Mes livres », fiche d'un livre,
+  « Mon atelier », poste de travail atelier, panneau de suivi admin. Deux
+  failles fermées : un atelier sollicité puis écarté gardait le Brief et les
+  photos du livre ; la fiche atelier renvoyait le prix client.
 
 ---
 
@@ -955,26 +984,56 @@ récidive.
 
 ### In progress
 
-Rien. Working tree propre.
+- **Captures** des espaces client, atelier, admin et de la console de prix : elles
+  attendent une connexion dans le navigateur. L'agent ne saisit aucun mot de
+  passe ; les comptes de test du dev doivent être ouverts par une personne.
+- **Scénario E2E `e2e/project-thread.spec.ts`** : écrit, jamais exécuté. Il lit
+  ses identifiants dans les variables `E2E_PROJECT_*` (voir `e2e/README.md`).
 
 ---
 
 ### Next recommended task
 
-1. **Remplir le référentiel.** Ce n'est pas du code : c'est s'asseoir avec un
+1. **Mettre les deux branches en production** : appliquer les migrations
+   `20260910120000` et `20260911120000` sur `hljxohondjvrkzqicexl` (§J),
+   merger `feat/project-thread` sur `main`, déployer par
+   `npm run build:mareliure` puis `wrangler deploy --name mareliure`.
+2. **Configurer l'envoi d'e-mails de Ma Reliure** : secret `LOVABLE_API_KEY`
+   sur le Worker (saisi dans Cloudflare, jamais dans une conversation) et, de
+   préférence, un domaine d'envoi Ma Reliure. Sans lui, aucune notification de
+   suivi ne part.
+3. **Rouvrir les inscriptions (§H) et habiller `/auth` aux couleurs de Ma
+   Reliure** : c'est la porte des deux espaces.
+4. **Remplir le référentiel.** Ce n'est pas du code : c'est s'asseoir avec un
    relieur. Le référentiel est **vide**, donc chaque projet part en revue
    manuelle. Premier atelier à interroger : Reliure Dorure Ferrière (Orléans),
    déjà présent sur la plateforme. Trois ateliers font fonctionner le moteur,
    six le rendent confiant.
-2. **Spike Stripe Connect** (§Q) — _après validation explicite_. STOP avant
+5. **Spike Stripe Connect** (§Q) — _après validation explicite_. STOP avant
    toute implémentation.
-3. **Comparatif Sendcloud / Boxtal** et livrables A–I — _après le spike
+6. **Comparatif Sendcloud / Boxtal** et livrables A–I — _après le spike
    paiement_. Voir `docs/shipping-pickup-point-spec.md`.
 
 ---
 
 ### Known issues
 
+- **Aucun e-mail de suivi ne part de mareliure.fr** : le Worker n'a pas de
+  secret `LOVABLE_API_KEY`. Le code saute l'envoi et le journalise. L'expéditeur
+  est désormais nommé « Ma Reliure », mais le domaine reste `notify.metre-pro.fr`.
+- **`/auth` est aux couleurs de Métré Build** (« Create your account ») sur
+  Ma Reliure.
+- **Deux passages provisoires dans la machine à états** : `binder_selected →
+paid` (Ma Reliure confirme la commande, règlement reçu par elle) et `paid →
+received_by_binder` (réception sans transport). À retirer avec le paiement en
+  ligne et l'expédition.
+- **Temps réel par sondage** (8 s, onglet visible) plutôt que Supabase Realtime,
+  qui aurait obligé à ouvrir les tables du fil (§I de
+  `docs/order-tracking-design.md`).
+- **Fichiers du fil** : URL signées d'une heure ; une page restée ouverte plus
+  longtemps montre des images expirées jusqu'au rafraîchissement suivant.
+- **Six gabarits d'e-mail Métré** reformatés par erreur dans `151d153`,
+  restaurés dans `84e7da5`.
 - **Les numéros de version du Playbook ne sont pas les mêmes selon la base.**
   Le 10 septembre 2026, on a découvert que la production n'avait jamais reçu
   que la version 1 : les versions 2 à 5, dont les six univers, n'avaient été
