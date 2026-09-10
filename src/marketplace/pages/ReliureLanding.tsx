@@ -41,6 +41,7 @@ import {
   STEPS,
 } from "./landing/content";
 import { PHOTOS, PHOTO_SIZES } from "./landing/photos";
+import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
 
 /** Un seul conteneur pour toute la page. Les variations se font en colonnes. */
 const SHELL = "mx-auto w-full max-w-[80rem] px-5 sm:px-8";
@@ -288,7 +289,7 @@ function Artisans() {
       </div>
       <p id={ANCHORS.binders} className="mr-body mt-12 max-w-[38rem] scroll-mt-24">
         Vous tenez un atelier de reliure ?{" "}
-        <a href="mailto:contact@mareliure.fr" className="mr-link">
+        <a href={`mailto:${MARELIURE_CONTACT_EMAIL}`} className="mr-link">
           Écrivez-nous
         </a>{" "}
         — nous cherchons des relieurs installés en France, quel que soit leur savoir-faire dominant.

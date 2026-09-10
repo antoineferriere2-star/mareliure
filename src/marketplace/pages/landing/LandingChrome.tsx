@@ -10,6 +10,7 @@ import { BOOKBINDING_PUBLIC_TOKEN } from "@/build/constants";
 import { MARELIURE_BRAND } from "@/marketplace/config";
 import { isMaReliure } from "@/brand";
 import { ANCHORS } from "./content";
+import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
 
 /**
  * La Mission Métré, atteinte par sa route typée — le même `/m/:publicToken`
@@ -178,8 +179,18 @@ const PRESTATIONS = [
   "Protection sur mesure",
 ] as const;
 
-/** Annoncées, jamais liées : aucune de ces pages n'existe encore. */
-const PENDING = ["Mentions légales", "CGV", "Confidentialité", "Contact"] as const;
+/**
+ * Les pages légales, désormais publiées. Seules les conditions générales de
+ * vente restent annoncées : elles encadreront la commande et le paiement, qui
+ * n'existent pas encore, et les publier aujourd'hui serait décrire un service
+ * que personne ne peut acheter.
+ */
+const LEGAL_LINKS = [
+  { href: "/mentions-legales", label: "Mentions légales" },
+  { href: "/confidentialite", label: "Confidentialité" },
+  { href: "/conditions", label: "Conditions d'utilisation" },
+  { href: `mailto:${MARELIURE_CONTACT_EMAIL}`, label: "Contact" },
+] as const;
 
 export function LandingFooter() {
   return (
@@ -222,11 +233,20 @@ export function LandingFooter() {
           <div>
             <h2 className="mr-eyebrow text-mr-graphite">Informations</h2>
             <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
-              {PENDING.map((label) => (
-                <li key={label}>
-                  {label} <span className="text-mr-muted">— en préparation</span>
+              {LEGAL_LINKS.map((item) => (
+                <li key={item.href}>
+                  <a
+                    href={item.href}
+                    className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline"
+                  >
+                    {item.label}
+                  </a>
                 </li>
               ))}
+              <li>
+                Conditions générales de vente{" "}
+                <span className="text-mr-muted">— publiées avant l'ouverture du paiement</span>
+              </li>
             </ul>
           </div>
         </div>

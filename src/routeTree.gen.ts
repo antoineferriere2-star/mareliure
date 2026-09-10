@@ -12,11 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as ConditionsRouteImport } from './routes/conditions'
+import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
 import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
 import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
@@ -97,6 +100,16 @@ const AuthRoute = AuthRouteImport.update({
   path: '/auth',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConditionsRoute = ConditionsRouteImport.update({
+  id: '/conditions',
+  path: '/conditions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
+  id: '/confidentialite',
+  path: '/confidentialite',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ContactRoute = ContactRouteImport.update({
   id: '/contact',
   path: '/contact',
@@ -120,6 +133,11 @@ const FreeInquiryAuditRoute = FreeInquiryAuditRouteImport.update({
 const HowItWorksRoute = HowItWorksRouteImport.update({
   id: '/how-it-works',
   path: '/how-it-works',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
+  id: '/mentions-legales',
+  path: '/mentions-legales',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -496,11 +514,14 @@ const ApiInternalHermesProspectFunnelsMetricsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/conditions': typeof ConditionsRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
@@ -570,11 +591,14 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/conditions': typeof ConditionsRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
@@ -640,11 +664,14 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/conditions': typeof ConditionsRoute
+  '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/mentions-legales': typeof MentionsLegalesRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
@@ -716,11 +743,14 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/conditions'
+    | '/confidentialite'
     | '/contact'
     | '/deck-builders'
     | '/example-project-brief'
     | '/free-inquiry-audit'
     | '/how-it-works'
+    | '/mentions-legales'
     | '/pricing'
     | '/privacy'
     | '/private-beta'
@@ -790,11 +820,14 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/conditions'
+    | '/confidentialite'
     | '/contact'
     | '/deck-builders'
     | '/example-project-brief'
     | '/free-inquiry-audit'
     | '/how-it-works'
+    | '/mentions-legales'
     | '/pricing'
     | '/privacy'
     | '/private-beta'
@@ -859,11 +892,14 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/conditions'
+    | '/confidentialite'
     | '/contact'
     | '/deck-builders'
     | '/example-project-brief'
     | '/free-inquiry-audit'
     | '/how-it-works'
+    | '/mentions-legales'
     | '/pricing'
     | '/privacy'
     | '/private-beta'
@@ -935,11 +971,14 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  ConditionsRoute: typeof ConditionsRoute
+  ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
   DeckBuildersRoute: typeof DeckBuildersRoute
   ExampleProjectBriefRoute: typeof ExampleProjectBriefRoute
   FreeInquiryAuditRoute: typeof FreeInquiryAuditRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  MentionsLegalesRoute: typeof MentionsLegalesRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivateBetaRoute: typeof PrivateBetaRoute
@@ -988,6 +1027,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/conditions': {
+      id: '/conditions'
+      path: '/conditions'
+      fullPath: '/conditions'
+      preLoaderRoute: typeof ConditionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/confidentialite': {
+      id: '/confidentialite'
+      path: '/confidentialite'
+      fullPath: '/confidentialite'
+      preLoaderRoute: typeof ConfidentialiteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/contact': {
       id: '/contact'
       path: '/contact'
@@ -1021,6 +1074,13 @@ declare module '@tanstack/react-router' {
       path: '/how-it-works'
       fullPath: '/how-it-works'
       preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/mentions-legales': {
+      id: '/mentions-legales'
+      path: '/mentions-legales'
+      fullPath: '/mentions-legales'
+      preLoaderRoute: typeof MentionsLegalesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -1684,11 +1744,14 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  ConditionsRoute: ConditionsRoute,
+  ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
   DeckBuildersRoute: DeckBuildersRoute,
   ExampleProjectBriefRoute: ExampleProjectBriefRoute,
   FreeInquiryAuditRoute: FreeInquiryAuditRoute,
   HowItWorksRoute: HowItWorksRoute,
+  MentionsLegalesRoute: MentionsLegalesRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   PrivateBetaRoute: PrivateBetaRoute,

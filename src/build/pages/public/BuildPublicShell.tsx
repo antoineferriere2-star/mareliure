@@ -146,10 +146,20 @@ function BuildPublicShellContent({
                 over something of theirs. */}
             {!isMaReliure && <span>Project intake powered by Métré Build</span>}
             <span className="flex gap-4">
-              <a href="/privacy" target="_blank" rel="noreferrer" className="hover:text-slate-900">
+              <a
+                href={isMaReliure ? "/confidentialite" : "/privacy"}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-slate-900"
+              >
                 {t(locale, "footer.privacy")}
               </a>
-              <a href="/terms" target="_blank" rel="noreferrer" className="hover:text-slate-900">
+              <a
+                href={isMaReliure ? "/conditions" : "/terms"}
+                target="_blank"
+                rel="noreferrer"
+                className="hover:text-slate-900"
+              >
                 {t(locale, "footer.terms")}
               </a>
             </span>
