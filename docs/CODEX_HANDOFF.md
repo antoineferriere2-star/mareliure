@@ -828,6 +828,11 @@ vérifie le format d'une clé.
   la marque. Le récapitulatif propose de repartir d'un projet vierge : la
   session mémorisée ramenait sans fin au projet déjà envoyé. Le nom de marque de
   l'en-tête ramène à l'accueil.
+- **Textes du tunnel alignés sur le positionnement** — Playbook v6 et Mission :
+  plus de « relieurs sélectionnés », de « leurs propositions » ni de « après
+  votre choix ». Le consentement nomme Ma Reliure et l'atelier retenu.
+  `src/marketplace/missionPositioning.test.ts` refuse le retour de ces
+  formulations. Publié sur le dev (v6) et en production (v2).
 
 ---
 
@@ -960,15 +965,15 @@ Rien. Working tree propre.
 
 ### Known issues
 
-- **Le texte de la Mission contredit le positionnement.** `proposal.intro` —
-  « des relieurs sélectionnés vous répondront » — et `proposal.confirmationText`
-  — « vous recevrez leurs propositions par e-mail » — promettent encore plusieurs
-  relieurs et plusieurs propositions, en dev comme en production. Le second
-  s'affiche sous « La suite » sur l'écran de récapitulatif. Source :
-  `scripts/seedBookbindingPlaybook.ts`. Le `why` du champ de contact dans le
-  Playbook v5 dit aussi « après votre choix » : le client ne choisit pas dans le
-  modèle géré. Corriger le premier est une écriture en production dans
-  `build_missions.proposal` ; le second demande une version 6 du Playbook.
+- **Les numéros de version du Playbook ne sont pas les mêmes selon la base.**
+  Le 10 septembre 2026, on a découvert que la production n'avait jamais reçu
+  que la version 1 : les versions 2 à 5, dont les six univers, n'avaient été
+  publiées que sur le dev, alors que la page d'accueil de production annonçait
+  déjà les six univers. Le même contenu — la « v6 » du dépôt — est désormais
+  publié partout, mais il porte le numéro 6 sur le dev et le numéro
+  2 en production. **Ne jamais raisonner sur un numéro de
+  version sans préciser la base** ; comparer les schémas, pas les numéros.
+  Un seed n'est publié qu'une fois lancé contre chaque base.
 - **Un dossier de test saisi à la main existe en production** (titre « ok »,
   e-mail contact@oppe.fr), en plus du `marketplace_case` de test déjà connu.
 - **Les liens Confidentialité et CGU du pied de tunnel** mènent aux pages Métré
