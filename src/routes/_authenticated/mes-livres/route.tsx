@@ -1,28 +1,19 @@
 /**
- * "Mes livres" — the customer's space. As with the atelier layout, the gate is
- * in the server functions: a case is matched to the signed-in account by the
- * e-mail the visitor gave the intake, checked server-side against the Dossier.
+ * « Mes livres » — l'espace client. Le layout est un décor : la garde est dans
+ * les server functions, qui n'ouvrent un livre qu'au compte qui le possède.
  */
-import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { CustomerLayout } from "@/marketplace/pages/customer/CustomerLayout";
 
 export const Route = createFileRoute("/_authenticated/mes-livres")({
   ssr: false,
-  component: CustomerLayout,
+  component: CustomerSpace,
 });
 
-function CustomerLayout() {
+function CustomerSpace() {
   return (
-    <div className="min-h-screen bg-[#f7f2e8] text-[#241a12]">
-      <header className="border-b border-[#3b2a1d]/10">
-        <div className="mx-auto flex max-w-6xl items-center gap-6 px-5 py-4">
-          <Link to="/mes-livres" className="font-serif text-lg">
-            Ma Reliure
-          </Link>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-5 py-8">
-        <Outlet />
-      </main>
-    </div>
+    <CustomerLayout>
+      <Outlet />
+    </CustomerLayout>
   );
 }

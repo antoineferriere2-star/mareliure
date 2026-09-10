@@ -20,6 +20,7 @@ import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { CasePricingPanel } from "./CasePricingPanel";
+import { ProjectAdminPanel } from "./ProjectAdminPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -89,6 +90,9 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
       <div>
         <CaseBriefPanel view={data.view} />
+        <div className="mt-8">
+          <ProjectAdminPanel caseId={caseId} caseStatus={data.case.status} />
+        </div>
       </div>
 
       <aside className="space-y-6">

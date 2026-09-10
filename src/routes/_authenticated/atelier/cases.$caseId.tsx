@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { BinderCasePage } from "@/marketplace/pages/binder/BinderCasePage";
+import { WorkshopCasePage } from "@/marketplace/pages/binder/WorkshopCasePage";
 
 export const Route = createFileRoute("/_authenticated/atelier/cases/$caseId")({
   component: RouteComponent,
@@ -7,5 +7,5 @@ export const Route = createFileRoute("/_authenticated/atelier/cases/$caseId")({
 
 function RouteComponent() {
   const { caseId } = Route.useParams();
-  return <BinderCasePage caseId={caseId} />;
+  return <WorkshopCasePage caseId={caseId} />;
 }

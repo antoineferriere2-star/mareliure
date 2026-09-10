@@ -50,6 +50,11 @@ export function JourneyTimeline({
   );
 }
 
+export type ProgressStepView = {
+  to: "paid" | "received_by_binder" | "in_progress" | "work_finished";
+  label: string;
+};
+
 const CONFIRMATIONS: Record<string, string> = {
   paid: "Le règlement du client a bien été reçu par Ma Reliure. L'atelier pourra confirmer la réception du livre.",
   received_by_binder: "Le livre est bien entre vos mains. Le client en sera prévenu par e-mail.",

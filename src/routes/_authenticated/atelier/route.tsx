@@ -1,29 +1,20 @@
 /**
- * The relieur's own space. Authentication is enough to enter the layout; every
- * server function behind it independently checks that this account actually has
- * an approved relieur profile, and that the case being asked for was confided
- * to it. The layout is chrome, never a permission.
+ * L'espace atelier. S'authentifier suffit à entrer dans le layout ; chaque
+ * server function vérifie ensuite que ce compte a un profil d'atelier et que
+ * le dossier demandé lui est ouvert. Le layout n'est jamais une permission.
  */
-import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { WorkshopLayout } from "@/marketplace/pages/binder/WorkshopLayout";
 
 export const Route = createFileRoute("/_authenticated/atelier")({
   ssr: false,
-  component: AtelierLayout,
+  component: WorkshopSpace,
 });
 
-function AtelierLayout() {
+function WorkshopSpace() {
   return (
-    <div className="min-h-screen bg-[#f7f2e8] text-[#241a12]">
-      <header className="border-b border-[#3b2a1d]/10">
-        <div className="mx-auto flex max-w-6xl items-center gap-6 px-5 py-4">
-          <Link to="/atelier" className="font-serif text-lg">
-            Ma Reliure · atelier
-          </Link>
-        </div>
-      </header>
-      <main className="mx-auto max-w-6xl px-5 py-8">
-        <Outlet />
-      </main>
-    </div>
+    <WorkshopLayout>
+      <Outlet />
+    </WorkshopLayout>
   );
 }
