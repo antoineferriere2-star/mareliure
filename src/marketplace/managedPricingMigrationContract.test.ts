@@ -93,6 +93,7 @@ describe("managed pricing migration", () => {
       ...[
         "supabase/migrations/20260910120000_pricing_admin_console.sql",
         "supabase/migrations/20260911120000_project_thread.sql",
+        "supabase/migrations/20260912120000_mareliure_single_pricebook.sql",
         "src/marketplace/services/pricing.data.functions.ts",
         "src/marketplace/services/projectThread.functions.ts",
         "src/marketplace/project/progress.ts",

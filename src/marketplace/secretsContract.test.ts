@@ -25,7 +25,6 @@ const SERVER_ONLY = [
   "scripts/seedBookbindingPlaybook.ts",
   "scripts/seedDeckPlaybook.ts",
   "scripts/seedMarketplaceDemo.ts",
-  "scripts/seedWebBenchmarks.ts",
 ];
 
 function walk(dir: string, out: string[] = []): string[] {

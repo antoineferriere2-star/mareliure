@@ -5,9 +5,9 @@ import { describe, expect, it } from "vitest";
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 const service = read("src/marketplace/services/marketplace.data.functions.ts");
 const pricing = [
-  read("src/marketplace/pricing/pricing.types.ts"),
   read("src/marketplace/pricing/pricing.rules.ts"),
   read("src/marketplace/pricing/pricing.engine.ts"),
+  read("src/marketplace/pricing/composition.ts"),
 ].join("\n");
 const customerStart = service.indexOf("// Customer — their own books");
 const customerCaseEnd = service.indexOf("export const claimMarketplaceCase");

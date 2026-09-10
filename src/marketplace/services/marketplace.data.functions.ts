@@ -44,8 +44,8 @@ import {
 import { triageMessages } from "@/marketplace/cases/triage";
 import { disclosedSummary } from "@/marketplace/cases/dossierProjection";
 import type { ProjectBrief } from "@/build/schema/brief";
-import { suggestManagedPrice } from "@/marketplace/pricing/pricing.engine";
-import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
+import { priceProject, projectRequest } from "@/marketplace/pricing/pricing.engine";
+import { PRICING_RULE_VERSION } from "@/marketplace/pricing/pricing.rules";
 import {
   assignCaseOwner,
   buildCaseView,
@@ -56,15 +56,10 @@ import {
   resolveCaseByAccessToken,
 } from "./caseRepository.server";
 import { threadSummaries } from "./projectThreadRepository.server";
-import { loadAggregates } from "./pricingRepository.server";
 import { COMPLEXITY_CLASSES, SIZE_CLASSES } from "@/marketplace/pricing/catalog";
-import { composePrice } from "@/marketplace/pricing/composition";
-import { COMPOSITION_POLICY } from "@/marketplace/pricing/pricing.rules";
-import { weakestEvidence } from "@/marketplace/pricing/pricebookEvidence";
 import { buildPricingSnapshot } from "@/marketplace/pricing/snapshot";
 import { STANDARD_VAT_RATE_BPS } from "@/marketplace/pricing/vat";
-import { resolveWork } from "@/marketplace/pricing/workResolver";
-import { loadPricingContext, referencesForWork } from "./pricingContext.server";
+import { loadPricingData, toPricingGrid } from "./pricingContext.server";
 import { pricingLinesInput } from "./pricing.data.functions";
 
 const BINDER_LIST_COLUMNS =
@@ -274,7 +269,7 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
     const { data: matches } = await sb
       .from("marketplace_case_matches")
       .select(
-        "binder_id, state, match_score, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, responded_at, decline_reason_code, decline_reason_detail",
+        "binder_id, state, match_score, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, responded_at, decline_reason_code, decline_reason_detail, minimum_required_payout_cents",
       )
       .eq("case_id", data.caseId);
 
@@ -331,84 +326,21 @@ export const clearCaseManualReview = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const generateMarketplacePricing = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
-  .handler(async ({ context, data }) => {
-    await assertAdmin(context.supabase, context.userId);
-    const sb = await admin();
-    const caseContext = await loadCaseContext(sb, data.caseId);
-    if (!caseContext) fail(404, "Dossier introuvable");
-
-    // Le moteur ne chiffre qu'à partir des grilles réellement saisies par des
-    // relieurs. Sans référentiel, il n'invente rien : il rend `manual_review`,
-    // et c'est cet état-là qu'on enregistre.
-    const suggestion = suggestManagedPrice(caseContext.profile, {
-      aggregates: await loadAggregates(sb),
-    });
-    const abstained = suggestion.status === "manual_review";
-    const now = new Date().toISOString();
-    const { error } = await sb
-      .from("marketplace_cases")
-      .update({
-        pricing_status: abstained ? "manual_review" : "suggested",
-        suggested_customer_price_cents: suggestion.suggestedCustomerPriceCents,
-        suggested_binder_payout_cents: suggestion.suggestedBinderPayoutCents,
-        // On ne pré-remplit le prix retenu que lorsqu'il y a une suggestion.
-        // Écrire un null effacerait une saisie manuelle en cours.
-        ...(abstained
-          ? {}
-          : {
-              customer_price_cents: suggestion.suggestedCustomerPriceCents,
-              binder_payout_cents: suggestion.suggestedBinderPayoutCents,
-            }),
-        pricing_low_estimate_cents: suggestion.lowEstimateCents,
-        pricing_high_estimate_cents: suggestion.highEstimateCents,
-        pricing_confidence: suggestion.confidence,
-        pricing_reason_codes: suggestion.workItemKeys,
-        pricing_components: suggestion.components as unknown as Json,
-        pricing_reference_count: suggestion.referenceCount,
-        pricing_rule_version: suggestion.ruleVersion,
-        pricing_generated_at: now,
-        status: caseContext.row.status === "under_review" ? "under_review" : "pricing",
-      })
-      .eq("id", data.caseId);
-    if (error) fail(500, error.message);
-    await sb.from("marketplace_events").insert({
-      case_id: data.caseId,
-      actor_user_id: context.userId,
-      event_type: abstained ? "pricing_manual_review" : "pricing_generated",
-      metadata: {
-        customer_price_cents: suggestion.suggestedCustomerPriceCents,
-        binder_payout_cents: suggestion.suggestedBinderPayoutCents,
-        reference_count: suggestion.referenceCount,
-        work_items: suggestion.workItemKeys,
-        factors: suggestion.factors,
-        rule_version: suggestion.ruleVersion,
-      },
-    });
-    return suggestion;
-  });
-
 /**
- * Le point de départ d'une composition : les travaux que le moteur a lus dans
- * le Dossier, au format et à la complexité qu'il en a déduits. L'admin les
+ * Le point de départ d'une composition : les prestations que le moteur a lues
+ * dans le Dossier, au format et à la complexité qu'il en a déduits. L'admin les
  * corrige ensuite ; il ne part jamais d'une page blanche.
  */
 function defaultCaseComposition(caseContext: CaseContext) {
-  const work = resolveWork(caseContext.profile);
-  return {
-    lines: work.workItemKeys.map((workItemKey) => ({ workItemKey, quantity: 1 })),
-    sizeClass: work.sizeClass,
-    complexityClass: work.complexityClass,
-  };
+  const { lines, sizeClass, complexityClass } = projectRequest(caseContext.profile);
+  return { lines, sizeClass, complexityClass };
 }
 
 /**
- * Compose le prix d'un dossier à partir du Pricebook.
+ * Compose le prix d'un dossier à partir de la grille Ma Reliure.
  *
  * Lecture seule : on peut recomposer autant de fois qu'on veut, cocher et
- * décocher des travaux, changer le format. Rien n'est écrit tant que
+ * décocher des prestations, changer le format. Rien n'est écrit tant que
  * personne n'a validé.
  */
 export const composeCasePricing = createServerFn({ method: "POST" })
@@ -435,37 +367,19 @@ export const composeCasePricing = createServerFn({ method: "POST" })
       sizeClass: data.sizeClass ?? defaults.sizeClass,
       complexityClass: data.complexityClass ?? defaults.complexityClass,
     };
-    const pricing = await loadPricingContext(sb);
-    const composition = composePrice({
-      ...request,
-      entries: pricing.published,
-      modifiers: pricing.modifiers,
-      policy: COMPOSITION_POLICY,
-    });
-    const references = referencesForWork(
-      pricing,
-      request.lines.map((line) => line.workItemKey),
-      request.sizeClass,
-      request.complexityClass,
-    );
-    return {
-      defaults,
-      request,
-      composition,
-      references,
-      confidence: weakestEvidence(Object.values(references).map((item) => item.evidence)),
-      vatRateBps: STANDARD_VAT_RATE_BPS,
-    };
+    const composition = priceProject(request, toPricingGrid(await loadPricingData(sb)));
+    return { defaults, request, composition, vatRateBps: STANDARD_VAT_RATE_BPS };
   });
 
 /**
  * Valide le prix d'un dossier et le fige.
  *
- * Le serveur recompose lui-même à partir du Pricebook : il ne croit jamais
- * les montants « composés » qu'un navigateur lui enverrait, seulement ceux que
- * la personne a décidé de retenir. S'ils diffèrent de la composition — ou si
- * le Pricebook ne chiffre pas le projet — la raison est obligatoire, et la
- * base écrit `pricing_overridden` en plus de `pricing_validated`.
+ * Le serveur recompose lui-même à partir de la grille : il ne croit jamais les
+ * montants « composés » qu'un navigateur lui enverrait, seulement ceux que la
+ * personne a décidé de retenir. S'ils diffèrent de la grille — ou si une
+ * prestation repose sur une référence web encore non validée — la raison est
+ * obligatoire, le prix devient `CASE_OVERRIDE` et la base écrit
+ * `pricing_overridden` en plus de `pricing_validated`. La grille ne bouge pas.
  *
  * La marge ne bloque pas : son état est dans la photographie, et l'écran l'a
  * montré dans la confirmation.
@@ -479,8 +393,8 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
         lines: pricingLinesInput,
         sizeClass: z.enum(SIZE_CLASSES),
         complexityClass: z.enum(COMPLEXITY_CLASSES),
+        retainedPriceTtcCents: z.number().int().positive(),
         retainedPayoutCents: z.number().int().positive(),
-        retainedPriceHtCents: z.number().int().positive(),
         priceIncludes: z.array(z.string().trim().min(1).max(160)).max(20).default([]),
         overrideReason: z.string().trim().max(500).nullable().default(null),
       })
@@ -492,32 +406,18 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable");
 
-    const pricing = await loadPricingContext(sb);
-    const composition = composePrice({
-      lines: data.lines,
-      sizeClass: data.sizeClass,
-      complexityClass: data.complexityClass,
-      entries: pricing.published,
-      modifiers: pricing.modifiers,
-      policy: COMPOSITION_POLICY,
-    });
-    const references = referencesForWork(
-      pricing,
-      data.lines.map((line) => line.workItemKey),
-      data.sizeClass,
-      data.complexityClass,
+    const composition = priceProject(
+      { lines: data.lines, sizeClass: data.sizeClass, complexityClass: data.complexityClass },
+      toPricingGrid(await loadPricingData(sb)),
     );
-
     const { snapshot, errors } = buildPricingSnapshot({
       composition,
+      retainedPriceTtcCents: data.retainedPriceTtcCents,
       retainedPayoutCents: data.retainedPayoutCents,
-      retainedPriceHtCents: data.retainedPriceHtCents,
       vatRateBps: STANDARD_VAT_RATE_BPS,
-      policy: COMPOSITION_POLICY,
-      confidence: weakestEvidence(Object.values(references).map((item) => item.evidence)),
       overrideReason: data.overrideReason,
       priceIncludes: data.priceIncludes,
-      ruleVersion: PRICING_POLICY.version,
+      ruleVersion: PRICING_RULE_VERSION,
     });
     if (!snapshot) fail(422, errors.join(" "));
 
@@ -529,7 +429,7 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
       p_binder_payout_cents: snapshot.payoutCents,
       p_price_includes: data.priceIncludes,
       p_snapshot: snapshot as unknown as Json,
-      p_overridden: snapshot.overridden,
+      p_overridden: snapshot.provenance === "CASE_OVERRIDE",
       p_actor_user_id: context.userId,
     });
     if (error) fail(409, error.message);

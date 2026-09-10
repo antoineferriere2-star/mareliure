@@ -13,10 +13,9 @@
  * migration changed none of it.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import type { Database, Json } from "@/integrations/supabase/types";
 import type { ProjectBrief } from "@/build/schema/brief";
 import type { Answers } from "@/build/schema/answers";
-import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
 import type { PricingSnapshot } from "@/marketplace/pricing/snapshot";
 import { extractPhotoReferences } from "@/build/engine/visitorSummary";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
@@ -55,7 +54,8 @@ export interface CaseRow {
   pricing_currency: string;
   pricing_confidence: string | null;
   pricing_reason_codes: string[];
-  pricing_components: PricingComponent[] | null;
+  /** Colonne de l'ancien moteur, plus écrite. */
+  pricing_components: Json | null;
   pricing_low_estimate_cents: number | null;
   pricing_high_estimate_cents: number | null;
   pricing_reference_count: number | null;

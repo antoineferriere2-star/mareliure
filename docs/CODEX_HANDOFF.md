@@ -268,11 +268,14 @@ admin**. Aucune décision de prix entièrement automatique.
 
 Exactement cela, depuis `52d0861`.
 
-`src/marketplace/pricing/` calcule une suggestion déterministe à partir des
-réponses structurées du Dossier — `pricing.rules.ts` porte la grille,
-`pricing.engine.ts` l'applique, `pricing.types.ts` déclare des codes de raison
-stables séparés de leurs libellés français. La marge minimale est vérifiée en
-base, pas seulement dans le code.
+`src/marketplace/pricing/` compose le prix d'un projet à partir d'**une seule
+grille tarifaire, celle de Ma Reliure** (décision du 10 septembre 2026) :
+`workResolver.ts` lit les opérations dans les réponses structurées du Dossier,
+`composition.ts` additionne leurs tarifs TTC du Pricebook et applique les
+modificateurs globaux de format et de complexité, `payout.ts` propose la
+rémunération de l'atelier par la politique de marge (25 % du HT, 80 € minimum,
+administrables). Les ateliers n'ont pas de grille : ils reçoivent une
+rémunération à accepter ou refuser.
 
 `marketplace_quotes` ne stocke plus un devis mais l'offre gérée présentée à un
 atelier : `customer_price_cents`, `binder_payout_cents`, `accepted_at`,
@@ -280,12 +283,12 @@ atelier : `customer_price_cents`, `binder_payout_cents`, `accepted_at`,
 Postgres rendent atomiques la validation du prix, la réponse de l'atelier et la
 sélection ; `marketplace_events` journalise le tout derrière une RLS deny-all.
 
-> **La grille tarifaire est un point de départ, pas un tarif.** Les montants de
-> `PAYOUT_RULES` — 140 € de base en réparation, 180 € de supplément plein cuir,
-> etc. — ont été posés pour que le moteur produise quelque chose, pas parce
-> qu'ils sont justes. Ils doivent être calibrés avec un relieur réel avant
-> qu'un prix atteigne un client. La validation humaine exigée par ce chapitre
-> est ce qui rend cet état acceptable en attendant.
+> **La grille est initialisée par une recherche web, pas par des devis.** Les
+> 45 tarifs de départ sont le milieu des fourchettes publiques observées,
+> arrondi aux 5 € (`marketplace_web_benchmarks`), en brouillon « Référence
+> initiale web ». Ma Reliure les ajuste et les valide dans `/marketplace/pricing` ;
+> un tarif non validé sert au simulateur mais ne se promet à aucun client sans
+> justification écrite sur le dossier.
 
 `quotes/rules.ts` subsiste pour lire les dossiers antérieurs. Aucune server
 function active n'y crée plus de prix d'atelier.
@@ -349,6 +352,13 @@ Fonctions et déclencheurs :
 - `marketplace_ingest_missing_cases()` : RPC de rattrapage idempotent.
 - `marketplace_enforce_match_ceiling()` + trigger AFTER INSERT : plafond de
   3 ateliers par dossier, vérifié en base en plus du code.
+
+Tarification (migrations `20260909120000`, `20260910120000`, `20260912120000`) :
+`marketplace_work_items` (45 opérations), `marketplace_web_benchmarks` (une
+référence web par opération), `marketplace_pricebook` (la grille Ma Reliure,
+versionnée), `marketplace_pricing_modifiers`, `marketplace_pricing_policy`.
+`marketplace_binder_rates` et `marketplace_price_benchmarks` sont **dépréciées**
+— conservées, plus lues ni écrites.
 
 ### Règle de non-duplication
 
@@ -792,18 +802,25 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Date :** 10 septembre 2026
 
-**Branch :** `feat/project-thread`, ouverte depuis `feat/pricing-admin-console`
-et poussée sur `mareliure/feat/project-thread`. **Rien de ces deux branches
-n'est en production** : `main` et mareliure.fr restent sur `afc2d57`.
+**Branch :** `feat/mareliure-pricebook`, ouverte depuis `feat/project-thread`
+(`8a8bedc`), non poussée. Elle vit dans un worktree séparé,
+`C:\Users\antoi\Buil AI-pricebook` : une autre session travaillait en même temps
+dans `C:\Users\antoi\Buil AI` sur `fix/mareliure-customer-access` (voir In
+progress). **Rien de ces trois branches n'est en production** : `main` et
+mareliure.fr restent sur `afc2d57`.
 
 **Commits :** console de prix `e0b595e` ; suivi de commande `b5abc05`
-(conception), `151d153` (socle), `84e7da5` (écrans), puis cette passation.
+(conception), `151d153` (socle), `84e7da5` (écrans), `8a8bedc` (passation) ;
+puis la grille tarifaire unique, dans le commit qui porte cette passation.
 
 **Migrations appliquées sur le dev seulement** (`qwfhebtxeubfmvvdsqdt`) :
 `20260910120000_pricing_admin_console` et `20260911120000_project_thread`.
-**Avant tout merge sur `main`**, les appliquer en production par l'API de
-gestion (§J) : sans elles, la console de prix, « Mes livres » et « Mon atelier »
-échouent en production.
+**`20260912120000_mareliure_single_pricebook` n'est appliquée nulle part** : le
+jeton du CLI reçoit un 403 sur le projet de dev (« Initialising login role »),
+et aucun mot de passe de base n'est disponible sur le poste. **Avant tout merge
+sur `main`**, appliquer les trois migrations, dans l'ordre, sur le dev puis en
+production (§J) : sans elles, la grille, « Mes livres » et « Mon atelier »
+échouent.
 
 **Production :** **alignée sur `main`.** Déployée le 10 septembre 2026, Worker
 `mareliure` version `5428cfbb-c9b1-4c0d-8026-be10e7efd350`, commit `afc2d57`.
@@ -854,14 +871,16 @@ vérifie le format d'une clé.
 
 **Sur les branches, pas encore déployé :**
 
-- **Console de prix** (`e0b595e`, `/marketplace/pricing` et
-  `/marketplace/pricing/simulator`) — trois couches jamais fusionnées :
-  benchmark web (repère, jamais public, 39 relevés sourcés), grilles d'ateliers
-  (observation), Pricebook (décision, HT/TVA/TTC, modes, travaux inclus,
-  historique avec raison du changement, visibilité publique distincte de la
-  publication). Composition d'un prix sans total partiel ni coefficient
-  implicite ; validation d'un dossier avec photographie figée. Fuite corrigée :
-  « Mes livres » renvoyait un prix suggéré non validé.
+- **Grille tarifaire unique Ma Reliure** (remplace la console de prix de
+  `e0b595e`) — `/marketplace/pricing` : une ligne par opération (45), référence
+  web min / référence / max à gauche, tarif Ma Reliure TTC modifiable sur place
+  (Tab, Entrée, Échap), écart à la référence, mode (prix fixe, à partir de, sur
+  étude), actif, dernière modification, historique par version, retour à la
+  référence web confirmé, « Valider la grille initiale » avec confirmation
+  écrite. Règles de calcul sous la grille : marge cible et marge minimale,
+  modificateurs appliqués au total. `/marketplace/pricing/simulator` compose
+  avec la fonction même qui valide un dossier. Les grilles d'ateliers, leur
+  saisie, leur route et leurs liens ont disparu.
 - **Suivi de commande** (`151d153`, `84e7da5`) — conception dans
   `docs/order-tracking-design.md`. Un fil par projet (client, atelier retenu,
   Ma Reliure), décisions structurées figées en base (couleur, papier, texte à
@@ -875,7 +894,49 @@ vérifie le format d'une clé.
 
 ---
 
-### Completed
+### Completed — grille tarifaire unique (10 septembre 2026)
+
+**Décision produit : Ma Reliure fixe ses propres tarifs.** Plus de grille par
+atelier, plus d'agrégation ni de médiane entre relieurs. Deux objets seulement :
+
+| Objet                         | Table                        | Rôle                                      |
+| ----------------------------- | ---------------------------- | ----------------------------------------- |
+| Benchmark web                 | `marketplace_web_benchmarks` | min / référence / max TTC, jamais public  |
+| Grille Ma Reliure (Pricebook) | `marketplace_pricebook`      | le tarif utilisé par le moteur, versionné |
+
+- **Seed des 45 opérations** dans la migration, idempotent : références web de
+  la recherche initiale (tarifs publics d'ateliers, Etsy pour le rebind),
+  Pricebook en brouillon `WEB_REFERENCE_INITIAL` au montant de la référence.
+  Restauration patrimoniale, reliure de création et projet sur mesure en « Sur
+  étude » ; le taux horaire interne de 85 €/h n'est jamais converti en prix.
+- **Provenances** : `WEB_REFERENCE_INITIAL`, `ADMIN_VALIDATED`,
+  `HISTORICAL_TRANSACTION`, `CASE_OVERRIDE`. Les anciennes restent lisibles en
+  base, jamais proposées.
+- **Versionnage** : chaque geste écrit une version par
+  `marketplace_save_pricebook_changes` (transaction, verrou par opération,
+  refus si la ligne a changé depuis l'ouverture de la grille, événement
+  `pricebook_updated`). Motif facultatif. Les dossiers validés gardent leur
+  photographie (schéma v2 ; la v1 reste lisible).
+- **Prix décidé TTC**, HT déduit par `fromTtc`, marge calculée sur le HT.
+- **Rémunération atelier** = prix HT − max(25 % du HT, 80 €), arrondie à l'euro
+  inférieur ; politique administrable dans `marketplace_pricing_policy`.
+- **Modificateurs** appliqués au total du projet ; nouvelle forme « revue
+  manuelle », semée sur le hors format.
+- **Dossier** : prix client TTC et rémunération pré-remplis depuis la grille ;
+  s'en écarter, ou s'appuyer sur un tarif non validé, exige une raison et donne
+  `CASE_OVERRIDE`. Un refus « rémunération insuffisante » affiche dans la fiche
+  admin le montant que l'atelier aurait accepté ; la grille ne bouge pas.
+- **Retiré** : `rateCard.ts`, `benchmark.ts`, `references.ts`, `confidence.ts`,
+  `pricebookEvidence.ts`, `pricing.types.ts`, `testReferences.fixture.ts`,
+  `webBenchmarks.seed.ts`, `pricebookInput.ts`, `RateCardPage`,
+  `PricingConsolePage`, la route `pricing.$binderId`, le lien « Sa grille »,
+  `generateMarketplacePricing`, `scripts/seedWebBenchmarks.ts`. L'écrivain
+  d'événements vit dans `marketplaceEvents.server.ts`.
+- **Tests** : 1561 (122 fichiers), typecheck propre, lint sans erreur, build
+  vert. Nouveaux : `composition`, `payout`, `pricebookChanges`, `snapshot`,
+  `singlePricebookMigrationContract`, `pricingGridContract`.
+
+### Completed — référentiel par grilles d'ateliers (9 septembre, remplacé)
 
 **Les prix inventés sont partis.** Le moteur portait une quinzaine de montants
 codés en dur — 140 € pour une réparation, 200 € pour une belle reliure, 80 €
@@ -984,19 +1045,28 @@ récidive.
 
 ### In progress
 
-- **Captures** des espaces client, atelier, admin et de la console de prix : elles
-  attendent une connexion dans le navigateur. L'agent ne saisit aucun mot de
-  passe ; les comptes de test du dev doivent être ouverts par une personne.
-- **Scénario E2E `e2e/project-thread.spec.ts`** : écrit, jamais exécuté. Il lit
-  ses identifiants dans les variables `E2E_PROJECT_*` (voir `e2e/README.md`).
+- **Appliquer `20260912120000` sur le dev**, puis vérifier : 45 lignes
+  préremplies, demi-cuir 350 € → 390 €, simulateur à 440 € avec un titrage. À
+  lancer par une personne, depuis `C:\Users\antoi\Buil AI-pricebook`, avec le
+  mot de passe de la base saisi dans le terminal (jamais dans une conversation).
+- **Captures avant / après** de `/marketplace/pricing` : elles attendent la
+  migration et une connexion admin dans le navigateur.
+- **Collision de sessions du 10 septembre, 18 h 29** : une session a mis le
+  travail en cours dans `stash@{0}` et basculé l'arbre principal sur
+  `fix/mareliure-customer-access` ; quatre écritures égarées ont été retirées de
+  cet arbre. Le stash est intégré à ce commit et peut être supprimé.
+- Captures des espaces client et atelier, scénario E2E
+  `e2e/project-thread.spec.ts` : toujours en attente (connexion, variables
+  `E2E_PROJECT_*`).
 
 ---
 
 ### Next recommended task
 
-1. **Mettre les deux branches en production** : appliquer les migrations
-   `20260910120000` et `20260911120000` sur `hljxohondjvrkzqicexl` (§J),
-   merger `feat/project-thread` sur `main`, déployer par
+1. **Appliquer et vérifier la grille sur le dev, puis mettre les trois branches
+   en production** : appliquer les migrations `20260910120000`,
+   `20260911120000` et `20260912120000` sur `hljxohondjvrkzqicexl` (§J),
+   merger `feat/mareliure-pricebook` sur `main`, déployer par
    `npm run build:mareliure` puis `wrangler deploy --name mareliure`.
 2. **Configurer l'envoi d'e-mails de Ma Reliure** : secret `LOVABLE_API_KEY`
    sur le Worker (saisi dans Cloudflare, jamais dans une conversation) et, de
@@ -1004,11 +1074,10 @@ récidive.
    suivi ne part.
 3. **Rouvrir les inscriptions (§H) et habiller `/auth` aux couleurs de Ma
    Reliure** : c'est la porte des deux espaces.
-4. **Remplir le référentiel.** Ce n'est pas du code : c'est s'asseoir avec un
-   relieur. Le référentiel est **vide**, donc chaque projet part en revue
-   manuelle. Premier atelier à interroger : Reliure Dorure Ferrière (Orléans),
-   déjà présent sur la plateforme. Trois ateliers font fonctionner le moteur,
-   six le rendent confiant.
+4. **Relire et valider la grille initiale** dans `/marketplace/pricing`, puis
+   poser les modificateurs de format et de complexité : sans eux, un grand
+   format garde le prix du format courant (signalé), le hors format part en
+   revue manuelle.
 5. **Spike Stripe Connect** (§Q) — _après validation explicite_. STOP avant
    toute implémentation.
 6. **Comparatif Sendcloud / Boxtal** et livrables A–I — _après le spike
@@ -1057,10 +1126,18 @@ received_by_binder` (réception sans transport). À retirer avec le paiement en
   conditions générales de vente : elles viendront avec le paiement.
 - **Le CLI Supabase ne joint pas la production depuis ce poste** (IPv6 non
   routé, pooler IPv4 sans mot de passe). Passer par l'API de gestion (§J).
-- **Le référentiel tarifaire est vide en production.** Sur le dev il porte le
-  jeu d'essai TEST_ONLY (3 ateliers, 6 combinaisons, 40 travaux sur 45 non
-  couverts). Aucun tarif réel n'a encore été relevé auprès d'un relieur.
-- Le Pricebook est vide : aucun prix n'a encore été arrêté.
+- **La grille n'existe encore dans aucune base** : `20260912120000` n'est pas
+  appliquée (voir In progress). Une fois appliquée, les 45 tarifs sont des
+  références initiales web, **à valider** ; aucun n'est public.
+- **La marge se lit sur le HT.** Un prix client de 650 € TTC avec 480 € pour
+  l'atelier laisse 61,67 € HT à Ma Reliure, pas 170 € : 650 − 480 oublie la
+  TVA. Les écrans affichent « Marge … HT ».
+- **Les modificateurs de format et de complexité sont vides**, sauf le hors
+  format, semé en revue manuelle. Tant qu'ils ne sont pas posés, un grand
+  format se chiffre au prix du format courant, avec un avertissement.
+- `marketplace_binder_rates` (18 lignes TEST_ONLY sur le dev) et
+  `marketplace_price_benchmarks` (39 relevés) restent en base, dépréciées. Les
+  supprimer demande une migration de nettoyage dédiée.
 - Les inscriptions publiques sont fermées en production (§H).
 - `rating_avg`, `rating_count`, `response_rate` existent et sont vides : une
   page publique ne doit les afficher que non nuls.
@@ -1074,16 +1151,19 @@ received_by_binder` (réception sans transport). À retirer avec le paiement en
 
 ### Do not touch
 
-- **`src/marketplace/pricing/pricing.rules.ts` ne doit plus jamais porter de
-  montant de travail.** Un test lit le fichier. Les tarifs viennent des
-  grilles, point.
-- **`testReferences.fixture.ts`** : jeu d'essai `TEST_ONLY`. Rien dans `src/`
-  hors des tests ne l'importe, et un test le vérifie. Il n'agrège que si
-  `MARKETPLACE_ALLOW_TEST_RATES=true` et que l'environnement n'est pas marqué
-  production.
-- **Les seuils `PUBLISHABLE_MINIMUM_REFERENCES` (3) et
-  `QUARTILE_MINIMUM_REFERENCES` (5)** : ils protègent contre la précision
-  inventée. Les baisser rendrait une page publique malhonnête.
+- **Une seule grille tarifaire : celle de Ma Reliure.** Ne pas réintroduire de
+  grille par atelier, d'agrégation, de médiane ni de « nombre d'ateliers
+  contributeurs ». `pricingGridContract.test.ts` refuse ces noms dans le code
+  actif.
+- **Aucun montant en dur dans le moteur** (`pricing.rules.ts`,
+  `composition.ts`, `payout.ts`…). Les tarifs vivent dans le Pricebook ; les
+  valeurs de départ n'existent que dans la migration `20260912120000`.
+  `noFabricatedPrices.test.ts` lit les fichiers.
+- **Rien ne modifie un tarif sans geste humain** : ni un refus d'atelier (il
+  s'enregistre sur le dossier), ni une référence web corrigée, ni un prix fixé
+  sur un dossier (`CASE_OVERRIDE`, qui n'appartient qu'au dossier).
+- **Le benchmark web ne sort pas du back-office** : `/tarifs` ne lit que des
+  tarifs `ADMIN_VALIDATED` cochés publics.
 - `src/build/` pour un besoin propre à la reliure — Playbook ou
   `src/marketplace/`. Une capacité générique y est recevable, sans métier et
   avec ses tests : c'est ce qu'est `briefLabel`.

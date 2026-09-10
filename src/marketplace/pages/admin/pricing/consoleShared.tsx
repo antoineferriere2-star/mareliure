@@ -1,18 +1,19 @@
 /**
- * Les pièces communes de la console de prix.
+ * Les pièces communes de la grille tarifaire et du simulateur.
  *
  * Un outil interne, dense, lu sur un écran de bureau : des chiffres alignés,
- * des états écrits en toutes lettres, pas de couleurs qui parlent seules.
- * Une marge en alerte le dit (« Alerte »), elle ne se contente pas d'être rouge.
+ * des états écrits en toutes lettres, pas de couleurs qui parlent seules. Une
+ * marge en alerte le dit (« Alerte »), elle ne se contente pas d'être rouge.
  */
 import type { ReactNode } from "react";
+import { Link } from "@tanstack/react-router";
 import { money, percent } from "./consoleFormat";
 import {
   MARGIN_STATUS_LABELS,
   type MarginAssessment,
   type MarginStatus,
 } from "@/marketplace/pricing/margin";
-import type { EvidenceAssessment } from "@/marketplace/pricing/pricebookEvidence";
+import { PROVENANCE_LABELS, type PriceProvenance } from "@/marketplace/pricing/provenance";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,6 +24,22 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+/** D'abord la grille, ensuite le simulateur : l'ordre dit à quoi sert l'écran. */
+export function PricingTabs() {
+  const tab =
+    "rounded-md px-3 py-1.5 text-sm text-muted-foreground transition hover:bg-muted hover:text-foreground [&.active]:bg-muted [&.active]:text-foreground";
+  return (
+    <nav aria-label="Tarifs" className="flex gap-1">
+      <Link to="/marketplace/pricing" activeOptions={{ exact: true }} className={tab}>
+        Grille tarifaire
+      </Link>
+      <Link to="/marketplace/pricing/simulator" className={tab}>
+        Simulateur
+      </Link>
+    </nav>
+  );
+}
 
 const MARGIN_TONE: Record<MarginStatus, string> = {
   OK: "border-emerald-700/30 text-emerald-800",
@@ -39,80 +56,25 @@ export function MarginBadge({ margin }: { margin: MarginAssessment | null }) {
     >
       <strong className="font-semibold">{MARGIN_STATUS_LABELS[margin.status]}</strong>
       <span className="tabular-nums">
-        {money(margin.marginCents)} · {percent(margin.marginBps)}
+        {money(margin.marginCents)} HT · {percent(margin.marginBps)}
       </span>
     </span>
   );
 }
 
-export function EvidenceNote({ evidence }: { evidence: EvidenceAssessment }) {
-  return (
-    <span className="text-xs" title={evidence.alerts.join("\n")}>
-      <span className={evidence.level === "NONE" ? "text-muted-foreground" : ""}>
-        {evidence.label}
-      </span>
-      {evidence.alerts.length > 0 && (
-        <span className="ml-1 text-amber-800">
-          · {evidence.alerts.length} alerte{evidence.alerts.length > 1 ? "s" : ""}
-        </span>
-      )}
-    </span>
-  );
-}
+const PROVENANCE_TONE: Record<PriceProvenance, string> = {
+  WEB_REFERENCE_INITIAL: "border-amber-600/40 text-amber-900",
+  ADMIN_VALIDATED: "border-emerald-700/30 text-emerald-800",
+  HISTORICAL_TRANSACTION: "border-border text-muted-foreground",
+  CASE_OVERRIDE: "border-sky-700/30 text-sky-900",
+};
 
-/**
- * Où tombe notre prix TTC par rapport à ce que le web affiche.
- *
- * Une barre, pas un score : la fourchette affichée en gris, sa médiane en
- * trait fin, notre prix en repère plein. On voit d'un coup d'œil « au-dessus »,
- * « dedans » ou « en dessous », et c'est tout ce que ce repère peut dire.
- */
-export function MarketBar({
-  priceCents,
-  lowCents,
-  highCents,
-  medianCents,
-  title,
-}: {
-  priceCents: number | null;
-  lowCents: number | null;
-  highCents: number | null;
-  medianCents: number | null;
-  title?: string;
-}) {
-  if (lowCents === null || highCents === null)
-    return <span className="text-xs text-muted-foreground">Aucun repère</span>;
-  const values = [lowCents, highCents, ...(priceCents === null ? [] : [priceCents])];
-  const min = Math.min(...values) * 0.9;
-  const max = Math.max(...values) * 1.1;
-  const position = (value: number) => `${((value - min) / (max - min)) * 100}%`;
+export function ProvenanceTag({ provenance }: { provenance: PriceProvenance }) {
   return (
     <span
-      className="relative inline-block h-3 w-28 align-middle"
-      title={title ?? `Web : ${money(lowCents)} – ${money(highCents)}`}
-      aria-label={title ?? `Web : ${money(lowCents)} à ${money(highCents)}`}
-      role="img"
+      className={`inline-flex whitespace-nowrap rounded-sm border px-1 text-[11px] leading-4 ${PROVENANCE_TONE[provenance]}`}
     >
-      <span className="absolute inset-x-0 top-1/2 h-px bg-border" />
-      <span
-        className="absolute top-0.5 h-2 rounded-[1px] bg-muted-foreground/25"
-        style={{
-          left: position(lowCents),
-          width: `calc(${position(highCents)} - ${position(lowCents)})`,
-        }}
-      />
-      {medianCents !== null && (
-        <span
-          className="absolute top-0 h-3 w-px bg-muted-foreground"
-          style={{ left: position(medianCents) }}
-        />
-      )}
-      {priceCents !== null && (
-        <span
-          className="absolute top-0 h-3 w-1 -translate-x-1/2 rounded-[1px] bg-foreground"
-          style={{ left: position(priceCents) }}
-        />
-      )}
+      {PROVENANCE_LABELS[provenance]}
     </span>
   );
 }

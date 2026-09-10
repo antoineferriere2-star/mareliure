@@ -25,6 +25,14 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
+const DECLINE_REASON_LABELS: Record<string, string> = {
+  payout_insufficient: "rémunération insuffisante",
+  deadline_impossible: "délai impossible",
+  outside_specialty: "hors de sa spécialité",
+  no_capacity: "capacité indisponible",
+  other: "autre motif",
+};
+
 export function CaseMatchingPage({ caseId }: { caseId: string }) {
   const fetchCase = useServerFn(getMarketplaceCase);
   const send = useServerFn(sendCaseToBinders);
@@ -164,8 +172,20 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
                       </p>
                     )}
                     {offer.decline_reason_code && (
-                      <p className="mt-1 text-amber-700">Refus : {offer.decline_reason_code}</p>
+                      <p className="mt-1 text-amber-700">
+                        Refus :{" "}
+                        {DECLINE_REASON_LABELS[offer.decline_reason_code] ??
+                          offer.decline_reason_code}
+                        {offer.decline_reason_detail ? ` — ${offer.decline_reason_detail}` : ""}
+                      </p>
                     )}
+                    {"minimum_required_payout_cents" in offer &&
+                      offer.minimum_required_payout_cents && (
+                        <p className="mt-1 text-muted-foreground">
+                          Aurait accepté à {formatEuros(offer.minimum_required_payout_cents)}.
+                          Enregistré sur le dossier ; la grille ne change pas.
+                        </p>
+                      )}
                     {offer.state === "accepted" && (
                       <Button
                         className="mt-3"

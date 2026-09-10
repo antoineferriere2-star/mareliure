@@ -17,7 +17,6 @@
  * se passe réellement.
  */
 import { IntakeCta, LandingFooter, LandingHeader } from "./landing/LandingChrome";
-import { SIZE_CLASS_LABELS } from "@/marketplace/pricing/catalog";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { formatPublicPrice, type PublicPriceRow } from "@/marketplace/pricing/publicPrices";
 
@@ -168,10 +167,10 @@ export function TarifsPage({ publicPrices = [] }: { publicPrices?: readonly Publ
 /**
  * Les prix que Ma Reliure a arrêtés et choisi d'annoncer.
  *
- * Rien d'autre n'arrive ici : ni fourchette relevée sur le web, ni tarif
- * d'atelier. `publicPriceRows` ne lit que le Pricebook, entrées publiées et
- * cochées « public » par un humain — et la section n'existe pas tant qu'il n'y
- * en a aucune.
+ * Rien d'autre n'arrive ici : ni référence web, ni rémunération d'atelier.
+ * `publicPriceRows` ne lit que le Pricebook, tarifs validés par Ma Reliure et
+ * cochés « public » par un humain — et la section n'existe pas tant qu'il n'y
+ * en a aucun.
  */
 function PublicPrices({ rows }: { rows: readonly PublicPriceRow[] }) {
   return (
@@ -189,16 +188,11 @@ function PublicPrices({ rows }: { rows: readonly PublicPriceRow[] }) {
         <dl className="mt-8 divide-y divide-mr-ink/10 border-y border-mr-ink/10">
           {rows.map((row) => (
             <div
-              key={`${row.workItemKey}-${row.sizeClass}-${row.complexityClass}`}
+              key={row.workItemKey}
               className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-4"
             >
               <dt>
                 <span className="font-serif text-[1.1875rem]">{row.label}</span>
-                {row.sizeClass !== "standard" && (
-                  <span className="ml-2 text-[0.875rem] text-mr-ink/55">
-                    {SIZE_CLASS_LABELS[row.sizeClass]}
-                  </span>
-                )}
               </dt>
               <dd className="text-[1rem] tabular-nums">{formatPublicPrice(row, formatEuros)}</dd>
             </div>

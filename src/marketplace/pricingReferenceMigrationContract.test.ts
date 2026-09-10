@@ -13,9 +13,16 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { WORK_FAMILIES, WORK_ITEMS } from "./pricing/catalog";
-import { PRICE_PROVENANCES, RATE_SOURCES } from "./pricing/provenance";
-import { PRICING_CONFIDENCES } from "./pricing/confidence";
-import { PRICING_METHODS } from "./pricing/pricebook";
+
+/**
+ * Les vocabulaires de cette migration, figés avec elle. Le code qui les
+ * portait (grilles d'ateliers, moteur à confiance) a été retiré le 10
+ * septembre 2026 : ils ne décrivent plus que l'historique de la base.
+ */
+const LEGACY_PROVENANCES = ["REAL_VERIFIED", "ADMIN_VALIDATED", "DEMO", "PLACEHOLDER", "TEST_ONLY"];
+const RATE_SOURCES = ["binder_interview", "binder_import", "historical_order", "admin_entry"];
+const PRICING_METHODS = ["margin_target", "fixed_price", "manual"];
+const PRICING_CONFIDENCES = ["manual_review", "low", "medium", "high"];
 
 const SQL = readFileSync(
   resolve(process.cwd(), "supabase/migrations/20260909120000_pricing_reference_system.sql"),
@@ -80,11 +87,7 @@ describe("la migration du référentiel tarifaire", () => {
 
   /** Les vocabulaires du code et de la base ne peuvent pas diverger en silence. */
   it("connaît exactement les mêmes vocabulaires que le code", () => {
-    // Les provenances ajoutées par la console de prix vivent dans sa propre
-    // migration, où `pricingConsoleContract.test.ts` les confronte au code.
-    const addedLater = ["HISTORICAL_TRANSACTION", "BINDER_DECLARED", "WEB_BENCHMARK"];
-    for (const provenance of PRICE_PROVENANCES.filter((p) => !addedLater.includes(p)))
-      expect(STATEMENTS).toContain(`'${provenance}'`);
+    for (const provenance of LEGACY_PROVENANCES) expect(STATEMENTS).toContain(`'${provenance}'`);
     for (const source of RATE_SOURCES) expect(STATEMENTS).toContain(`'${source}'`);
     for (const method of PRICING_METHODS) expect(STATEMENTS).toContain(`'${method}'`);
     for (const family of WORK_FAMILIES) expect(STATEMENTS).toContain(`'${family.key}'`);

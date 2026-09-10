@@ -2,9 +2,8 @@
  * Le catalogue canonique des travaux de reliure.
  *
  * C'est le vocabulaire dans lequel Ma Reliure décrit un travail, et le seul
- * dans lequel un tarif peut être exprimé. Un relieur remplit sa grille sur ces
- * clés ; l'agrégation les compare ; le Pricebook les tarife ; le moteur les
- * additionne. Une clé est donc un identifiant machine stable : on en ajoute,
+ * dans lequel un tarif peut être exprimé. La grille Ma Reliure les tarife ; le
+ * moteur les additionne. Une clé est donc un identifiant machine stable : on en ajoute,
  * on en retire de la liste offerte, on n'en renomme jamais — exactement la
  * même discipline que les valeurs d'option du Playbook.
  *
@@ -16,7 +15,7 @@
  * sait faire ; l'administration étend, elle ne redéfinit pas.
  *
  * Aucun montant ici. Un catalogue dit ce qu'on sait faire, pas ce que ça
- * coûte : les montants n'ont qu'une seule origine légitime, le terrain.
+ * coûte : les montants vivent dans le Pricebook, que Ma Reliure administre.
  */
 
 export const WORK_FAMILIES = [
@@ -41,8 +40,9 @@ export const WORK_FAMILY_LABELS: Record<WorkFamilyKey, string> = Object.fromEntr
  * projet en porte au plus un — on ne relie pas un livre en plein cuir *et* en
  * demi-toile. `complement` : tout ce qui s'ajoute, et qui peut se cumuler.
  *
- * La distinction n'est pas cosmétique : elle dit à l'agrégation quoi comparer
- * (deux ateliers se comparent sur une structure) et au moteur quoi additionner.
+ * La distinction n'est pas cosmétique : elle dit au moteur quelles opérations
+ * peuvent s'additionner. La protection (étui, chemise…) fait exception : elle
+ * accompagne une reliure sans en être une seconde.
  */
 export type WorkRole = "structure" | "complement";
 
@@ -57,7 +57,7 @@ export interface WorkItem {
    * un projet suffit à le sortir du calcul automatique.
    */
   requiresStudy?: boolean;
-  /** Ce que le travail recouvre, pour la personne qui remplit une grille. */
+  /** Ce que le travail recouvre, pour la personne qui tient la grille. */
   hint?: string;
 }
 
@@ -233,10 +233,10 @@ export function requiresStudy(keys: readonly string[]): boolean {
 }
 
 /**
- * Format et complexité : les deux axes qui font varier un même travail d'un
- * facteur deux. Ils sont déclarés sur la ligne de grille, pas déduits, parce
- * qu'un relieur sait dire « un demi-cuir grand format me prend une journée de
- * plus » et que personne ne sait le calculer à sa place.
+ * Format et complexité : les deux axes qui font varier un même travail. La
+ * grille ne les multiplie pas — un tarif par opération, au format et à la
+ * complexité courants — et des modificateurs globaux, administrés par Ma
+ * Reliure, s'appliquent au total du projet (`modifiers.ts`).
  */
 export const SIZE_CLASSES = ["small", "standard", "large", "oversize"] as const;
 export type SizeClass = (typeof SIZE_CLASSES)[number];

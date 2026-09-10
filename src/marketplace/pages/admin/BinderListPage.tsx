@@ -81,15 +81,6 @@ export function BinderListPage() {
                 <span className="text-xs text-muted-foreground">
                   {STATUS_LABELS[binder.status] ?? binder.status}
                 </span>
-                {/* L'entrée de la session tarifaire : on ouvre la fiche d'un
-                    atelier depuis la liste, en face de la personne. */}
-                <Link
-                  to="/marketplace/pricing/$binderId"
-                  params={{ binderId: binder.id }}
-                  className="rounded-md border border-border px-2.5 py-1 text-xs text-muted-foreground transition hover:text-foreground"
-                >
-                  Sa grille
-                </Link>
                 {binder.status !== "approved" ? (
                   <Button
                     size="sm"

@@ -1162,6 +1162,7 @@ export type Database = {
           minimum_margin_cents: number | null;
           price_ht_high_cents: number | null;
           pricing_mode: string;
+          provenance: string;
           public_visible: boolean;
           unit_label: string | null;
           vat_rate_bps: number;
@@ -1190,6 +1191,7 @@ export type Database = {
           minimum_margin_cents?: number | null;
           price_ht_high_cents?: number | null;
           pricing_mode?: string;
+          provenance?: string;
           public_visible?: boolean;
           unit_label?: string | null;
           vat_rate_bps?: number;
@@ -1218,6 +1220,7 @@ export type Database = {
           minimum_margin_cents?: number | null;
           price_ht_high_cents?: number | null;
           pricing_mode?: string;
+          provenance?: string;
           public_visible?: boolean;
           unit_label?: string | null;
           vat_rate_bps?: number;
@@ -1276,6 +1279,72 @@ export type Database = {
           percent_bps?: number | null;
           updated_at?: string;
           updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      marketplace_pricing_policy: {
+        Row: {
+          id: number;
+          minimum_margin_cents: number;
+          target_margin_bps: number;
+          updated_at: string;
+          updated_by: string | null;
+        };
+        Insert: {
+          id?: number;
+          minimum_margin_cents: number;
+          target_margin_bps: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Update: {
+          id?: number;
+          minimum_margin_cents?: number;
+          target_margin_bps?: number;
+          updated_at?: string;
+          updated_by?: string | null;
+        };
+        Relationships: [];
+      };
+      marketplace_web_benchmarks: {
+        Row: {
+          notes: string | null;
+          open_ended_max: boolean;
+          pricing_unit: string;
+          researched_at: string | null;
+          source_summary: string | null;
+          updated_at: string;
+          updated_by: string | null;
+          web_max_cents: number | null;
+          web_min_cents: number | null;
+          web_reference_cents: number | null;
+          work_item_key: string;
+        };
+        Insert: {
+          notes?: string | null;
+          open_ended_max?: boolean;
+          pricing_unit?: string;
+          researched_at?: string | null;
+          source_summary?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          web_max_cents?: number | null;
+          web_min_cents?: number | null;
+          web_reference_cents?: number | null;
+          work_item_key: string;
+        };
+        Update: {
+          notes?: string | null;
+          open_ended_max?: boolean;
+          pricing_unit?: string;
+          researched_at?: string | null;
+          source_summary?: string | null;
+          updated_at?: string;
+          updated_by?: string | null;
+          web_max_cents?: number | null;
+          web_min_cents?: number | null;
+          web_reference_cents?: number | null;
+          work_item_key?: string;
         };
         Relationships: [];
       };
@@ -1802,6 +1871,14 @@ export type Database = {
           p_reason_detail: string | null;
         };
         Returns: Database["public"]["Tables"]["marketplace_quotes"]["Row"];
+      };
+      marketplace_save_pricebook_changes: {
+        Args: {
+          p_actor_user_id: string;
+          p_change_reason?: string;
+          p_changes: Json;
+        };
+        Returns: Database["public"]["Tables"]["marketplace_pricebook"]["Row"][];
       };
       marketplace_select_binder_offer: {
         Args: {

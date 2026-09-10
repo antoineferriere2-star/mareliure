@@ -32,7 +32,7 @@ import { progressStep, progressStepsFor } from "@/marketplace/project/progress";
 import { SCOPE_REASONS, validateScopeIssue } from "@/marketplace/project/scopeIssues";
 import { customerActionFor, MESSAGE_MAX_LENGTH, UPDATE_TYPES } from "@/marketplace/project/thread";
 import { notifyCustomer } from "./projectNotifications.server";
-import { recordMarketplaceEvent } from "./pricingRepository.server";
+import { recordMarketplaceEvent } from "./marketplaceEvents.server";
 import {
   attachFiles,
   authorizeThread,

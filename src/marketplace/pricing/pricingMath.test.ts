@@ -3,9 +3,10 @@
  * écran à l'autre, et qui se font en centimes entiers.
  */
 import { describe, expect, it } from "vitest";
+// POLICY : marge cible 25 % du HT, minimum 80 €.
 import { assessMargin } from "./margin";
 import { fromHt, fromTtc, STANDARD_VAT_RATE_BPS, vatOf } from "./vat";
-import { POLICY } from "./pricingConsole.fixtures";
+import { POLICY } from "./pricingGrid.fixtures";
 
 describe("TVA", () => {
   it("s'applique au taux normal par défaut, en centimes entiers", () => {
@@ -52,7 +53,7 @@ describe("marge", () => {
   });
 
   it("passe en Attention sous la cible", () => {
-    const margin = assessMargin({ priceHtCents: 40_000, payoutCents: 34_000, ...POLICY });
+    const margin = assessMargin({ priceHtCents: 40_000, payoutCents: 32_000, ...POLICY });
     expect(margin.status).toBe("ATTENTION");
     expect(margin.reasons[0]).toContain("sous la cible");
   });

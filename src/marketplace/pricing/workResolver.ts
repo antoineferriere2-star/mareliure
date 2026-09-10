@@ -4,11 +4,11 @@
  * C'est l'étape qui manquait. L'ancien moteur sautait directement des réponses
  * à des montants : chaque condition ajoutait des centimes, et le raisonnement
  * du métier — « ce livre-là demande une recouture complète et un demi-cuir »
- * — n'existait nulle part. On ne pouvait donc ni le discuter avec un relieur,
- * ni le tarifer à partir de sa grille.
+ * — n'existait nulle part. On ne pouvait donc ni le discuter, ni le tarifer
+ * opération par opération.
  *
  * Ici, les réponses produisent une liste de travaux nommés. Les montants
- * viennent après, d'ailleurs, et seulement du terrain.
+ * viennent après, de la grille Ma Reliure, et de rien d'autre.
  *
  * Deux garde-fous :
  *

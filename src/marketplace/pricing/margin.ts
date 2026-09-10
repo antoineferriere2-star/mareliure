@@ -11,7 +11,14 @@
  * une marge calculée sur le TTC paraîtrait meilleure de vingt points.
  */
 import { formatEuros } from "./money";
-import { marginOf } from "./pricebook";
+
+export function marginOf(priceHtCents: number, payoutCents: number) {
+  const marginCents = priceHtCents - payoutCents;
+  return {
+    marginCents,
+    marginBps: priceHtCents > 0 ? Math.floor((marginCents * 10_000) / priceHtCents) : 0,
+  };
+}
 
 export const MARGIN_STATUSES = ["OK", "ATTENTION", "ALERTE"] as const;
 export type MarginStatus = (typeof MARGIN_STATUSES)[number];

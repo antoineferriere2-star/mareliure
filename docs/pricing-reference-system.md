@@ -1,5 +1,15 @@
 # Le référentiel tarifaire de Ma Reliure
 
+> **Remplacé le 10 septembre 2026.** Ma Reliure ne relève plus de grille auprès
+> des ateliers et n'agrège plus leurs tarifs : elle fixe **une seule grille
+> tarifaire**, initialisée par une recherche web puis administrée
+> (`/marketplace/pricing`), et propose une rémunération aux ateliers par une
+> politique de marge. Voir la migration
+> `20260912120000_mareliure_single_pricebook.sql` et `docs/CODEX_HANDOFF.md`.
+> Ce document décrit l'ancien modèle et n'est gardé que pour l'historique ;
+> `marketplace_binder_rates` et `marketplace_price_benchmarks` restent en base,
+> dépréciées.
+>
 > État au 9 septembre 2026. Les deux migrations sont appliquées en production.
 > Le référentiel y est **vide** : aucun
 > tarif n'a encore été relevé auprès d'un relieur réel, donc le moteur refuse de

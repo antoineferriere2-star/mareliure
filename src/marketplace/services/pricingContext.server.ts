@@ -1,93 +1,56 @@
 /**
  * Tout ce qu'il faut pour chiffrer, chargé en une fois.
  *
- * La console, le simulateur et le dossier lisent exactement les mêmes données
- * de la même façon. Un simulateur plus indulgent que la validation d'un
- * dossier serait un piège : on y montrerait un prix que le dossier refuserait.
+ * La grille d'administration, le simulateur, la composition et la validation
+ * d'un dossier lisent exactement les mêmes données de la même façon. Un
+ * simulateur plus indulgent que la validation montrerait un prix que le
+ * dossier refuserait.
  */
 import type { Supa } from "@/build/services/adminAuth.server";
-import type { ComplexityClass, SizeClass } from "@/marketplace/pricing/catalog";
-import {
-  benchmarkAggregatesFrom,
-  type BenchmarkAggregate,
-  type PriceBenchmark,
-} from "@/marketplace/pricing/benchmark";
+import type { PricingGrid } from "@/marketplace/pricing/composition";
 import type { PricingModifier } from "@/marketplace/pricing/modifiers";
+import type { PayoutPolicy } from "@/marketplace/pricing/payout";
+import { isActiveEntry, type PricebookEntry } from "@/marketplace/pricing/pricebook";
+import type { WorkItemState } from "@/marketplace/pricing/pricingGrid";
+import { STANDARD_VAT_RATE_BPS } from "@/marketplace/pricing/vat";
+import type { WebBenchmark } from "@/marketplace/pricing/webBenchmark";
 import {
-  detectDrift,
-  type PricebookDrift,
-  type PricebookEntry,
-} from "@/marketplace/pricing/pricebook";
-import type { BinderRate, RateAggregate } from "@/marketplace/pricing/rateCard";
-import {
-  referencesFor,
-  type DriftSignal,
-  type WorkReferences,
-} from "@/marketplace/pricing/references";
-import {
-  aggregatesFrom,
-  loadActiveRates,
-  loadBenchmarks,
   loadModifiers,
   loadPricebook,
+  loadPricingPolicy,
+  loadWebBenchmarks,
+  loadWorkItemRows,
 } from "./pricingRepository.server";
 
-export interface PricingContext {
-  rates: (BinderRate & { binderName: string })[];
-  aggregates: RateAggregate[];
-  benchmarks: PriceBenchmark[];
-  benchmarkAggregates: BenchmarkAggregate[];
-  /** Toutes les versions, retirées comprises : c'est l'historique. */
-  pricebook: PricebookEntry[];
-  published: PricebookEntry[];
+export interface PricingData {
+  workItems: WorkItemState[];
+  benchmarks: WebBenchmark[];
+  /** Toutes les versions de la grille, retirées comprises : c'est l'historique. */
+  entries: PricebookEntry[];
   modifiers: PricingModifier[];
-  drift: PricebookDrift[];
-  driftSignals: DriftSignal[];
+  policy: PayoutPolicy;
 }
 
-export async function loadPricingContext(sb: Supa): Promise<PricingContext> {
-  const [rates, benchmarks, pricebook, modifiers] = await Promise.all([
-    loadActiveRates(sb),
-    loadBenchmarks(sb),
-    loadPricebook(sb, false),
+export async function loadPricingData(sb: Supa): Promise<PricingData> {
+  const [workItems, benchmarks, entries, modifiers, policy] = await Promise.all([
+    loadWorkItemRows(sb),
+    loadWebBenchmarks(sb),
+    loadPricebook(sb),
     loadModifiers(sb),
+    loadPricingPolicy(sb),
   ]);
-  const aggregates = aggregatesFrom(rates);
-  const published = pricebook.filter((entry) => entry.status === "published");
-  const drift = detectDrift(published, aggregates);
-  return {
-    rates,
-    aggregates,
-    benchmarks,
-    benchmarkAggregates: benchmarkAggregatesFrom(benchmarks),
-    pricebook,
-    published,
-    modifiers,
-    drift,
-    driftSignals: drift.map((item) => ({ entryId: item.entry.id, severity: item.severity })),
-  };
+  return { workItems, benchmarks, entries, modifiers, policy };
 }
 
-export function referencesForWork(
-  context: PricingContext,
-  workItemKeys: readonly string[],
-  sizeClass: SizeClass,
-  complexityClass: ComplexityClass,
-  now: Date = new Date(),
-): Record<string, WorkReferences> {
-  return Object.fromEntries(
-    [...new Set(workItemKeys)].map((workItemKey) => [
-      workItemKey,
-      referencesFor({
-        workItemKey,
-        sizeClass,
-        complexityClass,
-        aggregates: context.aggregates,
-        benchmarkAggregates: context.benchmarkAggregates,
-        entries: context.published,
-        drift: context.driftSignals,
-        now,
-      }),
-    ]),
-  );
+/** Ce que lit le moteur : la grille en vigueur, sans le benchmark web. */
+export function toPricingGrid(
+  data: Pick<PricingData, "workItems" | "entries" | "modifiers" | "policy">,
+): PricingGrid {
+  return {
+    entries: data.entries.filter(isActiveEntry),
+    modifiers: data.modifiers,
+    policy: data.policy,
+    inactiveWorkItems: data.workItems.filter((item) => !item.active).map((item) => item.key),
+    vatRateBps: STANDARD_VAT_RATE_BPS,
+  };
 }

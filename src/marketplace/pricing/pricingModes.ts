@@ -1,10 +1,9 @@
 /**
  * Comment un prix s'exprime.
  *
- * Distinct de `PricingMethod` (pricebook.ts), qui dit comment le prix a été
- * construit. Un titrage se vend à l'unité, une restauration de coin à la
- * pièce, une reliure de création sur étude : forcer tous les travaux dans un
- * prix fixe obligerait à inventer un chiffre là où le métier n'en donne pas.
+ * Une reliure de création se chiffre sur étude, un décor peut s'annoncer « à
+ * partir de » : forcer toutes les opérations dans un prix fixe obligerait à
+ * inventer un chiffre là où le métier n'en donne pas.
  */
 
 export const PRICING_MODES = [
@@ -26,6 +25,17 @@ export const PRICING_MODE_LABELS: Record<PricingMode, string> = {
   STARTING_FROM: "À partir de",
   MANUAL_REVIEW: "Sur étude",
 };
+
+/**
+ * Les modes proposés dans la grille Ma Reliure. Les autres restent admis par
+ * la base pour l'historique, mais un tarif par opération n'a besoin que d'un
+ * prix fixe, d'un « à partir de », ou de la revue sur étude.
+ */
+export const GRID_PRICING_MODES = [
+  "FIXED",
+  "STARTING_FROM",
+  "MANUAL_REVIEW",
+] as const satisfies readonly PricingMode[];
 
 /** `MANUAL_REVIEW` refuse d'avoir un montant ; tous les autres en exigent un. */
 export function modeCarriesAmount(mode: PricingMode): boolean {

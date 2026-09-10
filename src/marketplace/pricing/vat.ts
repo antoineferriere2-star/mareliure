@@ -1,13 +1,14 @@
 /**
  * La TVA, calculée à un seul endroit.
  *
- * Un prix se décide HT — c'est sur lui que se calcule la marge, la TVA n'étant
- * pas un revenu — et s'annonce TTC à un particulier. Entre les deux, une seule
- * fonction : si le Pricebook, le simulateur, le dossier et la page publique
- * arrondissaient chacun à leur façon, un même travail afficherait deux prix à
- * un centime près, et personne ne saurait lequel est le vrai.
+ * Le tarif Ma Reliure se décide TTC — c'est le prix qu'un particulier paie et
+ * celui que le web affiche — et la marge se calcule sur le HT, la TVA n'étant
+ * pas un revenu. Entre les deux, une seule fonction : si la grille, le
+ * simulateur, le dossier et la page publique arrondissaient chacun à leur
+ * façon, un même travail afficherait deux prix à un centime près.
  *
- * Le HT est la vérité stockée ; le TTC en est dérivé et figé à la publication.
+ * Le TTC de la grille est la décision ; le HT en est déduit par `fromTtc`, et
+ * la décomposition retombe exactement sur le TTC décidé.
  *
  * Le taux normal (20 %) s'applique aux travaux de reliure et de restauration,
  * qui sont des prestations de services. Le taux à retenir reste une décision

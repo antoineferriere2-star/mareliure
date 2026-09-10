@@ -1,21 +1,19 @@
 /**
- * Le prix d'un dossier : composé depuis le Pricebook, décidé par un humain,
- * figé à la validation.
+ * Le prix d'un dossier : composé depuis la grille Ma Reliure, décidé par un
+ * humain, figé à la validation.
  *
- * Le panneau part des travaux que le moteur a lus dans le Dossier. On coche,
- * on décoche, on ajuste les quantités, le format, la complexité ; la
- * composition se recalcule côté serveur à chaque changement. Les montants
- * retenus se pré-remplissent avec elle — s'en écarter est permis, mais se
- * justifie. « Valider le prix » ouvre une confirmation qui montre ce qui va
- * être figé, marge comprise. Une fois validé, le panneau n'affiche plus que la
- * photographie : elle ne se recalcule jamais.
+ * Le panneau part des prestations que le moteur a lues dans le Dossier. On
+ * coche, on décoche, on ajuste les quantités, le format, la complexité ; la
+ * composition se recalcule côté serveur. Le prix client TTC et la rémunération
+ * atelier se pré-remplissent avec elle — les changer est permis, se justifie,
+ * et n'appartient qu'au dossier : la grille ne bouge pas. Une fois validé, le
+ * panneau n'affiche plus que la photographie.
  */
 import { useEffect, useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   composeCasePricing,
-  generateMarketplacePricing,
   validateMarketplacePricing,
 } from "@/marketplace/services/marketplace.data.functions";
 import {
@@ -25,17 +23,16 @@ import {
   type ComplexityClass,
   type SizeClass,
 } from "@/marketplace/pricing/catalog";
-import { CONFIDENCE_LABELS, type PricingConfidence } from "@/marketplace/pricing/confidence";
 import { assessMargin, type MarginAssessment } from "@/marketplace/pricing/margin";
-import { COMPOSITION_POLICY } from "@/marketplace/pricing/pricing.rules";
+import { PROVENANCE_LABELS } from "@/marketplace/pricing/provenance";
 import type { PricingSnapshot } from "@/marketplace/pricing/snapshot";
-import { formatVatRate, fromHt, STANDARD_VAT_RATE_BPS } from "@/marketplace/pricing/vat";
+import { formatVatRate, fromTtc } from "@/marketplace/pricing/vat";
 import { Button } from "@/components/ui/button";
 import {
   ConfirmDialog,
-  EvidenceNote,
   inputClass,
   MarginBadge,
+  ProvenanceTag,
   selectClass,
 } from "./pricing/consoleShared";
 import { centsToInput, eurosToCents, money, shortDate } from "./pricing/consoleFormat";
@@ -45,17 +42,27 @@ interface CasePricingRow {
   pricing_status: string;
   pricing_snapshot: PricingSnapshot | null;
   price_includes: string[];
-  pricing_confidence: string | null;
-  pricing_reference_count: number | null;
-  suggested_customer_price_cents: number | null;
-  suggested_binder_payout_cents: number | null;
 }
 
 interface Request {
-  lines: { workItemKey: string; quantity: number }[];
+  lines: readonly { workItemKey: string; quantity: number }[];
   sizeClass: SizeClass;
   complexityClass: ComplexityClass;
 }
+
+/** Une photographie prise avant la grille unique porte d'autres champs. */
+type StoredSnapshot = Partial<PricingSnapshot> &
+  Pick<PricingSnapshot, "priceTtcCents" | "priceHtCents" | "vatRateBps" | "vatCents" | "payoutCents"> & {
+    validatedAt?: string;
+    confidence?: { label: string };
+    operations: (Partial<PricingSnapshot["operations"][number]> & {
+      workItemKey: string;
+      label: string;
+      quantity: number;
+      priceHtCents?: number | null;
+    })[];
+    margin: PricingSnapshot["margin"];
+  };
 
 export function CasePricingPanel({
   caseId,
@@ -77,7 +84,7 @@ export function CasePricingPanel({
         </span>
       </div>
       {row.pricing_status === "validated" && row.pricing_snapshot ? (
-        <FrozenPrice snapshot={row.pricing_snapshot} />
+        <FrozenPrice snapshot={row.pricing_snapshot as unknown as StoredSnapshot} />
       ) : (
         <Composer caseId={caseId} row={row} refresh={refresh} />
       )}
@@ -85,37 +92,29 @@ export function CasePricingPanel({
   );
 }
 
-function FrozenPrice({ snapshot }: { snapshot: PricingSnapshot & { validatedAt?: string } }) {
+function FrozenPrice({ snapshot }: { snapshot: StoredSnapshot }) {
   return (
     <div className="mt-3 space-y-3 text-sm">
       <p className="font-serif text-3xl tabular-nums">{money(snapshot.priceTtcCents)}</p>
       <dl className="space-y-1 text-xs">
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">Prix HT</dt>
-          <dd className="tabular-nums">{money(snapshot.priceHtCents)}</dd>
-        </div>
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">TVA ({formatVatRate(snapshot.vatRateBps)})</dt>
-          <dd className="tabular-nums">{money(snapshot.vatCents)}</dd>
-        </div>
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">Rémunération atelier</dt>
-          <dd className="tabular-nums">{money(snapshot.payoutCents)}</dd>
-        </div>
+        <Row label="Prix HT" value={money(snapshot.priceHtCents)} />
+        <Row label={`TVA (${formatVatRate(snapshot.vatRateBps)})`} value={money(snapshot.vatCents)} />
+        <Row label="Rémunération atelier" value={money(snapshot.payoutCents)} />
         <div className="flex justify-between">
           <dt className="text-muted-foreground">Marge</dt>
           <dd>
             <MarginBadge margin={snapshot.margin as MarginAssessment} />
           </dd>
         </div>
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">Preuve</dt>
-          <dd>{snapshot.confidence.label}</dd>
-        </div>
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">Validé le</dt>
-          <dd>{shortDate(snapshot.validatedAt)}</dd>
-        </div>
+        <Row
+          label="Source du prix"
+          value={
+            snapshot.provenance
+              ? PROVENANCE_LABELS[snapshot.provenance]
+              : (snapshot.confidence?.label ?? "—")
+          }
+        />
+        <Row label="Validé le" value={shortDate(snapshot.validatedAt)} />
       </dl>
       <ul className="space-y-0.5 border-t border-border pt-2 text-xs">
         {snapshot.operations.map((operation) => (
@@ -123,27 +122,37 @@ function FrozenPrice({ snapshot }: { snapshot: PricingSnapshot & { validatedAt?:
             <span>
               {operation.label}
               {operation.quantity > 1 ? ` × ${operation.quantity}` : ""}
-              {operation.entryVersion !== null && (
-                <span className="text-muted-foreground">
-                  {" "}
-                  · Pricebook v{operation.entryVersion}
-                </span>
+              {operation.entryVersion != null && (
+                <span className="text-muted-foreground"> · grille v{operation.entryVersion}</span>
               )}
-              {operation.includedIn && <span className="text-muted-foreground"> · compris</span>}
             </span>
-            <span className="tabular-nums">{money(operation.priceHtCents)}</span>
+            <span className="tabular-nums">
+              {money(
+                operation.priceTtcCents ??
+                  (operation as { priceHtCents?: number | null }).priceHtCents,
+              )}
+            </span>
           </li>
         ))}
       </ul>
       {snapshot.overridden && (
-        <p className="rounded-md border border-amber-300 bg-amber-50 p-2 text-xs text-amber-950">
-          Écart au Pricebook
-          {snapshot.composed
-            ? ` (composé : ${money(snapshot.composed.priceHtCents)} HT)`
-            : " (non chiffré)"}{" "}
+        <p className="rounded-md border border-sky-300 bg-sky-50 p-2 text-xs text-sky-950">
+          Prix fixé sur le dossier
+          {snapshot.composed?.priceTtcCents != null
+            ? ` (grille : ${money(snapshot.composed.priceTtcCents)} TTC)`
+            : ""}{" "}
           — {snapshot.overrideReason}
         </p>
       )}
+    </div>
+  );
+}
+
+function Row({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="flex justify-between">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="tabular-nums">{value}</dd>
     </div>
   );
 }
@@ -159,7 +168,6 @@ function Composer({
 }) {
   const compose = useServerFn(composeCasePricing);
   const validate = useServerFn(validateMarketplacePricing);
-  const generate = useServerFn(generateMarketplacePricing);
 
   const initial = useQuery({
     queryKey: ["marketplace", "case", caseId, "composition"],
@@ -172,8 +180,8 @@ function Composer({
 
   const [request, setRequest] = useState<Request | null>(null);
   const [adding, setAdding] = useState("");
-  const [payout, setPayout] = useState("");
   const [price, setPrice] = useState("");
+  const [payout, setPayout] = useState("");
   const [touched, setTouched] = useState(false);
   const [reason, setReason] = useState("");
   const [includes, setIncludes] = useState(row.price_includes.join(", "));
@@ -186,8 +194,8 @@ function Composer({
   const composition = current?.composition;
   useEffect(() => {
     if (touched || !composition || composition.status !== "priced") return;
-    setPayout(centsToInput(composition.payoutCents));
-    setPrice(centsToInput(composition.priceHtCents));
+    setPrice(centsToInput(composition.priceTtcCents));
+    setPayout(centsToInput(composition.payout?.payoutCents));
   }, [composition, touched]);
 
   const change = (next: Request) => {
@@ -203,8 +211,8 @@ function Composer({
           lines: request!.lines,
           sizeClass: request!.sizeClass,
           complexityClass: request!.complexityClass,
+          retainedPriceTtcCents: eurosToCents(price) ?? 0,
           retainedPayoutCents: eurosToCents(payout) ?? 0,
-          retainedPriceHtCents: eurosToCents(price) ?? 0,
           priceIncludes: includes
             .split(",")
             .map((item) => item.trim())
@@ -217,33 +225,38 @@ function Composer({
       await refresh();
     },
   });
-  const suggestion = useMutation({
-    mutationFn: () => generate({ data: { caseId } }),
-    onSuccess: refresh,
-  });
 
   if (initial.isPending || !request)
     return <p className="mt-3 text-sm text-muted-foreground">Composition…</p>;
   if (initial.error)
     return <p className="mt-3 text-sm text-destructive">{(initial.error as Error).message}</p>;
 
-  const payoutCents = eurosToCents(payout);
   const priceCents = eurosToCents(price);
-  const breakdown = priceCents && priceCents > 0 ? fromHt(priceCents, STANDARD_VAT_RATE_BPS) : null;
+  const payoutCents = eurosToCents(payout);
+  const breakdown = priceCents && priceCents > 0 ? fromTtc(priceCents) : null;
   const margin =
-    payoutCents && priceCents
-      ? assessMargin({ priceHtCents: priceCents, payoutCents, ...COMPOSITION_POLICY })
+    breakdown && payoutCents && composition
+      ? assessMargin({
+          priceHtCents: breakdown.htCents,
+          payoutCents,
+          targetMarginBps: composition.policy.targetMarginBps,
+          minimumMarginCents: composition.policy.minimumMarginCents,
+        })
       : null;
   const priced = composition?.status === "priced";
   const overridden =
-    !priced || composition?.payoutCents !== payoutCents || composition?.priceHtCents !== priceCents;
+    !priced ||
+    composition?.priceTtcCents !== priceCents ||
+    (composition?.payout?.payoutCents ?? null) !== payoutCents;
+  const unvalidated = priced ? (composition?.unvalidated ?? []) : [];
+  const needsReason = overridden || unvalidated.length > 0;
   const ready =
     request.lines.length > 0 &&
+    breakdown !== null &&
     payoutCents !== null &&
-    priceCents !== null &&
     payoutCents > 0 &&
-    payoutCents <= priceCents &&
-    (!overridden || reason.trim() !== "") &&
+    payoutCents <= breakdown.htCents &&
+    (!needsReason || reason.trim() !== "") &&
     !row.manual_review_required;
 
   const selected = new Set(request.lines.map((line) => line.workItemKey));
@@ -286,7 +299,6 @@ function Composer({
       <ul className="space-y-1.5">
         {request.lines.map((line) => {
           const composed = composition?.lines.find((item) => item.workItemKey === line.workItemKey);
-          const evidence = current?.references[line.workItemKey]?.evidence;
           return (
             <li key={line.workItemKey} className="rounded-md border border-border px-2 py-1.5">
               <div className="flex items-center gap-2">
@@ -324,20 +336,14 @@ function Composer({
                   }
                 />
                 <span className="w-20 text-right text-xs tabular-nums">
-                  {money(composed?.priceHtCents)}
+                  {money(composed?.priceTtcCents)}
                 </span>
               </div>
-              <div className="pl-6 text-xs text-muted-foreground">
-                {composed?.entryVersion != null && (
-                  <span>Pricebook v{composed.entryVersion} · </span>
-                )}
-                {composed?.includedIn && <span>compris dans un autre travail · </span>}
-                {composed?.modifiers.map((modifier) => (
-                  <span key={modifier}>{modifier} · </span>
-                ))}
-                {evidence && <EvidenceNote evidence={evidence} />}
+              <div className="flex flex-wrap items-center gap-1.5 pl-6 text-xs text-muted-foreground">
+                {composed?.entryVersion != null && <span>grille v{composed.entryVersion}</span>}
+                {composed?.provenance && <ProvenanceTag provenance={composed.provenance} />}
                 {composed?.problem && (
-                  <span className="block text-amber-800">{composed.problem}</span>
+                  <span className="block w-full text-amber-800">{composed.problem}</span>
                 )}
               </div>
             </li>
@@ -351,7 +357,7 @@ function Composer({
           value={adding}
           onChange={(e) => setAdding(e.target.value)}
         >
-          <option value="">Ajouter un travail…</option>
+          <option value="">Ajouter une prestation…</option>
           {WORK_ITEMS.filter((item) => !selected.has(item.key)).map((item) => (
             <option key={item.key} value={item.key}>
               {item.label}
@@ -373,26 +379,50 @@ function Composer({
 
       {composition && !priced && (
         <div className="rounded-md border border-amber-300 bg-amber-50 p-3 text-xs text-amber-950">
-          <p className="font-medium">Le Pricebook ne chiffre pas ce projet.</p>
+          <p className="font-medium">La grille ne chiffre pas ce projet.</p>
           <ul className="mt-1 list-disc pl-4">
             {composition.reasons.map((line) => (
               <li key={line}>{line}</li>
             ))}
           </ul>
-          <p className="mt-1">
-            Un prix peut être fixé à la main après étude, avec sa justification.
-          </p>
+          <p className="mt-1">Un prix peut être fixé à la main après étude, avec sa justification.</p>
         </div>
       )}
-      {priced && composition?.breakdown && (
-        <p className="text-xs text-muted-foreground">
-          Composé : {money(composition.payoutCents)} atelier · {money(composition.priceHtCents)} HT
-          · {money(composition.breakdown.ttcCents)} TTC
-          {composition.startingFrom ? " (à partir de)" : ""}
-        </p>
+      {priced && composition && (
+        <dl className="space-y-0.5 text-xs text-muted-foreground">
+          <Row label="Total des prestations" value={money(composition.subtotalTtcCents)} />
+          {composition.modifiers.map((modifier) => (
+            <Row
+              key={modifier.label}
+              label={modifier.label}
+              value={`${modifier.deltaTtcCents >= 0 ? "+" : "−"}${money(Math.abs(modifier.deltaTtcCents))}`}
+            />
+          ))}
+          <Row label="Grille : prix client TTC" value={money(composition.priceTtcCents)} />
+          <Row label="Grille : rémunération proposée" value={money(composition.payout?.payoutCents)} />
+        </dl>
+      )}
+      {composition && composition.warnings.length > 0 && (
+        <ul className="space-y-0.5 text-xs text-amber-900">
+          {composition.warnings.map((warning) => (
+            <li key={warning}>{warning}</li>
+          ))}
+        </ul>
       )}
 
       <div className="grid grid-cols-2 gap-2 border-t border-border pt-3 text-xs">
+        <label>
+          Prix client TTC (€)
+          <input
+            className={`${inputClass} mt-1`}
+            inputMode="decimal"
+            value={price}
+            onChange={(e) => {
+              setTouched(true);
+              setPrice(e.target.value);
+            }}
+          />
+        </label>
         <label>
           Rémunération atelier (€)
           <input
@@ -405,48 +435,27 @@ function Composer({
             }}
           />
         </label>
-        <label>
-          Prix client HT (€)
-          <input
-            className={`${inputClass} mt-1`}
-            inputMode="decimal"
-            value={price}
-            onChange={(e) => {
-              setTouched(true);
-              setPrice(e.target.value);
-            }}
-          />
-        </label>
       </div>
       <dl className="space-y-1 text-xs">
-        <div className="flex justify-between">
-          <dt className="text-muted-foreground">TVA ({formatVatRate(STANDARD_VAT_RATE_BPS)})</dt>
-          <dd className="tabular-nums">{money(breakdown?.vatCents)}</dd>
-        </div>
-        <div className="flex justify-between text-sm font-medium">
-          <dt>Prix client TTC</dt>
-          <dd className="tabular-nums">{money(breakdown?.ttcCents)}</dd>
-        </div>
+        <Row label="Prix HT" value={money(breakdown?.htCents)} />
+        <Row
+          label={`TVA (${formatVatRate(breakdown?.vatRateBps ?? 2_000)})`}
+          value={money(breakdown?.vatCents)}
+        />
         <div className="flex justify-between">
           <dt className="text-muted-foreground">Marge</dt>
           <dd>
             <MarginBadge margin={margin} />
           </dd>
         </div>
-        {current && (
-          <div className="flex justify-between">
-            <dt className="text-muted-foreground">Preuve</dt>
-            <dd>
-              <EvidenceNote evidence={current.confidence} />
-            </dd>
-          </div>
-        )}
       </dl>
-      {overridden && (
+      {needsReason && (
         <label className="block text-xs">
-          {priced
-            ? "Pourquoi s’écarter du Pricebook ?"
-            : "Sur quoi repose ce prix fixé à la main ?"}{" "}
+          {!priced
+            ? "Sur quoi repose ce prix fixé à la main ?"
+            : overridden
+              ? "Pourquoi s’écarter de la grille ?"
+              : `Tarif non validé dans la grille (${unvalidated.join(", ")}) : validez-le dans la grille, ou justifiez ce prix.`}{" "}
           (obligatoire)
           <textarea
             className="mt-1 min-h-14 w-full rounded-md border border-input bg-background px-2 py-1 text-sm"
@@ -466,37 +475,17 @@ function Composer({
         />
       </label>
 
-      <div className="flex flex-wrap gap-2">
-        <Button disabled={!ready} onClick={() => setConfirming(true)}>
-          Valider le prix…
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          disabled={suggestion.isPending}
-          onClick={() => suggestion.mutate()}
-        >
-          Référence des grilles
-        </Button>
-      </div>
+      <Button disabled={!ready} onClick={() => setConfirming(true)}>
+        Valider le prix…
+      </Button>
       {row.manual_review_required && (
         <p className="text-xs text-amber-800">
           La revue manuelle doit être levée avant de valider un prix.
         </p>
       )}
-      {row.suggested_customer_price_cents !== null && (
-        <p className="text-xs text-muted-foreground">
-          Grilles d’ateliers : {money(row.suggested_binder_payout_cents)} atelier ·{" "}
-          {money(row.suggested_customer_price_cents)} client
-          {row.pricing_confidence
-            ? ` · ${CONFIDENCE_LABELS[row.pricing_confidence as PricingConfidence] ?? row.pricing_confidence}`
-            : ""}
-          {row.pricing_reference_count ? ` · ${row.pricing_reference_count} atelier(s)` : ""}
-        </p>
-      )}
-      {(recompose.error || validation.error || suggestion.error) && (
+      {(recompose.error || validation.error) && (
         <p className="text-xs text-destructive">
-          {((recompose.error ?? validation.error ?? suggestion.error) as Error).message}
+          {((recompose.error ?? validation.error) as Error).message}
         </p>
       )}
 
@@ -504,7 +493,7 @@ function Composer({
         open={confirming}
         onOpenChange={setConfirming}
         title="Valider et figer ce prix"
-        description="Le prix, sa décomposition et les versions du Pricebook utilisées sont figés dans le dossier. Ils ne se recalculeront plus."
+        description="Le prix, sa décomposition et les versions de la grille utilisées sont figés dans le dossier. Ils ne se recalculeront plus, et la grille ne change pas."
         confirmLabel="Valider le prix"
         pending={validation.isPending}
         onConfirm={() => validation.mutate()}
@@ -512,12 +501,12 @@ function Composer({
         <dl className="space-y-1 text-sm">
           <div className="flex justify-between">
             <dt>Prix client TTC</dt>
-            <dd className="font-medium tabular-nums">{money(breakdown?.ttcCents)}</dd>
+            <dd className="font-medium tabular-nums">{money(priceCents)}</dd>
           </div>
           <div className="flex justify-between">
             <dt>Prix HT · TVA</dt>
             <dd className="tabular-nums">
-              {money(priceCents)} · {money(breakdown?.vatCents)}
+              {money(breakdown?.htCents)} · {money(breakdown?.vatCents)}
             </dd>
           </div>
           <div className="flex justify-between">
@@ -533,7 +522,10 @@ function Composer({
           {margin && margin.status !== "OK" && (
             <p className="text-xs text-amber-900">{margin.reasons.join(" ")}</p>
           )}
-          {overridden && <p className="text-xs">Écart au Pricebook : {reason.trim()}</p>}
+          <p className="text-xs">
+            Source : {PROVENANCE_LABELS[needsReason ? "CASE_OVERRIDE" : "ADMIN_VALIDATED"]}
+            {needsReason ? ` — ${reason.trim()}` : ""}
+          </p>
         </dl>
         {validation.error && (
           <p className="text-xs text-destructive">{(validation.error as Error).message}</p>

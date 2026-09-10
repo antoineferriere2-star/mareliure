@@ -1,39 +1,50 @@
 /**
- * Composer un prix à partir du Pricebook.
+ * Composer le prix d'un projet à partir de la grille Ma Reliure.
  *
- * Un projet est une structure et des compléments — un demi-cuir, un titrage,
- * une réparation de coins. Chacun a (ou n'a pas) son entrée au Pricebook ; le
- * prix du projet est leur somme, et rien d'autre. Ce module ne lit ni les
- * grilles d'ateliers ni le benchmark : ce sont des références qu'on affiche à
- * côté, pas des sources de prix.
+ * Un projet est une liste d'opérations. Son prix est la somme de leurs tarifs
+ * dans le Pricebook, puis les modificateurs de format et de complexité, et
+ * rien d'autre : ni benchmark web, ni tarif d'atelier, ni coefficient caché.
+ * La rémunération proposée à l'atelier se déduit ensuite du prix HT, par la
+ * politique de marge.
  *
- * Trois règles qui tiennent l'ensemble honnête :
+ * Exemple : demi-cuir 390 € + titrage 50 € = 440 € TTC.
  *
- * 1. **Un trou suffit à ne pas conclure.** Un seul travail sans prix publié,
- *    un seul travail sur étude, et le total est `null`. Un total partiel
- *    aurait l'air complet, et il se validerait.
- * 2. **Rien ne se facture deux fois.** Une entrée qui déclare inclure un
- *    travail (`includedWorkItems`) le couvre : s'il est aussi sélectionné, il
- *    reste visible, à zéro, avec ce qui l'inclut.
- * 3. **Pas de coefficient implicite.** Faute d'entrée exacte pour le format
- *    ou la complexité, on ne se rabat sur la classe courante qu'à travers un
- *    modificateur activé par un humain. Sans lui, le travail est non chiffré.
+ * Les règles qui tiennent le calcul honnête :
+ *
+ * 1. **Un trou suffit à ne pas conclure.** Une opération sans tarif, sur étude
+ *    ou désactivée, et le total est `null` : un total partiel aurait l'air
+ *    complet.
+ * 2. **Les rôles du catalogue sont respectés.** Un ouvrage porte au plus une
+ *    structure (on ne relie pas en plein cuir *et* en demi-toile). La
+ *    protection fait exception : un étui ou une chemise accompagne une reliure.
+ * 3. **Une référence initiale se voit.** Le simulateur l'utilise ; la liste
+ *    `unvalidated` dit quelles opérations n'ont pas encore été validées, pour
+ *    qu'aucun dossier ne les promette sans décision.
  */
 import {
   COMPLEXITY_CLASS_LABELS,
   SIZE_CLASS_LABELS,
-  requiresStudy,
   workItem,
   workItemLabel,
   type ComplexityClass,
   type SizeClass,
+  type WorkFamilyKey,
   type WorkRole,
 } from "./catalog";
 import { assessMargin, type MarginAssessment } from "./margin";
-import { activeModifier, applyModifier, describeModifier, type PricingModifier } from "./modifiers";
-import type { PricebookEntry } from "./pricebook";
+import {
+  activeModifier,
+  applyModifier,
+  describeModifier,
+  type ModifierAxis,
+  type ModifierKind,
+  type PricingModifier,
+} from "./modifiers";
+import { proposeBinderPayout, type PayoutPolicy, type PayoutProposal } from "./payout";
+import { activeEntry, type PricebookEntry } from "./pricebook";
 import type { PricingMode } from "./pricingModes";
-import { fromHt, STANDARD_VAT_RATE_BPS, type PriceBreakdown } from "./vat";
+import type { GridProvenance } from "./provenance";
+import { fromTtc, STANDARD_VAT_RATE_BPS, type PriceBreakdown } from "./vat";
 
 export interface CompositionLine {
   workItemKey: string;
@@ -43,298 +54,228 @@ export interface CompositionLine {
 export interface ComposedLine {
   workItemKey: string;
   label: string;
+  family: WorkFamilyKey | null;
   role: WorkRole | null;
   quantity: number;
   entryId: string | null;
   entryVersion: number | null;
-  entrySizeClass: SizeClass | null;
-  entryComplexityClass: ComplexityClass | null;
+  provenance: GridProvenance | null;
   mode: PricingMode | null;
-  unitLabel: string | null;
-  unitPayoutCents: number | null;
-  unitPriceHtCents: number | null;
-  unitPriceHtHighCents: number | null;
-  payoutCents: number | null;
-  priceHtCents: number | null;
-  priceHtHighCents: number | null;
-  /** Le travail sélectionné dont le prix couvre déjà celui-ci. */
-  includedIn: string | null;
-  /** Les modificateurs appliqués, lisibles : « Grand format +15 % ». */
-  modifiers: string[];
-  /** Pourquoi la ligne n'a pas de prix. */
+  unitPriceTtcCents: number | null;
+  priceTtcCents: number | null;
+  /** Pourquoi l'opération n'a pas de prix. */
   problem: string | null;
 }
 
-export interface CompositionPolicy {
-  targetMarginBps: number;
-  minimumMarginCents: number;
+export interface AppliedModifier {
+  axis: ModifierAxis;
+  classKey: string;
+  kind: ModifierKind;
+  /** « Grand format +15 % ». */
+  label: string;
+  deltaTtcCents: number;
 }
 
-export interface CompositionInput {
+/** Tout ce que le moteur lit pour chiffrer : la grille et ses règles. */
+export interface PricingGrid {
+  entries: readonly PricebookEntry[];
+  modifiers: readonly PricingModifier[];
+  policy: PayoutPolicy;
+  /** Les opérations désactivées dans la grille. */
+  inactiveWorkItems?: readonly string[];
+  vatRateBps?: number;
+}
+
+export interface CompositionRequest {
   lines: readonly CompositionLine[];
   sizeClass: SizeClass;
   complexityClass: ComplexityClass;
-  entries: readonly PricebookEntry[];
-  modifiers: readonly PricingModifier[];
-  policy: CompositionPolicy;
-  vatRateBps?: number;
 }
 
 export interface CompositionResult {
   status: "priced" | "manual_review";
+  /** Ce qui empêche de conclure. Vide si le projet est chiffré. */
   reasons: string[];
+  /** Ce qui mérite un regard sans empêcher de conclure. */
+  warnings: string[];
   lines: ComposedLine[];
   sizeClass: SizeClass;
   complexityClass: ComplexityClass;
-  payoutCents: number | null;
-  priceHtCents: number | null;
-  /** Le haut, quand au moins une ligne est une fourchette. */
-  priceHtHighCents: number | null;
-  /** Au moins une ligne est « à partir de » : le total est un minimum. */
-  startingFrom: boolean;
+  /** La somme des opérations, avant modificateurs. */
+  subtotalTtcCents: number | null;
+  modifiers: AppliedModifier[];
+  priceTtcCents: number | null;
   breakdown: PriceBreakdown | null;
+  startingFrom: boolean;
+  /** Les opérations chiffrées sur une référence initiale non validée. */
+  unvalidated: string[];
+  payout: PayoutProposal | null;
   margin: MarginAssessment | null;
+  policy: PayoutPolicy;
 }
 
 export const MAX_LINE_QUANTITY = 999;
 
-interface Resolution {
-  entry: PricebookEntry;
-  modifiers: PricingModifier[];
+function classLabel(axis: ModifierAxis, classKey: string): string {
+  return axis === "size"
+    ? SIZE_CLASS_LABELS[classKey as SizeClass]
+    : `Complexité ${COMPLEXITY_CLASS_LABELS[classKey as ComplexityClass].toLowerCase()}`;
 }
 
-/**
- * L'entrée à utiliser, de la plus précise à la plus générale — mais une
- * classe voisine n'est acceptée que si un modificateur activé fait le pont.
- */
-function resolveEntry(
-  published: readonly PricebookEntry[],
-  modifiers: readonly PricingModifier[],
-  workItemKey: string,
-  sizeClass: SizeClass,
-  complexityClass: ComplexityClass,
-): Resolution | null {
-  const candidates: [SizeClass, ComplexityClass][] = [
-    [sizeClass, complexityClass],
-    [sizeClass, "standard"],
-    ["standard", complexityClass],
-    ["standard", "standard"],
-  ];
-  const tried = new Set<string>();
-  for (const [size, complexity] of candidates) {
-    const id = `${size}|${complexity}`;
-    if (tried.has(id)) continue;
-    tried.add(id);
-
-    const entry = published.find(
-      (candidate) =>
-        candidate.workItemKey === workItemKey &&
-        candidate.sizeClass === size &&
-        candidate.complexityClass === complexity,
-    );
-    if (!entry) continue;
-
-    const bridges: PricingModifier[] = [];
-    if (size !== sizeClass) {
-      const bridge = activeModifier(modifiers, "size", sizeClass);
-      if (!bridge) continue;
-      bridges.push(bridge);
-    }
-    if (complexity !== complexityClass) {
-      const bridge = activeModifier(modifiers, "complexity", complexityClass);
-      if (!bridge) continue;
-      bridges.push(bridge);
-    }
-    return { entry, modifiers: bridges };
-  }
-  return null;
-}
-
-function modifierLabel(modifier: PricingModifier): string {
-  const classLabel =
-    modifier.axis === "size"
-      ? SIZE_CLASS_LABELS[modifier.classKey as SizeClass]
-      : `Complexité ${COMPLEXITY_CLASS_LABELS[modifier.classKey as ComplexityClass].toLowerCase()}`;
-  return `${classLabel} ${describeModifier(modifier)}`;
-}
-
-function emptyLine(line: CompositionLine): ComposedLine {
-  return {
-    workItemKey: line.workItemKey,
-    label: workItemLabel(line.workItemKey),
-    role: workItem(line.workItemKey)?.role ?? null,
-    quantity: line.quantity,
-    entryId: null,
-    entryVersion: null,
-    entrySizeClass: null,
-    entryComplexityClass: null,
-    mode: null,
-    unitLabel: null,
-    unitPayoutCents: null,
-    unitPriceHtCents: null,
-    unitPriceHtHighCents: null,
-    payoutCents: null,
-    priceHtCents: null,
-    priceHtHighCents: null,
-    includedIn: null,
-    modifiers: [],
-    problem: null,
-  };
-}
-
-export function composePrice(input: CompositionInput): CompositionResult {
-  const { sizeClass, complexityClass } = input;
-  const published = input.entries.filter((entry) => entry.status === "published");
+export function composePrice(request: CompositionRequest, grid: PricingGrid): CompositionResult {
+  const { sizeClass, complexityClass } = request;
+  const inactive = new Set(grid.inactiveWorkItems ?? []);
   const reasons: string[] = [];
+  const warnings: string[] = [];
 
   const unique = new Map<string, CompositionLine>();
-  for (const line of input.lines)
+  for (const line of request.lines)
     if (!unique.has(line.workItemKey)) unique.set(line.workItemKey, line);
-  const lines = [...unique.values()].map(emptyLine);
 
-  const abstain = (): CompositionResult => ({
+  const lines: ComposedLine[] = [...unique.values()].map((line) => {
+    const item = workItem(line.workItemKey);
+    const composed: ComposedLine = {
+      workItemKey: line.workItemKey,
+      label: workItemLabel(line.workItemKey),
+      family: item?.family ?? null,
+      role: item?.role ?? null,
+      quantity: line.quantity,
+      entryId: null,
+      entryVersion: null,
+      provenance: null,
+      mode: null,
+      unitPriceTtcCents: null,
+      priceTtcCents: null,
+      problem: null,
+    };
+    if (!item) return { ...composed, problem: "prestation hors catalogue." };
+    if (!Number.isInteger(line.quantity) || line.quantity < 1 || line.quantity > MAX_LINE_QUANTITY)
+      return { ...composed, problem: "quantité invalide." };
+    if (inactive.has(item.key)) return { ...composed, problem: "prestation désactivée dans la grille." };
+
+    const entry = activeEntry(grid.entries, item.key);
+    if (!entry) return { ...composed, problem: "aucun tarif dans la grille." };
+    const withEntry = {
+      ...composed,
+      entryId: entry.id,
+      entryVersion: entry.version,
+      provenance: entry.provenance,
+      mode: entry.pricingMode,
+    };
+    if (item.requiresStudy || entry.pricingMode === "MANUAL_REVIEW")
+      return { ...withEntry, problem: "sur étude." };
+    if (entry.priceTtcCents === null || entry.priceTtcCents <= 0)
+      return { ...withEntry, problem: "aucun tarif dans la grille." };
+    return {
+      ...withEntry,
+      unitPriceTtcCents: entry.priceTtcCents,
+      priceTtcCents: entry.priceTtcCents * line.quantity,
+    };
+  });
+
+  const policy = grid.policy;
+  const abstain = (subtotal: number | null, modifiers: AppliedModifier[] = []): CompositionResult => ({
     status: "manual_review",
     reasons,
+    warnings,
     lines,
     sizeClass,
     complexityClass,
-    payoutCents: null,
-    priceHtCents: null,
-    priceHtHighCents: null,
-    startingFrom: false,
+    subtotalTtcCents: subtotal,
+    modifiers,
+    priceTtcCents: null,
     breakdown: null,
+    startingFrom: false,
+    unvalidated: [],
+    payout: null,
     margin: null,
+    policy,
   });
 
   if (lines.length === 0) {
-    reasons.push("Aucun travail sélectionné.");
-    return abstain();
+    reasons.push("Aucune prestation sélectionnée.");
+    return abstain(null);
   }
 
-  for (const line of lines) {
-    if (!workItem(line.workItemKey)) line.problem = "travail hors catalogue.";
-    else if (
-      !Number.isInteger(line.quantity) ||
-      line.quantity < 1 ||
-      line.quantity > MAX_LINE_QUANTITY
-    )
-      line.problem = "quantité invalide.";
-  }
-
-  const structures = lines.filter((line) => line.role === "structure");
+  const structures = lines.filter(
+    (line) => line.role === "structure" && line.family !== "protection",
+  );
   if (structures.length > 1)
     reasons.push(
       `Deux structures sélectionnées (${structures.map((line) => line.label).join(", ")}) : un ouvrage n'en porte qu'une.`,
     );
-  if (requiresStudy(lines.map((line) => line.workItemKey)))
-    reasons.push("Le projet comporte un travail qui se chiffre sur étude.");
-
-  const resolved = new Map<string, Resolution>();
-  for (const line of lines) {
-    if (line.problem) continue;
-    const resolution = resolveEntry(
-      published,
-      input.modifiers,
-      line.workItemKey,
-      sizeClass,
-      complexityClass,
-    );
-    if (resolution) resolved.set(line.workItemKey, resolution);
-  }
-
-  // Les inclusions, structure d'abord : c'est elle qui, le plus souvent,
-  // couvre des compléments (« demi-cuir, titrage compris »).
-  const selected = new Map(lines.map((line) => [line.workItemKey, line]));
-  const ordered = [...lines].sort(
-    (a, b) => (a.role === "structure" ? 0 : 1) - (b.role === "structure" ? 0 : 1),
-  );
-  for (const line of ordered) {
-    if (line.includedIn) continue;
-    const resolution = resolved.get(line.workItemKey);
-    if (!resolution) continue;
-    for (const key of resolution.entry.includedWorkItems) {
-      const covered = selected.get(key);
-      if (!covered || covered === line || covered.includedIn) continue;
-      covered.includedIn = line.workItemKey;
-    }
-  }
-
-  for (const line of lines) {
-    if (line.problem) continue;
-    if (line.includedIn) {
-      line.payoutCents = 0;
-      line.priceHtCents = 0;
-      continue;
-    }
-
-    const resolution = resolved.get(line.workItemKey);
-    if (!resolution) {
-      line.problem = `aucun prix publié en ${SIZE_CLASS_LABELS[sizeClass].toLowerCase()}, complexité ${COMPLEXITY_CLASS_LABELS[complexityClass].toLowerCase()}, ni modificateur actif pour s'y ramener.`;
-      continue;
-    }
-
-    const { entry, modifiers } = resolution;
-    line.entryId = entry.id;
-    line.entryVersion = entry.version;
-    line.entrySizeClass = entry.sizeClass;
-    line.entryComplexityClass = entry.complexityClass;
-    line.mode = entry.pricingMode;
-    line.unitLabel = entry.unitLabel;
-    line.modifiers = modifiers.map(modifierLabel);
-
-    if (
-      entry.pricingMode === "MANUAL_REVIEW" ||
-      entry.customerPriceCents === null ||
-      entry.referenceBinderPayoutCents === null
-    ) {
-      line.problem = "le Pricebook le chiffre sur étude.";
-      continue;
-    }
-
-    const adjust = (amount: number) =>
-      modifiers.reduce((current, modifier) => applyModifier(current, modifier), amount);
-    const unitPayout = adjust(entry.referenceBinderPayoutCents);
-    const unitPrice = adjust(entry.customerPriceCents);
-    const unitHigh = entry.priceHtHighCents === null ? null : adjust(entry.priceHtHighCents);
-
-    if (
-      unitPayout <= 0 ||
-      unitPrice <= 0 ||
-      unitPayout > unitPrice ||
-      (unitHigh !== null && unitHigh < unitPrice)
-    ) {
-      line.problem = "les modificateurs produisent un montant incohérent.";
-      continue;
-    }
-
-    line.unitPayoutCents = unitPayout;
-    line.unitPriceHtCents = unitPrice;
-    line.unitPriceHtHighCents = unitHigh;
-    line.payoutCents = unitPayout * line.quantity;
-    line.priceHtCents = unitPrice * line.quantity;
-    line.priceHtHighCents = unitHigh === null ? null : unitHigh * line.quantity;
-  }
-
   for (const line of lines) if (line.problem) reasons.push(`${line.label} : ${line.problem}`);
-  if (reasons.length > 0) return abstain();
+  if (reasons.length > 0) return abstain(null);
 
-  const payoutCents = lines.reduce((sum, line) => sum + (line.payoutCents ?? 0), 0);
-  const priceHtCents = lines.reduce((sum, line) => sum + (line.priceHtCents ?? 0), 0);
-  const hasRange = lines.some((line) => line.priceHtHighCents !== null);
+  const subtotal = lines.reduce((sum, line) => sum + (line.priceTtcCents ?? 0), 0);
+
+  let total = subtotal;
+  const applied: AppliedModifier[] = [];
+  const axes: [ModifierAxis, string][] = [
+    ["size", sizeClass],
+    ["complexity", complexityClass],
+  ];
+  for (const [axis, classKey] of axes) {
+    if (classKey === "standard") continue;
+    const modifier = activeModifier(grid.modifiers, axis, classKey);
+    if (!modifier) {
+      warnings.push(
+        `${classLabel(axis, classKey)} : aucun modificateur configuré, prix du format et de la complexité courants.`,
+      );
+      continue;
+    }
+    if (modifier.kind === "MANUAL_REVIEW") {
+      reasons.push(`${classLabel(axis, classKey)} : revue manuelle.`);
+      continue;
+    }
+    const next = applyModifier(total, modifier);
+    applied.push({
+      axis,
+      classKey,
+      kind: modifier.kind,
+      label: `${classLabel(axis, classKey)} ${describeModifier(modifier)}`,
+      deltaTtcCents: next - total,
+    });
+    total = next;
+  }
+  if (reasons.length > 0) return abstain(subtotal, applied);
+  if (total <= 0) {
+    reasons.push("Les modificateurs produisent un montant incohérent.");
+    return abstain(subtotal, applied);
+  }
+
+  const breakdown = fromTtc(total, grid.vatRateBps ?? STANDARD_VAT_RATE_BPS);
+  const payout = proposeBinderPayout(breakdown.htCents, policy);
+  if (payout.problem) warnings.push(payout.problem);
+  const unvalidated = lines
+    .filter((line) => line.provenance === "WEB_REFERENCE_INITIAL")
+    .map((line) => line.label);
+  if (unvalidated.length > 0)
+    warnings.push(`Référence initiale web non validée : ${unvalidated.join(", ")}.`);
 
   return {
     status: "priced",
     reasons,
+    warnings,
     lines,
     sizeClass,
     complexityClass,
-    payoutCents,
-    priceHtCents,
-    priceHtHighCents: hasRange
-      ? lines.reduce((sum, line) => sum + (line.priceHtHighCents ?? line.priceHtCents ?? 0), 0)
-      : null,
+    subtotalTtcCents: subtotal,
+    modifiers: applied,
+    priceTtcCents: total,
+    breakdown,
     startingFrom: lines.some((line) => line.mode === "STARTING_FROM"),
-    breakdown: fromHt(priceHtCents, input.vatRateBps ?? STANDARD_VAT_RATE_BPS),
-    margin: assessMargin({ priceHtCents, payoutCents, ...input.policy }),
+    unvalidated,
+    payout,
+    margin:
+      payout.payoutCents === null
+        ? null
+        : assessMargin({
+            priceHtCents: breakdown.htCents,
+            payoutCents: payout.payoutCents,
+            targetMarginBps: policy.targetMarginBps,
+            minimumMarginCents: policy.minimumMarginCents,
+          }),
+    policy,
   };
 }

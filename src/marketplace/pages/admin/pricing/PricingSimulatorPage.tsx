@@ -1,53 +1,68 @@
 /**
- * Le simulateur : composer un projet et voir ce que le Pricebook en fait.
+ * Le simulateur : composer un projet et voir ce que la grille Ma Reliure en
+ * fait.
  *
- * Il utilise exactement la composition qui validera un dossier. À côté de
- * chaque ligne, ce que disent les ateliers et le web — pour qu'un trou du
- * Pricebook se comble ici même, en connaissance de cause : on saisit la
- * rémunération et le prix, on confirme, et l'entrée est publiée.
+ * Il lit la grille en vigueur et compose avec `priceProject`, la fonction même
+ * qui validera un dossier : demi-cuir à 390 €, plus un titrage à 50 €, font
+ * 440 €. Aucune donnée d'atelier n'intervient, et rien n'est écrit — pour
+ * changer un tarif, on retourne à la grille.
  */
-import { useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { useMutation } from "@tanstack/react-query";
+import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import {
-  publishPricebookEntry,
-  simulatePricing,
-} from "@/marketplace/services/pricing.data.functions";
+import { getPricingGrid } from "@/marketplace/services/pricing.data.functions";
 import {
   COMPLEXITY_CLASS_LABELS,
   SIZE_CLASS_LABELS,
-  WORK_FAMILIES,
-  WORK_ITEMS,
-  workItem,
+  WORK_FAMILY_LABELS,
   type ComplexityClass,
   type SizeClass,
 } from "@/marketplace/pricing/catalog";
-import type { ComposedLine } from "@/marketplace/pricing/composition";
-import { assessMargin } from "@/marketplace/pricing/margin";
-import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
-import { PRICING_MODE_LABELS } from "@/marketplace/pricing/pricingModes";
+import { priceProject } from "@/marketplace/pricing/pricing.engine";
 import { formatVatRate } from "@/marketplace/pricing/vat";
-import { Button } from "@/components/ui/button";
-import { ConfirmDialog, EvidenceNote, inputClass, MarginBadge, selectClass } from "./consoleShared";
-import { centsToInput, eurosToCents, money } from "./consoleFormat";
+import { MarginBadge, PricingTabs, ProvenanceTag, inputClass, selectClass } from "./consoleShared";
+import { PRICING_GRID_QUERY_KEY, money, percent, wholeEuros } from "./consoleFormat";
 
-type Simulation = Awaited<ReturnType<typeof simulatePricing>>;
+type GridData = Awaited<ReturnType<typeof getPricingGrid>>;
 
 export function PricingSimulatorPage() {
-  const simulate = useServerFn(simulatePricing);
+  const fetchGrid = useServerFn(getPricingGrid);
+  const query = useQuery({ queryKey: PRICING_GRID_QUERY_KEY, queryFn: () => fetchGrid() });
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
+        <div>
+          <h1 className="font-serif text-2xl">Simulateur</h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Composez un projet : le prix client vient de la grille Ma Reliure, la rémunération
+            atelier de la politique de marge.
+          </p>
+        </div>
+        <PricingTabs />
+      </header>
+      {query.isPending && <p className="text-sm text-muted-foreground">Chargement de la grille…</p>}
+      {query.error && <p className="text-sm text-destructive">{(query.error as Error).message}</p>}
+      {query.data && <Simulator data={query.data} />}
+    </div>
+  );
+}
+
+function Simulator({ data }: { data: GridData }) {
   const [quantities, setQuantities] = useState<Record<string, number>>({});
   const [sizeClass, setSizeClass] = useState<SizeClass>("standard");
   const [complexityClass, setComplexityClass] = useState<ComplexityClass>("standard");
 
-  const lines = Object.entries(quantities).map(([workItemKey, quantity]) => ({
-    workItemKey,
-    quantity,
-  }));
-  const run = useMutation({
-    mutationFn: () => simulate({ data: { lines, sizeClass, complexityClass } }),
-  });
-  const result = run.data;
+  const lines = useMemo(
+    () =>
+      Object.entries(quantities).map(([workItemKey, quantity]) => ({ workItemKey, quantity })),
+    [quantities],
+  );
+  const result = useMemo(
+    () =>
+      lines.length > 0 ? priceProject({ lines, sizeClass, complexityClass }, data.grid) : null,
+    [lines, sizeClass, complexityClass, data.grid],
+  );
 
   const toggle = (key: string) =>
     setQuantities((current) => {
@@ -58,94 +73,89 @@ export function PricingSimulatorPage() {
     });
 
   return (
-    <div className="space-y-6">
-      <header className="flex flex-wrap items-end justify-between gap-4 border-b border-border pb-4">
-        <div>
-          <h1 className="font-serif text-2xl">Simulateur</h1>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Une structure, des compléments, un format : le prix que le Pricebook compose, et ce que
-            disent les ateliers et le web à côté.
-          </p>
+    <div className="grid gap-6 xl:grid-cols-[24rem_1fr]">
+      <aside className="space-y-4">
+        <div className="grid grid-cols-2 gap-2 text-xs">
+          <label>
+            Format
+            <select
+              className={`${selectClass} mt-1 w-full`}
+              value={sizeClass}
+              onChange={(event) => setSizeClass(event.target.value as SizeClass)}
+            >
+              {Object.entries(SIZE_CLASS_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Complexité
+            <select
+              className={`${selectClass} mt-1 w-full`}
+              value={complexityClass}
+              onChange={(event) => setComplexityClass(event.target.value as ComplexityClass)}
+            >
+              {Object.entries(COMPLEXITY_CLASS_LABELS).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
         </div>
-        <Link
-          to="/marketplace/pricing"
-          search={{ view: "pricebook" }}
-          className="text-sm text-muted-foreground hover:text-foreground"
-        >
-          ← Pricebook
-        </Link>
-      </header>
-
-      <div className="grid gap-6 xl:grid-cols-[20rem_1fr]">
-        <aside className="space-y-4">
-          <div className="grid grid-cols-2 gap-2 text-xs">
-            <label>
-              Format
-              <select
-                className={`${selectClass} mt-1 w-full`}
-                value={sizeClass}
-                onChange={(e) => setSizeClass(e.target.value as SizeClass)}
-              >
-                {Object.entries(SIZE_CLASS_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Complexité
-              <select
-                className={`${selectClass} mt-1 w-full`}
-                value={complexityClass}
-                onChange={(e) => setComplexityClass(e.target.value as ComplexityClass)}
-              >
-                {Object.entries(COMPLEXITY_CLASS_LABELS).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          </div>
-          <div className="max-h-[36rem] space-y-3 overflow-y-auto rounded-md border border-border p-3">
-            {WORK_FAMILIES.map((family) => (
-              <fieldset key={family.key}>
-                <legend className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  {family.label}
-                </legend>
-                <ul className="mt-1 space-y-0.5">
-                  {WORK_ITEMS.filter((item) => item.family === family.key).map((item) => {
-                    const selected = item.key in quantities;
+        <div className="max-h-[calc(100vh-18rem)] space-y-3 overflow-y-auto rounded-md border border-border p-3">
+          {data.families.map((family) => (
+            <fieldset key={family.key}>
+              <legend className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                {WORK_FAMILY_LABELS[family.key]}
+              </legend>
+              <ul className="mt-1 space-y-0.5">
+                {data.rows
+                  .filter((row) => row.family === family.key)
+                  .map((row) => {
+                    const selected = row.key in quantities;
                     return (
-                      <li key={item.key} className="flex items-center gap-2 text-sm">
+                      <li key={row.key} className="flex items-center gap-2 text-sm">
                         <input
-                          id={`sim-${item.key}`}
+                          id={`sim-${row.key}`}
                           type="checkbox"
                           checked={selected}
-                          onChange={() => toggle(item.key)}
+                          disabled={!row.active}
+                          onChange={() => toggle(row.key)}
                         />
-                        <label htmlFor={`sim-${item.key}`} className="flex-1">
-                          {item.label}
-                          {item.role === "structure" && (
-                            <span className="ml-1 text-xs text-muted-foreground">structure</span>
-                          )}
-                          {item.requiresStudy && (
-                            <span className="ml-1 text-xs text-amber-800">sur étude</span>
+                        <label
+                          htmlFor={`sim-${row.key}`}
+                          className={`flex-1 ${row.active ? "" : "text-muted-foreground"}`}
+                        >
+                          {row.label}
+                          {row.toValidate && (
+                            <span className="ml-1 text-[11px] text-amber-800">à valider</span>
                           )}
                         </label>
+                        <span className="text-xs tabular-nums text-muted-foreground">
+                          {row.study
+                            ? "Sur étude"
+                            : row.priceTtcCents !== null
+                              ? wholeEuros(row.priceTtcCents)
+                              : "—"}
+                        </span>
                         {selected && (
                           <input
-                            aria-label={`Quantité — ${item.label}`}
+                            aria-label={`Quantité — ${row.label}`}
                             className={`${inputClass} w-14`}
                             type="number"
                             min={1}
                             max={999}
-                            value={quantities[item.key]}
-                            onChange={(e) =>
+                            value={quantities[row.key]}
+                            onChange={(event) =>
                               setQuantities({
                                 ...quantities,
-                                [item.key]: Math.max(1, Number.parseInt(e.target.value, 10) || 1),
+                                [row.key]: Math.max(
+                                  1,
+                                  Number.parseInt(event.target.value, 10) || 1,
+                                ),
                               })
                             }
                           />
@@ -153,319 +163,127 @@ export function PricingSimulatorPage() {
                       </li>
                     );
                   })}
-                </ul>
-              </fieldset>
-            ))}
-          </div>
-          <div className="flex gap-2">
-            <Button disabled={lines.length === 0 || run.isPending} onClick={() => run.mutate()}>
-              Calculer
-            </Button>
-            {lines.length > 0 && (
-              <Button variant="ghost" onClick={() => setQuantities({})}>
-                Vider
-              </Button>
-            )}
-          </div>
-        </aside>
+              </ul>
+            </fieldset>
+          ))}
+        </div>
+      </aside>
 
-        <section className="min-w-0 space-y-4">
-          {run.error && <p className="text-sm text-destructive">{(run.error as Error).message}</p>}
-          {!result && (
-            <p className="text-sm text-muted-foreground">
-              Sélectionnez des travaux, puis calculez.
-            </p>
-          )}
-          {result && (
-            <SimulationResult
-              result={result}
-              sizeClass={sizeClass}
-              complexityClass={complexityClass}
-              onPublished={() => run.mutate()}
-            />
-          )}
-        </section>
-      </div>
+      <section className="min-w-0 space-y-4" aria-live="polite">
+        {!result && (
+          <p className="text-sm text-muted-foreground">Sélectionnez des prestations.</p>
+        )}
+        {result && (
+          <>
+            <div className="overflow-x-auto rounded-md border border-border">
+              <table className="w-full min-w-[640px] text-sm">
+                <thead className="bg-muted/50 text-left text-xs text-muted-foreground">
+                  <tr>
+                    <th className="px-2 py-2 font-medium">Prestation</th>
+                    <th className="px-2 py-2 text-right font-medium">Tarif Ma Reliure</th>
+                    <th className="px-2 py-2 text-right font-medium">Qté</th>
+                    <th className="px-2 py-2 text-right font-medium">Total TTC</th>
+                    <th className="px-2 py-2 font-medium">Source</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {result.lines.map((line) => (
+                    <tr key={line.workItemKey} className="border-t border-border align-top">
+                      <td className="px-2 py-1.5">
+                        {line.label}
+                        {line.problem && (
+                          <span className="block text-xs text-amber-800">{line.problem}</span>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">
+                        {money(line.unitPriceTtcCents)}
+                      </td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">{line.quantity}</td>
+                      <td className="px-2 py-1.5 text-right tabular-nums">
+                        {money(line.priceTtcCents)}
+                      </td>
+                      <td className="px-2 py-1.5">
+                        {line.provenance && <ProvenanceTag provenance={line.provenance} />}
+                        {line.entryVersion !== null && (
+                          <span className="ml-1 text-xs text-muted-foreground">
+                            v{line.entryVersion}
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {result.status === "priced" && result.breakdown ? (
+              <dl className="grid max-w-md gap-1 rounded-md border border-border bg-card p-4 text-sm">
+                <Line label="Total avant modificateurs" value={money(result.subtotalTtcCents)} />
+                {result.modifiers.map((modifier) => (
+                  <Line
+                    key={modifier.label}
+                    label={modifier.label}
+                    value={`${modifier.deltaTtcCents >= 0 ? "+" : "−"}${money(Math.abs(modifier.deltaTtcCents))}`}
+                  />
+                ))}
+                <div className="flex justify-between border-t border-border pt-2 text-base font-medium">
+                  <dt>Prix client Ma Reliure TTC</dt>
+                  <dd className="tabular-nums">
+                    {result.startingFrom ? "à partir de " : ""}
+                    {money(result.breakdown.ttcCents)}
+                  </dd>
+                </div>
+                <Line label="Prix HT" value={money(result.breakdown.htCents)} />
+                <Line
+                  label={`TVA (${formatVatRate(result.breakdown.vatRateBps)})`}
+                  value={money(result.breakdown.vatCents)}
+                />
+                <div className="mt-2 flex justify-between border-t border-border pt-2">
+                  <dt>Rémunération atelier proposée</dt>
+                  <dd className="font-medium tabular-nums">
+                    {money(result.payout?.payoutCents)}
+                  </dd>
+                </div>
+                <div className="flex justify-between">
+                  <dt className="text-muted-foreground">Marge Ma Reliure</dt>
+                  <dd>
+                    <MarginBadge margin={result.margin} />
+                  </dd>
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Politique : marge cible {percent(result.policy.targetMarginBps)} du HT, minimum{" "}
+                  {wholeEuros(result.policy.minimumMarginCents)}.
+                </p>
+              </dl>
+            ) : (
+              <div className="max-w-2xl rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+                <p className="font-medium">Pas de prix automatique pour ce projet.</p>
+                <ul className="mt-2 list-disc space-y-0.5 pl-5">
+                  {result.reasons.map((reason) => (
+                    <li key={reason}>{reason}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {result.warnings.length > 0 && (
+              <ul className="max-w-2xl space-y-0.5 text-xs text-amber-900">
+                {result.warnings.map((warning) => (
+                  <li key={warning}>{warning}</li>
+                ))}
+              </ul>
+            )}
+          </>
+        )}
+      </section>
     </div>
   );
 }
 
-function SimulationResult({
-  result,
-  sizeClass,
-  complexityClass,
-  onPublished,
-}: {
-  result: Simulation;
-  sizeClass: SizeClass;
-  complexityClass: ComplexityClass;
-  onPublished: () => void;
-}) {
-  const { composition, references } = result;
+function Line({ label, value }: { label: string; value: string }) {
   return (
-    <>
-      <div className="overflow-x-auto rounded-md border border-border">
-        <table className="w-full min-w-[1100px] text-sm">
-          <thead className="bg-muted/50 text-left text-xs uppercase tracking-wide text-muted-foreground">
-            <tr>
-              <th className="px-2 py-2 font-medium">Travail</th>
-              <th className="px-2 py-2 text-right font-medium">Qté</th>
-              <th className="px-2 py-2 font-medium">Pricebook</th>
-              <th className="px-2 py-2 text-right font-medium">Rémun.</th>
-              <th className="px-2 py-2 text-right font-medium">Prix HT</th>
-              <th className="px-2 py-2 font-medium">Ateliers</th>
-              <th className="px-2 py-2 font-medium">Web</th>
-              <th className="px-2 py-2 font-medium">Preuve</th>
-              <th className="px-2 py-2 font-medium">Saisir au Pricebook</th>
-            </tr>
-          </thead>
-          <tbody>
-            {composition.lines.map((line) => (
-              <SimulationLine
-                key={line.workItemKey}
-                line={line}
-                references={references[line.workItemKey]}
-                sizeClass={sizeClass}
-                complexityClass={complexityClass}
-                onPublished={onPublished}
-              />
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {composition.status === "priced" && composition.breakdown ? (
-        <dl className="grid max-w-md gap-1 rounded-md border border-border bg-card p-4 text-sm">
-          <div className="flex justify-between">
-            <dt className="text-muted-foreground">Rémunération atelier</dt>
-            <dd className="tabular-nums">{money(composition.payoutCents)}</dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-muted-foreground">Prix HT</dt>
-            <dd className="tabular-nums">
-              {money(composition.priceHtCents)}
-              {composition.priceHtHighCents !== null && ` – ${money(composition.priceHtHighCents)}`}
-            </dd>
-          </div>
-          <div className="flex justify-between">
-            <dt className="text-muted-foreground">
-              TVA ({formatVatRate(composition.breakdown.vatRateBps)})
-            </dt>
-            <dd className="tabular-nums">{money(composition.breakdown.vatCents)}</dd>
-          </div>
-          <div className="flex justify-between text-base font-medium">
-            <dt>Prix TTC</dt>
-            <dd className="tabular-nums">
-              {composition.startingFrom ? "à partir de " : ""}
-              {money(composition.breakdown.ttcCents)}
-            </dd>
-          </div>
-          <div className="flex justify-between pt-1">
-            <dt className="text-muted-foreground">Marge</dt>
-            <dd>
-              <MarginBadge margin={composition.margin} />
-            </dd>
-          </div>
-          {composition.margin?.reasons.map((reason) => (
-            <p key={reason} className="text-xs text-muted-foreground">
-              {reason}
-            </p>
-          ))}
-        </dl>
-      ) : (
-        <div className="max-w-2xl rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
-          <p className="font-medium">
-            Pas de prix : le Pricebook ne chiffre pas ce projet en entier.
-          </p>
-          <ul className="mt-2 list-disc space-y-0.5 pl-5">
-            {composition.reasons.map((reason) => (
-              <li key={reason}>{reason}</li>
-            ))}
-          </ul>
-          <p className="mt-2 text-xs">
-            Un total partiel aurait l’air complet : on ne l’affiche pas.
-          </p>
-        </div>
-      )}
-    </>
-  );
-}
-
-function SimulationLine({
-  line,
-  references,
-  sizeClass,
-  complexityClass,
-  onPublished,
-}: {
-  line: ComposedLine;
-  references: Simulation["references"][string] | undefined;
-  sizeClass: SizeClass;
-  complexityClass: ComplexityClass;
-  onPublished: () => void;
-}) {
-  const publish = useServerFn(publishPricebookEntry);
-  const exact = references?.entry ?? null;
-  const [payout, setPayout] = useState(centsToInput(exact?.referenceBinderPayoutCents));
-  const [price, setPrice] = useState(centsToInput(exact?.customerPriceCents));
-  const [reason, setReason] = useState("");
-  const [confirming, setConfirming] = useState(false);
-  const study = workItem(line.workItemKey)?.requiresStudy === true;
-  const payoutCents = eurosToCents(payout);
-  const priceCents = eurosToCents(price);
-  const margin =
-    payoutCents && priceCents
-      ? assessMargin({
-          priceHtCents: priceCents,
-          payoutCents,
-          targetMarginBps: PRICING_POLICY.targetMarginBps,
-          minimumMarginCents: PRICING_POLICY.minimumMarginCents,
-        })
-      : null;
-
-  const publishing = useMutation({
-    mutationFn: () =>
-      publish({
-        data: {
-          workItemKey: line.workItemKey,
-          sizeClass,
-          complexityClass,
-          pricingMode:
-            exact?.pricingMode && exact.pricingMode !== "MANUAL_REVIEW"
-              ? exact.pricingMode
-              : "FIXED",
-          referenceBinderPayoutCents: payoutCents,
-          customerPriceHtCents: priceCents,
-          priceHtHighCents: exact?.pricingMode === "RANGE" ? exact.priceHtHighCents : null,
-          unitLabel: exact?.unitLabel ?? null,
-          includedWorkItems: exact?.includedWorkItems ?? [],
-          publicVisible: exact?.publicVisible ?? false,
-          changeReason: reason.trim() || null,
-        },
-      }),
-    onSuccess: () => {
-      setConfirming(false);
-      onPublished();
-    },
-  });
-
-  return (
-    <tr className="border-t border-border align-top">
-      <td className="px-2 py-1.5">
-        {line.label}
-        {line.includedIn && (
-          <span className="block text-xs text-muted-foreground">
-            compris dans {workItem(line.includedIn)?.label}
-          </span>
-        )}
-        {line.modifiers.length > 0 && (
-          <span className="block text-xs text-muted-foreground">{line.modifiers.join(" · ")}</span>
-        )}
-        {line.problem && <span className="block text-xs text-amber-800">{line.problem}</span>}
-      </td>
-      <td className="px-2 py-1.5 text-right tabular-nums">{line.quantity}</td>
-      <td className="px-2 py-1.5 text-xs">
-        {line.entryVersion !== null ? (
-          <>
-            v{line.entryVersion} · {line.mode ? PRICING_MODE_LABELS[line.mode] : ""}
-            {line.entrySizeClass !== sizeClass || line.entryComplexityClass !== complexityClass ? (
-              <span className="block text-muted-foreground">
-                entrée {line.entrySizeClass} · {line.entryComplexityClass}
-              </span>
-            ) : null}
-          </>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )}
-      </td>
-      <td className="px-2 py-1.5 text-right tabular-nums">{money(line.payoutCents)}</td>
-      <td className="px-2 py-1.5 text-right tabular-nums">{money(line.priceHtCents)}</td>
-      <td className="px-2 py-1.5 text-xs">
-        {references?.binder ? (
-          <>
-            {money(references.binder.medianCents)}{" "}
-            <span className="text-muted-foreground">
-              ({references.binder.referenceCount}
-              {references.binderApproximated ? ", courant" : ""})
-            </span>
-          </>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )}
-      </td>
-      <td className="px-2 py-1.5 text-xs">
-        {references?.benchmark ? (
-          <>
-            {money(references.benchmark.lowCents)} – {money(references.benchmark.highCents)}{" "}
-            <span className="text-muted-foreground">({references.benchmark.sourceCount})</span>
-          </>
-        ) : (
-          <span className="text-muted-foreground">—</span>
-        )}
-      </td>
-      <td className="px-2 py-1.5">
-        {references && <EvidenceNote evidence={references.evidence} />}
-      </td>
-      <td className="px-2 py-1.5">
-        {study ? (
-          <span className="text-xs text-muted-foreground">Sur étude</span>
-        ) : (
-          <div className="flex items-center gap-1">
-            <input
-              aria-label={`Rémunération — ${line.label}`}
-              className={`${inputClass} w-20`}
-              placeholder="rémun. €"
-              inputMode="decimal"
-              value={payout}
-              onChange={(e) => setPayout(e.target.value)}
-            />
-            <input
-              aria-label={`Prix HT — ${line.label}`}
-              className={`${inputClass} w-20`}
-              placeholder="HT €"
-              inputMode="decimal"
-              value={price}
-              onChange={(e) => setPrice(e.target.value)}
-            />
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={!payoutCents || !priceCents}
-              onClick={() => setConfirming(true)}
-            >
-              Enregistrer…
-            </Button>
-          </div>
-        )}
-        <ConfirmDialog
-          open={confirming}
-          onOpenChange={setConfirming}
-          title="Enregistrer dans le Pricebook"
-          description={`${line.label} · ${SIZE_CLASS_LABELS[sizeClass]} · ${COMPLEXITY_CLASS_LABELS[complexityClass]}. ${exact ? `Remplace la version ${exact.version}.` : "Première version de ce prix."}`}
-          confirmLabel="Publier"
-          pending={publishing.isPending}
-          disabled={Boolean(exact) && reason.trim() === ""}
-          onConfirm={() => publishing.mutate()}
-        >
-          <div className="space-y-2 text-sm">
-            <p className="tabular-nums">
-              Rémunération {money(payoutCents)} · prix HT {money(priceCents)}
-            </p>
-            <MarginBadge margin={margin} />
-            <label className="block text-xs">
-              Raison du changement {exact ? "(obligatoire)" : "(facultative)"}
-              <input
-                className={`${inputClass} mt-1`}
-                value={reason}
-                onChange={(e) => setReason(e.target.value)}
-              />
-            </label>
-            {publishing.error && (
-              <p className="text-xs text-destructive">{(publishing.error as Error).message}</p>
-            )}
-          </div>
-        </ConfirmDialog>
-      </td>
-    </tr>
+    <div className="flex justify-between">
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className="tabular-nums">{value}</dd>
+    </div>
   );
 }

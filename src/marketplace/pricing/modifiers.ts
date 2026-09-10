@@ -1,27 +1,31 @@
 /**
  * Les modificateurs de format et de complexité.
  *
- * Le moteur de suggestion refuse tout coefficient (pricing.engine.ts) : majorer
- * un tarif d'atelier de 10 % pour un grand format serait inventer ce que le
- * relieur n'a pas dit. Ici, c'est différent, et la différence est tout le
- * sujet : un modificateur est une **décision de Ma Reliure** sur son propre
- * Pricebook, comme la marge. Il n'existe que si un humain l'a écrit.
+ * Un tarif par opération, au format et à la complexité courants ; les écarts
+ * se règlent ici, une fois pour toute la grille, plutôt que par quarante-cinq
+ * opérations multipliées par quatre formats et trois complexités.
  *
- * Trois garanties :
+ * Un modificateur s'applique au **total du projet**, après addition des
+ * opérations : « grand format +15 % » majore le projet, pas chaque titrage.
  *
- * - semés désactivés et sans valeur — le système ne propose aucun chiffre ;
- * - une entrée exacte du Pricebook l'emporte toujours ;
- * - appliqué à la rémunération **et** au prix, pour ne pas déplacer la marge
- *   en douce : un pourcentage garde la marge en %, un montant fixe la garde
- *   en euros.
+ * Trois formes : un pourcentage, un montant fixe, ou la revue manuelle — le
+ * projet sort alors du calcul automatique. Un modificateur n'existe que si
+ * Ma Reliure l'a écrit : une classe sans modificateur actif garde le prix du
+ * format courant, et la composition le signale.
  */
 import type { ComplexityClass, SizeClass } from "./catalog";
 
 export const MODIFIER_AXES = ["size", "complexity"] as const;
 export type ModifierAxis = (typeof MODIFIER_AXES)[number];
 
-export const MODIFIER_KINDS = ["PERCENT", "FIXED"] as const;
+export const MODIFIER_KINDS = ["PERCENT", "FIXED", "MANUAL_REVIEW"] as const;
 export type ModifierKind = (typeof MODIFIER_KINDS)[number];
+
+export const MODIFIER_KIND_LABELS: Record<ModifierKind, string> = {
+  PERCENT: "Pourcentage",
+  FIXED: "Montant fixe",
+  MANUAL_REVIEW: "Revue manuelle",
+};
 
 /** La classe courante est la base : elle n'a pas de modificateur. */
 export const MODIFIABLE_CLASSES: Record<ModifierAxis, readonly string[]> = {
@@ -42,7 +46,7 @@ export interface PricingModifier {
   updatedBy: string | null;
 }
 
-/** Un modificateur ne compte que s'il est activé **et** porte une valeur. */
+/** Un modificateur ne compte que s'il est activé et porte ce qu'il annonce. */
 export function activeModifier(
   modifiers: readonly PricingModifier[],
   axis: ModifierAxis,
@@ -60,10 +64,12 @@ export function activeModifier(
 export function applyModifier(amountCents: number, modifier: PricingModifier): number {
   if (modifier.kind === "PERCENT")
     return amountCents + Math.round((amountCents * (modifier.percentBps ?? 0)) / 10_000);
-  return amountCents + (modifier.fixedCents ?? 0);
+  if (modifier.kind === "FIXED") return amountCents + (modifier.fixedCents ?? 0);
+  return amountCents;
 }
 
 export function describeModifier(modifier: PricingModifier): string {
+  if (modifier.kind === "MANUAL_REVIEW") return "revue manuelle";
   if (modifier.kind === "PERCENT") {
     const bps = modifier.percentBps ?? 0;
     return `${bps >= 0 ? "+" : ""}${(bps / 100).toLocaleString("fr-FR", { maximumFractionDigits: 2 })} %`;
@@ -92,12 +98,19 @@ export function validateModifier(input: {
         input.percentBps > 50_000)
     )
       errors.push("Le pourcentage doit être compris entre −90 % et +500 %.");
-  } else {
+  } else if (input.kind === "FIXED") {
     if (input.percentBps !== null) errors.push("Un montant fixe ne porte pas de pourcentage.");
     if (input.fixedCents !== null && !Number.isInteger(input.fixedCents))
       errors.push("Le montant fixe doit être un entier de centimes.");
+  } else if (input.percentBps !== null || input.fixedCents !== null) {
+    errors.push("La revue manuelle ne porte aucune valeur.");
   }
-  if (input.enabled && input.percentBps === null && input.fixedCents === null)
+  if (
+    input.enabled &&
+    input.kind !== "MANUAL_REVIEW" &&
+    input.percentBps === null &&
+    input.fixedCents === null
+  )
     errors.push("Un modificateur activé doit porter une valeur.");
   return errors;
 }
