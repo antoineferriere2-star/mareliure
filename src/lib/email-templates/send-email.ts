@@ -2,11 +2,15 @@ import * as React from "react";
 import { render } from "@react-email/render";
 import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
 import { TEMPLATES } from "./registry";
+import { isMaReliure } from "@/brand";
 
 // Server-only: reads LOVABLE_API_KEY. Never import from client components.
 
-// Configuration baked in at scaffold time
-const SITE_NAME = "Métré Build";
+// Le nom affiché suit la marque du déploiement : un client de Ma Reliure ne
+// reçoit pas un e-mail signé « Métré Build ». Le domaine d'envoi, lui, reste
+// celui qui est vérifié chez le prestataire tant qu'aucun domaine Ma Reliure
+// ne l'est.
+const SITE_NAME = isMaReliure ? "Ma Reliure" : "Métré Build";
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
 const SENDER_DOMAIN = "notify.metre-pro.fr";

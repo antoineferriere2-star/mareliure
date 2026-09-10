@@ -18,7 +18,24 @@ import { MARKETPLACE_CURRENCY, MAX_BINDERS_PER_CASE } from "@/marketplace/config
 import { canSendToBinders, isCaseStatus, type CaseStatus } from "@/marketplace/cases/state";
 import { planBinderSelection } from "@/marketplace/matching/selection";
 import { rankBinders, type BinderMatchProfile } from "@/marketplace/matching/score";
-import { caseDisclosure, canViewCase, type Viewer } from "@/marketplace/permissions";
+import {
+  binderAccessFacts,
+  caseDisclosure,
+  canViewCase,
+  projectThreadAccess,
+  type Viewer,
+} from "@/marketplace/permissions";
+import { visibleJourney } from "@/marketplace/cases/journey";
+import {
+  binderGroup,
+  binderNextAction,
+  customerGroup,
+  customerStatusText,
+  progressStepsFor,
+} from "@/marketplace/project/progress";
+import { customerActionFor, lastActivityAt } from "@/marketplace/project/thread";
+import { describeWork, orderedWork } from "@/marketplace/project/views";
+import type { PricingSnapshot } from "@/marketplace/pricing/snapshot";
 import {
   decideClaim,
   extractAccessToken,
@@ -38,6 +55,7 @@ import {
   type CaseContext,
   resolveCaseByAccessToken,
 } from "./caseRepository.server";
+import { threadSummaries } from "./projectThreadRepository.server";
 import { loadAggregates } from "./pricingRepository.server";
 import { COMPLEXITY_CLASSES, SIZE_CLASSES } from "@/marketplace/pricing/catalog";
 import { composePrice } from "@/marketplace/pricing/composition";
@@ -748,13 +766,13 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     const caseIds = matches.map((m) => m.case_id);
     const { data: cases } = await sb
       .from("marketplace_cases")
-      .select("id, reference, status, dossier_id")
+      .select("id, reference, status, dossier_id, pricing_snapshot")
       .in("id", caseIds);
 
     // Titles again come from the Dossier the case points at, never from a copy.
     const titles = new Map<string, string>();
     const photoCount = new Map<string, number>();
-    const summaries = new Map<string, string>();
+    const summariesText = new Map<string, string>();
     for (const row of cases ?? []) {
       const { data: dossier } = await sb
         .from("build_dossiers")
@@ -770,7 +788,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
       // Dossier. La liste affichait le résumé brut, budget du client compris,
       // alors que la fiche le retirait : deux surfaces, une seule filtrée.
       if (typeof content?.projectSummary === "string")
-        summaries.set(
+        summariesText.set(
           row.id,
           disclosedSummary(dossier!.content as unknown as ProjectBrief, "project_only"),
         );
@@ -781,25 +799,58 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     const { data: offers } = await sb
       .from("marketplace_quotes")
       .select(
-        "case_id, binder_id, state, customer_price_cents, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail",
+        "case_id, binder_id, state, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail",
       )
       .in("case_id", caseIds)
       .eq("binder_id", binder!.id);
 
+    // Le fil n'existe que pour les dossiers où cet atelier est retenu.
+    const selectedCaseIds = matches
+      .filter((match) => {
+        const offer = (offers ?? []).find((candidate) => candidate.case_id === match.case_id);
+        return (offer?.state ?? match.state) === "selected";
+      })
+      .map((match) => match.case_id);
+    const summaries = await threadSummaries(sb, selectedCaseIds, context.userId);
+
     return matches.map((match) => {
       const row = (cases ?? []).find((c) => c.id === match.case_id);
       const offer = (offers ?? []).find((candidate) => candidate.case_id === match.case_id);
+      const state = offer?.state ?? match.state;
+      const summary = summaries.get(match.case_id);
+      const group = binderGroup({
+        offerState: state,
+        caseStatus: row?.status ?? "",
+        openDecisions: summary?.openDecisions.length ?? 0,
+      });
+      // Une offre close ne garde que sa trace : ni résumé du projet, ni photos.
+      const closed = group === "closed";
       return {
         caseId: match.case_id,
-        state: offer?.state ?? match.state,
+        state,
+        group,
         offeredAt: offer?.offered_at ?? match.offered_at ?? match.invited_at,
         binderPayoutCents: offer?.binder_payout_cents ?? match.binder_payout_cents,
         currency: offer?.currency ?? match.currency,
         reference: row?.reference ?? "",
         caseStatus: row?.status ?? "",
         title: titles.get(match.case_id) ?? row?.reference ?? "",
-        summary: summaries.get(match.case_id) ?? "",
-        photoCount: photoCount.get(match.case_id) ?? 0,
+        summary: closed ? "" : (summariesText.get(match.case_id) ?? ""),
+        photoCount: closed ? 0 : (photoCount.get(match.case_id) ?? 0),
+        work:
+          state === "selected"
+            ? describeWork(
+                orderedWork(row?.pricing_snapshot as unknown as PricingSnapshot | null, []),
+              )
+            : "",
+        nextAction:
+          state === "selected"
+            ? binderNextAction(row?.status ?? "", summary?.openDecisions.length ?? 0)
+            : null,
+        unread: summary?.unread ?? 0,
+        openDecisions: summary?.openDecisions.length ?? 0,
+        answeredSinceRead: summary?.answeredSinceRead ?? 0,
+        lastActivityAt: summary?.lastActivityAt ?? null,
       };
     });
   });
@@ -816,11 +867,12 @@ export const getBinderCase = createServerFn({ method: "GET" })
     if (!caseContext) fail(404, "Dossier introuvable");
 
     const viewer: Viewer = { role: "binder", binderId: binder!.id };
-    const facts = {
-      invitedBinderIds: caseContext.invitedBinderIds,
-      selectedBinderId: caseContext.selectedBinderId,
+    // Seules les invitations en cours ouvrent le dossier à un atelier : un
+    // refus, une offre close ou un autre atelier retenu referment l'accès.
+    const facts = binderAccessFacts({
+      matches: caseContext.matchStates,
       customerUserId: caseContext.customerUserId,
-    };
+    });
     // Answered on the server, from rows, never from anything the client sent.
     if (!canViewCase(viewer, facts)) fail(403, "Ce dossier ne vous a pas été confié.");
 
@@ -830,7 +882,7 @@ export const getBinderCase = createServerFn({ method: "GET" })
     const { data: offer } = await sb
       .from("marketplace_quotes")
       .select(
-        "state, customer_price_cents, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail",
+        "state, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail",
       )
       .eq("case_id", data.caseId)
       .eq("binder_id", binder!.id)
@@ -841,6 +893,23 @@ export const getBinderCase = createServerFn({ method: "GET" })
       offer: offer ?? null,
       caseStatus: caseContext.row.status,
       canRespond: offer?.state === "offered",
+      selected: facts.selectedBinderId === binder!.id,
+      // Le périmètre contractuel, sans le prix client : ce que la photographie
+      // du prix a figé à la validation.
+      work:
+        facts.selectedBinderId === binder!.id
+          ? orderedWork(caseContext.row.pricing_snapshot, [])
+          : [],
+      threadAccess: projectThreadAccess(viewer, { ...facts, status: caseContext.row.status }),
+      nextAction:
+        facts.selectedBinderId === binder!.id ? binderNextAction(caseContext.row.status, 0) : null,
+      progressSteps:
+        facts.selectedBinderId === binder!.id
+          ? progressStepsFor("binder", caseContext.row.status).map((step) => ({
+              to: step.to,
+              label: step.label,
+            }))
+          : [],
     };
   });
 
@@ -942,20 +1011,44 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       .eq("customer_user_id", context.userId)
       .order("created_at", { ascending: false });
 
+    const summaries = await threadSummaries(
+      sb,
+      (cases ?? []).map((row) => row.id),
+      context.userId,
+    );
     const results = [];
     for (const row of cases ?? []) {
-      const { data: dossier } = await sb
-        .from("build_dossiers")
-        .select("content")
-        .eq("id", row.dossier_id)
-        .maybeSingle();
-      const content = dossier?.content as { missionName?: unknown } | null;
+      const caseContext = await loadCaseContext(sb, row.id);
+      if (!caseContext) continue;
+      // La projection du Dossier donne le titre du livre et ses photos signées ;
+      // la carte n'en garde que la première.
+      const view = await buildCaseView(sb, caseContext, "full");
+      const summary = summaries.get(row.id);
+      const action = customerActionFor(summary?.openDecisions ?? []);
+      let binder: { name: string; city: string | null } | null = null;
+      if (caseContext.selectedBinderId) {
+        const { data: chosen } = await sb
+          .from("marketplace_binders")
+          .select("display_name, workshop_name, city")
+          .eq("id", caseContext.selectedBinderId)
+          .maybeSingle();
+        if (chosen)
+          binder = { name: chosen.workshop_name ?? chosen.display_name, city: chosen.city };
+      }
       results.push({
         id: row.id,
         reference: row.reference,
         status: row.status,
         createdAt: row.created_at,
-        title: typeof content?.missionName === "string" ? content.missionName : row.reference,
+        title: view.title,
+        photoUrl: view.photos.find((photo) => photo.url)?.url ?? null,
+        work: describeWork(orderedWork(caseContext.row.pricing_snapshot)),
+        binder,
+        statusText: customerStatusText(row.status),
+        group: customerGroup(row.status, action !== null),
+        action,
+        unread: summary?.unread ?? 0,
+        lastActivityAt: lastActivityAt([summary?.lastActivityAt, row.created_at]),
         // Un prix non validé ne quitte pas le serveur, ni sur la fiche ni dans
         // la liste : le calcul automatique écrit `customer_price_cents` dès
         // qu'il suggère, bien avant qu'un humain ait validé quoi que ce soit.
@@ -1020,6 +1113,10 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
         priceIncludes: caseContext.row.price_includes,
         createdAt: caseContext.row.created_at,
       },
+      statusText: customerStatusText(caseContext.row.status),
+      journey: visibleJourney(caseContext.row.status),
+      work: orderedWork(caseContext.row.pricing_snapshot),
+      threadAccess: projectThreadAccess(viewer, { ...facts, status: caseContext.row.status }),
       view,
       selectedBinder: binder
         ? {

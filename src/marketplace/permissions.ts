@@ -70,6 +70,88 @@ export function canViewCase(viewer: Viewer, facts: CaseAccessFacts): boolean {
  */
 export type CaseDisclosure = "full" | "assigned" | "project_only" | "none";
 
+/** Les états d'une sollicitation qui donnent encore le droit de regarder le projet. */
+export const LIVE_INVITATION_STATES = ["offered", "accepted", "invited", "quoted"] as const;
+
+/**
+ * Les faits d'accès **tels qu'un atelier doit les voir**.
+ *
+ * `invitedBinderIds` compte toutes les sollicitations d'un dossier : l'admin en
+ * a besoin pour marquer « déjà invité » et tenir le plafond de trois. Pour
+ * décider ce qu'un atelier peut ouvrir, en revanche, seule compte une
+ * invitation encore en cours. Un atelier qui a refusé, dont l'offre a expiré
+ * ou a été close, ou qui n'a pas été retenu quand un autre l'a été, ne voit
+ * plus le Brief ni les photos du livre — ni, bien sûr, la conversation.
+ */
+export function binderAccessFacts(input: {
+  matches: readonly { binderId: string; state: string }[];
+  customerUserId: string | null;
+}): CaseAccessFacts {
+  const selected = input.matches.find((match) => match.state === "selected")?.binderId ?? null;
+  return {
+    invitedBinderIds:
+      selected === null
+        ? input.matches
+            .filter((match) => (LIVE_INVITATION_STATES as readonly string[]).includes(match.state))
+            .map((match) => match.binderId)
+        : [],
+    selectedBinderId: selected,
+    customerUserId: input.customerUserId,
+  };
+}
+
+export type ThreadAccess = "none" | "read" | "write";
+
+/** Du choix de l'atelier au retour du livre : le fil est ouvert. */
+const THREAD_WRITABLE_STATUSES: readonly string[] = [
+  "binder_selected",
+  "awaiting_payment",
+  "paid",
+  "shipping_to_binder",
+  "received_by_binder",
+  "in_progress",
+  "awaiting_approval",
+  "work_finished",
+  "shipping_to_customer",
+  "delivered",
+];
+
+/** Terminé ou annulé : le fil reste lisible, c'est l'archive du livre. */
+const THREAD_ARCHIVED_STATUSES: readonly string[] = ["completed", "cancelled"];
+
+/**
+ * Qui lit et qui écrit dans le fil d'un projet.
+ *
+ * Le fil appartient au projet Ma Reliure. Il n'existe qu'une fois un atelier
+ * retenu, et seul cet atelier y entre — jamais un atelier sollicité puis
+ * écarté. Ma Reliure y a toujours accès, dans le cadre du suivi et du support.
+ */
+export function projectThreadAccess(
+  viewer: Viewer,
+  facts: CaseAccessFacts & { status: string },
+): ThreadAccess {
+  const stage = THREAD_WRITABLE_STATUSES.includes(facts.status)
+    ? "write"
+    : THREAD_ARCHIVED_STATUSES.includes(facts.status) && facts.selectedBinderId !== null
+      ? "read"
+      : "none";
+
+  switch (viewer.role) {
+    case "admin":
+      return facts.selectedBinderId === null ? "none" : "write";
+    case "customer":
+      return facts.customerUserId !== null && facts.customerUserId === viewer.userId
+        ? stage
+        : "none";
+    case "binder":
+      return facts.selectedBinderId !== null && facts.selectedBinderId === viewer.binderId
+        ? stage
+        : "none";
+    case "anonymous":
+      return "none";
+  }
+}
+
 export function caseDisclosure(viewer: Viewer, facts: CaseAccessFacts): CaseDisclosure {
   if (!canViewCase(viewer, facts)) return "none";
   switch (viewer.role) {

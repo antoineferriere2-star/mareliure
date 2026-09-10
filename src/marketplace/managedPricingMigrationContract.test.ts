@@ -43,8 +43,14 @@ describe("managed pricing migration", () => {
     const start = STATEMENTS.lastIndexOf("marketplace_cases_status_check CHECK");
     const clause = STATEMENTS.slice(start, STATEMENTS.indexOf("));", start) + 3);
     const values = [...clause.matchAll(/'([a-z_]+)'/g)].map((match) => match[1]);
+    // `work_finished` est ajouté par la migration du fil de projet, dont le
+    // contrat vérifie la contrainte la plus récente.
     expect(new Set(values)).toEqual(
-      new Set([...CASE_STATUSES, "sent_to_binders", "quotes_received"]),
+      new Set([
+        ...CASE_STATUSES.filter((status) => status !== "work_finished"),
+        "sent_to_binders",
+        "quotes_received",
+      ]),
     );
   });
 
@@ -79,18 +85,18 @@ describe("managed pricing migration", () => {
     expect(STATEMENTS).toContain("FOR ALL TO anon, authenticated");
     expect(STATEMENTS).toContain("USING (false) WITH CHECK (false)");
     // Un type déclaré est un type réellement écrit quelque part : par les
-    // fonctions SQL, par le service des dossiers ou par la console de prix.
+    // fonctions SQL, par le service des dossiers, par la console de prix ou
+    // par le fil de projet.
     const writers = [
       STATEMENTS,
       SERVICE,
-      readFileSync(
-        resolve(process.cwd(), "supabase/migrations/20260910120000_pricing_admin_console.sql"),
-        "utf8",
-      ),
-      readFileSync(
-        resolve(process.cwd(), "src/marketplace/services/pricing.data.functions.ts"),
-        "utf8",
-      ),
+      ...[
+        "supabase/migrations/20260910120000_pricing_admin_console.sql",
+        "supabase/migrations/20260911120000_project_thread.sql",
+        "src/marketplace/services/pricing.data.functions.ts",
+        "src/marketplace/services/projectThread.functions.ts",
+        "src/marketplace/project/progress.ts",
+      ].map((path) => readFileSync(resolve(process.cwd(), path), "utf8")),
     ].join("\n");
     for (const eventType of MARKETPLACE_EVENT_TYPES)
       expect(writers, eventType).toContain(eventType);

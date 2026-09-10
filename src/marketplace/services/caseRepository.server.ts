@@ -92,6 +92,8 @@ export interface CaseContext {
   customerName: string | null;
   invitedBinderIds: string[];
   selectedBinderId: string | null;
+  /** L'état de chaque sollicitation, pour décider ce qu'un atelier peut encore ouvrir. */
+  matchStates: { binderId: string; state: string }[];
 }
 
 /**
@@ -150,6 +152,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
     customerName: dossier.visitor_name,
     invitedBinderIds: (matches ?? []).map((m) => m.binder_id),
     selectedBinderId: (matches ?? []).find((m) => m.state === "selected")?.binder_id ?? null,
+    matchStates: (matches ?? []).map((m) => ({ binderId: m.binder_id, state: m.state })),
   };
 }
 

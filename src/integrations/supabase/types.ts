@@ -928,6 +928,231 @@ export type Database = {
         };
         Relationships: [];
       };
+      marketplace_project_messages: {
+        Row: {
+          author_role: string
+          author_user_id: string | null
+          binder_id: string | null
+          body: string
+          case_id: string
+          created_at: string
+          deleted_at: string | null
+          deleted_by: string | null
+          edited_at: string | null
+          id: string
+          important: boolean
+          kind: string
+          update_type: string | null
+        }
+        Insert: {
+          author_role: string
+          author_user_id?: string | null
+          binder_id?: string | null
+          body?: string
+          case_id: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          edited_at?: string | null
+          id?: string
+          important?: boolean
+          kind?: string
+          update_type?: string | null
+        }
+        Update: {
+          author_role?: string
+          author_user_id?: string | null
+          binder_id?: string | null
+          body?: string
+          case_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          deleted_by?: string | null
+          edited_at?: string | null
+          id?: string
+          important?: boolean
+          kind?: string
+          update_type?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_project_decisions: {
+        Row: {
+          allow_free_text: boolean
+          answered_at: string | null
+          answered_by: string | null
+          binder_id: string | null
+          cancel_reason: string | null
+          cancelled_at: string | null
+          cancelled_by: string | null
+          case_id: string
+          created_at: string
+          created_by_role: string
+          created_by_user_id: string | null
+          decision_type: string
+          description: string | null
+          free_text_answer: string | null
+          gilding_text: Json | null
+          id: string
+          options: Json
+          question: string
+          selected_option_id: string | null
+          status: string
+          supersedes_decision_id: string | null
+        }
+        Insert: {
+          allow_free_text?: boolean
+          answered_at?: string | null
+          answered_by?: string | null
+          binder_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          case_id: string
+          created_at?: string
+          created_by_role: string
+          created_by_user_id?: string | null
+          decision_type: string
+          description?: string | null
+          free_text_answer?: string | null
+          gilding_text?: Json | null
+          id?: string
+          options?: Json
+          question: string
+          selected_option_id?: string | null
+          status?: string
+          supersedes_decision_id?: string | null
+        }
+        Update: {
+          allow_free_text?: boolean
+          answered_at?: string | null
+          answered_by?: string | null
+          binder_id?: string | null
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          cancelled_by?: string | null
+          case_id?: string
+          created_at?: string
+          created_by_role?: string
+          created_by_user_id?: string | null
+          decision_type?: string
+          description?: string | null
+          free_text_answer?: string | null
+          gilding_text?: Json | null
+          id?: string
+          options?: Json
+          question?: string
+          selected_option_id?: string | null
+          status?: string
+          supersedes_decision_id?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_project_files: {
+        Row: {
+          case_id: string
+          created_at: string
+          id: string
+          mime_type: string
+          option_id: string | null
+          owner_id: string
+          owner_kind: string
+          size_bytes: number
+          storage_path: string
+          uploaded_by: string | null
+          uploaded_role: string
+        }
+        Insert: {
+          case_id: string
+          created_at?: string
+          id?: string
+          mime_type: string
+          option_id?: string | null
+          owner_id: string
+          owner_kind: string
+          size_bytes: number
+          storage_path: string
+          uploaded_by?: string | null
+          uploaded_role: string
+        }
+        Update: {
+          case_id?: string
+          created_at?: string
+          id?: string
+          mime_type?: string
+          option_id?: string | null
+          owner_id?: string
+          owner_kind?: string
+          size_bytes?: number
+          storage_path?: string
+          uploaded_by?: string | null
+          uploaded_role?: string
+        }
+        Relationships: []
+      }
+      marketplace_project_reads: {
+        Row: {
+          case_id: string
+          last_read_at: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          last_read_at?: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          last_read_at?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_scope_issues: {
+        Row: {
+          binder_id: string | null
+          case_id: string
+          created_at: string
+          description: string
+          id: string
+          reason: string
+          reported_by: string | null
+          resolution_note: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string
+        }
+        Insert: {
+          binder_id?: string | null
+          case_id: string
+          created_at?: string
+          description: string
+          id?: string
+          reason: string
+          reported_by?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Update: {
+          binder_id?: string | null
+          case_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          reason?: string
+          reported_by?: string | null
+          resolution_note?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
       marketplace_pricebook: {
         Row: {
           change_reason: string | null;
@@ -1624,6 +1849,15 @@ export type Database = {
         };
         Returns: Database["public"]["Tables"]["marketplace_cases"]["Row"];
       };
+      marketplace_answer_project_decision: {
+        Args: {
+          p_actor_user_id: string
+          p_decision_id: string
+          p_free_text_answer: string | null
+          p_selected_option_id: string | null
+        }
+        Returns: Database["public"]["Tables"]["marketplace_project_decisions"]["Row"]
+      }
       marketplace_validate_pricing: {
         Args: {
           p_actor_user_id: string;

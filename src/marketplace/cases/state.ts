@@ -27,6 +27,8 @@ export const CASE_STATUSES = [
   "received_by_binder",
   "in_progress",
   "awaiting_approval",
+  /** Le travail est fini ; le livre attend son retour. */
+  "work_finished",
   "shipping_to_customer",
   "delivered",
   "completed",
@@ -44,11 +46,12 @@ export const CASE_STATUS_LABELS: Record<CaseStatus, string> = {
   binder_accepted: "Atelier disponible",
   binder_selected: "Relieur choisi",
   awaiting_payment: "En attente de paiement",
-  paid: "Payé",
+  paid: "Commande confirmée",
   shipping_to_binder: "En route vers l'atelier",
   received_by_binder: "Reçu par l'atelier",
   in_progress: "Travail en cours",
   awaiting_approval: "En attente de validation",
+  work_finished: "Travail terminé",
   shipping_to_customer: "En route vers le client",
   delivered: "Livré",
   completed: "Terminé",
@@ -89,6 +92,12 @@ export function offerStateLabel(state: string): string {
 /**
  * Cancelling is allowed from anywhere before money moves, so it is added to
  * every entry below rather than repeated in each list.
+ *
+ * Deux passages sont provisoires, décidés le 10 septembre 2026 tant que ni le
+ * paiement en ligne ni l'expédition n'existent : `binder_selected → paid`
+ * (Ma Reliure confirme la commande, règlement reçu par elle) et
+ * `paid → received_by_binder` (l'atelier confirme la réception sans étape de
+ * transport). Ils disparaîtront avec ces briques.
  */
 const TRANSITIONS: Record<CaseStatus, readonly CaseStatus[]> = {
   under_review: ["pricing"],
@@ -96,13 +105,14 @@ const TRANSITIONS: Record<CaseStatus, readonly CaseStatus[]> = {
   matching: ["awaiting_binder_response"],
   awaiting_binder_response: ["binder_accepted", "matching"],
   binder_accepted: ["binder_selected", "matching"],
-  binder_selected: ["awaiting_payment"],
+  binder_selected: ["awaiting_payment", "paid"],
   awaiting_payment: ["paid"],
-  paid: ["shipping_to_binder"],
+  paid: ["shipping_to_binder", "received_by_binder"],
   shipping_to_binder: ["received_by_binder"],
   received_by_binder: ["in_progress"],
-  in_progress: ["awaiting_approval", "shipping_to_customer"],
-  awaiting_approval: ["in_progress", "shipping_to_customer"],
+  in_progress: ["awaiting_approval", "work_finished"],
+  awaiting_approval: ["in_progress", "work_finished"],
+  work_finished: ["shipping_to_customer"],
   shipping_to_customer: ["delivered"],
   delivered: ["completed"],
   completed: [],

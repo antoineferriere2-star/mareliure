@@ -153,7 +153,8 @@ const PRIVACY_SECTIONS: LegalSection[] = [
   {
     heading: "Qui y a accès",
     body: [
-      "L'équipe Ma Reliure. Les ateliers partenaires sollicités pour évaluer le travail reçoivent la description du projet et ses photos, sans vos coordonnées. Seul l'atelier retenu pour réaliser votre projet reçoit vos coordonnées.",
+      "L'équipe Ma Reliure. Les ateliers partenaires sollicités pour évaluer le travail reçoivent la description du projet et ses photos, sans vos coordonnées, et n'y ont plus accès s'ils ne sont pas retenus. Seul l'atelier retenu pour réaliser votre projet reçoit vos coordonnées.",
+      "Une fois l'atelier retenu, vous échangez avec lui depuis votre espace Ma Reliure. Ces messages, les photos qui les accompagnent et les choix que vous y confirmez sont conservés dans le dossier de votre livre. L'équipe Ma Reliure peut les consulter pour suivre votre commande et vous assister.",
       "Vos données ne sont ni vendues ni louées. Les photos de votre livre ne sont jamais publiées.",
     ],
   },
@@ -228,6 +229,13 @@ const TERMS_SECTIONS: LegalSection[] = [
     body: [
       "L'envoi d'un projet ne constitue ni une commande, ni une acceptation. Un prix ne devient ferme qu'une fois confirmé par Ma Reliure pour votre projet.",
       "La commande, le paiement et l'acheminement de votre livre feront l'objet de conditions générales de vente, publiées avant l'ouverture de ces services.",
+    ],
+  },
+  {
+    heading: "Le suivi de votre projet",
+    body: [
+      "Une fois l'atelier retenu, la conversation avec lui se tient dans votre espace Ma Reliure, dans le cadre du service. Elle sert à la réalisation de votre livre : les coordonnées, le paiement et toute modification du prix n'y passent pas, et Ma Reliure peut en prendre connaissance pour le suivi et l'assistance.",
+      "Les choix que vous confirmez dans votre espace — une couleur, un papier, un texte à dorer — sont enregistrés dans le dossier de votre livre et transmis à l'atelier.",
     ],
   },
   {

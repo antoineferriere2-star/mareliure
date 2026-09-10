@@ -1,5 +1,6 @@
 import type { ComponentType } from "react";
 import { template as newDossierTemplate } from "./new-dossier";
+import { template as projectNotificationTemplate } from "./project-notification";
 import { template as publicContactTemplate } from "./public-contact";
 import { template as visitorSummaryTemplate } from "./visitor-summary";
 
@@ -24,6 +25,7 @@ export interface TemplateEntry {
  */
 export const TEMPLATES: Record<string, TemplateEntry> = {
   "new-dossier": newDossierTemplate,
+  "project-notification": projectNotificationTemplate,
   "public-contact": publicContactTemplate,
   "visitor-summary": visitorSummaryTemplate,
 };

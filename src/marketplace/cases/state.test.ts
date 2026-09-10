@@ -36,6 +36,7 @@ describe("the transaction's states", () => {
       "shipping_to_binder",
       "received_by_binder",
       "in_progress",
+      "work_finished",
       "shipping_to_customer",
       "delivered",
       "completed",
@@ -43,6 +44,29 @@ describe("the transaction's states", () => {
     for (let i = 0; i < path.length - 1; i += 1) {
       expect(canTransitionCase(path[i], path[i + 1]), `${path[i]} -> ${path[i + 1]}`).toBe(true);
     }
+  });
+
+  /**
+   * Le chemin provisoire décidé le 10 septembre 2026, tant que ni le paiement
+   * en ligne ni l'expédition n'existent : Ma Reliure confirme la commande,
+   * l'atelier confirme la réception.
+   */
+  it("walks the provisional path while payment and shipping are not built", () => {
+    const path = [
+      "binder_selected",
+      "paid",
+      "received_by_binder",
+      "in_progress",
+      "work_finished",
+    ] as const;
+    for (let i = 0; i < path.length - 1; i += 1) {
+      expect(canTransitionCase(path[i], path[i + 1]), `${path[i]} -> ${path[i + 1]}`).toBe(true);
+    }
+  });
+
+  it("never announces a return shipment the work has not finished", () => {
+    expect(canTransitionCase("in_progress", "shipping_to_customer")).toBe(false);
+    expect(canTransitionCase("received_by_binder", "work_finished")).toBe(false);
   });
 
   it("refuses jumps that skip the work", () => {
