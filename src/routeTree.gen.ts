@@ -76,6 +76,7 @@ import { Route as AuthenticatedMarketplaceCasesIndexRouteImport } from './routes
 import { Route as AuthenticatedMarketplaceCasesCaseIdRouteImport } from './routes/_authenticated/marketplace/cases.$caseId'
 import { Route as AuthenticatedMarketplacePricingIndexRouteImport } from './routes/_authenticated/marketplace/pricing.index'
 import { Route as AuthenticatedMarketplacePricingBinderIdRouteImport } from './routes/_authenticated/marketplace/pricing.$binderId'
+import { Route as AuthenticatedMarketplacePricingSimulatorRouteImport } from './routes/_authenticated/marketplace/pricing.simulator'
 import { Route as AuthenticatedPortalDemosNewRouteImport } from './routes/_authenticated/portal/demos.new'
 import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
 import { Route as ApiInternalAnalyticsMetricsRouteImport } from './routes/api/internal/analytics/metrics'
@@ -458,6 +459,12 @@ const AuthenticatedMarketplacePricingBinderIdRoute =
     path: '/pricing/$binderId',
     getParentRoute: () => AuthenticatedMarketplaceRouteRoute,
   } as any)
+const AuthenticatedMarketplacePricingSimulatorRoute =
+  AuthenticatedMarketplacePricingSimulatorRouteImport.update({
+    id: '/pricing/simulator',
+    path: '/pricing/simulator',
+    getParentRoute: () => AuthenticatedMarketplaceRouteRoute,
+  } as any)
 const AuthenticatedPortalDemosNewRoute =
   AuthenticatedPortalDemosNewRouteImport.update({
     id: '/new',
@@ -571,6 +578,7 @@ export interface FileRoutesByFullPath {
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/marketplace/cases/$caseId': typeof AuthenticatedMarketplaceCasesCaseIdRoute
   '/marketplace/pricing/$binderId': typeof AuthenticatedMarketplacePricingBinderIdRoute
+  '/marketplace/pricing/simulator': typeof AuthenticatedMarketplacePricingSimulatorRoute
   '/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
@@ -642,6 +650,7 @@ export interface FileRoutesByTo {
   '/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/marketplace/cases/$caseId': typeof AuthenticatedMarketplaceCasesCaseIdRoute
   '/marketplace/pricing/$binderId': typeof AuthenticatedMarketplacePricingBinderIdRoute
+  '/marketplace/pricing/simulator': typeof AuthenticatedMarketplacePricingSimulatorRoute
   '/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
@@ -721,6 +730,7 @@ export interface FileRoutesById {
   '/_authenticated/build/requests/$id': typeof AuthenticatedBuildRequestsIdRoute
   '/_authenticated/marketplace/cases/$caseId': typeof AuthenticatedMarketplaceCasesCaseIdRoute
   '/_authenticated/marketplace/pricing/$binderId': typeof AuthenticatedMarketplacePricingBinderIdRoute
+  '/_authenticated/marketplace/pricing/simulator': typeof AuthenticatedMarketplacePricingSimulatorRoute
   '/_authenticated/portal/demos/new': typeof AuthenticatedPortalDemosNewRoute
   '/_authenticated/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
@@ -800,6 +810,7 @@ export interface FileRouteTypes {
     | '/build/requests/$id'
     | '/marketplace/cases/$caseId'
     | '/marketplace/pricing/$binderId'
+    | '/marketplace/pricing/simulator'
     | '/portal/demos/new'
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
@@ -871,6 +882,7 @@ export interface FileRouteTypes {
     | '/build/requests/$id'
     | '/marketplace/cases/$caseId'
     | '/marketplace/pricing/$binderId'
+    | '/marketplace/pricing/simulator'
     | '/portal/demos/new'
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
@@ -949,6 +961,7 @@ export interface FileRouteTypes {
     | '/_authenticated/build/requests/$id'
     | '/_authenticated/marketplace/cases/$caseId'
     | '/_authenticated/marketplace/pricing/$binderId'
+    | '/_authenticated/marketplace/pricing/simulator'
     | '/_authenticated/portal/demos/new'
     | '/_authenticated/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
@@ -1475,6 +1488,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMarketplacePricingBinderIdRouteImport
       parentRoute: typeof AuthenticatedMarketplaceRouteRoute
     }
+    '/_authenticated/marketplace/pricing/simulator': {
+      id: '/_authenticated/marketplace/pricing/simulator'
+      path: '/pricing/simulator'
+      fullPath: '/marketplace/pricing/simulator'
+      preLoaderRoute: typeof AuthenticatedMarketplacePricingSimulatorRouteImport
+      parentRoute: typeof AuthenticatedMarketplaceRouteRoute
+    }
     '/_authenticated/portal/demos/new': {
       id: '/_authenticated/portal/demos/new'
       path: '/new'
@@ -1623,6 +1643,7 @@ interface AuthenticatedMarketplaceRouteRouteChildren {
   AuthenticatedMarketplaceIndexRoute: typeof AuthenticatedMarketplaceIndexRoute
   AuthenticatedMarketplaceCasesCaseIdRoute: typeof AuthenticatedMarketplaceCasesCaseIdRoute
   AuthenticatedMarketplacePricingBinderIdRoute: typeof AuthenticatedMarketplacePricingBinderIdRoute
+  AuthenticatedMarketplacePricingSimulatorRoute: typeof AuthenticatedMarketplacePricingSimulatorRoute
   AuthenticatedMarketplaceCasesIndexRoute: typeof AuthenticatedMarketplaceCasesIndexRoute
   AuthenticatedMarketplacePricingIndexRoute: typeof AuthenticatedMarketplacePricingIndexRoute
 }
@@ -1635,6 +1656,8 @@ const AuthenticatedMarketplaceRouteRouteChildren: AuthenticatedMarketplaceRouteR
       AuthenticatedMarketplaceCasesCaseIdRoute,
     AuthenticatedMarketplacePricingBinderIdRoute:
       AuthenticatedMarketplacePricingBinderIdRoute,
+    AuthenticatedMarketplacePricingSimulatorRoute:
+      AuthenticatedMarketplacePricingSimulatorRoute,
     AuthenticatedMarketplaceCasesIndexRoute:
       AuthenticatedMarketplaceCasesIndexRoute,
     AuthenticatedMarketplacePricingIndexRoute:

@@ -17,6 +17,7 @@ import type { Database } from "@/integrations/supabase/types";
 import type { ProjectBrief } from "@/build/schema/brief";
 import type { Answers } from "@/build/schema/answers";
 import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
+import type { PricingSnapshot } from "@/marketplace/pricing/snapshot";
 import { extractPhotoReferences } from "@/build/engine/visitorSummary";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 import { buildCaseProfile, type CaseProfile } from "@/marketplace/cases/caseProfile";
@@ -63,6 +64,10 @@ export interface CaseRow {
   pricing_generated_at: string | null;
   pricing_validated_at: string | null;
   pricing_validated_by: string | null;
+  customer_price_ttc_cents: number | null;
+  pricing_vat_rate_bps: number | null;
+  /** La photographie figée à la validation. `null` tant que le prix n'est pas validé. */
+  pricing_snapshot: PricingSnapshot | null;
   created_at: string;
 }
 
@@ -112,7 +117,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
   const { data: row, error } = await sb
     .from("marketplace_cases")
     .select(
-      "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at",
+      "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, customer_price_ttc_cents, pricing_vat_rate_bps, pricing_snapshot, created_at",
     )
     .eq("id", caseId)
     .maybeSingle();

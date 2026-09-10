@@ -78,8 +78,22 @@ describe("managed pricing migration", () => {
     );
     expect(STATEMENTS).toContain("FOR ALL TO anon, authenticated");
     expect(STATEMENTS).toContain("USING (false) WITH CHECK (false)");
+    // Un type déclaré est un type réellement écrit quelque part : par les
+    // fonctions SQL, par le service des dossiers ou par la console de prix.
+    const writers = [
+      STATEMENTS,
+      SERVICE,
+      readFileSync(
+        resolve(process.cwd(), "supabase/migrations/20260910120000_pricing_admin_console.sql"),
+        "utf8",
+      ),
+      readFileSync(
+        resolve(process.cwd(), "src/marketplace/services/pricing.data.functions.ts"),
+        "utf8",
+      ),
+    ].join("\n");
     for (const eventType of MARKETPLACE_EVENT_TYPES)
-      expect(`${STATEMENTS}\n${SERVICE}`).toContain(eventType);
+      expect(writers, eventType).toContain(eventType);
   });
 
   it("makes price validation, response and selection atomic service operations", () => {

@@ -16,6 +16,7 @@
     "seed:deck": "tsx scripts/seedDeckPlaybook.ts",
     "seed:bookbinding": "tsx scripts/seedBookbindingPlaybook.ts",
     "seed:marketplace-demo": "tsx scripts/seedMarketplaceDemo.ts",
+    "seed:web-benchmarks": "tsx scripts/seedWebBenchmarks.ts",
     "setup:stripe-portal": "tsx scripts/setupStripeBillingPortal.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",

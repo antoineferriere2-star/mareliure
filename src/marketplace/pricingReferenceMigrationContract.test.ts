@@ -80,7 +80,11 @@ describe("la migration du référentiel tarifaire", () => {
 
   /** Les vocabulaires du code et de la base ne peuvent pas diverger en silence. */
   it("connaît exactement les mêmes vocabulaires que le code", () => {
-    for (const provenance of PRICE_PROVENANCES) expect(STATEMENTS).toContain(`'${provenance}'`);
+    // Les provenances ajoutées par la console de prix vivent dans sa propre
+    // migration, où `pricingConsoleContract.test.ts` les confronte au code.
+    const addedLater = ["HISTORICAL_TRANSACTION", "BINDER_DECLARED", "WEB_BENCHMARK"];
+    for (const provenance of PRICE_PROVENANCES.filter((p) => !addedLater.includes(p)))
+      expect(STATEMENTS).toContain(`'${provenance}'`);
     for (const source of RATE_SOURCES) expect(STATEMENTS).toContain(`'${source}'`);
     for (const method of PRICING_METHODS) expect(STATEMENTS).toContain(`'${method}'`);
     for (const family of WORK_FAMILIES) expect(STATEMENTS).toContain(`'${family.key}'`);

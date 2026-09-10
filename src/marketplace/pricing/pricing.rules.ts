@@ -16,6 +16,7 @@
  * `testReferences.fixture.ts`, marqués `TEST_ONLY`, où ils servent de jeu
  * d'essai et ne peuvent atteindre personne.
  */
+import type { CompositionPolicy } from "./composition";
 import type { PricingPolicy } from "./pricing.types";
 
 export const PRICING_POLICY: PricingPolicy = {
@@ -26,4 +27,16 @@ export const PRICING_POLICY: PricingPolicy = {
   minimumMarginBps: 1_500,
   minimumMarginCents: 2_000,
   roundingIncrementCents: 1_000,
+};
+
+/**
+ * Ce que la composition d'un prix vérifie, tiré de la même politique.
+ *
+ * Une seule marge cible et un seul minimum pour le simulateur, la validation
+ * d'un dossier et le Pricebook : trois seuils différents feraient passer au
+ * vert dans un écran ce que l'autre signale en alerte.
+ */
+export const COMPOSITION_POLICY: CompositionPolicy = {
+  targetMarginBps: PRICING_POLICY.targetMarginBps,
+  minimumMarginCents: PRICING_POLICY.minimumMarginCents,
 };

@@ -17,6 +17,9 @@
  * se passe réellement.
  */
 import { IntakeCta, LandingFooter, LandingHeader } from "./landing/LandingChrome";
+import { SIZE_CLASS_LABELS } from "@/marketplace/pricing/catalog";
+import { formatEuros } from "@/marketplace/pricing/money";
+import { formatPublicPrice, type PublicPriceRow } from "@/marketplace/pricing/publicPrices";
 
 const SHELL = "mx-auto w-full max-w-[52rem] px-5 sm:px-8";
 
@@ -62,7 +65,7 @@ const FACTORS: readonly Factor[] = [
   },
 ];
 
-export function TarifsPage() {
+export function TarifsPage({ publicPrices = [] }: { publicPrices?: readonly PublicPriceRow[] }) {
   return (
     <div className="mr-site min-h-screen bg-mr-paper text-mr-graphite">
       <LandingHeader />
@@ -77,15 +80,17 @@ export function TarifsPage() {
               déterminent son prix.
             </p>
             <p className="mt-4 max-w-[38rem] text-[1.0625rem] leading-[1.7] text-mr-ink/75">
-              Nous ne publions pas de grille tarifaire, parce qu’une grille donnerait un chiffre
-              faux à la plupart des projets. Présentez-nous votre livre : nous regardons le travail
-              à faire, puis nous vous annonçons un prix ferme.
+              {publicPrices.length === 0
+                ? "Nous ne publions pas de grille tarifaire, parce qu’une grille donnerait un chiffre faux à la plupart des projets. Présentez-nous votre livre : nous regardons le travail à faire, puis nous vous annonçons un prix ferme."
+                : "Pour quelques travaux courants, nous annonçons notre prix ci-dessous. Pour tout le reste, présentez-nous votre livre : nous regardons le travail à faire, puis nous vous annonçons un prix ferme."}
             </p>
             <div className="mt-9">
               <IntakeCta />
             </div>
           </div>
         </section>
+
+        {publicPrices.length > 0 && <PublicPrices rows={publicPrices} />}
 
         <section className="py-16 sm:py-20">
           <div className={SHELL}>
@@ -157,5 +162,49 @@ export function TarifsPage() {
       </main>
       <LandingFooter />
     </div>
+  );
+}
+
+/**
+ * Les prix que Ma Reliure a arrêtés et choisi d'annoncer.
+ *
+ * Rien d'autre n'arrive ici : ni fourchette relevée sur le web, ni tarif
+ * d'atelier. `publicPriceRows` ne lit que le Pricebook, entrées publiées et
+ * cochées « public » par un humain — et la section n'existe pas tant qu'il n'y
+ * en a aucune.
+ */
+function PublicPrices({ rows }: { rows: readonly PublicPriceRow[] }) {
+  return (
+    <section className="border-b border-mr-ink/10 py-16 sm:py-20">
+      <div className={SHELL}>
+        <p className="font-sans text-[0.75rem] uppercase tracking-[0.18em] text-mr-ink/45">
+          Prix annoncés
+        </p>
+        <h2 className="mt-3 font-serif text-[1.75rem] leading-[1.2] sm:text-[2.125rem]">
+          Les travaux dont nous annonçons le prix
+        </h2>
+        <p className="mt-4 max-w-[36rem] text-[1rem] leading-[1.7] text-mr-ink/70">
+          Prix TTC, par travail. Le prix de votre projet se confirme une fois le livre décrit.
+        </p>
+        <dl className="mt-8 divide-y divide-mr-ink/10 border-y border-mr-ink/10">
+          {rows.map((row) => (
+            <div
+              key={`${row.workItemKey}-${row.sizeClass}-${row.complexityClass}`}
+              className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-1 py-4"
+            >
+              <dt>
+                <span className="font-serif text-[1.1875rem]">{row.label}</span>
+                {row.sizeClass !== "standard" && (
+                  <span className="ml-2 text-[0.875rem] text-mr-ink/55">
+                    {SIZE_CLASS_LABELS[row.sizeClass]}
+                  </span>
+                )}
+              </dt>
+              <dd className="text-[1rem] tabular-nums">{formatPublicPrice(row, formatEuros)}</dd>
+            </div>
+          ))}
+        </dl>
+      </div>
+    </section>
   );
 }

@@ -27,7 +27,7 @@ import {
 import { triageMessages } from "@/marketplace/cases/triage";
 import { disclosedSummary } from "@/marketplace/cases/dossierProjection";
 import type { ProjectBrief } from "@/build/schema/brief";
-import { suggestManagedPrice, validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
+import { suggestManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
 import {
   assignCaseOwner,
@@ -35,9 +35,19 @@ import {
   claimCasesByVerifiedEmail,
   loadCaseContext,
   reconcileCaseTriage,
+  type CaseContext,
   resolveCaseByAccessToken,
 } from "./caseRepository.server";
 import { loadAggregates } from "./pricingRepository.server";
+import { COMPLEXITY_CLASSES, SIZE_CLASSES } from "@/marketplace/pricing/catalog";
+import { composePrice } from "@/marketplace/pricing/composition";
+import { COMPOSITION_POLICY } from "@/marketplace/pricing/pricing.rules";
+import { weakestEvidence } from "@/marketplace/pricing/pricebookEvidence";
+import { buildPricingSnapshot } from "@/marketplace/pricing/snapshot";
+import { STANDARD_VAT_RATE_BPS } from "@/marketplace/pricing/vat";
+import { resolveWork } from "@/marketplace/pricing/workResolver";
+import { loadPricingContext, referencesForWork } from "./pricingContext.server";
+import { pricingLinesInput } from "./pricing.data.functions";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -362,62 +372,150 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
     return suggestion;
   });
 
-const managedPriceInput = z.object({
-  caseId: z.string().uuid(),
-  customerPriceCents: z.number().int().positive(),
-  binderPayoutCents: z.number().int().positive(),
-  priceIncludes: z.array(z.string().trim().min(1).max(160)).max(20).default([]),
-});
+/**
+ * Le point de départ d'une composition : les travaux que le moteur a lus dans
+ * le Dossier, au format et à la complexité qu'il en a déduits. L'admin les
+ * corrige ensuite ; il ne part jamais d'une page blanche.
+ */
+function defaultCaseComposition(caseContext: CaseContext) {
+  const work = resolveWork(caseContext.profile);
+  return {
+    lines: work.workItemKeys.map((workItemKey) => ({ workItemKey, quantity: 1 })),
+    sizeClass: work.sizeClass,
+    complexityClass: work.complexityClass,
+  };
+}
 
-export const saveMarketplacePricing = createServerFn({ method: "POST" })
+/**
+ * Compose le prix d'un dossier à partir du Pricebook.
+ *
+ * Lecture seule : on peut recomposer autant de fois qu'on veut, cocher et
+ * décocher des travaux, changer le format. Rien n'est écrit tant que
+ * personne n'a validé.
+ */
+export const composeCasePricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => managedPriceInput.parse(data))
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        caseId: z.string().uuid(),
+        lines: pricingLinesInput.optional(),
+        sizeClass: z.enum(SIZE_CLASSES).optional(),
+        complexityClass: z.enum(COMPLEXITY_CLASSES).optional(),
+      })
+      .parse(data),
+  )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
-    const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
-    if (!validation.valid) fail(422, validation.errors.join(" "));
     const sb = await admin();
-    const { error } = await sb
-      .from("marketplace_cases")
-      .update({
-        customer_price_cents: data.customerPriceCents,
-        binder_payout_cents: data.binderPayoutCents,
-        price_includes: data.priceIncludes,
-      })
-      .eq("id", data.caseId)
-      .neq("pricing_status", "validated");
-    if (error) fail(500, error.message);
-    await sb.from("marketplace_events").insert({
-      case_id: data.caseId,
-      actor_user_id: context.userId,
-      event_type: "pricing_edited",
-      metadata: {
-        customer_price_cents: data.customerPriceCents,
-        binder_payout_cents: data.binderPayoutCents,
-      },
+    const caseContext = await loadCaseContext(sb, data.caseId);
+    if (!caseContext) fail(404, "Dossier introuvable");
+
+    const defaults = defaultCaseComposition(caseContext);
+    const request = {
+      lines: data.lines ?? defaults.lines,
+      sizeClass: data.sizeClass ?? defaults.sizeClass,
+      complexityClass: data.complexityClass ?? defaults.complexityClass,
+    };
+    const pricing = await loadPricingContext(sb);
+    const composition = composePrice({
+      ...request,
+      entries: pricing.published,
+      modifiers: pricing.modifiers,
+      policy: COMPOSITION_POLICY,
     });
-    return validation;
+    const references = referencesForWork(
+      pricing,
+      request.lines.map((line) => line.workItemKey),
+      request.sizeClass,
+      request.complexityClass,
+    );
+    return {
+      defaults,
+      request,
+      composition,
+      references,
+      confidence: weakestEvidence(Object.values(references).map((item) => item.evidence)),
+      vatRateBps: STANDARD_VAT_RATE_BPS,
+    };
   });
 
+/**
+ * Valide le prix d'un dossier et le fige.
+ *
+ * Le serveur recompose lui-même à partir du Pricebook : il ne croit jamais
+ * les montants « composés » qu'un navigateur lui enverrait, seulement ceux que
+ * la personne a décidé de retenir. S'ils diffèrent de la composition — ou si
+ * le Pricebook ne chiffre pas le projet — la raison est obligatoire, et la
+ * base écrit `pricing_overridden` en plus de `pricing_validated`.
+ *
+ * La marge ne bloque pas : son état est dans la photographie, et l'écran l'a
+ * montré dans la confirmation.
+ */
 export const validateMarketplacePricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => managedPriceInput.parse(data))
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        caseId: z.string().uuid(),
+        lines: pricingLinesInput,
+        sizeClass: z.enum(SIZE_CLASSES),
+        complexityClass: z.enum(COMPLEXITY_CLASSES),
+        retainedPayoutCents: z.number().int().positive(),
+        retainedPriceHtCents: z.number().int().positive(),
+        priceIncludes: z.array(z.string().trim().min(1).max(160)).max(20).default([]),
+        overrideReason: z.string().trim().max(500).nullable().default(null),
+      })
+      .parse(data),
+  )
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
-    const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
-    if (!validation.valid) fail(422, validation.errors.join(" "));
     const sb = await admin();
-    const { data: result, error } = await sb.rpc("marketplace_validate_pricing", {
+    const caseContext = await loadCaseContext(sb, data.caseId);
+    if (!caseContext) fail(404, "Dossier introuvable");
+
+    const pricing = await loadPricingContext(sb);
+    const composition = composePrice({
+      lines: data.lines,
+      sizeClass: data.sizeClass,
+      complexityClass: data.complexityClass,
+      entries: pricing.published,
+      modifiers: pricing.modifiers,
+      policy: COMPOSITION_POLICY,
+    });
+    const references = referencesForWork(
+      pricing,
+      data.lines.map((line) => line.workItemKey),
+      data.sizeClass,
+      data.complexityClass,
+    );
+
+    const { snapshot, errors } = buildPricingSnapshot({
+      composition,
+      retainedPayoutCents: data.retainedPayoutCents,
+      retainedPriceHtCents: data.retainedPriceHtCents,
+      vatRateBps: STANDARD_VAT_RATE_BPS,
+      policy: COMPOSITION_POLICY,
+      confidence: weakestEvidence(Object.values(references).map((item) => item.evidence)),
+      overrideReason: data.overrideReason,
+      priceIncludes: data.priceIncludes,
+      ruleVersion: PRICING_POLICY.version,
+    });
+    if (!snapshot) fail(422, errors.join(" "));
+
+    const { data: result, error } = await sb.rpc("marketplace_validate_pricing_snapshot", {
       p_case_id: data.caseId,
-      p_customer_price_cents: data.customerPriceCents,
-      p_binder_payout_cents: data.binderPayoutCents,
+      p_customer_price_cents: snapshot.priceHtCents,
+      p_customer_price_ttc_cents: snapshot.priceTtcCents,
+      p_vat_rate_bps: snapshot.vatRateBps,
+      p_binder_payout_cents: snapshot.payoutCents,
       p_price_includes: data.priceIncludes,
-      p_minimum_margin_bps: PRICING_POLICY.minimumMarginBps,
-      p_minimum_margin_cents: PRICING_POLICY.minimumMarginCents,
+      p_snapshot: snapshot as unknown as Json,
+      p_overridden: snapshot.overridden,
       p_actor_user_id: context.userId,
     });
     if (error) fail(409, error.message);
-    return { case: result, validation };
+    return { case: result, snapshot };
   });
 
 export const sendCaseToBinders = createServerFn({ method: "POST" })
@@ -839,7 +937,7 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
     const { data: cases } = await sb
       .from("marketplace_cases")
       .select(
-        "id, reference, status, dossier_id, created_at, customer_price_cents, pricing_currency",
+        "id, reference, status, dossier_id, created_at, customer_price_cents, customer_price_ttc_cents, pricing_status, pricing_currency",
       )
       .eq("customer_user_id", context.userId)
       .order("created_at", { ascending: false });
@@ -858,7 +956,12 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
         status: row.status,
         createdAt: row.created_at,
         title: typeof content?.missionName === "string" ? content.missionName : row.reference,
-        customerPriceCents: row.customer_price_cents,
+        // Un prix non validé ne quitte pas le serveur, ni sur la fiche ni dans
+        // la liste : le calcul automatique écrit `customer_price_cents` dès
+        // qu'il suggère, bien avant qu'un humain ait validé quoi que ce soit.
+        customerPriceCents: row.pricing_status === "validated" ? row.customer_price_cents : null,
+        customerPriceTtcCents:
+          row.pricing_status === "validated" ? row.customer_price_ttc_cents : null,
         currency: row.pricing_currency,
       });
     }
@@ -908,6 +1011,10 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
         customerPriceCents:
           caseContext.row.pricing_status === "validated"
             ? caseContext.row.customer_price_cents
+            : null,
+        customerPriceTtcCents:
+          caseContext.row.pricing_status === "validated"
+            ? caseContext.row.customer_price_ttc_cents
             : null,
         currency: caseContext.row.pricing_currency,
         priceIncludes: caseContext.row.price_includes,

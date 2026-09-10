@@ -11,236 +11,18 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   clearCaseManualReview,
-  generateMarketplacePricing,
   getMarketplaceCase,
-  saveMarketplacePricing,
   selectBinderOffer,
   sendCaseToBinders,
-  validateMarketplacePricing,
 } from "@/marketplace/services/marketplace.data.functions";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
 import { formatEuros } from "@/marketplace/pricing/money";
-import { validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
-import { workItemLabel } from "@/marketplace/pricing/catalog";
-import { CONFIDENCE_LABELS, type PricingConfidence } from "@/marketplace/pricing/confidence";
-import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
+import { CasePricingPanel } from "./CasePricingPanel";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
-function toCents(euros: string): number {
-  return Math.round(Number.parseFloat(euros.replace(",", ".")) * 100);
-}
-
-function PricingPanel({
-  caseId,
-  row,
-  refresh,
-}: {
-  caseId: string;
-  row: {
-    manual_review_required: boolean;
-    pricing_status: string;
-    suggested_customer_price_cents: number | null;
-    suggested_binder_payout_cents: number | null;
-    customer_price_cents: number | null;
-    binder_payout_cents: number | null;
-    price_includes: string[];
-    pricing_confidence: string | null;
-    pricing_reason_codes: string[];
-    pricing_components: PricingComponent[] | null;
-    pricing_low_estimate_cents: number | null;
-    pricing_high_estimate_cents: number | null;
-    pricing_reference_count: number | null;
-  };
-  refresh: () => Promise<unknown>;
-}) {
-  const generate = useServerFn(generateMarketplacePricing);
-  const save = useServerFn(saveMarketplacePricing);
-  const validate = useServerFn(validateMarketplacePricing);
-  const initialCustomer = row.customer_price_cents ?? row.suggested_customer_price_cents;
-  const initialPayout = row.binder_payout_cents ?? row.suggested_binder_payout_cents;
-  const [customer, setCustomer] = useState(initialCustomer ? String(initialCustomer / 100) : "");
-  const [payout, setPayout] = useState(initialPayout ? String(initialPayout / 100) : "");
-  const [includes, setIncludes] = useState(row.price_includes.join(", "));
-  const customerCents = toCents(customer);
-  const payoutCents = toCents(payout);
-  const result = validateManagedPrice(
-    Number.isFinite(customerCents) ? customerCents : 0,
-    Number.isFinite(payoutCents) ? payoutCents : 0,
-  );
-  const payload = {
-    caseId,
-    customerPriceCents: customerCents,
-    binderPayoutCents: payoutCents,
-    priceIncludes: includes
-      .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean),
-  };
-  const generation = useMutation({
-    mutationFn: () => generate({ data: { caseId } }),
-    onSuccess: refresh,
-  });
-  const saving = useMutation({ mutationFn: () => save({ data: payload }), onSuccess: refresh });
-  const validation = useMutation({
-    mutationFn: () => validate({ data: payload }),
-    onSuccess: refresh,
-  });
-
-  return (
-    <section className="rounded-lg border border-border bg-card p-5">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Prix Ma Reliure
-        </h2>
-        <span className="text-xs text-muted-foreground">
-          {row.pricing_status === "validated" ? "Validé" : "À valider"}
-        </span>
-      </div>
-      {/* La décomposition, réservée à l'administration. Un client n'a pas à
-          lire ce que nous payons l'atelier — mais quiconque valide un prix
-          doit pouvoir dire d'où vient chaque euro, et sur combien d'ateliers
-          il repose. */}
-      {row.pricing_status === "manual_review" ? (
-        <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3">
-          <p className="text-sm font-medium text-amber-900">Le moteur n’a pas chiffré ce projet.</p>
-          <p className="mt-1 text-xs leading-5 text-amber-800">
-            Il ne dispose pas des tarifs de référence nécessaires, ou le projet demande une étude.
-            Le prix doit être arrêté à la main.
-          </p>
-        </div>
-      ) : (
-        row.pricing_confidence && (
-          <div className="mt-3 space-y-2">
-            <p className="text-xs text-muted-foreground">
-              Confiance{" "}
-              {CONFIDENCE_LABELS[row.pricing_confidence as PricingConfidence] ??
-                row.pricing_confidence}
-              {row.pricing_reference_count
-                ? ` · ${row.pricing_reference_count} ateliers de référence`
-                : ""}
-            </p>
-            {(row.pricing_components ?? []).length > 0 && (
-              <table className="w-full text-xs">
-                <tbody>
-                  {(row.pricing_components ?? []).map((component) => (
-                    <tr key={component.workItemKey} className="border-b border-border/50">
-                      <td className="py-1 pr-2">
-                        {component.label ?? workItemLabel(component.workItemKey)}
-                        {component.approximated && (
-                          <span
-                            className="ml-1 text-amber-700"
-                            title={component.approximationNote ?? ""}
-                          >
-                            ≈
-                          </span>
-                        )}
-                      </td>
-                      <td className="py-1 text-right text-muted-foreground">
-                        {component.referenceCount} ate.
-                      </td>
-                      <td className="py-1 pl-2 text-right tabular-nums">
-                        {formatEuros(component.referencePayoutCents)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            )}
-            {row.pricing_low_estimate_cents !== null &&
-              row.pricing_high_estimate_cents !== null && (
-                <p className="text-xs text-muted-foreground">
-                  Fourchette observée : {formatEuros(row.pricing_low_estimate_cents)} –{" "}
-                  {formatEuros(row.pricing_high_estimate_cents)}
-                </p>
-              )}
-          </div>
-        )
-      )}
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <div>
-          <Label htmlFor="customer-price">Prix client (€)</Label>
-          <Input
-            id="customer-price"
-            className="mt-1"
-            inputMode="decimal"
-            value={customer}
-            disabled={row.pricing_status === "validated"}
-            onChange={(event) => setCustomer(event.target.value)}
-          />
-        </div>
-        <div>
-          <Label htmlFor="binder-payout">Rémunération atelier (€)</Label>
-          <Input
-            id="binder-payout"
-            className="mt-1"
-            inputMode="decimal"
-            value={payout}
-            disabled={row.pricing_status === "validated"}
-            onChange={(event) => setPayout(event.target.value)}
-          />
-        </div>
-      </div>
-      <div className="mt-3">
-        <Label htmlFor="price-includes">Ce que le prix comprend</Label>
-        <Input
-          id="price-includes"
-          className="mt-1"
-          value={includes}
-          disabled={row.pricing_status === "validated"}
-          onChange={(event) => setIncludes(event.target.value)}
-          placeholder="Reliure, matériaux, expédition retour"
-        />
-      </div>
-      <p className={`mt-3 text-sm ${result.valid ? "text-emerald-700" : "text-destructive"}`}>
-        Marge : {formatEuros(result.marginCents)} · {(result.marginBps / 100).toFixed(1)} %
-      </p>
-      {!result.valid && customer !== "" && payout !== "" && (
-        <p className="mt-1 text-xs text-destructive">{result.errors.join(" ")}</p>
-      )}
-      <div className="mt-4 flex flex-wrap gap-2">
-        {(row.pricing_status === "pending" || row.pricing_status === "manual_review") && (
-          <Button
-            variant="outline"
-            disabled={generation.isPending}
-            onClick={() => generation.mutate()}
-          >
-            {/* Une abstention n'est pas définitive : dès qu'un relieur a
-                rempli sa grille, le même dossier peut être rechiffré. */}
-            {row.pricing_status === "manual_review"
-              ? "Reprendre le calcul"
-              : "Calculer une suggestion"}
-          </Button>
-        )}
-        {row.pricing_status !== "validated" && (
-          <Button
-            variant="outline"
-            disabled={!result.valid || saving.isPending}
-            onClick={() => saving.mutate()}
-          >
-            Enregistrer
-          </Button>
-        )}
-        {row.pricing_status !== "validated" && (
-          <Button
-            disabled={!result.valid || validation.isPending || row.manual_review_required}
-            onClick={() => validation.mutate()}
-          >
-            Valider le prix
-          </Button>
-        )}
-      </div>
-      {(generation.error || saving.error || validation.error) && (
-        <p className="mt-3 text-sm text-destructive">
-          {(generation.error ?? saving.error ?? (validation.error as Error)).message}
-        </p>
-      )}
-    </section>
-  );
-}
 
 export function CaseMatchingPage({ caseId }: { caseId: string }) {
   const fetchCase = useServerFn(getMarketplaceCase);
@@ -349,8 +131,8 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
           )}
         </section>
 
-        <PricingPanel
-          key={`${data.case.pricing_status}-${data.case.pricing_generated_at ?? "new"}`}
+        <CasePricingPanel
+          key={data.case.pricing_status}
           caseId={caseId}
           row={data.case}
           refresh={() => queryClient.invalidateQueries({ queryKey })}

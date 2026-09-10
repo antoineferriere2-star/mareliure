@@ -133,7 +133,9 @@ export function CustomerCaseListPage() {
                 <p className="mt-4 text-sm text-[#4b3a2c]">{nextStep(row.status)}</p>
                 {row.customerPriceCents && (
                   <p className="mt-2 font-medium text-[#241a12]">
-                    {formatEuros(row.customerPriceCents)}
+                    {row.customerPriceTtcCents
+                      ? `${formatEuros(row.customerPriceTtcCents)} TTC`
+                      : formatEuros(row.customerPriceCents)}
                   </p>
                 )}
               </Link>

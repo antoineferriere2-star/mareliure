@@ -115,7 +115,8 @@ export interface RateAggregate {
 /** Seuil à partir duquel les quartiles cessent d'être une décoration. */
 export const QUARTILE_MINIMUM_REFERENCES = 5;
 
-function percentile(sorted: readonly number[], fraction: number): number {
+/** Percentile par interpolation linéaire, sur une liste **déjà triée**. */
+export function percentile(sorted: readonly number[], fraction: number): number {
   if (sorted.length === 1) return sorted[0];
   const position = (sorted.length - 1) * fraction;
   const lower = Math.floor(position);

@@ -48,7 +48,9 @@ export function CustomerCasePage({ caseId }: { caseId: string }) {
         </p>
         {data.case.customerPriceCents ? (
           <p className="mt-1 font-serif text-3xl text-[#241a12]">
-            {formatEuros(data.case.customerPriceCents)}
+            {data.case.customerPriceTtcCents
+              ? `${formatEuros(data.case.customerPriceTtcCents)} TTC`
+              : formatEuros(data.case.customerPriceCents)}
           </p>
         ) : (
           <>

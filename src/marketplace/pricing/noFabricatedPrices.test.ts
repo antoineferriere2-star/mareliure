@@ -97,13 +97,31 @@ describe("aucun tarif inventé ne peut revenir", () => {
     }
   });
 
-  /** Deux provenances seulement peuvent être vendues, une seule fait référence. */
+  /**
+   * Deux provenances seulement peuvent être vendues. Deux font référence : ce
+   * qu'un relieur a dit, et ce qu'on lui a réellement payé. Ni un prix décidé
+   * par Ma Reliure, ni un prix lu sur le web.
+   */
   it("la provenance décide seule de ce qu'on peut faire d'un montant", () => {
     expect(PRICE_PROVENANCES.filter(canReachCustomer)).toEqual([
       "REAL_VERIFIED",
       "ADMIN_VALIDATED",
     ]);
-    expect(PRICE_PROVENANCES.filter(countsAsReference)).toEqual(["REAL_VERIFIED"]);
+    expect(PRICE_PROVENANCES.filter(countsAsReference)).toEqual([
+      "REAL_VERIFIED",
+      "HISTORICAL_TRANSACTION",
+    ]);
+  });
+
+  it("la composition, la photographie et les prix publics ne contiennent aucun montant", () => {
+    for (const file of [
+      "composition.ts",
+      "margin.ts",
+      "snapshot.ts",
+      "references.ts",
+      "publicPrices.ts",
+    ])
+      expect(suspiciousAmounts(read(file)), file).toEqual([]);
   });
 
   /**
