@@ -152,7 +152,7 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
         {
           id: "ouvrage",
           title: "De quel ouvrage s'agit-il ?",
-          why: "Le titre et la nature de l'ouvrage orientent le choix de l'artisan bien plus que le budget.",
+          why: "Ce qu'est le livre, bien plus que le budget, détermine l'atelier à qui nous le confierons.",
           fields: [
             {
               key: "titre",
@@ -830,7 +830,7 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
         {
           id: "contact",
           title: "Pour vous répondre",
-          why: "Les relieurs sélectionnés vous répondront ici. Vos coordonnées ne leur sont transmises qu'après votre choix.",
+          why: "C'est à cette adresse que Ma Reliure vous présentera le travail proposé et son prix. Vos coordonnées ne sont communiquées qu'à l'atelier retenu pour votre projet.",
           fields: [
             {
               key: "name",
@@ -895,11 +895,11 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
             {
               key: "consentement",
               label:
-                "J'accepte que ma demande soit transmise à des relieurs sélectionnés pour qu'ils me répondent.",
+                "J'accepte que Ma Reliure étudie ma demande et en partage le descriptif avec des ateliers partenaires. Mes coordonnées ne sont communiquées qu'à l'atelier retenu.",
               type: "consent",
               desirability: "required",
               consentText:
-                "J'accepte que ma demande soit transmise à des relieurs sélectionnés pour qu'ils me répondent.",
+                "J'accepte que Ma Reliure étudie ma demande et en partage le descriptif avec des ateliers partenaires. Mes coordonnées ne sont communiquées qu'à l'atelier retenu.",
             },
           ],
         },

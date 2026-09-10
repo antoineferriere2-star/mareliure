@@ -125,7 +125,8 @@ async function main() {
     id: BOOKBINDING_MISSION_ID,
     workspace_id: BOOKBINDING_WORKSPACE_ID,
     name: "Reliure — présenter mon livre",
-    objective: "Qualifier un projet de reliure avant de solliciter des relieurs.",
+    objective:
+      "Qualifier un projet de reliure pour en fixer le prix et le confier à l'atelier adapté.",
     playbook_id: BOOKBINDING_PLAYBOOK_ID,
     playbook_version_id: versionId,
     playbook_name: "Bookbinding Playbook",
@@ -138,10 +139,13 @@ async function main() {
       // capability of a Mission — nothing in the runtime knows this particular
       // Playbook is French. See MissionProposal.defaultLocale.
       defaultLocale: "fr-FR",
+      // Ma Reliure est un service qui étudie, fixe le prix et confie le projet
+      // à un atelier. Rien ici ne doit promettre plusieurs réponses ni un
+      // choix entre artisans — voir missionPositioning.test.ts.
       intro:
-        "Quelques questions sur votre livre, et des relieurs sélectionnés vous répondront. Comptez cinq minutes.",
+        "Quelques questions et quelques photos suffisent à décrire votre livre. Ma Reliure étudie ensuite le travail à faire et vous présente son prix. Comptez cinq minutes.",
       confirmationText:
-        "Merci. Nous examinons votre demande et sélectionnons les relieurs les plus adaptés à votre projet. Vous recevrez leurs propositions par e-mail.",
+        "Merci. Ma Reliure étudie maintenant le travail à réaliser sur votre livre. Nous revenons vers vous avec son prix, puis nous confions votre projet à l'atelier dont le savoir-faire lui correspond.",
     } as unknown as Json,
     branding: {
       displayName: "Ma Reliure",
