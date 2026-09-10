@@ -794,10 +794,10 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 **Branch :** `managed-pricing`, poussée sur `mareliure/main` et
 `mareliure/feat/managed-pricing-offers`.
 
-**Commit :** `b2ff563`.
+**Commit :** `ed14250`.
 
 **Production :** **alignée sur `main`.** Déployée le 10 septembre 2026, Worker
-`mareliure` version `292966bd-4c92-402a-9a19-593f355b9d9a`, commit `b2ff563`.
+`mareliure` version `e4defa03-1984-4b9d-a4dc-4d4007d3bfde`, commit `ed14250`.
 Les deux migrations sont appliquées sur `hljxohondjvrkzqicexl` (§J).
 
 Vérifié après déploiement, sur `mareliure.fr` et sur l'URL `workers.dev` :
@@ -820,6 +820,14 @@ vérifie le format d'une clé.
 - **Habillage du tunnel** (`b2ff563`) — tokens de surface génériques
   `--intake-*` dans `styles.css`, valeurs par marque sous `.brand-mareliure`.
   Aucune connaissance de la reliure dans `src/build/`.
+- **Habillage complet du tunnel et « Présenter un autre projet »** (`ed14250`) —
+  Tailwind v4 compile chaque couleur en variable ; la palette du moteur
+  (`stone`, `emerald`, `indigo`, tokens shadcn, `--radius`) est redéfinie
+  dans le seul sous-arbre `.brand-mareliure .intake-surface`. Aucun composant
+  réécrit. `src/intakeTheme.test.ts` garantit que la redéfinition ne sort pas de
+  la marque. Le récapitulatif propose de repartir d'un projet vierge : la
+  session mémorisée ramenait sans fin au projet déjà envoyé. Le nom de marque de
+  l'en-tête ramène à l'accueil.
 
 ---
 
@@ -952,9 +960,17 @@ Rien. Working tree propre.
 
 ### Known issues
 
-- **L'habillage du tunnel est partiel.** Fond, panneau principal, en-tête et
-  pied prennent la marque ; les champs, les cartes de choix et le Project Canvas
-  gardent leurs gris Tailwind.
+- **Le texte de la Mission contredit le positionnement.** `proposal.intro` —
+  « des relieurs sélectionnés vous répondront » — et `proposal.confirmationText`
+  — « vous recevrez leurs propositions par e-mail » — promettent encore plusieurs
+  relieurs et plusieurs propositions, en dev comme en production. Le second
+  s'affiche sous « La suite » sur l'écran de récapitulatif. Source :
+  `scripts/seedBookbindingPlaybook.ts`. Le `why` du champ de contact dans le
+  Playbook v5 dit aussi « après votre choix » : le client ne choisit pas dans le
+  modèle géré. Corriger le premier est une écriture en production dans
+  `build_missions.proposal` ; le second demande une version 6 du Playbook.
+- **Un dossier de test saisi à la main existe en production** (titre « ok »,
+  e-mail contact@oppe.fr), en plus du `marketplace_case` de test déjà connu.
 - **Les liens Confidentialité et CGU du pied de tunnel** mènent aux pages Métré
   Build, en anglais. Laissés en place : les retirer supprimerait le seul accès
   légal du parcours, et les pages Ma Reliure n'existent pas.
