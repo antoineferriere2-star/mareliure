@@ -102,6 +102,7 @@ export const FR_PUBLIC_COPY: Record<string, string> = {
   "Your project summary is ready": "Le récapitulatif de votre projet est prêt",
   "Your information has been sent to": "Vos informations ont été transmises à",
   "Review your summary": "Consulter mon récapitulatif",
+  "Start another project": "Présenter un autre projet",
   "Still to confirm": "Reste à préciser",
   "What happens next": "La suite",
   "The team will review your project information and contact you to discuss the next step.":

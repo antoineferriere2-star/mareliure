@@ -92,6 +92,7 @@ export const RUNTIME_CHROME_STRINGS: readonly string[] = [
   "Your project summary is ready",
   "Your information has been sent to",
   "Review your summary",
+  "Start another project",
   "Still to confirm",
   "What happens next",
   "The team will review your project information and contact you to discuss the next step.",

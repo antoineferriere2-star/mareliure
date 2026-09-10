@@ -182,7 +182,7 @@ export function ProjectCanvasMobileSheet({
       </SheetTrigger>
       <SheetContent
         side="bottom"
-        className="max-h-[85svh] overflow-y-auto rounded-t-lg bg-[#f7f3ec] p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
+        className="max-h-[85svh] overflow-y-auto intake-surface rounded-t-lg p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
         <SheetHeader className="pr-8 text-left">
           <SheetTitle>{title}</SheetTitle>

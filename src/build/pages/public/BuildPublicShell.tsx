@@ -106,12 +106,26 @@ function BuildPublicShellContent({
       <div className="intake-surface min-h-screen">
         <header className="intake-rule border-b">
           <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
-            {/* Not a link: inside an iframe on the business's own site there is
-                nowhere useful to navigate to, and any destination here would
-                lead the visitor away from the intake. */}
-            <span className="intake-display truncate text-base font-semibold">
-              {businessName || " "}
-            </span>
+            {/* Not a link where the intake is embedded: inside an iframe on the
+                business's own site there is nowhere useful to navigate to, and
+                any destination would lead the visitor away from the intake.
+
+                A deployment that is its own site is different. There the
+                intake is a page like any other, and the name is the way back
+                to the home page — without it, leaving the intake meant the
+                browser's back button or the address bar. */}
+            {isMaReliure ? (
+              <a
+                href="/"
+                className="intake-display truncate text-base font-semibold underline-offset-4 hover:underline"
+              >
+                {businessName || " "}
+              </a>
+            ) : (
+              <span className="intake-display truncate text-base font-semibold">
+                {businessName || " "}
+              </span>
+            )}
             <PublicLanguageSelect />
           </div>
         </header>

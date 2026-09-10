@@ -62,6 +62,7 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "We sent a copy of this summary to your email.":
     "Le enviamos una copia de este resumen a su correo electrónico.",
   "Review your summary": "Revisar su resumen",
+  "Start another project": "Comenzar otro proyecto",
   "Loading…": "Cargando…",
   "This summary link is not available.": "Este enlace de resumen no está disponible.",
   "Deck Builders": "Constructores de terrazas",

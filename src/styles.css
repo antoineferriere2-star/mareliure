@@ -604,3 +604,113 @@
     font-family: var(--intake-display);
   }
 }
+
+/* ===========================================================================
+   Le tunnel — la palette du moteur, remappée sous la marque
+   ===========================================================================
+
+   Les premiers tokens `--intake-*` n'habillaient que les grandes surfaces. Le
+   reste du tunnel — champs, cartes de choix, Project Canvas, récapitulatif —
+   gardait le vert de Métré sur « Projet envoyé » et les coches, le jaune
+   sécurité au survol des boutons, les angles arrondis et la trame de plan.
+
+   Réécrire chaque composant du moteur pour une marque aurait fait descendre la
+   marque dans `src/build/`. Tailwind v4 offre mieux : chaque utilitaire de
+   couleur est compilé en variable — `.text-stone-500{color:var(--color-stone-500)}`
+   — et chaque rayon en `var(--radius)`. Redéfinir ces variables dans le seul
+   sous-arbre du tunnel rhabille tous ses composants sans en toucher un.
+
+   La portée est `.brand-mareliure .intake-surface` : jamais l'administration,
+   jamais un déploiement Métré. Ce bloc est hors de toute `@layer`, ce qui le
+   fait passer devant les utilitaires sans surenchère de spécificité.
+
+   Le rouge des erreurs et l'ambre des avertissements ne sont pas remappés : ce
+   sont des significations, pas une identité. */
+.brand-mareliure .intake-surface {
+  /* Neutres : du papier à l'encre, rôle pour rôle. */
+  --color-white: #fbfaf7;
+  --color-stone-50: #f7f4ee;
+  --color-stone-100: #f2eee5;
+  --color-stone-200: #e8e2d6;
+  --color-stone-300: #ddd6c9;
+  --color-stone-400: #a89e90;
+  --color-stone-500: #6d655a;
+  --color-stone-600: #574f45;
+  --color-stone-700: #3c352d;
+  --color-stone-800: #2a241e;
+  --color-stone-900: #1f1a15;
+  --color-stone-950: #17130f;
+  --color-slate-200: #e8e2d6;
+  --color-slate-500: #6d655a;
+  --color-slate-600: #574f45;
+  --color-slate-900: #1f1a15;
+  --color-slate-950: #17130f;
+
+  /* Le vert de « confirmé » et de « Projet envoyé » devient l'accent. */
+  --color-emerald-50: #f6eced;
+  --color-emerald-100: #eedadd;
+  --color-emerald-200: #dfb9be;
+  --color-emerald-300: #c98f98;
+  --color-emerald-500: #9a4451;
+  --color-emerald-600: #86303e;
+  --color-emerald-700: #7a2230;
+  --color-emerald-800: #641b27;
+  --color-emerald-900: #4f1520;
+  --color-emerald-950: #3a0f17;
+
+  /* « Dérivé » gardait un indigo que rien d'autre ne porte sur le site. Un
+     brun distinct du bordeaux et des gris, pour que le statut reste lisible. */
+  --color-indigo-700: #6b4f2e;
+
+  /* Les tokens des composants partagés — boutons, feuille mobile. `--accent`
+     y valait le jaune sécurité de Métré, visible au survol d'un bouton. */
+  --background: #fbfaf7;
+  --foreground: #17130f;
+  --primary: #17130f;
+  --primary-foreground: #fbfaf7;
+  --secondary: #f2eee5;
+  --secondary-foreground: #17130f;
+  --muted: #f2eee5;
+  --muted-foreground: #6d655a;
+  --accent: #e8e2d6;
+  --accent-foreground: #17130f;
+  --border: #ddd6c9;
+  --input: #ddd6c9;
+  --ring: #7a2230;
+  --radius: 2px;
+}
+
+/* Les ombres portées s'effacent, mais par `--tw-shadow` et non `box-shadow` :
+   Tailwind compose l'anneau de focus dans la même propriété, et l'écraser
+   aurait retiré le focus visible de chaque champ. */
+.brand-mareliure .intake-surface :is(.shadow-sm, .shadow, .shadow-md, .shadow-lg) {
+  --tw-shadow: 0 0 #0000;
+}
+
+/* La serif sur les titres du parcours, comme sur la landing — et sur eux
+   seulement : les intitulés de section en capitales restent en sans-serif. */
+.brand-mareliure .intake-surface h1,
+.brand-mareliure .project-canvas h2 {
+  font-family: var(--intake-display);
+  font-weight: 400;
+  letter-spacing: -0.015em;
+}
+
+/* La trame de plan et les équerres d'angle sont le vocabulaire graphique de
+   Métré — un outil de chantier. Sur Ma Reliure elles faisaient papier
+   millimétré et ornement : retirées. */
+.brand-mareliure .project-canvas {
+  background-image: none;
+}
+
+/* L'ombre du cadre Métré faisait léviter le Project Canvas au-dessus de la
+   page. Un panneau sur filet, comme partout ailleurs. Pas de risque pour le
+   focus : ce cadre est un conteneur, jamais une cible. */
+.brand-mareliure .metre-frame {
+  box-shadow: none;
+}
+
+.brand-mareliure .metre-frame::before,
+.brand-mareliure .metre-frame::after {
+  content: none;
+}

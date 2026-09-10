@@ -334,6 +334,33 @@ function MissionRuntimeContent({
     setReloadKey((key) => key + 1);
   }
 
+  /**
+   * "Start another project", from the summary screen.
+   *
+   * The session is remembered in localStorage so a visitor who closes the tab
+   * mid-way comes back to where they left off. After submitting, that same
+   * memory became a trap: every visit to the intake reopened the finished
+   * summary, and the only way to describe a second book was clearing site
+   * data by hand.
+   *
+   * Forgetting the local session is enough. The submitted Dossier is untouched
+   * on the server, and the visitor already holds its secure summary link. The
+   * effect then starts a fresh session exactly as on a first visit.
+   */
+  function startNewProject() {
+    clearStoredAuth(publicToken);
+    setDossier(null);
+    setAnswers({});
+    setStepIndex(0);
+    setReviewing(false);
+    setConsistencyErrors([]);
+    setConsistencyWarnings([]);
+    setAcknowledgedRuleIds([]);
+    setFieldErrors({});
+    setReloadKey((key) => key + 1);
+    window.scrollTo({ top: 0 });
+  }
+
   const visibleSteps = useMemo<VisibleStep[]>(
     () => (schema ? computeVisibleSteps(schema, answers) : []),
     [schema, answers],
@@ -578,6 +605,7 @@ function MissionRuntimeContent({
           summary={dossier.visitor_summary}
           emailSent={dossier.emailSent}
           summaryUrl={dossier.summaryUrl}
+          onStartNew={startNewProject}
         />
       )}
 

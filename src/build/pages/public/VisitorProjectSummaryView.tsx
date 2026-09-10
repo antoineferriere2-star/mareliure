@@ -39,11 +39,17 @@ export function VisitorProjectSummaryView({
   summary,
   emailSent,
   summaryUrl,
+  onStartNew,
 }: {
   summary: Omit<VisitorProjectSummary, "photos"> & { photos: DisplayPhotoReference[] };
   emailSent?: boolean;
   /** Only passed on the live post-submission screen — the secure /project-summary page itself never links back to itself. */
   summaryUrl?: string | null;
+  /**
+   * Only passed by the live runtime. The secure /project-summary page is
+   * reached from an email and has no intake session to restart.
+   */
+  onStartNew?: () => void;
 }) {
   const { locale } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
@@ -119,6 +125,18 @@ export function VisitorProjectSummaryView({
               {copy("Review your summary")}
             </a>
           </p>
+        )}
+
+        {onStartNew && (
+          <div className="border-t border-stone-200 pt-5 text-center">
+            <button
+              type="button"
+              onClick={onStartNew}
+              className="inline-flex min-h-10 items-center justify-center rounded-md border border-stone-300 bg-white px-4 py-2 text-sm font-medium text-stone-900 transition-colors hover:bg-stone-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--metre-accent)] focus-visible:ring-offset-2"
+            >
+              {copy("Start another project")}
+            </button>
+          </div>
         )}
 
         {/* Bloc 7 — Deck visual preview: a secondary, illustrative enhancement
