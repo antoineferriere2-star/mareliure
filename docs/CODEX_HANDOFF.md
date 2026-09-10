@@ -387,9 +387,10 @@ divergeront.
 - 57 migrations enregistrées dans `supabase_migrations.schema_migrations` ;
 - 7 tables `marketplace_*` présentes ;
 - 1 `marketplace_intake_missions` (la Mission Reliure) ;
-- 1 `build_dossiers` et 1 `marketplace_cases` (`under_review`, non revendiqué,
-  créé le 8 septembre à 15:08 UTC) — **très probablement le dossier de test du
-  déploiement ; à confirmer et à supprimer avant l'ouverture réelle** ;
+- 0 `build_dossiers`, 0 `marketplace_cases`, 0 session du tunnel : l'unique
+  dossier de test du lancement (RL-002, 8 septembre) a été supprimé le
+  10 septembre 2026, avec sa session, sa photo dans `build-project-photos`
+  et une session vide ouverte pendant le même essai ;
 - 0 `marketplace_binders`.
 
 Le jeton de gestion utilisé pour l'audit n'a **plus** accès au projet
@@ -974,8 +975,6 @@ Rien. Working tree propre.
   2 en production. **Ne jamais raisonner sur un numéro de
   version sans préciser la base** ; comparer les schémas, pas les numéros.
   Un seed n'est publié qu'une fois lancé contre chaque base.
-- **Un dossier de test saisi à la main existe en production** (titre « ok »,
-  e-mail contact@oppe.fr), en plus du `marketplace_case` de test déjà connu.
 - **Les liens Confidentialité et CGU du pied de tunnel** mènent aux pages Métré
   Build, en anglais. Laissés en place : les retirer supprimerait le seul accès
   légal du parcours, et les pages Ma Reliure n'existent pas.
@@ -986,7 +985,6 @@ Rien. Working tree propre.
   couverts). Aucun tarif réel n'a encore été relevé auprès d'un relieur.
 - Le Pricebook est vide : aucun prix n'a encore été arrêté.
 - Les inscriptions publiques sont fermées en production (§H).
-- Un `marketplace_case` de test subsiste en production (1 ligne).
 - `rating_avg`, `rating_count`, `response_rate` existent et sont vides : une
   page publique ne doit les afficher que non nuls.
 - La fiche atelier est en dur dans `pages/landing/content.ts`.
