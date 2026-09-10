@@ -505,9 +505,9 @@ assets construits.
 > publique rend 401 — et aucune donnée d'essai n'a suivi : 0 grille, 0 entrée
 > de Pricebook, 0 relieur.
 >
-> **Le déploiement Cloudflare, lui, n'a pas été fait.** La production sert
-> toujours le code d'avant le pricing géré, et la base est en avance sur lui —
-> ce qui est le bon sens de l'écart.
+> **Déployé le 10 septembre 2026** — Worker `mareliure`, version
+> `292966bd-4c92-402a-9a19-593f355b9d9a`, commit `b2ff563`. Code et base de
+> production sont alignés.
 
 |               |                                                                               |
 | ------------- | ----------------------------------------------------------------------------- |
@@ -794,15 +794,32 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 **Branch :** `managed-pricing`, poussée sur `mareliure/main` et
 `mareliure/feat/managed-pricing-offers`.
 
-**Commit :** `1741180`.
+**Commit :** `b2ff563`.
 
-**Production :** **base à jour, code non déployé.** Les deux migrations sont
-appliquées sur `hljxohondjvrkzqicexl` depuis le 9 septembre 2026 (§J). Le
-Worker `59d66164-3a37-46ba-897e-88fe4011614c` sert toujours le code d'avant le
-pricing géré — la base est en avance sur lui, ce qui est le bon sens de
-l'écart : elle est additive, l'ancien code l'ignore.
+**Production :** **alignée sur `main`.** Déployée le 10 septembre 2026, Worker
+`mareliure` version `292966bd-4c92-402a-9a19-593f355b9d9a`, commit `b2ff563`.
+Les deux migrations sont appliquées sur `hljxohondjvrkzqicexl` (§J).
 
-**Il ne reste donc qu'à déployer.**
+Vérifié après déploiement, sur `mareliure.fr` et sur l'URL `workers.dev` :
+icône et identité Ma Reliure, `lang="fr"`, nouvelle landing, `/tarifs` en 200,
+les cinq images générées en 404, la classe de thème présente sur le tunnel, et
+aucune donnée structurée Métré. Le bundle client ne contient aucune chaîne à la
+forme d'une clé secrète — seul le littéral `'sb_secret_'` de `client.ts`, qui
+vérifie le format d'une clé.
+
+**Livré avec ce déploiement, en plus du référentiel tarifaire :**
+
+- **Refonte de la landing** (`d2179d1`) — cinq images générées retirées, dont
+  une créditée à tort à l'atelier Ferrière ; système de tokens (trois papiers,
+  un accent bordeaux) ; serif réservée aux grands titres ; corps à 17 px ;
+  127 éléments testés, zéro échec de contraste ; anneau de focus par règle de
+  portée.
+- **Identité de marque à la racine** (`5371466`) — favicon, titre, `lang`,
+  données structurées JSON-LD et jeton Search Console étaient ceux de Métré sur
+  mareliure.fr. Déclinés par `isMaReliure`.
+- **Habillage du tunnel** (`b2ff563`) — tokens de surface génériques
+  `--intake-*` dans `styles.css`, valeurs par marque sous `.brand-mareliure`.
+  Aucune connaissance de la reliure dans `src/build/`.
 
 ---
 
@@ -921,28 +938,26 @@ Rien. Working tree propre.
 
 ### Next recommended task
 
-1. **Déployer.** La base de production porte le schéma, le Worker non. Rien
-   du travail des trois derniers jours n'est en ligne. `npm run
-deploy:mareliure` (§J), après avoir vérifié que le bundle vise bien
-   `hljxohondjvrkzqicexl` — `scripts/buildMaReliure.mjs` le contrôle et refuse
-   de livrer sinon.
-2. **Remplir le référentiel.** Ce n'est pas du code : c'est s'asseoir avec un
+1. **Remplir le référentiel.** Ce n'est pas du code : c'est s'asseoir avec un
    relieur. Le référentiel est **vide**, donc chaque projet part en revue
    manuelle. Premier atelier à interroger : Reliure Dorure Ferrière (Orléans),
    déjà présent sur la plateforme. Trois ateliers font fonctionner le moteur,
    six le rendent confiant.
-3. **Spike Stripe Connect** (§Q) — _après validation explicite_. STOP avant
+2. **Spike Stripe Connect** (§Q) — _après validation explicite_. STOP avant
    toute implémentation.
-4. **Comparatif Sendcloud / Boxtal** et livrables A–I — _après le spike
+3. **Comparatif Sendcloud / Boxtal** et livrables A–I — _après le spike
    paiement_. Voir `docs/shipping-pickup-point-spec.md`.
 
 ---
 
 ### Known issues
 
-- **Rien n'est déployé.** La base de production est à jour, le Worker sert le
-  code d'avant le pricing géré. C'est le seul écart qui reste entre `main` et
-  la production.
+- **L'habillage du tunnel est partiel.** Fond, panneau principal, en-tête et
+  pied prennent la marque ; les champs, les cartes de choix et le Project Canvas
+  gardent leurs gris Tailwind.
+- **Les liens Confidentialité et CGU du pied de tunnel** mènent aux pages Métré
+  Build, en anglais. Laissés en place : les retirer supprimerait le seul accès
+  légal du parcours, et les pages Ma Reliure n'existent pas.
 - **Le CLI Supabase ne joint pas la production depuis ce poste** (IPv6 non
   routé, pooler IPv4 sans mot de passe). Passer par l'API de gestion (§J).
 - **Le référentiel tarifaire est vide en production.** Sur le dev il porte le
