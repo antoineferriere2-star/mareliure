@@ -794,11 +794,40 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** voir `git log -1` — Phase C en un commit, sur Phase B (`88b3d591`).
+**Commit :** `080bb355` (Phase C), sur `eef429ad` (onglets `/auth`), sur
+`8d504d9e` (Phase A), sur `eb0253d2` (rattrapage accès client) — cinq
+commits, une seule branche `fix/mareliure-customer-access`.
 
-**Production :** le code de cette session **n'est pas déployé**, comme les
-phases précédentes. La migration **est appliquée** sur `hljxohondjvrkzqicexl`
-(même méthode — l'API de gestion, le CLI ne joint toujours pas la base).
+**Production : déployée le 13 septembre 2026.** Worker `mareliure` version
+`42b5fbef-22e7-4a50-84bb-20bff7650bca`, via `npm run deploy:mareliure` (donc
+`build:mareliure`, jamais `npm run build` seul — voir l'incident évité de
+justesse le 11 septembre). Les trois migrations de Phases A/B/C sont
+appliquées sur `hljxohondjvrkzqicexl` depuis avant ce déploiement.
+
+Vérifié après déploiement, sur `mareliure.fr` (onglets neufs, pas de
+navigation client réutilisant une session déjà chargée) :
+- `secretsContract.test.ts` (6/6) contre le bundle réellement déployé ;
+- `/auth` : les deux onglets Client/Atelier partenaire, aucune erreur console ;
+- `/` : landing intacte, aucune erreur console ;
+- `/m/reliure-marketplace-token-000001` (navigation client depuis la
+  landing) : Mission chargée, étape 1/8, aucune erreur console — exerce le
+  nouveau `seedAnswers` de `MissionRuntime.tsx` sans l'activer (pas de
+  `?ref=`) ;
+- `/a/atelier-inexistant-test` : page « atelier introuvable », aucune erreur
+  console — comportement attendu, aucun atelier n'a encore de
+  `personal_referral_slug` en production.
+
+Une erreur d'hydratation React #418 est apparue une fois, lors d'une
+navigation `navigate()` directe vers `/mes-livres` non authentifié
+(redirection vers `/auth`) dans un onglet déjà chargé — **pas reproduite**
+sur un onglet neuf ni sur une navigation client normale (clic sur un lien).
+Même symptôme que celui déjà consigné le 8 septembre 2026 (bundle client
+d'une version précédente encore servi dans l'onglet) : à surveiller si elle
+réapparaît sur un onglet neuf, pas avant.
+
+Aucune des trois briques (compte relieur réel, message échangé, condition
+commerciale) n'a encore été exercée par un utilisateur réel — voir Next
+recommended task ci-dessous.
 
 ---
 
