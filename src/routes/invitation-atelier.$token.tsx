@@ -67,7 +67,15 @@ function InvitationPage() {
     if (mode === "signup") {
       const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
       if (signUpError) {
-        setError("Impossible de créer ce compte. " + signUpError.message);
+        // Un domaine que Supabase rejette d'office (ex. example.com, non
+        // routable) renvoie parfois un message vide ou non exploitable
+        // ("{}") plutôt qu'une phrase — constaté en test. Un message
+        // générique vaut mieux qu'un message illisible.
+        const detail =
+          signUpError.message && signUpError.message.trim() && signUpError.message !== "{}"
+            ? signUpError.message
+            : "Vérifiez l'adresse indiquée et réessayez.";
+        setError(`Impossible de créer ce compte. ${detail}`);
         return;
       }
       if (!data.session) {
