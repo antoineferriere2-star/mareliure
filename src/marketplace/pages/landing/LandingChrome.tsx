@@ -145,7 +145,22 @@ export function LandingHeader() {
           </ul>
         </nav>
 
-        <IntakeCta variant="outline" size="compact" />
+        <div className="flex items-center gap-4 sm:gap-5">
+          {/* Hors du <nav> repliable : contrairement aux ancres de la
+              landing, retrouver son espace doit rester possible même sur
+              mobile — c'est le seul chemin vers /auth depuis le site public.
+              `<a href>`, pas `<Link to>`, comme le reste de la navigation
+              secondaire de ce fichier (NAV, SERVICE_LINKS) : landingHonesty.test.ts
+              garde `/m/$publicToken` comme seule porte *typée* de la landing —
+              une page d'accès au compte n'est pas une seconde Mission. */}
+          <a
+            href="/auth"
+            className="mr-tap mr-small shrink-0 text-mr-graphite underline-offset-[6px] transition-colors hover:text-mr-ink hover:underline"
+          >
+            Se connecter
+          </a>
+          <IntakeCta variant="outline" size="compact" />
+        </div>
       </div>
     </header>
   );
