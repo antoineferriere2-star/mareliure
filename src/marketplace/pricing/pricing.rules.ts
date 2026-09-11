@@ -21,9 +21,12 @@ import type { PricingPolicy } from "./pricing.types";
 export const PRICING_POLICY: PricingPolicy = {
   // La version change dès que la politique change : un dossier chiffré hier
   // doit pouvoir dire sous quelle règle il l'a été.
-  version: "bookbinding-2026-09-09-v2",
+  version: "bookbinding-2026-09-13-v3",
   targetMarginBps: 1_800,
   minimumMarginBps: 1_500,
   minimumMarginCents: 2_000,
   roundingIncrementCents: 1_000,
+  // §25 : 20 % ou 50 €, le plus élevé des deux — jamais un montant fixe.
+  depositPercentageBps: 2_000,
+  depositMinimumCents: 5_000,
 };

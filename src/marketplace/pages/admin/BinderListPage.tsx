@@ -8,10 +8,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   inviteBinderMember,
+  listBinderCommercialTerms,
   listMarketplaceBinders,
+  setBinderCommercialTerm,
   setBinderStatus,
 } from "@/marketplace/services/marketplace.data.functions";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
+import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
 import { Button } from "@/components/ui/button";
 
 const STATUS_LABELS: Record<string, string> = {
@@ -123,11 +126,147 @@ export function BinderListPage() {
                   }
                 />
               </div>
+              <div className="mt-3 sm:mt-2 sm:basis-full">
+                <CommercialTermsSection binderId={binder.id} />
+              </div>
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+/**
+ * Rémunération différenciée par famille de métier (§31) — un multiplicateur
+ * sur le montant de référence de Ma Reliure, jamais une seconde grille de
+ * 45 tarifs. Repliée par défaut : la plupart des ateliers n'en ont besoin
+ * d'aucune (le montant de référence s'applique tel quel).
+ */
+function CommercialTermsSection({ binderId }: { binderId: string }) {
+  const [open, setOpen] = useState(false);
+  const fetchTerms = useServerFn(listBinderCommercialTerms);
+  const setTerm = useServerFn(setBinderCommercialTerm);
+  const queryClient = useQueryClient();
+  const queryKey = ["marketplace", "binder-terms", binderId] as const;
+
+  const { data, isPending } = useQuery({
+    queryKey,
+    queryFn: () => fetchTerms({ data: { binderId } }),
+    enabled: open,
+  });
+  const mutation = useMutation({
+    mutationFn: (input: { familyKey: WorkFamilyKey; payoutMultiplierBps: number; manualPayoutRequired: boolean }) =>
+      setTerm({ data: { binderId, ...input } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
+  if (!open) {
+    return (
+      <button
+        type="button"
+        className="text-xs text-muted-foreground underline underline-offset-2"
+        onClick={() => setOpen(true)}
+      >
+        Conditions commerciales
+      </button>
+    );
+  }
+
+  const active = (data ?? []).filter((t) => !t.effective_to);
+
+  return (
+    <div className="rounded-md border border-border bg-muted/30 p-3">
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          Conditions commerciales
+        </p>
+        <button type="button" className="text-xs text-muted-foreground" onClick={() => setOpen(false)}>
+          Fermer
+        </button>
+      </div>
+      {isPending ? (
+        <p className="mt-2 text-xs text-muted-foreground">Chargement…</p>
+      ) : active.length === 0 ? (
+        <p className="mt-2 text-xs text-muted-foreground">
+          Aucune condition particulière — rémunéré au montant de référence.
+        </p>
+      ) : (
+        <ul className="mt-2 space-y-1 text-xs">
+          {active.map((term) => (
+            <li key={term.id}>
+              {WORK_FAMILIES.find((f) => f.key === term.family_key)?.label ?? term.family_key} :{" "}
+              {term.manual_payout_required
+                ? "rémunération manuelle"
+                : `${(term.payout_multiplier_bps / 100).toFixed(1)} %`}
+            </li>
+          ))}
+        </ul>
+      )}
+      <CommercialTermForm
+        pending={mutation.isPending}
+        onSubmit={(input) => mutation.mutate(input)}
+      />
+    </div>
+  );
+}
+
+function CommercialTermForm({
+  pending,
+  onSubmit,
+}: {
+  pending: boolean;
+  onSubmit: (input: {
+    familyKey: WorkFamilyKey;
+    payoutMultiplierBps: number;
+    manualPayoutRequired: boolean;
+  }) => void;
+}) {
+  const [family, setFamily] = useState<WorkFamilyKey>(WORK_FAMILIES[0].key);
+  const [percent, setPercent] = useState("100");
+  const [manual, setManual] = useState(false);
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    onSubmit({
+      familyKey: family,
+      payoutMultiplierBps: Math.round(Number.parseFloat(percent.replace(",", ".")) * 100),
+      manualPayoutRequired: manual,
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="mt-3 flex flex-wrap items-center gap-2 border-t border-border pt-3">
+      <select
+        className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+        value={family}
+        onChange={(event) => setFamily(event.target.value as WorkFamilyKey)}
+      >
+        {WORK_FAMILIES.map((f) => (
+          <option key={f.key} value={f.key}>
+            {f.label}
+          </option>
+        ))}
+      </select>
+      {!manual && (
+        <input
+          type="number"
+          step="0.1"
+          min="0"
+          value={percent}
+          onChange={(event) => setPercent(event.target.value)}
+          className="h-8 w-20 rounded-md border border-input bg-background px-2 text-xs"
+          aria-label="Pourcentage du montant de référence"
+        />
+      )}
+      <label className="flex items-center gap-1 text-xs text-muted-foreground">
+        <input type="checkbox" checked={manual} onChange={(event) => setManual(event.target.checked)} />
+        Manuel
+      </label>
+      <Button type="submit" size="sm" variant="outline" disabled={pending}>
+        Enregistrer
+      </Button>
+    </form>
   );
 }
 

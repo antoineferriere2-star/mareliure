@@ -790,135 +790,109 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 12 septembre 2026
+**Date :** 13 septembre 2026
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** voir `git log -1` — Phase B en un commit, sur Phase A (`8d504d9e`).
+**Commit :** voir `git log -1` — Phase C en un commit, sur Phase B (`88b3d591`).
 
-**Production :** le code de cette session **n'est pas déployé**, comme
-Phase A avant elle. Les deux migrations **sont appliquées** sur
-`hljxohondjvrkzqicexl` (même méthode que Phase A — l'API de gestion, le CLI
-ne joint toujours pas la base).
-
-**Complément demandé en cours de session** : `/auth` (`MaReliureAuthPage.tsx`)
-distinguait client/atelier par un lien discret en bas de page. Remplacé par
-deux onglets explicites en haut (« Client » / « Atelier partenaire »). Côté
-atelier, deux actions désormais visibles : **Se connecter** (mot de passe,
-inchangé) et **S'inscrire** — qui n'ouvre pas de compte immédiatement (un
-atelier ne s'auto-déclare pas partenaire, §7) mais ouvre un `mailto:` vers
-`MARELIURE_CONTACT_EMAIL` avec un sujet pré-rempli. Aucun backend nouveau :
-la création réelle du compte reste le flux d'invitation de Phase A.
-`e2e/managed-marketplace-reference.spec.ts` mis à jour (le clic visait le
-texte du lien disparu, cible maintenant l'onglet par son rôle).
+**Production :** le code de cette session **n'est pas déployé**, comme les
+phases précédentes. La migration **est appliquée** sur `hljxohondjvrkzqicexl`
+(même méthode — l'API de gestion, le CLI ne joint toujours pas la base).
 
 ---
 
-### Chantier de cette session — Phase B : messagerie et décisions
+### Chantier de cette session — Phase C : pricing à trois modes
 
-Suite de `docs/transactional-platform-audit.md` (Phase B). Une conversation
-par dossier, des décisions structurées séparées du chat, et les compteurs de
-non-lus qui font qu'un dashboard répond enfin à « que se passe-t-il
-maintenant ? » (§10).
+Suite de `docs/transactional-platform-audit.md` (Phase C). Le point le plus
+important : **la majeure partie de ce qu'exigeait ce chantier existait déjà**
+avant d'y toucher — `pricing_low_estimate_cents`/`pricing_high_estimate_cents`
+et la confiance (`confidence.ts`) étaient en production depuis le 9 septembre.
+Phase C **formalise** ce que le moteur savait déjà, elle n'invente pas de
+nouveau seuil.
 
-**Messagerie (§14-§18)**
+**Modes commerciaux (§23-§28)**
 
-- Migration `20260912090000_marketplace_messaging.sql` :
-  `marketplace_messages` (case_id, sender_user_id, sender_role, body,
-  attachment_paths[], deleted_at), `marketplace_conversation_reads`
-  (case_id, user_id, last_read_at), bucket privé
-  `marketplace-message-attachments` (JPEG/PNG/WEBP + PDF, 8 Mo — le seul
-  bucket marketplace qui accepte le PDF).
-- `src/marketplace/messaging/conversation.ts` (pur, testé) — **décision
-  d'accès propre à la conversation, pas une réutilisation de
-  `canViewCase`.** Un relieur sollicité puis refusé/annulé garde une ligne
-  `marketplace_case_matches` (état `declined`/`cancelled`, jamais
-  supprimée) : `canViewCase` continuerait de lui ouvrir le dossier.
-  `canAccessConversation` ne considère que les binder_id dont le match est
-  encore `offered`/`accepted`/`selected` — c'est ce qui ferme réellement
-  l'accès qu'exige le §72 (« BINDER sollicité mais non retenu perd l'accès
-  au contenu privé »).
-- `sendCaseMessage`/`listCaseMessages`/`markConversationRead`
-  (`services/messaging.data.functions.ts`). Un message envoyé vaut lecture
-  de tout ce qui précède (pas de double action « lu »).
-- **§18, décision confirmée** : React Query, pas Supabase Realtime.
-  `ConversationPanel.tsx` fait tout le transport — affichage optimiste à
-  l'envoi, invalidation, `refetchInterval` de 15 s. Le composant est le
-  *seul* endroit qui connaît le mécanisme de transport ; le remplacer par
-  Realtime plus tard ne touche ni les server functions ni les pages
-  appelantes.
-- Notification e-mail (`case-activity.tsx`, nouveau modèle Resend) :
-  **seule la direction atelier/admin → client est couverte.** Un atelier
-  peut avoir plusieurs membres depuis Phase A et aucun n'est encore désigné
-  comme contact principal — notifier « l'atelier » est reporté plutôt que
-  deviné.
-- **Non construit, annoncé** : upload de pièce jointe (le bucket et la
-  colonne existent, l'UI d'envoi de fichier non), édition/suppression d'un
-  message (colonnes `edited_at`/`deleted_at` prêtes, pas d'écran).
+- `marketplace_cases.pricing_mode` (`FIXED_PRICE` | `ESTIMATE_THEN_CONFIRM` |
+  `MANUAL_STUDY`), dérivé sans nouvelle heuristique
+  (`pricing/pricingMode.ts#pricingModeFor`) :
+  - `status: "manual_review"` (déjà le refus de chiffrer du moteur) →
+    `MANUAL_STUDY` ;
+  - confiance `"high"` (plusieurs ateliers d'accord, récents, sur le travail
+    exact) → `FIXED_PRICE` ;
+  - confiance `"medium"`/`"low"` → `ESTIMATE_THEN_CONFIRM`.
+- `deposit_cents` : max(20 % du bas de fourchette, 50 €) — même formule que
+  la marge plancher (`max(pourcentage, plancher absolu)`), configurable dans
+  `PRICING_POLICY` (`depositPercentageBps`, `depositMinimumCents`), jamais un
+  montant fixe codé en dur. Version de la politique passée à
+  `bookbinding-2026-09-13-v3`.
+- Calculé et posé une seule fois, dans `generateMarketplacePricing` (déjà
+  existant, étendu plutôt que dupliqué).
+- **Non construit, annoncé** : l'écran client de confirmation du prix
+  définitif après examen physique (§26) et le paiement de l'acompte/solde.
+  Les deux dépendent de Stripe Connect (Phase D, toujours bloquée faute
+  d'identifiants) — construire l'écran sans le paiement réel aurait affiché
+  une promesse que le produit ne tient pas encore.
 
-**Décisions (§20-§22)**
+**Rémunération différenciée par atelier (§31)**
 
-- Migration `20260912100000_marketplace_decisions.sql` :
-  `marketplace_decisions` (kind, question, options JSONB, status
-  open/answered/cancelled, answer JSONB, `superseded_by`). Un `CHECK`
-  interdit qu'un statut `answered` existe sans `answer`+`answered_by`+
-  `answered_at` — même discipline que
-  `marketplace_binder_invitations_accept_complete_check` (Phase A).
-- **Immutabilité réelle, pas seulement documentée** : `answerCaseDecision`
-  écrit sous condition `WHERE status='open'` (même patron que
-  `assignCaseOwner`) — deux réponses concurrentes ne peuvent jamais toutes
-  les deux gagner, et rien ne peut réécrire une réponse déjà donnée.
-  Corriger une décision répondue (`reviseCaseDecision`) crée une **nouvelle**
-  ligne et relie l'ancienne par `superseded_by` ; ça n'existe que pour un
-  statut `answered`, jamais un `UPDATE` de `answer`.
-- `src/marketplace/decisions/decisions.ts` (pur, testé) : qui peut demander
-  (l'atelier **retenu**, ou l'admin — jamais un atelier seulement invité),
-  qui peut répondre (le client, seul), qui peut réviser. La révision suit
-  l'atelier assigné au dossier, pas le compte individuel qui a posé la
-  question — nécessaire depuis que `marketplace_binder_members` permet
-  plusieurs personnes par atelier (Phase A).
-- `DecisionsPanel.tsx` : décisions ouvertes en tête (« Action requise »),
-  formulaire de réponse pour le client (choix parmi les options, ou texte
-  libre — le cas titrage/dorure du §21 avec son avertissement
-  d'orthographe), formulaire de demande pour l'atelier retenu.
+- `marketplace_binder_commercial_terms` (binder_id, family_key,
+  payout_multiplier_bps, manual_payout_required, effective_from/to). Une
+  ligne par atelier et par famille de métier (`WORK_FAMILIES`, catalog.ts —
+  8 familles déjà existantes), jamais une grille complète : exactement
+  l'exemple du cahier des charges (toile 1,00 / cuir 1,05 / dorure 1,10 /
+  restauration manuel).
+- `resolvePayout` (`pricing/commercialTerms.ts`, pur, testé) : le
+  multiplicateur s'applique à la **famille structure** du projet
+  (`structuralFamily` — un projet a au plus un travail structure, catalog.ts
+  le garantissait déjà). Sans condition configurée → montant de référence
+  inchangé. `manualPayoutRequired` gagne toujours et ne calcule jamais un
+  montant automatique.
+- **Branché au seul point qui compte** : `sendCaseToBinders` calcule
+  désormais un montant par atelier sollicité (`resolvePerBinderPayouts`),
+  plus un montant unique pour les trois. Un atelier en « manuel » pour la
+  famille du projet **bloque l'envoi** vers lui spécifiquement — refus
+  explicite plutôt qu'un montant inventé.
+- Une seule condition **active** par atelier et par famille
+  (`effective_to IS NULL`) : en poser une nouvelle ferme l'ancienne au lieu
+  de l'écraser — l'historique tarifaire reste lisible.
+- Écran admin minimal sur `/marketplace/binders` (`BinderListPage.tsx`,
+  section repliée « Conditions commerciales ») : lister et ajouter une
+  condition. Pas d'historique visible dans l'UI (la donnée existe,
+  interrogeable directement).
 
-**Dashboards (§10, §12)**
+**Matching (§33) — vérifié, pas corrigé**
 
-- `listMyCustomerCases`/`listMyBinderCases` renvoient désormais
-  `unreadCount` (et `actionRequired` côté client, pour une décision
-  ouverte) — badges posés sur `CustomerCaseListPage`/`BinderDashboardPage`.
-  Calcul partagé (`unreadCountsByCase`, `messaging.data.functions.ts`) pour
-  ne pas charger deux fois les messages entre la liste et la fiche.
-- **Non fait** : la refonte complète des dashboards en « poste de travail »
-  du §12-§13 (sections Résumé/Avancement/Transport/Imprévus). Phase B
-  ajoute les briques P0 (conversation, décisions, non-lus) aux pages
-  existantes plutôt que de les redessiner — cohérent avec le principe
-  d'audit : ne pas construire ce que les 50 premières transactions
-  n'exigent pas encore.
-
-**Dépendance circulaire assumée** : `marketplace.data.functions.ts` importe
-`unreadCountsByCase` depuis `messaging.data.functions.ts`, qui importe
-`resolveViewer` depuis `marketplace.data.functions.ts`. Les deux imports ne
-sont utilisés qu'à l'intérieur de corps de fonction (jamais à l'évaluation du
-module), ce qui reste sûr en ES modules — vérifié par le build et les 1563
-tests, mais à garder à l'œil si l'un des deux fichiers grossit encore.
+- `matching/score.ts` a été relu contre l'ordre du §33. Conclusion : **aucune
+  correction nécessaire**. Le poids "payout" (15/100, derrière compétences à
+  40/100) ne compare jamais les ateliers entre eux sur le prix — il vérifie
+  seulement que le montant de référence, uniforme pour tous les candidats au
+  moment du classement, tombe dans la fourchette que chaque atelier a
+  déclarée. Les montants différenciés par commercial terms n'entrent en jeu
+  qu'*après* le classement, quand l'admin a déjà choisi à qui envoyer — le
+  score ne devient donc jamais un « qui coûte le moins cher gagne ».
+  Documenté ici plutôt que de changer un code qui n'avait pas le défaut
+  supposé.
 
 ---
 
-### Completed (Phase B)
+### Completed (Phase C)
 
-- 2 migrations, additives, rejouables, rollback documenté.
-- Migrations **appliquées sur `hljxohondjvrkzqicexl`** (production), même
-  méthode que Phase A. Vérifié après coup : les 3 nouvelles tables existent,
-  le bucket `marketplace-message-attachments` existe.
-- **Toujours pas appliquées sur le sandbox** `qwfhebtxeubfmvvdsqdt` — inchangé
-  depuis Phase A (403, droits insuffisants sur ce projet précisément).
-- `tsc --noEmit` : propre. `eslint` sur tous les fichiers touchés : propre
-  (1 warning pré-existant, cohérent — modèle e-mail « only-export-components »).
-- `npx vitest run` : **1563 tests verts, 124 fichiers**, dont 51 nouveaux
-  (conversation, décisions, exclusivité, contrat des 2 migrations).
-- `npm run build` : vert. Aucune nouvelle route — `routeTree.gen.ts`
-  inchangé.
+- 1 migration (`20260913090000_marketplace_pricing_modes.sql`), additive,
+  rejouable, rollback documenté. **Appliquée sur `hljxohondjvrkzqicexl`**
+  (production) via l'API de gestion. Vérifié après coup : les deux colonnes
+  existent sur `marketplace_cases`, la table `marketplace_binder_commercial_terms`
+  existe (0 ligne, attendu — aucune condition n'a encore été posée).
+- Un bug de typecheck pré-existant (Phase B) trouvé et corrigé au passage :
+  `answerCaseDecision` écrivait `Record<string, unknown>` là où Supabase
+  attend `Json` — passait la compilation par accident jusqu'à ce que `tsc`
+  le relève cette session. Cast explicite ajouté, même patron que
+  `pricing_components` ailleurs dans le fichier.
+- `tsc --noEmit` : propre. `eslint` sur tous les fichiers touchés : propre,
+  0 warning nouveau.
+- `npx vitest run` : **1589 tests verts, 127 fichiers**, dont 25 nouveaux
+  (mode de pricing, conditions commerciales, contrat de la migration).
+- `npm run build` : vert. Aucune nouvelle route.
 
 ---
 
@@ -930,52 +904,53 @@ Rien. Working tree propre après le commit de cette session.
 
 ### Next recommended task
 
-1. **Déployer Phase A et Phase B ensemble** (`npm run deploy:mareliure`) —
-   aucune des deux n'est en production. Les tester d'abord sur un atelier
-   réel : Phase A (invitation) crée le premier compte relieur réel de la
-   plateforme, Phase B (conversation) n'a jamais échangé un message pour de
-   vrai.
-2. **Phase C** (`docs/transactional-platform-audit.md`) : pricing à trois
-   modes (FIXED_PRICE/ESTIMATE_THEN_CONFIRM/MANUAL_STUDY), rémunération
-   différenciée par atelier par famille, correction du matching.
-3. **Remplir le référentiel tarifaire** — toujours vide en production,
-   inchangé depuis le 10 septembre.
-4. **Spike Stripe Connect** — toujours bloqué, mêmes identifiants absents
-   qu'à la fin de Phase A.
-5. **Notification e-mail atelier** — reportée en Phase B faute de contact
-   principal désigné par workshop. À trancher : premier OWNER historique
-   par défaut, ou un champ explicite « contact notifications » sur
-   `marketplace_binder_members`.
+1. **Déployer Phases A, B et C ensemble** (`npm run deploy:mareliure`) —
+   aucune n'est en production. Le premier test réel (compte relieur,
+   message, décision, condition commerciale) reste à faire.
+2. **Remplir le référentiel tarifaire** — toujours vide en production,
+   inchangé depuis le 10 septembre. Sans lui, `pricing_mode` ne sortira
+   jamais que `MANUAL_STUDY` en pratique : aucun agrégat n'existe pour
+   produire `FIXED_PRICE` ou `ESTIMATE_THEN_CONFIRM`.
+3. **Spike Stripe Connect** (Phase D) — toujours bloqué, mêmes identifiants
+   absents. C'est ce spike qui débloque à la fois le paiement et l'écran de
+   confirmation du prix définitif (§26) laissé de côté cette session.
+4. **Logistique par niveau de risque** (Phase E) — colonnes seules, pas le
+   fournisseur de transport (`docs/shipping-pickup-point-spec.md`).
 
 ---
 
 ### Known issues
 
-Tout ce qui était listé à la fin de Phase A reste vrai, sans changement,
+Tout ce qui était listé à la fin de Phase B reste vrai, sans changement,
 sauf :
 
-- **Aucun atelier n'a de compte réel en production** — toujours vrai à la
-  fin de Phase B : la messagerie et les décisions n'ont donc jamais été
-  exercées par un vrai client ni un vrai atelier.
-- Nouveau : **la notification e-mail « nouveau message » ne couvre que la
-  direction atelier/admin → client** (voir Next recommended task, point 5).
-- Nouveau : **pas d'upload de pièce jointe** dans la messagerie — le bucket
-  et la colonne existent, l'écran non.
+- Nouveau : **`pricing_mode` ne peut sortir que `MANUAL_STUDY` en
+  production** tant que le référentiel tarifaire reste vide (voir Next
+  recommended task, point 2) — la logique est prête, les données de terrain
+  manquent pour l'exercer.
+- Nouveau : **pas d'écran client pour le prix définitif après examen
+  physique (§26)** ni pour payer un acompte — dépend du spike Stripe.
 
 ---
 
 ### Do not touch
 
-Tout ce qui était listé à la fin de Phase A reste vrai. S'y ajoute :
+Tout ce qui était listé à la fin de Phase B reste vrai. S'y ajoute :
 
-- **`canAccessConversation`** (`messaging/conversation.ts`) : ne jamais la
-  remplacer par `canViewCase` pour gagner une ligne d'import — c'est
-  précisément la différence (matches `declined`/`cancelled` exclus) qui
-  ferme l'accès d'un atelier écarté à ce qui s'est dit après.
-- **`answerCaseDecision`** : l'`UPDATE ... WHERE status='open'` est la
-  garantie d'immutabilité, pas un détail d'implémentation. Toute évolution
-  qui permettrait de réécrire `answer` sur une décision déjà `answered`
-  romprait le §20.
-- **`superseded_by`** : une correction crée toujours une nouvelle ligne.
-  Jamais de `UPDATE` sur `answer`/`answered_by`/`answered_at` d'une décision
-  déjà répondue.
+- **`pricingModeFor`** : dérive le mode de `status`/`confidence`, jamais
+  d'un nouveau seuil. Si un mode semble mal choisi, la correction se fait
+  dans `confidence.ts` (ce qui fonde la confiance), pas en ajoutant un
+  paramètre à `pricingModeFor`.
+- **`depositCentsFor`** : max(pourcentage, plancher), jamais un montant
+  fixe. Un acompte à 100 € codé en dur serait exactement la régression que
+  `noFabricatedPrices.test.ts` existe pour empêcher — `depositPercentageBps`/
+  `depositMinimumCents` ont été ajoutés à la liste des noms exclus de ce
+  garde-fou ; tout nouveau paramètre de politique doit y être ajouté de la
+  même façon, jamais en écrivant le montant en clair ailleurs.
+- **`marketplace_binder_commercial_terms` reste un multiplicateur par
+  famille, jamais un tarif par travail.** Le §31 est explicite : pas de
+  retour à 45 tarifs par atelier.
+- **`resolvePayout`/`manualPayoutRequired`** : ne jamais faire calculer un
+  montant automatique quand `manualPayoutRequired` est vrai, même « pour
+  dépanner ». `sendCaseToBinders` doit continuer à refuser l'envoi plutôt
+  que d'inventer un chiffre.

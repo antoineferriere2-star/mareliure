@@ -29,6 +29,12 @@ import { disclosedSummary } from "@/marketplace/cases/dossierProjection";
 import type { ProjectBrief } from "@/build/schema/brief";
 import { suggestManagedPrice, validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
+import { depositCentsFor, pricingModeFor } from "@/marketplace/pricing/pricingMode";
+import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
+import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
+
+/** zod needs a literal tuple; WORK_FAMILIES stays the one place the list is written. */
+const WORK_FAMILY_KEYS = WORK_FAMILIES.map((f) => f.key) as [WorkFamilyKey, ...WorkFamilyKey[]];
 import {
   assignCaseOwner,
   buildCaseView,
@@ -129,6 +135,45 @@ async function activeLoadByBinder(sb: Supa, binderIds: string[]): Promise<Map<st
     load.set(row.binder_id, (load.get(row.binder_id) ?? 0) + 1);
   }
   return load;
+}
+
+/**
+ * The payout each of these workshops actually receives for this case's
+ * structural family (§31) — the reference amount for a workshop with no
+ * configured term, or the reference amount times its multiplier for one
+ * that has. `family === null` (no structural work item resolved) always
+ * pays the flat reference amount: there is nothing to differentiate by.
+ */
+async function resolvePerBinderPayouts(
+  sb: Supa,
+  binderIds: readonly string[],
+  family: WorkFamilyKey | null,
+  referencePayoutCents: number,
+): Promise<Map<string, { payoutCents: number; manualRequired: boolean }>> {
+  const result = new Map<string, { payoutCents: number; manualRequired: boolean }>();
+  if (!family) {
+    for (const id of binderIds) result.set(id, { payoutCents: referencePayoutCents, manualRequired: false });
+    return result;
+  }
+  const { data: terms } = await sb
+    .from("marketplace_binder_commercial_terms")
+    .select("binder_id, family_key, payout_multiplier_bps, manual_payout_required")
+    .in("binder_id", binderIds as string[])
+    .eq("family_key", family)
+    .is("effective_to", null);
+  const termByBinder = new Map((terms ?? []).map((t) => [t.binder_id, t]));
+  for (const id of binderIds) {
+    const row = termByBinder.get(id);
+    const term: CommercialTerm | null = row
+      ? {
+          familyKey: row.family_key as WorkFamilyKey,
+          payoutMultiplierBps: row.payout_multiplier_bps,
+          manualPayoutRequired: row.manual_payout_required,
+        }
+      : null;
+    result.set(id, resolvePayout(referencePayoutCents, term));
+  }
+  return result;
 }
 
 async function skillsByBinder(sb: Supa, binderIds: string[]): Promise<Map<string, string[]>> {
@@ -342,11 +387,21 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
       aggregates: await loadAggregates(sb),
     });
     const abstained = suggestion.status === "manual_review";
+    // Dérivé de ce que le moteur sait déjà (statut + confiance), jamais d'un
+    // nouveau seuil — voir pricingMode.ts. L'acompte n'a de sens que pour une
+    // fourchette à confirmer : ailleurs il reste NULL, pas zéro.
+    const mode = pricingModeFor(suggestion);
+    const depositCents =
+      mode === "ESTIMATE_THEN_CONFIRM" && suggestion.lowEstimateCents !== null
+        ? depositCentsFor(suggestion.lowEstimateCents, PRICING_POLICY)
+        : null;
     const now = new Date().toISOString();
     const { error } = await sb
       .from("marketplace_cases")
       .update({
         pricing_status: abstained ? "manual_review" : "suggested",
+        pricing_mode: mode,
+        deposit_cents: depositCents,
         suggested_customer_price_cents: suggestion.suggestedCustomerPriceCents,
         suggested_binder_payout_cents: suggestion.suggestedBinderPayoutCents,
         // On ne pré-remplit le prix retenu que lorsqu'il y a une suggestion.
@@ -526,13 +581,36 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
         caseContext.row.binder_payout_cents,
       ).map((entry) => [entry.binder.id, entry.total]),
     );
+    // Rémunération différenciée par atelier (§31) : le montant de référence
+    // de Ma Reliure, ajusté par la condition commerciale de CET atelier pour
+    // la famille structure du projet — jamais un second Pricebook. Un
+    // atelier qui exige un montant manuel (restauration patrimoniale, par
+    // exemple) ne peut pas recevoir d'offre auto-calculée : il faut le dire
+    // avant d'envoyer, pas après.
+    const family = structuralFamily(caseContext.row.pricing_reason_codes);
+    const payoutByBinder = await resolvePerBinderPayouts(
+      sb,
+      decision.binderIds,
+      family,
+      caseContext.row.binder_payout_cents,
+    );
+    const manualRequiredFor = decision.binderIds.filter(
+      (binderId) => payoutByBinder.get(binderId)!.manualRequired,
+    );
+    if (manualRequiredFor.length > 0) {
+      fail(
+        422,
+        "Au moins un atelier sélectionné a une condition « rémunération manuelle » pour ce type de travail : fixez son montant avant d'envoyer l'offre.",
+      );
+    }
+
     const offeredAt = new Date().toISOString();
     const { error } = await sb.from("marketplace_case_matches").insert(
       decision.binderIds.map((binderId) => ({
         case_id: data.caseId,
         binder_id: binderId,
         state: "offered",
-        binder_payout_cents: caseContext.row.binder_payout_cents,
+        binder_payout_cents: payoutByBinder.get(binderId)!.payoutCents,
         currency: MARKETPLACE_CURRENCY,
         offered_at: offeredAt,
         match_score: scoreByBinder.get(binderId) ?? null,
@@ -559,7 +637,7 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
         lead_time_weeks: null,
         state: "offered",
         customer_price_cents: caseContext.row.customer_price_cents,
-        binder_payout_cents: caseContext.row.binder_payout_cents,
+        binder_payout_cents: payoutByBinder.get(binderId)!.payoutCents,
         offered_at: offeredAt,
       })),
     );
@@ -584,7 +662,7 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
         binder_id: binderId,
         actor_user_id: context.userId,
         event_type: "offer_sent",
-        metadata: { binder_payout_cents: caseContext.row.binder_payout_cents },
+        metadata: { binder_payout_cents: payoutByBinder.get(binderId)!.payoutCents },
       })),
     );
 
@@ -675,6 +753,72 @@ export const setBinderReferralSlug = createServerFn({ method: "POST" })
       );
     }
     return { ok: true, slug: data.slug };
+  });
+
+/**
+ * The commercial terms currently and previously in force for an atelier —
+ * for the admin screen that sets them, and for support answering "what did
+ * we pay this atelier for leather work in March?".
+ */
+export const listBinderCommercialTerms = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ binderId: z.string().uuid() }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: terms, error } = await sb
+      .from("marketplace_binder_commercial_terms")
+      .select("id, family_key, payout_multiplier_bps, manual_payout_required, effective_from, effective_to")
+      .eq("binder_id", data.binderId)
+      .order("family_key")
+      .order("effective_from", { ascending: false });
+    if (error) fail(500, error.message);
+    return terms ?? [];
+  });
+
+/**
+ * Set an atelier's condition for one family of work (§31) — a multiplier on
+ * Ma Reliure's reference payout, or "manual" for a category that never
+ * auto-computes (restauration patrimoniale, in the brief's own example).
+ *
+ * Never an UPDATE of the active row: the previous one is closed
+ * (`effective_to`) and a new one created, so "what did we pay in March" stays
+ * answerable after the rate changes in April.
+ */
+export const setBinderCommercialTerm = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        binderId: z.string().uuid(),
+        familyKey: z.enum(WORK_FAMILY_KEYS),
+        payoutMultiplierBps: z.number().int().positive().default(10_000),
+        manualPayoutRequired: z.boolean().default(false),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const today = new Date().toISOString().slice(0, 10);
+
+    const { error: closeError } = await sb
+      .from("marketplace_binder_commercial_terms")
+      .update({ effective_to: today })
+      .eq("binder_id", data.binderId)
+      .eq("family_key", data.familyKey)
+      .is("effective_to", null);
+    if (closeError) fail(500, closeError.message);
+
+    const { error } = await sb.from("marketplace_binder_commercial_terms").insert({
+      binder_id: data.binderId,
+      family_key: data.familyKey,
+      payout_multiplier_bps: data.payoutMultiplierBps,
+      manual_payout_required: data.manualPayoutRequired,
+      created_by: context.userId,
+    });
+    if (error) fail(500, error.message);
+    return { ok: true };
   });
 
 /**

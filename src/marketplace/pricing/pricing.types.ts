@@ -11,6 +11,13 @@ export interface PricingPolicy {
   minimumMarginBps: number;
   minimumMarginCents: number;
   roundingIncrementCents: number;
+  /**
+   * L'acompte d'un projet ESTIMATE_THEN_CONFIRM (§25) : max(pourcentage,
+   * plancher absolu) — la même formule que la marge, jamais un montant fixe
+   * inventé (« ne pas hardcoder 100 € »).
+   */
+  depositPercentageBps: number;
+  depositMinimumCents: number;
 }
 
 /**

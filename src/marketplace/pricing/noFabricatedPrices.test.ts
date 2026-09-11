@@ -39,7 +39,7 @@ function code(source: string): string {
 function suspiciousAmounts(source: string): string[] {
   const withoutPolicy = code(source)
     .replace(
-      /\b(?:targetMarginBps|minimumMarginBps|minimumMarginCents|roundingIncrementCents|DRIFT_\w+|HIGH_DISPERSION_BPS|STALE_AFTER_DAYS)\s*[:=]\s*[\d_]+/g,
+      /\b(?:targetMarginBps|minimumMarginBps|minimumMarginCents|roundingIncrementCents|depositPercentageBps|depositMinimumCents|DRIFT_\w+|HIGH_DISPERSION_BPS|STALE_AFTER_DAYS)\s*[:=]\s*[\d_]+/g,
       "",
     )
     .replace(/10_000/g, "");

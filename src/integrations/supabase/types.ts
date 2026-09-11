@@ -1099,6 +1099,42 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_binder_commercial_terms: {
+        Row: {
+          binder_id: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          family_key: string
+          id: string
+          manual_payout_required: boolean
+          payout_multiplier_bps: number
+        }
+        Insert: {
+          binder_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          family_key: string
+          id?: string
+          manual_payout_required?: boolean
+          payout_multiplier_bps?: number
+        }
+        Update: {
+          binder_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          family_key?: string
+          id?: string
+          manual_payout_required?: boolean
+          payout_multiplier_bps?: number
+        }
+        Relationships: []
+      }
       marketplace_binder_members: {
         Row: {
           account_status: string
@@ -1245,12 +1281,14 @@ export type Database = {
           customer_price_cents: number | null
           created_at: string
           declared_value_band: string | null
+          deposit_cents?: number | null
           dossier_id: string
           heritage_flag: boolean
           id: string
           manual_review_required: boolean
           mission_id: string | null
           price_includes: string[]
+          pricing_mode?: string | null
           referred_binder_id?: string | null
           pricing_components?: Json
           pricing_low_estimate_cents?: number | null
@@ -1282,12 +1320,14 @@ export type Database = {
           customer_price_cents?: number | null
           created_at?: string
           declared_value_band?: string | null
+          deposit_cents?: number | null
           dossier_id: string
           heritage_flag?: boolean
           id?: string
           manual_review_required?: boolean
           mission_id?: string | null
           price_includes?: string[]
+          pricing_mode?: string | null
           referred_binder_id?: string | null
           pricing_components?: Json
           pricing_low_estimate_cents?: number | null
@@ -1319,12 +1359,14 @@ export type Database = {
           customer_price_cents?: number | null
           created_at?: string
           declared_value_band?: string | null
+          deposit_cents?: number | null
           dossier_id?: string
           heritage_flag?: boolean
           id?: string
           manual_review_required?: boolean
           mission_id?: string | null
           price_includes?: string[]
+          pricing_mode?: string | null
           referred_binder_id?: string | null
           pricing_components?: Json
           pricing_low_estimate_cents?: number | null

@@ -7,6 +7,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin, type Supa } from "@/build/services/adminAuth.server";
+import type { Json } from "@/integrations/supabase/types";
 import { fail } from "@/build/services/serverError";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 import {
@@ -173,7 +174,12 @@ export const answerCaseDecision = createServerFn({ method: "POST" })
     // decision can never be silently overwritten by a retry.
     const { data: updated, error } = await sb
       .from("marketplace_decisions")
-      .update({ status: "answered", answer: data.answer, answered_by: context.userId, answered_at: now })
+      .update({
+        status: "answered",
+        answer: data.answer as unknown as Json,
+        answered_by: context.userId,
+        answered_at: now,
+      })
       .eq("id", data.decisionId)
       .eq("status", "open")
       .select("id");
