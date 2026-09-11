@@ -2,7 +2,9 @@
 // notifies workspace members). Rendered server-side via @react-email/render,
 // no React context available, so copy is self-contained here rather than
 // routed through the client-only publicLocaleContext.ts. Never receives the
-// internal ProjectBrief or dossier id — only VisitorProjectSummary fields.
+// internal ProjectBrief or dossier id — only VisitorProjectSummary fields,
+// plus what the sending brand adds: its name, its colour and, when it has
+// one, the space where the visitor follows the project.
 import * as React from "react";
 import {
   Body,
@@ -19,10 +21,15 @@ import {
 import type { TemplateEntry } from "./registry";
 
 type SummaryItem = { label: string; value: string };
+type EmailLocale = "en-US" | "es-US" | "fr-FR";
 
 interface VisitorSummaryEmailProps {
-  locale?: "en-US" | "es-US";
+  locale?: EmailLocale;
   businessName?: string;
+  /** The brand sending the email, shown above the heading. */
+  brandName?: string;
+  /** Eyebrow and primary button colour. */
+  accentColor?: string;
   summary?: string;
   confirmedItems?: SummaryItem[];
   calculatedItems?: SummaryItem[];
@@ -30,6 +37,8 @@ interface VisitorSummaryEmailProps {
   itemsToConfirm?: SummaryItem[];
   nextStep?: string;
   summaryUrl?: string;
+  /** Where the visitor follows the project, when the brand offers such a space. */
+  trackUrl?: string;
 }
 
 const COPY = {
@@ -42,6 +51,10 @@ const COPY = {
     stillToConfirm: "Still to confirm",
     whatsNext: "What happens next",
     viewSummary: "View your project summary",
+    trackHeading: "Follow your project",
+    trackIntro:
+      "Your project and its progress are waiting in your customer space. To sign in, enter this email address: we'll send you a sign-in link, no password needed.",
+    trackButton: "Follow my project",
     disclaimer:
       "This summary reflects the information you provided. It is not a final quote, technical assessment or project approval.",
   },
@@ -54,10 +67,34 @@ const COPY = {
     stillToConfirm: "Aún por confirmar",
     whatsNext: "Qué sigue",
     viewSummary: "Ver el resumen de su proyecto",
+    trackHeading: "Siga su proyecto",
+    trackIntro:
+      "Su proyecto y su avance le esperan en su espacio de cliente. Para entrar, indique esta dirección de correo: le enviaremos un enlace de acceso, sin contraseña.",
+    trackButton: "Seguir mi proyecto",
     disclaimer:
       "Este resumen refleja la información que proporcionó. No constituye una cotización final, una evaluación técnica ni una aprobación del proyecto.",
   },
+  "fr-FR": {
+    subject: (businessName: string) => `Le récapitulatif de votre projet — ${businessName}`,
+    preview: "Nous avons bien reçu votre projet.",
+    heading: "Nous avons bien reçu votre projet",
+    intro: (businessName: string) => `Vos informations ont été transmises à ${businessName}.`,
+    projectSummary: "Récapitulatif du projet",
+    stillToConfirm: "Reste à préciser",
+    whatsNext: "La suite",
+    viewSummary: "Revoir le récapitulatif",
+    trackHeading: "Suivre votre projet",
+    trackIntro:
+      "Votre projet et son avancement vous attendent dans votre espace. Pour y entrer, indiquez cette adresse e-mail : nous vous enverrons un lien de connexion, sans mot de passe.",
+    trackButton: "Suivre mon projet",
+    disclaimer:
+      "Ce récapitulatif reprend les informations que vous avez fournies. Ce n'est ni un devis définitif, ni une évaluation technique, ni l'acceptation du projet.",
+  },
 } as const;
+
+function copyFor(locale: unknown) {
+  return COPY[locale as EmailLocale] ?? COPY["en-US"];
+}
 
 function itemLine(item: SummaryItem, i: number) {
   return (
@@ -67,9 +104,14 @@ function itemLine(item: SummaryItem, i: number) {
   );
 }
 
+const DEFAULT_BRAND = "Métré Build";
+const DEFAULT_ACCENT = "#047857";
+
 const VisitorSummaryEmail = ({
   locale = "en-US",
   businessName = "",
+  brandName = DEFAULT_BRAND,
+  accentColor = DEFAULT_ACCENT,
   summary,
   confirmedItems = [],
   calculatedItems = [],
@@ -77,8 +119,9 @@ const VisitorSummaryEmail = ({
   itemsToConfirm = [],
   nextStep,
   summaryUrl,
+  trackUrl,
 }: VisitorSummaryEmailProps) => {
-  const t = COPY[locale] ?? COPY["en-US"];
+  const t = copyFor(locale);
   const projectItems = [...confirmedItems, ...calculatedItems, ...budgetAndTimingItems];
 
   return (
@@ -87,7 +130,7 @@ const VisitorSummaryEmail = ({
       <Preview>{t.preview}</Preview>
       <Body style={main}>
         <Container style={container}>
-          <Text style={eyebrow}>Métré Build</Text>
+          <Text style={{ ...eyebrow, color: accentColor }}>{brandName}</Text>
           <Heading style={heading}>{t.heading}</Heading>
           <Text style={paragraph}>{t.intro(businessName)}</Text>
 
@@ -111,9 +154,28 @@ const VisitorSummaryEmail = ({
             </Section>
           )}
 
+          {trackUrl && (
+            <Section style={card}>
+              <Text style={cardLabel}>{t.trackHeading}</Text>
+              <Text style={cardText}>{t.trackIntro}</Text>
+              <Section style={{ marginTop: "10px" }}>
+                <Button href={trackUrl} style={{ ...button, backgroundColor: accentColor }}>
+                  {t.trackButton}
+                </Button>
+              </Section>
+            </Section>
+          )}
+
           {summaryUrl && (
             <Section style={{ marginTop: "8px" }}>
-              <Button href={summaryUrl} style={button}>
+              <Button
+                href={summaryUrl}
+                style={
+                  trackUrl
+                    ? { ...secondaryButton, color: accentColor, borderColor: accentColor }
+                    : { ...button, backgroundColor: accentColor }
+                }
+              >
                 {t.viewSummary}
               </Button>
             </Section>
@@ -130,9 +192,7 @@ const VisitorSummaryEmail = ({
 export const template = {
   component: VisitorSummaryEmail,
   subject: (data: Record<string, unknown>) =>
-    COPY[(data.locale as "en-US" | "es-US") ?? "en-US"].subject(
-      typeof data.businessName === "string" ? data.businessName : "",
-    ),
+    copyFor(data.locale).subject(typeof data.businessName === "string" ? data.businessName : ""),
   displayName: "Visitor Project Summary",
   previewData: {
     locale: "en-US",
@@ -152,7 +212,6 @@ const eyebrow = {
   fontSize: "12px",
   letterSpacing: "1.6px",
   textTransform: "uppercase" as const,
-  color: "#047857",
   margin: "0 0 6px",
   fontWeight: 700,
 };
@@ -167,10 +226,18 @@ const card = {
 const cardLabel = { fontSize: "12px", fontWeight: 700, color: "#0f172a", margin: "0 0 6px" };
 const cardText = { fontSize: "14px", lineHeight: "22px", color: "#334155", margin: "0 0 4px" };
 const button = {
-  backgroundColor: "#047857",
   color: "#ffffff",
   borderRadius: "8px",
   padding: "12px 20px",
+  fontSize: "14px",
+  fontWeight: 700,
+  textDecoration: "none",
+};
+const secondaryButton = {
+  backgroundColor: "#ffffff",
+  border: "1px solid",
+  borderRadius: "8px",
+  padding: "11px 19px",
   fontSize: "14px",
   fontWeight: 700,
   textDecoration: "none",

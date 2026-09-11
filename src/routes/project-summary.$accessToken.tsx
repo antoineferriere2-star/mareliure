@@ -1,13 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { ProjectSummaryAccessView } from "@/build/pages/public/ProjectSummaryAccessView";
+import { isMaReliure } from "@/brand";
+
+const TITLE = isMaReliure
+  ? "Le récapitulatif de votre projet — Ma Reliure"
+  : "Métré Build — Project summary";
 
 export const Route = createFileRoute("/project-summary/$accessToken")({
   ssr: false,
   head: () => ({
-    meta: [
-      { title: "Métré Build — Project summary" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
+    meta: [{ title: TITLE }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: ProjectSummaryPage,
 });

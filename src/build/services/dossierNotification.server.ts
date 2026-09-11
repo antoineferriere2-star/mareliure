@@ -6,9 +6,10 @@ import { sendTemplateEmail } from "@/lib/email-templates/send-email";
 import type { Supa } from "./adminAuth.server";
 import { logOperationalError } from "./operationalLog.server";
 import { recipientsFor, toBriefNotificationMode } from "@/build/settings/notifications";
+import { PUBLIC_SITE_URL } from "@/lib/siteUrl";
 
 function portalUrl(dossierId: string): string {
-  const base = (process.env.PUBLIC_SITE_URL || "https://metre-pro.com").replace(/\/+$/, "");
+  const base = (process.env.PUBLIC_SITE_URL || PUBLIC_SITE_URL).replace(/\/+$/, "");
   return `${base}/portal/dossiers/${dossierId}`;
 }
 

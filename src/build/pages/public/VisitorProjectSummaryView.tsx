@@ -40,8 +40,15 @@ export function VisitorProjectSummaryView({
   emailSent,
   summaryUrl,
   onStartNew,
+  followUp,
 }: {
   summary: Omit<VisitorProjectSummary, "photos"> & { photos: DisplayPhotoReference[] };
+  /**
+   * What the deployment offers once the project is sent — on Ma Reliure, the
+   * way into the customer space. Supplied by the route, never decided here:
+   * this view renders a Mission, it does not know who runs it.
+   */
+  followUp?: React.ReactNode;
   emailSent?: boolean;
   /** Only passed on the live post-submission screen — the secure /project-summary page itself never links back to itself. */
   summaryUrl?: string | null;
@@ -117,6 +124,9 @@ export function VisitorProjectSummaryView({
             {copy("We sent a copy of this summary to your email.")}
           </p>
         )}
+
+        {/* Bloc 5b — What the deployment offers next (Ma Reliure: the customer space) */}
+        {followUp}
 
         {/* Bloc 6 — Actions */}
         {summaryUrl && (

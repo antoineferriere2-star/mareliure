@@ -542,7 +542,8 @@ export async function handleSubmitSession(
   try {
     const { generateAccessToken, hashAccessToken, accessTokenExpiryFromNow } =
       await import("@/build/services/dossierAccessToken.server");
-    const { SITE_URL } = await import("@/lib/structured-data");
+    // The brand's own domain: the token lives in this deployment's database.
+    const { PUBLIC_SITE_URL } = await import("@/lib/siteUrl");
     const rawToken = generateAccessToken();
     const { error: tokenError } = await supabase.from("build_dossier_access_tokens").insert({
       dossier_id: dossier.id,
@@ -550,7 +551,7 @@ export async function handleSubmitSession(
       expires_at: accessTokenExpiryFromNow(),
     });
     if (tokenError) throw tokenError;
-    summaryUrl = `${SITE_URL}/project-summary/${rawToken}`;
+    summaryUrl = `${PUBLIC_SITE_URL}/project-summary/${rawToken}`;
   } catch (err) {
     logOperationalError("visitor-summary.token-mint-failed", err, { dossierId: dossier.id });
   }

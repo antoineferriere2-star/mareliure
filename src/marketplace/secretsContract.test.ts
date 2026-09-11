@@ -109,3 +109,28 @@ describe("the service-role key never reaches the browser", () => {
     expect(offenders).toEqual([]);
   });
 });
+
+// The Resend key sends email in Ma Reliure's name. Same discipline as the
+// service-role key: one server module reads it, and it never gets a VITE_
+// prefix. Tests may stub it; they never hold a real one.
+describe("the Resend key never reaches the browser", () => {
+  const RESEND_ENV = "RESEND_API_KEY";
+  const sourceFiles = () =>
+    [...walk(resolve(ROOT, "src")), ...walk(resolve(ROOT, "scripts"))].filter(
+      (f) => [".ts", ".tsx"].includes(extname(f)) && !/\.test\.tsx?$/.test(f),
+    );
+
+  it("is read only by the email sender", () => {
+    const readers = sourceFiles()
+      .filter((file) => readFileSync(file, "utf8").includes(RESEND_ENV))
+      .map((file) => file.slice(ROOT.length + 1).replace(/\\/g, "/"));
+    expect(readers).toEqual(["src/lib/email-templates/send-email.ts"]);
+  });
+
+  it("has no VITE_ variant", () => {
+    const files = [...sourceFiles(), resolve(ROOT, "vite.config.ts"), resolve(ROOT, ".env.example")];
+    for (const file of files.filter((f) => existsSync(f))) {
+      expect(readFileSync(file, "utf8"), file).not.toContain(`VITE_${RESEND_ENV}`);
+    }
+  });
+});

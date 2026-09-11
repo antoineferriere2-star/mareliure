@@ -1,18 +1,36 @@
 import * as React from "react";
 import { render } from "@react-email/render";
 import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
+import { isMaReliure } from "@/brand";
 import { TEMPLATES } from "./registry";
+import { sendResendEmail } from "./resend";
 
-// Server-only: reads LOVABLE_API_KEY. Never import from client components.
+// Server-only: reads RESEND_API_KEY or LOVABLE_API_KEY. Never import from
+// client components.
 
-// Configuration baked in at scaffold time
-const SITE_NAME = "Métré Build";
+/**
+ * Chaque marque envoie depuis son propre domaine, par un seul prestataire.
+ *
+ * Métré Build passe par l'API e-mail de Lovable, sur le sous-domaine délégué
+ * `notify.metre-pro.fr`. Ma Reliure passe par Resend, sur `mareliure.fr` : une
+ * personne qui confie un livre ne reçoit pas un message d'un domaine Métré, et
+ * le Worker Cloudflare de Ma Reliure n'a pas de clé Lovable — c'est pour cela
+ * qu'aucun récapitulatif n'en partait.
+ *
+ * Le choix est une constante de compilation (`isMaReliure`) : jamais deux
+ * prestataires pour une même marque, jamais de repli silencieux de l'un vers
+ * l'autre.
+ */
+const METRE_SITE_NAME = "Métré Build";
 // SENDER_DOMAIN is the verified sender subdomain FQDN (e.g., "notify.example.com").
 // It MUST match the subdomain delegated to Lovable's nameservers. NEVER use the root domain.
 const SENDER_DOMAIN = "notify.metre-pro.fr";
 // FROM_DOMAIN is the domain shown in the From: header (e.g., "example.com").
 // Can be the root domain when display_from_root is enabled — this is cosmetic only.
 const FROM_DOMAIN = "notify.metre-pro.fr";
+
+/** Le domaine vérifié chez Resend. `noreply` : aucune boîte ne lit les réponses. */
+export const MARELIURE_FROM = "Ma Reliure <noreply@mareliure.fr>";
 
 export type SendTemplateEmailResult =
   { sent: true } | { sent: false; reason: "recipient_suppressed" };
@@ -25,22 +43,16 @@ export interface SendTemplateEmailOptions {
 }
 
 /**
- * Renders a registered template and sends it through Lovable's managed email
- * API. Suppression, retries, and rate limits are enforced by Lovable
- * server-side. A suppressed recipient is an expected outcome
- * ({ sent: false }); any other failure throws — EmailAPIError exposes
- * .code and .status for branching.
+ * Renders a registered template and sends it through the brand's provider —
+ * Resend for Ma Reliure, Lovable's managed email API for Métré Build. A
+ * suppressed recipient (Lovable only) is an expected outcome
+ * ({ sent: false }); any other failure throws, a missing key included.
  */
 export async function sendTemplateEmail(
   templateName: string,
   to: string,
   options: SendTemplateEmailOptions = {},
 ): Promise<SendTemplateEmailResult> {
-  const apiKey = process.env.LOVABLE_API_KEY;
-  if (!apiKey) {
-    throw new Error("LOVABLE_API_KEY is not configured");
-  }
-
   const template = TEMPLATES[templateName];
   if (!template) {
     throw new Error(
@@ -61,19 +73,46 @@ export async function sendTemplateEmail(
   const text = await render(element, { plainText: true });
   const subject =
     typeof template.subject === "function" ? template.subject(templateData) : template.subject;
+  const idempotencyKey = options.idempotencyKey || crypto.randomUUID();
+
+  if (isMaReliure) {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      throw new Error("RESEND_API_KEY is not configured");
+    }
+    await sendResendEmail(
+      {
+        from: MARELIURE_FROM,
+        to: recipient,
+        subject,
+        html,
+        text,
+        replyTo: options.replyTo,
+        idempotencyKey,
+        tag: templateName,
+      },
+      { apiKey },
+    );
+    return { sent: true };
+  }
+
+  const apiKey = process.env.LOVABLE_API_KEY;
+  if (!apiKey) {
+    throw new Error("LOVABLE_API_KEY is not configured");
+  }
 
   try {
     await sendLovableEmail(
       {
         to: recipient,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+        from: `${METRE_SITE_NAME} <noreply@${FROM_DOMAIN}>`,
         sender_domain: SENDER_DOMAIN,
         subject,
         html,
         text,
         purpose: "transactional",
         label: templateName,
-        idempotency_key: options.idempotencyKey || crypto.randomUUID(),
+        idempotency_key: idempotencyKey,
         reply_to: options.replyTo,
       },
       { apiKey, sendUrl: process.env.LOVABLE_SEND_URL },

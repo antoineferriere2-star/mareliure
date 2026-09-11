@@ -8,6 +8,7 @@ import { ensureMyWorkspace } from "@/build/services/provisionWorkspace.functions
 import { resolvePostAuthDestination } from "@/build/services/postAuthRoute";
 import { resolveMarketplacePostAuthDestination } from "@/marketplace/auth/postAuthRoute";
 import { getMyBinderProfile } from "@/marketplace/services/marketplace.data.functions";
+import { MaReliureAuthPage } from "@/marketplace/pages/auth/MaReliureAuthPage";
 import { isMaReliure } from "@/brand";
 
 export const Route = createFileRoute("/auth")({
@@ -21,15 +22,20 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
     typeof search.redirect === "string" ? { redirect: search.redirect } : {},
   head: () => ({
-    meta: [
-      { title: "Sign in or create your account — Métré Build" },
-      {
-        name: "description",
-        content:
-          "Create your Métré Build account and get your own workspace to turn website visitors into structured project briefs.",
-      },
-      { name: "robots", content: "noindex,nofollow" },
-    ],
+    meta: isMaReliure
+      ? [
+          { title: "Retrouver mes livres — Ma Reliure" },
+          { name: "robots", content: "noindex,nofollow" },
+        ]
+      : [
+          { title: "Sign in or create your account — Métré Build" },
+          {
+            name: "description",
+            content:
+              "Create your Métré Build account and get your own workspace to turn website visitors into structured project briefs.",
+          },
+          { name: "robots", content: "noindex,nofollow" },
+        ],
   }),
   component: AuthPage,
 });
@@ -95,6 +101,21 @@ function AuthPage() {
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Same route, same server-side routing, the brand's own door. A build
+  // constant, so the hooks above run in the same order on both brands.
+  if (isMaReliure) {
+    return (
+      <MaReliureAuthPage
+        accessError={accessError}
+        routing={routing}
+        onSignedIn={async () => {
+          await router.invalidate();
+          await goToHomeRoute();
+        }}
+      />
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4 py-10">

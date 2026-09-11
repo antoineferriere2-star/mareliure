@@ -69,3 +69,48 @@ describe("visitor-summary email template", () => {
     );
   });
 });
+
+describe("visitor-summary email template — French, and signed by its brand", () => {
+  const frenchData = {
+    ...baseData,
+    locale: "fr-FR" as const,
+    businessName: "Ma Reliure",
+    brandName: "Ma Reliure",
+    accentColor: "#17130f",
+  };
+
+  it("renders French copy and a French subject when locale is fr-FR", async () => {
+    const html = await render(React.createElement(template.component, frenchData));
+    const text = await render(React.createElement(template.component, frenchData), {
+      plainText: true,
+    });
+    expect(html).toContain('lang="fr-FR"');
+    expect(text.toLowerCase()).toContain("nous avons bien reçu votre projet");
+    expect(text).toContain("ni un devis définitif");
+    expect(text.toLowerCase()).not.toContain("dossier");
+    if (typeof template.subject !== "function") throw new Error("subject must be a function");
+    expect(template.subject(frenchData)).toBe("Le récapitulatif de votre projet — Ma Reliure");
+  });
+
+  it("names the brand that sends it, and not Métré Build when another brand sends", async () => {
+    const text = await render(React.createElement(template.component, frenchData), {
+      plainText: true,
+    });
+    expect(text).toContain("Ma Reliure");
+    expect(text).not.toContain("Métré");
+  });
+
+  it("offers the customer space only when a tracking link is given", async () => {
+    const withTrack = await render(
+      React.createElement(template.component, {
+        ...frenchData,
+        trackUrl: "https://mareliure.fr/mes-livres",
+      }),
+    );
+    expect(withTrack).toContain('href="https://mareliure.fr/mes-livres"');
+    expect(withTrack).toContain("Suivre mon projet");
+
+    const withoutTrack = await render(React.createElement(template.component, frenchData));
+    expect(withoutTrack).not.toContain("Suivre mon projet");
+  });
+});

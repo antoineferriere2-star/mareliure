@@ -4,9 +4,23 @@
 // must never fail dossier creation. Only VisitorProjectSummary fields ever
 // reach the template — never the internal ProjectBrief, confidence score,
 // commercial notes, or any workspace-only field.
+import { isMaReliure } from "@/brand";
 import { sendTemplateEmail } from "@/lib/email-templates/send-email";
+import { MARELIURE_SITE_URL } from "@/lib/structured-data";
 import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
 import { logOperationalError } from "./operationalLog.server";
+
+/**
+ * What the brand adds to the email: its name, its colour and — on Ma Reliure —
+ * the way to the space where the book is followed. The summary itself depends
+ * only on the project. `/mes-livres` sends a signed-out visitor to the sign-in
+ * page, which mails a sign-in link: no link that expires sits in this email.
+ */
+function brandEmailData(): Record<string, string> {
+  return isMaReliure
+    ? { brandName: "Ma Reliure", accentColor: "#17130f", trackUrl: `${MARELIURE_SITE_URL}/mes-livres` }
+    : { brandName: "Métré Build", accentColor: "#047857" };
+}
 
 export async function sendVisitorSummaryEmail(params: {
   dossierId: string;
@@ -20,6 +34,7 @@ export async function sendVisitorSummaryEmail(params: {
   try {
     const result = await sendTemplateEmail("visitor-summary", params.recipientEmail, {
       templateData: {
+        ...brandEmailData(),
         locale: params.summary.locale,
         businessName: params.summary.businessName,
         summary: params.summary.summary,

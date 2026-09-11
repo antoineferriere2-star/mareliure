@@ -22,10 +22,12 @@ const ready = Boolean(
 
 async function signIn(page: Page, target: string, email: string, password: string) {
   await page.goto(`/auth?redirect=${encodeURIComponent(target)}`);
-  await page.getByRole("button", { name: "Already have an account? Sign in" }).click();
-  await page.getByLabel("Work email").fill(email);
-  await page.getByLabel("Password").fill(password);
-  await page.getByRole("button", { name: "Sign in", exact: true }).click();
+  // Ma Reliure's /auth leads with the emailed sign-in link; test accounts use
+  // the password path reserved for workshops and the team.
+  await page.getByRole("button", { name: /se connecter avec un mot de passe/ }).click();
+  await page.getByLabel("Adresse e-mail").fill(email);
+  await page.getByLabel("Mot de passe").fill(password);
+  await page.getByRole("button", { name: "Se connecter", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(target.replaceAll("/", "\\/")), { timeout: 30_000 });
 }
 
