@@ -15,6 +15,10 @@ export const MARKETPLACE_EVENT_TYPES = [
   // Provenance (Phase A) — sur case_id, posé une seule fois par
   // reconcileCaseTriage au moment où le cas est créé.
   "binder_referral_attributed",
+  // Messagerie et décisions (Phase B, 12 septembre 2026).
+  "message_sent",
+  "decision_requested",
+  "decision_answered",
 ] as const;
 
 export type MarketplaceEventType = (typeof MARKETPLACE_EVENT_TYPES)[number];

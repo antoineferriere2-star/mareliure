@@ -17,6 +17,8 @@ const SERVICE = [
   "src/marketplace/services/marketplace.data.functions.ts",
   "src/marketplace/services/binderMembership.server.ts",
   "src/marketplace/services/caseRepository.server.ts",
+  "src/marketplace/services/messaging.data.functions.ts",
+  "src/marketplace/services/decisions.data.functions.ts",
 ]
   .map((path) => readFileSync(resolve(process.cwd(), path), "utf8"))
   .join("\n");

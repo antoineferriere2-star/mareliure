@@ -3,6 +3,7 @@ import { template as newDossierTemplate } from "./new-dossier";
 import { template as publicContactTemplate } from "./public-contact";
 import { template as visitorSummaryTemplate } from "./visitor-summary";
 import { template as binderInvitationTemplate } from "./binder-invitation";
+import { template as caseActivityTemplate } from "./case-activity";
 
 type TemplateData = Record<string, unknown>;
 
@@ -28,4 +29,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   "public-contact": publicContactTemplate,
   "visitor-summary": visitorSummaryTemplate,
   "binder-invitation": binderInvitationTemplate,
+  "case-activity": caseActivityTemplate,
 };

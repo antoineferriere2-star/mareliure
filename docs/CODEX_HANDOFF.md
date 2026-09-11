@@ -790,165 +790,124 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 11 septembre 2026
+**Date :** 12 septembre 2026
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** voir `git log -1` — cette session commite Phase A en un seul
-commit (migrations + code + tests + ce document).
+**Commit :** voir `git log -1` — Phase B en un commit, sur Phase A (`8d504d9e`).
 
-**Production :** le code de cette session **n'est pas déployé**. Les deux
-migrations, elles, **sont appliquées** sur `hljxohondjvrkzqicexl` (voir §H
-plus bas — l'API de gestion, pas le CLI). C'est un choix délibéré : la
-migration est additive et sans risque, le code est un premier jet non éprouvé
-en environnement réel et touche des chemins d'authentification — il attend
-une relecture avant `npm run deploy:mareliure`.
-
-**Avant cette session, deux choses corrigées le 11 septembre (même journée,
-session précédente) et qui rendent une partie du « Known issues » ci-dessous
-périmée :**
-
-- **Les e-mails Ma Reliure partent par Resend**, depuis `noreply@mareliure.fr`
-  — plus par Métré/Lovable. La clé Resend vit à trois endroits distincts :
-  secret du Worker Cloudflare, mot de passe SMTP dans Supabase Auth, et
-  `.env` local.
-- **Les inscriptions publiques sont rouvertes en production** (`disable_signup:
-  false`), avec les modèles de connexion en français.
+**Production :** le code de cette session **n'est pas déployé**, comme
+Phase A avant elle. Les deux migrations **sont appliquées** sur
+`hljxohondjvrkzqicexl` (même méthode que Phase A — l'API de gestion, le CLI
+ne joint toujours pas la base).
 
 ---
 
-### Chantier de cette session — Phase A de l'architecture transactionnelle
+### Chantier de cette session — Phase B : messagerie et décisions
 
-Contexte : un cahier des charges de 90 points a été reçu pour faire évoluer
-Ma Reliure vers une plateforme transactionnelle complète (comptes client et
-relieur, messagerie, décisions, pricing à trois modes, Stripe Connect 80/20,
-niveaux de risque logistique, vitrine atelier). Un audit préalable
-(`docs/transactional-platform-audit.md`) a constaté que l'essentiel du modèle
-de pricing géré, le claim sécurisé et le journal d'événements étaient déjà en
-production — le chantier réel est plus étroit que les 90 points ne le
-suggèrent. Phase A couvre les fondations : membership atelier, invitation,
-provenance `BINDER_REFERRED`.
+Suite de `docs/transactional-platform-audit.md` (Phase B). Une conversation
+par dossier, des décisions structurées séparées du chat, et les compteurs de
+non-lus qui font qu'un dashboard répond enfin à « que se passe-t-il
+maintenant ? » (§10).
 
-**A1 — Le binder n'est plus lié à un seul compte pour toujours**
+**Messagerie (§14-§18)**
 
-- Migration `20260911120000_marketplace_binder_membership.sql` : table
-  `marketplace_binder_members` (`binder_id`, `user_id`, `role`
-  OWNER/MEMBER, `account_status` invited/onboarding/active/disabled).
-  `marketplace_binders.user_id` **n'est pas retiré** — legacy, plus lu par le
-  code, backfillé en ligne OWNER `active` pour chaque atelier qui en avait un.
-- `account_status` vit sur la **membership**, pas sur l'atelier
-  (`marketplace_binders.status` reste la relation commerciale
-  draft/pending_review/approved/rejected/suspended, inchangée) — décision du
-  produit du 11 septembre : un atelier peut avoir un owner actif et un membre
-  encore en invitation, deux questions différentes.
-- `findBinderForUser` (`marketplace.data.functions.ts`) résout désormais par
-  `marketplace_binder_members` (`findActiveBinderMembership`,
-  `binderMembership.server.ts`) — seul point de changement pour les quatre
-  server functions binder existantes (`getMyBinderProfile`,
-  `listMyBinderCases`, `getBinderCase`, `respondToBinderOffer`).
+- Migration `20260912090000_marketplace_messaging.sql` :
+  `marketplace_messages` (case_id, sender_user_id, sender_role, body,
+  attachment_paths[], deleted_at), `marketplace_conversation_reads`
+  (case_id, user_id, last_read_at), bucket privé
+  `marketplace-message-attachments` (JPEG/PNG/WEBP + PDF, 8 Mo — le seul
+  bucket marketplace qui accepte le PDF).
+- `src/marketplace/messaging/conversation.ts` (pur, testé) — **décision
+  d'accès propre à la conversation, pas une réutilisation de
+  `canViewCase`.** Un relieur sollicité puis refusé/annulé garde une ligne
+  `marketplace_case_matches` (état `declined`/`cancelled`, jamais
+  supprimée) : `canViewCase` continuerait de lui ouvrir le dossier.
+  `canAccessConversation` ne considère que les binder_id dont le match est
+  encore `offered`/`accepted`/`selected` — c'est ce qui ferme réellement
+  l'accès qu'exige le §72 (« BINDER sollicité mais non retenu perd l'accès
+  au contenu privé »).
+- `sendCaseMessage`/`listCaseMessages`/`markConversationRead`
+  (`services/messaging.data.functions.ts`). Un message envoyé vaut lecture
+  de tout ce qui précède (pas de double action « lu »).
+- **§18, décision confirmée** : React Query, pas Supabase Realtime.
+  `ConversationPanel.tsx` fait tout le transport — affichage optimiste à
+  l'envoi, invalidation, `refetchInterval` de 15 s. Le composant est le
+  *seul* endroit qui connaît le mécanisme de transport ; le remplacer par
+  Realtime plus tard ne touche ni les server functions ni les pages
+  appelantes.
+- Notification e-mail (`case-activity.tsx`, nouveau modèle Resend) :
+  **seule la direction atelier/admin → client est couverte.** Un atelier
+  peut avoir plusieurs membres depuis Phase A et aucun n'est encore désigné
+  comme contact principal — notifier « l'atelier » est reporté plutôt que
+  deviné.
+- **Non construit, annoncé** : upload de pièce jointe (le bucket et la
+  colonne existent, l'UI d'envoi de fichier non), édition/suppression d'un
+  message (colonnes `edited_at`/`deleted_at` prêtes, pas d'écran).
 
-**A2 — Invitation relieur**
+**Décisions (§20-§22)**
 
-- Table `marketplace_binder_invitations` : jeton haché (réutilise
-  `build_dossiers/dossierAccessToken.server.ts` — même primitive que le
-  claim client, aucun second système), expirant (7 jours,
-  `BINDER_INVITATION_TTL_DAYS`), à usage unique (`UPDATE ... WHERE
-status='pending'`, même patron que `assignCaseOwner`).
-- `inviteBinderMember` (admin) crée l'invitation et envoie l'e-mail
-  (`binder-invitation.tsx`, nouveau modèle Resend, enregistré dans
-  `registry.ts`). Un échec d'envoi ne défait pas l'invitation
-  (`logOperationalError`).
-- `acceptBinderInvitation` vérifie le jeton, refuse si non « pending », expiré,
-  ou si l'e-mail du compte connecté ne correspond pas à l'e-mail invité
-  (`decideInvitationAcceptance`, `membership.ts`, pur et testé). Le premier
-  membre d'un atelier devient OWNER, les suivants MEMBER
-  (`roleForNewMember`).
-- Route publique `/invitation-atelier/:token` (hors `_authenticated`,
-  délibérément — `/atelier` perdrait le jeton dans une redirection vers
-  `/auth`, le même piège déjà documenté pour le claim client). Gère
-  connexion et création de compte.
-- Événements : `binder_member_invited`, `binder_member_invitation_accepted`,
-  `binder_member_activated` — sur `binder_id`, jamais `case_id` :
-  `marketplace_events.case_id` est devenu nullable (`CHECK (case_id IS NOT
-NULL OR binder_id IS NOT NULL)`).
+- Migration `20260912100000_marketplace_decisions.sql` :
+  `marketplace_decisions` (kind, question, options JSONB, status
+  open/answered/cancelled, answer JSONB, `superseded_by`). Un `CHECK`
+  interdit qu'un statut `answered` existe sans `answer`+`answered_by`+
+  `answered_at` — même discipline que
+  `marketplace_binder_invitations_accept_complete_check` (Phase A).
+- **Immutabilité réelle, pas seulement documentée** : `answerCaseDecision`
+  écrit sous condition `WHERE status='open'` (même patron que
+  `assignCaseOwner`) — deux réponses concurrentes ne peuvent jamais toutes
+  les deux gagner, et rien ne peut réécrire une réponse déjà donnée.
+  Corriger une décision répondue (`reviseCaseDecision`) crée une **nouvelle**
+  ligne et relie l'ancienne par `superseded_by` ; ça n'existe que pour un
+  statut `answered`, jamais un `UPDATE` de `answer`.
+- `src/marketplace/decisions/decisions.ts` (pur, testé) : qui peut demander
+  (l'atelier **retenu**, ou l'admin — jamais un atelier seulement invité),
+  qui peut répondre (le client, seul), qui peut réviser. La révision suit
+  l'atelier assigné au dossier, pas le compte individuel qui a posé la
+  question — nécessaire depuis que `marketplace_binder_members` permet
+  plusieurs personnes par atelier (Phase A).
+- `DecisionsPanel.tsx` : décisions ouvertes en tête (« Action requise »),
+  formulaire de réponse pour le client (choix parmi les options, ou texte
+  libre — le cas titrage/dorure du §21 avec son avertissement
+  d'orthographe), formulaire de demande pour l'atelier retenu.
 
-**A3 — `BINDER_REFERRED`**
+**Dashboards (§10, §12)**
 
-- Migration `20260911130000_marketplace_referral.sql` :
-  `marketplace_cases.acquisition_origin` (`MA_RELIURE_ACQUIRED` par défaut |
-  `BINDER_REFERRED`), `referred_binder_id`. CHECK **à sens unique** —
-  `referred_binder_id IS NULL OR acquisition_origin = 'BINDER_REFERRED'` —
-  pas l'inverse : la leçon de `marketplace_cases_claim_complete` (audit du
-  8 septembre) appliquée ici avant qu'elle ne se reproduise. Si le compte de
-  l'atelier référent est supprimé, `referred_binder_id` se vide
-  (`ON DELETE SET NULL`) mais `acquisition_origin` reste `BINDER_REFERRED` —
-  la provenance est un fait historique, pas une référence vivante.
-- `marketplace_binders.personal_referral_slug` (unique, format
-  `^[a-z0-9]+(-[a-z0-9]+)*$`, posé par l'admin — `setBinderReferralSlug`,
-  jamais par l'atelier lui-même).
-- Route `/a/:slug` : résout le slug côté serveur (public, sans auth —
-  `resolveBinderReferral`, ne révèle rien qu'une carte de visite ne révèle
-  déjà), redirige vers `/m/$publicToken?ref=<slug>` si l'atelier est
-  `approved`, sinon montre « atelier introuvable ».
-- `?ref=` traverse le tunnel comme une réponse `_referral_slug` **opaque**
-  (`REFERRAL_ANSWER_KEY`, `binders/referral.ts`) — le moteur générique
-  (`MissionRuntime.tsx`, nouveau prop `seedAnswers`) ne l'interprète jamais,
-  il la transporte, exactement comme il transporte toute réponse réelle.
-  **La résolution qui compte** a lieu une seule fois, côté serveur, dans
-  `reconcileCaseTriage` (`caseRepository.server.ts`) — même passage, même
-  garde `triaged_at IS NULL` que le triage existant : le slug est re-résolu
-  contre `marketplace_binders WHERE status='approved'`, jamais fait confiance
-  tel quel. C'est ce qui rend une falsification (`?ref=` fabriqué) inoffensive
-  — au pire elle ne résout à rien et le cas reste `MA_RELIURE_ACQUIRED`.
-- **Exclusivité garantie au seul point d'écriture qui envoie des
-  invitations** : `canSendCaseToBinders` (`matching/selection.ts`, pur, testé)
-  — un cas `BINDER_REFERRED` ne peut être envoyé qu'à son
-  `referred_binder_id`, jamais à un autre atelier ni en plus d'un autre.
-  Appelé dans `sendCaseToBinders` avant toute autre logique de matching.
+- `listMyCustomerCases`/`listMyBinderCases` renvoient désormais
+  `unreadCount` (et `actionRequired` côté client, pour une décision
+  ouverte) — badges posés sur `CustomerCaseListPage`/`BinderDashboardPage`.
+  Calcul partagé (`unreadCountsByCase`, `messaging.data.functions.ts`) pour
+  ne pas charger deux fois les messages entre la liste et la fiche.
+- **Non fait** : la refonte complète des dashboards en « poste de travail »
+  du §12-§13 (sections Résumé/Avancement/Transport/Imprévus). Phase B
+  ajoute les briques P0 (conversation, décisions, non-lus) aux pages
+  existantes plutôt que de les redessiner — cohérent avec le principe
+  d'audit : ne pas construire ce que les 50 premières transactions
+  n'exigent pas encore.
 
-**Ce qui n'a délibérément pas été construit en Phase A** (annoncé, pas
-oublié) : UI de gestion multi-membres par atelier (§8 l'autorise —
-« même si l'UI n'est pas encore développée »), onboarding en plusieurs
-étapes distinctes (l'invitation active directement, `onboarding` reste une
-valeur d'enum prête mais inutilisée), réattribution d'un cas
-`BINDER_REFERRED` (§45-46 — pas de colonne `assigned_binder_id` séparée
-tant que ce workflow n'existe pas), page vitrine `/ateliers/:slug` (Phase F).
+**Dépendance circulaire assumée** : `marketplace.data.functions.ts` importe
+`unreadCountsByCase` depuis `messaging.data.functions.ts`, qui importe
+`resolveViewer` depuis `marketplace.data.functions.ts`. Les deux imports ne
+sont utilisés qu'à l'intérieur de corps de fonction (jamais à l'évaluation du
+module), ce qui reste sûr en ES modules — vérifié par le build et les 1563
+tests, mais à garder à l'œil si l'un des deux fichiers grossit encore.
 
 ---
 
-### Completed (Phase A)
+### Completed (Phase B)
 
-- 2 migrations, additives, rejouables, avec rollback documenté — patron
-  identique à `20260908210000_managed_pricing_offers.sql`.
-- Migrations **appliquées sur `hljxohondjvrkzqicexl`** (production) via l'API
-  de gestion Supabase (`POST /v1/projects/{ref}/database/query`) — le CLI ne
-  peut toujours pas joindre la base depuis ce poste (IPv6, voir Known
-  issues). Vérifié après coup : `marketplace_binder_members` = 0 ligne
-  (aucun atelier n'a encore de compte réel en production, donc rien à
-  backfiller — cohérent), `marketplace_cases.acquisition_origin` =
-  `MA_RELIURE_ACQUIRED` sur l'unique cas existant. Consignées dans
-  `supabase_migrations.schema_migrations` pour que `supabase db push` les
-  reconnaisse plus tard.
-- **Non appliquées sur le projet sandbox** `qwfhebtxeubfmvvdsqdt` — l'API de
-  gestion a renvoyé 403 (droits insuffisants sur ce projet précisément, pas
-  sur la production). À faire à la main :
-  `npx supabase link --project-ref qwfhebtxeubfmvvdsqdt && npx supabase db
-push` depuis un poste avec IPv4 sortant, ou en redonnant les droits API sur
-  ce projet.
+- 2 migrations, additives, rejouables, rollback documenté.
+- Migrations **appliquées sur `hljxohondjvrkzqicexl`** (production), même
+  méthode que Phase A. Vérifié après coup : les 3 nouvelles tables existent,
+  le bucket `marketplace-message-attachments` existe.
+- **Toujours pas appliquées sur le sandbox** `qwfhebtxeubfmvvdsqdt` — inchangé
+  depuis Phase A (403, droits insuffisants sur ce projet précisément).
 - `tsc --noEmit` : propre. `eslint` sur tous les fichiers touchés : propre
-  (2 warnings pré-existants, cohérents avec le reste du dépôt : le fichier de
-  modèle e-mail « only-export-components », résolu pour `MissionRuntime.tsx`
-  en listant `seedAnswers` dans les dépendances de l'effet — le prop est
-  mémoïsé par la route, donc stable).
-- `npx vitest run` (build entier) : **1513 tests verts, 121 fichiers**, dont
-  29 nouveaux (membership, référral, exclusivité `BINDER_REFERRED`, contrat
-  de migration). Voir la liste demandée par le brief plus bas.
-- `npm run build` : vert (régénère `routeTree.gen.ts`, qui doit être commité
-  — deux nouvelles routes `/a/$slug` et `/invitation-atelier/$token`).
-  **Rappel du 11 septembre, toujours vrai** : `npm run build` seul embarque
-  la config Supabase **sandbox** dans le bundle client. Ne jamais l'utiliser
-  pour un déploiement — `npm run deploy:mareliure` (via `build:mareliure`)
-  est le seul chemin correct, et il n'a pas été lancé cette session.
+  (1 warning pré-existant, cohérent — modèle e-mail « only-export-components »).
+- `npx vitest run` : **1563 tests verts, 124 fichiers**, dont 51 nouveaux
+  (conversation, décisions, exclusivité, contrat des 2 migrations).
+- `npm run build` : vert. Aucune nouvelle route — `routeTree.gen.ts`
+  inchangé.
 
 ---
 
@@ -960,108 +919,52 @@ Rien. Working tree propre après le commit de cette session.
 
 ### Next recommended task
 
-1. **Relire et déployer le code de Phase A** (`npm run deploy:mareliure`)
-   avant de commencer la Phase B — sans déploiement, `/a/:slug` et
-   l'invitation relieur n'existent nulle part en dehors de ce dépôt.
-2. **Phase B** (portails, messagerie, décisions, non-lus) — voir
-   `docs/transactional-platform-audit.md` §H, Phase B. React Query
-   (optimistic update + invalidation + polling), pas Supabase Realtime au P0
-   — décision explicite du 11 septembre.
+1. **Déployer Phase A et Phase B ensemble** (`npm run deploy:mareliure`) —
+   aucune des deux n'est en production. Les tester d'abord sur un atelier
+   réel : Phase A (invitation) crée le premier compte relieur réel de la
+   plateforme, Phase B (conversation) n'a jamais échangé un message pour de
+   vrai.
+2. **Phase C** (`docs/transactional-platform-audit.md`) : pricing à trois
+   modes (FIXED_PRICE/ESTIMATE_THEN_CONFIRM/MANUAL_STUDY), rémunération
+   différenciée par atelier par famille, correction du matching.
 3. **Remplir le référentiel tarifaire** — toujours vide en production,
-   toujours la tâche la plus limitante avant toute mise en concurrence
-   réelle des prix (reportée de la session du 10 septembre, rien n'a changé).
-4. **Spike Stripe Connect** — bloqué : aucun `STRIPE_SANDBOX_API_KEY` ni
-   `LOVABLE_API_KEY` dans cet environnement. Voir
-   `docs/transactional-platform-audit.md` §G pour l'architecture recommandée
-   sous réserve du spike (separate charges and transfers, comptes Express,
-   deux `PaymentIntent` plutôt qu'une autorisation bloquée sur la fourchette
-   haute).
+   inchangé depuis le 10 septembre.
+4. **Spike Stripe Connect** — toujours bloqué, mêmes identifiants absents
+   qu'à la fin de Phase A.
+5. **Notification e-mail atelier** — reportée en Phase B faute de contact
+   principal désigné par workshop. À trancher : premier OWNER historique
+   par défaut, ou un champ explicite « contact notifications » sur
+   `marketplace_binder_members`.
 
 ---
 
 ### Known issues
 
-- **Les numéros de version du Playbook ne sont pas les mêmes selon la base.**
-  Le même contenu Playbook (Mission Reliure) porte un numéro de version
-  différent sur le dev et en production, parce qu'il n'a pas été publié aux
-  mêmes moments sur les deux. Ne jamais raisonner sur un numéro de version
-  sans préciser la base ; comparer les schémas, pas les numéros. Un seed
-  n'est publié qu'une fois lancé contre chaque base. Inchangé depuis le
-  10 septembre.
-- ~~Les e-mails partent au nom de « Métré Build »~~ — **corrigé le 11
-  septembre** : Resend, `noreply@mareliure.fr`. Voir la mémoire longue
-  `mareliure-resend-email-three-places`.
-- **Les durées de conservation ne sont pas fixées.** Toujours vrai.
-- **Le directeur de la publication n'est pas nommé.** Toujours vrai.
-- **Les textes légaux sont exacts, pas relus par un juriste.** Toujours vrai.
-- **Le CLI Supabase ne joint pas la production depuis ce poste** (IPv6 non
-  routé). Contournement confirmé cette session : `POST
-https://api.supabase.com/v1/projects/{ref}/database/query` avec
-  `SUPABASE_ACCESS_TOKEN` exécute du SQL arbitraire sans passer par une
-  connexion Postgres directe — c'est ce qui a appliqué les deux migrations
-  de Phase A. Fonctionne sur `hljxohondjvrkzqicexl`, **pas** sur
-  `qwfhebtxeubfmvvdsqdt` (403, droits insuffisants sur ce projet).
-- **Le référentiel tarifaire est vide en production.** Toujours vrai.
-- Le Pricebook est vide. Toujours vrai.
-- ~~Les inscriptions publiques sont fermées en production~~ — **rouvertes le
-  11 septembre.**
-- `rating_avg`, `rating_count`, `response_rate` existent et sont vides.
-  Toujours vrai.
-- La fiche atelier est en dur dans `pages/landing/content.ts`. Toujours vrai.
-- Deux réglages Cloudflare restent à poser à la main (forcer HTTPS,
-  redirection `www`). Toujours vrai.
-- Pages ateliers `/ateliers/:slug` : toujours pas construites (Phase F).
-  `personal_referral_slug` (Phase A) n'est **pas** le même champ que le futur
-  `slug` de vitrine publique évoqué ici — deux usages, à ne pas fusionner
-  sans y réfléchir : l'un pointe vers le tunnel (`/a/:slug`), l'autre vers
-  une page de présentation (`/ateliers/:slug`).
-- **Aucun atelier n'a de compte réel en production** — `marketplace_binders`
-  n'a aucune ligne avec `user_id` non nul. Le premier test réel de
-  l'invitation (A2) se fera contre un atelier neuf, pas un existant.
+Tout ce qui était listé à la fin de Phase A reste vrai, sans changement,
+sauf :
+
+- **Aucun atelier n'a de compte réel en production** — toujours vrai à la
+  fin de Phase B : la messagerie et les décisions n'ont donc jamais été
+  exercées par un vrai client ni un vrai atelier.
+- Nouveau : **la notification e-mail « nouveau message » ne couvre que la
+  direction atelier/admin → client** (voir Next recommended task, point 5).
+- Nouveau : **pas d'upload de pièce jointe** dans la messagerie — le bucket
+  et la colonne existent, l'écran non.
 
 ---
 
 ### Do not touch
 
-- **`src/marketplace/pricing/pricing.rules.ts` ne doit plus jamais porter de
-  montant de travail.** Un test lit le fichier. Les tarifs viennent des
-  grilles, point.
-- **`testReferences.fixture.ts`** : jeu d'essai `TEST_ONLY`. Rien dans `src/`
-  hors des tests ne l'importe, et un test le vérifie. Il n'agrège que si
-  `MARKETPLACE_ALLOW_TEST_RATES=true` et que l'environnement n'est pas marqué
-  production.
-- **Les seuils `PUBLISHABLE_MINIMUM_REFERENCES` (3) et
-  `QUARTILE_MINIMUM_REFERENCES` (5)** : ils protègent contre la précision
-  inventée. Les baisser rendrait une page publique malhonnête.
-- `src/build/` pour un besoin propre à la reliure — Playbook ou
-  `src/marketplace/`. Une capacité générique y est recevable, sans métier et
-  avec ses tests : c'est ce qu'est `briefLabel`.
-- `src/build/services/postAuthRoute.ts` : la réponse Ma Reliure vit dans
-  `src/marketplace/auth/postAuthRoute.ts`.
-- **Les valeurs d'option du Playbook** et **les clés de `catalog.ts`** :
-  identifiants machine lus par `caseProfile.ts`, `workResolver.ts` et les
-  grilles en base. On ajoute, on retire d'une liste, on ne renomme
-  **jamais**. Une version publiée de Playbook ne se modifie pas en place.
-- `MAX_BINDERS_PER_CASE = 3` : règle interne, jamais vendue au client.
-- Les politiques RLS `build_*` et `marketplace_*` (deny-all, service_role
-  only) — étendues (marketplace_binder_members/_invitations, Phase A), jamais
-  assouplies.
-- Le preset Nitro (`cloudflare-module`).
-- Le repli codé en dur de `vite.config.ts` : bonne valeur pour Métré seul.
-- Stripe Connect et l'expédition — spécifiés, pas commencés.
-- **`marketplace_binders.user_id`** : legacy, jamais lu par le nouveau code,
-  jamais retiré tant qu'une migration dédiée ne l'a pas décidé
-  explicitement (voir A1 ci-dessus).
-- **`canSendCaseToBinders`** (`matching/selection.ts`) : la seule garantie
-  réelle que `BINDER_REFERRED` ne réintègre jamais le matching général.
-  Contourner cette fonction en écrivant directement dans
-  `marketplace_case_matches` recréerait exactement le risque qu'elle existe
-  pour fermer.
-- **`marketplace_cases_referral_origin_check`** : volontairement à sens
-  unique. Le reposer symétrique reproduirait le bug de
-  `marketplace_cases_claim_complete` que l'audit du 8 septembre avait
-  corrigé.
-- **`REFERRAL_ANSWER_KEY` (`_referral_slug`)** : clé de réponse réservée,
-  jamais un champ de Playbook. Si un Playbook venait un jour à déclarer un
-  champ du même nom, ce serait une collision à traiter, pas un hasard à
-  ignorer.
+Tout ce qui était listé à la fin de Phase A reste vrai. S'y ajoute :
+
+- **`canAccessConversation`** (`messaging/conversation.ts`) : ne jamais la
+  remplacer par `canViewCase` pour gagner une ligne d'import — c'est
+  précisément la différence (matches `declined`/`cancelled` exclus) qui
+  ferme l'accès d'un atelier écarté à ce qui s'est dit après.
+- **`answerCaseDecision`** : l'`UPDATE ... WHERE status='open'` est la
+  garantie d'immutabilité, pas un détail d'implémentation. Toute évolution
+  qui permettrait de réécrire `answer` sur une décision déjà `answered`
+  romprait le §20.
+- **`superseded_by`** : une correction crée toujours une nouvelle ligne.
+  Jamais de `UPDATE` sur `answer`/`answered_by`/`answered_at` d'une décision
+  déjà répondue.

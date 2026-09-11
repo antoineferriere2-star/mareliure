@@ -128,8 +128,20 @@ export function CustomerCaseListPage() {
                 params={{ caseId: row.id }}
                 className="block rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-6 transition hover:border-[#3b2a1d]/40"
               >
-                <p className="font-serif text-xl text-[#241a12]">{row.title}</p>
+                <div className="flex items-start justify-between gap-2">
+                  <p className="font-serif text-xl text-[#241a12]">{row.title}</p>
+                  {row.unreadCount > 0 && (
+                    <span className="shrink-0 rounded-full bg-[#3b2a1d] px-2 py-0.5 text-xs font-semibold text-[#fdfaf3]">
+                      {row.unreadCount} nouveau{row.unreadCount > 1 ? "x" : ""}
+                    </span>
+                  )}
+                </div>
                 <p className="mt-1 text-xs text-[#8a7663]">{row.reference}</p>
+                {row.actionRequired && (
+                  <p className="mt-2 text-xs font-semibold uppercase tracking-wide text-[#8a2e1f]">
+                    Action requise
+                  </p>
+                )}
                 <p className="mt-4 text-sm text-[#4b3a2c]">{nextStep(row.status)}</p>
                 {row.customerPriceCents && (
                   <p className="mt-2 font-medium text-[#241a12]">

@@ -1378,6 +1378,111 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_messages: {
+        Row: {
+          attachment_paths: string[]
+          body: string
+          case_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          sender_role: string
+          sender_user_id: string | null
+        }
+        Insert: {
+          attachment_paths?: string[]
+          body?: string
+          case_id: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          sender_role: string
+          sender_user_id?: string | null
+        }
+        Update: {
+          attachment_paths?: string[]
+          body?: string
+          case_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          sender_role?: string
+          sender_user_id?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_conversation_reads: {
+        Row: {
+          case_id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_decisions: {
+        Row: {
+          answer: Json | null
+          answered_at: string | null
+          answered_by: string | null
+          cancelled_at: string | null
+          case_id: string
+          created_at: string
+          id: string
+          kind: string
+          options: Json
+          question: string
+          requested_by: string | null
+          requested_role: string
+          status: string
+          superseded_by: string | null
+        }
+        Insert: {
+          answer?: Json | null
+          answered_at?: string | null
+          answered_by?: string | null
+          cancelled_at?: string | null
+          case_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          options?: Json
+          question: string
+          requested_by?: string | null
+          requested_role: string
+          status?: string
+          superseded_by?: string | null
+        }
+        Update: {
+          answer?: Json | null
+          answered_at?: string | null
+          answered_by?: string | null
+          cancelled_at?: string | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          options?: Json
+          question?: string
+          requested_by?: string | null
+          requested_role?: string
+          status?: string
+          superseded_by?: string | null
+        }
+        Relationships: []
+      }
       marketplace_intake_missions: {
         Row: {
           created_at: string

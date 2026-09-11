@@ -54,7 +54,14 @@ export function BinderDashboardPage() {
                     params={{ caseId: row.caseId }}
                     className="block h-full rounded-lg border border-border bg-card p-4 transition hover:border-foreground/30"
                   >
-                    <p className="font-serif text-lg">{row.title}</p>
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="font-serif text-lg">{row.title}</p>
+                      {row.unreadCount > 0 && (
+                        <span className="shrink-0 rounded-full bg-foreground px-2 py-0.5 text-xs font-semibold text-background">
+                          {row.unreadCount}
+                        </span>
+                      )}
+                    </div>
                     <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">{row.summary}</p>
                     <p className="mt-3 text-xs text-muted-foreground">
                       {row.reference} · {row.photoCount} photo(s)

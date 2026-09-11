@@ -44,6 +44,7 @@ import {
   findActiveBinderMembership,
 } from "./binderMembership.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
+import { unreadCountsByCase } from "./messaging.data.functions";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -102,8 +103,13 @@ async function isAdmin(supabase: Supa, userId: string): Promise<boolean> {
 /**
  * Who this request is, from the marketplace's point of view. Resolved server
  * side from the session, never from anything the client sent.
+ *
+ * Exported for messaging.data.functions.ts and decisions.data.functions.ts
+ * (Phase B) — the same viewer resolution a case's own server functions use,
+ * so a conversation or a decision is authorised by exactly the same notion
+ * of "who is this" as the case it belongs to.
  */
-async function resolveViewer(supabase: Supa, sb: Supa, userId: string): Promise<Viewer> {
+export async function resolveViewer(supabase: Supa, sb: Supa, userId: string): Promise<Viewer> {
   if (await isAdmin(supabase, userId)) return { role: "admin" };
   const binder = await findBinderForUser(sb, userId);
   if (binder) return { role: "binder", binderId: binder.id };
@@ -821,6 +827,8 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
       .in("case_id", caseIds)
       .eq("binder_id", binder!.id);
 
+    const unread = await unreadCountsByCase(sb, caseIds, context.userId);
+
     return matches.map((match) => {
       const row = (cases ?? []).find((c) => c.id === match.case_id);
       const offer = (offers ?? []).find((candidate) => candidate.case_id === match.case_id);
@@ -835,6 +843,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
         title: titles.get(match.case_id) ?? row?.reference ?? "",
         summary: summaries.get(match.case_id) ?? "",
         photoCount: photoCount.get(match.case_id) ?? 0,
+        unreadCount: unread.get(match.case_id) ?? 0,
       };
     });
   });
@@ -977,6 +986,15 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       .eq("customer_user_id", context.userId)
       .order("created_at", { ascending: false });
 
+    const caseIds = (cases ?? []).map((row) => row.id);
+    const [unread, openDecisions] = await Promise.all([
+      unreadCountsByCase(sb, caseIds, context.userId),
+      caseIds.length === 0
+        ? Promise.resolve({ data: [] as { case_id: string }[] })
+        : sb.from("marketplace_decisions").select("case_id").eq("status", "open").in("case_id", caseIds),
+    ]);
+    const openDecisionCaseIds = new Set((openDecisions.data ?? []).map((row) => row.case_id));
+
     const results = [];
     for (const row of cases ?? []) {
       const { data: dossier } = await sb
@@ -993,6 +1011,8 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
         title: typeof content?.missionName === "string" ? content.missionName : row.reference,
         customerPriceCents: row.customer_price_cents,
         currency: row.pricing_currency,
+        unreadCount: unread.get(row.id) ?? 0,
+        actionRequired: openDecisionCaseIds.has(row.id),
       });
     }
     return results;

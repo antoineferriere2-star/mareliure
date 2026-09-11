@@ -6,6 +6,8 @@ import {
   respondToBinderOffer,
 } from "@/marketplace/services/marketplace.data.functions";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
+import { ConversationPanel } from "@/marketplace/pages/ConversationPanel";
+import { DecisionsPanel } from "@/marketplace/pages/DecisionsPanel";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -62,7 +64,12 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   if (!data) return null;
 
   const offer = data.offer;
+  // Un atelier n'a de conversation et de décisions qu'une fois retenu — pas
+  // seulement sollicité. Avant ça, il n'y a rien à demander ni à discuter, et
+  // canAccessConversation (côté serveur) refuserait de toute façon.
+  const isSelected = offer?.state === "selected";
   return (
+    <div className="space-y-8">
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
       <CaseBriefPanel view={data.view} />
       <aside className="space-y-6">
@@ -162,6 +169,13 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
           </section>
         )}
       </aside>
+    </div>
+    {isSelected && (
+      <>
+        <DecisionsPanel caseId={caseId} role="binder" />
+        <ConversationPanel caseId={caseId} viewerRole="binder" />
+      </>
+    )}
     </div>
   );
 }

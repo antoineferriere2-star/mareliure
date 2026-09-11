@@ -2,6 +2,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyCustomerCase } from "@/marketplace/services/marketplace.data.functions";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
+import { ConversationPanel } from "@/marketplace/pages/ConversationPanel";
+import { DecisionsPanel } from "@/marketplace/pages/DecisionsPanel";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { visibleJourney } from "@/marketplace/cases/journey";
@@ -37,6 +39,11 @@ export function CustomerCasePage({ caseId }: { caseId: string }) {
   return (
     <div className="space-y-10">
       <CaseBriefPanel view={data.view} />
+
+      {/* Décisions avant conversation : une confirmation attendue prime sur
+          l'historique du fil (§10 : « que se passe-t-il maintenant ? »). */}
+      <DecisionsPanel caseId={caseId} role="customer" />
+      <ConversationPanel caseId={caseId} viewerRole="customer" />
       {/* Un prix n'apparaît ici qu'une fois validé par un humain — le serveur
           ne renvoie même pas les autres. Tant qu'il n'y en a pas, on dit ce
           qui se passe réellement plutôt que d'afficher un montant provisoire :
