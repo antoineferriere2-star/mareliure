@@ -6,11 +6,14 @@
  * une personne venue confier un livre. C'est la même route, sous la marque
  * Ma Reliure.
  *
- * Deux chemins, dans l'ordre de ceux qui les empruntent :
+ * Deux publics, choisis explicitement en haut de la page plutôt que devinés :
  *
- * - un lien de connexion par e-mail, pour les clients : pas de compte à créer,
- *   pas de mot de passe à retenir, et le premier lien ouvre l'espace ;
- * - un mot de passe, en retrait, pour les ateliers partenaires et l'équipe.
+ * - **Client** : un lien de connexion par e-mail — pas de compte à créer, pas
+ *   de mot de passe à retenir, et le premier lien ouvre l'espace ;
+ * - **Atelier partenaire** : un mot de passe pour se connecter, et candidater
+ *   pour rejoindre le réseau si aucun compte n'existe encore — un atelier ne
+ *   s'auto-déclare jamais partenaire actif, l'admin invite après avoir
+ *   approuvé (`src/marketplace/services/binderMembership.server.ts`).
  *
  * La destination ne se décide pas ici. Une fois la session ouverte, la route
  * la demande au serveur (`resolveMarketplacePostAuthDestination`).
@@ -23,6 +26,7 @@ import {
   linkErrorFromUrl,
   requestAccessLink,
 } from "@/marketplace/auth/accessLink";
+import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
 import { LandingFooter, LandingHeader } from "@/marketplace/pages/landing/LandingChrome";
 
 const labelClass = "mr-small block font-semibold text-mr-ink";
@@ -31,6 +35,15 @@ const inputClass =
 const submitClass =
   "mt-6 inline-flex w-full items-center justify-center rounded-[2px] bg-mr-ink px-6 py-3.5 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-graphite disabled:opacity-60 sm:w-auto";
 const textButtonClass = "mr-link mr-small mr-tap text-left disabled:no-underline disabled:opacity-60";
+
+type Audience = "customer" | "binder";
+
+const tabClass = (active: boolean) =>
+  `mr-tap flex-1 rounded-[2px] border px-4 py-3 text-center text-[0.9375rem] font-semibold transition-colors duration-200 ${
+    active
+      ? "border-mr-ink bg-mr-ink text-mr-paper"
+      : "border-mr-rule-strong bg-white text-mr-ink hover:border-mr-ink"
+  }`;
 
 export function MaReliureAuthPage({
   accessError,
@@ -47,21 +60,41 @@ export function MaReliureAuthPage({
       ? null
       : linkErrorFromUrl(window.location.hash, window.location.search),
   );
-  const [withPassword, setWithPassword] = useState(false);
+  const [audience, setAudience] = useState<Audience>("customer");
   const alert = accessError ?? linkProblem;
 
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <LandingHeader />
       <main className="mx-auto w-full max-w-[36rem] flex-1 px-5 py-14 sm:px-8 sm:py-20">
-        <p className="mr-eyebrow">{withPassword ? "Ateliers et équipe" : "Votre espace"}</p>
-        <h1 className="mr-title mt-4 text-mr-ink">
-          {withPassword ? "Connexion avec mot de passe" : "Retrouver mes livres"}
-        </h1>
-        <p className="mr-lead mt-5">
-          {withPassword
-            ? "Pour les ateliers partenaires et l'équipe Ma Reliure, avec le mot de passe de votre compte."
-            : "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien de connexion : pas de compte à créer, pas de mot de passe à retenir."}
+        <p className="mr-eyebrow">Votre espace</p>
+        <h1 className="mr-title mt-4 text-mr-ink">Accéder à mon espace Ma Reliure</h1>
+
+        <div className="mt-6 flex gap-2" role="tablist" aria-label="Vous êtes">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={audience === "customer"}
+            className={tabClass(audience === "customer")}
+            onClick={() => setAudience("customer")}
+          >
+            Client
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={audience === "binder"}
+            className={tabClass(audience === "binder")}
+            onClick={() => setAudience("binder")}
+          >
+            Atelier partenaire
+          </button>
+        </div>
+
+        <p className="mr-lead mt-6">
+          {audience === "customer"
+            ? "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien de connexion : pas de compte à créer, pas de mot de passe à retenir."
+            : "Connectez-vous avec le mot de passe de votre atelier, ou candidatez pour rejoindre le réseau si vous n'avez pas encore de compte."}
         </p>
 
         {alert && (
@@ -76,24 +109,31 @@ export function MaReliureAuthPage({
         )}
 
         <div className="mt-10">
-          {withPassword ? (
-            <PasswordSignIn onSignedIn={onSignedIn} />
-          ) : (
+          {audience === "customer" ? (
             <LinkSignIn onSent={() => setLinkProblem(null)} />
+          ) : (
+            <>
+              <h2 className="mr-heading text-mr-ink">Se connecter</h2>
+              <div className="mt-4">
+                <PasswordSignIn onSignedIn={onSignedIn} />
+              </div>
+
+              <div className="mt-10 border-t border-mr-rule pt-6">
+                <h2 className="mr-heading text-mr-ink">S'inscrire</h2>
+                <p className="mr-body mt-3">
+                  Un atelier ne devient partenaire qu'après validation par Ma Reliure — nous ne
+                  créons pas de compte immédiatement. Écrivez-nous, nous revenons vers vous.
+                </p>
+                <a
+                  href={`mailto:${MARELIURE_CONTACT_EMAIL}?subject=${encodeURIComponent("Candidature atelier partenaire Ma Reliure")}`}
+                  className={`mt-4 ${submitClass}`}
+                >
+                  Candidater pour devenir atelier partenaire
+                </a>
+              </div>
+            </>
           )}
         </div>
-
-        <p className="mt-12 border-t border-mr-rule pt-6">
-          <button
-            type="button"
-            className={textButtonClass}
-            onClick={() => setWithPassword((current) => !current)}
-          >
-            {withPassword
-              ? "Recevoir plutôt un lien de connexion par e-mail"
-              : "Atelier partenaire ou équipe Ma Reliure : se connecter avec un mot de passe"}
-          </button>
-        </p>
       </main>
       <LandingFooter />
     </div>

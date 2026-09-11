@@ -801,6 +801,17 @@ Phase A avant elle. Les deux migrations **sont appliquées** sur
 `hljxohondjvrkzqicexl` (même méthode que Phase A — l'API de gestion, le CLI
 ne joint toujours pas la base).
 
+**Complément demandé en cours de session** : `/auth` (`MaReliureAuthPage.tsx`)
+distinguait client/atelier par un lien discret en bas de page. Remplacé par
+deux onglets explicites en haut (« Client » / « Atelier partenaire »). Côté
+atelier, deux actions désormais visibles : **Se connecter** (mot de passe,
+inchangé) et **S'inscrire** — qui n'ouvre pas de compte immédiatement (un
+atelier ne s'auto-déclare pas partenaire, §7) mais ouvre un `mailto:` vers
+`MARELIURE_CONTACT_EMAIL` avec un sujet pré-rempli. Aucun backend nouveau :
+la création réelle du compte reste le flux d'invitation de Phase A.
+`e2e/managed-marketplace-reference.spec.ts` mis à jour (le clic visait le
+texte du lien disparu, cible maintenant l'onglet par son rôle).
+
 ---
 
 ### Chantier de cette session — Phase B : messagerie et décisions
