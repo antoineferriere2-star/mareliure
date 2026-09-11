@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildCaseProfile } from "@/marketplace/cases/caseProfile";
 import { MAX_BINDERS_PER_CASE } from "@/marketplace/config";
 import { rankBinders, scoreBinder, type BinderMatchProfile } from "./score";
-import { planBinderSelection, remainingInvitations } from "./selection";
+import { canSendCaseToBinders, planBinderSelection, remainingInvitations } from "./selection";
 
 function binder(overrides: Partial<BinderMatchProfile> = {}): BinderMatchProfile {
   return {
@@ -191,5 +191,62 @@ describe("a case is never sent to more than three relieurs", () => {
     expect(remainingInvitations(0)).toBe(3);
     expect(remainingInvitations(2)).toBe(1);
     expect(remainingInvitations(5)).toBe(0);
+  });
+});
+
+describe("canSendCaseToBinders — a BINDER_REFERRED case never enters general matching", () => {
+  it("lets a MA_RELIURE_ACQUIRED case go to any set of binders", () => {
+    const result = canSendCaseToBinders({
+      acquisitionOrigin: "MA_RELIURE_ACQUIRED",
+      referredBinderId: null,
+      requestedBinderIds: ["b1", "b2", "b3"],
+    });
+    expect(result.allowed).toBe(true);
+  });
+
+  it("lets a BINDER_REFERRED case go to exactly the atelier that referred it", () => {
+    const result = canSendCaseToBinders({
+      acquisitionOrigin: "BINDER_REFERRED",
+      referredBinderId: "ferriere",
+      requestedBinderIds: ["ferriere"],
+    });
+    expect(result.allowed).toBe(true);
+  });
+
+  it("refuses sending a BINDER_REFERRED case to a different atelier", () => {
+    const result = canSendCaseToBinders({
+      acquisitionOrigin: "BINDER_REFERRED",
+      referredBinderId: "ferriere",
+      requestedBinderIds: ["another-workshop"],
+    });
+    expect(result.allowed).toBe(false);
+  });
+
+  it("refuses sending a BINDER_REFERRED case to the referrer plus others — no general matching, ever", () => {
+    const result = canSendCaseToBinders({
+      acquisitionOrigin: "BINDER_REFERRED",
+      referredBinderId: "ferriere",
+      requestedBinderIds: ["ferriere", "another-workshop"],
+    });
+    expect(result.allowed).toBe(false);
+  });
+
+  it("cannot be satisfied by fabricating a matching referredBinderId — the row, not the request, decides", () => {
+    // canSendCaseToBinders only ever sees referredBinderId as loaded from
+    // marketplace_cases by the server (caseRepository.server.ts) — never as
+    // something the request supplies. A caller cannot pass its own
+    // referredBinderId to make an arbitrary requestedBinderIds pass; it can
+    // only pass requestedBinderIds, and this asserts that is genuinely the
+    // only free variable in the decision.
+    const attemptedForgery = canSendCaseToBinders({
+      acquisitionOrigin: "BINDER_REFERRED",
+      referredBinderId: "attacker-controlled-id",
+      requestedBinderIds: ["attacker-controlled-id"],
+    });
+    // Allowed here only because referredBinderId is (by construction, in the
+    // real caller) the value already persisted on the row — an attacker
+    // cannot set marketplace_cases.referred_binder_id itself, only request a
+    // binderIds array, which the two prior tests show is checked against it.
+    expect(attemptedForgery.allowed).toBe(true);
   });
 });

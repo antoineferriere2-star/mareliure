@@ -788,228 +788,236 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 ## Latest handoff
 
-**Agent :** Claude Code (Opus 5)
+**Agent :** Claude Code (Sonnet 5)
 
-**Date :** 10 septembre 2026
+**Date :** 11 septembre 2026
 
-**Branch :** `managed-pricing`, poussée sur `mareliure/main` et
-`mareliure/feat/managed-pricing-offers`.
+**Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `afc2d57`.
+**Commit :** voir `git log -1` — cette session commite Phase A en un seul
+commit (migrations + code + tests + ce document).
 
-**Production :** **alignée sur `main`.** Déployée le 10 septembre 2026, Worker
-`mareliure` version `5428cfbb-c9b1-4c0d-8026-be10e7efd350`, commit `afc2d57`.
-Les deux migrations sont appliquées sur `hljxohondjvrkzqicexl` (§J).
+**Production :** le code de cette session **n'est pas déployé**. Les deux
+migrations, elles, **sont appliquées** sur `hljxohondjvrkzqicexl` (voir §H
+plus bas — l'API de gestion, pas le CLI). C'est un choix délibéré : la
+migration est additive et sans risque, le code est un premier jet non éprouvé
+en environnement réel et touche des chemins d'authentification — il attend
+une relecture avant `npm run deploy:mareliure`.
 
-Vérifié après déploiement, sur `mareliure.fr` et sur l'URL `workers.dev` :
-icône et identité Ma Reliure, `lang="fr"`, nouvelle landing, `/tarifs` en 200,
-les cinq images générées en 404, la classe de thème présente sur le tunnel, et
-aucune donnée structurée Métré. Le bundle client ne contient aucune chaîne à la
-forme d'une clé secrète — seul le littéral `'sb_secret_'` de `client.ts`, qui
-vérifie le format d'une clé.
+**Avant cette session, deux choses corrigées le 11 septembre (même journée,
+session précédente) et qui rendent une partie du « Known issues » ci-dessous
+périmée :**
 
-**Livré avec ce déploiement, en plus du référentiel tarifaire :**
-
-- **Refonte de la landing** (`d2179d1`) — cinq images générées retirées, dont
-  une créditée à tort à l'atelier Ferrière ; système de tokens (trois papiers,
-  un accent bordeaux) ; serif réservée aux grands titres ; corps à 17 px ;
-  127 éléments testés, zéro échec de contraste ; anneau de focus par règle de
-  portée.
-- **Identité de marque à la racine** (`5371466`) — favicon, titre, `lang`,
-  données structurées JSON-LD et jeton Search Console étaient ceux de Métré sur
-  mareliure.fr. Déclinés par `isMaReliure`.
-- **Habillage du tunnel** (`b2ff563`) — tokens de surface génériques
-  `--intake-*` dans `styles.css`, valeurs par marque sous `.brand-mareliure`.
-  Aucune connaissance de la reliure dans `src/build/`.
-- **Habillage complet du tunnel et « Présenter un autre projet »** (`ed14250`) —
-  Tailwind v4 compile chaque couleur en variable ; la palette du moteur
-  (`stone`, `emerald`, `indigo`, tokens shadcn, `--radius`) est redéfinie
-  dans le seul sous-arbre `.brand-mareliure .intake-surface`. Aucun composant
-  réécrit. `src/intakeTheme.test.ts` garantit que la redéfinition ne sort pas de
-  la marque. Le récapitulatif propose de repartir d'un projet vierge : la
-  session mémorisée ramenait sans fin au projet déjà envoyé. Le nom de marque de
-  l'en-tête ramène à l'accueil.
-- **Textes du tunnel alignés sur le positionnement** — Playbook v6 et Mission :
-  plus de « relieurs sélectionnés », de « leurs propositions » ni de « après
-  votre choix ». Le consentement nomme Ma Reliure et l'atelier retenu.
-  `src/marketplace/missionPositioning.test.ts` refuse le retour de ces
-  formulations. Publié sur le dev (v6) et en production (v2).
-- **Pages légales de Ma Reliure** (`afc2d57`) — `/confidentialite`,
-  `/conditions`, `/mentions-legales`. Le pied du tunnel ouvrait les pages
-  anglaises de Métré Build sur l'écran du consentement ; il ouvre maintenant
-  celles-ci, sur Ma Reliure seulement. Éditeur OPPE SAS, contact
-  `contact@oppe.fr`, déclarés une fois dans
-  `src/marketplace/legal/legalEntity.ts`. `legal.test.ts` confronte les
-  affirmations des pages au code : durée du lien de récapitulatif (90 jours),
-  domaine d'envoi, passerelle d'IA, empreinte d'IP salée. L'adresse
-  `contact@mareliure.fr`, publiée sans que la boîte existe, a disparu.
+- **Les e-mails Ma Reliure partent par Resend**, depuis `noreply@mareliure.fr`
+  — plus par Métré/Lovable. La clé Resend vit à trois endroits distincts :
+  secret du Worker Cloudflare, mot de passe SMTP dans Supabase Auth, et
+  `.env` local.
+- **Les inscriptions publiques sont rouvertes en production** (`disable_signup:
+  false`), avec les modèles de connexion en français.
 
 ---
 
-### Completed
+### Chantier de cette session — Phase A de l'architecture transactionnelle
 
-**Les prix inventés sont partis.** Le moteur portait une quinzaine de montants
-codés en dur — 140 € pour une réparation, 200 € pour une belle reliure, 80 €
-pour un demi-cuir — posés pour qu'il produise un résultat. Aucun relieur ne les
-avait vus, et rien dans le code ne les distinguait d'un tarif de terrain :
-même type, même colonne, même confiance « haute ».
+Contexte : un cahier des charges de 90 points a été reçu pour faire évoluer
+Ma Reliure vers une plateforme transactionnelle complète (comptes client et
+relieur, messagerie, décisions, pricing à trois modes, Stripe Connect 80/20,
+niveaux de risque logistique, vitrine atelier). Un audit préalable
+(`docs/transactional-platform-audit.md`) a constaté que l'essentiel du modèle
+de pricing géré, le claim sécurisé et le journal d'événements étaient déjà en
+production — le chantier réel est plus étroit que les 90 points ne le
+suggèrent. Phase A couvre les fondations : membership atelier, invitation,
+provenance `BINDER_REFERRED`.
 
-Ils sont retirés de `pricing.rules.ts`, qui ne porte plus que des décisions
-commerciales : marge cible, plancher, arrondi. Décider sa marge n'est pas
-inventer un tarif.
+**A1 — Le binder n'est plus lié à un seul compte pour toujours**
 
-**Le moteur s'abstient au lieu de deviner.** Sans référence terrain il rend
-`status: "manual_review"` et **tous les montants à `null`** — pas un chiffrage
-prudent, un refus de chiffrer. Un travail non tarifé, un ouvrage patrimonial,
-un travail sur étude ou aucun travail identifié suffisent à déclencher ce
-refus, sans rattrapage possible.
+- Migration `20260911120000_marketplace_binder_membership.sql` : table
+  `marketplace_binder_members` (`binder_id`, `user_id`, `role`
+  OWNER/MEMBER, `account_status` invited/onboarding/active/disabled).
+  `marketplace_binders.user_id` **n'est pas retiré** — legacy, plus lu par le
+  code, backfillé en ligne OWNER `active` pour chaque atelier qui en avait un.
+- `account_status` vit sur la **membership**, pas sur l'atelier
+  (`marketplace_binders.status` reste la relation commerciale
+  draft/pending_review/approved/rejected/suspended, inchangée) — décision du
+  produit du 11 septembre : un atelier peut avoir un owner actif et un membre
+  encore en invitation, deux questions différentes.
+- `findBinderForUser` (`marketplace.data.functions.ts`) résout désormais par
+  `marketplace_binder_members` (`findActiveBinderMembership`,
+  `binderMembership.server.ts`) — seul point de changement pour les quatre
+  server functions binder existantes (`getMyBinderProfile`,
+  `listMyBinderCases`, `getBinderCase`, `respondToBinderOffer`).
 
-**Trois objets qu'on ne confond plus** (migration
-`20260909120000_pricing_reference_system`) :
+**A2 — Invitation relieur**
 
-| Table                      | Nature                                               |
-| -------------------------- | ---------------------------------------------------- |
-| `marketplace_work_items`   | ce que le métier sait faire — 45 travaux, 8 familles |
-| `marketplace_binder_rates` | ce que chaque relieur demande — **observation**      |
-| `marketplace_pricebook`    | ce que Ma Reliure paie et vend — **décision**        |
+- Table `marketplace_binder_invitations` : jeton haché (réutilise
+  `build_dossiers/dossierAccessToken.server.ts` — même primitive que le
+  claim client, aucun second système), expirant (7 jours,
+  `BINDER_INVITATION_TTL_DAYS`), à usage unique (`UPDATE ... WHERE
+status='pending'`, même patron que `assignCaseOwner`).
+- `inviteBinderMember` (admin) crée l'invitation et envoie l'e-mail
+  (`binder-invitation.tsx`, nouveau modèle Resend, enregistré dans
+  `registry.ts`). Un échec d'envoi ne défait pas l'invitation
+  (`logOperationalError`).
+- `acceptBinderInvitation` vérifie le jeton, refuse si non « pending », expiré,
+  ou si l'e-mail du compte connecté ne correspond pas à l'e-mail invité
+  (`decideInvitationAcceptance`, `membership.ts`, pur et testé). Le premier
+  membre d'un atelier devient OWNER, les suivants MEMBER
+  (`roleForNewMember`).
+- Route publique `/invitation-atelier/:token` (hors `_authenticated`,
+  délibérément — `/atelier` perdrait le jeton dans une redirection vers
+  `/auth`, le même piège déjà documenté pour le claim client). Gère
+  connexion et création de compte.
+- Événements : `binder_member_invited`, `binder_member_invitation_accepted`,
+  `binder_member_activated` — sur `binder_id`, jamais `case_id` :
+  `marketplace_events.case_id` est devenu nullable (`CHECK (case_id IS NOT
+NULL OR binder_id IS NOT NULL)`).
 
-**Provenance sur chaque montant.** `REAL_VERIFIED` · `ADMIN_VALIDATED` ·
-`DEMO` · `PLACEHOLDER` · `TEST_ONLY`. Deux fonctions décident de tout :
-`canReachCustomer` (deux provenances) et `countsAsReference` (une seule).
-Un prix décidé par Ma Reliure ne compte pas dans une médiane — se citer
-soi-même comme source revient à confirmer ses propres hypothèses.
+**A3 — `BINDER_REFERRED`**
 
-Une contrainte SQL empêche `REAL_VERIFIED` sans `verified_at` **et**
-`verified_by`. Sans elle, ce serait une case à cocher.
+- Migration `20260911130000_marketplace_referral.sql` :
+  `marketplace_cases.acquisition_origin` (`MA_RELIURE_ACQUIRED` par défaut |
+  `BINDER_REFERRED`), `referred_binder_id`. CHECK **à sens unique** —
+  `referred_binder_id IS NULL OR acquisition_origin = 'BINDER_REFERRED'` —
+  pas l'inverse : la leçon de `marketplace_cases_claim_complete` (audit du
+  8 septembre) appliquée ici avant qu'elle ne se reproduise. Si le compte de
+  l'atelier référent est supprimé, `referred_binder_id` se vide
+  (`ON DELETE SET NULL`) mais `acquisition_origin` reste `BINDER_REFERRED` —
+  la provenance est un fait historique, pas une référence vivante.
+- `marketplace_binders.personal_referral_slug` (unique, format
+  `^[a-z0-9]+(-[a-z0-9]+)*$`, posé par l'admin — `setBinderReferralSlug`,
+  jamais par l'atelier lui-même).
+- Route `/a/:slug` : résout le slug côté serveur (public, sans auth —
+  `resolveBinderReferral`, ne révèle rien qu'une carte de visite ne révèle
+  déjà), redirige vers `/m/$publicToken?ref=<slug>` si l'atelier est
+  `approved`, sinon montre « atelier introuvable ».
+- `?ref=` traverse le tunnel comme une réponse `_referral_slug` **opaque**
+  (`REFERRAL_ANSWER_KEY`, `binders/referral.ts`) — le moteur générique
+  (`MissionRuntime.tsx`, nouveau prop `seedAnswers`) ne l'interprète jamais,
+  il la transporte, exactement comme il transporte toute réponse réelle.
+  **La résolution qui compte** a lieu une seule fois, côté serveur, dans
+  `reconcileCaseTriage` (`caseRepository.server.ts`) — même passage, même
+  garde `triaged_at IS NULL` que le triage existant : le slug est re-résolu
+  contre `marketplace_binders WHERE status='approved'`, jamais fait confiance
+  tel quel. C'est ce qui rend une falsification (`?ref=` fabriqué) inoffensive
+  — au pire elle ne résout à rien et le cas reste `MA_RELIURE_ACQUIRED`.
+- **Exclusivité garantie au seul point d'écriture qui envoie des
+  invitations** : `canSendCaseToBinders` (`matching/selection.ts`, pur, testé)
+  — un cas `BINDER_REFERRED` ne peut être envoyé qu'à son
+  `referred_binder_id`, jamais à un autre atelier ni en plus d'un autre.
+  Appelé dans `sendCaseToBinders` avant toute autre logique de matching.
 
-**La confiance change de sens.** Elle se calculait sur le nombre de réponses du
-visiteur : « haute » voulait dire « le parcours est bien rempli », pas « nous
-savons ce que ce travail coûte ». Elle porte maintenant sur le nombre
-d'ateliers, la fraîcheur des données, la dispersion et l'exactitude de la
-correspondance — et elle ne fait que descendre.
+**Ce qui n'a délibérément pas été construit en Phase A** (annoncé, pas
+oublié) : UI de gestion multi-membres par atelier (§8 l'autorise —
+« même si l'UI n'est pas encore développée »), onboarding en plusieurs
+étapes distinctes (l'invitation active directement, `onboarding` reste une
+valeur d'enum prête mais inutilisée), réattribution d'un cas
+`BINDER_REFERRED` (§45-46 — pas de colonne `assigned_binder_id` séparée
+tant que ce workflow n'existe pas), page vitrine `/ateliers/:slug` (Phase F).
 
-**`briefLabel` a une petite sœur : `workResolver.ts`.** L'ancien moteur sautait
-des réponses aux montants ; le raisonnement du métier — « ce livre demande une
-recouture complète et un demi-cuir » — n'existait nulle part et ne pouvait donc
-pas se discuter avec un relieur. Il existe maintenant, nommé, avant tout
-montant.
+---
 
-**L'approximation est déclarée, jamais compensée.** Faute de tarif exact
-(travail × format × complexité), le moteur se rabat sur la classe courante
-**sans appliquer le moindre coefficient** : majorer de 10 % pour un grand
-format serait exactement le geste qu'on vient de bannir.
+### Completed (Phase A)
 
-**Trois écrans d'administration** sous `Admin → Tarifs` :
-la grille d'un atelier (pensée pour vingt minutes en face de quelqu'un), le
-référentiel (qui montre autant les trous que les travaux couverts), et le
-simulateur (qu'on ouvre devant un relieur, marge comprise).
-
-**Le refus d'un atelier devient un signal.** Après un refus pour rémunération
-insuffisante, l'atelier peut dire à quel montant il aurait accepté
-(`minimum_required_payout_cents`). Donnée révélée par une décision réelle
-plutôt que déclarée en entretien. Aucun effet sur l'offre, aucun effet
-automatique sur le Pricebook.
-
-**`/tarifs`** répond à la recherche la plus fréquente du domaine sans afficher
-un seul montant : elle explique ce qui fait le prix. Une fourchette n'y
-apparaîtra qu'une fois relevée auprès de trois ateliers
-(`isPublishableRange`). Aucune donnée structurée `Offer` — annoncer un prix à
-un moteur de recherche est un engagement.
-
-**Le client ne voit un prix qu'une fois validé par un humain.** Sinon « Votre
-projet est en cours d'étude ». Le serveur ne renvoie même pas les autres.
-
-**Le budget du client fuyait vers les ateliers, par deux portes.** La ligne
-« Budget envisagé » était bien retirée, mais la phrase d'ouverture du Dossier se
-terminait par « Budget 250 – 400 € » — en tête de fiche **et** dans la liste de
-projets de l'atelier, qui lisait `content.projectSummary` brut sans passer par la
-divulgation. Filtrer une surface sur deux ne filtre rien.
-
-Corrigé par une capacité générique du moteur, `projectSummaryParts` : le Brief
-expose son résumé phrase par phrase avec les clés de réponse que chacune a
-interpolées, et un consommateur retire celles qui citent ce qu'il ne doit pas
-montrer. Sans métier dans le moteur, comme `briefLabel`.
-
-Le repli compte autant que le chemin nominal : un Project Brief est **stocké**
-dans `build_dossiers.content`, donc les Dossiers déjà en base — les neuf vrais
-compris — n'auront jamais de parts. Pour eux, on retire toute phrase contenant
-la valeur retenue : plus grossier, mais il peut emporter une phrase de trop, pas
-en laisser passer une.
-
-**L'agrégat ne confond plus deux dispersions.** `minimumCents` /
-`medianCents` / `maximumCents` portent tous sur le **tarif courant** — avec
-320 / 350 / 410 on lit 320 / 350 / 410. Le plancher et le plafond déclarés
-vivent à part (`floorCents` / `ceilingCents`) et bornent l'estimation. Mélangés,
-ils affichaient « minimum 300 € » là où aucun atelier ne demande 300 €.
-
-**Documentation :** `docs/pricing-reference-system.md`,
-`docs/content-assets.md` (provenance des images, atelier Ferrière),
-`docs/shipping-pickup-point-spec.md` (spécifié, non commencé).
-
-**Tests :** 1406 (112 fichiers), typecheck propre, lint propre, build vert.
-`noFabricatedPrices.test.ts` lit le texte des fichiers du domaine pour que les
-montants ne reviennent pas — grossier, mais c'est le seul test qui attrape la
-récidive.
+- 2 migrations, additives, rejouables, avec rollback documenté — patron
+  identique à `20260908210000_managed_pricing_offers.sql`.
+- Migrations **appliquées sur `hljxohondjvrkzqicexl`** (production) via l'API
+  de gestion Supabase (`POST /v1/projects/{ref}/database/query`) — le CLI ne
+  peut toujours pas joindre la base depuis ce poste (IPv6, voir Known
+  issues). Vérifié après coup : `marketplace_binder_members` = 0 ligne
+  (aucun atelier n'a encore de compte réel en production, donc rien à
+  backfiller — cohérent), `marketplace_cases.acquisition_origin` =
+  `MA_RELIURE_ACQUIRED` sur l'unique cas existant. Consignées dans
+  `supabase_migrations.schema_migrations` pour que `supabase db push` les
+  reconnaisse plus tard.
+- **Non appliquées sur le projet sandbox** `qwfhebtxeubfmvvdsqdt` — l'API de
+  gestion a renvoyé 403 (droits insuffisants sur ce projet précisément, pas
+  sur la production). À faire à la main :
+  `npx supabase link --project-ref qwfhebtxeubfmvvdsqdt && npx supabase db
+push` depuis un poste avec IPv4 sortant, ou en redonnant les droits API sur
+  ce projet.
+- `tsc --noEmit` : propre. `eslint` sur tous les fichiers touchés : propre
+  (2 warnings pré-existants, cohérents avec le reste du dépôt : le fichier de
+  modèle e-mail « only-export-components », résolu pour `MissionRuntime.tsx`
+  en listant `seedAnswers` dans les dépendances de l'effet — le prop est
+  mémoïsé par la route, donc stable).
+- `npx vitest run` (build entier) : **1513 tests verts, 121 fichiers**, dont
+  29 nouveaux (membership, référral, exclusivité `BINDER_REFERRED`, contrat
+  de migration). Voir la liste demandée par le brief plus bas.
+- `npm run build` : vert (régénère `routeTree.gen.ts`, qui doit être commité
+  — deux nouvelles routes `/a/$slug` et `/invitation-atelier/$token`).
+  **Rappel du 11 septembre, toujours vrai** : `npm run build` seul embarque
+  la config Supabase **sandbox** dans le bundle client. Ne jamais l'utiliser
+  pour un déploiement — `npm run deploy:mareliure` (via `build:mareliure`)
+  est le seul chemin correct, et il n'a pas été lancé cette session.
 
 ---
 
 ### In progress
 
-Rien. Working tree propre.
+Rien. Working tree propre après le commit de cette session.
 
 ---
 
 ### Next recommended task
 
-1. **Remplir le référentiel.** Ce n'est pas du code : c'est s'asseoir avec un
-   relieur. Le référentiel est **vide**, donc chaque projet part en revue
-   manuelle. Premier atelier à interroger : Reliure Dorure Ferrière (Orléans),
-   déjà présent sur la plateforme. Trois ateliers font fonctionner le moteur,
-   six le rendent confiant.
-2. **Spike Stripe Connect** (§Q) — _après validation explicite_. STOP avant
-   toute implémentation.
-3. **Comparatif Sendcloud / Boxtal** et livrables A–I — _après le spike
-   paiement_. Voir `docs/shipping-pickup-point-spec.md`.
+1. **Relire et déployer le code de Phase A** (`npm run deploy:mareliure`)
+   avant de commencer la Phase B — sans déploiement, `/a/:slug` et
+   l'invitation relieur n'existent nulle part en dehors de ce dépôt.
+2. **Phase B** (portails, messagerie, décisions, non-lus) — voir
+   `docs/transactional-platform-audit.md` §H, Phase B. React Query
+   (optimistic update + invalidation + polling), pas Supabase Realtime au P0
+   — décision explicite du 11 septembre.
+3. **Remplir le référentiel tarifaire** — toujours vide en production,
+   toujours la tâche la plus limitante avant toute mise en concurrence
+   réelle des prix (reportée de la session du 10 septembre, rien n'a changé).
+4. **Spike Stripe Connect** — bloqué : aucun `STRIPE_SANDBOX_API_KEY` ni
+   `LOVABLE_API_KEY` dans cet environnement. Voir
+   `docs/transactional-platform-audit.md` §G pour l'architecture recommandée
+   sous réserve du spike (separate charges and transfers, comptes Express,
+   deux `PaymentIntent` plutôt qu'une autorisation bloquée sur la fourchette
+   haute).
 
 ---
 
 ### Known issues
 
 - **Les numéros de version du Playbook ne sont pas les mêmes selon la base.**
-  Le 10 septembre 2026, on a découvert que la production n'avait jamais reçu
-  que la version 1 : les versions 2 à 5, dont les six univers, n'avaient été
-  publiées que sur le dev, alors que la page d'accueil de production annonçait
-  déjà les six univers. Le même contenu — la « v6 » du dépôt — est désormais
-  publié partout, mais il porte le numéro 6 sur le dev et le numéro
-  2 en production. **Ne jamais raisonner sur un numéro de
-  version sans préciser la base** ; comparer les schémas, pas les numéros.
-  Un seed n'est publié qu'une fois lancé contre chaque base.
-- **Les e-mails partent au nom de « Métré Build »**, depuis
-  `noreply@notify.metre-pro.fr`, y compris pour un visiteur de Ma Reliure
-  (`src/lib/email-templates/send-email.ts`). Fuite de marque, non corrigée ;
-  la politique de confidentialité nomme ce domaine parce que c'est le vrai.
-  Si l'expéditeur change, `legal.test.ts` échouera : c'est voulu.
-- **Les durées de conservation ne sont pas fixées.** La page de
-  confidentialité le dit (« en cours de fixation ») ; seule la durée du lien
-  de récapitulatif est affirmée. À décider, puis à écrire.
-- **Le directeur de la publication n'est pas nommé** : les mentions légales
-  disent « le représentant légal de OPPE SAS ». Un nom est attendu.
-- **Les textes légaux sont exacts, pas relus par un juriste.** Pas de
-  conditions générales de vente : elles viendront avec le paiement.
+  Le même contenu Playbook (Mission Reliure) porte un numéro de version
+  différent sur le dev et en production, parce qu'il n'a pas été publié aux
+  mêmes moments sur les deux. Ne jamais raisonner sur un numéro de version
+  sans préciser la base ; comparer les schémas, pas les numéros. Un seed
+  n'est publié qu'une fois lancé contre chaque base. Inchangé depuis le
+  10 septembre.
+- ~~Les e-mails partent au nom de « Métré Build »~~ — **corrigé le 11
+  septembre** : Resend, `noreply@mareliure.fr`. Voir la mémoire longue
+  `mareliure-resend-email-three-places`.
+- **Les durées de conservation ne sont pas fixées.** Toujours vrai.
+- **Le directeur de la publication n'est pas nommé.** Toujours vrai.
+- **Les textes légaux sont exacts, pas relus par un juriste.** Toujours vrai.
 - **Le CLI Supabase ne joint pas la production depuis ce poste** (IPv6 non
-  routé, pooler IPv4 sans mot de passe). Passer par l'API de gestion (§J).
-- **Le référentiel tarifaire est vide en production.** Sur le dev il porte le
-  jeu d'essai TEST_ONLY (3 ateliers, 6 combinaisons, 40 travaux sur 45 non
-  couverts). Aucun tarif réel n'a encore été relevé auprès d'un relieur.
-- Le Pricebook est vide : aucun prix n'a encore été arrêté.
-- Les inscriptions publiques sont fermées en production (§H).
-- `rating_avg`, `rating_count`, `response_rate` existent et sont vides : une
-  page publique ne doit les afficher que non nuls.
-- La fiche atelier est en dur dans `pages/landing/content.ts`.
-- Deux réglages Cloudflare restent à poser à la main (§J).
-- Pages ateliers `/ateliers/:slug` : huit colonnes manquent sur
-  `marketplace_binders` (`slug`, `short_bio`, `styles`, `typical_lead_time`,
-  `workshop_photos[]`, `seo_title`, `seo_description`, `featured`).
+  routé). Contournement confirmé cette session : `POST
+https://api.supabase.com/v1/projects/{ref}/database/query` avec
+  `SUPABASE_ACCESS_TOKEN` exécute du SQL arbitraire sans passer par une
+  connexion Postgres directe — c'est ce qui a appliqué les deux migrations
+  de Phase A. Fonctionne sur `hljxohondjvrkzqicexl`, **pas** sur
+  `qwfhebtxeubfmvvdsqdt` (403, droits insuffisants sur ce projet).
+- **Le référentiel tarifaire est vide en production.** Toujours vrai.
+- Le Pricebook est vide. Toujours vrai.
+- ~~Les inscriptions publiques sont fermées en production~~ — **rouvertes le
+  11 septembre.**
+- `rating_avg`, `rating_count`, `response_rate` existent et sont vides.
+  Toujours vrai.
+- La fiche atelier est en dur dans `pages/landing/content.ts`. Toujours vrai.
+- Deux réglages Cloudflare restent à poser à la main (forcer HTTPS,
+  redirection `www`). Toujours vrai.
+- Pages ateliers `/ateliers/:slug` : toujours pas construites (Phase F).
+  `personal_referral_slug` (Phase A) n'est **pas** le même champ que le futur
+  `slug` de vitrine publique évoqué ici — deux usages, à ne pas fusionner
+  sans y réfléchir : l'un pointe vers le tunnel (`/a/:slug`), l'autre vers
+  une page de présentation (`/ateliers/:slug`).
+- **Aucun atelier n'a de compte réel en production** — `marketplace_binders`
+  n'a aucune ligne avec `user_id` non nul. Le premier test réel de
+  l'invitation (A2) se fera contre un atelier neuf, pas un existant.
 
 ---
 
@@ -1030,13 +1038,30 @@ Rien. Working tree propre.
   avec ses tests : c'est ce qu'est `briefLabel`.
 - `src/build/services/postAuthRoute.ts` : la réponse Ma Reliure vit dans
   `src/marketplace/auth/postAuthRoute.ts`.
-- **Les valeurs d'option du Playbook** et **les clés de
-  `catalog.ts`** : identifiants machine lus par `caseProfile.ts`,
-  `workResolver.ts` et les grilles en base. On ajoute, on retire d'une liste,
-  on ne renomme **jamais**. Une version publiée de Playbook ne se modifie pas
-  en place.
+- **Les valeurs d'option du Playbook** et **les clés de `catalog.ts`** :
+  identifiants machine lus par `caseProfile.ts`, `workResolver.ts` et les
+  grilles en base. On ajoute, on retire d'une liste, on ne renomme
+  **jamais**. Une version publiée de Playbook ne se modifie pas en place.
 - `MAX_BINDERS_PER_CASE = 3` : règle interne, jamais vendue au client.
-- Les politiques RLS `build_*` et `marketplace_*` (deny-all, service_role only).
+- Les politiques RLS `build_*` et `marketplace_*` (deny-all, service_role
+  only) — étendues (marketplace_binder_members/_invitations, Phase A), jamais
+  assouplies.
 - Le preset Nitro (`cloudflare-module`).
 - Le repli codé en dur de `vite.config.ts` : bonne valeur pour Métré seul.
-- Stripe Connect (§Q) et l'expédition — spécifiés, pas commencés.
+- Stripe Connect et l'expédition — spécifiés, pas commencés.
+- **`marketplace_binders.user_id`** : legacy, jamais lu par le nouveau code,
+  jamais retiré tant qu'une migration dédiée ne l'a pas décidé
+  explicitement (voir A1 ci-dessus).
+- **`canSendCaseToBinders`** (`matching/selection.ts`) : la seule garantie
+  réelle que `BINDER_REFERRED` ne réintègre jamais le matching général.
+  Contourner cette fonction en écrivant directement dans
+  `marketplace_case_matches` recréerait exactement le risque qu'elle existe
+  pour fermer.
+- **`marketplace_cases_referral_origin_check`** : volontairement à sens
+  unique. Le reposer symétrique reproduirait le bug de
+  `marketplace_cases_claim_complete` que l'audit du 8 septembre avait
+  corrigé.
+- **`REFERRAL_ANSWER_KEY` (`_referral_slug`)** : clé de réponse réservée,
+  jamais un champ de Playbook. Si un Playbook venait un jour à déclarer un
+  champ du même nom, ce serait une collision à traiter, pas un hasard à
+  ignorer.

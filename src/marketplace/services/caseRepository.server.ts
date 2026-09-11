@@ -21,6 +21,7 @@ import { extractPhotoReferences } from "@/build/engine/visitorSummary";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 import { buildCaseProfile, type CaseProfile } from "@/marketplace/cases/caseProfile";
 import { triageCase } from "@/marketplace/cases/triage";
+import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
 import {
   projectCase,
   type CaseView,
@@ -37,6 +38,8 @@ export interface CaseRow {
   dossier_id: string;
   reference: string;
   status: string;
+  acquisition_origin: string;
+  referred_binder_id: string | null;
   manual_review_required: boolean;
   heritage_flag: boolean;
   declared_value_band: string | null;
@@ -112,7 +115,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
   const { data: row, error } = await sb
     .from("marketplace_cases")
     .select(
-      "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at",
+      "id, dossier_id, reference, status, acquisition_origin, referred_binder_id, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at",
     )
     .eq("id", caseId)
     .maybeSingle();
@@ -247,6 +250,27 @@ export async function claimCasesByVerifiedEmail(
 }
 
 /**
+ * Resolve an atelier's public referral slug — `/a/:slug` — to the workshop it
+ * names, but only when that workshop is `approved`. A draft or suspended
+ * workshop's slug resolves to nothing, the same way an unknown one does: a
+ * visitor cannot tell the difference, and neither ends up creating a case for
+ * a workshop Ma Reliure has not vetted.
+ */
+export async function resolveApprovedBinderBySlug(
+  sb: Supa,
+  slug: string,
+): Promise<{ binderId: string; displayName: string } | null> {
+  const { data } = await sb
+    .from("marketplace_binders")
+    .select("id, display_name, workshop_name")
+    .eq("personal_referral_slug", slug)
+    .eq("status", "approved")
+    .maybeSingle();
+  if (!data) return null;
+  return { binderId: data.id, displayName: data.workshop_name ?? data.display_name };
+}
+
+/**
  * Signed URLs for the visitor's photos, from whichever bucket each one came
  * from. Storage paths are never handed to a browser — the URL expires, the
  * path would not.
@@ -317,6 +341,19 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
     const answers = await loadAnswers(sb, dossier?.session_id ?? null);
     const triage = triageCase(buildCaseProfile(answers));
 
+    // Resolved here rather than at ingestion for the same reason triage is:
+    // the trigger stays dumb, and this pass already runs exactly once per
+    // case (triaged_at IS NULL). The slug is an opaque answer key
+    // (referral.ts) — it means nothing until re-resolved, server-side,
+    // against an approved workshop, which is what makes it impossible for a
+    // visitor to fabricate an attribution the way a trusted `?binder_id=`
+    // would (§55).
+    const referralSlug = answers[REFERRAL_ANSWER_KEY];
+    const referral =
+      typeof referralSlug === "string" && referralSlug.trim()
+        ? await resolveApprovedBinderBySlug(sb, referralSlug.trim())
+        : null;
+
     const { error: updateError } = await sb
       .from("marketplace_cases")
       .update({
@@ -328,11 +365,23 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
         // back-office split it back apart on newlines — prose used as an API.
         triage_flags: triage.flags,
         triaged_at: new Date().toISOString(),
+        ...(referral
+          ? { acquisition_origin: "BINDER_REFERRED", referred_binder_id: referral.binderId }
+          : {}),
       })
       .eq("id", row.id)
       .is("triaged_at", null);
     if (updateError) throw updateError;
     triaged += 1;
+
+    if (referral) {
+      await sb.from("marketplace_events").insert({
+        case_id: row.id,
+        binder_id: referral.binderId,
+        event_type: "binder_referral_attributed",
+        metadata: {},
+      });
+    }
   }
   return triaged;
 }

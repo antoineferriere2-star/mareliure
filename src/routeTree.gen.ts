@@ -32,7 +32,9 @@ import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authentic
 import { Route as AuthenticatedMarketplaceRouteRouteImport } from './routes/_authenticated/marketplace/route'
 import { Route as AuthenticatedMesLivresRouteRouteImport } from './routes/_authenticated/mes-livres/route'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
+import { Route as ASlugRouteImport } from './routes/a.$slug'
 import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
+import { Route as InvitationAtelierTokenRouteImport } from './routes/invitation-atelier.$token'
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as ProjectSummaryAccessTokenRouteImport } from './routes/project-summary.$accessToken'
 import { Route as AuthenticatedAtelierIndexRouteImport } from './routes/_authenticated/atelier/index'
@@ -204,9 +206,19 @@ const AuthenticatedPortalRouteRoute =
     path: '/portal',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const ASlugRoute = ASlugRouteImport.update({
+  id: '/a/$slug',
+  path: '/a/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
   id: '/demo/deck-project',
   path: '/demo/deck-project',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const InvitationAtelierTokenRoute = InvitationAtelierTokenRouteImport.update({
+  id: '/invitation-atelier/$token',
+  path: '/invitation-atelier/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
 const MPublicTokenRoute = MPublicTokenRouteImport.update({
@@ -534,7 +546,9 @@ export interface FileRoutesByFullPath {
   '/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
   '/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
@@ -606,7 +620,9 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
@@ -684,7 +700,9 @@ export interface FileRoutesById {
   '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
   '/_authenticated/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
   '/_authenticated/build/activity': typeof AuthenticatedBuildActivityRoute
@@ -763,7 +781,9 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/mes-livres'
     | '/portal'
+    | '/a/$slug'
     | '/demo/deck-project'
+    | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
     | '/build/activity'
@@ -835,7 +855,9 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/a/$slug'
     | '/demo/deck-project'
+    | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
     | '/build/activity'
@@ -912,7 +934,9 @@ export interface FileRouteTypes {
     | '/_authenticated/marketplace'
     | '/_authenticated/mes-livres'
     | '/_authenticated/portal'
+    | '/a/$slug'
     | '/demo/deck-project'
+    | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
     | '/_authenticated/build/activity'
@@ -986,7 +1010,9 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TarifsRoute: typeof TarifsRoute
   TermsRoute: typeof TermsRoute
+  ASlugRoute: typeof ASlugRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
+  InvitationAtelierTokenRoute: typeof InvitationAtelierTokenRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
   ProjectSummaryAccessTokenRoute: typeof ProjectSummaryAccessTokenRoute
   ApiPublicAnalyzeSiteRoute: typeof ApiPublicAnalyzeSiteRoute
@@ -1167,11 +1193,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalRouteRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/a/$slug': {
+      id: '/a/$slug'
+      path: '/a/$slug'
+      fullPath: '/a/$slug'
+      preLoaderRoute: typeof ASlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/deck-project': {
       id: '/demo/deck-project'
       path: '/demo/deck-project'
       fullPath: '/demo/deck-project'
       preLoaderRoute: typeof DemoDeckProjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/invitation-atelier/$token': {
+      id: '/invitation-atelier/$token'
+      path: '/invitation-atelier/$token'
+      fullPath: '/invitation-atelier/$token'
+      preLoaderRoute: typeof InvitationAtelierTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/m/$publicToken': {
@@ -1759,7 +1799,9 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TarifsRoute: TarifsRoute,
   TermsRoute: TermsRoute,
+  ASlugRoute: ASlugRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
+  InvitationAtelierTokenRoute: InvitationAtelierTokenRoute,
   MPublicTokenRoute: MPublicTokenRoute,
   ProjectSummaryAccessTokenRoute: ProjectSummaryAccessTokenRoute,
   ApiPublicAnalyzeSiteRoute: ApiPublicAnalyzeSiteRoute,

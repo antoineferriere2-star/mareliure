@@ -9,10 +9,17 @@ const SQL = readFileSync(
   "utf8",
 ).replace(/\r\n/g, "\n");
 const STATEMENTS = SQL.replace(/^\s*--.*$/gm, "").replace(/--.*$/gm, "");
-const SERVICE = readFileSync(
-  resolve(process.cwd(), "src/marketplace/services/marketplace.data.functions.ts"),
-  "utf8",
-);
+// Every file that actually inserts into marketplace_events. Phase A (11
+// septembre 2026) added two more — a membership event never touches a case,
+// so it could never have lived in marketplace.data.functions.ts's own event
+// inserts alone.
+const SERVICE = [
+  "src/marketplace/services/marketplace.data.functions.ts",
+  "src/marketplace/services/binderMembership.server.ts",
+  "src/marketplace/services/caseRepository.server.ts",
+]
+  .map((path) => readFileSync(resolve(process.cwd(), path), "utf8"))
+  .join("\n");
 
 /**
  * La migration est rejouable : chaque colonne est posée sous `IF NOT EXISTS`.

@@ -16,7 +16,7 @@ import { admin, assertAdmin, type Supa } from "@/build/services/adminAuth.server
 import { fail } from "@/build/services/serverError";
 import { MARKETPLACE_CURRENCY, MAX_BINDERS_PER_CASE } from "@/marketplace/config";
 import { canSendToBinders, isCaseStatus, type CaseStatus } from "@/marketplace/cases/state";
-import { planBinderSelection } from "@/marketplace/matching/selection";
+import { canSendCaseToBinders, planBinderSelection } from "@/marketplace/matching/selection";
 import { rankBinders, type BinderMatchProfile } from "@/marketplace/matching/score";
 import { caseDisclosure, canViewCase, type Viewer } from "@/marketplace/permissions";
 import {
@@ -38,6 +38,12 @@ import {
   resolveCaseByAccessToken,
 } from "./caseRepository.server";
 import { loadAggregates } from "./pricingRepository.server";
+import {
+  acceptBinderInvitation as acceptBinderInvitationForUser,
+  createBinderInvitation,
+  findActiveBinderMembership,
+} from "./binderMembership.server";
+import { isValidReferralSlug } from "@/marketplace/binders/referral";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -62,12 +68,23 @@ const uuid = z.object({ caseId: z.string().uuid() });
 // Shared lookups
 // ---------------------------------------------------------------------------
 
-/** The relieur profile attached to the signed-in account, if there is one. */
+/**
+ * The relieur profile the signed-in account currently runs, if any.
+ *
+ * Resolved through marketplace_binder_members (Phase A, 11 septembre 2026),
+ * never through the legacy marketplace_binders.user_id — this is the single
+ * point every one of this file's binder-facing server functions already went
+ * through, so making membership the source of truth changed nothing else.
+ * An account backfilled as OWNER at migration time resolves to exactly the
+ * workshop it ran before.
+ */
 async function findBinderForUser(sb: Supa, userId: string) {
+  const membership = await findActiveBinderMembership(sb, userId);
+  if (!membership) return null;
   const { data } = await sb
     .from("marketplace_binders")
     .select(BINDER_LIST_COLUMNS)
-    .eq("user_id", userId)
+    .eq("id", membership.binderId)
     .maybeSingle();
   return data;
 }
@@ -459,6 +476,16 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
     if (!caseContext.row.binder_payout_cents)
       fail(409, "La rémunération atelier validée est absente.");
 
+    // A client apporté par un atelier (§54) lui reste affecté et ne passe
+    // jamais dans le matching général — canSendCaseToBinders (matching/
+    // selection.ts) est la garantie testée, pas seulement une note d'audit.
+    const referralCheck = canSendCaseToBinders({
+      acquisitionOrigin: caseContext.row.acquisition_origin,
+      referredBinderId: caseContext.row.referred_binder_id,
+      requestedBinderIds: data.binderIds,
+    });
+    if (!referralCheck.allowed) fail(422, referralCheck.reason!);
+
     const { data: candidates } = await sb
       .from("marketplace_binders")
       .select(BINDER_LIST_COLUMNS)
@@ -611,6 +638,112 @@ export const setBinderStatus = createServerFn({ method: "POST" })
       .eq("id", data.binderId);
     if (error) fail(500, error.message);
     return { ok: true };
+  });
+
+/**
+ * Set or change an atelier's public referral slug (§52, `/a/:slug`).
+ *
+ * Admin-controlled by design (§52 of the 11 September brief: "Les termes sont
+ * définis par Ma Reliure"): the workshop does not pick its own address in the
+ * marketplace's URL space.
+ */
+export const setBinderReferralSlug = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ binderId: z.string().uuid(), slug: z.string().min(3).max(64) }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    if (!isValidReferralSlug(data.slug)) {
+      fail(422, "Le lien ne peut contenir que des minuscules, des chiffres et des tirets.");
+    }
+    const sb = await admin();
+    const { error } = await sb
+      .from("marketplace_binders")
+      .update({ personal_referral_slug: data.slug })
+      .eq("id", data.binderId);
+    if (error) {
+      fail(
+        error.code === "23505" ? 409 : 500,
+        error.code === "23505" ? "Ce lien est déjà pris par un autre atelier." : error.message,
+      );
+    }
+    return { ok: true, slug: data.slug };
+  });
+
+/**
+ * Invite someone to join an atelier (§7).
+ *
+ * Admin-only: a relieur cannot self-declare "atelier partenaire actif", and
+ * cannot invite themselves colleagues without Ma Reliure knowing — the
+ * invitation itself is the audited act (`binder_member_invited`).
+ */
+export const inviteBinderMember = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ binderId: z.string().uuid(), email: z.string().trim().email() }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const { data: binder } = await sb
+      .from("marketplace_binders")
+      .select("id, display_name, workshop_name")
+      .eq("id", data.binderId)
+      .maybeSingle();
+    if (!binder) fail(404, "Atelier introuvable.");
+
+    const invitation = await createBinderInvitation(sb, {
+      binderId: data.binderId,
+      email: data.email,
+      invitedBy: context.userId,
+    });
+
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    try {
+      await sendTemplateEmail("binder-invitation", data.email, {
+        templateData: {
+          workshopName: binder!.workshop_name ?? binder!.display_name,
+          invitationToken: invitation.token,
+        },
+      });
+    } catch (err) {
+      // The invitation exists and is valid even if the e-mail failed to
+      // leave — the same discipline as sendVisitorSummaryEmail: a
+      // notification failure must never undo the write it describes.
+      const { logOperationalError } = await import("@/build/services/operationalLog.server");
+      logOperationalError("binder-invitation.email-failed", err, { binderId: data.binderId });
+    }
+
+    return { ok: true, expiresAt: invitation.expiresAt };
+  });
+
+/**
+ * Accept a binder invitation and become a member of the atelier it names.
+ *
+ * The caller must already be signed in — this app has no unauthenticated
+ * write path, so the accept screen signs the person up or in first (Supabase
+ * Auth, password-based like every other relieur account) and only then calls
+ * this.
+ */
+export const acceptBinderInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ token: z.string().min(1).max(200) }).parse(data))
+  .handler(async ({ context, data }) => {
+    const sb = await admin();
+    // The declared address on the signed-in account, not necessarily
+    // provider-verified: unlike claimMarketplaceCase's e-mail rapprochement
+    // (which grants access on its own and so demands real verification), this
+    // is a sanity check on top of a token that already proves the invitation
+    // itself — it exists to catch the wrong account, not to authorise one.
+    const accountEmail = typeof context.claims.email === "string" ? context.claims.email : null;
+    const result = await acceptBinderInvitationForUser(sb, {
+      rawToken: data.token,
+      userId: context.userId,
+      accountEmail,
+    });
+    if (!result.ok) fail(409, result.reason);
+    return { binderId: result.binderId };
   });
 
 // ---------------------------------------------------------------------------

@@ -1034,6 +1034,7 @@ export type Database = {
           is_demo: boolean
           max_project_cents: number | null
           min_project_cents: number | null
+          personal_referral_slug?: string | null
           postal_code: string | null
           rating_avg: number | null
           rating_count: number
@@ -1058,6 +1059,7 @@ export type Database = {
           is_demo?: boolean
           max_project_cents?: number | null
           min_project_cents?: number | null
+          personal_referral_slug?: string | null
           postal_code?: string | null
           rating_avg?: number | null
           rating_count?: number
@@ -1082,6 +1084,7 @@ export type Database = {
           is_demo?: boolean
           max_project_cents?: number | null
           min_project_cents?: number | null
+          personal_referral_slug?: string | null
           postal_code?: string | null
           rating_avg?: number | null
           rating_count?: number
@@ -1093,6 +1096,78 @@ export type Database = {
           user_id?: string | null
           workshop_name?: string | null
           years_experience?: number | null
+        }
+        Relationships: []
+      }
+      marketplace_binder_members: {
+        Row: {
+          account_status: string
+          binder_id: string
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_status?: string
+          binder_id: string
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_status?: string
+          binder_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      marketplace_binder_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          binder_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          revoked_at: string | null
+          status: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          binder_id: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invited_by?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          binder_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash?: string
         }
         Relationships: []
       }
@@ -1161,6 +1236,7 @@ export type Database = {
       }
       marketplace_cases: {
         Row: {
+          acquisition_origin?: string
           admin_notes: string | null
           binder_payout_cents: number | null
           claim_method: string | null
@@ -1175,6 +1251,7 @@ export type Database = {
           manual_review_required: boolean
           mission_id: string | null
           price_includes: string[]
+          referred_binder_id?: string | null
           pricing_components?: Json
           pricing_low_estimate_cents?: number | null
           pricing_high_estimate_cents?: number | null
@@ -1196,6 +1273,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          acquisition_origin?: string
           admin_notes?: string | null
           binder_payout_cents?: number | null
           claim_method?: string | null
@@ -1210,6 +1288,7 @@ export type Database = {
           manual_review_required?: boolean
           mission_id?: string | null
           price_includes?: string[]
+          referred_binder_id?: string | null
           pricing_components?: Json
           pricing_low_estimate_cents?: number | null
           pricing_high_estimate_cents?: number | null
@@ -1231,6 +1310,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          acquisition_origin?: string
           admin_notes?: string | null
           binder_payout_cents?: number | null
           claim_method?: string | null
@@ -1245,6 +1325,7 @@ export type Database = {
           manual_review_required?: boolean
           mission_id?: string | null
           price_includes?: string[]
+          referred_binder_id?: string | null
           pricing_components?: Json
           pricing_low_estimate_cents?: number | null
           pricing_high_estimate_cents?: number | null
@@ -1271,7 +1352,7 @@ export type Database = {
         Row: {
           actor_user_id: string | null
           binder_id: string | null
-          case_id: string
+          case_id: string | null
           created_at: string
           event_type: string
           id: string
@@ -1280,7 +1361,7 @@ export type Database = {
         Insert: {
           actor_user_id?: string | null
           binder_id?: string | null
-          case_id: string
+          case_id?: string | null
           created_at?: string
           event_type: string
           id?: string
@@ -1289,7 +1370,7 @@ export type Database = {
         Update: {
           actor_user_id?: string | null
           binder_id?: string | null
-          case_id?: string
+          case_id?: string | null
           created_at?: string
           event_type?: string
           id?: string

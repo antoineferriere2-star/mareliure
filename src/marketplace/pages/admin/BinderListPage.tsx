@@ -2,10 +2,12 @@
  * The relieur roster. Approval is a human act (§51): a workshop only starts
  * receiving projects once someone has looked at its portfolio and said yes.
  */
+import { useState, type FormEvent } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  inviteBinderMember,
   listMarketplaceBinders,
   setBinderStatus,
 } from "@/marketplace/services/marketplace.data.functions";
@@ -23,6 +25,7 @@ const STATUS_LABELS: Record<string, string> = {
 export function BinderListPage() {
   const fetchBinders = useServerFn(listMarketplaceBinders);
   const setStatus = useServerFn(setBinderStatus);
+  const invite = useServerFn(inviteBinderMember);
   const queryClient = useQueryClient();
   const queryKey = ["marketplace", "binders"] as const;
 
@@ -31,6 +34,9 @@ export function BinderListPage() {
     mutationFn: (input: { binderId: string; status: string }) =>
       setStatus({ data: input as { binderId: string; status: "approved" } }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+  const inviteMember = useMutation({
+    mutationFn: (input: { binderId: string; email: string }) => invite({ data: input }),
   });
 
   if (isPending) return <p className="text-sm text-muted-foreground">Chargement…</p>;
@@ -109,10 +115,62 @@ export function BinderListPage() {
                   </Button>
                 )}
               </div>
+              <div className="mt-3 sm:mt-2 sm:basis-full">
+                <InviteMemberForm
+                  disabled={inviteMember.isPending}
+                  onInvite={(inviteEmail) =>
+                    inviteMember.mutate({ binderId: binder.id, email: inviteEmail })
+                  }
+                />
+              </div>
             </li>
           ))}
         </ul>
       )}
     </div>
+  );
+}
+
+/**
+ * One e-mail field per atelier row — Phase A ships the workflow, not a
+ * membership management screen (§8 : « même si l'UI de gestion
+ * multi-utilisateurs n'est pas encore développée »).
+ */
+function InviteMemberForm({
+  disabled,
+  onInvite,
+}: {
+  disabled: boolean;
+  onInvite: (email: string) => void;
+}) {
+  const [email, setEmail] = useState("");
+  const [sent, setSent] = useState(false);
+
+  function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    if (!email.trim()) return;
+    onInvite(email.trim());
+    setSent(true);
+    setEmail("");
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="flex flex-wrap items-center gap-2">
+      <input
+        type="email"
+        required
+        placeholder="e-mail à inviter"
+        value={email}
+        onChange={(event) => {
+          setEmail(event.target.value);
+          setSent(false);
+        }}
+        className="min-w-0 flex-1 rounded-md border border-border bg-background px-2.5 py-1.5 text-xs"
+      />
+      <Button type="submit" size="sm" variant="outline" disabled={disabled}>
+        Inviter
+      </Button>
+      {sent && <span className="text-xs text-muted-foreground">Invitation envoyée.</span>}
+    </form>
   );
 }

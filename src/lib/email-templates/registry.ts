@@ -2,6 +2,7 @@ import type { ComponentType } from "react";
 import { template as newDossierTemplate } from "./new-dossier";
 import { template as publicContactTemplate } from "./public-contact";
 import { template as visitorSummaryTemplate } from "./visitor-summary";
+import { template as binderInvitationTemplate } from "./binder-invitation";
 
 type TemplateData = Record<string, unknown>;
 
@@ -26,4 +27,5 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   "new-dossier": newDossierTemplate,
   "public-contact": publicContactTemplate,
   "visitor-summary": visitorSummaryTemplate,
+  "binder-invitation": binderInvitationTemplate,
 };

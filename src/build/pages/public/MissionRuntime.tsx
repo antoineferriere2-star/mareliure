@@ -1,5 +1,5 @@
 /* eslint-disable react-refresh/only-export-components -- localizeField is exported for unit testing */
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
 import { ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FIELD_COMPONENTS, type InspirationPhotoAnalysis } from "@/build/engine/fields";
@@ -188,7 +188,32 @@ function toNotices(rules: { id: string; message: string }[]): ConsistencyNotice[
  * here — every question, option, validation rule and brief mapping comes
  * from the Playbook itself.
  */
-export function MissionRuntime({ publicToken }: { publicToken: string }) {
+/**
+ * What a route may place after the submitted summary. The runtime passes the
+ * address the visitor typed and nothing else; the route decides what to do
+ * with it. No Mission knows which product it runs in.
+ */
+export type RenderAfterSubmission = (context: { visitorEmail: string | null }) => ReactNode;
+
+function visitorEmailFrom(answers: Answers): string | null {
+  return typeof answers.email === "string" && answers.email.trim() ? answers.email.trim() : null;
+}
+
+export function MissionRuntime({
+  publicToken,
+  renderAfterSubmission,
+  seedAnswers,
+}: {
+  publicToken: string;
+  renderAfterSubmission?: RenderAfterSubmission;
+  /**
+   * Answers to merge in when a fresh session starts (never on resume) — the
+   * generic half of carrying an opaque tag through the tunnel. The runtime
+   * does not interpret these keys; it only forwards them, exactly as it
+   * already forwards whatever a visitor types into a real Playbook field.
+   */
+  seedAnswers?: Record<string, string>;
+}) {
   // The header needs the business's name, which only arrives with the mission
   // fetched by the content below — so it is lifted here rather than fetched
   // twice.
@@ -214,6 +239,8 @@ export function MissionRuntime({ publicToken }: { publicToken: string }) {
         publicToken={publicToken}
         onBusinessName={setBusinessName}
         onMissionLocale={setMissionLocale}
+        renderAfterSubmission={renderAfterSubmission}
+        seedAnswers={seedAnswers}
       />
     </BuildPublicShell>
   );
@@ -223,10 +250,14 @@ function MissionRuntimeContent({
   publicToken,
   onBusinessName,
   onMissionLocale,
+  renderAfterSubmission,
+  seedAnswers,
 }: {
   publicToken: string;
   onBusinessName: (name: string | null) => void;
   onMissionLocale: (locale: SupportedLocale | null) => void;
+  renderAfterSubmission?: RenderAfterSubmission;
+  seedAnswers?: Record<string, string>;
 }) {
   const { locale } = usePublicLocale();
   const copy = useCallback((text: string) => publicCopy(locale, text), [locale]);
@@ -277,7 +308,21 @@ function MissionRuntimeContent({
       onMissionLocale(missionLocale(data.mission));
       setSchema(data.playbook_schema);
       setSessionAuth(auth);
-      setAnswers(data.session.answers ?? {});
+      const initialAnswers = { ...(data.session.answers ?? {}), ...seedAnswers };
+      setAnswers(initialAnswers);
+      if (seedAnswers && Object.keys(seedAnswers).length > 0) {
+        // Best-effort: a referral tag lost to a transient network error just
+        // means this session is never resolved as BINDER_REFERRED — never a
+        // security question, see reconcileCaseTriage. Fired directly against
+        // the freshly minted auth rather than through `persist`, whose
+        // closure would still see the stale (null) sessionAuth state here.
+        void callRuntime({
+          action: "save_session",
+          session_id: auth.sessionId,
+          session_secret: auth.secret,
+          answers: initialAnswers,
+        }).catch(() => {});
+      }
     }
 
     (async () => {
@@ -323,8 +368,11 @@ function MissionRuntimeContent({
       window.clearTimeout(slowLoadTimer);
     };
     // onBusinessName is a setState setter, so its identity is stable and
-    // listing it never re-runs the load.
-  }, [publicToken, reloadKey, onBusinessName, onMissionLocale]);
+    // listing it never re-runs the load. seedAnswers must stay referentially
+    // stable across re-renders for the same reason (the route memoises it on
+    // its search param) — listed here so a *real* change (a different `ref`)
+    // does start a fresh session, which is the correct behaviour.
+  }, [publicToken, reloadKey, onBusinessName, onMissionLocale, seedAnswers]);
 
   function retryLoad() {
     // Bump the effect's dependency rather than clearing storage first — a
@@ -606,6 +654,7 @@ function MissionRuntimeContent({
           emailSent={dossier.emailSent}
           summaryUrl={dossier.summaryUrl}
           onStartNew={startNewProject}
+          followUp={renderAfterSubmission?.({ visitorEmail: visitorEmailFrom(answers) })}
         />
       )}
 

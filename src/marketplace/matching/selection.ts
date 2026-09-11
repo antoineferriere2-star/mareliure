@@ -71,3 +71,30 @@ export function planBinderSelection(input: {
 export function remainingInvitations(alreadyInvitedCount: number): number {
   return Math.max(0, MAX_BINDERS_PER_CASE - alreadyInvitedCount);
 }
+
+const REFERRAL_EXCLUSIVITY_MESSAGE =
+  "Ce dossier a été apporté par un atelier : il ne peut être envoyé qu'à celui-ci.";
+
+/**
+ * A client apporté par un atelier (§53-§54) never enters the general
+ * matching pool. `sendCaseToBinders` is the only place invitations are ever
+ * created, so this is the one check that has to hold for the guarantee "il
+ * n'est pas proposé aux autres ateliers" to be real rather than a comment.
+ *
+ * Pure, so the property is testable without a database: whatever an admin
+ * (or a manipulated request) asks for, a BINDER_REFERRED case can only ever
+ * be sent to the workshop it was referred to.
+ */
+export function canSendCaseToBinders(input: {
+  acquisitionOrigin: string;
+  referredBinderId: string | null;
+  requestedBinderIds: readonly string[];
+}): { allowed: boolean; reason?: string } {
+  if (input.acquisitionOrigin !== "BINDER_REFERRED") return { allowed: true };
+  const isExactlyTheReferredBinder =
+    input.requestedBinderIds.length === 1 &&
+    input.requestedBinderIds[0] === input.referredBinderId;
+  return isExactlyTheReferredBinder
+    ? { allowed: true }
+    : { allowed: false, reason: REFERRAL_EXCLUSIVITY_MESSAGE };
+}
