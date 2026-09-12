@@ -26,11 +26,11 @@ export const Route = createFileRoute("/candidature-atelier")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "Devenir atelier partenaire — Ma Reliure" },
+      { title: "Candidature atelier partenaire — Ma Reliure" },
       {
         name: "description",
         content:
-          "Rejoindre le réseau d'ateliers indépendants de Ma Reliure : présentez votre atelier.",
+          "Présentez votre atelier à Ma Reliure : prénom, nom, e-mail, type d'entreprise. Nous lisons chaque candidature et vous recontactons.",
       },
     ],
   }),

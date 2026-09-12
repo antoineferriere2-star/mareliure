@@ -8,7 +8,7 @@ import { PartnersLandingPage } from "@/marketplace/pages/partners/PartnersLandin
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 
-const TITLE = "Devenir atelier partenaire — Ma Reliure";
+const TITLE = "Ateliers partenaires — Rejoindre le réseau Ma Reliure";
 const DESCRIPTION =
   "Rejoignez le réseau d'ateliers indépendants de Ma Reliure : projets qualifiés, rémunération connue avant d'accepter, et vos propres clients suivis dans le même espace.";
 
