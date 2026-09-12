@@ -9,7 +9,10 @@
  * Deux publics, choisis explicitement en haut de la page plutôt que devinés :
  *
  * - **Client** : un lien de connexion par e-mail — pas de compte à créer, pas
- *   de mot de passe à retenir, et le premier lien ouvre l'espace ;
+ *   de mot de passe à retenir, et le premier lien ouvre l'espace. Un mot de
+ *   passe reste possible en repli, replié sous « Vous préférez un mot de
+ *   passe ? » — jamais la méthode par défaut, mais jamais bloqué non plus
+ *   pour qui ne veut plus repasser par sa boîte mail à chaque connexion ;
  * - **Atelier partenaire** : un mot de passe pour se connecter, et candidater
  *   pour rejoindre le réseau si aucun compte n'existe encore — un atelier ne
  *   s'auto-déclare jamais partenaire actif, l'admin invite après avoir
@@ -26,7 +29,6 @@ import {
   linkErrorFromUrl,
   requestAccessLink,
 } from "@/marketplace/auth/accessLink";
-import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
 import { LandingFooter, LandingHeader } from "@/marketplace/pages/landing/LandingChrome";
 
 const labelClass = "mr-small block font-semibold text-mr-ink";
@@ -37,6 +39,8 @@ const submitClass =
 const textButtonClass = "mr-link mr-small mr-tap text-left disabled:no-underline disabled:opacity-60";
 
 type Audience = "customer" | "binder";
+/** Repliée sous le lien de connexion — la méthode recommandée reste sans mot de passe (§3). */
+type CustomerMethod = "link" | "password-signin" | "password-signup";
 
 const tabClass = (active: boolean) =>
   `mr-tap flex-1 rounded-[2px] border px-4 py-3 text-center text-[0.9375rem] font-semibold transition-colors duration-200 ${
@@ -61,6 +65,7 @@ export function MaReliureAuthPage({
       : linkErrorFromUrl(window.location.hash, window.location.search),
   );
   const [audience, setAudience] = useState<Audience>("customer");
+  const [customerMethod, setCustomerMethod] = useState<CustomerMethod>("link");
   const alert = accessError ?? linkProblem;
 
   return (
@@ -93,7 +98,11 @@ export function MaReliureAuthPage({
 
         <p className="mr-lead mt-6">
           {audience === "customer"
-            ? "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien de connexion : pas de compte à créer, pas de mot de passe à retenir."
+            ? customerMethod === "link"
+              ? "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien de connexion : pas de compte à créer, pas de mot de passe à retenir."
+              : customerMethod === "password-signin"
+                ? "Connectez-vous avec le mot de passe de votre espace."
+                : "Créez un mot de passe : vous n'aurez plus à passer par votre boîte mail à chaque connexion."
             : "Connectez-vous avec le mot de passe de votre atelier, ou candidatez pour rejoindre le réseau si vous n'avez pas encore de compte."}
         </p>
 
@@ -110,7 +119,50 @@ export function MaReliureAuthPage({
 
         <div className="mt-10">
           {audience === "customer" ? (
-            <LinkSignIn onSent={() => setLinkProblem(null)} />
+            customerMethod === "link" ? (
+              <>
+                <LinkSignIn onSent={() => setLinkProblem(null)} />
+                <p className="mt-8 border-t border-mr-rule pt-6">
+                  <button
+                    type="button"
+                    className={textButtonClass}
+                    onClick={() => setCustomerMethod("password-signin")}
+                  >
+                    Vous préférez un mot de passe ?
+                  </button>
+                </p>
+              </>
+            ) : (
+              <>
+                {customerMethod === "password-signin" ? (
+                  <PasswordSignIn onSignedIn={onSignedIn} />
+                ) : (
+                  <PasswordSignUp onSignedIn={onSignedIn} />
+                )}
+                <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 border-t border-mr-rule pt-6">
+                  <button
+                    type="button"
+                    className={textButtonClass}
+                    onClick={() =>
+                      setCustomerMethod(
+                        customerMethod === "password-signin" ? "password-signup" : "password-signin",
+                      )
+                    }
+                  >
+                    {customerMethod === "password-signin"
+                      ? "Pas encore de mot de passe ? En créer un"
+                      : "Déjà un mot de passe ? Se connecter"}
+                  </button>
+                  <button
+                    type="button"
+                    className={textButtonClass}
+                    onClick={() => setCustomerMethod("link")}
+                  >
+                    Revenir au lien de connexion par e-mail
+                  </button>
+                </div>
+              </>
+            )
           ) : (
             <>
               <h2 className="mr-heading text-mr-ink">Se connecter</h2>
@@ -122,12 +174,10 @@ export function MaReliureAuthPage({
                 <h2 className="mr-heading text-mr-ink">S'inscrire</h2>
                 <p className="mr-body mt-3">
                   Un atelier ne devient partenaire qu'après validation par Ma Reliure — nous ne
-                  créons pas de compte immédiatement. Écrivez-nous, nous revenons vers vous.
+                  créons pas de compte immédiatement. Présentez votre atelier, nous revenons vers
+                  vous.
                 </p>
-                <a
-                  href={`mailto:${MARELIURE_CONTACT_EMAIL}?subject=${encodeURIComponent("Candidature atelier partenaire Ma Reliure")}`}
-                  className={`mt-4 ${submitClass}`}
-                >
+                <a href="/candidature-atelier" className={`mt-4 ${submitClass}`}>
                   Candidater pour devenir atelier partenaire
                 </a>
               </div>
@@ -299,6 +349,100 @@ function PasswordSignIn({ onSignedIn }: { onSignedIn: () => Promise<void> }) {
       )}
       <button type="submit" disabled={loading} className={submitClass}>
         {loading ? "Connexion…" : "Se connecter"}
+      </button>
+    </form>
+  );
+}
+
+/**
+ * Créer un mot de passe sur le compte — pour un client qui a déjà reçu un
+ * lien de connexion au moins une fois (le compte existe) et ne veut plus
+ * repasser par sa boîte mail à chaque visite. N'importe entre-temps rien du
+ * flux principal : le lien de connexion reste la méthode recommandée (§3),
+ * celle-ci n'est jamais poussée par défaut.
+ */
+function PasswordSignUp({ onSignedIn }: { onSignedIn: () => Promise<void> }) {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    const { data, error: signUpError } = await supabase.auth.signUp({
+      email: email.trim(),
+      password,
+    });
+    setLoading(false);
+    if (signUpError) {
+      const detail =
+        signUpError.message && signUpError.message.trim() && signUpError.message !== "{}"
+          ? signUpError.message
+          : "Vérifiez l'adresse indiquée et réessayez.";
+      setError(detail);
+      return;
+    }
+    if (!data.session) {
+      // Confirmation requise avant l'ouverture d'une session — l'e-mail
+      // envoyé porte le même lien que la connexion habituelle.
+      setAwaitingConfirmation(true);
+      return;
+    }
+    await onSignedIn();
+  }
+
+  if (awaitingConfirmation) {
+    return (
+      <p role="status" className="mr-body">
+        Confirmez votre adresse depuis l'e-mail que nous venons d'envoyer, puis revenez vous
+        connecter avec ce mot de passe.
+      </p>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <div className="space-y-5">
+        <div>
+          <label htmlFor="mr-auth-signup-email" className={labelClass}>
+            Adresse e-mail
+          </label>
+          <input
+            id="mr-auth-signup-email"
+            type="email"
+            required
+            autoComplete="email"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            className={inputClass}
+          />
+        </div>
+        <div>
+          <label htmlFor="mr-auth-signup-password" className={labelClass}>
+            Mot de passe
+          </label>
+          <input
+            id="mr-auth-signup-password"
+            type="password"
+            required
+            minLength={8}
+            autoComplete="new-password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            className={inputClass}
+          />
+        </div>
+      </div>
+      {error && (
+        <p role="alert" className="mr-small mt-3 text-mr-bordeaux">
+          {error}
+        </p>
+      )}
+      <button type="submit" disabled={loading} className={submitClass}>
+        {loading ? "Création…" : "Créer mon mot de passe"}
       </button>
     </form>
   );

@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as AuthRouteImport } from './routes/auth'
+import { Route as CandidatureAtelierRouteImport } from './routes/candidature-atelier'
 import { Route as ConditionsRouteImport } from './routes/conditions'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -100,6 +101,11 @@ const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
 const AuthRoute = AuthRouteImport.update({
   id: '/auth',
   path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CandidatureAtelierRoute = CandidatureAtelierRouteImport.update({
+  id: '/candidature-atelier',
+  path: '/candidature-atelier',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConditionsRoute = ConditionsRouteImport.update({
@@ -526,6 +532,7 @@ const ApiInternalHermesProspectFunnelsMetricsRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
@@ -605,6 +612,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
@@ -680,6 +688,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
@@ -761,6 +770,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/candidature-atelier'
     | '/conditions'
     | '/confidentialite'
     | '/contact'
@@ -840,6 +850,7 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/candidature-atelier'
     | '/conditions'
     | '/confidentialite'
     | '/contact'
@@ -914,6 +925,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/candidature-atelier'
     | '/conditions'
     | '/confidentialite'
     | '/contact'
@@ -995,6 +1007,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CandidatureAtelierRoute: typeof CandidatureAtelierRoute
   ConditionsRoute: typeof ConditionsRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
@@ -1051,6 +1064,13 @@ declare module '@tanstack/react-router' {
       path: '/auth'
       fullPath: '/auth'
       preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/candidature-atelier': {
+      id: '/candidature-atelier'
+      path: '/candidature-atelier'
+      fullPath: '/candidature-atelier'
+      preLoaderRoute: typeof CandidatureAtelierRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conditions': {
@@ -1784,6 +1804,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CandidatureAtelierRoute: CandidatureAtelierRoute,
   ConditionsRoute: ConditionsRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,

@@ -725,6 +725,68 @@ export const setBinderStatus = createServerFn({ method: "POST" })
   });
 
 /**
+ * Créer l'atelier réel à partir d'une candidature acceptée (§7) — le seul
+ * chemin qui transforme une candidature en profil d'atelier. Toujours
+ * `pending_review` à la création : cette fonction accepte la candidature,
+ * elle n'approuve pas l'atelier — deux décisions distinctes, comme le reste
+ * du modèle (`setBinderStatus` approuve, séparément).
+ */
+export const createBinderFromApplication = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        applicationId: z.string().uuid(),
+        displayName: z.string().trim().min(1).max(200),
+        workshopName: z.string().trim().min(1).max(200).optional(),
+        city: z.string().trim().max(100).optional(),
+        yearsExperience: z.number().int().min(0).max(100).optional(),
+      })
+      .parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+
+    const { data: application } = await sb
+      .from("marketplace_binder_applications")
+      .select("status")
+      .eq("id", data.applicationId)
+      .maybeSingle();
+    if (!application) fail(404, "Candidature introuvable.");
+    if (application!.status !== "new") fail(409, "Cette candidature a déjà été traitée.");
+
+    const { data: binder, error } = await sb
+      .from("marketplace_binders")
+      .insert({
+        display_name: data.displayName,
+        workshop_name: data.workshopName || null,
+        city: data.city || null,
+        years_experience: data.yearsExperience ?? null,
+        status: "pending_review",
+      })
+      .select("id")
+      .single();
+    if (error) fail(500, error.message);
+
+    // Conditionnel sur status='new' : la même garde de course que partout
+    // ailleurs dans ce fichier (assignCaseOwner, acceptBinderInvitation…).
+    const { error: updateError } = await sb
+      .from("marketplace_binder_applications")
+      .update({
+        status: "accepted",
+        reviewed_by: context.userId,
+        reviewed_at: new Date().toISOString(),
+        converted_binder_id: binder!.id,
+      })
+      .eq("id", data.applicationId)
+      .eq("status", "new");
+    if (updateError) fail(500, updateError.message);
+
+    return { binderId: binder!.id };
+  });
+
+/**
  * Set or change an atelier's public referral slug (§52, `/a/:slug`).
  *
  * Admin-controlled by design (§52 of the 11 September brief: "Les termes sont

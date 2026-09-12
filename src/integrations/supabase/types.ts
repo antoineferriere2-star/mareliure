@@ -1099,6 +1099,66 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_binder_applications: {
+        Row: {
+          average_annual_revenue_band: string | null
+          city: string | null
+          converted_binder_id: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          legal_entity_type: string
+          message: string | null
+          phone: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          workshop_name: string
+          years_experience: number | null
+        }
+        Insert: {
+          average_annual_revenue_band?: string | null
+          city?: string | null
+          converted_binder_id?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          legal_entity_type: string
+          message?: string | null
+          phone?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          workshop_name: string
+          years_experience?: number | null
+        }
+        Update: {
+          average_annual_revenue_band?: string | null
+          city?: string | null
+          converted_binder_id?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          legal_entity_type?: string
+          message?: string | null
+          phone?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          workshop_name?: string
+          years_experience?: number | null
+        }
+        Relationships: []
+      }
       marketplace_binder_commercial_terms: {
         Row: {
           binder_id: string
