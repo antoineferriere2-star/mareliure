@@ -2,6 +2,7 @@ import { createContext, useContext } from "react";
 import { DEFAULT_LOCALE } from "@/build/i18n";
 import type { SupportedLocale } from "@/build/i18n";
 import { FR_PUBLIC_COPY } from "./frPublicCopy";
+import { EN_BOOKBINDING_COPY } from "./enBookbindingCopy";
 
 export type { SupportedLocale } from "@/build/i18n";
 
@@ -965,9 +966,19 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
     "Preguntas a explorar (a partir de la foto de inspiración)",
 };
 
+/**
+ * `en-US` is the engine's own base locale — every dictionary until now
+ * translated *from* it. The Bookbinding Playbook inverts that: its source
+ * text is French (bookbindingPlaybookSchema.ts), so Fine Bindery's Mission
+ * (`proposal.defaultLocale: "en-US"`) needs a lookup running the other way.
+ * Safe to add unconditionally: a Deck/Métré source string is English and
+ * never matches a French key here, so this dictionary is a no-op for every
+ * Playbook but the bookbinding one.
+ */
 const DICTIONARIES: Partial<Record<SupportedLocale, Record<string, string>>> = {
   "es-US": ES_PUBLIC_COPY,
   "fr-FR": FR_PUBLIC_COPY,
+  "en-US": EN_BOOKBINDING_COPY,
 };
 
 /**

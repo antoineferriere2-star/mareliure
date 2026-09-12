@@ -87,7 +87,17 @@ export function localizeField(field: PlaybookField, copy: CopyFn): PlaybookField
     localized.options = localized.options.map((option) => {
       if (typeof option === "string") return copy(option);
       if (option && typeof option === "object" && "label" in option) {
-        return { ...option, label: copy(String(option.label)) };
+        return {
+          ...option,
+          label: copy(String(option.label)),
+          // Missed until now, the same way `components`/`ranges` below once
+          // were: an option's reassurance renders straight from the Playbook
+          // (SingleChoiceField.tsx, MultiChoiceField.tsx) with no localizing
+          // step of its own.
+          ...("reassurance" in option && typeof option.reassurance === "string"
+            ? { reassurance: copy(option.reassurance) }
+            : {}),
+        };
       }
       return option;
     });

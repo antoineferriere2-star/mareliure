@@ -1,10 +1,32 @@
 import { describe, expect, it } from "vitest";
-import type { AddressField, BudgetField, ConsentField } from "@/build/schema/playbook";
+import type {
+  AddressField,
+  BudgetField,
+  ConsentField,
+  SingleChoiceField,
+} from "@/build/schema/playbook";
 import { localizeField } from "./MissionRuntime";
 
 const upper = (text: string) => text.toUpperCase();
 
 describe("localizeField", () => {
+  it("localizes an option's reassurance, not just its label", () => {
+    const field: SingleChoiceField = {
+      key: "intent",
+      label: "What do you want to do?",
+      type: "single_choice",
+      desirability: "required",
+      options: [
+        { value: "repair", label: "Repair it", reassurance: "The book is tired." },
+        { value: "other", label: "Other" },
+      ],
+    };
+    const localized = localizeField(field, upper) as SingleChoiceField;
+    expect(localized.options[0].reassurance).toBe("THE BOOK IS TIRED.");
+    expect(localized.options[0].label).toBe("REPAIR IT");
+    // An option with no reassurance stays exactly that — no stray key added.
+    expect(localized.options[1]).not.toHaveProperty("reassurance");
+  });
   it("localizes address components (ZIP code / City-State sub-labels)", () => {
     const field: AddressField = {
       key: "address",
