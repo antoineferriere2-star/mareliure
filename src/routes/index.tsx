@@ -2,9 +2,12 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
 import { ReliureLanding } from "@/marketplace/pages/ReliureLanding";
+import { FineBinderyLandingPage } from "@/marketplace/pages/fineBindery/FineBinderyLanding";
 import { jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
 import { isMaReliure } from "@/brand";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
+import { MARKETPLACE_BRAND_CONFIGS, type MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBrand.server";
 import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 
 /**
@@ -88,8 +91,45 @@ function metreHead() {
   };
 }
 
+const fineBinderyTitle = "Fine Bindery — Exceptional French Bookbinding";
+const fineBinderyDescription =
+  "The international concierge for exceptional French bookbinding. Entrust your book to selected independent workshops in France — Fine Bindery manages every step.";
+
+function fineBinderyHead() {
+  const canonical = MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY.seo.canonicalOrigin;
+  return {
+    meta: [
+      { title: fineBinderyTitle },
+      { name: "description", content: fineBinderyDescription },
+      { name: "robots", content: "index, follow" },
+      { property: "og:type", content: "website" },
+      { property: "og:site_name", content: "Fine Bindery" },
+      { property: "og:title", content: fineBinderyTitle },
+      { property: "og:description", content: fineBinderyDescription },
+      { property: "og:url", content: canonical },
+      { property: "og:locale", content: "en_US" },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: fineBinderyTitle },
+      { name: "twitter:description", content: fineBinderyDescription },
+    ],
+    links: [{ rel: "canonical", href: canonical }, EDITORIAL_FONT_PRELOAD],
+  };
+}
+
+async function loadHomeBrand(): Promise<MarketplaceBrand | null> {
+  // Only the marketplace deployment ever has two brands to tell apart — on
+  // the Métré deployment `isMaReliure` is `false` at build time, and this
+  // branch (along with the server round-trip it would otherwise make) is
+  // dropped by the bundler rather than shipped and skipped.
+  return isMaReliure ? getRequestMarketplaceBrand() : null;
+}
+
 export const Route = createFileRoute("/")({
-  head: () => (isMaReliure ? maReliureHead() : metreHead()),
+  loader: async () => ({ brand: await loadHomeBrand() }),
+  head: ({ loaderData }) => {
+    if (!isMaReliure) return metreHead();
+    return loaderData?.brand === "FINE_BINDERY" ? fineBinderyHead() : maReliureHead();
+  },
   component: HomeRoute,
 });
 
@@ -100,10 +140,12 @@ export const Route = createFileRoute("/")({
 // unprocessed session token in the hash and hand it to /auth, which already
 // knows how to detect the session and route to /build or /portal.
 function HomeRoute() {
+  const { brand } = Route.useLoaderData();
   useEffect(() => {
     if (window.location.hash.includes("access_token")) {
       window.location.replace(`/auth${window.location.hash}`);
     }
   }, []);
-  return isMaReliure ? <ReliureLanding /> : <BuildPublicHome />;
+  if (!isMaReliure) return <BuildPublicHome />;
+  return brand === "FINE_BINDERY" ? <FineBinderyLandingPage /> : <ReliureLanding />;
 }

@@ -18,6 +18,7 @@ import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
 import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
+import { Route as FineBinderyRouteImport } from './routes/fine-bindery'
 import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
@@ -132,6 +133,11 @@ const DeckBuildersRoute = DeckBuildersRouteImport.update({
 const ExampleProjectBriefRoute = ExampleProjectBriefRouteImport.update({
   id: '/example-project-brief',
   path: '/example-project-brief',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const FineBinderyRoute = FineBinderyRouteImport.update({
+  id: '/fine-bindery',
+  path: '/fine-bindery',
   getParentRoute: () => rootRouteImport,
 } as any)
 const FreeInquiryAuditRoute = FreeInquiryAuditRouteImport.update({
@@ -544,6 +550,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
+  '/fine-bindery': typeof FineBinderyRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
@@ -625,6 +632,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
+  '/fine-bindery': typeof FineBinderyRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
@@ -702,6 +710,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
+  '/fine-bindery': typeof FineBinderyRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
@@ -785,6 +794,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/deck-builders'
     | '/example-project-brief'
+    | '/fine-bindery'
     | '/free-inquiry-audit'
     | '/how-it-works'
     | '/mentions-legales'
@@ -866,6 +876,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/deck-builders'
     | '/example-project-brief'
+    | '/fine-bindery'
     | '/free-inquiry-audit'
     | '/how-it-works'
     | '/mentions-legales'
@@ -942,6 +953,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/deck-builders'
     | '/example-project-brief'
+    | '/fine-bindery'
     | '/free-inquiry-audit'
     | '/how-it-works'
     | '/mentions-legales'
@@ -1025,6 +1037,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   DeckBuildersRoute: typeof DeckBuildersRoute
   ExampleProjectBriefRoute: typeof ExampleProjectBriefRoute
+  FineBinderyRoute: typeof FineBinderyRoute
   FreeInquiryAuditRoute: typeof FreeInquiryAuditRoute
   HowItWorksRoute: typeof HowItWorksRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
@@ -1119,6 +1132,13 @@ declare module '@tanstack/react-router' {
       path: '/example-project-brief'
       fullPath: '/example-project-brief'
       preLoaderRoute: typeof ExampleProjectBriefRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/fine-bindery': {
+      id: '/fine-bindery'
+      path: '/fine-bindery'
+      fullPath: '/fine-bindery'
+      preLoaderRoute: typeof FineBinderyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/free-inquiry-audit': {
@@ -1830,6 +1850,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   DeckBuildersRoute: DeckBuildersRoute,
   ExampleProjectBriefRoute: ExampleProjectBriefRoute,
+  FineBinderyRoute: FineBinderyRoute,
   FreeInquiryAuditRoute: FreeInquiryAuditRoute,
   HowItWorksRoute: HowItWorksRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
