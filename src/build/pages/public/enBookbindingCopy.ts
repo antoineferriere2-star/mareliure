@@ -10,24 +10,50 @@
  * — nothing about the lookup mechanism is Playbook-specific, only its
  * content is.
  *
- * Covers exactly what `localizeField`/`localizeValidationMessage`
- * (MissionRuntime.tsx) actually route through `copy()` during the live
- * intake: step titles and "why" text, field labels/helpText, option labels
- * and reassurance, address component labels, budget range labels, consent
- * text, and the Vérificateur's messages. Deliberately does NOT cover
- * `briefMapping`/`calculatedFields`/`derivedLines`/`alwaysIncludeLines`/
- * `suggestedNextActions`/`missingMessage` — those feed the internal Project
- * Brief that an atelier reads (engine/brief.ts), never the live runtime, and
- * staying French there is correct (§44 — the atelier gets French, Fine
- * Bindery translates for the customer, not the reverse). Placeholders
- * (`field.placeholder`, e.g. "Le Comte de Monte-Cristo") are also out of
- * scope: no field type's placeholder is localized anywhere in the engine
- * today, for any Playbook — not a gap introduced here.
+ * Covers exactly what actually reaches a visitor, on two different paths:
+ *
+ * 1. Live, during the intake — `localizeField`/`localizeValidationMessage`
+ *    (MissionRuntime.tsx) route `step.title`/`why`, `field.label`/
+ *    `helpText`, option labels/reassurance, address components, budget
+ *    ranges and consent text through `copy()`. The Live Project Canvas
+ *    (ProjectCanvasProjection.ts) additionally reads `field.briefMapping?
+ *    .category` and `.label` *instead of* `field.label`/`step.title`
+ *    whenever a mapping exists — first found live in production as
+ *    untranslated "LE PROJET" / "Type de projet" sitting next to an
+ *    otherwise-English canvas, hence every `briefMapping.category`/`.label`
+ *    below.
+ * 2. After submission — `buildVisitorProjectSummary` (visitorSummary.ts)
+ *    pools `confirmedInformation`/`assumptionsAndCalculated`/`constraints`
+ *    (which is where `derivedLines` and `alwaysIncludeLines` write, per
+ *    their own `section: "constraints"`) into what the visitor reads on the
+ *    summary page and in the confirmation e-mail, and pools
+ *    `missingInformation` (fed by a field's `missingMessage`, or a
+ *    `calculatedFieldMapping.onMissingLabel`/`onMissingValue`) into "still
+ *    to confirm". All of it is customer-facing, contrary to a first
+ *    assumption made while building this file — worth stating plainly since
+ *    it is easy to get wrong again the same way.
+ *
+ * Deliberately still NOT covered, and correctly so:
+ * `suggestedNextActions` and `brief.confidence` — visitorSummary.ts's own
+ * docstring calls these "commercial-only signals never meant for the
+ * visitor", and never passes them to `translate()`. `briefMapping.category`/
+ * `calculatedFieldMapping.category` on a *line* (as opposed to on a field)
+ * — never read back out by `toItem()`, so never rendered anywhere. Also out
+ * of reach structurally, not by choice: `summaryFragments`/
+ * `brief.projectSummary` compose a fresh sentence per submission (the book's
+ * actual title, author, measurements…), so no fixed dictionary key can ever
+ * match it — a real limit of whole-string translation, not a missing entry.
+ * Placeholders (`field.placeholder`, e.g. "Le Comte de Monte-Cristo") are
+ * also out of scope: no field type's placeholder is localized anywhere in
+ * the engine today, for any Playbook — not a gap introduced here.
  *
  * Two validation-rule messages contain a number and are translated as the
  * *template* `localizeValidationMessage` actually produces (digits already
  * masked to `{n0}`/`{n1}`), not as the raw French sentence — verified against
- * that function's own regex rather than guessed.
+ * that function's own regex rather than guessed. `derivedLines`/
+ * `alwaysIncludeLines` values reach the visitor through a plain
+ * `publicCopy()` call with no such masking, so those keep their numbers
+ * (e.g. "1 000 €") written out literally.
  */
 export const EN_BOOKBINDING_COPY: Record<string, string> = {
   // ---- Step 1: intention ----
@@ -276,6 +302,93 @@ export const EN_BOOKBINDING_COPY: Record<string, string> = {
     "\"I'm not sure\" cannot be selected alongside a specific condition. Choose one or the other.",
   "Suspicion de moisissure : isolez l'ouvrage dans un sac non fermé hermétiquement, dans un endroit sec, et évitez de le manipuler. Tous les ateliers ne prennent pas ces livres en charge.":
     "Suspected mould: isolate the book in a bag that isn't sealed airtight, somewhere dry, and avoid handling it. Not every workshop can take on books like this.",
+
+  // ---- briefMapping.category — the Live Project Canvas's group headers ----
+  "Le projet": "The project",
+  "L'ouvrage": "The book",
+  État: "Condition",
+  "Pièces jointes": "Attachments",
+  // Same spelling in both languages — listed anyway so the coverage test
+  // (which requires an entry per rendered string) can't drift silently if
+  // one of them is ever reworded to something that does need translating.
+  Style: "Style",
+  Finitions: "Finishing touches",
+  Contact: "Contact",
+  Valeur: "Value",
+
+  // ---- briefMapping.label — only entries not already identical to a
+  // field.label translated above ----
+  "Type de projet": "Project type",
+  Titre: "Title",
+  "Nature de l'ouvrage": "Nature of the book",
+  "État déclaré": "Declared condition",
+  Dos: "Spine",
+  Plats: "Boards",
+  Cahiers: "Sections",
+  Photos: "Photos",
+  Matière: "Material",
+  Couleur: "Colour",
+  "Références visuelles": "Visual references",
+  Nom: "Name",
+  "E-mail": "Email",
+  Localisation: "Location",
+  "Importance de l'ouvrage": "Importance of the book",
+  "Valeur déclarée": "Declared value",
+  "Délai souhaité": "Desired timeline",
+
+  // ---- field.missingMessage — reaches the visitor as "still to confirm" ----
+  "L'année d'édition n'a pas été communiquée.":
+    "The year of publication has not been provided.",
+  "La hauteur de l'ouvrage n'a pas été mesurée.": "The book's height has not been measured.",
+  "La largeur de l'ouvrage n'a pas été mesurée.": "The book's width has not been measured.",
+  "L'épaisseur de l'ouvrage n'a pas été mesurée.":
+    "The book's thickness has not been measured.",
+  "L'état du dos n'a pas été précisé.": "The condition of the spine has not been specified.",
+  "L'état des plats n'a pas été précisé.": "The condition of the boards has not been specified.",
+  "La tenue des cahiers n'a pas été précisée.":
+    "Whether the sections are still holding together has not been specified.",
+  "Aucun gros plan des dommages n'a été fourni.":
+    "No close-up photos of the damage have been provided.",
+  "Le style souhaité n'a pas été précisé.": "The desired style has not been specified.",
+  "La matière de couverture n'a pas été choisie.": "The cover material has not been chosen.",
+  "Aucun numéro de téléphone n'a été communiqué.": "No phone number has been provided.",
+
+  // ---- calculatedFields (the "format" field) ----
+  "Format (H × L × ép., cm)": "Size (H × W × thickness, cm)",
+  "Aucune dimension n'a été communiquée.": "No dimensions have been provided.",
+
+  // ---- derivedLines — reach the visitor via brief.constraints ----
+  "Ouvrage patrimonial": "Heritage item",
+  "Ce type d'ouvrage nécessite une validation spécifique par un professionnel avant prise en charge.":
+    "This type of book requires specific validation by a professional before it can be taken on.",
+  "Valeur déclarée élevée": "High declared value",
+  "Valeur estimée à plus de 1 000 € : le dossier doit être revu par un humain avant d'être diffusé.":
+    "Value estimated above 1 000 € — the project must be reviewed by a person before being sent out.",
+  "L'ouvrage doit être isolé et examiné avant tout transport. Tous les ateliers n'acceptent pas ce type d'intervention.":
+    "The book must be isolated and examined before any transport. Not every workshop accepts this kind of work.",
+  "Des pages manquent. Un relieur ne peut pas les recréer : il faudra décider ensemble comment traiter le manque.":
+    "Pages are missing. A bookbinder cannot recreate them — how to handle the gap will need to be decided together.",
+  "Corps d'ouvrage": "Book block",
+  "Le bloc se défait : une couture complète est probable, ce qui change l'ampleur de l'intervention.":
+    "The book block is coming apart: a full re-sewing is likely, which changes the scope of the work.",
+  Intention: "Intent",
+  "Le visiteur ne sait pas encore quel type d'intervention il souhaite : à cadrer avant de solliciter des ateliers.":
+    "The visitor does not yet know what kind of work they want — to be clarified before contacting workshops.",
+  "La valeur de l'ouvrage n'est pas connue du propriétaire.":
+    "The owner does not know the value of the book.",
+
+  // ---- alwaysIncludeLines — permanent caveats, reach the visitor the same way ----
+  "Diagnostic physique": "Physical diagnosis",
+  "L'état réel de l'ouvrage ne peut être confirmé qu'après examen en atelier.":
+    "The book's actual condition can only be confirmed after an in-workshop examination.",
+  "Prix Ma Reliure": "Fine Bindery price",
+  "Le périmètre pourra être confirmé après inspection physique de l'ouvrage en atelier.":
+    "The scope may be confirmed after a physical inspection of the book at the workshop.",
+
+  // ---- projectSummary fallback (see docstring: the composed summary itself
+  // cannot be translated this way; only the fallback is a fixed string) ----
+  "Demande de reliure comportant peu d'informations.":
+    "A bookbinding request with little information provided.",
 
   // ---- The Vérificateur's messages with an embedded number — translated as
   // the *template* localizeValidationMessage actually produces, digits

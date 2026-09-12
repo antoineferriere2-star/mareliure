@@ -43,8 +43,34 @@ for (const section of bookbindingPlaybookSchema.sections) {
   for (const step of section.steps) {
     RENDERED_STRINGS.push(step.title);
     if (step.why) RENDERED_STRINGS.push(step.why);
-    for (const field of step.fields) RENDERED_STRINGS.push(...stringsFromField(field));
+    for (const field of step.fields) {
+      RENDERED_STRINGS.push(...stringsFromField(field));
+      // Live Project Canvas (ProjectCanvasProjection.ts) reads these
+      // *instead of* field.label/step.title whenever present.
+      if (field.briefMapping?.category) RENDERED_STRINGS.push(field.briefMapping.category);
+      if (field.briefMapping?.label) RENDERED_STRINGS.push(field.briefMapping.label);
+      // Post-submission summary + confirmation email (visitorSummary.ts),
+      // via missingInformation.
+      if (field.missingMessage) RENDERED_STRINGS.push(field.missingMessage);
+    }
   }
+}
+
+// Also post-submission: calculatedFields, derivedLines, alwaysIncludeLines
+// all reach the visitor through the same pooled brief sections — see the
+// docstring in enBookbindingCopy.ts for exactly which ones and why.
+for (const calc of bookbindingPlaybookSchema.briefConfig.calculatedFields) {
+  RENDERED_STRINGS.push(calc.label);
+  if (calc.onMissingValue) RENDERED_STRINGS.push(calc.onMissingValue);
+}
+for (const line of bookbindingPlaybookSchema.briefConfig.derivedLines) {
+  RENDERED_STRINGS.push(line.label, line.value);
+}
+for (const line of bookbindingPlaybookSchema.briefConfig.alwaysIncludeLines) {
+  RENDERED_STRINGS.push(line.label, line.value);
+}
+if (bookbindingPlaybookSchema.briefConfig.emptySummaryFallback) {
+  RENDERED_STRINGS.push(bookbindingPlaybookSchema.briefConfig.emptySummaryFallback);
 }
 
 describe("EN_BOOKBINDING_COPY covers everything the live intake renders", () => {
