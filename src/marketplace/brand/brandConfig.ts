@@ -24,6 +24,11 @@ import type { SupportedLocale } from "@/build/i18n/locales";
 export const MARKETPLACE_BRANDS = ["MA_RELIURE", "FINE_BINDERY"] as const;
 export type MarketplaceBrand = (typeof MARKETPLACE_BRANDS)[number];
 
+/** A `marketplace_cases.brand` column reads back as a plain string — this narrows it. */
+export function isMarketplaceBrand(value: string): value is MarketplaceBrand {
+  return (MARKETPLACE_BRANDS as readonly string[]).includes(value);
+}
+
 /**
  * Un Host qui ne correspond à aucune marque connue (déploiement de prévisualisation,
  * `*.workers.dev`, faute de frappe DNS) retombe ici plutôt que de deviner.

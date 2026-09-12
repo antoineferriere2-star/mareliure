@@ -24,6 +24,7 @@ const SERVER_ONLY = [
   "src/integrations/supabase/client.server.ts",
   "scripts/seedBookbindingPlaybook.ts",
   "scripts/seedDeckPlaybook.ts",
+  "scripts/seedFineBinderyMission.ts",
   "scripts/seedMarketplaceDemo.ts",
 ];
 

@@ -30,6 +30,8 @@ import type { ProjectBrief } from "@/build/schema/brief";
 import { suggestManagedPrice, validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
 import { depositCentsFor, pricingModeFor } from "@/marketplace/pricing/pricingMode";
+import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
+import { isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
 
@@ -382,18 +384,54 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
 
     // Le moteur ne chiffre qu'à partir des grilles réellement saisies par des
     // relieurs. Sans référentiel, il n'invente rien : il rend `manual_review`,
-    // et c'est cet état-là qu'on enregistre.
+    // et c'est cet état-là qu'on enregistre. Le moteur ne connaît aucune
+    // marque — le multiplicateur s'applique après, jamais dans le Pricebook.
     const suggestion = suggestManagedPrice(caseContext.profile, {
       aggregates: await loadAggregates(sb),
     });
     const abstained = suggestion.status === "manual_review";
+    const brand = isMarketplaceBrand(caseContext.row.brand) ? caseContext.row.brand : "MA_RELIURE";
+
+    // Le multiplicateur porte sur le prix client de référence — marge Ma
+    // Reliure déjà incluse — jamais sur la rémunération atelier (§13, §38) :
+    // un atelier est payé pareil, que le projet vienne de Ma Reliure ou de
+    // Fine Bindery. Pour Ma Reliure le multiplicateur vaut ×1,00 : le prix
+    // ne bouge pas, mais le même chemin de calcul s'applique aux deux
+    // marques plutôt que d'avoir un cas particulier pour l'une d'elles.
+    const brandPrice =
+      !abstained && suggestion.suggestedCustomerPriceCents !== null
+        ? applyBrandServicePricing(
+            suggestion.suggestedCustomerPriceCents,
+            brand,
+            PRICING_POLICY.roundingIncrementCents,
+          )
+        : null;
+    const brandLowEstimate =
+      suggestion.lowEstimateCents !== null
+        ? applyBrandServicePricing(
+            suggestion.lowEstimateCents,
+            brand,
+            PRICING_POLICY.roundingIncrementCents,
+          ).servicePriceCents
+        : null;
+    const brandHighEstimate =
+      suggestion.highEstimateCents !== null
+        ? applyBrandServicePricing(
+            suggestion.highEstimateCents,
+            brand,
+            PRICING_POLICY.roundingIncrementCents,
+          ).servicePriceCents
+        : null;
+
     // Dérivé de ce que le moteur sait déjà (statut + confiance), jamais d'un
-    // nouveau seuil — voir pricingMode.ts. L'acompte n'a de sens que pour une
-    // fourchette à confirmer : ailleurs il reste NULL, pas zéro.
+    // nouveau seuil — voir pricingMode.ts. L'acompte se calcule sur
+    // l'estimation basse déjà ajustée à la marque : un client Fine Bindery ne
+    // doit pas voir un acompte calé sur le prix Ma Reliure. Ailleurs il reste
+    // NULL, pas zéro.
     const mode = pricingModeFor(suggestion);
     const depositCents =
-      mode === "ESTIMATE_THEN_CONFIRM" && suggestion.lowEstimateCents !== null
-        ? depositCentsFor(suggestion.lowEstimateCents, PRICING_POLICY)
+      mode === "ESTIMATE_THEN_CONFIRM" && brandLowEstimate !== null
+        ? depositCentsFor(brandLowEstimate, PRICING_POLICY)
         : null;
     const now = new Date().toISOString();
     const { error } = await sb
@@ -402,18 +440,22 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
         pricing_status: abstained ? "manual_review" : "suggested",
         pricing_mode: mode,
         deposit_cents: depositCents,
-        suggested_customer_price_cents: suggestion.suggestedCustomerPriceCents,
+        suggested_customer_price_cents: brandPrice?.servicePriceCents ?? null,
         suggested_binder_payout_cents: suggestion.suggestedBinderPayoutCents,
+        base_service_price_cents: brandPrice?.baseServicePriceCents ?? null,
+        brand_multiplier_bps: brandPrice?.brandMultiplierBps ?? null,
+        service_price_cents: brandPrice?.servicePriceCents ?? null,
+        tax_status: brandPrice?.taxStatus ?? "TAX_REVIEW_REQUIRED",
         // On ne pré-remplit le prix retenu que lorsqu'il y a une suggestion.
         // Écrire un null effacerait une saisie manuelle en cours.
-        ...(abstained
+        ...(abstained || !brandPrice
           ? {}
           : {
-              customer_price_cents: suggestion.suggestedCustomerPriceCents,
+              customer_price_cents: brandPrice.servicePriceCents,
               binder_payout_cents: suggestion.suggestedBinderPayoutCents,
             }),
-        pricing_low_estimate_cents: suggestion.lowEstimateCents,
-        pricing_high_estimate_cents: suggestion.highEstimateCents,
+        pricing_low_estimate_cents: brandLowEstimate,
+        pricing_high_estimate_cents: brandHighEstimate,
         pricing_confidence: suggestion.confidence,
         pricing_reason_codes: suggestion.workItemKeys,
         pricing_components: suggestion.components as unknown as Json,
@@ -429,7 +471,10 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
       actor_user_id: context.userId,
       event_type: abstained ? "pricing_manual_review" : "pricing_generated",
       metadata: {
-        customer_price_cents: suggestion.suggestedCustomerPriceCents,
+        brand,
+        customer_price_cents: brandPrice?.servicePriceCents ?? null,
+        base_service_price_cents: brandPrice?.baseServicePriceCents ?? null,
+        brand_multiplier_bps: brandPrice?.brandMultiplierBps ?? null,
         binder_payout_cents: suggestion.suggestedBinderPayoutCents,
         reference_count: suggestion.referenceCount,
         work_items: suggestion.workItemKeys,

@@ -1340,7 +1340,10 @@ export type Database = {
         Row: {
           acquisition_origin?: string
           admin_notes: string | null
+          base_service_price_cents?: number | null
           binder_payout_cents: number | null
+          brand: string
+          brand_multiplier_bps?: number | null
           claim_method: string | null
           claimed_at: string | null
           customer_user_id: string | null
@@ -1369,9 +1372,11 @@ export type Database = {
           pricing_validated_at: string | null
           pricing_validated_by: string | null
           reference: string
+          service_price_cents?: number | null
           status: string
           suggested_binder_payout_cents: number | null
           suggested_customer_price_cents: number | null
+          tax_status: string
           triage_flags: string[]
           triaged_at: string | null
           updated_at: string
@@ -1379,7 +1384,10 @@ export type Database = {
         Insert: {
           acquisition_origin?: string
           admin_notes?: string | null
+          base_service_price_cents?: number | null
           binder_payout_cents?: number | null
+          brand?: string
+          brand_multiplier_bps?: number | null
           claim_method?: string | null
           claimed_at?: string | null
           customer_user_id?: string | null
@@ -1408,9 +1416,11 @@ export type Database = {
           pricing_validated_at?: string | null
           pricing_validated_by?: string | null
           reference: string
+          service_price_cents?: number | null
           status?: string
           suggested_binder_payout_cents?: number | null
           suggested_customer_price_cents?: number | null
+          tax_status?: string
           triage_flags?: string[]
           triaged_at?: string | null
           updated_at?: string
@@ -1418,7 +1428,10 @@ export type Database = {
         Update: {
           acquisition_origin?: string
           admin_notes?: string | null
+          base_service_price_cents?: number | null
           binder_payout_cents?: number | null
+          brand?: string
+          brand_multiplier_bps?: number | null
           claim_method?: string | null
           claimed_at?: string | null
           customer_user_id?: string | null
@@ -1447,9 +1460,11 @@ export type Database = {
           pricing_validated_at?: string | null
           pricing_validated_by?: string | null
           reference?: string
+          service_price_cents?: number | null
           status?: string
           suggested_binder_payout_cents?: number | null
           suggested_customer_price_cents?: number | null
+          tax_status?: string
           triage_flags?: string[]
           triaged_at?: string | null
           updated_at?: string
@@ -1593,16 +1608,19 @@ export type Database = {
       }
       marketplace_intake_missions: {
         Row: {
+          brand: string
           created_at: string
           mission_id: string
           vertical_id: string
         }
         Insert: {
+          brand?: string
           created_at?: string
           mission_id: string
           vertical_id?: string
         }
         Update: {
+          brand?: string
           created_at?: string
           mission_id?: string
           vertical_id?: string
