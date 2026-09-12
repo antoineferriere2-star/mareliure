@@ -25,8 +25,7 @@
  * Aucun chiffre de cette page n'est inventé. Ni note, ni compteur de projets,
  * ni nombre d'artisans, parce qu'aucun n'est réel.
  */
-import type { ReactNode } from "react";
-import { IntakeCta, LandingFooter, LandingHeader } from "./landing/LandingChrome";
+import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SHELL } from "./landing/LandingChrome";
 import { Photograph } from "./landing/Photograph";
 import { ArtisanCard } from "./landing/ArtisanCard";
 import {
@@ -41,42 +40,6 @@ import {
   STEPS,
 } from "./landing/content";
 import { PHOTOS, PHOTO_SIZES } from "./landing/photos";
-
-/** Un seul conteneur pour toute la page. Les variations se font en colonnes. */
-const SHELL = "mx-auto w-full max-w-[80rem] px-5 sm:px-8";
-
-/**
- * L'ouverture d'une section : surtitre, titre, chapô.
- *
- * Alignée à gauche partout. Centrer un titre est le réflexe qui fait ressembler
- * une page à un gabarit — le lecteur perd le bord sur lequel son œil revient.
- */
-function SectionHead({
-  eyebrow,
-  title,
-  lead,
-  tone = "ink",
-  className = "",
-}: {
-  eyebrow: string;
-  title: ReactNode;
-  lead?: ReactNode;
-  tone?: "ink" | "paper";
-  className?: string;
-}) {
-  return (
-    <div className={`max-w-[46rem] ${className}`}>
-      {/* Le surtitre et le chapô prennent la couleur de la section : rien à
-          régler ici. Seul le titre remonte au contraste plein, parce qu'un
-          titre atténué n'ouvre pas une section, il la referme. */}
-      <p className="mr-eyebrow">{eyebrow}</p>
-      <h2 className={`mr-title mt-4 ${tone === "paper" ? "text-mr-paper" : "text-mr-ink"}`}>
-        {title}
-      </h2>
-      {lead && <p className="mr-lead mt-5">{lead}</p>}
-    </div>
-  );
-}
 
 /**
  * Le premier écran.
@@ -286,10 +249,10 @@ function Artisans() {
           <ArtisanCard key={artisan.id} artisan={artisan} />
         ))}
       </div>
-      <p id={ANCHORS.binders} className="mr-body mt-12 max-w-[38rem] scroll-mt-24">
+      <p className="mr-body mt-12 max-w-[38rem]">
         Vous tenez un atelier de reliure ?{" "}
-        <a href="/candidature-atelier" className="mr-link">
-          Présentez votre atelier
+        <a href="/partenaires-relieurs" className="mr-link">
+          Découvrez comment rejoindre le réseau
         </a>{" "}
         — nous cherchons des relieurs installés en France, quel que soit leur savoir-faire dominant.
       </p>

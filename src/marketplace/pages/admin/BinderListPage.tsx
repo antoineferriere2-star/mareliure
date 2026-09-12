@@ -164,8 +164,10 @@ interface BinderApplicationRow {
   email: string;
   phone: string | null;
   workshop_name: string;
-  legal_entity_type: string;
+  legal_entity_type: string | null;
   city: string | null;
+  website_url: string | null;
+  skills: string[];
   years_experience: number | null;
   average_annual_revenue_band: string | null;
   message: string | null;
@@ -226,7 +228,9 @@ function BinderApplicationsSection() {
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {[
-                    LEGAL_ENTITY_LABELS[application.legal_entity_type as LegalEntityType],
+                    application.legal_entity_type
+                      ? LEGAL_ENTITY_LABELS[application.legal_entity_type as LegalEntityType]
+                      : null,
                     application.city,
                     application.years_experience !== null
                       ? `${application.years_experience} ans d'expérience`
@@ -238,11 +242,24 @@ function BinderApplicationsSection() {
                     .filter(Boolean)
                     .join(" · ")}
                 </p>
+                {application.skills.length > 0 && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    {application.skills.map(binderSkillLabel).join(", ")}
+                  </p>
+                )}
                 <p className="mt-1 text-xs text-muted-foreground">
                   <a href={`mailto:${application.email}`} className="underline">
                     {application.email}
                   </a>
                   {application.phone && ` · ${application.phone}`}
+                  {application.website_url && (
+                    <>
+                      {" · "}
+                      <a href={application.website_url} target="_blank" rel="noreferrer" className="underline">
+                        Site / réseau
+                      </a>
+                    </>
+                  )}
                 </p>
                 {application.message && (
                   <p className="mt-2 text-sm text-muted-foreground">{application.message}</p>

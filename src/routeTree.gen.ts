@@ -21,6 +21,7 @@ import { Route as ExampleProjectBriefRouteImport } from './routes/example-projec
 import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
+import { Route as PartenairesRelieursRouteImport } from './routes/partenaires-relieurs'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
@@ -146,6 +147,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
   id: '/mentions-legales',
   path: '/mentions-legales',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PartenairesRelieursRoute = PartenairesRelieursRouteImport.update({
+  id: '/partenaires-relieurs',
+  path: '/partenaires-relieurs',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -541,6 +547,7 @@ export interface FileRoutesByFullPath {
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/partenaires-relieurs': typeof PartenairesRelieursRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
@@ -621,6 +628,7 @@ export interface FileRoutesByTo {
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/partenaires-relieurs': typeof PartenairesRelieursRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
@@ -697,6 +705,7 @@ export interface FileRoutesById {
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
   '/mentions-legales': typeof MentionsLegalesRoute
+  '/partenaires-relieurs': typeof PartenairesRelieursRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
   '/private-beta': typeof PrivateBetaRoute
@@ -779,6 +788,7 @@ export interface FileRouteTypes {
     | '/free-inquiry-audit'
     | '/how-it-works'
     | '/mentions-legales'
+    | '/partenaires-relieurs'
     | '/pricing'
     | '/privacy'
     | '/private-beta'
@@ -859,6 +869,7 @@ export interface FileRouteTypes {
     | '/free-inquiry-audit'
     | '/how-it-works'
     | '/mentions-legales'
+    | '/partenaires-relieurs'
     | '/pricing'
     | '/privacy'
     | '/private-beta'
@@ -934,6 +945,7 @@ export interface FileRouteTypes {
     | '/free-inquiry-audit'
     | '/how-it-works'
     | '/mentions-legales'
+    | '/partenaires-relieurs'
     | '/pricing'
     | '/privacy'
     | '/private-beta'
@@ -1016,6 +1028,7 @@ export interface RootRouteChildren {
   FreeInquiryAuditRoute: typeof FreeInquiryAuditRoute
   HowItWorksRoute: typeof HowItWorksRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
+  PartenairesRelieursRoute: typeof PartenairesRelieursRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
   PrivateBetaRoute: typeof PrivateBetaRoute
@@ -1127,6 +1140,13 @@ declare module '@tanstack/react-router' {
       path: '/mentions-legales'
       fullPath: '/mentions-legales'
       preLoaderRoute: typeof MentionsLegalesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/partenaires-relieurs': {
+      id: '/partenaires-relieurs'
+      path: '/partenaires-relieurs'
+      fullPath: '/partenaires-relieurs'
+      preLoaderRoute: typeof PartenairesRelieursRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -1813,6 +1833,7 @@ const rootRouteChildren: RootRouteChildren = {
   FreeInquiryAuditRoute: FreeInquiryAuditRoute,
   HowItWorksRoute: HowItWorksRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
+  PartenairesRelieursRoute: PartenairesRelieursRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
   PrivateBetaRoute: PrivateBetaRoute,

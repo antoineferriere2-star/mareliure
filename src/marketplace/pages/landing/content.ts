@@ -33,7 +33,6 @@ export const SHOW_UNFILLED_SECTIONS = true;
 export const ANCHORS = {
   howItWorks: "comment-ca-marche",
   crafts: "savoir-faire",
-  binders: "pour-les-relieurs",
 } as const;
 
 export interface LandingStep {

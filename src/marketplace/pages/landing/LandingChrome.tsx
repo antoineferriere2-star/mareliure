@@ -5,12 +5,51 @@
  * évite qu'un lien change à un endroit et pas à l'autre — le genre d'écart qui
  * ne se voit qu'en production.
  */
+import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import { BOOKBINDING_PUBLIC_TOKEN } from "@/build/constants";
 import { MARELIURE_BRAND } from "@/marketplace/config";
 import { isMaReliure } from "@/brand";
 import { ANCHORS } from "./content";
 import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
+
+/**
+ * Un seul conteneur pour toutes les pages éditoriales. Les variations se
+ * font en colonnes — jamais une seconde largeur ailleurs dans le produit.
+ */
+export const SHELL = "mx-auto w-full max-w-[80rem] px-5 sm:px-8";
+
+/**
+ * L'ouverture d'une section : surtitre, titre, chapô.
+ *
+ * Alignée à gauche partout. Centrer un titre est le réflexe qui fait ressembler
+ * une page à un gabarit — le lecteur perd le bord sur lequel son œil revient.
+ * Partagée entre la landing et toute autre page éditoriale (partenaires
+ * relieurs) : une seconde définition aurait fini par diverger silencieusement.
+ */
+export function SectionHead({
+  eyebrow,
+  title,
+  lead,
+  tone = "ink",
+  className = "",
+}: {
+  eyebrow: string;
+  title: ReactNode;
+  lead?: ReactNode;
+  tone?: "ink" | "paper";
+  className?: string;
+}) {
+  return (
+    <div className={`max-w-[46rem] ${className}`}>
+      <p className="mr-eyebrow">{eyebrow}</p>
+      <h2 className={`mr-title mt-4 ${tone === "paper" ? "text-mr-paper" : "text-mr-ink"}`}>
+        {title}
+      </h2>
+      {lead && <p className="mr-lead mt-5">{lead}</p>}
+    </div>
+  );
+}
 
 /**
  * La Mission Métré, atteinte par sa route typée — le même `/m/:publicToken`
@@ -83,7 +122,10 @@ const NAV = [
   { href: `${LANDING_PATH}#${ANCHORS.howItWorks}`, label: "Comment ça marche" },
   { href: `${LANDING_PATH}#${ANCHORS.crafts}`, label: "Les savoir-faire" },
   { href: "/tarifs", label: "Tarifs" },
-  { href: `${LANDING_PATH}#${ANCHORS.binders}`, label: "Pour les relieurs" },
+  // Vers la page de recrutement, pas l'ancre de la landing : ce lien vise un
+  // relieur, pas un propriétaire de livre — les deux publics ne lisent jamais
+  // la même page d'atterrissage.
+  { href: "/partenaires-relieurs", label: "Pour les relieurs" },
 ] as const;
 
 /**
@@ -183,7 +225,7 @@ const SERVICE_LINKS = [
   { href: `${LANDING_PATH}#${ANCHORS.howItWorks}`, label: "Comment ça marche" },
   { href: `${LANDING_PATH}#${ANCHORS.crafts}`, label: "Les savoir-faire" },
   { href: "/tarifs", label: "Tarifs" },
-  { href: `${LANDING_PATH}#${ANCHORS.binders}`, label: "Pour les relieurs" },
+  { href: "/partenaires-relieurs", label: "Pour les relieurs" },
 ] as const;
 
 const PRESTATIONS = [

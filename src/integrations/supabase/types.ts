@@ -1109,13 +1109,15 @@ export type Database = {
           first_name: string
           id: string
           last_name: string
-          legal_entity_type: string
+          legal_entity_type: string | null
           message: string | null
           phone: string | null
           review_note: string | null
           reviewed_at: string | null
           reviewed_by: string | null
+          skills?: string[]
           status: string
+          website_url?: string | null
           workshop_name: string
           years_experience: number | null
         }
@@ -1128,13 +1130,15 @@ export type Database = {
           first_name: string
           id?: string
           last_name: string
-          legal_entity_type: string
+          legal_entity_type?: string | null
           message?: string | null
           phone?: string | null
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          skills?: string[]
           status?: string
+          website_url?: string | null
           workshop_name: string
           years_experience?: number | null
         }
@@ -1147,13 +1151,15 @@ export type Database = {
           first_name?: string
           id?: string
           last_name?: string
-          legal_entity_type?: string
+          legal_entity_type?: string | null
           message?: string | null
           phone?: string | null
           review_note?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
+          skills?: string[]
           status?: string
+          website_url?: string | null
           workshop_name?: string
           years_experience?: number | null
         }

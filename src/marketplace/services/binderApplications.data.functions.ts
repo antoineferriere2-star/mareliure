@@ -10,6 +10,7 @@ import { admin, assertAdmin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 import { LEGAL_ENTITY_TYPES, REVENUE_BANDS, decideReview } from "@/marketplace/binders/application";
+import { isKnownBinderSkill } from "@/marketplace/binders/skills";
 import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
 
 const applicationInput = z.object({
@@ -18,11 +19,26 @@ const applicationInput = z.object({
   email: z.string().trim().email().max(200),
   phone: z.string().trim().max(30).optional(),
   workshopName: z.string().trim().min(1).max(200),
-  legalEntityType: z.enum(LEGAL_ENTITY_TYPES),
+  // Facultatif : /partenaires-relieurs ne le demande pas, /candidature-atelier
+  // l'envoie — les deux écrivent dans la même table (§26).
+  legalEntityType: z.enum(LEGAL_ENTITY_TYPES).optional(),
   city: z.string().trim().max(100).optional(),
+  websiteUrl: z.string().trim().url().max(300).optional(),
+  // Slugs du même catalogue que marketplace_binder_skills (§29 : jamais une
+  // seconde liste de savoir-faire) — un slug hors catalogue est ignoré
+  // plutôt que de faire échouer toute la candidature pour une faute de frappe.
+  skills: z
+    .array(z.string())
+    .max(20)
+    .optional()
+    .transform((values) => (values ?? []).filter(isKnownBinderSkill)),
   yearsExperience: z.number().int().min(0).max(100).optional(),
   averageAnnualRevenueBand: z.enum(REVENUE_BANDS).optional(),
   message: z.string().trim().max(2000).optional(),
+  // Honeypot anti-spam (§27) : un champ invisible pour une personne, tentant
+  // pour un bot qui remplit tout ce qu'il trouve. Jamais stocké, jamais lu
+  // au-delà de cette vérification.
+  hpCompanyName: z.string().max(200).optional(),
 });
 
 /**
@@ -33,6 +49,11 @@ const applicationInput = z.object({
 export const submitBinderApplication = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => applicationInput.parse(data))
   .handler(async ({ data }) => {
+    // Un bot remplit tout ce qu'il trouve, y compris un champ qu'une personne
+    // ne voit jamais (masqué en CSS côté formulaire). Faux succès plutôt
+    // qu'un rejet explicite : rien n'apprend au bot que ce champ le trahit.
+    if (data.hpCompanyName) return { ok: true };
+
     const sb = await admin();
     const { error } = await sb.from("marketplace_binder_applications").insert({
       first_name: data.firstName,
@@ -40,8 +61,10 @@ export const submitBinderApplication = createServerFn({ method: "POST" })
       email: data.email.toLowerCase(),
       phone: data.phone || null,
       workshop_name: data.workshopName,
-      legal_entity_type: data.legalEntityType,
+      legal_entity_type: data.legalEntityType ?? null,
       city: data.city || null,
+      website_url: data.websiteUrl || null,
+      skills: data.skills,
       years_experience: data.yearsExperience ?? null,
       average_annual_revenue_band: data.averageAnnualRevenueBand ?? null,
       message: data.message || null,
