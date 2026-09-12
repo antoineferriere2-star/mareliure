@@ -54,6 +54,14 @@ const DESIRED: Record<string, string | number | boolean> = {
   mailer_templates_magic_link_content: template("magic-link.html"),
   mailer_subjects_confirmation: "Ouvrez votre espace Ma Reliure",
   mailer_templates_confirmation_content: template("confirmation.html"),
+  // Fine Bindery partage le même Worker et le même projet Supabase que
+  // Ma Reliure (audit multi-brand, 12 septembre 2026) — ses domaines doivent
+  // donc pouvoir recevoir une redirection de lien de connexion au même
+  // titre que mareliure.fr. `emailRedirectTo` (accessLink.ts) construit déjà
+  // l'URL depuis l'origine de la requête ; c'est cette liste qui autorise
+  // Supabase à l'accepter.
+  uri_allow_list:
+    "https://mareliure.fr/**,https://www.mareliure.fr/**,https://mareliure.aferriere.workers.dev/**,http://localhost:8080/**,https://finebindery.com/**,https://www.finebindery.com/**",
 };
 
 function describeValue(value: unknown): string {
