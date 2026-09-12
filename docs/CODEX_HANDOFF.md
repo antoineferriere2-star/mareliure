@@ -790,138 +790,121 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 13 septembre 2026
+**Date :** 15 septembre 2026
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `080bb355` (Phase C), sur `eef429ad` (onglets `/auth`), sur
-`8d504d9e` (Phase A), sur `eb0253d2` (rattrapage accès client) — cinq
-commits, une seule branche `fix/mareliure-customer-access`.
+**Commit :** `c82f04e5` (page `/partenaires-relieurs`), sur `e5286d20`
+(message d'erreur lisible signup atelier), sur `c2e0ac15` (lien « Se
+connecter »), sur `9fd96b32` (docs Phases A/B/C), sur `080bb355` (Phase C) —
+la même branche `fix/mareliure-customer-access` depuis le début du chantier
+transactionnel.
 
-**Production : déployée le 13 septembre 2026.** Worker `mareliure` version
-`42b5fbef-22e7-4a50-84bb-20bff7650bca`, via `npm run deploy:mareliure` (donc
-`build:mareliure`, jamais `npm run build` seul — voir l'incident évité de
-justesse le 11 septembre). Les trois migrations de Phases A/B/C sont
-appliquées sur `hljxohondjvrkzqicexl` depuis avant ce déploiement.
+**Production : déployée le 15 septembre 2026.** Worker `mareliure` version
+`02e21a10-8a09-49b7-92c6-6a2c518c4b35`, via `npm run deploy:mareliure`. La
+migration `20260915090000_marketplace_binder_applications_extend.sql` est
+appliquée sur `hljxohondjvrkzqicexl` (colonnes `website_url`, `skills`
+vérifiées présentes, `legal_entity_type` vérifié nullable).
 
-Vérifié après déploiement, sur `mareliure.fr` (onglets neufs, pas de
-navigation client réutilisant une session déjà chargée) :
-- `secretsContract.test.ts` (6/6) contre le bundle réellement déployé ;
-- `/auth` : les deux onglets Client/Atelier partenaire, aucune erreur console ;
-- `/` : landing intacte, aucune erreur console ;
-- `/m/reliure-marketplace-token-000001` (navigation client depuis la
-  landing) : Mission chargée, étape 1/8, aucune erreur console — exerce le
-  nouveau `seedAnswers` de `MissionRuntime.tsx` sans l'activer (pas de
-  `?ref=`) ;
-- `/a/atelier-inexistant-test` : page « atelier introuvable », aucune erreur
-  console — comportement attendu, aucun atelier n'a encore de
-  `personal_referral_slug` en production.
-
-Une erreur d'hydratation React #418 est apparue une fois, lors d'une
-navigation `navigate()` directe vers `/mes-livres` non authentifié
-(redirection vers `/auth`) dans un onglet déjà chargé — **pas reproduite**
-sur un onglet neuf ni sur une navigation client normale (clic sur un lien).
-Même symptôme que celui déjà consigné le 8 septembre 2026 (bundle client
-d'une version précédente encore servi dans l'onglet) : à surveiller si elle
-réapparaît sur un onglet neuf, pas avant.
-
-Aucune des trois briques (compte relieur réel, message échangé, condition
-commerciale) n'a encore été exercée par un utilisateur réel — voir Next
-recommended task ci-dessous.
+Vérifié après déploiement sur `mareliure.fr` : `/partenaires-relieurs` charge
+sans erreur console, la navigation « Pour les relieurs » (entête, pied de
+page) y pointe désormais au lieu d'une ancre de la landing client, et une
+candidature de test soumise via le formulaire de la page a bien écrit une
+ligne dans `marketplace_binder_applications` en production (vérifiée puis
+supprimée — c'était une ligne de test, pas une candidature réelle).
 
 ---
 
-### Chantier de cette session — Phase C : pricing à trois modes
+### Chantier de cette session — candidature atelier structurée, mot de passe client, page de recrutement
 
-Suite de `docs/transactional-platform-audit.md` (Phase C). Le point le plus
-important : **la majeure partie de ce qu'exigeait ce chantier existait déjà**
-avant d'y toucher — `pricing_low_estimate_cents`/`pricing_high_estimate_cents`
-et la confiance (`confidence.ts`) étaient en production depuis le 9 septembre.
-Phase C **formalise** ce que le moteur savait déjà, elle n'invente pas de
-nouveau seuil.
+Trois demandes distinctes, traitées dans l'ordre où elles sont arrivées :
 
-**Modes commerciaux (§23-§28)**
+**1. Candidature atelier structurée (remplace le `mailto:`)**
 
-- `marketplace_cases.pricing_mode` (`FIXED_PRICE` | `ESTIMATE_THEN_CONFIRM` |
-  `MANUAL_STUDY`), dérivé sans nouvelle heuristique
-  (`pricing/pricingMode.ts#pricingModeFor`) :
-  - `status: "manual_review"` (déjà le refus de chiffrer du moteur) →
-    `MANUAL_STUDY` ;
-  - confiance `"high"` (plusieurs ateliers d'accord, récents, sur le travail
-    exact) → `FIXED_PRICE` ;
-  - confiance `"medium"`/`"low"` → `ESTIMATE_THEN_CONFIRM`.
-- `deposit_cents` : max(20 % du bas de fourchette, 50 €) — même formule que
-  la marge plancher (`max(pourcentage, plancher absolu)`), configurable dans
-  `PRICING_POLICY` (`depositPercentageBps`, `depositMinimumCents`), jamais un
-  montant fixe codé en dur. Version de la politique passée à
-  `bookbinding-2026-09-13-v3`.
-- Calculé et posé une seule fois, dans `generateMarketplacePricing` (déjà
-  existant, étendu plutôt que dupliqué).
-- **Non construit, annoncé** : l'écran client de confirmation du prix
-  définitif après examen physique (§26) et le paiement de l'acompte/solde.
-  Les deux dépendent de Stripe Connect (Phase D, toujours bloquée faute
-  d'identifiants) — construire l'écran sans le paiement réel aurait affiché
-  une promesse que le produit ne tient pas encore.
+- `marketplace_binder_applications` (migration
+  `20260914090000_marketplace_binder_applications.sql`) : une candidature
+  publique, sans authentification, lue à la main dans l'admin
+  (`/marketplace/binders`). Ne crée **jamais** de compte ni d'atelier —
+  `createBinderFromApplication` (ajouté cette session, l'admin ne pouvait
+  auparavant créer un atelier que par script de seed) reste un acte humain
+  distinct.
+- Route `/candidature-atelier` : prénom, nom, e-mail, téléphone (facultatif),
+  atelier, type d'entreprise, ville (facultatif), années d'expérience
+  (facultatif), CA moyen annuel (facultatif), message (facultatif).
 
-**Rémunération différenciée par atelier (§31)**
+**2. Mot de passe client (évite de ressaisir l'e-mail à chaque connexion)**
 
-- `marketplace_binder_commercial_terms` (binder_id, family_key,
-  payout_multiplier_bps, manual_payout_required, effective_from/to). Une
-  ligne par atelier et par famille de métier (`WORK_FAMILIES`, catalog.ts —
-  8 familles déjà existantes), jamais une grille complète : exactement
-  l'exemple du cahier des charges (toile 1,00 / cuir 1,05 / dorure 1,10 /
-  restauration manuel).
-- `resolvePayout` (`pricing/commercialTerms.ts`, pur, testé) : le
-  multiplicateur s'applique à la **famille structure** du projet
-  (`structuralFamily` — un projet a au plus un travail structure, catalog.ts
-  le garantissait déjà). Sans condition configurée → montant de référence
-  inchangé. `manualPayoutRequired` gagne toujours et ne calcule jamais un
-  montant automatique.
-- **Branché au seul point qui compte** : `sendCaseToBinders` calcule
-  désormais un montant par atelier sollicité (`resolvePerBinderPayouts`),
-  plus un montant unique pour les trois. Un atelier en « manuel » pour la
-  famille du projet **bloque l'envoi** vers lui spécifiquement — refus
-  explicite plutôt qu'un montant inventé.
-- Une seule condition **active** par atelier et par famille
-  (`effective_to IS NULL`) : en poser une nouvelle ferme l'ancienne au lieu
-  de l'écraser — l'historique tarifaire reste lisible.
-- Écran admin minimal sur `/marketplace/binders` (`BinderListPage.tsx`,
-  section repliée « Conditions commerciales ») : lister et ajouter une
-  condition. Pas d'historique visible dans l'UI (la donnée existe,
-  interrogeable directement).
+- `/auth`, onglet Client : lien discret « Vous préférez un mot de passe ? »
+  sous le lien magique, ouvrant inscription ou connexion par mot de passe
+  (`supabase.auth.signUp` / `signInWithPassword`). Un même compte Supabase
+  Auth accepte les deux méthodes simultanément — vérifié empiriquement.
+- Bug trouvé et corrigé en testant en direct : un `signUp` refusé par
+  Supabase (domaine invalide) renvoie un message d'erreur qui est littéralement
+  la chaîne `"{}"`. Fallback ajouté dans `PasswordSignUp` et
+  `invitation-atelier.$token.tsx` : `"Vérifiez l'adresse indiquée et
+  réessayez."` quand le message est vide ou vaut `"{}"`.
+- **Effet de bord constaté, signalé à l'utilisateur** : tester l'inscription
+  atelier avec une adresse déjà enregistrée côté client (lien magique) a
+  ajouté un mot de passe à ce compte réel plutôt que de refuser
+  l'inscription. Pas corrigé cette session — l'utilisateur ne s'est pas
+  prononcé sur s'il faut retirer ce mot de passe.
 
-**Matching (§33) — vérifié, pas corrigé**
+**3. Page de recrutement `/partenaires-relieurs`**
 
-- `matching/score.ts` a été relu contre l'ordre du §33. Conclusion : **aucune
-  correction nécessaire**. Le poids "payout" (15/100, derrière compétences à
-  40/100) ne compare jamais les ateliers entre eux sur le prix — il vérifie
-  seulement que le montant de référence, uniforme pour tous les candidats au
-  moment du classement, tombe dans la fourchette que chaque atelier a
-  déclarée. Les montants différenciés par commercial terms n'entrent en jeu
-  qu'*après* le classement, quand l'admin a déjà choisi à qui envoyer — le
-  score ne devient donc jamais un « qui coûte le moins cher gagne ».
-  Documenté ici plutôt que de changer un code qui n'avait pas le défaut
-  supposé.
+- Distincte de `/candidature-atelier` : celle-ci est la page de vente qui
+  explique le réseau (bénéfices, parcours, espace atelier, invitation de ses
+  propres clients, rémunération, FAQ) et **contient son propre formulaire**,
+  plus court (pas de type d'entreprise ni de CA moyen, mais site/réseau
+  social et savoir-faire en plus) — les deux formulaires écrivent dans la
+  même table via le même server function `submitBinderApplication`.
+- `marketplace_binder_applications` étendue plutôt que dupliquée
+  (`20260915090000_marketplace_binder_applications_extend.sql`) :
+  `legal_entity_type` devient facultatif, `website_url` et `skills` (même
+  catalogue que `BINDER_SKILLS`, slugs hors catalogue filtrés en silence)
+  ajoutés.
+- Honeypot anti-spam (`hpCompanyName`, champ masqué visuellement mais lu par
+  un lecteur d'écran comme « à ne pas remplir ») : faux succès silencieux si
+  rempli, jamais stocké. **Pas de rate-limiting côté serveur** — aucune
+  infrastructure de ce type n'existe ailleurs dans le produit
+  (`/candidature-atelier` ne l'a pas non plus) ; en construire une aurait été
+  disproportionné pour cette page seule. À traiter le jour où le spam devient
+  un problème réel, pas avant.
+- Section « Répartition 80/20 » et section vitrine (`/ateliers/:slug`)
+  écrites au futur, explicitement : Stripe Connect n'est pas branché (Phase D
+  toujours bloquée), et aucune vitrine par atelier n'a jamais été construite.
+  Aucune capture d'écran de l'espace atelier — aucun atelier réel ne s'y est
+  encore connecté en production, en fabriquer une aurait été l'invention que
+  le produit interdit.
+- Navigation « Pour les relieurs » (entête, pied de page, teaser sur la
+  landing client) repointée de l'ancre `#pour-les-relieurs` vers cette page.
+  L'ancre elle-même a été retirée de `ANCHORS` (plus référencée nulle part).
+- `SHELL` et `SectionHead` extraits de `ReliureLanding.tsx` vers
+  `LandingChrome.tsx` (exportés) pour que la nouvelle page réutilise
+  exactement le même système de mise en page plutôt que d'en refaire un
+  second — vérifié par `landingHonesty.test.ts` (42/42, cette page n'est
+  pas dans son périmètre de scan) et par lint.
+- Analytics : `usePageViewTracking()` (déjà générique, jusque-là utilisé
+  seulement côté Métré) rebranché sur cette page pour la vue de page.
+  **Pas d'événements de funnel** (clic CTA, début/soumission de candidature)
+  — aucune infrastructure d'événements nommés n'existe au-delà du compteur de
+  vues ; en construire une aurait dépassé le périmètre d'une seule page.
 
 ---
 
-### Completed (Phase C)
+### Completed (cette session)
 
-- 1 migration (`20260913090000_marketplace_pricing_modes.sql`), additive,
-  rejouable, rollback documenté. **Appliquée sur `hljxohondjvrkzqicexl`**
-  (production) via l'API de gestion. Vérifié après coup : les deux colonnes
-  existent sur `marketplace_cases`, la table `marketplace_binder_commercial_terms`
-  existe (0 ligne, attendu — aucune condition n'a encore été posée).
-- Un bug de typecheck pré-existant (Phase B) trouvé et corrigé au passage :
-  `answerCaseDecision` écrivait `Record<string, unknown>` là où Supabase
-  attend `Json` — passait la compilation par accident jusqu'à ce que `tsc`
-  le relève cette session. Cast explicite ajouté, même patron que
-  `pricing_components` ailleurs dans le fichier.
-- `tsc --noEmit` : propre. `eslint` sur tous les fichiers touchés : propre,
-  0 warning nouveau.
-- `npx vitest run` : **1589 tests verts, 127 fichiers**, dont 25 nouveaux
-  (mode de pricing, conditions commerciales, contrat de la migration).
-- `npm run build` : vert. Aucune nouvelle route.
+- 2 migrations additives (candidature atelier + son extension), toutes deux
+  **appliquées et vérifiées en production**.
+- `npx tsc --noEmit` : propre. `npm run lint` : propre (mêmes 11
+  avertissements pré-existants, aucun nouveau).
+- `npx vitest run` : **1610 tests verts, 130 fichiers** (dont les 5 nouveaux
+  du contrat de migration d'extension).
+- `npm run build` : vert, route `/partenaires-relieurs` généreée dans
+  `routeTree.gen.ts`.
+- Vérifié au navigateur (local et production) : rendu desktop et mobile
+  (375 px), formulaire testé de bout en bout (soumission réussie, ligne
+  écrite puis nettoyée en production), aucune erreur console.
+- `npm run deploy:mareliure` : déployé, vérifié en ligne.
 
 ---
 
@@ -933,53 +916,53 @@ Rien. Working tree propre après le commit de cette session.
 
 ### Next recommended task
 
-1. **Déployer Phases A, B et C ensemble** (`npm run deploy:mareliure`) —
-   aucune n'est en production. Le premier test réel (compte relieur,
-   message, décision, condition commerciale) reste à faire.
-2. **Remplir le référentiel tarifaire** — toujours vide en production,
-   inchangé depuis le 10 septembre. Sans lui, `pricing_mode` ne sortira
-   jamais que `MANUAL_STUDY` en pratique : aucun agrégat n'existe pour
-   produire `FIXED_PRICE` ou `ESTIMATE_THEN_CONFIRM`.
-3. **Spike Stripe Connect** (Phase D) — toujours bloqué, mêmes identifiants
-   absents. C'est ce spike qui débloque à la fois le paiement et l'écran de
-   confirmation du prix définitif (§26) laissé de côté cette session.
-4. **Logistique par niveau de risque** (Phase E) — colonnes seules, pas le
+1. **Décider du sort du mot de passe ajouté par erreur** au compte client
+   réel testé cette session (effet de bord du point 2 ci-dessus) — l'utilisateur
+   ne s'est pas encore prononcé.
+2. **Spike Stripe Connect** (Phase D) — toujours bloqué, mêmes identifiants
+   absents. Débloque le paiement, l'écran de prix définitif après examen
+   (§26), et lève enfin les deux sections de `/partenaires-relieurs` écrites
+   au futur.
+3. **Remplir le référentiel tarifaire** — toujours vide en production. Sans
+   lui, `pricing_mode` ne sort jamais que `MANUAL_STUDY`.
+4. **Premier atelier réel** — dès qu'une candidature (`/candidature-atelier`
+   ou `/partenaires-relieurs`) est acceptée, `createBinderFromApplication`
+   permet de créer l'atelier depuis l'admin. Ce sera aussi le premier test
+   réel du parcours complet (invitation, espace atelier, messagerie,
+   décisions, lien de parrainage personnel).
+5. **Logistique par niveau de risque** (Phase E) — colonnes seules, pas le
    fournisseur de transport (`docs/shipping-pickup-point-spec.md`).
 
 ---
 
 ### Known issues
 
-Tout ce qui était listé à la fin de Phase B reste vrai, sans changement,
+Tout ce qui était listé à la fin de Phase C reste vrai, sans changement,
 sauf :
 
-- Nouveau : **`pricing_mode` ne peut sortir que `MANUAL_STUDY` en
-  production** tant que le référentiel tarifaire reste vide (voir Next
-  recommended task, point 2) — la logique est prête, les données de terrain
-  manquent pour l'exercer.
-- Nouveau : **pas d'écran client pour le prix définitif après examen
-  physique (§26)** ni pour payer un acompte — dépend du spike Stripe.
+- Nouveau : un compte client réel (`antoineferriere2@hotmail.fr`, lien
+  magique) a désormais aussi un mot de passe, ajouté par un test de
+  l'inscription atelier cette session — voir Next recommended task, point 1.
+- Nouveau : **pas de rate-limiting sur les formulaires publics de
+  candidature** (`/candidature-atelier`, `/partenaires-relieurs`) — seul un
+  honeypot protège contre le spam automatisé. Le référentiel Zod valide la
+  forme des données mais pas leur fréquence.
 
 ---
 
 ### Do not touch
 
-Tout ce qui était listé à la fin de Phase B reste vrai. S'y ajoute :
+Tout ce qui était listé à la fin de Phase C reste vrai. S'y ajoute :
 
-- **`pricingModeFor`** : dérive le mode de `status`/`confidence`, jamais
-  d'un nouveau seuil. Si un mode semble mal choisi, la correction se fait
-  dans `confidence.ts` (ce qui fonde la confiance), pas en ajoutant un
-  paramètre à `pricingModeFor`.
-- **`depositCentsFor`** : max(pourcentage, plancher), jamais un montant
-  fixe. Un acompte à 100 € codé en dur serait exactement la régression que
-  `noFabricatedPrices.test.ts` existe pour empêcher — `depositPercentageBps`/
-  `depositMinimumCents` ont été ajoutés à la liste des noms exclus de ce
-  garde-fou ; tout nouveau paramètre de politique doit y être ajouté de la
-  même façon, jamais en écrivant le montant en clair ailleurs.
-- **`marketplace_binder_commercial_terms` reste un multiplicateur par
-  famille, jamais un tarif par travail.** Le §31 est explicite : pas de
-  retour à 45 tarifs par atelier.
-- **`resolvePayout`/`manualPayoutRequired`** : ne jamais faire calculer un
-  montant automatique quand `manualPayoutRequired` est vrai, même « pour
-  dépanner ». `sendCaseToBinders` doit continuer à refuser l'envoi plutôt
-  que d'inventer un chiffre.
+- **`submitBinderApplication` reste le seul point d'écriture de
+  `marketplace_binder_applications`**, partagé par `/candidature-atelier` et
+  `/partenaires-relieurs`. Ne pas dupliquer ce server function pour la
+  deuxième page : un champ optionnel absent doit rester optionnel, jamais
+  une seconde validation divergente.
+- **`ANCHORS` de `landing/content.ts` ne porte plus `binders`** — le
+  supprimer était correct puisqu'il n'était plus référencé ; ne pas le
+  réintroduire pour un lien qui peut pointer directement vers
+  `/partenaires-relieurs`.
+- **`SHELL`/`SectionHead` vivent dans `LandingChrome.tsx`, pas dans
+  `ReliureLanding.tsx`.** Toute nouvelle page éditoriale Ma Reliure doit les
+  importer de là, jamais en redéclarer une copie.
