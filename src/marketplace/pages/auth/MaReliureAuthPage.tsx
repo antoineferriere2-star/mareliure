@@ -24,10 +24,12 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
+  ACCESS_CODE_LENGTH,
   ACCESS_LINK_RESEND_DELAY_SECONDS,
   ACCESS_LINK_VALIDITY,
   linkErrorFromUrl,
   requestAccessLink,
+  verifyAccessCode,
 } from "@/marketplace/auth/accessLink";
 import { LandingFooter, LandingHeader } from "@/marketplace/pages/landing/LandingChrome";
 
@@ -99,7 +101,7 @@ export function MaReliureAuthPage({
         <p className="mr-lead mt-6">
           {audience === "customer"
             ? customerMethod === "link"
-              ? "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien de connexion : pas de compte à créer, pas de mot de passe à retenir."
+              ? "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien et un code de connexion : pas de compte à créer, pas de mot de passe à retenir."
               : customerMethod === "password-signin"
                 ? "Connectez-vous avec le mot de passe de votre espace."
                 : "Créez un mot de passe : vous n'aurez plus à passer par votre boîte mail à chaque connexion."
@@ -121,7 +123,7 @@ export function MaReliureAuthPage({
           {audience === "customer" ? (
             customerMethod === "link" ? (
               <>
-                <LinkSignIn onSent={() => setLinkProblem(null)} />
+                <LinkSignIn onSent={() => setLinkProblem(null)} onSignedIn={onSignedIn} />
                 <p className="mt-8 border-t border-mr-rule pt-6">
                   <button
                     type="button"
@@ -190,7 +192,13 @@ export function MaReliureAuthPage({
   );
 }
 
-function LinkSignIn({ onSent }: { onSent: () => void }) {
+function LinkSignIn({
+  onSent,
+  onSignedIn,
+}: {
+  onSent: () => void;
+  onSignedIn: () => Promise<void>;
+}) {
   const [email, setEmail] = useState("");
   const [sentTo, setSentTo] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
@@ -225,12 +233,12 @@ function LinkSignIn({ onSent }: { onSent: () => void }) {
   if (sentTo) {
     return (
       <div>
-        <h2 className="mr-heading text-mr-ink">Lien envoyé</h2>
+        <h2 className="mr-heading text-mr-ink">E-mail envoyé</h2>
         <p role="status" className="mr-body mt-3">
-          Un lien de connexion est parti vers{" "}
-          <span className="font-semibold text-mr-ink">{sentTo}</span>. Il est valable{" "}
-          {ACCESS_LINK_VALIDITY} et s'ouvre sur l'appareil de votre choix. S'il n'arrive pas d'ici
-          quelques minutes, regardez dans les courriers indésirables.
+          Un lien et un code de connexion sont partis vers{" "}
+          <span className="font-semibold text-mr-ink">{sentTo}</span>. Cliquez le lien, ou saisissez
+          le code ci-dessous — les deux sont valables {ACCESS_LINK_VALIDITY}. S'il n'arrive pas
+          d'ici quelques minutes, regardez dans les courriers indésirables.
         </p>
         {problem && (
           <p role="alert" className="mr-small mt-3 text-mr-bordeaux">
@@ -244,7 +252,7 @@ function LinkSignIn({ onSent }: { onSent: () => void }) {
             disabled={sending || wait > 0}
             onClick={() => void send(sentTo)}
           >
-            {wait > 0 ? `Renvoyer le lien (dans ${wait} s)` : sending ? "Envoi…" : "Renvoyer le lien"}
+            {wait > 0 ? `Renvoyer (dans ${wait} s)` : sending ? "Envoi…" : "Renvoyer l'e-mail"}
           </button>
           <button
             type="button"
@@ -256,6 +264,10 @@ function LinkSignIn({ onSent }: { onSent: () => void }) {
           >
             Utiliser une autre adresse
           </button>
+        </div>
+
+        <div className="mt-8 border-t border-mr-rule pt-6">
+          <CodeSignIn email={sentTo} onSignedIn={onSignedIn} />
         </div>
       </div>
     );
@@ -282,7 +294,67 @@ function LinkSignIn({ onSent }: { onSent: () => void }) {
         </p>
       )}
       <button type="submit" disabled={sending} className={submitClass}>
-        {sending ? "Envoi…" : "Recevoir mon lien de connexion"}
+        {sending ? "Envoi…" : "Recevoir mon lien et mon code de connexion"}
+      </button>
+    </form>
+  );
+}
+
+/**
+ * Le code vit dans le même e-mail que le lien (§ accessLink.ts) — jamais un
+ * second envoi. Il sert quand le lien n'ouvre rien : messagerie qui
+ * pré-visite les liens, redirection vers une autre application sur mobile,
+ * client mail qui bloque l'ouverture.
+ */
+function CodeSignIn({
+  email,
+  onSignedIn,
+}: {
+  email: string;
+  onSignedIn: () => Promise<void>;
+}) {
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [problem, setProblem] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setVerifying(true);
+    setProblem(null);
+    const result = await verifyAccessCode(supabase.auth, email, code);
+    setVerifying(false);
+    if (!result.ok) {
+      setProblem(result.message);
+      return;
+    }
+    await onSignedIn();
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <label htmlFor="mr-auth-code" className={labelClass}>
+        Ou saisissez le code reçu par e-mail
+      </label>
+      <input
+        id="mr-auth-code"
+        type="text"
+        required
+        inputMode="numeric"
+        pattern="[0-9]*"
+        autoComplete="one-time-code"
+        maxLength={ACCESS_CODE_LENGTH}
+        placeholder={"•".repeat(ACCESS_CODE_LENGTH)}
+        value={code}
+        onChange={(event) => setCode(event.target.value.replace(/[^0-9]/g, ""))}
+        className={`${inputClass} tracking-[0.3em]`}
+      />
+      {problem && (
+        <p role="alert" className="mr-small mt-3 text-mr-bordeaux">
+          {problem}
+        </p>
+      )}
+      <button type="submit" disabled={verifying || code.trim() === ""} className={submitClass}>
+        {verifying ? "Vérification…" : "Valider le code"}
       </button>
     </form>
   );

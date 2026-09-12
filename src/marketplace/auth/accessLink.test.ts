@@ -1,9 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   ACCESS_LINK_MESSAGES,
+  accessCodeErrorMessage,
   accessLinkErrorMessage,
   linkErrorFromUrl,
   requestAccessLink,
+  verifyAccessCode,
 } from "./accessLink";
 
 describe("requestAccessLink", () => {
@@ -63,6 +65,59 @@ describe("accessLinkErrorMessage", () => {
 
   it("gives the unavailable case a way out", () => {
     expect(ACCESS_LINK_MESSAGES.unavailable).toContain("@");
+  });
+});
+
+describe("verifyAccessCode", () => {
+  it("verifies the same token family as the link, with type email", async () => {
+    const verifyOtp = vi.fn().mockResolvedValue({ error: null });
+    await expect(
+      verifyAccessCode({ verifyOtp }, "  lecteur@example.test ", " 12345678 "),
+    ).resolves.toEqual({ ok: true });
+    expect(verifyOtp).toHaveBeenCalledWith({
+      email: "lecteur@example.test",
+      token: "12345678",
+      type: "email",
+    });
+  });
+
+  it("does not call Supabase for something that cannot be a code", async () => {
+    const verifyOtp = vi.fn();
+    await expect(verifyAccessCode({ verifyOtp }, "lecteur@example.test", "")).resolves.toEqual({
+      ok: false,
+      message: ACCESS_LINK_MESSAGES.codeMissing,
+    });
+    await expect(verifyAccessCode({ verifyOtp }, "lecteur@example.test", "abc123")).resolves.toEqual(
+      { ok: false, message: ACCESS_LINK_MESSAGES.codeMissing },
+    );
+    expect(verifyOtp).not.toHaveBeenCalled();
+  });
+
+  it("reports a failure rather than throwing when the request itself fails", async () => {
+    const verifyOtp = vi.fn().mockRejectedValue(new TypeError("Failed to fetch"));
+    await expect(
+      verifyAccessCode({ verifyOtp }, "lecteur@example.test", "12345678"),
+    ).resolves.toEqual({ ok: false, message: ACCESS_LINK_MESSAGES.failed });
+  });
+
+  it("passes Supabase's refusal through as a French sentence", async () => {
+    const verifyOtp = vi.fn().mockResolvedValue({ error: { code: "otp_expired", status: 403 } });
+    await expect(
+      verifyAccessCode({ verifyOtp }, "lecteur@example.test", "12345678"),
+    ).resolves.toEqual({ ok: false, message: ACCESS_LINK_MESSAGES.codeInvalid });
+  });
+});
+
+describe("accessCodeErrorMessage", () => {
+  it("tells apart what the person can fix from what they cannot", () => {
+    expect(accessCodeErrorMessage({ code: "otp_expired", status: 403 })).toBe(
+      ACCESS_LINK_MESSAGES.codeInvalid,
+    );
+    expect(accessCodeErrorMessage({ status: 401 })).toBe(ACCESS_LINK_MESSAGES.codeInvalid);
+    expect(accessCodeErrorMessage({ code: "over_request_rate_limit", status: 429 })).toBe(
+      ACCESS_LINK_MESSAGES.tooSoon,
+    );
+    expect(accessCodeErrorMessage({ status: 500 })).toBe(ACCESS_LINK_MESSAGES.failed);
   });
 });
 
