@@ -4,46 +4,64 @@ import { getMyCustomerCase } from "@/marketplace/services/marketplace.data.funct
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { ConversationPanel } from "@/marketplace/pages/ConversationPanel";
 import { DecisionsPanel } from "@/marketplace/pages/DecisionsPanel";
-import { binderSkillLabel } from "@/marketplace/binders/skills";
+import { binderSkillLabel, binderSkillLabelEn } from "@/marketplace/binders/skills";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { visibleJourney } from "@/marketplace/cases/journey";
+import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 
-function customerMessage(status: string): string {
+function customerMessage(status: string, en: boolean): string {
   switch (status) {
     case "under_review":
     case "pricing":
-      return "Ma Reliure étudie votre projet et prépare son prix.";
+      return en
+        ? "Fine Bindery is reviewing your project and preparing its price."
+        : "Ma Reliure étudie votre projet et prépare son prix.";
     case "matching":
     case "awaiting_binder_response":
-      return "Nous recherchons l’atelier le plus adapté et vérifions sa disponibilité.";
+      return en
+        ? "We are looking for the most suitable workshop and checking its availability."
+        : "Nous recherchons l’atelier le plus adapté et vérifions sa disponibilité.";
     case "binder_accepted":
-      return "Un atelier est disponible. Ma Reliure finalise votre prise en charge.";
+      return en
+        ? "A workshop is available. Fine Bindery is finalising your project's handover."
+        : "Un atelier est disponible. Ma Reliure finalise votre prise en charge.";
     case "binder_selected":
-      return "Votre atelier est confirmé.";
+      return en ? "Your workshop is confirmed." : "Votre atelier est confirmé.";
     default:
-      return "Votre projet avance. Ma Reliure vous tient informé à chaque étape.";
+      return en
+        ? "Your project is moving forward. Fine Bindery keeps you informed at every step."
+        : "Votre projet avance. Ma Reliure vous tient informé à chaque étape.";
   }
 }
 
-export function CustomerCasePage({ caseId }: { caseId: string }) {
+export function CustomerCasePage({
+  caseId,
+  brand,
+}: {
+  caseId: string;
+  brand: MarketplaceBrand | null;
+}) {
+  const en = brand === "FINE_BINDERY";
+  const locale = en ? "en-US" : "fr-FR";
   const fetchCase = useServerFn(getMyCustomerCase);
   const { data, isPending, error } = useQuery({
     queryKey: ["marketplace", "customer", "case", caseId] as const,
     queryFn: () => fetchCase({ data: { caseId } }),
   });
 
-  if (isPending) return <p className="text-sm text-muted-foreground">Chargement…</p>;
+  if (isPending)
+    return <p className="text-sm text-muted-foreground">{en ? "Loading…" : "Chargement…"}</p>;
   if (error) return <p className="text-sm text-destructive">{(error as Error).message}</p>;
   if (!data) return null;
 
   return (
     <div className="space-y-10">
-      <CaseBriefPanel view={data.view} />
+      <CaseBriefPanel view={data.view} locale={locale} />
 
       {/* Décisions avant conversation : une confirmation attendue prime sur
           l'historique du fil (§10 : « que se passe-t-il maintenant ? »). */}
-      <DecisionsPanel caseId={caseId} role="customer" />
-      <ConversationPanel caseId={caseId} viewerRole="customer" />
+      <DecisionsPanel caseId={caseId} role="customer" locale={locale} />
+      <ConversationPanel caseId={caseId} viewerRole="customer" locale={locale} />
       {/* Un prix n'apparaît ici qu'une fois validé par un humain — le serveur
           ne renvoie même pas les autres. Tant qu'il n'y en a pas, on dit ce
           qui se passe réellement plutôt que d'afficher un montant provisoire :
@@ -51,28 +69,38 @@ export function CustomerCasePage({ caseId }: { caseId: string }) {
           qu'il était « en cours ». Pas de prix vaut mieux qu'un faux prix. */}
       <section className="rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-6">
         <p className="text-sm text-[#6b5847]">
-          {data.case.customerPriceCents ? "Prix fixé par Ma Reliure" : "Votre estimation"}
+          {data.case.customerPriceCents
+            ? en
+              ? "Price set by Fine Bindery"
+              : "Prix fixé par Ma Reliure"
+            : en
+              ? "Your estimate"
+              : "Votre estimation"}
         </p>
         {data.case.customerPriceCents ? (
           <p className="mt-1 font-serif text-3xl text-[#241a12]">
-            {formatEuros(data.case.customerPriceCents)}
+            {formatEuros(data.case.customerPriceCents, locale)}
           </p>
         ) : (
           <>
             <p className="mt-2 font-serif text-xl text-[#241a12]">
-              Votre projet est en cours d’étude.
+              {en ? "Your project is under review." : "Votre projet est en cours d’étude."}
             </p>
             <p className="mt-2 text-sm leading-6 text-[#4b3a2c]">
-              Nous devons confirmer le travail nécessaire avant de vous présenter votre prix.
+              {en
+                ? "We need to confirm the work required before presenting your price."
+                : "Nous devons confirmer le travail nécessaire avant de vous présenter votre prix."}
             </p>
           </>
         )}
         {data.case.priceIncludes.length > 0 && (
           <p className="mt-3 text-sm leading-6 text-[#6b5847]">
-            Comprend : {data.case.priceIncludes.join(", ")}.
+            {en ? "Includes" : "Comprend"}: {data.case.priceIncludes.join(", ")}.
           </p>
         )}
-        <p className="mt-5 text-sm leading-6 text-[#4b3a2c]">{customerMessage(data.case.status)}</p>
+        <p className="mt-5 text-sm leading-6 text-[#4b3a2c]">
+          {customerMessage(data.case.status, en)}
+        </p>
       </section>
 
       {/* Le parcours, réduit aux étapes qui existent : `journey.ts` retire
@@ -81,9 +109,9 @@ export function CustomerCasePage({ caseId }: { caseId: string }) {
           étape à venir un filet creux — pas de coche, pas de pourcentage : on
           raconte où en est un livre, on ne remplit pas une barre. */}
       <section>
-        <h2 className="font-serif text-2xl">Où en est votre livre</h2>
+        <h2 className="font-serif text-2xl">{en ? "Where your book stands" : "Où en est votre livre"}</h2>
         <ol className="mt-5 space-y-6">
-          {visibleJourney(data.case.status).map((stage) => (
+          {visibleJourney(data.case.status, locale).map((stage) => (
             <li key={stage.id} className="flex gap-4">
               <span
                 aria-hidden="true"
@@ -106,7 +134,7 @@ export function CustomerCasePage({ caseId }: { caseId: string }) {
 
       {data.selectedBinder && (
         <section>
-          <h2 className="font-serif text-2xl">L’atelier retenu</h2>
+          <h2 className="font-serif text-2xl">{en ? "The selected workshop" : "L’atelier retenu"}</h2>
           <div className="mt-4 rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-6">
             <p className="font-serif text-xl text-[#241a12]">
               {data.selectedBinder.workshop_name ?? data.selectedBinder.display_name}
@@ -115,7 +143,9 @@ export function CustomerCasePage({ caseId }: { caseId: string }) {
               {[
                 data.selectedBinder.city,
                 data.selectedBinder.years_experience
-                  ? `${data.selectedBinder.years_experience} ans de métier`
+                  ? en
+                    ? `${data.selectedBinder.years_experience} years' experience`
+                    : `${data.selectedBinder.years_experience} ans de métier`
                   : null,
               ]
                 .filter(Boolean)
@@ -123,7 +153,7 @@ export function CustomerCasePage({ caseId }: { caseId: string }) {
             </p>
             {data.selectedBinder.skills.length > 0 && (
               <p className="mt-3 text-sm text-[#6b5847]">
-                {data.selectedBinder.skills.map(binderSkillLabel).join(", ")}
+                {data.selectedBinder.skills.map(en ? binderSkillLabelEn : binderSkillLabel).join(", ")}
               </p>
             )}
             {data.selectedBinder.bio && (

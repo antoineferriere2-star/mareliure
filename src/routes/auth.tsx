@@ -10,6 +10,7 @@ import { resolveMarketplacePostAuthDestination } from "@/marketplace/auth/postAu
 import { getMyBinderProfile } from "@/marketplace/services/marketplace.data.functions";
 import { MaReliureAuthPage } from "@/marketplace/pages/auth/MaReliureAuthPage";
 import { isMaReliure } from "@/brand";
+import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBrand.server";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -21,13 +22,15 @@ export const Route = createFileRoute("/auth")({
   // stays valid without passing a search object.
   validateSearch: (search: Record<string, unknown>): { redirect?: string } =>
     typeof search.redirect === "string" ? { redirect: search.redirect } : {},
-  head: () => ({
-    meta: isMaReliure
-      ? [
-          { title: "Retrouver mes livres — Ma Reliure" },
-          { name: "robots", content: "noindex,nofollow" },
-        ]
-      : [
+  // Same seam as routes/index.tsx: only the marketplace deployment has two
+  // brands to tell apart, so the server round-trip is skipped entirely on
+  // the Métré deployment rather than made and ignored.
+  loader: async () =>
+    isMaReliure ? { brand: await getRequestMarketplaceBrand() } : { brand: null },
+  head: ({ loaderData }) => {
+    if (!isMaReliure) {
+      return {
+        meta: [
           { title: "Sign in or create your account — Métré Build" },
           {
             name: "description",
@@ -36,7 +39,14 @@ export const Route = createFileRoute("/auth")({
           },
           { name: "robots", content: "noindex,nofollow" },
         ],
-  }),
+      };
+    }
+    const title =
+      loaderData?.brand === "FINE_BINDERY"
+        ? "My Books — Fine Bindery"
+        : "Retrouver mes livres — Ma Reliure";
+    return { meta: [{ title }, { name: "robots", content: "noindex,nofollow" }] };
+  },
   component: AuthPage,
 });
 
@@ -51,6 +61,7 @@ type Audience = "client" | "team";
 function AuthPage() {
   const navigate = useNavigate();
   const { redirect } = Route.useSearch();
+  const { brand } = Route.useLoaderData();
   const router = useRouter();
   const [audience, setAudience] = useState<Audience>("client");
   const [accessError, setAccessError] = useState<string | null>(null);
@@ -107,6 +118,7 @@ function AuthPage() {
   if (isMaReliure) {
     return (
       <MaReliureAuthPage
+        brand={brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE"}
         accessError={accessError}
         routing={routing}
         onSignedIn={async () => {

@@ -135,10 +135,52 @@ export const CASE_JOURNEY: readonly JourneyStage[] = [
   },
 ];
 
+/**
+ * English text for the same stages — same ids, same `available`/
+ * `reachedFrom` (the domain rule doesn't change with the language), only
+ * `title`/`reached`/`upcoming` translated. Kept separate from CASE_JOURNEY
+ * rather than folded into it, so the one canonical stage list never drifts
+ * out of sync with itself across two languages.
+ */
+const JOURNEY_TEXT_EN: Record<
+  JourneyStage["id"],
+  Pick<JourneyStage, "title" | "reached" | "upcoming">
+> = {
+  project: {
+    title: "Your project",
+    reached: "We have your book, your photographs and what you'd like done with it.",
+    upcoming: "Present your book to get started.",
+  },
+  estimate: {
+    title: "Your estimate",
+    reached: "Fine Bindery has reviewed the work involved and set your project's price.",
+    upcoming: "Fine Bindery is reviewing the work involved and preparing your price.",
+  },
+  workshop: {
+    title: "Your workshop",
+    reached: "The selected workshop has accepted the project and its rate.",
+    upcoming: "We are looking for the workshop whose skills match your book.",
+  },
+  order: {
+    title: "Your order",
+    reached: "Your payment has been recorded.",
+    upcoming: "Payment will be made to Fine Bindery.",
+  },
+  travel: {
+    title: "Your book's journey",
+    reached: "Your book is on its way.",
+    upcoming: "Fine Bindery will organise its outbound and return journey.",
+  },
+};
+
 /** Les étapes qu'un client peut voir aujourd'hui, dans l'ordre du parcours. */
-export function visibleJourney(status: string): (JourneyStage & { done: boolean })[] {
+export function visibleJourney(
+  status: string,
+  locale: "fr-FR" | "en-US" = "fr-FR",
+): (JourneyStage & { done: boolean })[] {
   return CASE_JOURNEY.filter((stage) => stage.available).map((stage) => ({
     ...stage,
+    ...(locale === "en-US" ? JOURNEY_TEXT_EN[stage.id] : {}),
     done: (stage.reachedFrom as readonly string[]).includes(status),
   }));
 }

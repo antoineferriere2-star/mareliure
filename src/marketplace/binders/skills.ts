@@ -75,6 +75,28 @@ export function binderSkillLabel(slug: string): string {
   return BY_SLUG.get(slug)?.label ?? slug.replace(/_/g, " ");
 }
 
+/**
+ * English labels for the same catalogue — shown to a Fine Bindery customer
+ * reading their selected workshop's skills. Keyed by the same slugs as
+ * BINDER_SKILLS; never a second skills list (§29).
+ */
+const EN_LABELS: Record<string, string> = {
+  reliure_toile: "Cloth binding",
+  papier_decore: "Decorated paper",
+  demi_cuir: "Half-leather",
+  plein_cuir: "Full leather",
+  dorure: "Gilding",
+  restauration: "Restoration",
+  conservation: "Conservation",
+  cartonnage: "Box-making",
+  rebinding_contemporain: "Contemporary rebinding",
+  reliure_art: "Fine binding as art",
+};
+
+export function binderSkillLabelEn(slug: string): string {
+  return EN_LABELS[slug] ?? slug.replace(/_/g, " ");
+}
+
 export function isKnownBinderSkill(slug: string): boolean {
   return BY_SLUG.has(slug);
 }

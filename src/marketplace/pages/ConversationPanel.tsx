@@ -1,13 +1,18 @@
 /**
- * "Conversation avec votre atelier" (§14) — one thread per case, shared by
- * CustomerCasePage and BinderCasePage. The server decides who may read and
- * post (conversation.ts); this component only renders what it gets back.
+ * "Conversation avec votre atelier" / "Conversation with your workshop"
+ * (§14) — one thread per case, shared by CustomerCasePage and
+ * BinderCasePage. The server decides who may read and post
+ * (conversation.ts); this component only renders what it gets back.
  *
  * §18: React Query, not Supabase Realtime — optimistic update on send,
  * invalidation on success, and a bounded poll while the panel is visible.
  * The transport is entirely inside this one component: swapping polling for
  * a Realtime subscription later only touches this file, never the callers
  * or the server functions.
+ *
+ * `locale` defaults to French — BinderCasePage never passes it, and an
+ * atelier's own conversation stays exactly as it was. Only
+ * CustomerCasePage passes "en-US", for a Fine Bindery customer.
  */
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,13 +25,23 @@ import {
 
 const POLL_INTERVAL_MS = 15_000;
 
-const SENDER_LABELS: Record<string, string> = {
-  customer: "Vous",
-  binder: "Votre atelier",
-  admin: "Ma Reliure",
+type Locale = "fr-FR" | "en-US";
+
+const SENDER_LABELS: Record<Locale, Record<string, string>> = {
+  "fr-FR": { customer: "Vous", binder: "Votre atelier", admin: "Ma Reliure" },
+  "en-US": { customer: "You", binder: "Your workshop", admin: "Fine Bindery" },
 };
 
-export function ConversationPanel({ caseId, viewerRole }: { caseId: string; viewerRole: "customer" | "binder" }) {
+export function ConversationPanel({
+  caseId,
+  viewerRole,
+  locale = "fr-FR",
+}: {
+  caseId: string;
+  viewerRole: "customer" | "binder";
+  locale?: Locale;
+}) {
+  const en = locale === "en-US";
   const fetchMessages = useServerFn(listCaseMessages);
   const send = useServerFn(sendCaseMessage);
   const markRead = useServerFn(markConversationRead);
@@ -98,17 +113,28 @@ export function ConversationPanel({ caseId, viewerRole }: { caseId: string; view
     mutation.mutate(body);
   }
 
-  if (isPending) return <p className="text-sm text-muted-foreground">Chargement de la conversation…</p>;
+  if (isPending)
+    return (
+      <p className="text-sm text-muted-foreground">
+        {en ? "Loading the conversation…" : "Chargement de la conversation…"}
+      </p>
+    );
   if (error) return <p className="text-sm text-destructive">{(error as Error).message}</p>;
 
   return (
     <section className="rounded-lg border border-border bg-card p-5">
       <h2 className="font-serif text-lg">
-        {viewerRole === "customer" ? "Conversation avec votre atelier" : "Conversation"}
+        {viewerRole === "customer"
+          ? en
+            ? "Conversation with your workshop"
+            : "Conversation avec votre atelier"
+          : "Conversation"}
       </h2>
       <div className="mt-4 max-h-96 space-y-3 overflow-y-auto pr-1">
         {data!.messages.length === 0 && (
-          <p className="text-sm text-muted-foreground">Aucun message pour l'instant.</p>
+          <p className="text-sm text-muted-foreground">
+            {en ? "No messages yet." : "Aucun message pour l'instant."}
+          </p>
         )}
         {data!.messages.map((message) => (
           <div
@@ -118,10 +144,10 @@ export function ConversationPanel({ caseId, viewerRole }: { caseId: string; view
             }`}
           >
             <p className="text-xs font-semibold opacity-70">
-              {SENDER_LABELS[message.senderRole] ?? message.senderRole}
+              {SENDER_LABELS[locale][message.senderRole] ?? message.senderRole}
             </p>
             <p className="mt-0.5 whitespace-pre-wrap">
-              {message.deleted ? "Message supprimé." : message.body}
+              {message.deleted ? (en ? "Message deleted." : "Message supprimé.") : message.body}
             </p>
           </div>
         ))}
@@ -138,7 +164,7 @@ export function ConversationPanel({ caseId, viewerRole }: { caseId: string; view
             }
           }}
           rows={2}
-          placeholder="Écrire un message…"
+          placeholder={en ? "Write a message…" : "Écrire un message…"}
           className="min-w-0 flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
         <button
@@ -146,7 +172,7 @@ export function ConversationPanel({ caseId, viewerRole }: { caseId: string; view
           disabled={draft.trim() === "" || mutation.isPending}
           className="self-end rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
         >
-          Envoyer
+          {en ? "Send" : "Envoyer"}
         </button>
       </form>
     </section>

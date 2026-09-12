@@ -7,5 +7,6 @@ export const Route = createFileRoute("/_authenticated/mes-livres/$caseId")({
 
 function RouteComponent() {
   const { caseId } = Route.useParams();
-  return <CustomerCasePage caseId={caseId} />;
+  const { brand } = Route.useRouteContext();
+  return <CustomerCasePage caseId={caseId} brand={brand} />;
 }

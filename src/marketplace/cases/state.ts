@@ -56,6 +56,33 @@ export const CASE_STATUS_LABELS: Record<CaseStatus, string> = {
 };
 
 /**
+ * The same fallback labels in English — used only as CustomerCaseListPage's
+ * last resort for a status its own customer-worded switch doesn't name
+ * explicitly. Still back-office-flavoured wording (not a redesign of what a
+ * Fine Bindery customer ideally reads for "shipping_to_binder"), kept
+ * because that UX decision predates this translation and isn't this
+ * change's to make.
+ */
+export const CASE_STATUS_LABELS_EN: Record<CaseStatus, string> = {
+  under_review: "Under review",
+  pricing: "Price to confirm",
+  matching: "Selecting a workshop",
+  awaiting_binder_response: "Awaiting workshop response",
+  binder_accepted: "Workshop available",
+  binder_selected: "Workshop selected",
+  awaiting_payment: "Awaiting payment",
+  paid: "Paid",
+  shipping_to_binder: "On its way to the workshop",
+  received_by_binder: "Received by the workshop",
+  in_progress: "Work in progress",
+  awaiting_approval: "Awaiting approval",
+  shipping_to_customer: "On its way back to you",
+  delivered: "Delivered",
+  completed: "Completed",
+  cancelled: "Cancelled",
+};
+
+/**
  * Les états d'une offre faite à un atelier, et ce qu'un humain doit en lire.
  *
  * Ils viennent de la contrainte posée sur `marketplace_quotes` par la migration

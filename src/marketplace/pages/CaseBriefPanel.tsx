@@ -9,21 +9,36 @@
  *
  * Line provenance is shown, not hidden: a value the vision agent proposed from
  * a photo must never read like something the customer confirmed.
+ *
+ * `locale` defaults to French — the admin and atelier call sites never pass
+ * it, and stay exactly as they were. Only CustomerCasePage passes "en-US",
+ * for a Fine Bindery customer.
  */
 import type { BriefLine } from "@/build/schema/brief";
 import type { CaseView, CaseViewLine } from "@/marketplace/cases/dossierProjection";
 
-const SOURCE_LABELS: Record<BriefLine["source"], string> = {
-  visitor_answer: "Déclaré par le client",
-  calculated_value: "Calculé",
-  deterministic_rule: "Règle du playbook",
-  assumed_default: "Hypothèse par défaut",
-  image_hypothesis: "Hypothèse IA (photo, non confirmée)",
+type Locale = "fr-FR" | "en-US";
+
+const SOURCE_LABELS: Record<Locale, Record<BriefLine["source"], string>> = {
+  "fr-FR": {
+    visitor_answer: "Déclaré par le client",
+    calculated_value: "Calculé",
+    deterministic_rule: "Règle du playbook",
+    assumed_default: "Hypothèse par défaut",
+    image_hypothesis: "Hypothèse IA (photo, non confirmée)",
+  },
+  "en-US": {
+    visitor_answer: "Stated by the customer",
+    calculated_value: "Calculated",
+    deterministic_rule: "Playbook rule",
+    assumed_default: "Default assumption",
+    image_hypothesis: "AI hypothesis (photo, unconfirmed)",
+  },
 };
 
-function Lines({ lines }: { lines: CaseViewLine[] }) {
+function Lines({ lines, locale }: { lines: CaseViewLine[]; locale: Locale }) {
   if (lines.length === 0) {
-    return <p className="text-sm text-[#8a7663]">Aucune.</p>;
+    return <p className="text-sm text-[#8a7663]">{locale === "en-US" ? "None." : "Aucune."}</p>;
   }
   return (
     <dl className="divide-y divide-[#3b2a1d]/10">
@@ -34,7 +49,7 @@ function Lines({ lines }: { lines: CaseViewLine[] }) {
             <span className="text-[#241a12]">{line.value}</span>
             {line.source !== "visitor_answer" && (
               <span className="ml-2 text-[11px] uppercase tracking-wide text-[#8a7663]">
-                {SOURCE_LABELS[line.source]}
+                {SOURCE_LABELS[locale][line.source]}
               </span>
             )}
           </dd>
@@ -53,7 +68,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-export function CaseBriefPanel({ view }: { view: CaseView }) {
+export function CaseBriefPanel({ view, locale = "fr-FR" }: { view: CaseView; locale?: Locale }) {
+  const en = locale === "en-US";
   return (
     <div className="rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -65,13 +81,17 @@ export function CaseBriefPanel({ view }: { view: CaseView }) {
       {(view.manualReviewRequired || view.heritage) && (
         <p className="mt-4 rounded-lg border border-[#8a5a2b]/30 bg-[#f3e6d3] px-4 py-3 text-sm leading-6 text-[#5b3a17]">
           {view.heritage
-            ? "Ce type d'ouvrage nécessite une validation spécifique par un professionnel avant prise en charge."
-            : "Ce dossier est en attente de revue manuelle avant diffusion."}
+            ? en
+              ? "This type of book requires specific validation by a professional before it can be taken on."
+              : "Ce type d'ouvrage nécessite une validation spécifique par un professionnel avant prise en charge."
+            : en
+              ? "This project is awaiting manual review before it is shared further."
+              : "Ce dossier est en attente de revue manuelle avant diffusion."}
         </p>
       )}
 
       {view.photos.length > 0 && (
-        <Section title={`Photos (${view.photos.length})`}>
+        <Section title={en ? `Photos (${view.photos.length})` : `Photos (${view.photos.length})`}>
           <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {view.photos.map((photo, index) =>
               photo.url ? (
@@ -81,7 +101,7 @@ export function CaseBriefPanel({ view }: { view: CaseView }) {
                 >
                   <img
                     src={photo.url}
-                    alt={photo.caption ?? `Photo ${index + 1} de l'ouvrage`}
+                    alt={photo.caption ?? (en ? `Photo ${index + 1} of the book` : `Photo ${index + 1} de l'ouvrage`)}
                     className="aspect-square w-full object-cover"
                     loading="lazy"
                   />
@@ -92,32 +112,32 @@ export function CaseBriefPanel({ view }: { view: CaseView }) {
         </Section>
       )}
 
-      <Section title="Le projet">
-        <Lines lines={view.project} />
+      <Section title={en ? "The project" : "Le projet"}>
+        <Lines lines={view.project} locale={locale} />
       </Section>
 
       {view.budgetAndTiming.length > 0 && (
-        <Section title="Budget et délai">
-          <Lines lines={view.budgetAndTiming} />
+        <Section title={en ? "Budget and timing" : "Budget et délai"}>
+          <Lines lines={view.budgetAndTiming} locale={locale} />
         </Section>
       )}
 
       {view.constraints.length > 0 && (
-        <Section title="Réserves et contraintes">
-          <Lines lines={view.constraints} />
+        <Section title={en ? "Reservations and constraints" : "Réserves et contraintes"}>
+          <Lines lines={view.constraints} locale={locale} />
         </Section>
       )}
 
-      <Section title="Informations manquantes">
-        <Lines lines={view.missingInformation} />
+      <Section title={en ? "Missing information" : "Informations manquantes"}>
+        <Lines lines={view.missingInformation} locale={locale} />
       </Section>
 
-      <Section title="Localisation">
-        <p className="text-[#241a12]">{view.area ?? "Non communiquée"}</p>
+      <Section title={en ? "Location" : "Localisation"}>
+        <p className="text-[#241a12]">{view.area ?? (en ? "Not provided" : "Non communiquée")}</p>
       </Section>
 
       {view.contact ? (
-        <Section title="Contact client">
+        <Section title={en ? "Customer contact" : "Contact client"}>
           <ul className="space-y-1 text-[#241a12]">
             {view.contact.name && <li>{view.contact.name}</li>}
             {view.contact.email && <li>{view.contact.email}</li>}
@@ -127,7 +147,9 @@ export function CaseBriefPanel({ view }: { view: CaseView }) {
         </Section>
       ) : (
         <p className="mt-8 text-sm text-[#8a7663]">
-          Les coordonnées du client vous seront transmises si Ma Reliure retient votre atelier.
+          {en
+            ? "The customer's contact details will be shared with you if your workshop is selected."
+            : "Les coordonnées du client vous seront transmises si Ma Reliure retient votre atelier."}
         </p>
       )}
     </div>

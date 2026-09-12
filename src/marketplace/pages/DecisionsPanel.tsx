@@ -2,6 +2,11 @@
  * Structured decisions (§20-§22) — never mixed with the conversation. A
  * question here gets one immutable answer; correcting one creates a new
  * decision rather than rewriting the old (superseded_by).
+ *
+ * `locale` defaults to French — BinderCasePage never passes it, and an
+ * atelier's own decisions screen stays exactly as it was (an atelier always
+ * requests in French, whichever brand the case belongs to — §44). Only
+ * CustomerCasePage passes "en-US", for a Fine Bindery customer answering.
  */
 import { useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -15,15 +20,29 @@ import {
 import { DECISION_KINDS, type DecisionKind } from "@/marketplace/decisions/decisions";
 import { Button } from "@/components/ui/button";
 
-const KIND_LABELS: Record<DecisionKind, string> = {
-  COLOR: "Couleur",
-  MATERIAL: "Matière",
-  PAPER: "Papier",
-  GILDING_TEXT: "Texte de dorure",
-  GILDING_STYLE: "Style de dorure",
-  DECOR: "Décor",
-  TECHNICAL_CHOICE: "Choix technique",
-  OTHER: "Autre",
+type Locale = "fr-FR" | "en-US";
+
+const KIND_LABELS: Record<Locale, Record<DecisionKind, string>> = {
+  "fr-FR": {
+    COLOR: "Couleur",
+    MATERIAL: "Matière",
+    PAPER: "Papier",
+    GILDING_TEXT: "Texte de dorure",
+    GILDING_STYLE: "Style de dorure",
+    DECOR: "Décor",
+    TECHNICAL_CHOICE: "Choix technique",
+    OTHER: "Autre",
+  },
+  "en-US": {
+    COLOR: "Colour",
+    MATERIAL: "Material",
+    PAPER: "Paper",
+    GILDING_TEXT: "Gilding text",
+    GILDING_STYLE: "Gilding style",
+    DECOR: "Decoration",
+    TECHNICAL_CHOICE: "Technical choice",
+    OTHER: "Other",
+  },
 };
 
 interface DecisionRow {
@@ -46,11 +65,15 @@ function optionsOf(options: unknown): string[] {
 export function DecisionsPanel({
   caseId,
   role,
+  locale = "fr-FR",
 }: {
   caseId: string;
   /** "customer" answers; "binder" (and admin, from the back-office) requests. */
   role: "customer" | "binder";
+  locale?: Locale;
 }) {
+  const en = locale === "en-US";
+  const kindLabels = KIND_LABELS[locale];
   const fetchDecisions = useServerFn(listCaseDecisions);
   const answer = useServerFn(answerCaseDecision);
   const request = useServerFn(requestCaseDecision);
@@ -73,7 +96,12 @@ export function DecisionsPanel({
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
-  if (isPending) return <p className="text-sm text-muted-foreground">Chargement des décisions…</p>;
+  if (isPending)
+    return (
+      <p className="text-sm text-muted-foreground">
+        {en ? "Loading decisions…" : "Chargement des décisions…"}
+      </p>
+    );
   if (error) return <p className="text-sm text-destructive">{(error as Error).message}</p>;
 
   const decisions = (data ?? []) as DecisionRow[];
@@ -82,10 +110,12 @@ export function DecisionsPanel({
 
   return (
     <section className="rounded-lg border border-border bg-card p-5">
-      <h2 className="font-serif text-lg">Décisions</h2>
+      <h2 className="font-serif text-lg">{en ? "Decisions" : "Décisions"}</h2>
 
       {decisions.length === 0 && role === "customer" && (
-        <p className="mt-3 text-sm text-muted-foreground">Aucune décision à confirmer pour l'instant.</p>
+        <p className="mt-3 text-sm text-muted-foreground">
+          {en ? "No decision to confirm for now." : "Aucune décision à confirmer pour l'instant."}
+        </p>
       )}
 
       {open.length > 0 && (
@@ -93,12 +123,15 @@ export function DecisionsPanel({
           {open.map((decision) => (
             <li key={decision.id} className="rounded-md border border-amber-300 bg-amber-50 p-4">
               <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
-                {KIND_LABELS[decision.kind as DecisionKind] ?? decision.kind} · Action requise
+                {kindLabels[decision.kind as DecisionKind] ?? decision.kind} ·{" "}
+                {en ? "Action required" : "Action requise"}
               </p>
               <p className="mt-1 text-sm font-medium">{decision.question}</p>
               {decision.kind === "GILDING_TEXT" && (
                 <p className="mt-1 text-xs text-amber-800">
-                  Vérifiez attentivement l'orthographe. Cette validation sera transmise à l'atelier.
+                  {en
+                    ? "Check the spelling carefully. This confirmation will be passed on to the workshop."
+                    : "Vérifiez attentivement l'orthographe. Cette validation sera transmise à l'atelier."}
                 </p>
               )}
               {role === "customer" ? (
@@ -106,19 +139,24 @@ export function DecisionsPanel({
                   decisionId={decision.id}
                   kind={decision.kind as DecisionKind}
                   options={optionsOf(decision.options)}
+                  locale={locale}
                   onAnswer={(value) => answerMutation.mutate({ decisionId: decision.id, answer: value })}
                   pending={answerMutation.isPending}
                 />
               ) : (
                 <div className="mt-3 flex items-center gap-3">
-                  <p className="text-xs text-muted-foreground">En attente d'une réponse du client.</p>
+                  <p className="text-xs text-muted-foreground">
+                    {en
+                      ? "Awaiting a reply from the customer."
+                      : "En attente d'une réponse du client."}
+                  </p>
                   <button
                     type="button"
                     className="text-xs text-muted-foreground underline"
                     disabled={cancelMutation.isPending}
                     onClick={() => cancelMutation.mutate(decision.id)}
                   >
-                    Annuler cette demande
+                    {en ? "Cancel this request" : "Annuler cette demande"}
                   </button>
                 </div>
               )}
@@ -134,22 +172,34 @@ export function DecisionsPanel({
               <p className="font-medium">{decision.question}</p>
               {decision.status === "answered" && (
                 <p className="mt-1 text-muted-foreground">
-                  Confirmé{" "}
+                  {en ? "Confirmed" : "Confirmé"}{" "}
                   {decision.answered_at &&
-                    `le ${new Date(decision.answered_at).toLocaleDateString("fr-FR")}`}{" "}
+                    (en
+                      ? `on ${new Date(decision.answered_at).toLocaleDateString("en-US")}`
+                      : `le ${new Date(decision.answered_at).toLocaleDateString("fr-FR")}`)}{" "}
                   : {JSON.stringify(decision.answer)}
-                  {decision.superseded_by && " (depuis corrigé — voir la décision plus récente)"}
+                  {decision.superseded_by &&
+                    (en
+                      ? " (since corrected — see the more recent decision)"
+                      : " (depuis corrigé — voir la décision plus récente)")}
                 </p>
               )}
               {decision.status === "cancelled" && (
-                <p className="mt-1 text-muted-foreground">Demande annulée.</p>
+                <p className="mt-1 text-muted-foreground">
+                  {en ? "Request cancelled." : "Demande annulée."}
+                </p>
               )}
             </li>
           ))}
         </ul>
       )}
 
-      {role === "binder" && <RequestDecisionForm onRequest={(input) => request({ data: { caseId, ...input } })} onRequested={() => queryClient.invalidateQueries({ queryKey })} />}
+      {role === "binder" && (
+        <RequestDecisionForm
+          onRequest={(input) => request({ data: { caseId, ...input } })}
+          onRequested={() => queryClient.invalidateQueries({ queryKey })}
+        />
+      )}
     </section>
   );
 }
@@ -158,15 +208,18 @@ function DecisionAnswerForm({
   decisionId,
   kind,
   options,
+  locale,
   onAnswer,
   pending,
 }: {
   decisionId: string;
   kind: DecisionKind;
   options: string[];
+  locale: Locale;
   onAnswer: (answer: Record<string, unknown>) => void;
   pending: boolean;
 }) {
+  const en = locale === "en-US";
   const [choice, setChoice] = useState(options[0] ?? "");
   const [freeText, setFreeText] = useState("");
 
@@ -195,12 +248,20 @@ function DecisionAnswerForm({
           required
           value={freeText}
           onChange={(event) => setFreeText(event.target.value)}
-          placeholder={kind === "GILDING_TEXT" ? "Texte exact à dorer" : "Votre réponse"}
+          placeholder={
+            kind === "GILDING_TEXT"
+              ? en
+                ? "Exact text to be gilded"
+                : "Texte exact à dorer"
+              : en
+                ? "Your answer"
+                : "Votre réponse"
+          }
           className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm"
         />
       )}
       <Button type="submit" size="sm" disabled={pending}>
-        Confirmer
+        {en ? "Confirm" : "Confirmer"}
       </Button>
     </form>
   );
@@ -240,6 +301,8 @@ function RequestDecisionForm({
     }
   }
 
+  // Toujours français — l'atelier reste l'atelier, quelle que soit la
+  // marque du dossier (§44).
   if (!open) {
     return (
       <Button variant="outline" size="sm" className="mt-4" onClick={() => setOpen(true)}>
@@ -257,7 +320,7 @@ function RequestDecisionForm({
       >
         {DECISION_KINDS.map((value) => (
           <option key={value} value={value}>
-            {KIND_LABELS[value]}
+            {KIND_LABELS["fr-FR"][value]}
           </option>
         ))}
       </select>
