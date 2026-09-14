@@ -27,7 +27,7 @@ import {
   FineBinderyHeader,
 } from "@/marketplace/pages/fineBindery/FineBinderyChrome";
 import {
-  LEGAL_PAGES_UPDATED_AT,
+  formatLegalPagesUpdatedAt,
   MARELIURE_CONTACT_EMAIL,
   MARELIURE_PROVIDERS,
   MARELIURE_PUBLISHER,
@@ -230,7 +230,7 @@ export function ConfidentialitePage() {
       path="/confidentialite"
       title="Politique de confidentialité"
       eyebrow="Informations légales"
-      updatedLabel={`Dernière mise à jour : ${LEGAL_PAGES_UPDATED_AT}`}
+      updatedLabel={`Dernière mise à jour : ${formatLegalPagesUpdatedAt("fr-FR")}`}
       seeAlso="Voir aussi :"
       intro="Ce que nous faisons des informations que vous nous confiez en présentant votre livre, et comment garder la main dessus."
       sections={PRIVACY_SECTIONS}
@@ -315,7 +315,7 @@ export function ConditionsPage() {
       path="/conditions"
       title="Conditions d'utilisation"
       eyebrow="Informations légales"
-      updatedLabel={`Dernière mise à jour : ${LEGAL_PAGES_UPDATED_AT}`}
+      updatedLabel={`Dernière mise à jour : ${formatLegalPagesUpdatedAt("fr-FR")}`}
       seeAlso="Voir aussi :"
       intro="Ce que vous pouvez attendre du site, et ce qu'il n'engage pas encore."
       sections={TERMS_SECTIONS}
@@ -362,7 +362,7 @@ export function MentionsLegalesPage() {
       path="/mentions-legales"
       title="Mentions légales"
       eyebrow="Informations légales"
-      updatedLabel={`Dernière mise à jour : ${LEGAL_PAGES_UPDATED_AT}`}
+      updatedLabel={`Dernière mise à jour : ${formatLegalPagesUpdatedAt("fr-FR")}`}
       seeAlso="Voir aussi :"
       intro="Qui édite Ma Reliure et où le site est hébergé."
       sections={NOTICE_SECTIONS}
@@ -480,7 +480,7 @@ export function PrivacyPage() {
       path="/privacy-policy"
       title="Privacy Policy"
       eyebrow="Legal information"
-      updatedLabel={`Last updated: ${LEGAL_PAGES_UPDATED_AT}`}
+      updatedLabel={`Last updated: ${formatLegalPagesUpdatedAt("en-US")}`}
       seeAlso="See also:"
       intro="What we do with the information you give us when presenting your book, and how to stay in control of it."
       sections={PRIVACY_SECTIONS_EN}
@@ -562,7 +562,7 @@ export function TermsPage() {
       path="/terms-of-use"
       title="Terms of Use"
       eyebrow="Legal information"
-      updatedLabel={`Last updated: ${LEGAL_PAGES_UPDATED_AT}`}
+      updatedLabel={`Last updated: ${formatLegalPagesUpdatedAt("en-US")}`}
       seeAlso="See also:"
       intro="What you can expect from the site, and what it does not yet commit to."
       sections={TERMS_SECTIONS_EN}
@@ -606,7 +606,7 @@ export function LegalNoticePage() {
       path="/legal-notice"
       title="Legal Notice"
       eyebrow="Legal information"
-      updatedLabel={`Last updated: ${LEGAL_PAGES_UPDATED_AT}`}
+      updatedLabel={`Last updated: ${formatLegalPagesUpdatedAt("en-US")}`}
       seeAlso="See also:"
       intro="Who publishes Fine Bindery, and where the site is hosted."
       sections={NOTICE_SECTIONS_EN}

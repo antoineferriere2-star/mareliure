@@ -61,5 +61,12 @@ export const MARELIURE_PROVIDERS = {
 /** Durée de validité du lien vers le récapitulatif, en jours. */
 export const SUMMARY_LINK_VALIDITY_DAYS = 90;
 
-/** La date affichée en tête des pages légales. À changer à chaque révision. */
-export const LEGAL_PAGES_UPDATED_AT = "10 septembre 2026";
+/** La date affichée en tête des pages légales, au format ISO. À changer à chaque révision. */
+export const LEGAL_PAGES_UPDATED_AT = "2026-09-10";
+
+/** Formate {@link LEGAL_PAGES_UPDATED_AT} dans la langue de la page qui l'affiche. */
+export function formatLegalPagesUpdatedAt(locale: "fr-FR" | "en-US"): string {
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(
+    new Date(`${LEGAL_PAGES_UPDATED_AT}T00:00:00Z`),
+  );
+}
