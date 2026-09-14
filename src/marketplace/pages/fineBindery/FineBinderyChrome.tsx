@@ -99,17 +99,10 @@ export function FineBinderyHeader() {
   );
 }
 
-/**
- * Legal pages exist only in French today (/mentions-legales,
- * /confidentialite, /conditions) — a real, flagged gap, not something to
- * paper over with fabricated English text. Linking to them plainly, in
- * English labels, is more honest than inventing a translation of a legal
- * document no one has reviewed.
- */
 const LEGAL_LINKS = [
-  { href: "/mentions-legales", label: "Legal notice (French)" },
-  { href: "/confidentialite", label: "Privacy (French)" },
-  { href: "/conditions", label: "Terms (French)" },
+  { href: "/legal-notice", label: "Legal notice" },
+  { href: "/privacy-policy", label: "Privacy policy" },
+  { href: "/terms-of-use", label: "Terms of use" },
 ] as const;
 
 export function FineBinderyFooter() {

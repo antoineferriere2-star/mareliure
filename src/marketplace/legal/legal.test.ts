@@ -44,9 +44,17 @@ describe("les affirmations correspondent au code", () => {
     expect(source).toMatch(new RegExp(`TTL_DAYS\\s*=\\s*${SUMMARY_LINK_VALIDITY_DAYS}\\b`));
   });
 
+  /**
+   * Vérifie l'embranchement réellement pris par `isMaReliure` (MARELIURE_FROM,
+   * Resend), pas une correspondance de sous-chaîne qui serait restée vraie
+   * même quand ce champ affirmait "Lovable" / notify.metre-pro.fr — l'adresse
+   * du branchement Métré, jamais empruntée par une marque Ma Reliure.
+   */
   it("nomme le domaine d'envoi des e-mails réellement utilisé", () => {
     const source = read("src/lib/email-templates/send-email.ts");
-    expect(source).toContain(`SENDER_DOMAIN = "${MARELIURE_PROVIDERS.email.senderDomain}"`);
+    expect(MARELIURE_PROVIDERS.email.name).toBe("Resend");
+    const fromLine = source.match(/MARELIURE_FROM\s*=\s*"[^"]*"/)?.[0] ?? "";
+    expect(fromLine).toContain(`@${MARELIURE_PROVIDERS.email.senderDomain}`);
   });
 
   it("nomme la passerelle d'IA réellement appelée", () => {
@@ -65,6 +73,20 @@ describe("le tunnel et le site mènent aux pages de Ma Reliure", () => {
   it("existent comme routes", () => {
     for (const route of ["confidentialite", "conditions", "mentions-legales"])
       expect(existsSync(resolve(process.cwd(), `src/routes/${route}.tsx`)), route).toBe(true);
+  });
+
+  /**
+   * Fine Bindery's own English pages — never "/privacy" or "/terms", déjà
+   * pris par Métré Build sur ce même dépôt (src/routes/privacy.tsx,
+   * src/routes/terms.tsx) avec un contenu sans rapport.
+   */
+  it("Fine Bindery a ses propres pages, sur des chemins qui ne collisionnent pas avec Métré", () => {
+    for (const route of ["privacy-policy", "terms-of-use", "legal-notice"])
+      expect(existsSync(resolve(process.cwd(), `src/routes/${route}.tsx`)), route).toBe(true);
+    for (const forbidden of ["privacy", "terms"]) {
+      const metreOwned = read(`src/routes/${forbidden}.tsx`);
+      expect(metreOwned, forbidden).toContain("Métré Build");
+    }
   });
 
   it("remplace, sur Ma Reliure seulement, les liens vers les pages de Métré", () => {

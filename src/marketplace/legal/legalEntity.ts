@@ -39,6 +39,14 @@ export const MARELIURE_CONTACT_EMAIL = "contact@oppe.fr";
  * confronte ces valeurs aux fichiers qui les emploient : si l'expéditeur des
  * e-mails change dans le code, la politique de confidentialité doit changer
  * avec lui.
+ *
+ * `email` a longtemps affirmé "Lovable" / notify.metre-pro.fr — exact pour
+ * Métré Build, faux pour Ma Reliure depuis que send-email.ts envoie via
+ * Resend (MARELIURE_FROM, "noreply@mareliure.fr") pour toute marque
+ * `isMaReliure`. Le test qui devait l'attraper vérifiait seulement qu'une
+ * chaîne de caractères apparaissait quelque part dans le fichier — vraie par
+ * coïncidence, jamais sur le bon embranchement. Corrigé ici et dans
+ * legal.test.ts.
  */
 export const MARELIURE_PROVIDERS = {
   webHost: {
@@ -46,7 +54,7 @@ export const MARELIURE_PROVIDERS = {
     address: "101 Townsend Street, San Francisco, CA 94107, États-Unis",
   },
   dataHost: { name: "Supabase, Inc.", region: "Union européenne (Irlande)" },
-  email: { name: "Lovable", senderDomain: "notify.metre-pro.fr" },
+  email: { name: "Resend", senderDomain: "mareliure.fr" },
   ai: { name: "Lovable AI Gateway" },
 } as const;
 

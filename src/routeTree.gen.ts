@@ -21,15 +21,18 @@ import { Route as ExampleProjectBriefRouteImport } from './routes/example-projec
 import { Route as FineBinderyRouteImport } from './routes/fine-bindery'
 import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
 import { Route as HowItWorksRouteImport } from './routes/how-it-works'
+import { Route as LegalNoticeRouteImport } from './routes/legal-notice'
 import { Route as MentionsLegalesRouteImport } from './routes/mentions-legales'
 import { Route as PartenairesRelieursRouteImport } from './routes/partenaires-relieurs'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
 import { Route as ReliureRouteImport } from './routes/reliure'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
 import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
 import { Route as AuthenticatedMarketplaceRouteRouteImport } from './routes/_authenticated/marketplace/route'
@@ -150,6 +153,11 @@ const HowItWorksRoute = HowItWorksRouteImport.update({
   path: '/how-it-works',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalNoticeRoute = LegalNoticeRouteImport.update({
+  id: '/legal-notice',
+  path: '/legal-notice',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const MentionsLegalesRoute = MentionsLegalesRouteImport.update({
   id: '/mentions-legales',
   path: '/mentions-legales',
@@ -168,6 +176,11 @@ const PricingRoute = PricingRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyPolicyRoute = PrivacyPolicyRouteImport.update({
+  id: '/privacy-policy',
+  path: '/privacy-policy',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivateBetaRoute = PrivateBetaRouteImport.update({
@@ -193,6 +206,11 @@ const TarifsRoute = TarifsRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfUseRoute = TermsOfUseRouteImport.update({
+  id: '/terms-of-use',
+  path: '/terms-of-use',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedAtelierRouteRoute =
@@ -553,15 +571,18 @@ export interface FileRoutesByFullPath {
   '/fine-bindery': typeof FineBinderyRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/legal-notice': typeof LegalNoticeRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/partenaires-relieurs': typeof PartenairesRelieursRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/build': typeof AuthenticatedBuildRouteRouteWithChildren
   '/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
@@ -635,15 +656,18 @@ export interface FileRoutesByTo {
   '/fine-bindery': typeof FineBinderyRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/legal-notice': typeof LegalNoticeRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/partenaires-relieurs': typeof PartenairesRelieursRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
@@ -713,15 +737,18 @@ export interface FileRoutesById {
   '/fine-bindery': typeof FineBinderyRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
   '/how-it-works': typeof HowItWorksRoute
+  '/legal-notice': typeof LegalNoticeRoute
   '/mentions-legales': typeof MentionsLegalesRoute
   '/partenaires-relieurs': typeof PartenairesRelieursRoute
   '/pricing': typeof PricingRoute
   '/privacy': typeof PrivacyRoute
+  '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/terms-of-use': typeof TermsOfUseRoute
   '/_authenticated/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/_authenticated/build': typeof AuthenticatedBuildRouteRouteWithChildren
   '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
@@ -797,15 +824,18 @@ export interface FileRouteTypes {
     | '/fine-bindery'
     | '/free-inquiry-audit'
     | '/how-it-works'
+    | '/legal-notice'
     | '/mentions-legales'
     | '/partenaires-relieurs'
     | '/pricing'
     | '/privacy'
+    | '/privacy-policy'
     | '/private-beta'
     | '/reliure'
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/terms-of-use'
     | '/atelier'
     | '/build'
     | '/marketplace'
@@ -879,15 +909,18 @@ export interface FileRouteTypes {
     | '/fine-bindery'
     | '/free-inquiry-audit'
     | '/how-it-works'
+    | '/legal-notice'
     | '/mentions-legales'
     | '/partenaires-relieurs'
     | '/pricing'
     | '/privacy'
+    | '/privacy-policy'
     | '/private-beta'
     | '/reliure'
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/terms-of-use'
     | '/a/$slug'
     | '/demo/deck-project'
     | '/invitation-atelier/$token'
@@ -956,15 +989,18 @@ export interface FileRouteTypes {
     | '/fine-bindery'
     | '/free-inquiry-audit'
     | '/how-it-works'
+    | '/legal-notice'
     | '/mentions-legales'
     | '/partenaires-relieurs'
     | '/pricing'
     | '/privacy'
+    | '/privacy-policy'
     | '/private-beta'
     | '/reliure'
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/terms-of-use'
     | '/_authenticated/atelier'
     | '/_authenticated/build'
     | '/_authenticated/marketplace'
@@ -1040,15 +1076,18 @@ export interface RootRouteChildren {
   FineBinderyRoute: typeof FineBinderyRoute
   FreeInquiryAuditRoute: typeof FreeInquiryAuditRoute
   HowItWorksRoute: typeof HowItWorksRoute
+  LegalNoticeRoute: typeof LegalNoticeRoute
   MentionsLegalesRoute: typeof MentionsLegalesRoute
   PartenairesRelieursRoute: typeof PartenairesRelieursRoute
   PricingRoute: typeof PricingRoute
   PrivacyRoute: typeof PrivacyRoute
+  PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   PrivateBetaRoute: typeof PrivateBetaRoute
   ReliureRoute: typeof ReliureRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TarifsRoute: typeof TarifsRoute
   TermsRoute: typeof TermsRoute
+  TermsOfUseRoute: typeof TermsOfUseRoute
   ASlugRoute: typeof ASlugRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
   InvitationAtelierTokenRoute: typeof InvitationAtelierTokenRoute
@@ -1155,6 +1194,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof HowItWorksRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal-notice': {
+      id: '/legal-notice'
+      path: '/legal-notice'
+      fullPath: '/legal-notice'
+      preLoaderRoute: typeof LegalNoticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/mentions-legales': {
       id: '/mentions-legales'
       path: '/mentions-legales'
@@ -1181,6 +1227,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy-policy': {
+      id: '/privacy-policy'
+      path: '/privacy-policy'
+      fullPath: '/privacy-policy'
+      preLoaderRoute: typeof PrivacyPolicyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/private-beta': {
@@ -1216,6 +1269,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-use': {
+      id: '/terms-of-use'
+      path: '/terms-of-use'
+      fullPath: '/terms-of-use'
+      preLoaderRoute: typeof TermsOfUseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/atelier': {
@@ -1853,15 +1913,18 @@ const rootRouteChildren: RootRouteChildren = {
   FineBinderyRoute: FineBinderyRoute,
   FreeInquiryAuditRoute: FreeInquiryAuditRoute,
   HowItWorksRoute: HowItWorksRoute,
+  LegalNoticeRoute: LegalNoticeRoute,
   MentionsLegalesRoute: MentionsLegalesRoute,
   PartenairesRelieursRoute: PartenairesRelieursRoute,
   PricingRoute: PricingRoute,
   PrivacyRoute: PrivacyRoute,
+  PrivacyPolicyRoute: PrivacyPolicyRoute,
   PrivateBetaRoute: PrivateBetaRoute,
   ReliureRoute: ReliureRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TarifsRoute: TarifsRoute,
   TermsRoute: TermsRoute,
+  TermsOfUseRoute: TermsOfUseRoute,
   ASlugRoute: ASlugRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
   InvitationAtelierTokenRoute: InvitationAtelierTokenRoute,
