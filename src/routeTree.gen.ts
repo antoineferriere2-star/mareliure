@@ -88,6 +88,7 @@ import { Route as AuthenticatedPortalDemosNewRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
 import { Route as ApiInternalAnalyticsMetricsRouteImport } from './routes/api/internal/analytics/metrics'
 import { Route as ApiInternalHermesProspectFunnelsRouteImport } from './routes/api/internal/hermes/prospect-funnels'
+import { Route as ApiInternalMarketplaceAuthEmailHookRouteImport } from './routes/api/internal/marketplace/auth-email-hook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -530,6 +531,12 @@ const ApiInternalHermesProspectFunnelsRoute =
     path: '/api/internal/hermes/prospect-funnels',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiInternalMarketplaceAuthEmailHookRoute =
+  ApiInternalMarketplaceAuthEmailHookRouteImport.update({
+    id: '/api/internal/marketplace/auth-email-hook',
+    path: '/api/internal/marketplace/auth-email-hook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -631,6 +638,7 @@ export interface FileRoutesByFullPath {
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
   '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRouteWithChildren
+  '/api/internal/marketplace/auth-email-hook': typeof ApiInternalMarketplaceAuthEmailHookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -710,6 +718,7 @@ export interface FileRoutesByTo {
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
   '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRouteWithChildren
+  '/api/internal/marketplace/auth-email-hook': typeof ApiInternalMarketplaceAuthEmailHookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -797,6 +806,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
   '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRouteWithChildren
+  '/api/internal/marketplace/auth-email-hook': typeof ApiInternalMarketplaceAuthEmailHookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -884,6 +894,7 @@ export interface FileRouteTypes {
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
     | '/api/internal/hermes/prospect-funnels'
+    | '/api/internal/marketplace/auth-email-hook'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -963,6 +974,7 @@ export interface FileRouteTypes {
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
     | '/api/internal/hermes/prospect-funnels'
+    | '/api/internal/marketplace/auth-email-hook'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1049,6 +1061,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
     | '/api/internal/hermes/prospect-funnels'
+    | '/api/internal/marketplace/auth-email-hook'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1102,6 +1115,7 @@ export interface RootRouteChildren {
   ApiPublicTrackViewRoute: typeof ApiPublicTrackViewRoute
   ApiInternalAnalyticsMetricsRoute: typeof ApiInternalAnalyticsMetricsRoute
   ApiInternalHermesProspectFunnelsRoute: typeof ApiInternalHermesProspectFunnelsRouteWithChildren
+  ApiInternalMarketplaceAuthEmailHookRoute: typeof ApiInternalMarketplaceAuthEmailHookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1663,6 +1677,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiInternalHermesProspectFunnelsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/internal/marketplace/auth-email-hook': {
+      id: '/api/internal/marketplace/auth-email-hook'
+      path: '/api/internal/marketplace/auth-email-hook'
+      fullPath: '/api/internal/marketplace/auth-email-hook'
+      preLoaderRoute: typeof ApiInternalMarketplaceAuthEmailHookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/payments/webhook': {
       id: '/api/public/payments/webhook'
       path: '/api/public/payments/webhook'
@@ -1940,6 +1961,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiInternalAnalyticsMetricsRoute: ApiInternalAnalyticsMetricsRoute,
   ApiInternalHermesProspectFunnelsRoute:
     ApiInternalHermesProspectFunnelsRouteWithChildren,
+  ApiInternalMarketplaceAuthEmailHookRoute:
+    ApiInternalMarketplaceAuthEmailHookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

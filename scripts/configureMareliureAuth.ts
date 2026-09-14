@@ -40,6 +40,14 @@ const template = (name: string) =>
   readFileSync(resolve(ROOT, "supabase/templates/mareliure", name), "utf8");
 
 /**
+ * Le même secret que le Worker lit dans `SEND_EMAIL_HOOK_SECRET`
+ * (`auth-email-hook.ts`) — jamais affiché, jamais recopié ici en dur : un
+ * secret HMAC dans un fichier suivi par git cesserait d'en être un.
+ */
+const HOOK_SECRET =
+  process.env.SEND_EMAIL_HOOK_SECRET ?? readEnvFile(".env.supabase").SEND_EMAIL_HOOK_SECRET ?? "";
+
+/**
  * Les délais doivent rester ceux que l'interface annonce
  * (`src/marketplace/auth/accessLink.ts`) : un lien « valable une heure », un
  * renvoi possible après une minute. Un test le vérifie.
@@ -62,9 +70,25 @@ const DESIRED: Record<string, string | number | boolean> = {
   // Supabase à l'accepter.
   uri_allow_list:
     "https://mareliure.fr/**,https://www.mareliure.fr/**,https://mareliure.aferriere.workers.dev/**,http://localhost:8080/**,https://finebindery.com/**,https://www.finebindery.com/**",
+  // Phase F : un client Fine Bindery recevait son lien de connexion en
+  // français, signé Ma Reliure — Supabase n'a qu'un seul modèle par projet.
+  // Ce hook intercepte l'envoi et le remplace par authEmailHook.server.ts,
+  // qui choisit la marque et la langue depuis email_data.redirect_to.
+  // N'activer qu'après avoir vérifié la route en production par un appel
+  // signé à la main (voir le commit qui introduit ce hook) : Supabase
+  // considère tout ce qui n'est pas un 200 vide comme un échec d'envoi, et
+  // bloque alors la connexion — sur les deux marques, pas seulement Fine
+  // Bindery.
+  hook_send_email_enabled: true,
+  hook_send_email_uri: "https://mareliure.fr/api/internal/marketplace/auth-email-hook",
+  hook_send_email_secrets: HOOK_SECRET,
 };
 
-function describeValue(value: unknown): string {
+/** Le secret ne doit jamais atteindre un terminal ou un journal, même en aperçu. */
+const SECRET_KEYS = new Set(["hook_send_email_secrets"]);
+
+function describeValue(key: string, value: unknown): string {
+  if (SECRET_KEYS.has(key)) return typeof value === "string" && value ? "<secret défini>" : "<absent>";
   if (typeof value === "string" && value.length > 80) return `<modèle HTML, ${value.length} caractères>`;
   return JSON.stringify(value);
 }
@@ -98,7 +122,9 @@ async function main() {
 
   const changes = Object.entries(DESIRED).filter(([key, value]) => current[key] !== value);
   for (const [key, value] of Object.entries(DESIRED))
-    console.log(`  ${current[key] === value ? "=" : "→"} ${key} : ${describeValue(value)}`);
+    console.log(`  ${current[key] === value ? "=" : "→"} ${key} : ${describeValue(key, value)}`);
+
+  if (!HOOK_SECRET) throw new Error("SEND_EMAIL_HOOK_SECRET est requis (.env.supabase).");
 
   if (changes.length === 0) {
     console.log("Rien à changer.");

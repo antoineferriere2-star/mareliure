@@ -4,6 +4,8 @@ import { template as publicContactTemplate } from "./public-contact";
 import { template as visitorSummaryTemplate } from "./visitor-summary";
 import { template as binderInvitationTemplate } from "./binder-invitation";
 import { template as caseActivityTemplate } from "./case-activity";
+import { template as authMagicLinkTemplate } from "./auth-magic-link";
+import { template as authSignupConfirmationTemplate } from "./auth-signup-confirmation";
 
 type TemplateData = Record<string, unknown>;
 
@@ -30,4 +32,6 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   "visitor-summary": visitorSummaryTemplate,
   "binder-invitation": binderInvitationTemplate,
   "case-activity": caseActivityTemplate,
+  "auth-magic-link": authMagicLinkTemplate,
+  "auth-signup-confirmation": authSignupConfirmationTemplate,
 };
