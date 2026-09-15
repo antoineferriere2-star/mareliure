@@ -1,10 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { isMaReliure } from "@/brand";
-import {
-  MARKETPLACE_BRAND_CONFIGS,
-  resolveMarketplaceBrandForHostname,
-} from "@/marketplace/brand/brandConfig";
+import { MARKETPLACE_BRAND_CONFIGS } from "@/marketplace/brand/brandConfig";
+import { resolveMarketplaceBrandForRequest } from "@/marketplace/brand/resolveRequestBrand.server";
 
 /**
  * Chemins qui ne mènent jamais à une page qu'un moteur doit indexer, quelle
@@ -27,9 +25,9 @@ const DISALLOW = [
   "/project-summary/",
 ];
 
-function baseUrlFor(host: string | null): string {
+export function baseUrlFor(host: string | null): string {
   if (!isMaReliure) return "https://metre-pro.com";
-  const brand = resolveMarketplaceBrandForHostname(host);
+  const brand = resolveMarketplaceBrandForRequest(host, process.env.MARKETPLACE_BRAND_OVERRIDE);
   return MARKETPLACE_BRAND_CONFIGS[brand].seo.canonicalOrigin;
 }
 

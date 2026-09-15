@@ -1,10 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { isMaReliure } from "@/brand";
-import {
-  MARKETPLACE_BRAND_CONFIGS,
-  resolveMarketplaceBrandForHostname,
-} from "@/marketplace/brand/brandConfig";
+import { MARKETPLACE_BRAND_CONFIGS } from "@/marketplace/brand/brandConfig";
+import { resolveMarketplaceBrandForRequest } from "@/marketplace/brand/resolveRequestBrand.server";
 
 interface SitemapEntry {
   path: string;
@@ -67,9 +65,12 @@ const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
  */
 const LAST_MODIFIED = new Date().toISOString().slice(0, 10);
 
-function sitemapFor(host: string | null): { baseUrl: string; entries: SitemapEntry[] } {
+export function sitemapFor(host: string | null): { baseUrl: string; entries: SitemapEntry[] } {
   if (!isMaReliure) return { baseUrl: "https://metre-pro.com", entries: METRE_ENTRIES };
-  const brand = resolveMarketplaceBrandForHostname(host);
+  // Même résolution que le reste de l'app (Host, avec le même repli
+  // MARKETPLACE_BRAND_OVERRIDE qu'en local) — jamais une seconde logique de
+  // reconnaissance de marque qui pourrait diverger de celle des pages.
+  const brand = resolveMarketplaceBrandForRequest(host, process.env.MARKETPLACE_BRAND_OVERRIDE);
   return brand === "FINE_BINDERY"
     ? { baseUrl: MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY.seo.canonicalOrigin, entries: FINE_BINDERY_ENTRIES }
     : { baseUrl: MARKETPLACE_BRAND_CONFIGS.MA_RELIURE.seo.canonicalOrigin, entries: MARELIURE_ENTRIES };
