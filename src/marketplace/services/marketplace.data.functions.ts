@@ -1171,8 +1171,13 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
       p_case_id: data.caseId,
       p_binder_id: binder!.id,
       p_accept: data.accept,
-      p_reason_code: data.reasonCode ?? null,
-      p_reason_detail: data.reasonDetail ?? null,
+      // La fonction Postgres accepte NULL (TEXT sans NOT NULL, voir
+      // 20260908210000_managed_pricing_offers.sql) ; les types générés par
+      // cette version de la CLI Supabase les déclarent à tort non-nullables
+      // pour les arguments de fonction — un cast, pas une triche sur le
+      // contrat réel de la fonction.
+      p_reason_code: (data.reasonCode ?? null) as unknown as string,
+      p_reason_detail: (data.reasonDetail ?? null) as unknown as string,
       p_actor_user_id: context.userId,
     });
     if (error) fail(409, error.message);

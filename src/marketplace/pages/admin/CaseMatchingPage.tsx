@@ -18,6 +18,11 @@ import {
   sendCaseToBinders,
   validateMarketplacePricing,
 } from "@/marketplace/services/marketplace.data.functions";
+import {
+  acceptCommercialProposal,
+  createCommercialProposal,
+  listCaseCommercialProposals,
+} from "@/marketplace/services/commercialProposal.data.functions";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
@@ -26,6 +31,8 @@ import { validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { workItemLabel } from "@/marketplace/pricing/catalog";
 import { CONFIDENCE_LABELS, type PricingConfidence } from "@/marketplace/pricing/confidence";
 import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
+import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
+import { MARKETPLACE_BRAND_CONFIGS, isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -242,6 +249,166 @@ function PricingPanel({
   );
 }
 
+/**
+ * La lecture économique du dossier (audit du 15 septembre 2026, §15) : ce
+ * que Ma Reliure/Fine Bindery achète à l'atelier, ce qu'elle vend au
+ * client, et ce qu'il en reste — jamais de comptabilité Stripe ici, cette
+ * phase ne fait que rendre lisible ce que le pricing a déjà décidé.
+ */
+function EconomicsPanel({
+  row,
+}: {
+  row: {
+    brand: string;
+    brand_multiplier_bps: number | null;
+    base_service_price_cents: number | null;
+    service_price_cents: number | null;
+    binder_payout_cents: number | null;
+    tax_status: string;
+  };
+}) {
+  const brand = isMarketplaceBrand(row.brand) ? row.brand : "MA_RELIURE";
+  const grossMarginCents =
+    row.service_price_cents !== null && row.binder_payout_cents !== null
+      ? row.service_price_cents - row.binder_payout_cents
+      : null;
+  const grossMarginRate =
+    grossMarginCents !== null && row.service_price_cents ? grossMarginCents / row.service_price_cents : null;
+
+  const line = (label: string, value: string) => (
+    <div className="flex items-center justify-between gap-3 py-1">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="tabular-nums">{value}</span>
+    </div>
+  );
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-5">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        Économie
+      </h2>
+      <div className="mt-3 text-sm">
+        {line("Marque", MARKETPLACE_BRAND_CONFIGS[brand].displayName)}
+        {line(
+          "Multiplicateur de marque",
+          row.brand_multiplier_bps !== null ? `×${(row.brand_multiplier_bps / 10_000).toFixed(2)}` : "—",
+        )}
+        {row.base_service_price_cents !== null &&
+          line("Prix Ma Reliure avant marque (HT)", formatEuros(row.base_service_price_cents))}
+        {line(
+          "Rémunération atelier (HT)",
+          row.binder_payout_cents !== null ? formatEuros(row.binder_payout_cents) : "—",
+        )}
+        {line("Marge cible", `${(PRICING_POLICY.targetMarginBps / 100).toFixed(1)} %`)}
+        {line("Contribution minimale", formatEuros(PRICING_POLICY.minimumContributionCents))}
+        {line(
+          "Prix client service (HT)",
+          row.service_price_cents !== null ? formatEuros(row.service_price_cents) : "—",
+        )}
+        {grossMarginCents !== null &&
+          line(
+            "Marge brute",
+            `${formatEuros(grossMarginCents)} · ${grossMarginRate !== null ? (grossMarginRate * 100).toFixed(1) : "—"} %`,
+          )}
+        {line("Statut fiscal", row.tax_status === "TAX_REVIEW_REQUIRED" ? "À valider" : row.tax_status)}
+      </div>
+    </section>
+  );
+}
+
+const PROPOSAL_STATUS_LABELS: Record<string, string> = {
+  draft: "Brouillon",
+  proposed: "Proposée",
+  accepted: "Acceptée",
+  superseded: "Remplacée",
+  cancelled: "Annulée",
+};
+
+/**
+ * La couche commerciale immuable (audit §2-3) : chaque version figée d'une
+ * proposition pour ce dossier. « Accepter » est réservé à l'administration
+ * dans cette phase — aucun parcours client ne le fait encore lui-même.
+ */
+function CommercialProposalPanel({ caseId }: { caseId: string }) {
+  const list = useServerFn(listCaseCommercialProposals);
+  const create = useServerFn(createCommercialProposal);
+  const accept = useServerFn(acceptCommercialProposal);
+  const queryClient = useQueryClient();
+  const queryKey = ["marketplace", "case", caseId, "commercial-proposals"] as const;
+
+  const { data: proposals, isPending } = useQuery({
+    queryKey,
+    queryFn: () => list({ data: caseId }),
+  });
+
+  const creating = useMutation({
+    mutationFn: () =>
+      create({ data: { caseId, shipping: { outboundCents: 0, returnCents: 0, otherCents: 0 } } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+  const accepting = useMutation({
+    mutationFn: (proposalId: string) => accept({ data: proposalId }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+
+  const hasAccepted = (proposals ?? []).some((p) => p.status === "accepted");
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Proposition commerciale
+        </h2>
+        <Button size="sm" variant="outline" disabled={creating.isPending} onClick={() => creating.mutate()}>
+          {(proposals ?? []).length === 0 ? "Créer la proposition" : "Nouvelle version"}
+        </Button>
+      </div>
+      {isPending && <p className="mt-2 text-xs text-muted-foreground">Chargement…</p>}
+      {creating.error && (
+        <p className="mt-2 text-xs text-destructive">{(creating.error as Error).message}</p>
+      )}
+      {accepting.error && (
+        <p className="mt-2 text-xs text-destructive">{(accepting.error as Error).message}</p>
+      )}
+      <ul className="mt-3 space-y-2 text-sm">
+        {(proposals ?? []).map((proposal) => (
+          <li
+            key={proposal.id}
+            className="flex items-center justify-between gap-3 rounded-md border border-border p-2"
+          >
+            <div>
+              <p>
+                v{proposal.version} · {PROPOSAL_STATUS_LABELS[proposal.status] ?? proposal.status} ·{" "}
+                {formatEuros(proposal.customerServicePriceCents)}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Rémunération atelier {formatEuros(proposal.binderPayoutCents)} · plancher :{" "}
+                {proposal.priceBoundBy === "reference"
+                  ? "référence Pricebook"
+                  : proposal.priceBoundBy === "margin_floor"
+                    ? "marge"
+                    : "contribution minimale"}
+              </p>
+            </div>
+            {proposal.status === "proposed" && !hasAccepted && (
+              <Button
+                size="sm"
+                disabled={accepting.isPending}
+                onClick={() => accepting.mutate(proposal.id)}
+              >
+                Accepter
+              </Button>
+            )}
+          </li>
+        ))}
+      </ul>
+      {(proposals ?? []).length === 0 && !isPending && (
+        <p className="mt-2 text-xs text-muted-foreground">Aucune proposition figée pour l'instant.</p>
+      )}
+    </section>
+  );
+}
+
 export function CaseMatchingPage({ caseId }: { caseId: string }) {
   const fetchCase = useServerFn(getMarketplaceCase);
   const send = useServerFn(sendCaseToBinders);
@@ -355,6 +522,10 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
           row={data.case}
           refresh={() => queryClient.invalidateQueries({ queryKey })}
         />
+
+        <EconomicsPanel row={data.case} />
+
+        {data.case.pricing_status === "validated" && <CommercialProposalPanel caseId={caseId} />}
 
         {data.matches.length > 0 && (
           <section className="rounded-lg border border-border bg-card p-5">

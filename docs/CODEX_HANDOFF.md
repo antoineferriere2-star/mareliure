@@ -794,28 +794,208 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `c82f04e5` (page `/partenaires-relieurs`), sur `e5286d20`
-(message d'erreur lisible signup atelier), sur `c2e0ac15` (lien « Se
-connecter »), sur `9fd96b32` (docs Phases A/B/C), sur `080bb355` (Phase C) —
-la même branche `fix/mareliure-customer-access` depuis le début du chantier
-transactionnel.
+**Commit :** `2161b556` (traduction du Brief dans l'espace client), sur
+`09626619`, `64446601` (SEO/GEO), `a2682b0d` (hook e-mail Supabase),
+`c6c4282d`, `b924c9ef` (pages légales Fine Bindery), `611a2e53` → `02186112`
+(Phases B à F Fine Bindery) — puis, pour le chantier commercial décrit
+ci-dessous, une suite de commits non encore listés ici individuellement au
+moment de la rédaction (voir `git log --oneline` pour l'état exact).
 
-**Production : déployée le 15 septembre 2026.** Worker `mareliure` version
-`02e21a10-8a09-49b7-92c6-6a2c518c4b35`, via `npm run deploy:mareliure`. La
-migration `20260915090000_marketplace_binder_applications_extend.sql` est
-appliquée sur `hljxohondjvrkzqicexl` (colonnes `website_url`, `skills`
-vérifiées présentes, `legal_entity_type` vérifié nullable).
-
-Vérifié après déploiement sur `mareliure.fr` : `/partenaires-relieurs` charge
-sans erreur console, la navigation « Pour les relieurs » (entête, pied de
-page) y pointe désormais au lieu d'une ancre de la landing client, et une
-candidature de test soumise via le formulaire de la page a bien écrit une
-ligne dans `marketplace_binder_applications` en production (vérifiée puis
-supprimée — c'était une ligne de test, pas une candidature réelle).
+**Depuis le précédent bloc Latest handoff** (candidature atelier,
+`c82f04e5`), une longue session a fait avancer, dans l'ordre : la Phase B
+(BrandConfig, résolution de marque par Host), Phase C (pricing Fine Bindery
++30 %), Phase D (traduction anglaise du Playbook), Phase E (homepage Fine
+Bindery), la mise en ligne réelle de `finebindery.com` (DNS/Cloudflare),
+Phase F (hook Supabase « Send Email » pour des e-mails d'authentification
+brand-aware — **construit et déployé, mais pas encore activé** :
+`hook_send_email_enabled` reste `false` en production, voir §17 de ce
+chantier ci-dessous pour la suite), la correction de plusieurs défauts
+SEO/GEO (JSON-LD, sitemap, robots.txt, redirection www), et un bug réel
+trouvé après coup : le Brief d'un dossier restait en français dans l'espace
+client Fine Bindery (`dossierProjection.ts` ne traduisait jamais label/valeur
+des lignes du Brief). Tout cela est **déployé et vérifié en production** —
+voir les commits cités plus haut pour le détail exact de chacun.
 
 ---
 
-### Chantier de cette session — candidature atelier structurée, mot de passe client, page de recrutement
+### Chantier de cette session — modèle commercial Phase 1 (audit + pricing MAX + snapshot immuable)
+
+Demande explicite de l'utilisateur : abandonner tout raisonnement
+« commission marketplace » au profit d'un modèle achat/revente (client
+achète à Ma Reliure/Fine Bindery, qui achète ensuite la prestation à
+l'atelier). Audit d'abord, puis Phase 1 seulement — **aucun changement
+Stripe live**, sur instruction explicite répétée plusieurs fois.
+
+**Audit (résumé — voir la conversation pour le détail complet donné à
+l'utilisateur) :** le pricing existant (`pricing.engine.ts`, `pricebook.ts`,
+`brandPricing.ts`, `pricingMode.ts`) était déjà un modèle acheteur/revendeur
+correct, jamais une commission — rien à défaire. Le vrai vide était Stripe :
+**aucune intégration n'existe** pour la marketplace (le seul client Stripe
+du dépôt est scopé au projet Métré Build via la gateway Lovable). Un écart
+concret trouvé côté pricing : le plancher de marge n'était pas combiné par
+MAX avec un plancher de contribution absolue — seule la marge cible
+s'appliquait.
+
+**Phase 1 — livré :**
+
+1. **`resolveServicePriceFloors`** (`pricing/pricebook.ts`, nouveau) :
+   `customer_service_price_ht = MAX(référence Pricebook si connue, plancher
+   de marge, plancher de contribution)`. Branché dans `pricing.engine.ts` à
+   la place du calcul par marge seule. `PricingPolicy.minimumContributionCents`
+   ajouté (`pricing.types.ts`, `pricing.rules.ts`), distinct de
+   `minimumMarginCents` (validation a posteriori, inchangé) — les deux
+   garde-fous ne sont jamais confondus. `applyBrandServicePricing`
+   (`brandPricing.ts`) **inchangé**, sur instruction explicite : il continue
+   de multiplier le prix Ma Reliure déjà plafonné, jamais le payout atelier
+   ni le shipping.
+2. **`marketplace_commercial_proposals`** (migration `20260916100000`,
+   **appliquée en production**) : la couche snapshot immuable, séparée de
+   la ligne mutable `marketplace_cases`. Chaque ligne est une version figée
+   d'une proposition pour un dossier ; un trigger Postgres refuse tout
+   `UPDATE` une fois `accepted_at` posé (même mécanisme que
+   `marketplace_cases_forbid_brand_change`, déjà en production). Un index
+   partiel garantit au plus une ligne acceptée par dossier.
+3. **`src/marketplace/commercial/commercialProposal.ts`** (pur) :
+   `buildCommercialProposalSnapshot` assemble un snapshot complet (HT-first,
+   shipping séparé toujours à marge nulle en P0, acompte figé, TTC client
+   `null` tant que `tax_policy` reste `TAX_REVIEW_REQUIRED`).
+   `commercialProposalRepository.server.ts` (insert/accept/list, aucun
+   UPDATE hors acceptation) et `commercialProposal.data.functions.ts`
+   (server functions admin-only : `createCommercialProposal`,
+   `acceptCommercialProposal`, `listCaseCommercialProposals`,
+   `getAcceptedCommercialProposal`).
+4. **Admin minimal** (`CaseMatchingPage.tsx`) : panneau « Économie »
+   (marque, multiplicateur, rémunération atelier, marge cible, contribution
+   minimale, prix service, marge brute, statut fiscal) et panneau
+   « Proposition commerciale » (créer une version, l'accepter). Réservé à
+   l'admin — aucun parcours client n'accepte encore une proposition
+   lui-même.
+5. **`CaseRow`** (`caseRepository.server.ts`) étendu : `pricing_mode`,
+   `deposit_cents`, `base_service_price_cents`, `brand_multiplier_bps`,
+   `service_price_cents`, `tax_status` manquaient à la sélection depuis
+   leurs migrations respectives (20260913090000, 20260916090000) — jamais
+   lus par `loadCaseContext` jusqu'ici, nécessaires à la construction du
+   snapshot.
+6. **`docs/commercial-billing-model.md`** créé — état réel du modèle,
+   ce qui est construit contre ce qui ne l'est pas (Pricebook par dossier,
+   shipping, tax, Stripe entier).
+7. **Connecteur MCP Stripe relié** (accès de préparation, demandé par
+   l'utilisateur en cours de session) — **aucune capacité d'écriture
+   utilisée**. Sert pour la future Phase Stripe (lister l'existant avant
+   d'en créer, §48 du brief commercial) — ne pas présumer qu'un Product,
+   Checkout ou compte Connect existe déjà pour la marketplace : aucun n'a
+   été créé.
+
+**Régénération collatérale :** `src/integrations/supabase/types.ts`
+régénéré (`supabase gen types`, le token `SUPABASE_ACCESS_TOKEN` de
+`.env.supabase` était expiré — la session CLI `supabase` elle-même restait
+authentifiée et a servi à la fois pour `db push` et `gen types`). Un type
+généré plus strict a exposé un mismatch pré-existant sans rapport
+(`marketplace_respond_to_offer`, arguments RPC nullable déclarés
+non-nullables par cette version du générateur) — corrigé par un cast local,
+pas une réécriture de la fonction Postgres.
+
+---
+
+### Completed (cette session)
+
+- Migration `20260916100000_marketplace_commercial_proposals.sql` :
+  **appliquée et vérifiée en production** (`supabase db push
+  --project-ref hljxohondjvrkzqicexl`).
+- `npx tsc --noEmit` : propre.
+- `npm run lint` : propre (mêmes 13 avertissements pré-existants, aucun
+  nouveau).
+- `npx vitest run` : **142 fichiers, tous verts** (dont les nouveaux
+  `pricebook.test.ts`, `commercialProposal.test.ts`, et les cas ajoutés à
+  `brandPricing.test.ts`/`noFabricatedPrices.test.ts`) — couvre les six cas
+  demandés par l'utilisateur (Ma Reliure normal, plancher de contribution,
+  Fine Bindery bout en bout, shipping non multiplié, indépendance d'un
+  snapshot déjà construit vis-à-vis d'un recalcul ultérieur).
+- `npm run build` : vert.
+- **Non vérifié au navigateur** dans cette phase : le panneau admin
+  « Proposition commerciale » n'a pas été cliqué en conditions réelles
+  (aucun dossier de test avec un prix validé n'était disponible pendant la
+  session) — à faire au premier dossier réel qui atteint `pricing_status:
+  validated`.
+- **Non déployé** : les changements de code (pricing, snapshot, admin) sont
+  commités mais `npm run deploy:mareliure` n'a pas encore été relancé après
+  ce chantier — seule la migration SQL est en production, le code qui la
+  consomme ne l'est pas encore au moment de la rédaction de ce bloc.
+
+---
+
+### In progress
+
+Rien côté code. `git status` propre après le dernier commit de ce chantier.
+Reste en attente : le déploiement (`npm run deploy:mareliure`) et la
+vérification navigateur mentionnés ci-dessus.
+
+---
+
+### Next recommended task
+
+1. **Déployer et vérifier** le chantier commercial Phase 1 (voir Completed
+   ci-dessus).
+2. **Phase Stripe**, sur validation explicite de l'utilisateur uniquement —
+   commencer par confirmer les capacités réelles du connecteur MCP
+   maintenant relié (`stripe_api_read`/`stripe_api_write`) avant toute
+   hypothèse d'architecture : Connect disponible ou non, Separate Charges
+   and Transfers possible, webhooks, Invoicing. Ne pas décider entre
+   « garder `stripe.server.ts`/gateway Lovable » et « client Stripe propre à
+   la marketplace » avant cette vérification (question explicitement laissée
+   ouverte, voir `docs/commercial-billing-model.md` §9).
+3. **Câbler `pricebookReferenceCents`** dossier par dossier
+   (`marketplace_pricebook` existe, sert seulement la détection de dérive
+   aujourd'hui) — troisième candidat du MAX, prêt côté types/fonction pure,
+   jamais branché à la lecture live.
+4. **Décider une vraie valeur pour `minimumContributionCents`** — posé à
+   2 000 (20 €) par défaut, aligné sur `minimumMarginCents` faute de mieux,
+   jamais validé commercialement.
+5. Les points 2 à 5 du bloc précédent (Stripe Connect, référentiel
+   tarifaire à remplir, premier atelier réel, logistique) restent valables
+   et non traités par ce chantier.
+
+---
+
+### Known issues
+
+Tout ce qui précède reste vrai, sans changement, sauf :
+
+- Nouveau : `hook_send_email_enabled` reste `false` en production (Phase F,
+  auth e-mails brand-aware) — la route est déployée et vérifiable
+  manuellement, jamais activée côté Supabase. Un client Fine Bindery reçoit
+  toujours son lien de connexion en français tant que ce n'est pas fait.
+- Nouveau : `pricebookReferenceCents` vaut toujours `null` en pratique —
+  voir Next recommended task, point 3.
+- Nouveau : le panneau admin « Proposition commerciale » n'a jamais été
+  exercé en conditions réelles (voir Completed).
+
+---
+
+### Do not touch
+
+Tout ce qui précède reste vrai. S'y ajoute :
+
+- **`applyBrandServicePricing` (`brandPricing.ts`) ne doit pas être
+  réécrite** pour recevoir les ingrédients bruts du MAX (référence,
+  payout) — décision explicite de l'utilisateur de conserver le mécanisme
+  actuel (multiplier le prix Ma Reliure déjà plafonné), même si cela diverge
+  en théorie d'un multiplicateur appliqué à une référence Pricebook brute
+  dans un cas limite (référence publiée sous les deux planchers *et* marque
+  Fine Bindery en même temps) — cas non couvert par les tests demandés,
+  arbitrage assumé.
+- **`marketplace_commercial_proposals` ne s'UPDATE jamais après
+  `accepted_at`** — le trigger le refuse de toute façon, mais aucun code
+  applicatif ne doit tenter de contourner cette garantie (par exemple via
+  une fonction `SECURITY DEFINER` qui l'ignorerait). Un changement après
+  acceptation crée une nouvelle version.
+- **Ne pas utiliser le connecteur MCP Stripe en écriture** avant la Phase
+  Stripe explicitement validée par l'utilisateur — la connexion a été faite
+  pour préparer l'accès, pas pour agir.
+
+---
+
+### Chantier antérieur — candidature atelier structurée, mot de passe client, page de recrutement
 
 Trois demandes distinctes, traitées dans l'ordre où elles sont arrivées :
 

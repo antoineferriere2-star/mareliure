@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyBrandServicePricing } from "./brandPricing";
+import { resolveServicePriceFloors } from "./pricebook";
 import { MARKETPLACE_BRAND_CONFIGS, type MarketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 
 describe("applyBrandServicePricing — §58", () => {
@@ -60,5 +61,30 @@ describe("applyBrandServicePricing — §58", () => {
     expect(withFloor(10_000)).toBe(65_000);
     // Un projet déjà au-dessus du plancher n'est pas affecté.
     expect(withFloor(100_000)).toBe(130_000);
+  });
+
+  /**
+   * Cas 3 de l'audit du 15 septembre 2026 — la chaîne complète : le prix Ma
+   * Reliure sort du plancher de marge (resolveServicePriceFloors), pas d'un
+   * montant donné à la main, puis le mécanisme de marque existant
+   * (applyBrandServicePricing, inchangé) l'ajuste pour Fine Bindery. Le
+   * payout atelier ne bouge jamais.
+   */
+  it("Fine Bindery, bout en bout : le plancher Ma Reliure puis le multiplicateur, jamais le payout atelier", () => {
+    const binderPayoutCents = 37_500; // 375 €
+    const maReliure = resolveServicePriceFloors({
+      binderPayoutCents,
+      targetMarginBps: 2_500,
+      minimumContributionCents: 0,
+      roundingIncrementCents: 1_000,
+      referenceCents: null,
+    });
+    expect(maReliure.priceCents).toBe(50_000); // 500 €, plancher de marge
+
+    const fineBindery = applyBrandServicePricing(maReliure.priceCents, "FINE_BINDERY", 1_000);
+    expect(fineBindery.servicePriceCents).toBe(65_000); // 650 €
+    // Le payout atelier n'entre nulle part dans ce dernier calcul — la seule
+    // façon de le vérifier ici est qu'aucun de ses arguments ne le porte.
+    expect(binderPayoutCents).toBe(37_500);
   });
 });

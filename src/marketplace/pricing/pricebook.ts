@@ -76,6 +76,72 @@ export function customerPriceForMargin(
   return Math.ceil(raw / roundingIncrementCents) * roundingIncrementCents;
 }
 
+export interface ServicePriceFloorInput {
+  binderPayoutCents: number;
+  targetMarginBps: number;
+  /** Le plancher de contribution absolue — `PricingPolicy.minimumContributionCents`, jamais `minimumMarginCents` (post-hoc, un garde-fou différent). */
+  minimumContributionCents: number;
+  roundingIncrementCents: number;
+  /** Le prix publié du Pricebook pour ce dossier, brand comprise — `null` si aucune correspondance. Jamais réarrondi : une valeur déjà décidée. */
+  referenceCents: number | null;
+}
+
+export interface ServicePriceFloorResult {
+  priceCents: number;
+  marginFloorCents: number;
+  contributionFloorCents: number;
+  referenceCents: number | null;
+  boundBy: "reference" | "margin_floor" | "contribution_floor";
+}
+
+/**
+ * Le prix client HT d'un service, jamais en dessous de deux planchers
+ * indépendants (audit du 15 septembre 2026, §5-6) :
+ *
+ * - un plancher de MARGE (pourcentage du prix client) : `customerPriceForMargin`,
+ *   déjà utilisé seul jusqu'ici ;
+ * - un plancher de CONTRIBUTION (montant absolu au-dessus de la rémunération
+ *   atelier) : `binderPayoutCents + minimumContributionCents`.
+ *
+ * Les deux répondent à des questions différentes — "quelle part du prix nous
+ * revient" contre "combien nous revient, en valeur absolue, quel que soit le
+ * prix" — et confondre l'un avec l'autre est précisément l'erreur que ce
+ * garde-fou existe pour empêcher : sur un petit projet, un plancher de marge
+ * à 25 % peut rendre bien moins que le minimum de contribution absolu dont
+ * l'activité a besoin.
+ *
+ * Une référence Pricebook publiée, quand elle existe, est un troisième
+ * candidat — jamais un remplacement des deux planchers : le Pricebook peut
+ * dater, les planchers jamais.
+ */
+export function resolveServicePriceFloors(input: ServicePriceFloorInput): ServicePriceFloorResult {
+  const marginFloorCents = customerPriceForMargin(
+    input.binderPayoutCents,
+    input.targetMarginBps,
+    input.roundingIncrementCents,
+  );
+  const contributionFloorCents =
+    Math.ceil(
+      (input.binderPayoutCents + input.minimumContributionCents) / input.roundingIncrementCents,
+    ) * input.roundingIncrementCents;
+
+  const candidates: { value: number; source: ServicePriceFloorResult["boundBy"] }[] = [
+    { value: marginFloorCents, source: "margin_floor" },
+    { value: contributionFloorCents, source: "contribution_floor" },
+  ];
+  if (input.referenceCents !== null) candidates.push({ value: input.referenceCents, source: "reference" });
+
+  const winner = candidates.reduce((best, candidate) => (candidate.value > best.value ? candidate : best));
+
+  return {
+    priceCents: winner.value,
+    marginFloorCents,
+    contributionFloorCents,
+    referenceCents: input.referenceCents,
+    boundBy: winner.source,
+  };
+}
+
 export interface PricebookDrift {
   entry: PricebookEntry;
   /** La médiane terrain constatée aujourd'hui. */

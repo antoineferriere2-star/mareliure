@@ -10,6 +10,15 @@ export interface PricingPolicy {
   targetMarginBps: number;
   minimumMarginBps: number;
   minimumMarginCents: number;
+  /**
+   * Le plancher de contribution absolue (audit du 15 septembre 2026, §6) —
+   * distinct de `minimumMarginCents` : celui-ci ne borne qu'une validation a
+   * posteriori (`validateManagedPrice`), tandis que celui-ci entre dans le
+   * calcul du prix lui-même (`resolveServicePriceFloors`, pricebook.ts),
+   * combiné par MAX avec le plancher de marge — jamais l'un à la place de
+   * l'autre. Deux garde-fous, jamais confondus.
+   */
+  minimumContributionCents: number;
   roundingIncrementCents: number;
   /**
    * L'acompte d'un projet ESTIMATE_THEN_CONFIRM (§25) : max(pourcentage,
@@ -50,6 +59,19 @@ export interface PricingSuggestion {
   highEstimateCents: number | null;
   marginCents: number | null;
   marginBps: number | null;
+  /**
+   * Le prix publié du Pricebook pour ce dossier, quand une correspondance
+   * existe — `null` aujourd'hui dans tous les cas : rien ne relit encore
+   * marketplace_pricebook dossier par dossier (voir l'audit du 15 septembre
+   * 2026 ; la table sert la détection de dérive, pas le chiffrage). Le champ
+   * existe pour que `resolveServicePriceFloors` ait un troisième candidat le
+   * jour où cette lecture sera branchée, sans nouveau changement de forme.
+   */
+  pricebookReferenceCents: number | null;
+  /** Les deux planchers considérés pour `suggestedCustomerPriceCents`, et lequel a gagné le MAX — voir resolveServicePriceFloors. */
+  marginFloorCents: number | null;
+  contributionFloorCents: number | null;
+  priceBoundBy: "reference" | "margin_floor" | "contribution_floor" | null;
   confidence: PricingConfidence;
   /** Le plus petit nombre d'ateliers sur lequel repose un des travaux. */
   referenceCount: number;
