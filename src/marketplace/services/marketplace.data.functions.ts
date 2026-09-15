@@ -25,7 +25,7 @@ import {
   verifiedEmailFromClaims,
 } from "@/marketplace/cases/ownership";
 import { triageMessages } from "@/marketplace/cases/triage";
-import { disclosedSummary } from "@/marketplace/cases/dossierProjection";
+import { disclosedSummary, type CaseLocale } from "@/marketplace/cases/dossierProjection";
 import type { ProjectBrief } from "@/build/schema/brief";
 import { suggestManagedPrice, validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
@@ -1285,7 +1285,11 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     };
     if (!canViewCase(viewer, facts)) fail(403, "Ce dossier n'est pas le vôtre.");
 
-    const view = await buildCaseView(sb, caseContext, caseDisclosure(viewer, facts));
+    // Seul le portail client traduit : l'atelier et l'admin (getBinderCase,
+    // getMarketplaceCase) restent français quelle que soit la marque.
+    const brand = isMarketplaceBrand(caseContext.row.brand) ? caseContext.row.brand : "MA_RELIURE";
+    const locale: CaseLocale = brand === "FINE_BINDERY" ? "en-US" : "fr-FR";
+    const view = await buildCaseView(sb, caseContext, caseDisclosure(viewer, facts), locale);
 
     const { data: selected } = await sb
       .from("marketplace_case_matches")

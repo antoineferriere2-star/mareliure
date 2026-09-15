@@ -33,7 +33,7 @@ const ANSWERS: Answers = {
   consentement: true,
 };
 
-function view(disclosure: "full" | "project_only") {
+function view(disclosure: "full" | "project_only", locale?: "fr-FR" | "en-US") {
   return projectCase({
     reference: "RL-001",
     brief: generateProjectBrief(bookbindingPlaybookSchema, ANSWERS, { name: "Mission Reliure" }),
@@ -41,6 +41,7 @@ function view(disclosure: "full" | "project_only") {
     disclosure,
     photos: [{ url: "https://signed.example/1.jpg", caption: "couverture.jpg" }],
     manualReviewRequired: false,
+    locale,
   });
 }
 
@@ -150,6 +151,38 @@ describe("what the admin, or the chosen relieur, sees", () => {
 
   it("garde aussi la phrase de résumé complète", () => {
     expect(full.summary).toMatch(/budget/i);
+  });
+});
+
+/**
+ * Un client Fine Bindery voyait ses propres réponses en français dans son
+ * espace ("Type de projet", "Matière", "Demi-cuir") : `toViewLine` copiait
+ * le label et la valeur du Brief tels quels, sans jamais passer par
+ * `publicCopy` — quand bien même `EN_BOOKBINDING_COPY` traduisait déjà ces
+ * mêmes chaînes pour le Live Project Canvas et le récapitulatif post-envoi.
+ * Repéré sur une capture d'écran de mes-livres/:caseId le 15 septembre 2026.
+ */
+describe("le portail client traduit le Brief quand la marque le demande", () => {
+  it("traduit les labels et les valeurs en anglais pour locale en-US", () => {
+    const en = view("full", "en-US");
+    expect(en.project.map((l) => l.label)).toContain("Material");
+    expect(en.project.map((l) => l.label)).not.toContain("Matière");
+    const material = en.project.find((l) => l.label === "Material");
+    expect(material?.value).not.toBe("Demi-cuir");
+  });
+
+  it("reste en français par défaut — atelier et admin, jamais traduits", () => {
+    const fr = view("full");
+    expect(fr.project.map((l) => l.label)).toContain("Matière");
+    expect(fr.project.map((l) => l.label)).not.toContain("Material");
+  });
+
+  it("ne traduit jamais une réponse saisie librement par le client", () => {
+    const en = view("full", "en-US");
+    // Le titre et le nom viennent de ANSWERS telles quelles : aucune clé du
+    // dictionnaire ne les couvre, donc publicCopy doit les laisser intactes.
+    expect(en.title).toBe("Le Comte de Monte-Cristo");
+    expect(en.contact?.name).toBe("Marie Lefèvre");
   });
 });
 

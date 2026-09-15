@@ -24,6 +24,7 @@ import { triageCase } from "@/marketplace/cases/triage";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
 import {
   projectCase,
+  type CaseLocale,
   type CaseView,
   type CaseViewPhoto,
 } from "@/marketplace/cases/dossierProjection";
@@ -294,6 +295,7 @@ export async function buildCaseView(
   sb: Supa,
   context: CaseContext,
   disclosure: CaseDisclosure,
+  locale?: CaseLocale,
 ): Promise<CaseView> {
   return projectCase({
     reference: context.row.reference,
@@ -302,6 +304,7 @@ export async function buildCaseView(
     disclosure,
     photos: await signCasePhotos(sb, context.answers),
     manualReviewRequired: context.row.manual_review_required,
+    locale,
   });
 }
 

@@ -13,7 +13,15 @@
  */
 import type { BriefLine, ProjectBrief } from "@/build/schema/brief";
 import type { CaseDisclosure } from "@/marketplace/permissions";
+import { publicCopy } from "@/build/pages/public/publicLocaleContext";
 import { CASE_ANSWER_KEYS, type CaseProfile } from "./caseProfile";
+
+/**
+ * `"fr-FR"` par défaut : l'atelier et l'admin restent français quelle que
+ * soit la marque du dossier (même règle que RequestDecisionForm dans
+ * DecisionsPanel.tsx) — seul l'appelant du portail client passe `"en-US"`.
+ */
+export type CaseLocale = "fr-FR" | "en-US";
 
 /**
  * Answer keys that identify the customer. A Brief line carrying one of these,
@@ -95,10 +103,18 @@ function isContactLine(line: BriefLine): boolean {
   );
 }
 
-function toViewLine(line: BriefLine): CaseViewLine {
+/**
+ * Le libellé et la valeur d'une ligne de Brief sont du vocabulaire fixe du
+ * Playbook (label de champ, libellé d'option) — exactement ce que
+ * `EN_BOOKBINDING_COPY` couvre déjà pour le Live Project Canvas et le
+ * récapitulatif post-envoi. `publicCopy` ne traduit que ce qu'il reconnaît :
+ * un titre ou un nom saisis librement par le client ne correspondent à
+ * aucune clé du dictionnaire et ressortent inchangés.
+ */
+function toViewLine(line: BriefLine, locale: CaseLocale): CaseViewLine {
   return {
-    label: line.label,
-    value: line.value,
+    label: publicCopy(locale, line.label),
+    value: publicCopy(locale, line.value),
     source: line.source,
     category: line.category ?? null,
   };
@@ -115,6 +131,8 @@ export interface ProjectCaseInput {
   disclosure: CaseDisclosure;
   photos: CaseViewPhoto[];
   manualReviewRequired: boolean;
+  /** Défaut "fr-FR" : seul le portail client passe la marque résolue du dossier. */
+  locale?: CaseLocale;
 }
 
 /**
@@ -165,7 +183,7 @@ function summaryFor(brief: ProjectBrief, showsCustomerBudget: boolean): string {
 }
 
 export function projectCase(input: ProjectCaseInput): CaseView {
-  const { brief, profile, disclosure } = input;
+  const { brief, profile, disclosure, locale = "fr-FR" } = input;
   // Les coordonnées suivent la divulgation ; le budget annoncé n'appartient
   // qu'à Ma Reliure et au client, jamais à un atelier, retenu ou non.
   const showsContact = disclosure === "full" || disclosure === "assigned";
@@ -173,7 +191,7 @@ export function projectCase(input: ProjectCaseInput): CaseView {
 
   const projectLines = [...brief.confirmedInformation, ...brief.assumptionsAndCalculated]
     .filter((line) => showsContact || !isContactLine(line))
-    .map(toViewLine);
+    .map((line) => toViewLine(line, locale));
 
   const contact: CaseContact | null = showsContact
     ? {
@@ -196,11 +214,11 @@ export function projectCase(input: ProjectCaseInput): CaseView {
     // couvre qu'une des deux surfaces ne filtre rien.
     summary: summaryFor(brief, showsCustomerBudget),
     project: projectLines,
-    constraints: brief.constraints.map(toViewLine),
+    constraints: brief.constraints.map((line) => toViewLine(line, locale)),
     budgetAndTiming: brief.budgetAndTiming
       .filter((line) => showsCustomerBudget || !isCustomerOnlyLine(line))
-      .map(toViewLine),
-    missingInformation: brief.missingInformation.map(toViewLine),
+      .map((line) => toViewLine(line, locale)),
+    missingInformation: brief.missingInformation.map((line) => toViewLine(line, locale)),
     photos: input.photos,
     // The town, never the street: enough to judge shipping, not enough to
     // turn up at someone's door.
