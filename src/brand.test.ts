@@ -52,13 +52,29 @@ describe("la racine du document ne code aucune marque en dur", () => {
       expect(code, `${champ} n'est pas décliné par marque`).toContain(champ);
   });
 
+  /**
+   * Ma Reliure et Fine Bindery partagent ce déploiement (`isMaReliure` seul
+   * ne les distingue pas) — la racine doit donc trancher un cran plus bas,
+   * par requête, comme `routes/index.tsx` le fait déjà (audit express
+   * SEO/GEO, 15 septembre 2026, actions 1 et 3 : la racine servait le lang,
+   * l'icône et les données structurées de Ma Reliure à Fine Bindery aussi).
+   */
+  it("résout aussi la marque marketplace, pas seulement isMaReliure vs Métré", () => {
+    expect(code).toContain("getRequestMarketplaceBrand");
+    expect(code).toContain("fineBinderyOrganizationSchema");
+    expect(code).toContain("fineBinderyWebsiteSchema");
+    expect(code).toMatch(/FINE_BINDERY_BRAND\s*=\s*\{/);
+  });
+
   it("ne sert plus l'icône ni le titre de Métré sans condition", () => {
-    // Les valeurs de Métré subsistent — dans la branche qui lui revient.
-    const brandBlock = code.slice(code.indexOf("const BRAND"), code.indexOf("function NotFound"));
+    // Les valeurs de Métré subsistent — dans la constante qui lui revient.
+    const brandBlock = code.slice(code.indexOf("const METRE_BRAND"), code.indexOf("function NotFound"));
     expect(brandBlock).toContain("metre-icon.svg");
     expect(brandBlock).toContain("mareliure-icon.svg");
-    // Mais plus rien de Métré n'apparaît dans le <head> lui-même.
-    const head = code.slice(code.indexOf("head: () => ({"), code.indexOf("shellComponent"));
+    // Mais plus rien de Métré n'apparaît dans le <head> lui-même : il ne lit
+    // plus que `BRAND.*`, résolu par requête (rootBrand), jamais une marque
+    // écrite en dur.
+    const head = code.slice(code.indexOf("head: ("), code.indexOf("shellComponent"));
     expect(head).not.toContain("metre-icon.svg");
     expect(head).not.toMatch(/title:\s*"Métré/);
     expect(head).not.toContain("organizationSchema)");

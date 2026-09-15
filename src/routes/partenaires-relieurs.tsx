@@ -7,6 +7,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PartnersLandingPage } from "@/marketplace/pages/partners/PartnersLanding";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
+import { breadcrumbSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/structured-data";
 
 const TITLE = "Ateliers partenaires — Rejoindre le réseau Ma Reliure";
 const DESCRIPTION =
@@ -26,6 +27,14 @@ export const Route = createFileRoute("/partenaires-relieurs")({
     links: [
       { rel: "canonical", href: `${MARELIURE_CANONICAL_HOME}partenaires-relieurs` },
       EDITORIAL_FONT_PRELOAD,
+    ],
+    scripts: [
+      jsonLdScript(
+        breadcrumbSchema(
+          [{ name: "Ateliers partenaires", path: "/partenaires-relieurs" }],
+          MARELIURE_SITE_URL,
+        ),
+      ),
     ],
   }),
   component: PartnersLandingPage,

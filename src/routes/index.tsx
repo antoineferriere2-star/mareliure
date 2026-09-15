@@ -3,7 +3,8 @@ import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
 import { ReliureLanding } from "@/marketplace/pages/ReliureLanding";
 import { FineBinderyLandingPage } from "@/marketplace/pages/fineBindery/FineBinderyLanding";
-import { jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
+import { faqPageSchema, jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
+import { FAQ as FINE_BINDERY_FAQ } from "@/marketplace/pages/fineBindery/content";
 import { isMaReliure } from "@/brand";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 import { MARKETPLACE_BRAND_CONFIGS, type MarketplaceBrand } from "@/marketplace/brand/brandConfig";
@@ -113,6 +114,10 @@ function fineBinderyHead() {
       { name: "twitter:description", content: fineBinderyDescription },
     ],
     links: [{ rel: "canonical", href: canonical }, EDITORIAL_FONT_PRELOAD],
+    // Les 8 questions de la section "Questions, answered" — le même tableau
+    // que FineBinderyLandingPage rend, jamais une copie à part qui pourrait
+    // diverger (audit express SEO/GEO, 15 septembre 2026, action 5).
+    scripts: [jsonLdScript(faqPageSchema(FINE_BINDERY_FAQ))],
   };
 }
 

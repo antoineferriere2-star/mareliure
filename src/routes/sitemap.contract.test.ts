@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { faqPageSchema } from "@/lib/structured-data";
 import { DECK_BUILDERS_FAQ, PRICING_FAQ } from "@/build/content/publicFaq";
+import { FAQ as FINE_BINDERY_FAQ } from "@/marketplace/pages/fineBindery/content";
 
 const ROUTES_DIR = join(process.cwd(), "src/routes");
 
@@ -59,6 +60,7 @@ describe("FAQ structured data mirrors what the page shows", () => {
   it.each([
     ["deck builders", DECK_BUILDERS_FAQ],
     ["pricing", PRICING_FAQ],
+    ["fine bindery", FINE_BINDERY_FAQ],
   ])("%s: one Question per visible entry, same text", (_name, entries) => {
     const schema = faqPageSchema(entries);
     expect(schema["@type"]).toBe("FAQPage");
@@ -78,5 +80,13 @@ describe("FAQ structured data mirrors what the page shows", () => {
     );
     expect(page).toContain("DECK_BUILDERS_FAQ.map(");
     expect(page).toContain("PRICING_FAQ.map(");
+  });
+
+  it("Fine Bindery's homepage renders from the same array its FAQPage schema uses", () => {
+    const page = readFileSync(
+      join(process.cwd(), "src/marketplace/pages/fineBindery/FineBinderyLanding.tsx"),
+      "utf8",
+    );
+    expect(page).toContain("FAQ.map(");
   });
 });

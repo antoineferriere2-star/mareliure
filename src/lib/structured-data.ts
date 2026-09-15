@@ -47,8 +47,13 @@ export const websiteSchema = {
   publisher: { "@id": ORGANIZATION_ID },
 };
 
-/** Builds a BreadcrumbList starting from the home page. */
-export function breadcrumbSchema(items: { name: string; path: string }[]) {
+/**
+ * Builds a BreadcrumbList starting from the home page. `baseUrl` defaults to
+ * Métré Build's own origin — every existing caller is a Métré route — so a
+ * new caller on another domain (Ma Reliure, Fine Bindery) must pass its own
+ * explicitly rather than silently inherit metre-pro.com's.
+ */
+export function breadcrumbSchema(items: { name: string; path: string }[], baseUrl: string = SITE_URL) {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -56,7 +61,7 @@ export function breadcrumbSchema(items: { name: string; path: string }[]) {
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
-      item: `${SITE_URL}${item.path}`,
+      item: `${baseUrl}${item.path}`,
     })),
   };
 }
@@ -67,7 +72,7 @@ export function breadcrumbSchema(items: { name: string; path: string }[]) {
  * only ever takes the same array the page renders from
  * (src/build/content/publicFaq.ts) — never a second, hand-written copy.
  */
-export function faqPageSchema(entries: { question: string; answer: string }[]) {
+export function faqPageSchema(entries: readonly { question: string; answer: string }[]) {
   return {
     "@context": "https://schema.org",
     "@type": "FAQPage",
@@ -129,4 +134,46 @@ export const mareliureWebsiteSchema = {
   url: `${MARELIURE_SITE_URL}/`,
   inLanguage: "fr-FR",
   publisher: { "@id": MARELIURE_ORGANIZATION_ID },
+} as const;
+
+// ---------------------------------------------------------------------------
+// Fine Bindery
+// ---------------------------------------------------------------------------
+
+/**
+ * L'identité déclarée aux moteurs par finebindery.com.
+ *
+ * Existe parce que la racine servait `mareliureOrganizationSchema` sans
+ * condition sur le sous-domaine marketplace : un visiteur anglophone de
+ * finebindery.com recevait des données structurées annonçant "Ma Reliure",
+ * en français, hébergée sur mareliure.fr (audit express SEO/GEO,
+ * 15 septembre 2026, action 1). Même discipline que Ma Reliure : minimale,
+ * rien d'inventé.
+ */
+export const FINE_BINDERY_SITE_URL = "https://finebindery.com";
+export const FINE_BINDERY_ORGANIZATION_ID = `${FINE_BINDERY_SITE_URL}/#organization`;
+export const FINE_BINDERY_WEBSITE_ID = `${FINE_BINDERY_SITE_URL}/#website`;
+
+export const fineBinderyOrganizationSchema = {
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "@id": FINE_BINDERY_ORGANIZATION_ID,
+  name: "Fine Bindery",
+  url: `${FINE_BINDERY_SITE_URL}/`,
+  logo: {
+    "@type": "ImageObject",
+    url: `${FINE_BINDERY_SITE_URL}/mareliure-icon.svg`,
+  },
+  description:
+    "International concierge for exceptional French bookbinding, restoration and bespoke creation, entrusted to independent workshops in France.",
+} as const;
+
+export const fineBinderyWebsiteSchema = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  "@id": FINE_BINDERY_WEBSITE_ID,
+  name: "Fine Bindery",
+  url: `${FINE_BINDERY_SITE_URL}/`,
+  inLanguage: "en-US",
+  publisher: { "@id": FINE_BINDERY_ORGANIZATION_ID },
 } as const;

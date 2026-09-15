@@ -263,7 +263,7 @@ export function LandingFooter() {
           </div>
 
           <div>
-            <h2 className="mr-eyebrow text-mr-graphite">Prestations</h2>
+            <p className="mr-eyebrow text-mr-graphite">Prestations</p>
             <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
               {PRESTATIONS.map((label) => (
                 <li key={label}>{label}</li>
@@ -272,7 +272,7 @@ export function LandingFooter() {
           </div>
 
           <nav aria-label="Le service">
-            <h2 className="mr-eyebrow text-mr-graphite">Le service</h2>
+            <p className="mr-eyebrow text-mr-graphite">Le service</p>
             <ul className="mr-small mt-5 space-y-3">
               {SERVICE_LINKS.map((item) => (
                 <li key={item.href}>
@@ -288,7 +288,7 @@ export function LandingFooter() {
           </nav>
 
           <div>
-            <h2 className="mr-eyebrow text-mr-graphite">Informations</h2>
+            <p className="mr-eyebrow text-mr-graphite">Informations</p>
             <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
               {LEGAL_LINKS.map((item) => (
                 <li key={item.href}>

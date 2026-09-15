@@ -29,6 +29,7 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
 import { Route as ReliureRouteImport } from './routes/reliure'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TermsRouteImport } from './routes/terms'
@@ -192,6 +193,11 @@ const PrivateBetaRoute = PrivateBetaRouteImport.update({
 const ReliureRoute = ReliureRouteImport.update({
   id: '/reliure',
   path: '/reliure',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
@@ -586,6 +592,7 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
@@ -672,6 +679,7 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
@@ -754,6 +762,7 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
@@ -842,6 +851,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/private-beta'
     | '/reliure'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
@@ -928,6 +938,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/private-beta'
     | '/reliure'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
@@ -1009,6 +1020,7 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/private-beta'
     | '/reliure'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
@@ -1097,6 +1109,7 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   PrivateBetaRoute: typeof PrivateBetaRoute
   ReliureRoute: typeof ReliureRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TarifsRoute: typeof TarifsRoute
   TermsRoute: typeof TermsRoute
@@ -1262,6 +1275,13 @@ declare module '@tanstack/react-router' {
       path: '/reliure'
       fullPath: '/reliure'
       preLoaderRoute: typeof ReliureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/sitemap.xml': {
@@ -1942,6 +1962,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   PrivateBetaRoute: PrivateBetaRoute,
   ReliureRoute: ReliureRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TarifsRoute: TarifsRoute,
   TermsRoute: TermsRoute,

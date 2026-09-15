@@ -1,7 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
-
-const BASE_URL = "https://metre-pro.com";
+import { isMaReliure } from "@/brand";
+import {
+  MARKETPLACE_BRAND_CONFIGS,
+  resolveMarketplaceBrandForHostname,
+} from "@/marketplace/brand/brandConfig";
 
 interface SitemapEntry {
   path: string;
@@ -17,7 +20,7 @@ interface SitemapEntry {
 // <meta name="robots" content="noindex">, a contradiction Search Console
 // reports as "Submitted URL marked noindex". Both halves were individually
 // correct, which is why nothing caught it — sitemap.contract.test.ts does now.
-const entries: SitemapEntry[] = [
+const METRE_ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/how-it-works", changefreq: "monthly", priority: "0.8" },
   { path: "/pricing", changefreq: "monthly", priority: "0.8" },
@@ -31,6 +34,30 @@ const entries: SitemapEntry[] = [
 ];
 
 /**
+ * Ma Reliure et Fine Bindery partagent ce déploiement (audit multi-brand,
+ * 12 septembre 2026) mais jamais un sitemap : chaque marque n'a de sens que
+ * sous son propre domaine, avec ses propres pages (audit express SEO/GEO,
+ * 15 septembre 2026, action commune aux deux — le fichier servait jusqu'ici
+ * les URL de metre-pro.com sur les trois domaines, sans distinction).
+ */
+const MARELIURE_ENTRIES: SitemapEntry[] = [
+  { path: "/", changefreq: "weekly", priority: "1.0" },
+  { path: "/tarifs", changefreq: "monthly", priority: "0.8" },
+  { path: "/partenaires-relieurs", changefreq: "monthly", priority: "0.7" },
+  { path: "/candidature-atelier", changefreq: "monthly", priority: "0.6" },
+  { path: "/mentions-legales", changefreq: "yearly", priority: "0.3" },
+  { path: "/confidentialite", changefreq: "yearly", priority: "0.3" },
+  { path: "/conditions", changefreq: "yearly", priority: "0.3" },
+];
+
+const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
+  { path: "/", changefreq: "weekly", priority: "1.0" },
+  { path: "/legal-notice", changefreq: "yearly", priority: "0.3" },
+  { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },
+  { path: "/terms-of-use", changefreq: "yearly", priority: "0.3" },
+];
+
+/**
  * One lastmod for the whole file, resolved at request time.
  *
  * A per-page date would be a lie: nothing in the build tracks when each
@@ -40,14 +67,23 @@ const entries: SitemapEntry[] = [
  */
 const LAST_MODIFIED = new Date().toISOString().slice(0, 10);
 
+function sitemapFor(host: string | null): { baseUrl: string; entries: SitemapEntry[] } {
+  if (!isMaReliure) return { baseUrl: "https://metre-pro.com", entries: METRE_ENTRIES };
+  const brand = resolveMarketplaceBrandForHostname(host);
+  return brand === "FINE_BINDERY"
+    ? { baseUrl: MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY.seo.canonicalOrigin, entries: FINE_BINDERY_ENTRIES }
+    : { baseUrl: MARKETPLACE_BRAND_CONFIGS.MA_RELIURE.seo.canonicalOrigin, entries: MARELIURE_ENTRIES };
+}
+
 export const Route = createFileRoute("/sitemap.xml")({
   server: {
     handlers: {
-      GET: async () => {
+      GET: async ({ request }) => {
+        const { baseUrl, entries } = sitemapFor(request.headers.get("host"));
         const urls = entries.map((e) =>
           [
             `  <url>`,
-            `    <loc>${BASE_URL}${e.path}</loc>`,
+            `    <loc>${baseUrl}${e.path}</loc>`,
             `    <lastmod>${LAST_MODIFIED}</lastmod>`,
             e.changefreq ? `    <changefreq>${e.changefreq}</changefreq>` : null,
             e.priority ? `    <priority>${e.priority}</priority>` : null,

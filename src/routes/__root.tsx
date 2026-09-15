@@ -12,6 +12,8 @@ import { useEffect, type ReactNode } from "react";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import {
+  fineBinderyOrganizationSchema,
+  fineBinderyWebsiteSchema,
   jsonLdScript,
   mareliureOrganizationSchema,
   mareliureWebsiteSchema,
@@ -19,6 +21,8 @@ import {
   websiteSchema,
 } from "../lib/structured-data";
 import { isMaReliure } from "../brand";
+import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBrand.server";
+import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 
 /**
  * Les valeurs par défaut du document, par marque.
@@ -30,30 +34,54 @@ import { isMaReliure } from "../brand";
  * que mareliure.fr *est* Métré Build, hébergé sur metre-pro.com.
  *
  * `isMaReliure` est une constante de compilation : la marque non déployée
- * disparaît du bundle plutôt que d'être évaluée à l'exécution.
+ * disparaît du bundle plutôt que d'être évaluée à l'exécution. En revanche,
+ * Ma Reliure et Fine Bindery partagent ce même déploiement — la racine doit
+ * donc encore trancher entre les deux, par requête, comme `routes/index.tsx`
+ * le fait déjà pour son propre `head()`. Sans ce second niveau, une page
+ * Fine Bindery recevait le lang, l'icône et les données structurées de Ma
+ * Reliure (audit express SEO/GEO, 15 septembre 2026, actions 1 et 3) : la
+ * confusion que ce fichier existe déjà pour éviter, un cran plus bas.
  */
-const BRAND = isMaReliure
-  ? {
-      lang: "fr",
-      title: "Ma Reliure — Reliure et restauration de livres",
-      description:
-        "Confiez votre livre à un artisan relieur. Réparation, restauration, nouvelle reliure ou création : Ma Reliure évalue votre projet et le confie à l'atelier adapté, partout en France.",
-      author: "Ma Reliure",
-      icon: "/mareliure-icon.svg?v=20260909",
-      // Porte les valeurs des tokens de surface du tunnel — voir styles.css.
-      themeClass: "brand-mareliure",
-      schemas: [mareliureOrganizationSchema, mareliureWebsiteSchema],
-    }
-  : {
-      lang: "en",
-      title: "Métré Build",
-      description:
-        "Métré Build turns vague website inquiries into structured Project Briefs your team can act on.",
-      author: "Métré Build",
-      icon: "/metre-icon.svg?v=20260727",
-      themeClass: undefined,
-      schemas: [organizationSchema, websiteSchema],
-    };
+const METRE_BRAND = {
+  lang: "en",
+  title: "Métré Build",
+  description:
+    "Métré Build turns vague website inquiries into structured Project Briefs your team can act on.",
+  author: "Métré Build",
+  icon: "/metre-icon.svg?v=20260727",
+  themeClass: undefined as string | undefined,
+  schemas: [organizationSchema, websiteSchema],
+};
+
+const MARELIURE_BRAND = {
+  lang: "fr",
+  title: "Ma Reliure — Reliure et restauration de livres",
+  description:
+    "Confiez votre livre à un artisan relieur. Réparation, restauration, nouvelle reliure ou création : Ma Reliure évalue votre projet et le confie à l'atelier adapté, partout en France.",
+  author: "Ma Reliure",
+  icon: "/mareliure-icon.svg?v=20260909",
+  // Porte les valeurs des tokens de surface du tunnel — voir styles.css.
+  themeClass: "brand-mareliure" as string | undefined,
+  schemas: [mareliureOrganizationSchema, mareliureWebsiteSchema],
+};
+
+const FINE_BINDERY_BRAND = {
+  lang: "en",
+  title: "Fine Bindery — Exceptional French Bookbinding",
+  description:
+    "The international concierge for exceptional French bookbinding. Entrust your book to selected independent workshops in France.",
+  author: "Fine Bindery",
+  // Même identité visuelle que Ma Reliure (tokens mr-*) — aucune icône propre
+  // à Fine Bindery n'existe encore.
+  icon: "/mareliure-icon.svg?v=20260909",
+  themeClass: "brand-mareliure" as string | undefined,
+  schemas: [fineBinderyOrganizationSchema, fineBinderyWebsiteSchema],
+};
+
+function rootBrand(marketplaceBrand: MarketplaceBrand | null) {
+  if (!isMaReliure) return METRE_BRAND;
+  return marketplaceBrand === "FINE_BINDERY" ? FINE_BINDERY_BRAND : MARELIURE_BRAND;
+}
 
 function NotFoundComponent() {
   return (
@@ -116,38 +144,44 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 }
 
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
-  head: () => ({
-    meta: [
-      { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: BRAND.title },
-      { name: "description", content: BRAND.description },
-      { name: "author", content: BRAND.author },
-      { property: "og:title", content: BRAND.title },
-      { property: "og:description", content: BRAND.description },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
-      // La vérification Search Console appartient à metre-pro.com. La servir
-      // sur mareliure.fr ne vérifie rien et expose le jeton d'un autre domaine.
-      ...(isMaReliure
-        ? []
-        : [
-            {
-              name: "google-site-verification",
-              content: "rQrZLNB13JT3YhmVbAqqDsVfFzT4GTYRROIVrkahIB0",
-            },
-          ]),
-    ],
-    links: [
-      {
-        rel: "stylesheet",
-        href: appCss,
-      },
-      { rel: "icon", href: BRAND.icon, type: "image/svg+xml" },
-      { rel: "shortcut icon", href: BRAND.icon, type: "image/svg+xml" },
-    ],
-    scripts: BRAND.schemas.map(jsonLdScript),
+  loader: async () => ({
+    marketplaceBrand: isMaReliure ? await getRequestMarketplaceBrand() : null,
   }),
+  head: ({ loaderData }) => {
+    const BRAND = rootBrand(loaderData?.marketplaceBrand ?? null);
+    return {
+      meta: [
+        { charSet: "utf-8" },
+        { name: "viewport", content: "width=device-width, initial-scale=1" },
+        { title: BRAND.title },
+        { name: "description", content: BRAND.description },
+        { name: "author", content: BRAND.author },
+        { property: "og:title", content: BRAND.title },
+        { property: "og:description", content: BRAND.description },
+        { property: "og:type", content: "website" },
+        { name: "twitter:card", content: "summary_large_image" },
+        // La vérification Search Console appartient à metre-pro.com. La servir
+        // sur mareliure.fr ne vérifie rien et expose le jeton d'un autre domaine.
+        ...(isMaReliure
+          ? []
+          : [
+              {
+                name: "google-site-verification",
+                content: "rQrZLNB13JT3YhmVbAqqDsVfFzT4GTYRROIVrkahIB0",
+              },
+            ]),
+      ],
+      links: [
+        {
+          rel: "stylesheet",
+          href: appCss,
+        },
+        { rel: "icon", href: BRAND.icon, type: "image/svg+xml" },
+        { rel: "shortcut icon", href: BRAND.icon, type: "image/svg+xml" },
+      ],
+      scripts: BRAND.schemas.map(jsonLdScript),
+    };
+  },
   shellComponent: RootShell,
   component: RootComponent,
   notFoundComponent: NotFoundComponent,
@@ -155,6 +189,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  const { marketplaceBrand } = Route.useLoaderData();
+  const BRAND = rootBrand(marketplaceBrand);
   return (
     <html lang={BRAND.lang} className={BRAND.themeClass}>
       <head>
