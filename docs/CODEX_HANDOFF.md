@@ -790,13 +790,15 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 16 septembre 2026 (soirée, suite)
+**Date :** 16 septembre 2026 (soirée, suite — bascule sur le compte live dédié)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `7b2aaed0` (Connect sans paramètre `type` legacy, script setup
-réutilisable multi-comptes), `4540b136` (garde fail-closed compte Stripe
-attendu), sur `408ee54c` (intégration Stripe live — Checkout/webhook/Connect,
+**Commit :** `e0cf1719` (descripteur de relevé par marque via
+`statement_descriptor_suffix`), sur `2d358ba6`, `94897323`, `7b2aaed0`
+(Connect sans paramètre `type` legacy, script setup réutilisable
+multi-comptes), `4540b136` (garde fail-closed compte Stripe attendu), sur
+`408ee54c` (intégration Stripe live — Checkout/webhook/Connect,
 préparés, aucun vrai paiement), sur `dacce714`, sur `5ea6b210` (contribution
 minimale 80 € + pricebookReferenceCents câblé), sur `bdb4ddce` (correctif
 inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
@@ -807,9 +809,80 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 à F Fine Bindery).
 
 **Production : déployée le 16 septembre 2026.** Worker `mareliure` version
-`807010ad-0833-4ce9-ad98-1954fbb38214`, via `npm run deploy:mareliure`.
+`8701f5b6-5d9f-491c-a849-89f5039d5ba1`, via `npm run deploy:mareliure`.
 Migrations `20260916100000`, `20260916110000` et `20260916120000` toutes
 appliquées (`supabase db push --dry-run` → `upToDate: true`).
+
+---
+
+### Chantier de cette session (suite 2) — bascule effective sur le compte live dédié
+
+Le connecteur MCP Stripe a été reconnecté par l'utilisateur sur
+`acct_1UGI34K0Q47WbZPf` (confirmé : `list_available_accounts_or_orgs`
+renvoie désormais les deux comptes, `livemode: true` sur le nouveau).
+
+**Fait :**
+
+1. **Audit live read-only** de `acct_1UGI34K0Q47WbZPf` : `charges_enabled`/
+   `payouts_enabled: true`, `transfers: active`, zéro Connected Account,
+   zéro Product, zéro webhook, zéro customer/invoice — compte propre.
+   **Mais hérité de "SECURICOM"** (comme l'ancien compte partagé) sur
+   `card_payments.statement_descriptor_prefix`,
+   `payments.statement_descriptor`, `business_profile.support_email`
+   (`contact@securicom.shop`) et `support_url` (`www.oppe.fr`) — visiblement
+   un profil cloné à la création plutôt que rempli pour Ma Reliure/Fine
+   Bindery.
+2. **Trois Products créés sur `acct_1UGI34K0Q47WbZPf`** (aucun n'existait) :
+   `prod_VGu3dUcm5c03W3` (Ma Reliure), `prod_VGu332vGMShtpJ` (Fine
+   Bindery), `prod_VGu3DtQmcdtp2Z` (Transport).
+3. **Secrets du Worker `mareliure` remplacés** : `STRIPE_PRODUCT_MA_RELIURE_SERVICE`/
+   `_FINE_BINDERY_SERVICE`/`_SHIPPING` pointent désormais vers ces trois IDs
+   — les anciens (créés sur `acct_1S530YKEMCwyPCrw`, jamais utilisés
+   réellement) ne sont plus référencés nulle part en production.
+4. **Correction technique demandée par l'utilisateur** : `PaymentIntent.
+   statement_descriptor` ne s'applique pas aux paiements carte — Stripe
+   combine `statement_descriptor_suffix` avec le préfixe raccourci du
+   compte. `statementDescriptorSuffixForBrand` (`checkoutPlan.ts`, pur,
+   testé) dérive `"MARELIURE"`/`"FINEBINDERY"` du `brand` de la proposition
+   acceptée — jamais du navigateur — câblé dans
+   `payment_intent_data.statement_descriptor_suffix` de
+   `createCommercialCheckoutSession`. Avec un préfixe cible `"OPPE"` côté
+   compte, le combiné (`OPPE*MARELIURE` = 14 car., `OPPE*FINEBINDERY` = 16
+   car.) reste sous la limite Stripe de 22 caractères.
+5. **Impossible de corriger l'identité publique du compte moi-même** : la
+   clé/session connectée via MCP pour `acct_1UGI34K0Q47WbZPf` est scopée
+   `required_permissions: ["limited_account_retrieve"]` — lecture seule sur
+   les paramètres de compte (`business_profile`, `settings`,
+   `statement_descriptor`…). Aucune opération d'écriture correspondante
+   n'apparaît même dans `stripe_api_search`. **À faire par l'utilisateur
+   lui-même, via le Dashboard Stripe (Paramètres → Informations publiques
+   de l'entreprise / Marque)** :
+   - Descripteur raccourci (préfixe) : `OPPE`
+   - Descripteur de repli (`payments.statement_descriptor`) : proposer
+     `OPPE` également (cohérent, même entité, jamais "SECURICOM")
+   - `support_email` : `contact@oppe.fr` (déjà l'adresse officielle
+     publiée dans les pages légales des deux marques,
+     `src/marketplace/legal/legalEntity.ts` — jamais une adresse inventée)
+   - `support_url`/`business_profile.url` : `https://mareliure.fr`
+     (le site produit réellement exploité ; `www.oppe.fr` n'est pas une
+     vitrine client)
+   - Ne pas toucher l'identité juridique (`company.name: "Oppe"`,
+     adresse, SIREN/SIRET/TVA) — déjà correcte et correspond à
+     `MARELIURE_PUBLISHER` dans le code.
+6. **Stripe Tax reste sans effet sur notre politique métier** :
+   `tax.settings.status: "active"` sur ce compte aussi, mais
+   `checkoutEligibility` (`checkoutPlan.ts`) continue de bloquer tout
+   Checkout tant que `tax_policy` vaut `TAX_REVIEW_REQUIRED` — aucune
+   politique concrète (France B2C, UE B2C, hors UE, biens envoyés puis
+   réexportés) n'a été décidée ni construite. Volontairement inchangé.
+
+**Toujours bloquant** : `STRIPE_SECRET_KEY` du compte
+`acct_1UGI34K0Q47WbZPf` jamais posée (l'utilisateur doit le faire
+lui-même) — sans elle, ni le health check applicatif, ni le webhook live
+ne peuvent avancer.
+
+npx vitest run : 147 fichiers, 1954 tests verts (2 nouveaux). npx tsc
+--noEmit : propre. npm run lint : propre. npm run build : vert. Déployé.
 
 ---
 
