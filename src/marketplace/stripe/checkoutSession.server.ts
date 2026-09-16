@@ -9,8 +9,12 @@
  * manquante), puis construit le Checkout à partir de ce qu'il vient de
  * relire, jamais à partir de ce qu'on lui a dit.
  *
- * NO SANDBOX : `getMarketplaceStripeClient` parle toujours au compte live
- * acct_1S530YKEMCwyPCrw (décision explicite du 16 septembre 2026).
+ * NO SANDBOX en production : `getMarketplaceStripeClient` doit parler au
+ * compte live dédié `acct_1UGI34K0Q47WbZPf` — jamais `acct_1S530YKEMCwyPCrw`
+ * (ancien compte partagé) ni `acct_1UGISJKB3EBc6Slh` (test, local
+ * uniquement). `assertExpectedStripeAccount`, appelé plus bas, refuse
+ * (fail closed) toute exécution si la clé posée répond pour un autre
+ * compte — voir stripeAccountGuard.ts et CODEX_HANDOFF.md.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { getRequestHost } from "@tanstack/react-start/server";

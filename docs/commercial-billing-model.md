@@ -174,12 +174,23 @@ l'administration dans cette phase (§9).
 
 ## 9. Stripe — live, Phase 1 (Products, Checkout, webhook, Connect préparés)
 
-**Décision explicite de l'utilisateur le 16 septembre 2026 : NO SANDBOX.**
-Le compte live `acct_1S530YKEMCwyPCrw` (« Oppe », entreprise française,
-déjà utilisée par Métré Build, AccessBot, BatiScores, MuWo et Securicom —
-voir l'audit complet dans `CODEX_HANDOFF.md`) est le compte de production
-retenu, avec des garde-fous stricts : aucun faux paiement, aucune fausse
-facture, aucun transfert de test, aucun client fictif.
+**Trois comptes Stripe distincts — ne jamais les confondre :**
+
+```
+LEGACY_ACCOUNT_ID = acct_1S530YKEMCwyPCrw   # "Oppe" — Métré/AccessBot/BatiScores/MuWo/Securicom
+                                              # INTERDIT pour Ma Reliure/Fine Bindery, en toute circonstance
+LIVE_ACCOUNT_ID   = acct_1UGI34K0Q47WbZPf   # compte live DÉDIÉ Ma Reliure/Fine Bindery — seule cible de production
+TEST_ACCOUNT_ID   = acct_1UGISJKB3EBc6Slh   # "environnement de test Mareliure/finebindery" — développement local UNIQUEMENT
+```
+
+**Décision explicite de l'utilisateur, NO SANDBOX pour la production** :
+tout Checkout/Invoice/Refund/Connect/Transfer réel doit passer par
+`LIVE_ACCOUNT_ID`, jamais `LEGACY_ACCOUNT_ID` ni `TEST_ACCOUNT_ID`. Le
+Worker Cloudflare de production porte `STRIPE_EXPECTED_ACCOUNT_ID=
+acct_1UGI34K0Q47WbZPf` ; `assertExpectedStripeAccount`
+(`stripeClient.server.ts`) refuse (fail closed) toute écriture si la clé
+posée répond pour un autre compte — vérifié en conditions réelles (mismatch
+délibéré → refus), voir `CODEX_HANDOFF.md`.
 
 **Client Stripe dédié** : `src/marketplace/stripe/stripeClient.server.ts`,
 séparé de `src/lib/stripe.server.ts` (gateway Lovable, abonnements SaaS
@@ -187,12 +198,21 @@ Métré — aucune capacité Connect, aucun rapport avec la marketplace). Une
 vraie clé secrète (`STRIPE_SECRET_KEY`), jamais la passerelle Lovable.
 
 **Construit** :
-- Trois Products permanents créés (idempotents par metadata) :
-  `prod_VGowujXB5VAtLN` (Ma Reliure), `prod_VGoxLIJgDWDx7c` (Fine
-  Bindery), `prod_VGoxkLqYmwcFm6` (Transport) — jamais de Price Stripe
-  fixe, le montant reste toujours `price_data` dynamique depuis le
-  snapshot commercial. `scripts/setupStripeProducts.ts` referait la même
-  recherche-puis-création.
+- Trois Products permanents (idempotents par metadata,
+  `scripts/setupStripeProducts.ts`) — jamais de Price Stripe fixe, le
+  montant reste toujours `price_data` dynamique depuis le snapshot
+  commercial. Créés sur `TEST_ACCOUNT_ID` pour le développement local
+  (`prod_VGqVa0gxBdKMFv`/`prod_VGqV9v0VrlqutW`/`prod_VGqVuC29bc1dgv`) ;
+  **à recréer séparément sur `LIVE_ACCOUNT_ID`** avant tout premier
+  paiement réel — voir `CODEX_HANDOFF.md` pour l'état exact de cette
+  étape. Trois autres Product IDs existent sur `LEGACY_ACCOUNT_ID`
+  (`prod_VGowujXB5VAtLN`/`prod_VGoxLIJgDWDx7c`/`prod_VGoxkLqYmwcFm6`,
+  créés avant la décision de dédier un compte séparé) — **toujours
+  présents dans les secrets du Worker de production au moment d'écrire
+  ceci**, à remplacer par les IDs `LIVE_ACCOUNT_ID` dès que le connecteur
+  MCP est reconnecté dessus (voir `CODEX_HANDOFF.md`, bloquant), puis à
+  archiver sur `LEGACY_ACCOUNT_ID` sur confirmation explicite (jamais
+  avant).
 - `createCommercialCheckoutSession` (`checkoutSession.server.ts`) :
   recharge la proposition **acceptée**, seule source du montant — jamais
   une valeur du navigateur. `checkoutPlan.ts` (pur, testé) bloque tant que
