@@ -790,11 +790,13 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 16 septembre 2026 (soirée)
+**Date :** 16 septembre 2026 (soirée, suite)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `408ee54c` (intégration Stripe live — Checkout/webhook/Connect,
+**Commit :** `7b2aaed0` (Connect sans paramètre `type` legacy, script setup
+réutilisable multi-comptes), `4540b136` (garde fail-closed compte Stripe
+attendu), sur `408ee54c` (intégration Stripe live — Checkout/webhook/Connect,
 préparés, aucun vrai paiement), sur `dacce714`, sur `5ea6b210` (contribution
 minimale 80 € + pricebookReferenceCents câblé), sur `bdb4ddce` (correctif
 inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
@@ -805,9 +807,57 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 à F Fine Bindery).
 
 **Production : déployée le 16 septembre 2026.** Worker `mareliure` version
-`edc5d2de-7c3c-469a-aa00-52aafc975b4a`, via `npm run deploy:mareliure`.
+`807010ad-0833-4ce9-ad98-1954fbb38214`, via `npm run deploy:mareliure`.
 Migrations `20260916100000`, `20260916110000` et `20260916120000` toutes
 appliquées (`supabase db push --dry-run` → `upToDate: true`).
+
+---
+
+### Chantier de cette session (suite) — compte de test dédié, Connect modernisé
+
+**Trois comptes Stripe distincts coexistent désormais — à ne jamais confondre :**
+
+| Compte | Rôle | Mode |
+| --- | --- | --- |
+| `acct_1S530YKEMCwyPCrw` | Ancien compte partagé (Métré/AccessBot/BatiScores/MuWo/Securicom) | live — **ne plus jamais y écrire d'objet marketplace** |
+| `acct_1UGI34K0Q47WbZPf` | Compte live **dédié** Ma Reliure/Fine Bindery | live — cible de production, `STRIPE_EXPECTED_ACCOUNT_ID` du Worker |
+| `acct_1UGISJKB3EBc6Slh` | « environnement de test Mareliure/finebindery » — test dédié, découvert cette session via une clé `sk_test_...` fournie par l'utilisateur | test — pour le développement local uniquement |
+
+**Nouveau, cette session :**
+
+1. **`ensureBinderStripeAccount` ne passe plus par `type: "express"`** (paramètre legacy) mais par `controller` explicite
+   (`fees.payer`/`losses.payments: "application"`, `stripe_dashboard.type: "express"`,
+   `requirement_collection: "stripe"`) — recommandation directe de
+   `stripe_implementation_planner` (arbre de décision Connect #5 : "Do NOT
+   configure connected accounts using the legacy type parameter").
+2. **`scripts/setupStripeProducts.ts` n'est plus câblé sur un seul compte en
+   dur** : il lit `STRIPE_EXPECTED_ACCOUNT_ID` de l'environnement et refuse
+   (fail closed) si la clé posée répond pour un autre compte — même garde
+   que `assertExpectedStripeAccount`. Exécuté avec succès contre le compte
+   de test (`acct_1UGISJKB3EBc6Slh`) : trois Products créés
+   (`prod_VGqVa0gxBdKMFv`, `prod_VGqV9v0VrlqutW`, `prod_VGqVuC29bc1dgv`),
+   ré-exécution confirmée idempotente.
+3. **`.env` local de l'utilisateur** porte désormais `STRIPE_SECRET_KEY`
+   (clé test), `STRIPE_EXPECTED_ACCOUNT_ID=acct_1UGISJKB3EBc6Slh` et les
+   trois `STRIPE_PRODUCT_*` du compte de test — jamais lu ni affiché par
+   l'agent, seule sa présence a été vérifiée (`grep -c`).
+4. **Le connecteur MCP Stripe de cette session reste scopé sur l'ancien
+   compte partagé** (`acct_1S530YKEMCwyPCrw`) — toujours pas reconnecté sur
+   `acct_1UGI34K0Q47WbZPf`. Un audit read-only via `stripe_implementation_planner`
+   a néanmoins été obtenu (le tool n'exige pas d'accès au compte cible pour
+   produire un plan générique) : voir l'arbre de décision complet dans la
+   conversation pour le détail (Connect Separate Charges and Transfers,
+   fee collection par `transferring less`, Invoicing déclenché par
+   événement métier).
+
+**`stripe_implementation_planner` est soumis à l'approbation de l'auto-mode
+classifier** (catégorie « Modify Shared Resources » — le tool crée
+apparemment un guide persistant côté Stripe) : le premier appel a été
+refusé, le second (après que l'utilisateur a ajusté ses permissions) est
+passé.
+
+npx vitest run : 147 fichiers, 1952 tests verts. npx tsc --noEmit : propre.
+npm run lint : propre. npm run build : vert. Déployé.
 
 ---
 
