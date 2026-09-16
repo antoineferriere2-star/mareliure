@@ -45,11 +45,12 @@ import {
   reconcileCaseTriage,
   resolveCaseByAccessToken,
 } from "./caseRepository.server";
-import { loadAggregates } from "./pricingRepository.server";
+import { loadAggregates, loadPricebook } from "./pricingRepository.server";
 import {
   acceptBinderInvitation as acceptBinderInvitationForUser,
   createBinderInvitation,
   findActiveBinderMembership,
+  resolvePendingInvitationEmail,
 } from "./binderMembership.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
 import { unreadCountsByCase } from "./messaging.data.functions";
@@ -388,6 +389,7 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
     // marque — le multiplicateur s'applique après, jamais dans le Pricebook.
     const suggestion = suggestManagedPrice(caseContext.profile, {
       aggregates: await loadAggregates(sb),
+      pricebookEntries: await loadPricebook(sb),
     });
     const abstained = suggestion.status === "manual_review";
     const brand = isMarketplaceBrand(caseContext.row.brand) ? caseContext.row.brand : "MA_RELIURE";
@@ -461,6 +463,8 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
         pricing_components: suggestion.components as unknown as Json,
         pricing_reference_count: suggestion.referenceCount,
         pricing_rule_version: suggestion.ruleVersion,
+        pricing_pricebook_reference_cents: suggestion.pricebookReferenceCents,
+        pricing_price_bound_by: suggestion.priceBoundBy,
         pricing_generated_at: now,
         status: caseContext.row.status === "under_review" ? "under_review" : "pricing",
       })
@@ -973,6 +977,26 @@ export const inviteBinderMember = createServerFn({ method: "POST" })
     }
 
     return { ok: true, expiresAt: invitation.expiresAt };
+  });
+
+/**
+ * Public, unauthenticated lookup: which e-mail was this invitation sent to?
+ *
+ * The accept screen (`/invitation-atelier/$token`) uses this to lock its
+ * sign-up/sign-in e-mail field to the invited address, so it can no longer
+ * be used to create or update an account for an arbitrary, different e-mail
+ * before the invitation itself is ever checked — see
+ * `resolvePendingInvitationEmail`'s doc comment. Returns `null` for any
+ * problem (unknown token, expired, already used) — the same generic refusal
+ * `acceptBinderInvitation` gives, so this lookup cannot be used to probe
+ * which tokens exist.
+ */
+export const getBinderInvitationEmail = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => z.object({ token: z.string().min(1).max(200) }).parse(data))
+  .handler(async ({ data }) => {
+    const sb = await admin();
+    const email = await resolvePendingInvitationEmail(sb, data.token);
+    return { email };
   });
 
 /**

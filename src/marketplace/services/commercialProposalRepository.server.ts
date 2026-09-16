@@ -9,8 +9,11 @@
  * l'impose).
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
-import type { CommercialProposalSnapshot } from "@/marketplace/commercial/commercialProposal";
+import type { Database, Json } from "@/integrations/supabase/types";
+import type {
+  CommercialProposalSnapshot,
+  PricebookProvenanceEntry,
+} from "@/marketplace/commercial/commercialProposal";
 
 type Supa = SupabaseClient<Database>;
 
@@ -26,7 +29,7 @@ export interface CommercialProposalRow extends CommercialProposalSnapshot {
 }
 
 const COLUMNS =
-  "id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at";
+  "id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toRow(row: any): CommercialProposalRow {
@@ -39,6 +42,7 @@ function toRow(row: any): CommercialProposalRow {
     pricingMode: row.pricing_mode,
     pricingRuleVersion: row.pricing_rule_version,
     pricebookReferenceCents: row.pricebook_reference_cents,
+    pricebookProvenance: row.pricebook_provenance as PricebookProvenanceEntry[] | null,
     brandMultiplierBps: row.brand_multiplier_bps,
     brandReferenceCents: row.brand_reference_cents,
     binderPayoutCents: row.binder_payout_cents,
@@ -113,6 +117,7 @@ export async function insertCommercialProposal(
       pricing_mode: snapshot.pricingMode,
       pricing_rule_version: snapshot.pricingRuleVersion,
       pricebook_reference_cents: snapshot.pricebookReferenceCents,
+      pricebook_provenance: snapshot.pricebookProvenance as unknown as Json,
       brand_multiplier_bps: snapshot.brandMultiplierBps,
       brand_reference_cents: snapshot.brandReferenceCents,
       binder_payout_cents: snapshot.binderPayoutCents,

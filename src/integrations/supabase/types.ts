@@ -1374,6 +1374,8 @@ export type Database = {
           pricing_high_estimate_cents: number | null
           pricing_low_estimate_cents: number | null
           pricing_mode: string | null
+          pricing_price_bound_by: string | null
+          pricing_pricebook_reference_cents: number | null
           pricing_reason_codes: string[]
           pricing_reference_count: number
           pricing_rule_version: string | null
@@ -1418,6 +1420,8 @@ export type Database = {
           pricing_high_estimate_cents?: number | null
           pricing_low_estimate_cents?: number | null
           pricing_mode?: string | null
+          pricing_price_bound_by?: string | null
+          pricing_pricebook_reference_cents?: number | null
           pricing_reason_codes?: string[]
           pricing_reference_count?: number
           pricing_rule_version?: string | null
@@ -1462,6 +1466,8 @@ export type Database = {
           pricing_high_estimate_cents?: number | null
           pricing_low_estimate_cents?: number | null
           pricing_mode?: string | null
+          pricing_price_bound_by?: string | null
+          pricing_pricebook_reference_cents?: number | null
           pricing_reason_codes?: string[]
           pricing_reference_count?: number
           pricing_rule_version?: string | null
@@ -1534,6 +1540,7 @@ export type Database = {
           minimum_contribution_cents: number
           notes: string | null
           price_bound_by: string
+          pricebook_provenance: Json | null
           pricebook_reference_cents: number | null
           pricing_mode: string
           pricing_rule_version: string
@@ -1581,6 +1588,7 @@ export type Database = {
           minimum_contribution_cents?: number
           notes?: string | null
           price_bound_by: string
+          pricebook_provenance?: Json | null
           pricebook_reference_cents?: number | null
           pricing_mode: string
           pricing_rule_version: string
@@ -1628,6 +1636,7 @@ export type Database = {
           minimum_contribution_cents?: number
           notes?: string | null
           price_bound_by?: string
+          pricebook_provenance?: Json | null
           pricebook_reference_cents?: number | null
           pricing_mode?: string
           pricing_rule_version?: string
@@ -2214,6 +2223,8 @@ export type Database = {
           pricing_high_estimate_cents: number | null
           pricing_low_estimate_cents: number | null
           pricing_mode: string | null
+          pricing_price_bound_by: string | null
+          pricing_pricebook_reference_cents: number | null
           pricing_reason_codes: string[]
           pricing_reference_count: number
           pricing_rule_version: string | null

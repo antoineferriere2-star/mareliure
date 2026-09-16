@@ -1,5 +1,25 @@
 import { describe, expect, it } from "vitest";
-import { resolveServicePriceFloors } from "./pricebook";
+import { lookupPricebookReference, resolveServicePriceFloors, type PricebookEntry } from "./pricebook";
+
+function entry(overrides: Partial<PricebookEntry> & Pick<PricebookEntry, "workItemKey">): PricebookEntry {
+  return {
+    id: `entry-${overrides.workItemKey}-${overrides.sizeClass ?? "standard"}-${overrides.complexityClass ?? "standard"}`,
+    sizeClass: "standard",
+    complexityClass: "standard",
+    referenceBinderPayoutCents: 0,
+    customerPriceCents: 0,
+    targetMarginCents: 0,
+    targetMarginBps: 0,
+    pricingMethod: "margin_target",
+    version: 1,
+    status: "published",
+    validatedAt: "2026-09-01T00:00:00.000Z",
+    validatedBy: null,
+    referenceCountAtValidation: 1,
+    notes: null,
+    ...overrides,
+  };
+}
 
 const ROUNDING = 100; // 1 € — assez fin pour ne jamais masquer les exemples de l'audit.
 
@@ -77,5 +97,38 @@ describe("resolveServicePriceFloors", () => {
     // 37050 / 0.75 = 49400 pile ; vérifie qu'un montant qui tombe déjà rond
     // n'est pas majoré d'un incrément par erreur d'arrondi.
     expect(result.marginFloorCents).toBe(49_400);
+  });
+});
+
+describe("lookupPricebookReference", () => {
+  it("somme le prix client publié de chaque travail du dossier", () => {
+    const entries = [
+      entry({ workItemKey: "demi_cuir", customerPriceCents: 30_000 }),
+      entry({ workItemKey: "restauration_dos", customerPriceCents: 20_000 }),
+    ];
+    const result = lookupPricebookReference(entries, ["demi_cuir", "restauration_dos"], "standard", "standard");
+    expect(result?.referenceCents).toBe(50_000);
+    expect(result?.matches).toHaveLength(2);
+  });
+
+  it("rend null si un seul travail du dossier n'a aucune entrée publiée — jamais une somme partielle", () => {
+    const entries = [entry({ workItemKey: "demi_cuir", customerPriceCents: 30_000 })];
+    const result = lookupPricebookReference(entries, ["demi_cuir", "restauration_dos"], "standard", "standard");
+    expect(result).toBeNull();
+  });
+
+  it("ignore une entrée non publiée (brouillon ou retirée)", () => {
+    const entries = [entry({ workItemKey: "demi_cuir", customerPriceCents: 30_000, status: "draft" })];
+    const result = lookupPricebookReference(entries, ["demi_cuir"], "standard", "standard");
+    expect(result).toBeNull();
+  });
+
+  it("retombe sur le format standard faute de correspondance exacte, sans coefficient", () => {
+    const entries = [
+      entry({ workItemKey: "demi_cuir", sizeClass: "standard", complexityClass: "standard", customerPriceCents: 30_000 }),
+    ];
+    const result = lookupPricebookReference(entries, ["demi_cuir"], "large", "standard");
+    expect(result?.referenceCents).toBe(30_000);
+    expect(result?.matches[0].note).toContain("format courant");
   });
 });

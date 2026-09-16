@@ -142,6 +142,92 @@ export function resolveServicePriceFloors(input: ServicePriceFloorInput): Servic
   };
 }
 
+export interface PricebookReferenceMatch {
+  entry: PricebookEntry;
+  /** Même discipline que `lookupAggregate` (pricing.engine.ts) : jamais de coefficient, seulement une classe plus générale déclarée comme telle. */
+  note: string | null;
+}
+
+export interface PricebookReferenceResult {
+  referenceCents: number;
+  matches: PricebookReferenceMatch[];
+}
+
+/**
+ * La même cascade que `lookupAggregate` (pricing.engine.ts), mais contre des
+ * entrées Pricebook **publiées** plutôt que des grilles atelier : correspondance
+ * exacte d'abord, puis format ou complexité standard, jamais un coefficient
+ * appliqué pour combler un trou.
+ */
+function lookupPricebookEntry(
+  entries: readonly PricebookEntry[],
+  workItemKey: string,
+  sizeClass: string,
+  complexityClass: string,
+): PricebookReferenceMatch | null {
+  const candidates = entries.filter(
+    (e) => e.status === "published" && e.workItemKey === workItemKey,
+  );
+  if (candidates.length === 0) return null;
+
+  const exact = candidates.find(
+    (e) => e.sizeClass === sizeClass && e.complexityClass === complexityClass,
+  );
+  if (exact) return { entry: exact, note: null };
+
+  const sameComplexity = candidates.find(
+    (e) => e.sizeClass === "standard" && e.complexityClass === complexityClass,
+  );
+  if (sameComplexity)
+    return { entry: sameComplexity, note: "tarif du format courant, faute de référence" };
+
+  const sameSize = candidates.find(
+    (e) => e.sizeClass === sizeClass && e.complexityClass === "standard",
+  );
+  if (sameSize)
+    return { entry: sameSize, note: "tarif de complexité courante, faute de référence" };
+
+  const generic = candidates.find(
+    (e) => e.sizeClass === "standard" && e.complexityClass === "standard",
+  );
+  if (generic)
+    return {
+      entry: generic,
+      note: "tarif courant, ni le format ni la complexité ne sont couverts",
+    };
+
+  return null;
+}
+
+/**
+ * La référence Pricebook d'un dossier — la somme des prix client publiés
+ * pour chacun de ses travaux, jamais une estimation partielle : si un seul
+ * travail du dossier n'a aucune entrée publiée, la fonction rend `null`
+ * plutôt qu'un total qui aurait l'air complet en en taisant un (même
+ * discipline que `suggestManagedPrice` s'abstenant sur un travail non
+ * tarifé). `resolveServicePriceFloors` reçoit alors `referenceCents: null`,
+ * exactement comme aujourd'hui — le Pricebook reste un candidat de plus
+ * dans le MAX, jamais un remplacement des deux planchers.
+ */
+export function lookupPricebookReference(
+  entries: readonly PricebookEntry[],
+  workItemKeys: readonly string[],
+  sizeClass: string,
+  complexityClass: string,
+): PricebookReferenceResult | null {
+  if (workItemKeys.length === 0) return null;
+  const matches: PricebookReferenceMatch[] = [];
+  for (const key of workItemKeys) {
+    const match = lookupPricebookEntry(entries, key, sizeClass, complexityClass);
+    if (!match) return null;
+    matches.push(match);
+  }
+  return {
+    referenceCents: matches.reduce((sum, m) => sum + m.entry.customerPriceCents, 0),
+    matches,
+  };
+}
+
 export interface PricebookDrift {
   entry: PricebookEntry;
   /** La médiane terrain constatée aujourd'hui. */

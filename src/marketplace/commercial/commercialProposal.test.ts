@@ -9,6 +9,7 @@ function baseInput(overrides: Partial<CommercialProposalSnapshotInput> = {}): Co
     pricingMode: "FIXED_PRICE",
     pricingRuleVersion: "bookbinding-2026-09-15-v4",
     pricebookReferenceCents: null,
+    pricebookProvenance: null,
     brandMultiplierBps: 10_000,
     brandReferenceCents: null,
     binderPayoutCents: 37_500,

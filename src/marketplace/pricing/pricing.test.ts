@@ -74,6 +74,63 @@ describe("le moteur tarifaire", () => {
     expect(result.components.map((c) => c.referencePayoutCents)).toEqual([35_000, 8_000, 4_500]);
   });
 
+  /**
+   * Câblage de pricebookReferenceCents (16 septembre 2026, §3) : une entrée
+   * Pricebook publiée par travail, couvrant exactement ceux du dossier, doit
+   * entrer dans le MAX comme un troisième candidat — jamais remplacer les
+   * deux planchers, jamais une somme partielle si un seul travail manque.
+   */
+  it("relit le Pricebook dossier par dossier quand chaque travail y est publié", () => {
+    const profile = buildCaseProfile({
+      intention: "belle_reliure",
+      hauteur: 24,
+      materiau: "demi_cuir",
+      cahiers: "desolidarises",
+      finitions: ["titre"],
+    });
+    const pricebookEntry = (workItemKey: string, customerPriceCents: number) => ({
+      id: `pb-${workItemKey}`,
+      workItemKey,
+      sizeClass: "standard" as const,
+      complexityClass: "standard" as const,
+      referenceBinderPayoutCents: 0,
+      customerPriceCents,
+      targetMarginCents: 0,
+      targetMarginBps: 0,
+      pricingMethod: "margin_target" as const,
+      version: 1,
+      status: "published" as const,
+      validatedAt: "2026-09-01T00:00:00.000Z",
+      validatedBy: null,
+      referenceCountAtValidation: 1,
+      notes: null,
+    });
+
+    // Somme des trois entrées = 70 000, au-dessus des 58 000 du plancher de
+    // marge : la référence doit gagner le MAX.
+    const withPricebook = suggestManagedPrice(profile, {
+      ...testReferences(),
+      pricebookEntries: [
+        pricebookEntry("demi_cuir", 45_000),
+        pricebookEntry("recouture_complete", 15_000),
+        pricebookEntry("dorure_titrage", 10_000),
+      ],
+    });
+    expect(withPricebook.pricebookReferenceCents).toBe(70_000);
+    expect(withPricebook.priceBoundBy).toBe("reference");
+    expect(withPricebook.suggestedCustomerPriceCents).toBe(70_000);
+
+    // Un seul travail non couvert dans le Pricebook : jamais une somme
+    // partielle — la référence disparaît, les planchers seuls décident,
+    // exactement comme sans câblage Pricebook du tout.
+    const partiallyMissing = suggestManagedPrice(profile, {
+      ...testReferences(),
+      pricebookEntries: [pricebookEntry("demi_cuir", 45_000)],
+    });
+    expect(partiallyMissing.pricebookReferenceCents).toBeNull();
+    expect(partiallyMissing.suggestedCustomerPriceCents).toBe(58_000);
+  });
+
   it("explique chaque ligne du calcul, avec le nombre d'ateliers derrière", () => {
     const profile = buildCaseProfile({
       intention: "belle_reliure",
@@ -105,7 +162,9 @@ describe("le moteur tarifaire", () => {
     });
     const result = suggestManagedPrice(profile, testReferences());
 
-    expect(result.lowEstimateCents).toBe(37_000); // 300 € de plancher terrain
+    // 300 € de plancher terrain + 80 € de contribution minimale (politique du
+    // 16 septembre 2026) l'emporte désormais sur le plancher de marge seul.
+    expect(result.lowEstimateCents).toBe(38_000);
     expect(result.highEstimateCents).toBe(58_000); // 470 € de plafond terrain
     expect(result.lowEstimateCents!).toBeLessThan(result.suggestedCustomerPriceCents!);
     expect(result.highEstimateCents!).toBeGreaterThan(result.suggestedCustomerPriceCents!);

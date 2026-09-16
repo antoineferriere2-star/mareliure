@@ -16,13 +16,16 @@ import { admin, assertAdmin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
-import { resolveServicePriceFloors } from "@/marketplace/pricing/pricebook";
+import { lookupPricebookReference, resolveServicePriceFloors } from "@/marketplace/pricing/pricebook";
+import { resolveWork } from "@/marketplace/pricing/workResolver";
 import { PRICING_MODES, type PricingMode } from "@/marketplace/pricing/pricingMode";
 import {
   buildCommercialProposalSnapshot,
   type DepositPolicyInput,
+  type PricebookProvenanceEntry,
 } from "@/marketplace/commercial/commercialProposal";
 import { loadCaseContext } from "./caseRepository.server";
+import { loadPricebook } from "./pricingRepository.server";
 import {
   acceptCommercialProposal as acceptCommercialProposalRow,
   insertCommercialProposal,
@@ -77,12 +80,49 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
       ? (row.pricing_mode as PricingMode)
       : "MANUAL_STUDY";
 
+    // Relue ici plutôt que devinée depuis marketplace_cases : la ligne ne
+    // conserve pas la décomposition par travail, mais le profil du dossier
+    // (answers) suffit à la reconstruire — resolveWork est déjà ce que
+    // suggestManagedPrice appelle pour produire workItemKeys/sizeClass/
+    // complexityClass, jamais un second calcul divergent.
+    const work = resolveWork(caseContext.profile);
+    const pricebookEntries = await loadPricebook(sb);
+    const pricebookMatch = lookupPricebookReference(
+      pricebookEntries,
+      work.workItemKeys,
+      work.sizeClass,
+      work.complexityClass,
+    );
+    const pricebookReferenceCents = pricebookMatch?.referenceCents ?? null;
+    const brandMultiplierBps = row.brand_multiplier_bps ?? 10_000;
+    // Même arrondi que applyBrandServicePricing (toujours vers le haut) :
+    // c'est ce que ce multiplicateur produirait sur la référence Pricebook,
+    // jamais une seconde règle d'arrondi pour la même marque.
+    const brandReferenceCents =
+      pricebookReferenceCents !== null
+        ? Math.ceil(
+            (pricebookReferenceCents * brandMultiplierBps) /
+              10_000 /
+              PRICING_POLICY.roundingIncrementCents,
+          ) * PRICING_POLICY.roundingIncrementCents
+        : null;
+    const pricebookProvenance: PricebookProvenanceEntry[] | null = pricebookMatch
+      ? pricebookMatch.matches.map((m) => ({
+          entryId: m.entry.id,
+          workItemKey: m.entry.workItemKey,
+          sizeClass: m.entry.sizeClass,
+          complexityClass: m.entry.complexityClass,
+          version: m.entry.version,
+          customerPriceCents: m.entry.customerPriceCents,
+        }))
+      : null;
+
     const floors = resolveServicePriceFloors({
       binderPayoutCents: row.binder_payout_cents,
       targetMarginBps: PRICING_POLICY.targetMarginBps,
       minimumContributionCents: PRICING_POLICY.minimumContributionCents,
       roundingIncrementCents: PRICING_POLICY.roundingIncrementCents,
-      referenceCents: null,
+      referenceCents: pricebookReferenceCents,
     });
 
     const deposit: DepositPolicyInput =
@@ -100,12 +140,10 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
       currency: row.pricing_currency,
       pricingMode,
       pricingRuleVersion: row.pricing_rule_version ?? PRICING_POLICY.version,
-      // Aucune correspondance Pricebook n'est encore relue dossier par
-      // dossier (voir pricing.types.ts#pricebookReferenceCents) — jamais
-      // devinée ici non plus.
-      pricebookReferenceCents: null,
-      brandMultiplierBps: row.brand_multiplier_bps ?? 10_000,
-      brandReferenceCents: null,
+      pricebookReferenceCents,
+      pricebookProvenance,
+      brandMultiplierBps,
+      brandReferenceCents,
       binderPayoutCents: row.binder_payout_cents,
       binderVatRateBps: null,
       targetMarginBps: PRICING_POLICY.targetMarginBps,

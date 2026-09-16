@@ -6,7 +6,7 @@
  * box. The admin decides, which is the whole point of a concierge MVP — and of
  * the CLAUDE.md rule that the system proposes and the human disposes.
  */
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -255,6 +255,12 @@ function PricingPanel({
  * client, et ce qu'il en reste — jamais de comptabilité Stripe ici, cette
  * phase ne fait que rendre lisible ce que le pricing a déjà décidé.
  */
+/**
+ * Six blocs, dans l'ordre où le prix se construit — jamais mélangés : le
+ * jour où quelque chose a l'air faux, il faut pouvoir dire lequel des six
+ * l'explique (brief du 16 septembre 2026, §5). Interne/admin uniquement :
+ * aucun client ne voit cet écran.
+ */
 function EconomicsPanel({
   row,
 }: {
@@ -265,6 +271,8 @@ function EconomicsPanel({
     service_price_cents: number | null;
     binder_payout_cents: number | null;
     tax_status: string;
+    pricing_pricebook_reference_cents: number | null;
+    pricing_price_bound_by: string | null;
   };
 }) {
   const brand = isMarketplaceBrand(row.brand) ? row.brand : "MA_RELIURE";
@@ -274,11 +282,26 @@ function EconomicsPanel({
       : null;
   const grossMarginRate =
     grossMarginCents !== null && row.service_price_cents ? grossMarginCents / row.service_price_cents : null;
+  const brandReferenceCents =
+    row.pricing_pricebook_reference_cents !== null && row.brand_multiplier_bps !== null
+      ? Math.round((row.pricing_pricebook_reference_cents * row.brand_multiplier_bps) / 10_000)
+      : null;
+  const boundByLabel: Record<string, string> = {
+    reference: "la référence Pricebook",
+    margin_floor: "le plancher de marge",
+    contribution_floor: "le plancher de contribution",
+  };
 
   const line = (label: string, value: string) => (
     <div className="flex items-center justify-between gap-3 py-1">
       <span className="text-muted-foreground">{label}</span>
       <span className="tabular-nums">{value}</span>
+    </div>
+  );
+  const group = (title: string, children: ReactNode) => (
+    <div className="mt-4 first:mt-0">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">{title}</p>
+      <div className="mt-1">{children}</div>
     </div>
   );
 
@@ -288,28 +311,74 @@ function EconomicsPanel({
         Économie
       </h2>
       <div className="mt-3 text-sm">
-        {line("Marque", MARKETPLACE_BRAND_CONFIGS[brand].displayName)}
-        {line(
-          "Multiplicateur de marque",
-          row.brand_multiplier_bps !== null ? `×${(row.brand_multiplier_bps / 10_000).toFixed(2)}` : "—",
-        )}
-        {row.base_service_price_cents !== null &&
-          line("Prix Ma Reliure avant marque (HT)", formatEuros(row.base_service_price_cents))}
-        {line(
-          "Rémunération atelier (HT)",
-          row.binder_payout_cents !== null ? formatEuros(row.binder_payout_cents) : "—",
-        )}
-        {line("Marge cible", `${(PRICING_POLICY.targetMarginBps / 100).toFixed(1)} %`)}
-        {line("Contribution minimale", formatEuros(PRICING_POLICY.minimumContributionCents))}
-        {line(
-          "Prix client service (HT)",
-          row.service_price_cents !== null ? formatEuros(row.service_price_cents) : "—",
-        )}
-        {grossMarginCents !== null &&
+        {group(
+          "Pricebook",
           line(
-            "Marge brute",
-            `${formatEuros(grossMarginCents)} · ${grossMarginRate !== null ? (grossMarginRate * 100).toFixed(1) : "—"} %`,
-          )}
+            "Référence (HT)",
+            row.pricing_pricebook_reference_cents !== null
+              ? formatEuros(row.pricing_pricebook_reference_cents)
+              : "Non couverte — aucune entrée publiée pour tous les travaux du dossier",
+          ),
+        )}
+
+        {group(
+          "Marque",
+          <>
+            {line("Marque", MARKETPLACE_BRAND_CONFIGS[brand].displayName)}
+            {line(
+              "Multiplicateur",
+              row.brand_multiplier_bps !== null ? `×${(row.brand_multiplier_bps / 10_000).toFixed(2)}` : "—",
+            )}
+            {brand === "FINE_BINDERY" && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Le ×1,30 est une politique de prix de marque (Brand Pricing Policy) — il ne
+                change ni ce que l'atelier reçoit, ni le transport.
+              </p>
+            )}
+            {brandReferenceCents !== null &&
+              line("Référence Pricebook × marque", formatEuros(brandReferenceCents))}
+          </>,
+        )}
+
+        {group(
+          "Atelier",
+          line(
+            "Rémunération (HT)",
+            row.binder_payout_cents !== null ? formatEuros(row.binder_payout_cents) : "—",
+          ),
+        )}
+
+        {group(
+          "Garde-fous",
+          <>
+            {line("Marge cible", `${(PRICING_POLICY.targetMarginBps / 100).toFixed(1)} %`)}
+            {line("Contribution minimale", formatEuros(PRICING_POLICY.minimumContributionCents))}
+            {row.pricing_price_bound_by &&
+              line(
+                "Prix retenu par",
+                boundByLabel[row.pricing_price_bound_by] ?? row.pricing_price_bound_by,
+              )}
+          </>,
+        )}
+
+        {group(
+          "Client",
+          line(
+            "Prix service suggéré (HT)",
+            row.service_price_cents !== null ? formatEuros(row.service_price_cents) : "—",
+          ),
+        )}
+
+        {group(
+          "Économie",
+          grossMarginCents !== null
+            ? line(
+                "Marge brute",
+                `${formatEuros(grossMarginCents)} · ${grossMarginRate !== null ? (grossMarginRate * 100).toFixed(1) : "—"} %`,
+              )
+            : line("Marge brute", "—"),
+        )}
+
         {line("Statut fiscal", row.tax_status === "TAX_REVIEW_REQUIRED" ? "À valider" : row.tax_status)}
       </div>
     </section>

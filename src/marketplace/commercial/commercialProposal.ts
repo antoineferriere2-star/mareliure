@@ -25,6 +25,22 @@ export type PriceBoundBy = "reference" | "margin_floor" | "contribution_floor";
 /** Une seule valeur possible aujourd'hui (brandPricing.ts) — le type reste ouvert pour la politique fiscale à venir. */
 export type CommercialTaxPolicy = "TAX_REVIEW_REQUIRED";
 
+/**
+ * D'où vient `pricebookReferenceCents` : quelles entrées Pricebook
+ * publiées, à quelle version, ont produit ce total — pour pouvoir expliquer
+ * a posteriori "prix Pricebook Ma Reliure → coefficient de marque → prix
+ * client" sans recalculer (§3 du brief du 16 septembre 2026). `null` quand
+ * `pricebookReferenceCents` l'est aussi.
+ */
+export interface PricebookProvenanceEntry {
+  entryId: string;
+  workItemKey: string;
+  sizeClass: string;
+  complexityClass: string;
+  version: number;
+  customerPriceCents: number;
+}
+
 export interface ShippingInput {
   outboundCents: number;
   returnCents: number;
@@ -58,6 +74,7 @@ export interface CommercialProposalSnapshotInput {
    * à deviner ici.
    */
   pricebookReferenceCents: number | null;
+  pricebookProvenance: PricebookProvenanceEntry[] | null;
   brandMultiplierBps: number;
   /** `pricebookReferenceCents × brandMultiplierBps`, quand le premier existe. */
   brandReferenceCents: number | null;
@@ -96,6 +113,7 @@ export interface CommercialProposalSnapshot {
   pricingRuleVersion: string;
 
   pricebookReferenceCents: number | null;
+  pricebookProvenance: PricebookProvenanceEntry[] | null;
   brandMultiplierBps: number;
   brandReferenceCents: number | null;
 
@@ -179,6 +197,7 @@ export function buildCommercialProposalSnapshot(
     pricingMode: input.pricingMode,
     pricingRuleVersion: input.pricingRuleVersion,
     pricebookReferenceCents: input.pricebookReferenceCents,
+    pricebookProvenance: input.pricebookProvenance,
     brandMultiplierBps: input.brandMultiplierBps,
     brandReferenceCents: input.brandReferenceCents,
     binderPayoutCents: input.binderPayoutCents,

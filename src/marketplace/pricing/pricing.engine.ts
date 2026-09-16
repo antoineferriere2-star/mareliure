@@ -32,7 +32,7 @@ import type {
   PricingValidation,
   ReferenceLookup,
 } from "./pricing.types";
-import { marginOf, resolveServicePriceFloors } from "./pricebook";
+import { lookupPricebookReference, marginOf, resolveServicePriceFloors } from "./pricebook";
 import type { RateAggregate } from "./rateCard";
 import { resolveWork } from "./workResolver";
 import type { CaseProfile } from "@/marketplace/cases/caseProfile";
@@ -197,18 +197,27 @@ export function suggestManagedPrice(
       components,
     );
 
-  // Le prix ne descend plus jamais sous le plus haut de deux planchers
-  // indépendants — marge cible et contribution minimale absolue (audit du
+  // La référence Pricebook du dossier, quand une entrée publiée couvre
+  // chacun de ses travaux (voir lookupPricebookReference) — `null` sinon,
+  // jamais une somme partielle qui aurait l'air complète.
+  const pricebookMatch = lookupPricebookReference(
+    references.pricebookEntries ?? [],
+    work.workItemKeys,
+    work.sizeClass,
+    work.complexityClass,
+  );
+
+  // Le prix ne descend plus jamais sous le plus haut de trois candidats
+  // indépendants — la référence Pricebook quand elle existe, un plancher de
+  // marge cible et un plancher de contribution minimale absolue (audit du
   // 15 septembre 2026, §5-6) — là où seul le plancher de marge s'appliquait
-  // jusqu'ici. `referenceCents: null` : aucune correspondance Pricebook
-  // publiée n'est encore relue dossier par dossier (voir le docstring de
-  // `pricebookReferenceCents`, pricing.types.ts).
+  // jusqu'ici.
   const floors = resolveServicePriceFloors({
     binderPayoutCents: payout,
     targetMarginBps: policy.targetMarginBps,
     minimumContributionCents: policy.minimumContributionCents,
     roundingIncrementCents: policy.roundingIncrementCents,
-    referenceCents: null,
+    referenceCents: pricebookMatch?.referenceCents ?? null,
   });
   const customerPrice = floors.priceCents;
   const validation = validateManagedPrice(customerPrice, payout, policy);

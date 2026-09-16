@@ -1,6 +1,7 @@
 import type { CaseProfile } from "@/marketplace/cases/caseProfile";
 import type { ComplexityClass, SizeClass } from "./catalog";
 import type { PricingConfidence } from "./confidence";
+import type { PricebookEntry } from "./pricebook";
 import type { RateAggregate } from "./rateCard";
 
 export type { PricingConfidence };
@@ -95,6 +96,13 @@ export interface PricingValidation {
 /** Ce que le moteur sait du marché au moment où il chiffre. */
 export interface ReferenceLookup {
   aggregates: readonly RateAggregate[];
+  /**
+   * Les entrées Pricebook publiées, pour `pricebookReferenceCents`. Optionnel
+   * et par défaut vide plutôt que `null` : un appelant qui ne le fournit pas
+   * (encore) obtient exactement le comportement d'avant ce câblage — aucune
+   * référence, jamais une supposition.
+   */
+  pricebookEntries?: readonly PricebookEntry[];
 }
 
 export type PricingInput = Pick<
