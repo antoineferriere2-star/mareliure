@@ -63,6 +63,7 @@ import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
 import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
 import { Route as AuthenticatedPortalTeamRouteImport } from './routes/_authenticated/portal/team'
+import { Route as ApiMarketplaceStripeHealthRouteImport } from './routes/api/marketplace/stripe-health'
 import { Route as ApiMarketplaceStripeWebhookRouteImport } from './routes/api/marketplace/stripe-webhook'
 import { Route as ApiPublicAnalyzeSiteRouteImport } from './routes/api/public/analyze-site'
 import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
@@ -388,6 +389,12 @@ const AuthenticatedPortalTeamRoute = AuthenticatedPortalTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedPortalRouteRoute,
 } as any)
+const ApiMarketplaceStripeHealthRoute =
+  ApiMarketplaceStripeHealthRouteImport.update({
+    id: '/api/marketplace/stripe-health',
+    path: '/api/marketplace/stripe-health',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMarketplaceStripeWebhookRoute =
   ApiMarketplaceStripeWebhookRouteImport.update({
     id: '/api/marketplace/stripe-webhook',
@@ -628,6 +635,7 @@ export interface FileRoutesByFullPath {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
   '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
@@ -710,6 +718,7 @@ export interface FileRoutesByTo {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
   '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
@@ -800,6 +809,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/_authenticated/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
   '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
@@ -890,6 +900,7 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/stripe-health'
     | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
@@ -972,6 +983,7 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/stripe-health'
     | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
@@ -1061,6 +1073,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/settings'
     | '/_authenticated/portal/setup'
     | '/_authenticated/portal/team'
+    | '/api/marketplace/stripe-health'
     | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
@@ -1132,6 +1145,7 @@ export interface RootRouteChildren {
   InvitationAtelierTokenRoute: typeof InvitationAtelierTokenRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
   ProjectSummaryAccessTokenRoute: typeof ProjectSummaryAccessTokenRoute
+  ApiMarketplaceStripeHealthRoute: typeof ApiMarketplaceStripeHealthRoute
   ApiMarketplaceStripeWebhookRoute: typeof ApiMarketplaceStripeWebhookRoute
   ApiPublicAnalyzeSiteRoute: typeof ApiPublicAnalyzeSiteRoute
   ApiPublicBuildPublicIntakeRoute: typeof ApiPublicBuildPublicIntakeRoute
@@ -1528,6 +1542,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/team'
       preLoaderRoute: typeof AuthenticatedPortalTeamRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/api/marketplace/stripe-health': {
+      id: '/api/marketplace/stripe-health'
+      path: '/api/marketplace/stripe-health'
+      fullPath: '/api/marketplace/stripe-health'
+      preLoaderRoute: typeof ApiMarketplaceStripeHealthRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/marketplace/stripe-webhook': {
       id: '/api/marketplace/stripe-webhook'
@@ -1993,6 +2014,7 @@ const rootRouteChildren: RootRouteChildren = {
   InvitationAtelierTokenRoute: InvitationAtelierTokenRoute,
   MPublicTokenRoute: MPublicTokenRoute,
   ProjectSummaryAccessTokenRoute: ProjectSummaryAccessTokenRoute,
+  ApiMarketplaceStripeHealthRoute: ApiMarketplaceStripeHealthRoute,
   ApiMarketplaceStripeWebhookRoute: ApiMarketplaceStripeWebhookRoute,
   ApiPublicAnalyzeSiteRoute: ApiPublicAnalyzeSiteRoute,
   ApiPublicBuildPublicIntakeRoute: ApiPublicBuildPublicIntakeRoute,
