@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { buildCheckoutLineItems, checkoutEligibility } from "./checkoutPlan";
+import {
+  buildCheckoutLineItems,
+  checkoutEligibility,
+  statementDescriptorSuffixForBrand,
+} from "./checkoutPlan";
 
 const PRODUCT_IDS = {
   maReliureService: "prod_ma_reliure",
@@ -58,5 +62,28 @@ describe("buildCheckoutLineItems", () => {
     expect(lines[0].productId).toBe("prod_fine_bindery");
     // Le module ne connaît aucun coefficient : 65 000 est déjà le résultat final (§11).
     expect(lines[0].unitAmountCents).toBe(65_000);
+  });
+});
+
+/**
+ * Correction technique de l'utilisateur (16 septembre 2026) : pour les
+ * paiements carte, Stripe combine `statement_descriptor_suffix` avec le
+ * préfixe raccourci du compte — jamais `PaymentIntent.statement_descriptor`
+ * seul. Ce suffixe doit toujours venir du brand de la proposition, jamais
+ * du navigateur.
+ */
+describe("statementDescriptorSuffixForBrand", () => {
+  it("un suffixe distinct par marque, sans caractères interdits ni accents", () => {
+    expect(statementDescriptorSuffixForBrand("MA_RELIURE")).toBe("MARELIURE");
+    expect(statementDescriptorSuffixForBrand("FINE_BINDERY")).toBe("FINEBINDERY");
+  });
+
+  it("tient sous la limite Stripe de 22 caractères combinés avec le préfixe cible OPPE", () => {
+    const PREFIX = "OPPE";
+    for (const brand of ["MA_RELIURE", "FINE_BINDERY"] as const) {
+      const combined = `${PREFIX}*${statementDescriptorSuffixForBrand(brand)}`;
+      expect(combined.length).toBeLessThanOrEqual(22);
+      expect(combined).toMatch(/^[A-Z*]+$/); // que des lettres majuscules et le séparateur
+    }
   });
 });

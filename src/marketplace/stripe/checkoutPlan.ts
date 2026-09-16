@@ -88,3 +88,22 @@ export function buildCheckoutLineItems(
   }
   return lines;
 }
+
+/**
+ * Le suffixe de relevé bancaire par marque (paiements carte) — jamais
+ * fourni par le navigateur, toujours dérivé côté serveur de
+ * `commercialProposal.brand` (brief du 16 septembre 2026, correction
+ * technique de l'utilisateur : `PaymentIntent.statement_descriptor` ne
+ * s'applique pas aux cartes, Stripe impose `statement_descriptor_suffix`,
+ * combiné par Stripe avec le préfixe raccourci du compte
+ * — cible « OPPE » — pour donner par exemple `OPPE* MARELIURE`).
+ *
+ * Contraintes Stripe (préfixe + suffixe) : 22 caractères combinés au
+ * maximum, au moins une lettre, aucun caractère parmi `< > \ ' "`, mis en
+ * majuscules automatiquement. Avec le préfixe cible « OPPE » (4
+ * caractères) : `OPPE* MARELIURE` = 15 caractères, `OPPE* FINEBINDERY` =
+ * 17 caractères — les deux tiennent largement sous la limite.
+ */
+export function statementDescriptorSuffixForBrand(brand: MarketplaceBrand): string {
+  return brand === "FINE_BINDERY" ? "FINEBINDERY" : "MARELIURE";
+}

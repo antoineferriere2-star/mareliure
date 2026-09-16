@@ -29,7 +29,11 @@ import {
   loadCommercialPaymentState,
   recordCheckoutSession,
 } from "@/marketplace/services/commercialPaymentRepository.server";
-import { buildCheckoutLineItems, checkoutEligibility } from "./checkoutPlan";
+import {
+  buildCheckoutLineItems,
+  checkoutEligibility,
+  statementDescriptorSuffixForBrand,
+} from "./checkoutPlan";
 import { getStripeProductIds } from "./stripeConfig.server";
 import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
 
@@ -132,6 +136,12 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
           brand: proposal.brand,
         },
         payment_intent_data: {
+          // Le suffixe de relevé bancaire par marque — jamais fourni par
+          // le navigateur, dérivé ici du brand de la proposition acceptée
+          // (voir checkoutPlan.ts). Combiné par Stripe avec le préfixe
+          // raccourci du compte ("OPPE", à poser côté Dashboard) pour
+          // donner par exemple "OPPE* MARELIURE" sur un paiement carte.
+          statement_descriptor_suffix: statementDescriptorSuffixForBrand(proposal.brand),
           metadata: {
             case_id: data.caseId,
             proposal_id: proposal.id,
