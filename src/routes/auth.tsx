@@ -107,9 +107,20 @@ function AuthPage() {
   );
 
   useEffect(() => {
+    // La route est `ssr: false` : le premier montage côté client peut être
+    // défait avant que cette promesse ne résolve (StrictMode en double
+    // montage, ou le remplacement du rendu provisoire par le vrai). Sans ce
+    // garde, `goToHomeRoute` — qui appelle `setRouting`/`setAccessError` —
+    // s'exécutait parfois sur une instance déjà démontée : "Can't perform a
+    // React state update on a component that hasn't mounted yet", visible en
+    // production sous la forme d'une erreur d'hydratation React #418.
+    let cancelled = false;
     supabase.auth.getSession().then(({ data }) => {
-      if (data.session) void goToHomeRoute();
+      if (!cancelled && data.session) void goToHomeRoute();
     });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
