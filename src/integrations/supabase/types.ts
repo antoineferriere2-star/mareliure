@@ -1210,6 +1210,9 @@ export type Database = {
           response_rate: number | null
           status: string
           stripe_account_id: string | null
+          stripe_connect_charges_enabled: boolean
+          stripe_connect_onboarded_at: string | null
+          stripe_connect_payouts_enabled: boolean
           training: string | null
           updated_at: string
           user_id: string | null
@@ -1235,6 +1238,9 @@ export type Database = {
           response_rate?: number | null
           status?: string
           stripe_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean
+          stripe_connect_onboarded_at?: string | null
+          stripe_connect_payouts_enabled?: boolean
           training?: string | null
           updated_at?: string
           user_id?: string | null
@@ -1260,6 +1266,9 @@ export type Database = {
           response_rate?: number | null
           status?: string
           stripe_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean
+          stripe_connect_onboarded_at?: string | null
+          stripe_connect_payouts_enabled?: boolean
           training?: string | null
           updated_at?: string
           user_id?: string | null
@@ -1505,6 +1514,44 @@ export type Database = {
             columns: ["referred_binder_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_commercial_proposal_payments: {
+        Row: {
+          created_at: string
+          paid_at: string | null
+          proposal_id: string
+          stripe_checkout_session_id: string | null
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          paid_at?: string | null
+          proposal_id: string
+          stripe_checkout_session_id?: string | null
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          paid_at?: string | null
+          proposal_id?: string
+          stripe_checkout_session_id?: string | null
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_commercial_proposal_payments_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: true
+            referencedRelation: "marketplace_commercial_proposals"
             referencedColumns: ["id"]
           },
         ]
@@ -2034,6 +2081,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketplace_stripe_webhook_events: {
+        Row: {
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          received_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+          type?: string
+        }
+        Relationships: []
       }
       marketplace_work_items: {
         Row: {

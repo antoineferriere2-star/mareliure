@@ -63,6 +63,7 @@ import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
 import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
 import { Route as AuthenticatedPortalTeamRouteImport } from './routes/_authenticated/portal/team'
+import { Route as ApiMarketplaceStripeWebhookRouteImport } from './routes/api/marketplace/stripe-webhook'
 import { Route as ApiPublicAnalyzeSiteRouteImport } from './routes/api/public/analyze-site'
 import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
 import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
@@ -387,6 +388,12 @@ const AuthenticatedPortalTeamRoute = AuthenticatedPortalTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedPortalRouteRoute,
 } as any)
+const ApiMarketplaceStripeWebhookRoute =
+  ApiMarketplaceStripeWebhookRouteImport.update({
+    id: '/api/marketplace/stripe-webhook',
+    path: '/api/marketplace/stripe-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAnalyzeSiteRoute = ApiPublicAnalyzeSiteRouteImport.update({
   id: '/api/public/analyze-site',
   path: '/api/public/analyze-site',
@@ -621,6 +628,7 @@ export interface FileRoutesByFullPath {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
@@ -702,6 +710,7 @@ export interface FileRoutesByTo {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
@@ -791,6 +800,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/_authenticated/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
@@ -880,6 +890,7 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
@@ -961,6 +972,7 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
@@ -1049,6 +1061,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/settings'
     | '/_authenticated/portal/setup'
     | '/_authenticated/portal/team'
+    | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
@@ -1119,6 +1132,7 @@ export interface RootRouteChildren {
   InvitationAtelierTokenRoute: typeof InvitationAtelierTokenRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
   ProjectSummaryAccessTokenRoute: typeof ProjectSummaryAccessTokenRoute
+  ApiMarketplaceStripeWebhookRoute: typeof ApiMarketplaceStripeWebhookRoute
   ApiPublicAnalyzeSiteRoute: typeof ApiPublicAnalyzeSiteRoute
   ApiPublicBuildPublicIntakeRoute: typeof ApiPublicBuildPublicIntakeRoute
   ApiPublicBuildRuntimeRoute: typeof ApiPublicBuildRuntimeRoute
@@ -1514,6 +1528,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/team'
       preLoaderRoute: typeof AuthenticatedPortalTeamRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/api/marketplace/stripe-webhook': {
+      id: '/api/marketplace/stripe-webhook'
+      path: '/api/marketplace/stripe-webhook'
+      fullPath: '/api/marketplace/stripe-webhook'
+      preLoaderRoute: typeof ApiMarketplaceStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/public/analyze-site': {
       id: '/api/public/analyze-site'
@@ -1972,6 +1993,7 @@ const rootRouteChildren: RootRouteChildren = {
   InvitationAtelierTokenRoute: InvitationAtelierTokenRoute,
   MPublicTokenRoute: MPublicTokenRoute,
   ProjectSummaryAccessTokenRoute: ProjectSummaryAccessTokenRoute,
+  ApiMarketplaceStripeWebhookRoute: ApiMarketplaceStripeWebhookRoute,
   ApiPublicAnalyzeSiteRoute: ApiPublicAnalyzeSiteRoute,
   ApiPublicBuildPublicIntakeRoute: ApiPublicBuildPublicIntakeRoute,
   ApiPublicBuildRuntimeRoute: ApiPublicBuildRuntimeRoute,
