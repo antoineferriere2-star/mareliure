@@ -172,41 +172,57 @@ commerciale » liste les versions figées d'un dossier et permet de créer une
 nouvelle version ou d'accepter la dernière proposée — réservé à
 l'administration dans cette phase (§9).
 
-## 9. Stripe — état réel, rien construit dans cette phase
+## 9. Stripe — live, Phase 1 (Products, Checkout, webhook, Connect préparés)
 
-**Aucune intégration Stripe n'existe pour Ma Reliure/Fine Bindery.** Le
-seul client Stripe du dépôt (`src/lib/stripe.server.ts`) passe par la
-gateway Lovable et est scopé au projet Supabase de Métré Build — le Worker
-`mareliure` n'a aucun secret Stripe configuré. Il n'y a ni Checkout, ni
-Stripe Connect, ni webhook, ni transfert atelier pour la marketplace.
-« Accepter » une proposition commerciale, dans cette phase, est une action
-admin (équivalent de `marketplace_validate_pricing` pour la nouvelle
-couche) — aucun parcours client ne déclenche encore une acceptation ni un
-paiement lui-même.
+**Décision explicite de l'utilisateur le 16 septembre 2026 : NO SANDBOX.**
+Le compte live `acct_1S530YKEMCwyPCrw` (« Oppe », entreprise française,
+déjà utilisée par Métré Build, AccessBot, BatiScores, MuWo et Securicom —
+voir l'audit complet dans `CODEX_HANDOFF.md`) est le compte de production
+retenu, avec des garde-fous stricts : aucun faux paiement, aucune fausse
+facture, aucun transfert de test, aucun client fictif.
 
-Le connecteur MCP Stripe a été relié à ce compte le 15 septembre 2026
-(accès de préparation) mais aucune capacité d'écriture n'a été utilisée :
-aucun Product, Checkout, compte Connect ou transfert n'a été créé.
+**Client Stripe dédié** : `src/marketplace/stripe/stripeClient.server.ts`,
+séparé de `src/lib/stripe.server.ts` (gateway Lovable, abonnements SaaS
+Métré — aucune capacité Connect, aucun rapport avec la marketplace). Une
+vraie clé secrète (`STRIPE_SECRET_KEY`), jamais la passerelle Lovable.
 
-**Audit read-only du 16 septembre 2026 — arrêté avant de lire quoi que ce
-soit.** `list_available_accounts_or_orgs` ne renvoie qu'un seul compte :
-`acct_1S530YKEMCwyPCrw` (« oppe.fr »), **`livemode: true`** — aucun compte
-sandbox/test n'est exposé par ce connecteur. Deux problèmes, pas un seul :
-la demande explicite portait sur le Sandbox/Test, jamais sur du live ; et
-rien ne confirme que ce compte Stripe (« oppe.fr ») soit même celui de Ma
-Reliure/Fine Bindery plutôt qu'un compte personnel ou d'un autre projet
-(voir §K de `CODEX_HANDOFF.md` : plusieurs organisations GitHub coexistent
-déjà pour des raisons similaires). Lire ses Products/Checkout/Connect en
-serait une hypothèse non vérifiée. Aucun appel `stripe_api_read` n'a donc
-été fait — à reprendre uniquement après que l'utilisateur ait confirmé
-quel compte/mode le connecteur doit exposer.
+**Construit** :
+- Trois Products permanents créés (idempotents par metadata) :
+  `prod_VGowujXB5VAtLN` (Ma Reliure), `prod_VGoxLIJgDWDx7c` (Fine
+  Bindery), `prod_VGoxkLqYmwcFm6` (Transport) — jamais de Price Stripe
+  fixe, le montant reste toujours `price_data` dynamique depuis le
+  snapshot commercial. `scripts/setupStripeProducts.ts` referait la même
+  recherche-puis-création.
+- `createCommercialCheckoutSession` (`checkoutSession.server.ts`) :
+  recharge la proposition **acceptée**, seule source du montant — jamais
+  une valeur du navigateur. `checkoutPlan.ts` (pur, testé) bloque tant que
+  `tax_policy` vaut `TAX_REVIEW_REQUIRED` (toujours vrai aujourd'hui,
+  aucun moteur fiscal construit) : **le premier vrai paiement ne peut donc
+  pas encore avoir lieu**, par construction, pas par bug.
+- Webhook `POST /api/marketplace/stripe-webhook` : signature vérifiée
+  avant toute lecture, idempotent par `event.id`
+  (`marketplace_stripe_webhook_events`), ignore tout paiement sans notre
+  metadata (les cinq autres activités sur ce même compte). **Pas encore
+  enregistré côté Stripe** (`STRIPE_SECRET_KEY` absent, voir
+  `CODEX_HANDOFF.md`, chantier Stripe, point 6).
+- État de paiement dans `marketplace_commercial_proposal_payments`, une
+  table séparée plutôt que des colonnes sur `marketplace_commercial_proposals`
+  : cette dernière reste rigoureusement immuable après acceptation (Phase
+  1), payer n'est pas un terme commercial.
+- Connect Express préparé (`binderConnect.server.ts`, réutilise
+  `marketplace_binders.stripe_account_id`) — jamais appelé, aucun
+  Connected Account créé. Aucun Connected Account n'existait déjà sur ce
+  compte (`GetAccounts` → liste vide).
 
-La Phase Stripe (Products permanents, Separate Charges and Transfers,
-80/20, webhooks) reste à auditer et cadrer séparément, en particulier la
-question laissée ouverte : garder le client `stripe.server.ts`/gateway
-Lovable existant, ou en établir un propre à la marketplace — décision à
-prendre au début de cette phase, pas avant, et seulement une fois le bon
-compte/mode confirmé.
+**Non construit / décisions ouvertes** :
+- Politique fiscale concrète (`FR_STANDARD`…) — bloque le premier
+  paiement tant qu'elle n'existe pas.
+- Descripteur de relevé bancaire : ce compte partagé affiche "SECURICOM"
+  par défaut pour un Checkout ponctuel (le `statement_descriptor` d'un
+  Product ne s'applique qu'aux abonnements) — décision à prendre.
+- Invoicing Stripe (numérotation déjà partagée avec d'autres activités,
+  non touchée sans validation), UI cliente "Payer" (aucun bouton ne
+  déclenche encore `createCommercialCheckoutSession`).
 
 ## 10. Ce qui n'a pas changé, volontairement
 

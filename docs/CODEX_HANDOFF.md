@@ -790,22 +790,245 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 16 septembre 2026 (après-midi)
+**Date :** 16 septembre 2026 (soirée)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `5ea6b210` (contribution minimale 80 € + pricebookReferenceCents
-câblé), sur `bdb4ddce` (correctif inscription atelier / mot de passe
-client), sur `2c1af9ae`, `af3aa753` (garde d'effet `/auth`), sur `e3c92bf6`
-(modèle commercial Phase 1), sur `2161b556` (traduction du Brief dans
-l'espace client), sur `09626619`, `64446601` (SEO/GEO), `a2682b0d` (hook
-e-mail Supabase), `c6c4282d`, `b924c9ef` (pages légales Fine Bindery),
-`611a2e53` → `02186112` (Phases B à F Fine Bindery).
+**Commit :** `408ee54c` (intégration Stripe live — Checkout/webhook/Connect,
+préparés, aucun vrai paiement), sur `dacce714`, sur `5ea6b210` (contribution
+minimale 80 € + pricebookReferenceCents câblé), sur `bdb4ddce` (correctif
+inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
+(garde d'effet `/auth`), sur `e3c92bf6` (modèle commercial Phase 1), sur
+`2161b556` (traduction du Brief dans l'espace client), sur `09626619`,
+`64446601` (SEO/GEO), `a2682b0d` (hook e-mail Supabase), `c6c4282d`,
+`b924c9ef` (pages légales Fine Bindery), `611a2e53` → `02186112` (Phases B
+à F Fine Bindery).
 
 **Production : déployée le 16 septembre 2026.** Worker `mareliure` version
-`6d215340-ac74-4d8c-9ad5-ce4472d46413`, via `npm run deploy:mareliure`.
-Migrations `20260916100000` et `20260916110000` toutes deux appliquées
-(`supabase db push --dry-run` → `upToDate: true`).
+`edc5d2de-7c3c-469a-aa00-52aafc975b4a`, via `npm run deploy:mareliure`.
+Migrations `20260916100000`, `20260916110000` et `20260916120000` toutes
+appliquées (`supabase db push --dry-run` → `upToDate: true`).
+
+---
+
+### Chantier de cette session — Stripe live, Phase 1 (audit, Products, Checkout/webhook/Connect préparés)
+
+Décision explicite de l'utilisateur, après le constat de la session
+précédente (connecteur MCP Stripe = compte live, pas de sandbox) :
+**« NO SANDBOX. Nous travaillons directement sur le compte Stripe LIVE
+actuellement connecté : `acct_1S530YKEMCwyPCrw`. »** Avec garde-fous stricts :
+aucun faux paiement, aucune fausse facture, aucun transfert de test, aucun
+client fictif — le premier vrai paiement devra correspondre à une vraie
+commande.
+
+**1. Audit live read-only, complet (rien modifié pendant l'audit).**
+`acct_1S530YKEMCwyPCrw` :
+
+- **Identité réelle : « Oppe », private_corporation, France** (705 route
+  du Montclair, 24160 Clermont d'Excideuil), TVA/SIRET fournis, compte
+  `standard` (`controller.type: account`), `charges_enabled`/
+  `payouts_enabled: true`, capacités carte/Klarna/Bancontact/etc. actives,
+  `transfers: active` (Connect utilisable). Devise par défaut `eur`, pays
+  `FR`. Compte bancaire externe QONTO (FR) rattaché.
+- **Ce compte sert déjà, réellement et en direct, au moins cinq autres
+  activités** : Métré Build (abonnements SaaS — les Products "Métré
+  Business/Launch/Growth/Pro", webhooks "Created by Lovable" pointant vers
+  `lovable.app`/`lovable.dev` et un *quatrième* projet Supabase,
+  `lmzyhtpqzdkefgshnbqm`), AccessBot Pro / Audit One Shot (audit RGAA),
+  BatiScores Premium (avec son propre webhook Supabase
+  `zmhlwuwpnoawtnryqvdc`), MuWo (annonces de mission BTP — abonnements
+  Starter/Pro/Business, un vrai client `contact@muwo.fr`), Securicom (BTP
+  — `business_profile.name: "Oppe"`, `support_email:
+  contact@securicom.shop`, **`statement_descriptor_prefix: "SECURICOM"`**),
+  Axelo (`axelo.nanocorp.app`). Des factures réelles existent et ont été
+  payées (ex. 120 € TTC, `in_1SBJVGKEMCwyPCrwPCac6BD7`). Numérotation de
+  facture **partagée** entre toutes ces activités (préfixe `W2WNQYLL-000X`
+  constaté sur deux factures de produits différents) — **non touchée**,
+  conformément à l'instruction explicite.
+- **`GetAccounts` (Connected Accounts) : liste vide.** Aucun Connect
+  Standard/Express/Custom n'existe encore sur ce compte — table rase pour
+  Ma Reliure/Fine Bindery, aucun conflit possible.
+- **`tax.settings` : Stripe Tax actif** (`status: active`,
+  `tax_behavior: inferred_by_currency`), déjà utilisé par les autres
+  produits. Rien activé pour la marketplace dans ce chantier — `tax_policy`
+  reste `TAX_REVIEW_REQUIRED` côté application, voir point 5.
+- **Balance** : 0 € disponible, 0 € en attente (paiements quotidiens,
+  délai 3 jours) — rien d'anormal.
+- **Conclusion de l'audit, explicitement acceptée par l'utilisateur** :
+  aucune anomalie bloquante. « Oppe » est déjà l'entité qui facture
+  plusieurs marques distinctes (Métré, Securicom, MuWo, BatiScores,
+  AccessBot) sous ce même compte Stripe — Ma Reliure/Fine Bindery s'y
+  ajoutent comme une marque de plus, pas un cas nouveau. **Point ouvert,
+  non résolu par ce chantier** : le descripteur de relevé bancaire par
+  défaut du compte est "SECURICOM" ; un Product a un `statement_descriptor`
+  propre mais **ce champ ne s'applique qu'aux paiements par abonnement**
+  (confirmé via `stripe_api_details`), pas à un Checkout `mode: payment`
+  ponctuel comme le nôtre — un client Ma Reliure/Fine Bindery verrait donc
+  aujourd'hui "SECURICOM" sur son relevé bancaire, sauf action
+  complémentaire (`payment_intent_data.statement_descriptor_suffix` sur le
+  Checkout, à décider avec l'utilisateur — pas fait, pas anodin).
+
+**2. Trois Products live créés, idempotents.** Recherchés d'abord par
+metadata (`GetProducts`, aucun `brand=MA_RELIURE`/`FINE_BINDERY` ni
+`product_role=SHIPPING` existant) puis créés :
+
+| Rôle | Product ID | Metadata |
+| --- | --- | --- |
+| Ma Reliure Service | `prod_VGowujXB5VAtLN` | `product_role=CUSTOMER_SERVICE`, `brand=MA_RELIURE` |
+| Fine Bindery Service | `prod_VGoxLIJgDWDx7c` | `product_role=CUSTOMER_SERVICE`, `brand=FINE_BINDERY` |
+| Transport / Shipping | `prod_VGoxkLqYmwcFm6` | `product_role=SHIPPING` |
+
+Aucun Price fixe créé — le montant reste toujours `price_data` dynamique,
+jamais un tarif Stripe (§6 du brief). `scripts/setupStripeProducts.ts`
+(nouveau) referait exactement cette recherche-puis-création s'il fallait le
+rejouer — **non exécuté par ce script lui-même** (il a besoin de
+`STRIPE_SECRET_KEY`, que je n'ai pas et ne dois pas demander en clair —
+voir point 6) ; les trois Products ont été créés directement via le
+connecteur MCP, en lecture-avant-écriture (`GetProducts` avant chaque
+création). Les trois IDs sont posés comme secrets du Worker Cloudflare
+(`STRIPE_PRODUCT_MA_RELIURE_SERVICE`/`_FINE_BINDERY_SERVICE`/`_SHIPPING`) —
+jamais en dur dans un composant React.
+
+**3. Checkout — code prêt, jamais déclenché.**
+`src/marketplace/stripe/checkoutSession.server.ts`
+(`createCommercialCheckoutSession`) recharge le dossier → sa proposition
+commerciale **acceptée** → l'état de paiement, vérifie l'autorisation
+(`canViewCase`, client propriétaire ou admin), puis construit les lignes
+Stripe à partir de ce snapshot immuable — jamais un montant venu du
+navigateur (§10). `checkoutPlan.ts` (pur, testé,
+`checkoutPlan.test.ts`) porte le fail-closed : **bloque tant que
+`tax_policy` vaut `TAX_REVIEW_REQUIRED`** — c'est-à-dire toujours
+aujourd'hui, puisqu'aucun moteur fiscal n'a jamais été construit. C'est
+voulu (§12, « mieux vaut bloquer un Checkout que facturer avec une
+mauvaise TVA ») mais ça veut dire concrètement : **le premier vrai paiement
+ne peut pas encore avoir lieu tant qu'une politique fiscale concrète
+n'existe pas** — voir Next recommended task. Idempotent (une session déjà
+créée pour une proposition est réutilisée, `idempotencyKey` par
+proposition) ; aucune UI cliente ne l'appelle encore (pas de bouton
+« payer »).
+
+**4. Webhook — route déployée, endpoint live PAS ENCORE créé côté
+Stripe.** `POST /api/marketplace/stripe-webhook`
+(`webhookHandler.server.ts`) vérifie la signature avant de rien lire,
+journalise chaque `event.id` une seule fois
+(`marketplace_stripe_webhook_events`, migration `20260916120000`) puis
+délègue à `decideWebhookAction` (pur, testé, `webhookEvents.test.ts`) :
+`checkout.session.completed`/`payment_intent.succeeded` avec **notre**
+metadata marquent la proposition payée
+(`marketplace_commercial_proposal_payments`, table séparée exprès — voir
+point 7) ; les autres événements du périmètre (`payment_intent.
+payment_failed`, `charge.refunded`, `charge.dispute.created`,
+`invoice.paid`, `invoice.payment_failed`) sont journalisés dans
+`marketplace_events` ; tout paiement sans notre metadata (Métré/BatiScores/
+MuWo/Securicom/Axelo, sur ce même compte) est explicitement ignoré. Vérifié
+en production : `POST` sans signature → 400 propre, pas de crash. **Pas
+encore enregistré côté Stripe** (`PostWebhookEndpoints` jamais appelé) :
+l'endpoint échouerait à chaque appel réel tant que `STRIPE_SECRET_KEY`
+n'est pas posé (voir point 6) — inutile de le créer avant, ça ne ferait que
+générer des échecs de livraison. À faire dès que ce secret existe.
+
+**5. Fiscalité — non traitée, bloque le premier paiement par construction.**
+Voir point 3 : `tax_policy` reste `TAX_REVIEW_REQUIRED` pour toute
+proposition existante, et `checkoutEligibility` refuse tout Checkout tant
+que c'est le cas. Aucune politique fiscale concrète (`FR_STANDARD`,
+`EU_CONSUMER`…) n'a été construite dans ce chantier — c'était hors périmètre
+du brief Stripe, mais c'est désormais le blocage réel avant tout premier
+paiement.
+
+**6. Ce que je n'ai pas pu faire — clé secrète et webhook signing secret.**
+`STRIPE_SECRET_KEY` (une vraie clé secrète Stripe) n'existe nulle part
+dans mes accès : le connecteur MCP fonctionne par OAuth, pas par clé API
+exposée, et je ne dois ni demander à l'utilisateur de la coller dans le
+chat, ni la saisir moi-même nulle part (identifiants financiers). **Sans
+elle, aucun code Stripe de ce chantier ne peut réellement s'exécuter en
+production** — `getMarketplaceStripeClient()` refuse de démarrer. Deux
+commandes à lancer par l'utilisateur lui-même, dans son propre terminal
+(je ne verrai jamais la valeur) :
+
+```bash
+npx wrangler secret put STRIPE_SECRET_KEY --name mareliure
+```
+
+Une fois ce secret posé, je peux (sur autorisation déjà donnée par ce
+brief) créer le webhook live via le connecteur MCP et poser
+`STRIPE_WEBHOOK_SECRET` directement en secret Cloudflare — je ne l'aurai
+vu qu'une fois, jamais stocké ailleurs (§16).
+
+**7. Décision d'architecture prise, à documenter clairement** : l'état de
+paiement (session Checkout, PaymentIntent, facture, `paid_at`) vit dans
+une **nouvelle table séparée**, `marketplace_commercial_proposal_payments`
+— pas comme colonnes sur `marketplace_commercial_proposals`. Raison :
+cette dernière reste rigoureusement immuable après acceptation (trigger de
+la Phase 1, « Do not touch »), et payer n'est pas un terme commercial,
+c'est ce qui arrive ensuite à un terme commercial déjà figé. Percer une
+exception dans le trigger existant aurait été plus risqué qu'ajouter une
+table.
+
+**8. Connect — code préparé, aucun Connected Account créé.**
+`binderConnect.server.ts` (compte Express, lien d'onboarding, relecture des
+capacités) réutilise `marketplace_binders.stripe_account_id`, déjà présent
+depuis la toute première migration marketplace (`20260908120000` —
+personne ne l'avait jamais utilisé). Aucune route ni bouton admin ne
+l'appelle encore.
+
+**Tests, build, déploiement** : `npx vitest run` → 146 fichiers, 1948 tests
+verts (13 nouveaux : `checkoutPlan.test.ts`, `webhookEvents.test.ts`).
+`npx tsc --noEmit` → propre. `npm run lint` → propre (mêmes 13
+avertissements préexistants). `npm run build` → vert. Déployé
+(`npm run deploy:mareliure`, version `edc5d2de-7c3c-469a-aa00-52aafc975b4a`).
+Vérifié en production, sans appel financier : `/` sans erreur console,
+`POST /api/marketplace/stripe-webhook` sans signature → 400 propre.
+
+---
+
+### Next recommended task (chantier Stripe)
+
+1. **L'utilisateur pose `STRIPE_SECRET_KEY`** (`npx wrangler secret put
+   STRIPE_SECRET_KEY --name mareliure`, sa vraie clé secrète live) — rien
+   de ce chantier ne peut s'exécuter avant.
+2. Une fois ce secret posé : créer le webhook live via le connecteur MCP
+   (`PostWebhookEndpoints`, URL `https://mareliure.fr/api/marketplace/
+   stripe-webhook`, les 7 événements listés au point 4), poser
+   `STRIPE_WEBHOOK_SECRET` en secret Cloudflare dans la foulée.
+3. **Décider une politique fiscale concrète** (même minimale, ex.
+   `FR_STANDARD` pour un client français) — sans ça, `checkoutEligibility`
+   bloque tout Checkout indéfiniment, par construction.
+4. **Décider le sort du statement descriptor** ("SECURICOM" par défaut sur
+   ce compte partagé) — via `payment_intent_data.statement_descriptor_suffix`
+   sur le Checkout, ou accepté tel quel.
+5. Brancher un bouton « Payer » côté client (`/mes-livres/:caseId`) sur
+   `createCommercialCheckoutSession` — aucune UI ne l'appelle encore.
+6. Premier Connected Account réel dès qu'un atelier réel est prêt
+   (`binderConnect.server.ts`, jamais appelé à ce jour).
+
+### Known issues (chantier Stripe)
+
+- Nouveau : aucun premier paiement réel n'est possible tant que 1) et 3)
+  ci-dessus ne sont pas faits — c'est un blocage attendu (fail closed),
+  pas un bug.
+- Nouveau : le descripteur de relevé bancaire par défaut de ce compte
+  partagé est "SECURICOM" — un client Ma Reliure/Fine Bindery le verrait
+  sur son relevé tant que le point 4 ci-dessus n'est pas tranché.
+- Nouveau : la numérotation de facture Stripe est partagée avec au moins
+  cinq autres activités sur ce compte — pas un problème en soi, mais à
+  garder en tête si l'Invoicing Stripe est un jour branché pour la
+  marketplace (§13-14 du brief, non traité dans ce chantier).
+
+### Do not touch (chantier Stripe)
+
+- **Ne pas modifier `settings.branding`/`business_profile`/le descripteur
+  de relevé au niveau du compte** — ce compte sert déjà cinq autres
+  activités réelles ; toute décision de branding pour Ma Reliure/Fine
+  Bindery doit rester au niveau Product/Checkout, jamais au niveau compte,
+  sans validation explicite.
+- **Ne pas toucher la numérotation de facture Stripe** sans validation
+  explicite (§14 du brief) — partagée avec d'autres activités réelles.
+- **Ne jamais écrire `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` ailleurs
+  qu'en secret du Worker Cloudflare** — jamais dans `.env` versionné,
+  jamais dans ce document, jamais dans une réponse de chat.
+- **Ne pas créer le webhook live avant que `STRIPE_SECRET_KEY` existe** —
+  chaque tentative de livraison échouerait et userait la santé de
+  l'endpoint pour rien.
 
 ---
 
