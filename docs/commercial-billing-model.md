@@ -73,19 +73,30 @@ distincts, jamais confondus (`PricingPolicy`, `pricing.types.ts`) : le
 premier borne une part du prix, le second un montant absolu. Avant le 15
 septembre 2026, seul le premier existait dans le calcul — un petit projet
 pouvait rendre moins que ce que l'activité doit toucher en valeur absolue.
+`minimumContributionCents` vaut **80 € HT** depuis le 16 septembre 2026
+(décision commerciale ; même plancher absolu pour les deux marques —
+Fine Bindery multiplie au-dessus, ne le remplace pas), configurable dans
+`PRICING_POLICY`, jamais en dur dans le moteur.
 
-### 3.1 Pricebook — statut réel
+### 3.1 Pricebook — câblé dossier par dossier depuis le 16 septembre 2026
 
-`marketplace_pricebook` existe et sert la détection de dérive
-(`detectDrift`, écran admin) : elle compare une référence publiée par
-travail à la médiane terrain constatée. **Elle n'est pas encore relue par
-dossier** au moment du chiffrage — `pricebookReferenceCents` vaut toujours
-`null` dans `PricingSuggestion` et dans les propositions commerciales
-créées aujourd'hui. Câbler cette lecture (sommer les entrées Pricebook
-correspondant aux travaux d'un dossier, comme `lookupAggregate` le fait déjà
-pour les rémunérations) est un chantier distinct, volontairement hors de
-cette phase — le MAX est prêt à recevoir ce troisième candidat sans nouveau
-changement de forme le jour où c'est fait.
+`marketplace_pricebook` sert toujours la détection de dérive (`detectDrift`,
+écran admin) et sert désormais aussi de troisième candidat du MAX :
+`lookupPricebookReference` (`pricebook.ts`) applique aux entrées **publiées**
+la même cascade que `lookupAggregate` sur les grilles atelier (exact, puis
+format ou complexité standard, jamais un coefficient) et somme leur
+`customerPriceCents` pour les travaux du dossier. **Jamais une somme
+partielle** : si un seul travail du dossier n'a aucune entrée publiée,
+`pricebookReferenceCents` reste `null`, exactement comme avant ce câblage.
+
+Branché dans `suggestManagedPrice` (`generateMarketplacePricing`, à partir
+des grilles + du Pricebook chargés ensemble) et recalculé à l'identique
+dans `createCommercialProposal` (`resolveWork` sur le profil du dossier,
+comme le fait déjà le moteur — jamais une seconde source de vérité). La
+provenance (quelles entrées, quelle version, quel prix publié) est gelée
+sur la proposition (`pricebook_provenance`, migration `20260916110000`)
+pour pouvoir expliquer a posteriori : Pricebook → coefficient de marque →
+garde-fou marge → garde-fou contribution → prix client, sans recalculer.
 
 ### 3.2 Fine Bindery — le multiplicateur de marque
 
@@ -150,13 +161,16 @@ proposition déjà figée.
 
 ## 8. Admin
 
-`CaseMatchingPage.tsx` affiche désormais (panneau « Économie ») : marque,
-multiplicateur, prix Ma Reliure avant marque, rémunération atelier, marge
-cible, contribution minimale, prix client service, marge brute (montant et
-taux), statut fiscal. Un panneau « Proposition commerciale » liste les
-versions figées d'un dossier et permet de créer une nouvelle version ou
-d'accepter la dernière proposée — réservé à l'administration dans cette
-phase (§9).
+`CaseMatchingPage.tsx` affiche (panneau « Économie », réorganisé le 16
+septembre 2026 en six blocs, dans l'ordre où le prix se construit) :
+Pricebook (référence HT), Marque (marque, multiplicateur, référence
+Pricebook × marque — le +30 % Fine Bindery est explicitement annoté comme
+une Brand Pricing Policy), Atelier (rémunération), Garde-fous (marge
+cible, contribution minimale, quel candidat a gagné le MAX), Client (prix
+service suggéré), Économie (marge brute € et %). Un panneau « Proposition
+commerciale » liste les versions figées d'un dossier et permet de créer une
+nouvelle version ou d'accepter la dernière proposée — réservé à
+l'administration dans cette phase (§9).
 
 ## 9. Stripe — état réel, rien construit dans cette phase
 
@@ -172,12 +186,27 @@ paiement lui-même.
 
 Le connecteur MCP Stripe a été relié à ce compte le 15 septembre 2026
 (accès de préparation) mais aucune capacité d'écriture n'a été utilisée :
-aucun Product, Checkout, compte Connect ou transfert n'a été créé. La
-Phase Stripe (Products permanents, Separate Charges and Transfers, 80/20,
-webhooks) reste à auditer et cadrer séparément, en particulier la question
-laissée ouverte : garder le client `stripe.server.ts`/gateway Lovable
-existant, ou en établir un propre à la marketplace — décision à prendre au
-début de cette phase, pas avant.
+aucun Product, Checkout, compte Connect ou transfert n'a été créé.
+
+**Audit read-only du 16 septembre 2026 — arrêté avant de lire quoi que ce
+soit.** `list_available_accounts_or_orgs` ne renvoie qu'un seul compte :
+`acct_1S530YKEMCwyPCrw` (« oppe.fr »), **`livemode: true`** — aucun compte
+sandbox/test n'est exposé par ce connecteur. Deux problèmes, pas un seul :
+la demande explicite portait sur le Sandbox/Test, jamais sur du live ; et
+rien ne confirme que ce compte Stripe (« oppe.fr ») soit même celui de Ma
+Reliure/Fine Bindery plutôt qu'un compte personnel ou d'un autre projet
+(voir §K de `CODEX_HANDOFF.md` : plusieurs organisations GitHub coexistent
+déjà pour des raisons similaires). Lire ses Products/Checkout/Connect en
+serait une hypothèse non vérifiée. Aucun appel `stripe_api_read` n'a donc
+été fait — à reprendre uniquement après que l'utilisateur ait confirmé
+quel compte/mode le connecteur doit exposer.
+
+La Phase Stripe (Products permanents, Separate Charges and Transfers,
+80/20, webhooks) reste à auditer et cadrer séparément, en particulier la
+question laissée ouverte : garder le client `stripe.server.ts`/gateway
+Lovable existant, ou en établir un propre à la marketplace — décision à
+prendre au début de cette phase, pas avant, et seulement une fois le bon
+compte/mode confirmé.
 
 ## 10. Ce qui n'a pas changé, volontairement
 

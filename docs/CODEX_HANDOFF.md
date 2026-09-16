@@ -790,37 +790,188 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 16 septembre 2026
+**Date :** 16 septembre 2026 (après-midi)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `af3aa753` (garde d'effet `/auth`), sur `e3c92bf6` (modèle
-commercial Phase 1), sur `2161b556` (traduction du Brief dans l'espace
-client), sur `09626619`, `64446601` (SEO/GEO), `a2682b0d` (hook e-mail
-Supabase), `c6c4282d`, `b924c9ef` (pages légales Fine Bindery), `611a2e53`
-→ `02186112` (Phases B à F Fine Bindery).
+**Commit :** `5ea6b210` (contribution minimale 80 € + pricebookReferenceCents
+câblé), sur `bdb4ddce` (correctif inscription atelier / mot de passe
+client), sur `2c1af9ae`, `af3aa753` (garde d'effet `/auth`), sur `e3c92bf6`
+(modèle commercial Phase 1), sur `2161b556` (traduction du Brief dans
+l'espace client), sur `09626619`, `64446601` (SEO/GEO), `a2682b0d` (hook
+e-mail Supabase), `c6c4282d`, `b924c9ef` (pages légales Fine Bindery),
+`611a2e53` → `02186112` (Phases B à F Fine Bindery).
 
 **Production : déployée le 16 septembre 2026.** Worker `mareliure` version
-`c1e4b30e-6241-4577-9e78-2e38b5da99cf`, via `npm run deploy:mareliure`.
-
-**Depuis le précédent bloc Latest handoff** (candidature atelier,
-`c82f04e5`), une longue session a fait avancer, dans l'ordre : la Phase B
-(BrandConfig, résolution de marque par Host), Phase C (pricing Fine Bindery
-+30 %), Phase D (traduction anglaise du Playbook), Phase E (homepage Fine
-Bindery), la mise en ligne réelle de `finebindery.com` (DNS/Cloudflare),
-Phase F (hook Supabase « Send Email » pour des e-mails d'authentification
-brand-aware — **construit et déployé, mais pas encore activé** :
-`hook_send_email_enabled` reste `false` en production, voir §17 de ce
-chantier ci-dessous pour la suite), la correction de plusieurs défauts
-SEO/GEO (JSON-LD, sitemap, robots.txt, redirection www), et un bug réel
-trouvé après coup : le Brief d'un dossier restait en français dans l'espace
-client Fine Bindery (`dossierProjection.ts` ne traduisait jamais label/valeur
-des lignes du Brief). Tout cela est **déployé et vérifié en production** —
-voir les commits cités plus haut pour le détail exact de chacun.
+`6d215340-ac74-4d8c-9ad5-ce4472d46413`, via `npm run deploy:mareliure`.
+Migrations `20260916100000` et `20260916110000` toutes deux appliquées
+(`supabase db push --dry-run` → `upToDate: true`).
 
 ---
 
-### Chantier de cette session — modèle commercial Phase 1 (audit + pricing MAX + snapshot immuable)
+### Chantier de cette session — corrections post-Phase 1 (compte client, contribution 80 €, Pricebook câblé, audit Stripe)
+
+Suite directe de la Phase 1 (voir le chantier ci-dessous), sur une demande
+en quatre volets : sécuriser le compte client, fixer une contribution
+minimale réelle, câbler le Pricebook par dossier, puis auditer Stripe en
+lecture seule.
+
+**1. Mot de passe attaché par erreur à un compte client réel — corrigé au
+niveau du code, pas seulement documenté.** Root cause identifiée avec
+certitude en lisant le code (pas de nouvelle hypothèse) : deux formulaires
+appelaient `supabase.auth.signUp({ email, password })` sur un e-mail saisi
+librement, **avant** toute vérification — `MaReliureAuthPage.tsx`
+(« Vous préférez un mot de passe ? » côté client) et
+`invitation-atelier.$token.tsx` (l'invitation atelier ne vérifiait l'e-mail
+qu'*après* la création du compte, dans `acceptBinderInvitation`). Un test
+de l'inscription atelier avec l'adresse d'une cliente déjà connue (lien
+magique) a ainsi attaché un mot de passe à son compte réel plutôt que de
+créer/rejeter le compte visé par l'invitation. Corrigé (commit
+`bdb4ddce`) :
+- `MaReliureAuthPage.tsx` : la création de mot de passe client n'existe
+  plus comme formulaire public — elle est proposée juste après qu'un code
+  de connexion a été vérifié (`CodeSignIn` → `SetPasswordAfterVerification`),
+  via `supabase.auth.updateUser({ password })` sur la session que ce code
+  vient d'ouvrir. `updateUser` ne prend aucun e-mail en entrée : cibler un
+  autre compte est structurellement impossible, pas seulement empêché par
+  une validation.
+- `invitation-atelier.$token.tsx` : le champ e-mail est verrouillé
+  (lecture seule) sur l'adresse réelle de l'invitation, résolue par une
+  nouvelle lecture publique `getBinderInvitationEmail` /
+  `resolvePendingInvitationEmail` — plus aucun e-mail arbitraire ne peut
+  être tapé avant que l'invitation soit vérifiée. Un garde
+  `canSubmitInvitationSignup` reste une seconde ligne de défense côté
+  client.
+- Tests de non-régression : `authPasswordSignupContract.test.ts`
+  verrouille qu'aucun `signUp` ne subsiste dans `MaReliureAuthPage.tsx` ;
+  `membership.test.ts` couvre `canSubmitInvitationSignup`.
+- **L'état réel du compte affecté (`antoineferriere2@hotmail.fr` — le
+  compte du testeur lui-même, pas un tiers) n'a PAS pu être vérifié ni
+  corrigé en base cette session** : le lire précisément (mot de passe
+  présent ou non) ou le corriger exige la clé `service_role` de
+  production, que le classificateur de sécurité de Claude Code a refusé de
+  laisser matérialiser dans cette session (« Credential Materialization »)
+  — un choix de sécurité délibéré, pas une limite technique contournable.
+  Deux issues, aucune tentée sans validation : (a) l'utilisateur vérifie/
+  corrige lui-même via le tableau de bord Supabase (Authentication → Users
+  → cette adresse), ce qui est de toute façon la voie la plus sûre pour un
+  compte réel ; (b) l'utilisateur autorise explicitement, dans une session
+  future, l'usage de la clé `service_role` de production pour ce diagnostic
+  précis. Comme le compte concerné est celui du testeur, le risque
+  immédiat est faible — mais la vulnérabilité de code, elle, était réelle
+  et touchait n'importe quel e-mail client, pas seulement celui-ci.
+
+**2. `minimumContributionCents` : 20 € → 80 € HT, configurable.** Décision
+commerciale de l'utilisateur. `PRICING_POLICY.minimumContributionCents`
+(`pricing.rules.ts`) passe de `2_000` à `8_000`, version de politique
+`bookbinding-2026-09-16-v5`. Même plancher absolu pour les deux marques —
+Fine Bindery multiplie *au-dessus* de ce plancher, ne le remplace jamais
+(architecture inchangée, voir « Do not touch »). Le snapshot d'une
+proposition commerciale conservait déjà la valeur réellement appliquée
+(`minimum_contribution_cents`, colonne de la Phase 1) : une commande
+acceptée avant ce changement ne bouge pas rétroactivement — vérifié par
+`economicTraceability.test.ts`.
+
+**3. `pricebookReferenceCents` câblé dossier par dossier.**
+`lookupPricebookReference` (`pricing/pricebook.ts`, nouveau) applique aux
+entrées Pricebook **publiées** la même cascade de repli que
+`lookupAggregate` sur les grilles atelier (exact → format standard →
+complexité standard → générique, jamais un coefficient) et somme leur
+`customer_price_cents` pour les travaux du dossier — `null`, jamais une
+somme partielle, si un seul travail n'a aucune entrée publiée. Branché
+dans `suggestManagedPrice` (`pricing.engine.ts`, via
+`generateMarketplacePricing` qui charge maintenant `loadPricebook(sb)` en
+plus des grilles) et recalculé à l'identique dans `createCommercialProposal`
+(`resolveWork` sur le profil du dossier — la même fonction que le moteur,
+jamais une seconde source de vérité). Migration `20260916110000` (appliquée
+en production) : `marketplace_cases` gagne
+`pricing_pricebook_reference_cents`/`pricing_price_bound_by` (pour l'admin,
+avant toute proposition figée) ; `marketplace_commercial_proposals` gagne
+`pricebook_provenance` (JSONB — quelles entrées, quelle version, quel prix
+publié ont produit la référence, gelé avec la proposition).
+
+**4. Écran admin « Économie » réorganisé.** Six blocs, dans l'ordre où le
+prix se construit (§5 de la demande) : Pricebook, Marque, Atelier,
+Garde-fous, Client, Économie. Le +30 % Fine Bindery est explicitement
+annoté comme une *Brand Pricing Policy* plutôt qu'une simple ligne de
+chiffre. Toujours interne/admin uniquement — **jamais exercé en
+conditions réelles** (aucun dossier avec `pricing_status: validated` et
+une correspondance Pricebook complète n'était disponible pour un
+screenshot en conditions réelles cette session non plus).
+
+**5. Audit Stripe MCP en lecture seule — arrêté avant de lire quoi que ce
+soit.** `list_available_accounts_or_orgs` ne renvoie qu'un seul compte :
+`acct_1S530YKEMCwyPCrw` (« oppe.fr »), **`livemode: true`**. Deux
+problèmes distincts, ni l'un ni l'autre résolu sans l'utilisateur : (a) la
+demande portait explicitement sur Sandbox/Test, jamais sur du live — ce
+connecteur n'expose aucun mode test ; (b) rien ne confirme que ce compte
+Stripe est celui de Ma Reliure/Fine Bindery plutôt qu'un compte personnel
+ou d'un autre projet de l'organisation GitHub `Antoineoppe` (voir §K —
+plusieurs dépôts/organisations coexistent déjà pour des raisons
+similaires). Lire ses Products/Checkout/Connect en aurait été une
+hypothèse non vérifiée sur un compte peut-être hors sujet, en mode live de
+surcroît. **Aucun appel `stripe_api_read` n'a été fait.** Voir
+`docs/commercial-billing-model.md` §9 pour le même constat, détaillé.
+
+**Tests, build :** `npx vitest run` → 144 fichiers, 1935 tests verts.
+`npx tsc --noEmit` → propre. `npm run lint` → propre (mêmes 13
+avertissements préexistants, aucun nouveau). `npm run build` → vert.
+Vérifié au navigateur en production après déploiement (`/`, `/auth` avec
+le nouveau flux mot de passe, `/partenaires-relieurs`) : aucune erreur
+console.
+
+---
+
+### Next recommended task (chantier de cette session)
+
+1. **Confirmer quel compte/mode Stripe le connecteur MCP doit exposer**
+   avant tout audit — c'est le blocage réel de la Phase Stripe, pas une
+   question d'architecture. Une fois confirmé (idéalement un compte
+   Sandbox/Test dédié à Ma Reliure/Fine Bindery), reprendre l'audit
+   read-only (Products, Checkout, Invoicing, Connect, Separate Charges and
+   Transfers, capacités des Connected Accounts) avant toute décision
+   d'architecture Phase 2.
+2. **Décider du sort du compte client réel** (`antoineferriere2@hotmail.fr`)
+   — voir point 1 ci-dessus. Aucune action prise cette session ; la
+   vulnérabilité de code, elle, est corrigée et ne peut plus reproduire ce
+   problème sur un compte tiers.
+3. Exercer l'écran « Économie »/« Proposition commerciale » sur un dossier
+   réel dès qu'un Pricebook complet existe pour ses travaux — jamais fait
+   en conditions réelles à ce jour.
+
+### Known issues (chantier de cette session)
+
+Tout ce qui précède reste vrai, sauf :
+
+- Résolu : le mot de passe pouvait être attaché à l'e-mail de n'importe
+  quel client via l'inscription atelier ou la page `/auth` publique —
+  corrigé au niveau du code (voir point 1 ci-dessus). L'état du compte
+  déjà affecté reste à vérifier/corriger côté Supabase, séparément.
+- Résolu : `pricebookReferenceCents` valait toujours `null` — câblé (voir
+  point 3 ci-dessus). Reste `null` tant qu'un Pricebook publié ne couvre
+  pas *tous* les travaux d'un dossier, par construction.
+- Nouveau : le connecteur MCP Stripe de cette session n'expose qu'un
+  compte live (`acct_1S530YKEMCwyPCrw`, « oppe.fr ») dont l'appartenance à
+  Ma Reliure/Fine Bindery n'est pas confirmée — aucun audit Stripe n'a pu
+  être fait.
+
+### Do not touch (chantier de cette session)
+
+Tout ce qui précède reste vrai. S'y ajoute :
+
+- **Ne plus jamais appeler `supabase.auth.signUp` pour « ajouter un mot de
+  passe » à un compte client** — seul `supabase.auth.updateUser` sur une
+  session déjà authentifiée peut le faire (voir
+  `authPasswordSignupContract.test.ts`, qui fait échouer la suite si
+  `signUp` réapparaît dans `MaReliureAuthPage.tsx`).
+- **Ne pas appeler `stripe_api_read`/`stripe_api_write` avec le compte
+  actuellement connecté** (`acct_1S530YKEMCwyPCrw`) sans confirmation
+  explicite de l'utilisateur sur son identité et son mode — voir point 5
+  ci-dessus.
+
+---
+
+### Chantier antérieur — modèle commercial Phase 1 (audit + pricing MAX + snapshot immuable)
 
 Demande explicite de l'utilisateur : abandonner tout raisonnement
 « commission marketplace » au profit d'un modèle achat/revente (client
