@@ -13,7 +13,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
-import { getMarketplaceStripeClient } from "./stripeClient.server";
+import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
 
 type Supa = SupabaseClient<Database>;
 
@@ -46,6 +46,9 @@ export async function ensureBinderStripeAccount(sb: Supa, binderId: string): Pro
   if (error) throw error;
   if (!binder) throw new Error(`Atelier introuvable : ${binderId}`);
   if (binder.stripe_account_id) return binder.stripe_account_id;
+
+  // Avant tout appel Stripe réel — jamais après.
+  await assertExpectedStripeAccount();
 
   const email = await loadBinderEmail(sb, binder.user_id);
   const stripe = getMarketplaceStripeClient();
@@ -80,6 +83,10 @@ export async function createBinderOnboardingLink(
   input: { returnUrl: string; refreshUrl: string },
 ): Promise<{ url: string }> {
   const accountId = await ensureBinderStripeAccount(sb, binderId);
+  // ensureBinderStripeAccount ne vérifie le compte que sur le chemin
+  // "création" (§1) — un atelier déjà pourvu d'un stripe_account_id sort
+  // avant ce garde ; on le repasse ici pour couvrir aussi ce cas.
+  await assertExpectedStripeAccount();
   const stripe = getMarketplaceStripeClient();
   const link = await stripe.accountLinks.create({
     account: accountId,
@@ -110,6 +117,7 @@ export async function refreshBinderConnectStatus(
     return { binderId, stripeAccountId: null, onboarded: false, chargesEnabled: false, payoutsEnabled: false };
   }
 
+  await assertExpectedStripeAccount();
   const stripe = getMarketplaceStripeClient();
   const account = await stripe.accounts.retrieve(binder.stripe_account_id);
   const chargesEnabled = !!account.charges_enabled;

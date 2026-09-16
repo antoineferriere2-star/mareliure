@@ -27,7 +27,7 @@ import {
 } from "@/marketplace/services/commercialPaymentRepository.server";
 import { buildCheckoutLineItems, checkoutEligibility } from "./checkoutPlan";
 import { getStripeProductIds } from "./stripeConfig.server";
-import { getMarketplaceStripeClient } from "./stripeClient.server";
+import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
 
 const uuid = z.string().uuid();
 
@@ -77,6 +77,11 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
       };
       fail(409, messages[eligibility.reason]);
     }
+
+    // Avant tout appel Stripe réel — jamais après (§1 du brief du 16
+    // septembre 2026, migration vers acct_1UGI34K0Q47WbZPf) : la clé posée
+    // doit répondre pour le compte dédié, jamais l'ancien compte partagé.
+    await assertExpectedStripeAccount();
 
     // Idempotent : une session déjà créée pour cette proposition est
     // réutilisée plutôt que dupliquée (§17) — Stripe renvoie l'URL de la
