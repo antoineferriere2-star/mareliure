@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canSubmitInvitationSignup,
   decideInvitationAcceptance,
   resolveActiveMembership,
   roleForNewMember,
@@ -100,5 +101,31 @@ describe("decideInvitationAcceptance", () => {
 
   it("does not require an account e-mail to be known (null skips the check)", () => {
     expect(decideInvitationAcceptance({ ...base, accountEmail: null }).allowed).toBe(true);
+  });
+});
+
+describe("canSubmitInvitationSignup", () => {
+  // Régression : un test de l'inscription atelier avait un jour tapé
+  // l'adresse d'une cliente déjà connue (magic link) dans ce formulaire,
+  // ce qui a attaché un mot de passe à son compte avant que l'invitation ne
+  // soit jamais vérifiée. Cette fonction est ce qui bloque désormais l'appel
+  // signUp/signInWithPassword avant qu'il ne parte, pas seulement le champ
+  // verrouillé côté UI.
+  it("refuses when no invitation e-mail is known yet", () => {
+    expect(canSubmitInvitationSignup(null, "quelqu-un@example.com")).toBe(false);
+  });
+
+  it("refuses a typed e-mail that does not match the invited one", () => {
+    expect(canSubmitInvitationSignup("artisan@example.com", "cliente-existante@example.com")).toBe(
+      false,
+    );
+  });
+
+  it("allows the exact invited e-mail", () => {
+    expect(canSubmitInvitationSignup("artisan@example.com", "artisan@example.com")).toBe(true);
+  });
+
+  it("is case- and whitespace-insensitive, like decideInvitationAcceptance", () => {
+    expect(canSubmitInvitationSignup("artisan@example.com", "  ARTISAN@EXAMPLE.COM  ")).toBe(true);
   });
 });

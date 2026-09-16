@@ -104,3 +104,25 @@ export function decideInvitationAcceptance(input: {
   }
   return { allowed: true };
 }
+
+/**
+ * Whether the accept-invitation form may submit — the client-side half of
+ * the same rule `decideInvitationAcceptance` enforces server-side.
+ *
+ * Exists because the invitation e-mail field used to be free text: typing
+ * any address there called `supabase.auth.signUp`/`signInWithPassword` for
+ * *that* address before the invitation was ever checked, which once
+ * attached a password to an unrelated, already-existing customer account
+ * during a workshop-invitation test. The field is now locked to
+ * `invitedEmail` (`resolvePendingInvitationEmail`), but this guard stays as
+ * the last line of defence against a locked field being bypassed (devtools,
+ * a future refactor) — it is what stands between a typed e-mail and the
+ * Supabase Auth call, not just a UI convenience.
+ */
+export function canSubmitInvitationSignup(
+  invitedEmail: string | null,
+  typedEmail: string,
+): boolean {
+  if (!invitedEmail) return false;
+  return typedEmail.trim().toLowerCase() === invitedEmail.trim().toLowerCase();
+}
