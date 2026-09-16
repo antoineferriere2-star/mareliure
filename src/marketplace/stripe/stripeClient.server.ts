@@ -37,7 +37,17 @@ export function getMarketplaceStripeClient(): Stripe {
       "STRIPE_SECRET_KEY manquant — secret du Worker Cloudflare, jamais dans .env versionné.",
     );
   }
-  cached = new Stripe(secretKey, { apiVersion: "2026-06-24.dahlia" });
+  cached = new Stripe(secretKey, {
+    apiVersion: "2026-06-24.dahlia",
+    // Le Worker Cloudflare n'a pas les modules Node (`http`/`https`/`net`)
+    // dont le SDK Stripe se sert par défaut — sans ce client fetch, les
+    // appels échouent au niveau transport, pas au niveau Stripe (constaté :
+    // "Invalid JSON received from the Stripe API" alors que la clé était
+    // correcte). Même nécessité que `src/lib/stripe.server.ts`, sans la
+    // réécriture d'URL vers la passerelle Lovable — on parle directement à
+    // `api.stripe.com`.
+    httpClient: Stripe.createFetchHttpClient(),
+  });
   return cached;
 }
 

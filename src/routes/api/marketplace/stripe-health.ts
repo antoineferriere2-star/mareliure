@@ -32,9 +32,22 @@ export async function handleStripeHealth(request: Request): Promise<Response> {
     await assertExpectedStripeAccount();
     return json(200, { ok: true, expectedAccountId: process.env.STRIPE_EXPECTED_ACCOUNT_ID ?? null });
   } catch (err) {
+    // Détail de diagnostic seulement — aucun champ Stripe.Error ne porte de
+    // secret (la clé elle-même n'apparaît jamais dans un objet d'erreur du
+    // SDK).
+    const detail =
+      err && typeof err === "object"
+        ? {
+            type: (err as { type?: string }).type,
+            code: (err as { code?: string }).code,
+            statusCode: (err as { statusCode?: number }).statusCode,
+            requestId: (err as { requestId?: string }).requestId,
+          }
+        : undefined;
     return json(200, {
       ok: false,
       error: err instanceof Error ? err.message : String(err),
+      detail,
       expectedAccountId: process.env.STRIPE_EXPECTED_ACCOUNT_ID ?? null,
     });
   }
