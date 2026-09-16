@@ -790,16 +790,18 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 15 septembre 2026
+**Date :** 16 septembre 2026
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `2161b556` (traduction du Brief dans l'espace client), sur
-`09626619`, `64446601` (SEO/GEO), `a2682b0d` (hook e-mail Supabase),
-`c6c4282d`, `b924c9ef` (pages légales Fine Bindery), `611a2e53` → `02186112`
-(Phases B à F Fine Bindery) — puis, pour le chantier commercial décrit
-ci-dessous, une suite de commits non encore listés ici individuellement au
-moment de la rédaction (voir `git log --oneline` pour l'état exact).
+**Commit :** `af3aa753` (garde d'effet `/auth`), sur `e3c92bf6` (modèle
+commercial Phase 1), sur `2161b556` (traduction du Brief dans l'espace
+client), sur `09626619`, `64446601` (SEO/GEO), `a2682b0d` (hook e-mail
+Supabase), `c6c4282d`, `b924c9ef` (pages légales Fine Bindery), `611a2e53`
+→ `02186112` (Phases B à F Fine Bindery).
+
+**Production : déployée le 16 septembre 2026.** Worker `mareliure` version
+`c1e4b30e-6241-4577-9e78-2e38b5da99cf`, via `npm run deploy:mareliure`.
 
 **Depuis le précédent bloc Latest handoff** (candidature atelier,
 `c82f04e5`), une longue session a fait avancer, dans l'ordre : la Phase B
@@ -912,31 +914,48 @@ pas une réécriture de la fonction Postgres.
   Fine Bindery bout en bout, shipping non multiplié, indépendance d'un
   snapshot déjà construit vis-à-vis d'un recalcul ultérieur).
 - `npm run build` : vert.
-- **Non vérifié au navigateur** dans cette phase : le panneau admin
-  « Proposition commerciale » n'a pas été cliqué en conditions réelles
-  (aucun dossier de test avec un prix validé n'était disponible pendant la
-  session) — à faire au premier dossier réel qui atteint `pricing_status:
-  validated`.
-- **Non déployé** : les changements de code (pricing, snapshot, admin) sont
-  commités mais `npm run deploy:mareliure` n'a pas encore été relancé après
-  ce chantier — seule la migration SQL est en production, le code qui la
-  consomme ne l'est pas encore au moment de la rédaction de ce bloc.
+- **Déployé le 16 septembre 2026** (`npm run deploy:mareliure`, Worker
+  `mareliure` version `c40a39c6-dfd3-4254-aff2-cbabfaf1f4fb`) et vérifié :
+  `mareliure.fr` accessible, aucune erreur console sur la page d'accueil,
+  migration confirmée à jour en production (`supabase db push --dry-run` →
+  `upToDate: true`).
+- **Toujours pas vérifié au navigateur en conditions réelles** : le panneau
+  admin « Proposition commerciale » n'a pas été cliqué (aucun dossier de
+  test avec un prix validé n'était disponible pendant la session, et
+  l'accès admin n'était pas disponible depuis l'agent) — à faire au premier
+  dossier réel qui atteint `pricing_status: validated`.
+- **Travail autonome du 16 septembre 2026 (session suivante, même
+  utilisateur absent la matinée)** : en vérifiant le déploiement ci-dessus,
+  un bug d'hydratation React a été trouvé sur `/auth` (et toute redirection
+  vers cette route) — `Minified React error #418` en production, et en
+  reproduction locale non minifiée (build `npm run build:dev` servi par
+  `wrangler dev`), l'avertissement explicite "Can't perform a React state
+  update on a component that hasn't mounted yet". **Confirmé préexistant**
+  par comparaison directe : même erreur reproduite sur le commit `a2682b0d`
+  (avant tout le travail SEO/pricing de cette longue session), via une
+  copie de travail Git isolée (`git worktree`). Un garde `cancelled` a été
+  ajouté à l'effet `supabase.auth.getSession().then(...)` de
+  `routes/auth.tsx` (commit `af3aa753`, déployé) — sûr et correct dans
+  l'absolu, mais **la reproduction s'est révélée intermittente** (l'erreur
+  n'apparaît pas à chaque rechargement, avant comme après ce changement) :
+  impossible d'affirmer avec certitude que la cause exacte de l'erreur #418
+  est éliminée. La page reste fonctionnelle dans tous les cas observés. Une
+  investigation plus poussée demanderait des source maps de production et
+  une instrumentation React DevTools — pas tentée, jugée disproportionnée
+  pour un avertissement non bloquant sur une session sans supervision en
+  direct.
 
 ---
 
 ### In progress
 
 Rien côté code. `git status` propre après le dernier commit de ce chantier.
-Reste en attente : le déploiement (`npm run deploy:mareliure`) et la
-vérification navigateur mentionnés ci-dessus.
 
 ---
 
 ### Next recommended task
 
-1. **Déployer et vérifier** le chantier commercial Phase 1 (voir Completed
-   ci-dessus).
-2. **Phase Stripe**, sur validation explicite de l'utilisateur uniquement —
+1. **Phase Stripe**, sur validation explicite de l'utilisateur uniquement —
    commencer par confirmer les capacités réelles du connecteur MCP
    maintenant relié (`stripe_api_read`/`stripe_api_write`) avant toute
    hypothèse d'architecture : Connect disponible ou non, Separate Charges
@@ -944,14 +963,14 @@ vérification navigateur mentionnés ci-dessus.
    « garder `stripe.server.ts`/gateway Lovable » et « client Stripe propre à
    la marketplace » avant cette vérification (question explicitement laissée
    ouverte, voir `docs/commercial-billing-model.md` §9).
-3. **Câbler `pricebookReferenceCents`** dossier par dossier
+2. **Câbler `pricebookReferenceCents`** dossier par dossier
    (`marketplace_pricebook` existe, sert seulement la détection de dérive
    aujourd'hui) — troisième candidat du MAX, prêt côté types/fonction pure,
    jamais branché à la lecture live.
-4. **Décider une vraie valeur pour `minimumContributionCents`** — posé à
+3. **Décider une vraie valeur pour `minimumContributionCents`** — posé à
    2 000 (20 €) par défaut, aligné sur `minimumMarginCents` faute de mieux,
    jamais validé commercialement.
-5. Les points 2 à 5 du bloc précédent (Stripe Connect, référentiel
+4. Les points 2 à 5 du bloc précédent (Stripe Connect, référentiel
    tarifaire à remplir, premier atelier réel, logistique) restent valables
    et non traités par ce chantier.
 
@@ -966,9 +985,14 @@ Tout ce qui précède reste vrai, sans changement, sauf :
   manuellement, jamais activée côté Supabase. Un client Fine Bindery reçoit
   toujours son lien de connexion en français tant que ce n'est pas fait.
 - Nouveau : `pricebookReferenceCents` vaut toujours `null` en pratique —
-  voir Next recommended task, point 3.
+  voir Next recommended task, point 2.
 - Nouveau : le panneau admin « Proposition commerciale » n'a jamais été
   exercé en conditions réelles (voir Completed).
+- Nouveau : `/auth` (et toute page qui y redirige) produit par
+  intermittence une erreur console d'hydratation React en production
+  (`#418`) — préexistante, non bloquante (la page reste utilisable), cause
+  exacte non isolée malgré un correctif défensif appliqué. Voir le bloc
+  « Travail autonome du 16 septembre 2026 » dans Completed.
 
 ---
 
