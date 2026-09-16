@@ -4,11 +4,14 @@
  * Service, Transport/Shipping.
  *
  * Retrouve chaque Product par sa metadata stable (`brand`/`product_role`)
- * avant d'en créer un — ne crée jamais de doublon, y compris si les trois
- * Products ont déjà été créés une fois via le connecteur MCP (constaté :
- * prod_VGowujXB5VAtLN, prod_VGoxLIJgDWDx7c, prod_VGoxkLqYmwcFm6, créés le
- * 16 septembre 2026). NO SANDBOX — toujours le compte live
- * acct_1S530YKEMCwyPCrw, décision explicite de l'utilisateur.
+ * avant d'en créer un — ne crée jamais de doublon. Tourne sur le compte
+ * associé à `STRIPE_SECRET_KEY`, quel qu'il soit (compte de test dédié,
+ * `acct_1UGISJKB3EBc6Slh`, ou le compte live dédié
+ * `acct_1UGI34K0Q47WbZPf` — jamais l'ancien compte partagé
+ * `acct_1S530YKEMCwyPCrw`, voir CODEX_HANDOFF.md) : si
+ * `STRIPE_EXPECTED_ACCOUNT_ID` est posé dans l'environnement, le script
+ * refuse (fail closed) de continuer si la clé répond pour un autre compte
+ * — même garde que `assertExpectedStripeAccount` côté application.
  *
  * Run avec : npx tsx scripts/setupStripeProducts.ts
  *
@@ -20,6 +23,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { resolve, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import Stripe from "stripe";
+import { verifyStripeAccount, describeAccountMismatch } from "../src/marketplace/stripe/stripeAccountGuard";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
@@ -86,7 +90,15 @@ async function main() {
   }
   const stripe = new Stripe(secretKey, { apiVersion: "2026-06-24.dahlia" });
 
-  console.log("[setupStripeProducts] compte live acct_1S530YKEMCwyPCrw — NO SANDBOX.");
+  const actual = await stripe.accounts.retrieveCurrent();
+  const expectedAccountId = process.env.STRIPE_EXPECTED_ACCOUNT_ID ?? null;
+  const verdict = verifyStripeAccount({ expectedAccountId, actualAccountId: actual.id });
+  if (!verdict.ok) {
+    throw new Error(
+      `${describeAccountMismatch()} (reason: ${verdict.reason}). Pose STRIPE_EXPECTED_ACCOUNT_ID=${actual.id} dans .env si c'est bien le compte visé.`,
+    );
+  }
+  console.log(`[setupStripeProducts] compte confirmé : ${actual.id} (livemode: ${!secretKey.startsWith("sk_test_")}).`);
 
   const resolved: Record<string, string> = {};
   for (const wanted of WANTED) {

@@ -54,7 +54,22 @@ export async function ensureBinderStripeAccount(sb: Supa, binderId: string): Pro
   const stripe = getMarketplaceStripeClient();
   const account = await stripe.accounts.create(
     {
-      type: "express",
+      // Le paramètre `type: "express"` est l'ancien raccourci — le
+      // planificateur Stripe (arbre de décision Connect, 16 septembre
+      // 2026) demande explicitement de ne plus l'utiliser et de déclarer
+      // `controller` explicitement. Ces quatre valeurs reproduisent
+      // exactement un compte Express, mais en clair : la marketplace
+      // porte les frais et les pertes (jamais l'atelier), garde le
+      // Dashboard Express, et Stripe collecte les informations
+      // d'onboarding — cohérent avec Separate Charges and Transfers
+      // (§20 du brief) où la plateforme reste responsable, jamais
+      // `on_behalf_of` sur l'atelier.
+      controller: {
+        fees: { payer: "application" },
+        losses: { payments: "application" },
+        stripe_dashboard: { type: "express" },
+        requirement_collection: "stripe",
+      },
       country: "FR",
       email: email ?? undefined,
       business_type: "individual",
