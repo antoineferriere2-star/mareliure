@@ -345,13 +345,19 @@ mieux" combiné dans la fonction pure.
 - Vérification automatique de numéro de TVA (VIES ou équivalent) —
   `business_vat_validation_status` reste `"NOT_CHECKED"`, rien ne l'appelle.
 - Identité publique du compte (statement descriptor "SECURICOM" hérité,
-  support_email `contact@securicom.shop`, pas de `support_url`) — **audit
-  live reconfirmé le 17 septembre 2026** (connecteur MCP Stripe désormais
+  support_email `contact@securicom.shop`, pas de `support_url`,
+  `product_description` décrivant une activité BTP) — **audit live
+  reconfirmé le 17 septembre 2026** (connecteur MCP Stripe désormais
   autorisé, lecture complète du compte via `GetAccountsAccount`, plus
-  seulement `limited_account_retrieve` comme le 16 septembre) ; proposition
-  de correction (`OPPE`, `contact@oppe.fr`, `https://mareliure.fr`)
-  toujours en attente de la décision de l'utilisateur avant toute écriture
-  — voir `CODEX_HANDOFF.md`.
+  seulement `limited_account_retrieve` comme le 16 septembre). Correction
+  approuvée par l'utilisateur (`OPPE`, `contact@oppe.fr` confirmée
+  surveillée, `https://mareliure.fr`, description réelle de l'activité)
+  mais **toujours impossible à écrire via ce connecteur** : aucune
+  opération d'écriture n'existe pour `business_profile`/
+  `settings.card_payments`/`settings.payments` (seule
+  `UpdateBrandSettings` existe, et elle ne couvre que logo/couleurs) — à
+  appliquer par l'utilisateur lui-même dans le Dashboard, voir
+  `CODEX_HANDOFF.md`.
 - Rotation de `STRIPE_SECRET_KEY` — exposée une fois par erreur de
   frappe (collée sur la ligne de commande au lieu du prompt), rotation
   différée par décision explicite de l'utilisateur.

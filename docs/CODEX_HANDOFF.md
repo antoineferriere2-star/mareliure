@@ -884,15 +884,26 @@ n'était pas le cas la fois précédente. Audit live complet, lecture seule :
   - Le reste est correct : `company.name: "Oppe"`, adresse, SIREN/TVA
     correspondent à `MARELIURE_PUBLISHER` ; `charges_enabled`/
     `payouts_enabled: true` ; compte bancaire QONTO (FR, EUR) déjà relié.
-  - **Une capacité d'écriture (`UpdateBrandSettings`, mise à jour du
-    compte) apparaît désormais dans la recherche d'opérations Stripe**,
-    ce qui n'était pas le cas le 16 septembre (`limited_account_retrieve`
-    ne montrait aucune écriture). **Aucune écriture n'a été tentée** :
-    corriger l'identité publique d'un compte Stripe live est un
-    changement visible par les clients (relevé bancaire, e-mail de
-    support) qui requiert une confirmation explicite de l'utilisateur,
-    pas seulement une autorisation technique retrouvée. La proposition de
-    correction reste celle déjà documentée (§21 plus bas).
+  - **Correction apportée à ce constat après vérification plus poussée** :
+    une capacité d'écriture (`UpdateBrandSettings`) est bien apparue dans
+    la recherche d'opérations Stripe, mais elle ne couvre que le logo et
+    les couleurs (`/v1/_unstable/settings/brand`) — **pas**
+    `business_profile`, `settings.card_payments`,
+    `settings.payments` ni `product_description`. Recherche explicite
+    d'une opération d'écriture pour ces champs (`stripe_api_search` sur
+    "update account business profile", "update connected account",
+    "update statement descriptor payments settings") : aucun résultat.
+    Tentative directe de `PostAccountsAccount` : refusée, opération non
+    disponible. **La conclusion du 16 septembre reste donc exacte** :
+    aucune écriture n'est possible sur ces champs via ce connecteur, quel
+    que soit le niveau de lecture désormais accordé. L'utilisateur a
+    explicitement approuvé la correction (statement descriptor "OPPE",
+    `support_email: contact@oppe.fr` confirmée surveillée,
+    `support_url`/`business_profile.url: https://mareliure.fr`,
+    `product_description` corrigée) — **reste à appliquer par lui-même
+    dans le Dashboard Stripe** (Paramètres → Informations publiques de
+    l'entreprise / Marque), le connecteur ne pouvant pas l'exécuter à sa
+    place.
 
 **10-12. `customer_type` — le modèle n'est plus structurellement
 B2C-only.** Détail complet dans `docs/commercial-billing-model.md` §9ter.
@@ -937,12 +948,13 @@ depuis la suite 4) :
 3. Alors seulement : `npm run deploy:mareliure`, puis les smoke tests
    (§33 du brief) et le parcours métier sans paiement (§34) jusqu'à
    `READY FOR PAYMENT`.
-4. Décision séparée, non technique : confirmer si `contact@oppe.fr` est
-   une adresse réellement surveillée avant de l'utiliser comme
-   `support_email` public, et valider la correction de l'identité Stripe
-   (statement descriptor "OPPE", `support_url: https://mareliure.fr`,
-   product_description à corriger aussi — nouveau constat de cette
-   session).
+4. **Appliquer manuellement dans le Dashboard Stripe** (le connecteur ne
+   peut pas écrire ces champs) : statement descriptor raccourci et de
+   repli → `OPPE` ; `support_email` → `contact@oppe.fr` (confirmée
+   surveillée par l'utilisateur le 17 septembre) ; `support_url` et
+   `business_profile.url` → `https://mareliure.fr` ; `product_description`
+   → une description réelle de l'activité (reliure/restauration), pas le
+   texte BTP hérité.
 
 **Toujours bloquant avant le premier vrai paiement** :
 1. Un taux de TVA validé par un expert-comptable pour au moins un cas réel
