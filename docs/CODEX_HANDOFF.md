@@ -790,12 +790,14 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 16 septembre 2026 (soirée, suite — bascule sur le compte live dédié)
+**Date :** 17 septembre 2026 (matin — webhook live enregistré)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `e0cf1719` (descripteur de relevé par marque via
-`statement_descriptor_suffix`), sur `2d358ba6`, `94897323`, `7b2aaed0`
+**Commit :** `a37f6246` (client Stripe marketplace passe par le transport
+`fetch`, indispensable en Cloudflare Workers), `2afd2dea` (endpoint de
+santé du garde-fou compte Stripe), sur `e0cf1719` (descripteur de relevé
+par marque via `statement_descriptor_suffix`), sur `2d358ba6`, `94897323`, `7b2aaed0`
 (Connect sans paramètre `type` legacy, script setup réutilisable
 multi-comptes), `4540b136` (garde fail-closed compte Stripe attendu), sur
 `408ee54c` (intégration Stripe live — Checkout/webhook/Connect,
@@ -808,10 +810,91 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 `b924c9ef` (pages légales Fine Bindery), `611a2e53` → `02186112` (Phases B
 à F Fine Bindery).
 
-**Production : déployée le 16 septembre 2026.** Worker `mareliure` version
-`8701f5b6-5d9f-491c-a849-89f5039d5ba1`, via `npm run deploy:mareliure`.
-Migrations `20260916100000`, `20260916110000` et `20260916120000` toutes
-appliquées (`supabase db push --dry-run` → `upToDate: true`).
+**Production : déployée le 17 septembre 2026 (matin).** Worker `mareliure`
+version `76ca610f-1f5b-40b1-aa7d-82332843d912`, via `npm run
+deploy:mareliure`. Migrations `20260916100000`, `20260916110000` et
+`20260916120000` toutes appliquées (`supabase db push --dry-run` →
+`upToDate: true`).
+
+---
+
+### Chantier de cette session (suite 3) — clé live posée, webhook enregistré
+
+**`STRIPE_SECRET_KEY` posée avec succès, health check vert :**
+
+```json
+{"ok":true,"expectedAccountId":"acct_1UGI34K0Q47WbZPf"}
+```
+
+Deux bugs réels trouvés et corrigés en chemin, pas juste "ça a fini par
+marcher" :
+
+1. **Le prompt masqué de `wrangler secret put` (`Enter a secret value:
+   ... *`) n'a capturé qu'un seul caractère de contrôle** au lieu de la clé
+   collée, dans ce terminal PowerShell — un bug d'environnement, pas un
+   mismatch de compte. Diagnostiqué via un endpoint temporaire
+   (`?raw=1` sur `/api/marketplace/stripe-health`, retiré depuis) qui
+   comparait la longueur/le préfixe de la clé lue par le Worker à ce
+   qu'elle devait être. Résolu en repassant par redirection de fichier
+   (`Get-Content | wrangler secret put`) plutôt que le prompt interactif.
+2. **Le client Stripe de la marketplace n'avait pas de `httpClient` fetch**
+   — indispensable en Cloudflare Workers (pas de module Node `http`/
+   `https`). Sans ça, `assertExpectedStripeAccount` échouait toujours,
+   quelle que soit la clé, avec `StripeAPIError: Invalid JSON received
+   from the Stripe API`. Corrigé en ajoutant `httpClient:
+   Stripe.createFetchHttpClient()`, comme le fait déjà
+   `src/lib/stripe.server.ts` pour l'autre intégration.
+
+**Incident de sécurité en chemin, documenté pour mémoire** : une tentative
+manuelle de réenregistrer la clé a collé sa valeur directement sur la
+ligne de commande (après `--name mareliure`, sans espace) plutôt qu'au
+prompt — la commande a échoué (nom de Worker invalide), mais la clé a
+transité en clair par l'historique du terminal et cette conversation.
+Rotation signalée comme nécessaire ; **l'utilisateur a choisi explicitement
+de continuer avec cette clé et de la faire tourner plus tard** — décision
+qui lui appartient, actée ici pour qu'un futur agent ne la re-signale pas
+comme un fait nouveau sans savoir qu'elle a déjà été tranchée.
+
+**Endpoint de santé permanent** : `GET /api/marketplace/stripe-health`
+(`src/routes/api/marketplace/stripe-health.ts`), protégé par jeton porteur
+(`STRIPE_HEALTHCHECK_TOKEN`, secret Cloudflare). Déclenche
+`assertExpectedStripeAccount` à la demande — à réutiliser après toute
+future pose ou rotation de `STRIPE_SECRET_KEY`, pas seulement cette
+fois-ci.
+
+**Webhook live enregistré** :
+
+| | |
+| --- | --- |
+| Endpoint ID | `we_1UGPd7K0Q47WbZPfCZDzfi6p` |
+| URL | `https://mareliure.fr/api/marketplace/stripe-webhook` |
+| Événements | `checkout.session.completed`, `payment_intent.succeeded`, `payment_intent.payment_failed`, `charge.refunded`, `charge.dispute.created`, `invoice.paid`, `invoice.payment_failed` |
+| Statut | `enabled` |
+
+`STRIPE_WEBHOOK_SECRET` posé en secret Cloudflare uniquement (jamais vu
+ailleurs). Vérifié en conditions réelles, sans aucun faux événement
+financier :
+- `POST` sans en-tête `stripe-signature` → 400 `Missing stripe-signature header`.
+- `POST` avec une signature invalide → 400 `Invalid signature` (confirme
+  que le secret réel est bien utilisé pour vérifier, pas juste que le
+  endpoint répond).
+- Idempotence (`marketplace_stripe_webhook_events`, dédoublonnage par
+  `event.id`) : couverte par les tests unitaires existants
+  (`webhookEvents.test.ts`, `stripeWebhookLog.server.ts`), pas rejouée en
+  live — aucun événement financier réel n'existe encore pour la tester de
+  bout en bout, et en fabriquer un serait exactement ce qui est interdit.
+
+**Toujours bloquant avant le premier vrai paiement** :
+1. Politique fiscale concrète (`tax_policy` reste `TAX_REVIEW_REQUIRED`,
+   `checkoutEligibility` bloque tout Checkout tant que ça n'a pas changé).
+2. Correction manuelle de l'identité publique du compte côté Dashboard
+   (statement descriptor "SECURICOM" hérité, support_email/url — voir le
+   chantier précédent pour les valeurs proposées) — pas encore faite par
+   l'utilisateur au moment d'écrire ceci.
+3. Rotation de `STRIPE_SECRET_KEY` — différée par décision explicite de
+   l'utilisateur, pas oubliée.
+4. Bouton « Payer » côté client — toujours non branché sur
+   `createCommercialCheckoutSession`.
 
 ---
 
