@@ -21,9 +21,16 @@ import { resolveWork } from "@/marketplace/pricing/workResolver";
 import { PRICING_MODES, type PricingMode } from "@/marketplace/pricing/pricingMode";
 import {
   buildCommercialProposalSnapshot,
+  type CommercialTaxPolicy,
   type DepositPolicyInput,
   type PricebookProvenanceEntry,
 } from "@/marketplace/commercial/commercialProposal";
+import {
+  isCommercialTaxPolicy,
+  recomputeProposalTax,
+  validateTaxPolicySelection,
+} from "@/marketplace/commercial/taxPolicy";
+import { getPaymentPreflight as loadPaymentPreflight } from "@/marketplace/stripe/paymentPreflight.server";
 import { loadCaseContext } from "./caseRepository.server";
 import { loadPricebook } from "./pricingRepository.server";
 import {
@@ -31,7 +38,9 @@ import {
   insertCommercialProposal,
   listCommercialProposals,
   loadAcceptedCommercialProposal,
+  loadCommercialProposalById,
   nextProposalVersion,
+  updateProposalTaxValidation,
 } from "./commercialProposalRepository.server";
 
 const uuid = z.string().uuid();
@@ -155,8 +164,13 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
       estimateMinCents: pricingMode === "ESTIMATE_THEN_CONFIRM" ? row.pricing_low_estimate_cents : null,
       estimateMaxCents: pricingMode === "ESTIMATE_THEN_CONFIRM" ? row.pricing_high_estimate_cents : null,
       shipping: data.shipping,
-      taxPolicy: "TAX_REVIEW_REQUIRED",
+      taxPolicy: "MANUAL_TAX_REVIEW",
       customerVatRateBps: null,
+      taxCountry: null,
+      taxBasis: "service_and_shipping",
+      taxValidationSource: null,
+      taxValidatedAt: null,
+      taxValidatedBy: null,
       deposit,
       status: "proposed",
     });
@@ -206,8 +220,15 @@ export const acceptCommercialProposal = createServerFn({ method: "POST" })
     let accepted;
     try {
       accepted = await acceptCommercialProposalRow(sb, proposalId);
-    } catch {
-      fail(409, "Cette proposition est introuvable ou déjà acceptée.");
+    } catch (err) {
+      const messages: Record<string, string> = {
+        proposal_not_found: "Cette proposition est introuvable.",
+        proposal_already_accepted: "Cette proposition est déjà acceptée.",
+        proposal_tax_not_validated:
+          "La fiscalité de cette proposition doit être validée avant de l'accepter.",
+      };
+      const message = err instanceof Error ? messages[err.message] : undefined;
+      fail(409, message ?? "Cette proposition est introuvable ou déjà acceptée.");
     }
 
     await sb.from("marketplace_events").insert({
@@ -233,4 +254,99 @@ export const getAcceptedCommercialProposal = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     return loadAcceptedCommercialProposal(sb, caseId);
+  });
+
+const validateTaxInput = z.object({
+  proposalId: uuid,
+  taxPolicy: z.string(),
+  taxCountry: z.string().trim().min(1),
+  // Points de base (1/100 de %) — jamais un pourcentage flottant, même
+  // convention que le reste du snapshot (customerVatRateBps).
+  customerVatRateBps: z.number().int().min(0).nullable(),
+});
+
+/**
+ * L'unique écriture qui fait passer une proposition de `MANUAL_TAX_REVIEW`
+ * à une catégorie fiscale nommée (§6, §9-10 du brief du 17 septembre 2026) —
+ * une décision humaine, jamais une règle automatique : ce serveur ne calcule
+ * aucun taux, il enregistre celui que l'admin a choisi et recalcule
+ * uniquement l'arithmétique HT→TTC qui en découle. Réservé à une proposition
+ * pas encore acceptée (voir updateProposalTaxValidation, garde-fou en base).
+ */
+export const validateCommercialProposalTax = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => validateTaxInput.parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    if (!isCommercialTaxPolicy(data.taxPolicy)) fail(400, "Politique fiscale inconnue.");
+    const taxPolicy: CommercialTaxPolicy = data.taxPolicy;
+
+    const check = validateTaxPolicySelection({
+      policy: taxPolicy,
+      country: data.taxCountry,
+      vatRateBps: data.customerVatRateBps,
+    });
+    if (!check.ok) {
+      const messages: Record<string, string> = {
+        manual_review_is_not_a_validated_policy:
+          "MANUAL_TAX_REVIEW n'est pas une politique validée — choisissez une catégorie concrète.",
+        country_required: "Le pays de taxation est requis pour valider la fiscalité.",
+        vat_rate_out_of_range: "Le taux de TVA saisi est hors limites raisonnables.",
+      };
+      fail(400, messages[check.reason]);
+    }
+
+    const sb = await admin();
+    const proposal = await loadCommercialProposalById(sb, data.proposalId);
+    if (!proposal) fail(404, "Proposition introuvable.");
+    if (proposal.acceptedAt) fail(409, "Cette proposition est déjà acceptée et donc immuable.");
+
+    const recomputed = recomputeProposalTax(
+      {
+        customerServicePriceCents: proposal.customerServicePriceCents,
+        shippingTotalCents: proposal.shippingTotalCents,
+        depositAmountCents: proposal.depositAmountCents,
+      },
+      data.customerVatRateBps,
+    );
+
+    const updated = await updateProposalTaxValidation(sb, data.proposalId, {
+      taxPolicy,
+      taxCountry: data.taxCountry,
+      customerVatRateBps: data.customerVatRateBps,
+      taxBasis: "service_and_shipping",
+      taxValidationSource: "manual_admin_review",
+      validatedBy: context.userId,
+      customerVatAmountCents: recomputed.customerVatAmountCents,
+      customerTotalTtcCents: recomputed.customerTotalTtcCents,
+      balanceDueCents: recomputed.balanceDueCents,
+    });
+
+    await sb.from("marketplace_events").insert({
+      case_id: updated.caseId,
+      actor_user_id: context.userId,
+      event_type: "commercial_proposal_tax_validated",
+      metadata: {
+        proposal_id: updated.id,
+        tax_policy: updated.taxPolicy,
+        tax_country: updated.taxCountry,
+        customer_vat_rate_bps: updated.customerVatRateBps,
+      },
+    });
+
+    return updated;
+  });
+
+/**
+ * L'écran de vérification avant le premier vrai paiement (§13) — jamais
+ * calculé côté client : tout ce qu'il affiche vient d'une relecture
+ * serveur, y compris l'appel réel à `assertExpectedStripeAccount`.
+ */
+export const getPaymentPreflight = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => uuid.parse(data))
+  .handler(async ({ context, data: caseId }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    return loadPaymentPreflight(sb, caseId);
   });

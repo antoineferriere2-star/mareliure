@@ -1600,7 +1600,12 @@ export type Database = {
           status: string
           superseded_at: string | null
           target_margin_bps: number
+          tax_basis: string | null
+          tax_country: string | null
           tax_policy: string
+          tax_validated_at: string | null
+          tax_validated_by: string | null
+          tax_validation_source: string | null
           validated_at: string | null
           validated_by: string | null
           version: number
@@ -1648,7 +1653,12 @@ export type Database = {
           status?: string
           superseded_at?: string | null
           target_margin_bps: number
+          tax_basis?: string | null
+          tax_country?: string | null
           tax_policy?: string
+          tax_validated_at?: string | null
+          tax_validated_by?: string | null
+          tax_validation_source?: string | null
           validated_at?: string | null
           validated_by?: string | null
           version: number
@@ -1696,7 +1706,12 @@ export type Database = {
           status?: string
           superseded_at?: string | null
           target_margin_bps?: number
+          tax_basis?: string | null
+          tax_country?: string | null
           tax_policy?: string
+          tax_validated_at?: string | null
+          tax_validated_by?: string | null
+          tax_validation_source?: string | null
           validated_at?: string | null
           validated_by?: string | null
           version?: number

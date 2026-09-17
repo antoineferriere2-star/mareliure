@@ -12,7 +12,10 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import type {
   CommercialProposalSnapshot,
+  CommercialTaxPolicy,
   PricebookProvenanceEntry,
+  TaxBasis,
+  TaxValidationSource,
 } from "@/marketplace/commercial/commercialProposal";
 
 type Supa = SupabaseClient<Database>;
@@ -29,7 +32,7 @@ export interface CommercialProposalRow extends CommercialProposalSnapshot {
 }
 
 const COLUMNS =
-  "id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at";
+  "id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, tax_country, tax_basis, tax_validation_source, tax_validated_at, tax_validated_by, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toRow(row: any): CommercialProposalRow {
@@ -68,6 +71,11 @@ function toRow(row: any): CommercialProposalRow {
     customerVatAmountCents: row.customer_vat_amount_cents,
     customerTotalHtCents: row.customer_total_ht_cents,
     customerTotalTtcCents: row.customer_total_ttc_cents,
+    taxCountry: row.tax_country,
+    taxBasis: row.tax_basis,
+    taxValidationSource: row.tax_validation_source,
+    taxValidatedAt: row.tax_validated_at,
+    taxValidatedBy: row.tax_validated_by,
     depositType: row.deposit_type,
     depositValueBps: row.deposit_value_bps,
     depositAmountCents: row.deposit_amount_cents,
@@ -143,6 +151,11 @@ export async function insertCommercialProposal(
       customer_vat_amount_cents: snapshot.customerVatAmountCents,
       customer_total_ht_cents: snapshot.customerTotalHtCents,
       customer_total_ttc_cents: snapshot.customerTotalTtcCents,
+      tax_country: snapshot.taxCountry,
+      tax_basis: snapshot.taxBasis,
+      tax_validation_source: snapshot.taxValidationSource,
+      tax_validated_at: snapshot.taxValidatedAt,
+      tax_validated_by: snapshot.taxValidatedBy,
       deposit_type: snapshot.depositType,
       deposit_value_bps: snapshot.depositValueBps,
       deposit_amount_cents: snapshot.depositAmountCents,
@@ -155,6 +168,19 @@ export async function insertCommercialProposal(
     .single();
   if (error) throw error;
   return toRow(data);
+}
+
+export async function loadCommercialProposalById(
+  sb: Supa,
+  proposalId: string,
+): Promise<CommercialProposalRow | null> {
+  const { data, error } = await sb
+    .from("marketplace_commercial_proposals")
+    .select(COLUMNS)
+    .eq("id", proposalId)
+    .maybeSingle();
+  if (error) throw error;
+  return data ? toRow(data) : null;
 }
 
 export async function loadLatestCommercialProposal(
@@ -199,6 +225,53 @@ export async function listCommercialProposals(
   return (data ?? []).map(toRow);
 }
 
+export interface TaxValidationUpdate {
+  taxPolicy: CommercialTaxPolicy;
+  taxCountry: string;
+  customerVatRateBps: number | null;
+  taxBasis: TaxBasis;
+  taxValidationSource: TaxValidationSource;
+  validatedBy: string;
+  customerVatAmountCents: number | null;
+  customerTotalTtcCents: number | null;
+  balanceDueCents: number;
+}
+
+/**
+ * Valide la fiscalité d'une version encore modifiable — jamais une ligne
+ * déjà acceptée (`accepted_at IS NULL` dans le WHERE, en plus du trigger
+ * d'immuabilité côté base). C'est la seule écriture qui touche `tax_policy`
+ * après la création : la proposition elle-même ne recalcule jamais son
+ * prix, seule sa fiscalité change de `MANUAL_TAX_REVIEW` à une catégorie
+ * validée (§9-10 du brief du 17 septembre 2026).
+ */
+export async function updateProposalTaxValidation(
+  sb: Supa,
+  proposalId: string,
+  update: TaxValidationUpdate,
+): Promise<CommercialProposalRow> {
+  const { data, error } = await sb
+    .from("marketplace_commercial_proposals")
+    .update({
+      tax_policy: update.taxPolicy,
+      tax_country: update.taxCountry,
+      customer_vat_rate_bps: update.customerVatRateBps,
+      tax_basis: update.taxBasis,
+      tax_validation_source: update.taxValidationSource,
+      tax_validated_by: update.validatedBy,
+      tax_validated_at: new Date().toISOString(),
+      customer_vat_amount_cents: update.customerVatAmountCents,
+      customer_total_ttc_cents: update.customerTotalTtcCents,
+      balance_due_cents: update.balanceDueCents,
+    })
+    .eq("id", proposalId)
+    .is("accepted_at", null)
+    .select(COLUMNS)
+    .single();
+  if (error) throw error;
+  return toRow(data);
+}
+
 /**
  * Accepte une version — la seule écriture qu'une ligne `draft`/`proposed`
  * subit encore après sa création, et la dernière de sa vie : le trigger
@@ -206,11 +279,25 @@ export async function listCommercialProposals(
  * acceptées du même dossier passent `superseded`, par hygiène — l'index
  * partiel garantit déjà qu'une seule ligne acceptée peut exister par
  * dossier, ce marquage ne fait que le rendre lisible.
+ *
+ * Exige une fiscalité déjà validée (§9-10) — vérifié ici pour un message
+ * précis, et garanti de toute façon par le trigger (migration
+ * 20260917090000) si ce contrôle applicatif était contourné.
  */
 export async function acceptCommercialProposal(
   sb: Supa,
   proposalId: string,
 ): Promise<CommercialProposalRow> {
+  const { data: current, error: readError } = await sb
+    .from("marketplace_commercial_proposals")
+    .select("id, accepted_at, tax_validated_at")
+    .eq("id", proposalId)
+    .maybeSingle();
+  if (readError) throw readError;
+  if (!current) throw new Error("proposal_not_found");
+  if (current.accepted_at) throw new Error("proposal_already_accepted");
+  if (!current.tax_validated_at) throw new Error("proposal_tax_not_validated");
+
   const { data, error } = await sb
     .from("marketplace_commercial_proposals")
     .update({ status: "accepted", accepted_at: new Date().toISOString() })

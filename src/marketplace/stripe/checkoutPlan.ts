@@ -19,6 +19,8 @@ export interface CheckoutEligibilityInput {
   status: string;
   acceptedAt: string | null;
   taxPolicy: string;
+  /** `null` tant que personne n'a validé la fiscalité (§9-10 du brief du 17 septembre 2026) — jamais déduit du seul `taxPolicy`. */
+  taxValidatedAt: string | null;
   alreadyPaid: boolean;
 }
 
@@ -28,18 +30,18 @@ export type CheckoutEligibility =
 
 /**
  * Fail closed (§22) : toute donnée essentielle manquante ou non résolue
- * bloque, jamais un "on fait au mieux". `tax_policy` reste aujourd'hui
- * toujours `TAX_REVIEW_REQUIRED` (aucun moteur fiscal construit) — cette
- * fonction bloquera donc tout Checkout tant que ça n'aura pas changé, et
- * c'est exactement l'intention : mieux vaut bloquer que facturer avec une
- * mauvaise TVA (§12).
+ * bloque, jamais un "on fait au mieux". Tant qu'une proposition n'a pas une
+ * fiscalité validée (`taxPolicy` différent de `MANUAL_TAX_REVIEW` ET
+ * `taxValidatedAt` renseigné — les deux, jamais l'un sans l'autre, même si
+ * la base garantit déjà leur cohérence), cette fonction bloque tout
+ * Checkout : mieux vaut bloquer que facturer avec une mauvaise TVA (§12).
  */
 export function checkoutEligibility(input: CheckoutEligibilityInput): CheckoutEligibility {
   if (input.alreadyPaid) return { eligible: false, reason: "already_paid" };
   if (input.status !== "accepted" || !input.acceptedAt) {
     return { eligible: false, reason: "proposal_not_accepted" };
   }
-  if (input.taxPolicy === "TAX_REVIEW_REQUIRED") {
+  if (input.taxPolicy === "MANUAL_TAX_REVIEW" || !input.taxValidatedAt) {
     return { eligible: false, reason: "tax_review_required" };
   }
   return { eligible: true };

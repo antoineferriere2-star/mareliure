@@ -818,6 +818,109 @@ deploy:mareliure`. Migrations `20260916100000`, `20260916110000` et
 
 ---
 
+### Chantier de cette session (suite 4) — politique fiscale, éligibilité Checkout, préflight, bouton Payer
+
+Brief du 17 septembre 2026 : dernier chantier avant le premier vrai
+paiement. Connect/payout atelier explicitement non touché.
+
+**1. Identité publique Stripe — pas re-vérifiée en direct.** Le connecteur
+MCP Stripe (`stripe`) exige une autorisation OAuth que cette session, non
+interactive, ne peut pas faire aboutir : `list_available_accounts_or_orgs`
+et tout autre appel Stripe ont été refusés faute d'autorisation. L'audit
+réutilisé ici est donc celui déjà consigné le 16 septembre 2026 (suite 2,
+plus haut) : le compte `acct_1UGI34K0Q47WbZPf` porte toujours l'héritage
+"SECURICOM" (`statement_descriptor_prefix`, `payments.statement_descriptor`,
+`support_email: contact@securicom.shop`, `support_url: www.oppe.fr`). La
+proposition de correction n'a pas changé : préfixe `OPPE`, `support_email:
+contact@oppe.fr`, `support_url: https://mareliure.fr` — toujours à
+appliquer par l'utilisateur lui-même dans le Dashboard (le jeton MCP,
+quand il redevient accessible, reste de toute façon en lecture seule sur
+ces paramètres, `limited_account_retrieve`).
+
+**2-6. Politique fiscale — architecture construite, aucun taux inventé.**
+Détail complet dans `docs/commercial-billing-model.md` §9bis. Résumé :
+- Cinq catégories nommées (`MANUAL_TAX_REVIEW`, `FR_B2C`, `EU_B2C`,
+  `NON_EU_B2C`, `NON_EU_TEMPORARY_IMPORT_REEXPORT`) —
+  `src/marketplace/commercial/commercialProposal.ts`.
+- `src/marketplace/commercial/taxPolicy.ts` (pur, testé,
+  `taxPolicy.test.ts`) : liste des États membres UE (un fait géographique,
+  codé en dur — la seule chose qui l'est), `suggestTaxPolicyForCountry`
+  (suggestion de pré-remplissage, jamais lue par l'éligibilité Checkout),
+  `validateTaxPolicySelection` (garde structurelle), `recomputeProposalTax`
+  (arithmétique HT→TTC pure).
+- Migration `20260917090000_marketplace_commercial_proposal_tax.sql` :
+  renomme `TAX_REVIEW_REQUIRED` → `MANUAL_TAX_REVIEW` sur
+  `marketplace_commercial_proposals.tax_policy` (aucune ligne réelle
+  affectée — aucune proposition acceptée n'existe encore), ajoute
+  `tax_country`/`tax_basis`/`tax_validation_source`/`tax_validated_at`/
+  `tax_validated_by`, et une contrainte CHECK qui rend
+  **structurellement impossible** qu'une catégorie autre que
+  `MANUAL_TAX_REVIEW` existe sans validation tracée. Le trigger
+  d'acceptation refuse désormais aussi d'accepter une proposition dont la
+  fiscalité n'a pas été validée.
+- `validateCommercialProposalTax` (server function, admin) : la seule
+  écriture qui valide une fiscalité — un admin choisit pays/catégorie/taux,
+  jamais une règle automatique. `TaxValidationForm` dans
+  `CaseMatchingPage.tsx` (admin) l'expose.
+- `checkoutEligibility` (`checkoutPlan.ts`) exige désormais
+  `tax_validated_at` en plus de `tax_policy` — testé (`checkoutPlan.test.ts`).
+
+**7-8. HT-first, transport.** Inchangés — déjà conformes (§7 du brief),
+voir `commercial-billing-model.md` §4-5.
+
+**10-11. Éligibilité Checkout finale et bouton Payer.** `getMyCustomerCase`
+recalcule `checkoutEligibility` côté serveur et expose
+`case.paymentEligible` ; `CustomerCasePage.tsx` n'affiche le bouton
+(« Payer » / « Pay securely », `PayButton`) que si ce flag est vrai. Le
+bouton n'appelle que `createCommercialCheckoutSession`, qui refait le même
+calcul avant de parler à Stripe — aucun montant, aucune éligibilité
+calculée côté navigateur.
+
+**13. Préflight admin.** `getPaymentPreflight`
+(`src/marketplace/stripe/paymentPreflight.server.ts`) + `PreflightPanel`
+(`CaseMatchingPage.tsx`) : marque, dossier, client, service/transport HT,
+fiscalité, TVA, TTC, `assertExpectedStripeAccount` appelé pour de vrai,
+Products configurés, suffixe de relevé, webhook configuré, déjà-payé →
+`READY FOR PAYMENT` ou `BLOCKED — <raisons>`.
+
+**J-L. Tests, typecheck, build.** `npx vitest run` : 148 fichiers, 1970
+tests verts (16 nouveaux : `taxPolicy.test.ts` + mises à jour de
+`checkoutPlan.test.ts`/`commercialProposal.test.ts`). `npx tsc --noEmit` :
+propre (après mise à jour manuelle de `src/integrations/supabase/types.ts`
+pour les cinq nouvelles colonnes — même geste que les fois précédentes).
+`npm run build:mareliure` : vert, bundle vérifié
+(`hljxohondjvrkzqicexl` uniquement).
+
+**M-N. Déploiement — BLOQUÉ, pas fait.** `SUPABASE_ACCESS_TOKEN`
+(`.env.supabase`) répond `Unauthorized` sur l'API de gestion Supabase,
+même sur un appel de lecture trivial (`GET /v1/organizations`) — le jeton
+est expiré ou révoqué, pas un problème de portée. Conséquence directe :
+**la migration `20260917090000` n'a pas pu être appliquée en production**,
+et déployer le code sans elle casserait `getMyCustomerCase` (appelé par
+toute cliente qui ouvre son dossier : `loadAcceptedCommercialProposal`
+sélectionne désormais des colonnes qui n'existeraient pas encore côté
+base) — une régression bien plus grave que le blocage qu'on cherche à
+lever. **Le code n'a donc pas été déployé**, par choix, pas par oubli.
+
+**À faire par l'utilisateur avant de reprendre ce chantier** :
+1. Générer un nouveau jeton — Dashboard Supabase → compte → Access Tokens
+   → New token — et remplacer la valeur de `SUPABASE_ACCESS_TOKEN` dans
+   `.env.supabase`.
+2. Appliquer la migration via l'API de gestion (voir §H plus haut pour la
+   commande exacte — jamais `supabase db push` en direct, IPv6 non
+   routable depuis cet environnement).
+3. Alors seulement : `npm run deploy:mareliure`.
+
+**Toujours bloquant avant le premier vrai paiement** :
+1. Un taux de TVA validé par un expert-comptable pour au moins un cas réel
+   — le mécanisme existe, aucune valeur n'est validée.
+2. Correction manuelle de l'identité publique du compte (voir point 1).
+3. Rotation de `STRIPE_SECRET_KEY` — différée par décision explicite de
+   l'utilisateur.
+4. La migration `20260917090000` et le déploiement — voir ci-dessus.
+
+---
+
 ### Chantier de cette session (suite 3) — clé live posée, webhook enregistré
 
 **`STRIPE_SECRET_KEY` posée avec succès, health check vert :**

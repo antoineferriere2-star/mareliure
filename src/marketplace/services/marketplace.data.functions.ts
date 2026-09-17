@@ -34,6 +34,9 @@ import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
 import { isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
+import { loadAcceptedCommercialProposal } from "@/marketplace/services/commercialProposalRepository.server";
+import { loadCommercialPaymentState } from "@/marketplace/services/commercialPaymentRepository.server";
+import { checkoutEligibility } from "@/marketplace/stripe/checkoutPlan";
 
 /** zod needs a literal tuple; WORK_FAMILIES stays the one place the list is written. */
 const WORK_FAMILY_KEYS = WORK_FAMILIES.map((f) => f.key) as [WorkFamilyKey, ...WorkFamilyKey[]];
@@ -1337,6 +1340,24 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
       : { data: null };
     const skills = binder ? await skillsByBinder(sb, [binder.id]) : new Map<string, string[]>();
 
+    // Le bouton « Payer »/« Pay securely » ne doit jamais apparaître pour un
+    // dossier dont le Checkout échouerait à coup sûr (§11 du brief du
+    // 17 septembre 2026) — même garde-fou que `createCommercialCheckoutSession`,
+    // relu ici, jamais recalculé côté navigateur.
+    const acceptedProposal = await loadAcceptedCommercialProposal(sb, data.caseId);
+    const paymentState = acceptedProposal
+      ? await loadCommercialPaymentState(sb, acceptedProposal.id)
+      : null;
+    const paymentEligible = acceptedProposal
+      ? checkoutEligibility({
+          status: acceptedProposal.status,
+          acceptedAt: acceptedProposal.acceptedAt,
+          taxPolicy: acceptedProposal.taxPolicy,
+          taxValidatedAt: acceptedProposal.taxValidatedAt,
+          alreadyPaid: !!paymentState?.paidAt,
+        }).eligible
+      : false;
+
     return {
       case: {
         id: caseContext.row.id,
@@ -1349,6 +1370,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
         currency: caseContext.row.pricing_currency,
         priceIncludes: caseContext.row.price_includes,
         createdAt: caseContext.row.created_at,
+        paymentEligible,
       },
       view,
       selectedBinder: binder

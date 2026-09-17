@@ -128,19 +128,15 @@ transport.
 
 ## 5. Fiscalité
 
-`tax_policy` vaut toujours `TAX_REVIEW_REQUIRED` (`brandPricing.ts`,
-inchangé). Aucun moteur fiscal n'existe pour aucune des deux marques. Le
-snapshot conserve `customer_vat_rate_bps`/`customer_vat_amount_cents`/
-`customer_total_ttc_cents`, tous `null` tant que la politique reste en
-revue — jamais un TTC calculé sur un taux non validé. Le système reste
-HT-first : `customer_total_ht_cents` est toujours connu, `_ttc_cents` ne
-l'est que si un taux a été validé.
-
-**NON CONSTRUIT** : `FR_STANDARD`, `EU_CONSUMER`, `NON_EU_REVIEW`,
-`EXEMPT_CONFIRMED` — le type `CommercialTaxPolicy` reste ouvert pour ces
-valeurs futures, aucune n'est implémentée. Corollaire : rien dans ce
-chantier ne bloque un Checkout sur `MANUAL_TAX_REVIEW`, puisque le Checkout
-lui-même n'existe pas encore (§9).
+`marketplace_cases.tax_status` (aperçu de prix, avant toute proposition)
+vaut toujours `TAX_REVIEW_REQUIRED` (`brandPricing.ts`, inchangé — un
+vocabulaire distinct de celui du snapshot commercial, volontairement non
+harmonisé pour ne pas toucher à un champ hors du périmètre de ce
+chantier). Le snapshot d'une proposition, lui, a une vraie architecture
+fiscale depuis le 17 septembre 2026 — voir §9bis pour le détail complet
+(les cinq catégories, le mécanisme de validation admin, le snapshot fiscal
+figé). Le système reste HT-first : `customer_total_ht_cents` est toujours
+connu, `_ttc_cents` ne l'est que si un taux a été validé.
 
 ## 6. Modes de pricing
 
@@ -210,15 +206,29 @@ vraie clé secrète (`STRIPE_SECRET_KEY`), jamais la passerelle Lovable.
   production ; ni supprimés ni archivés sur ce compte (jamais demandé).
 - `createCommercialCheckoutSession` (`checkoutSession.server.ts`) :
   recharge la proposition **acceptée**, seule source du montant — jamais
-  une valeur du navigateur. `checkoutPlan.ts` (pur, testé) bloque tant que
-  `tax_policy` vaut `TAX_REVIEW_REQUIRED` (toujours vrai aujourd'hui,
-  aucun moteur fiscal construit) : **le premier vrai paiement ne peut donc
-  pas encore avoir lieu**, par construction, pas par bug. Descripteur de
-  relevé bancaire par marque via `payment_intent_data.
-  statement_descriptor_suffix` (`"MARELIURE"`/`"FINEBINDERY"`, dérivé du
-  `brand` de la proposition, jamais du navigateur) — combiné par Stripe
-  au préfixe raccourci du compte (`"OPPE"` proposé, pas encore posé côté
-  Dashboard, voir `CODEX_HANDOFF.md`).
+  une valeur du navigateur. `checkoutPlan.ts` (pur, testé) bloque tant
+  qu'une proposition n'a pas une fiscalité **validée** (`tax_policy`
+  différent de `MANUAL_TAX_REVIEW` ET `tax_validated_at` renseigné — voir
+  §9bis) : **le premier vrai paiement ne peut donc avoir lieu que pour un
+  dossier dont un admin a explicitement validé la fiscalité**, jamais par
+  une règle automatique. Descripteur de relevé bancaire par marque via
+  `payment_intent_data.statement_descriptor_suffix`
+  (`"MARELIURE"`/`"FINEBINDERY"`, dérivé du `brand` de la proposition,
+  jamais du navigateur) — combiné par Stripe au préfixe raccourci du
+  compte (`"OPPE"` proposé, pas encore posé côté Dashboard, voir
+  `CODEX_HANDOFF.md`).
+- Bouton client « Payer »/« Pay securely » (`CustomerCasePage.tsx`) :
+  n'apparaît que si le serveur (`getMyCustomerCase`) recalcule
+  `checkoutEligibility` à `true` pour la proposition acceptée du dossier —
+  jamais un flag optimiste côté client. Le bouton n'appelle que
+  `createCommercialCheckoutSession`, qui refait le même calcul
+  server-side avant de créer quoi que ce soit chez Stripe.
+- Préflight admin (`getPaymentPreflight`, `PreflightPanel` dans
+  `CaseMatchingPage.tsx`) : relit en direct marque, dossier, client,
+  service/transport HT, fiscalité, TVA, TTC, joignabilité réelle du compte
+  Stripe (`assertExpectedStripeAccount`), Products configurés, suffixe de
+  relevé, webhook configuré, déjà-payé — puis rend `READY FOR PAYMENT` ou
+  `BLOCKED — <raisons>`. Rien n'y est recalculé côté navigateur.
 - Webhook live **enregistré et vérifié** sur `LIVE_ACCOUNT_ID`
   (`we_1UGPd7K0Q47WbZPfCZDzfi6p`,
   `https://mareliure.fr/api/marketplace/stripe-webhook`) : signature
@@ -243,20 +253,83 @@ vraie clé secrète (`STRIPE_SECRET_KEY`), jamais la passerelle Lovable.
   Workers, qui n'a pas les modules Node `http`/`https` dont le SDK se
   sert par défaut.
 
+### 9bis. Politique fiscale — architecture (17 septembre 2026)
+
+Décidée par l'application, jamais par Stripe : Stripe Tax reste `active`
+sur le compte mais n'influence aucune décision — voir `CODEX_HANDOFF.md`
+§ "Stripe Tax reste sans effet sur notre politique métier". Aucune règle
+d'exonération n'est codée à partir d'une interprétation maison ; la seule
+chose codée en dur est une liste d'États membres UE (un fait géographique,
+pas une règle fiscale) dans `src/marketplace/commercial/taxPolicy.ts`.
+
+**Cinq catégories nommées** (`CommercialTaxPolicy`, `commercialProposal.ts`) :
+
+| Catégorie | Sens | Automatisable aujourd'hui ? |
+| --- | --- | --- |
+| `MANUAL_TAX_REVIEW` | Aucune fiscalité validée — seule valeur possible sans validation humaine (garanti en base) | — c'est l'état par défaut |
+| `FR_B2C` | Client particulier en France | Non : nécessite un taux confirmé par un expert-comptable et un pays client réellement capturé (aucun champ pays n'existe encore sur un dossier — voir plus bas) |
+| `EU_B2C` | Client particulier dans un autre État membre UE | Non, même raison |
+| `NON_EU_B2C` | Client particulier hors UE | Non, même raison — le traitement usuel (exonération à l'export) est plausible mais jamais affirmé ici sans validation |
+| `NON_EU_TEMPORARY_IMPORT_REEXPORT` | Livre appartenant à un client hors UE, envoyé en France pour restauration puis réexporté | Jamais automatisable : un fait qu'un code pays ne peut pas révéler, toujours une lecture humaine du dossier (régime douanier d'admission temporaire, distinct d'une vente) |
+
+**Ce qui est construit** : le mécanisme de validation, pas une règle
+fiscale. `validateCommercialProposalTax` (server function, admin
+uniquement) fait passer une proposition **encore modifiable** (jamais une
+ligne acceptée — le trigger l'interdit désormais aussi au niveau base,
+migration `20260917090000`) de `MANUAL_TAX_REVIEW` à une catégorie
+choisie par l'admin, avec un pays de taxation et un taux de TVA qu'il
+saisit lui-même — le code ne calcule ni ne suggère aucun taux, seulement
+l'arithmétique HT→TTC qui en découle (`recomputeProposalTax`, pure,
+testée). `suggestTaxPolicyForCountry` ne fait que pré-remplir le
+formulaire admin à partir d'un pays saisi ; `checkoutEligibility` ne la
+lit jamais, seulement `tax_validated_at`.
+
+**Snapshot fiscal** (§9 du brief, structure équivalente à celle demandée) :
+`tax_policy`, `customer_vat_rate_bps` (le taux), `customer_vat_amount_cents`
+(le montant), `tax_country`, `tax_basis` (`"service_and_shipping"` — une
+seule valeur aujourd'hui, le type reste ouvert si transport et service
+devaient un jour suivre des régimes distincts), `tax_validation_source`
+(`"manual_admin_review"`, seule source construite), `tax_validated_at`,
+`tax_validated_by`. Les trois derniers vont ensemble — jamais l'un sans
+les deux autres (contrainte CHECK en base). Une fois une proposition
+acceptée, ce snapshot est aussi immuable que le reste de la ligne : un
+changement de règle futur ne modifie jamais une commande déjà honorée.
+
+**Ce qui manque avant qu'une catégorie autre que `MANUAL_TAX_REVIEW`
+puisse être choisie en confiance** :
+1. Un taux TVA confirmé par un expert-comptable pour chacun des quatre cas
+   — non fait, volontairement hors du périmètre de ce chantier.
+2. Un pays client réellement connu : aucun dossier ne capture aujourd'hui
+   une adresse ou un pays du client (seuls `customerEmail`/`customerName`
+   existent, via `CaseContext`). L'admin saisit donc le pays à la main
+   dans `PreflightPanel`/`TaxValidationForm`, à partir de ce qu'il sait du
+   dossier — pas une lacune que ce chantier avait pour objet de combler.
+
+**Éligibilité Checkout finale** (`checkoutEligibility`, `checkoutPlan.ts`) :
+proposition acceptée ET `tax_policy` ≠ `MANUAL_TAX_REVIEW` ET
+`tax_validated_at` renseigné ET pas déjà payée. Le compte Stripe et le
+mapping Products restent vérifiés séparément (`assertExpectedStripeAccount`,
+`getStripeProductIds`) dans `createCommercialCheckoutSession` et dans
+`getPaymentPreflight` — fail closed sur chacun, jamais un "on fait au
+mieux" combiné dans la fonction pure.
+
 **Non construit / décisions ouvertes** :
-- Politique fiscale concrète (`FR_STANDARD`…) — bloque le premier
-  paiement tant qu'elle n'existe pas.
+- Un taux de TVA validé par un expert-comptable, pour n'importe laquelle
+  des quatre catégories concrètes — ce chantier construit le mécanisme de
+  validation, jamais la validation elle-même.
+- Capture d'un pays/adresse client sur un dossier — l'admin le saisit à la
+  main au moment de valider la fiscalité d'une proposition donnée.
 - Identité publique du compte (statement descriptor "SECURICOM" hérité,
   support_email/url) — proposition prête, à appliquer par l'utilisateur
   lui-même dans le Dashboard Stripe (le connecteur MCP n'a que
-  `limited_account_retrieve`, pas d'écriture sur ces paramètres).
+  `limited_account_retrieve`, pas d'écriture sur ces paramètres) ; pas
+  re-vérifiée en direct cette session (connecteur MCP Stripe non autorisé
+  dans cette session, voir `CODEX_HANDOFF.md`).
 - Rotation de `STRIPE_SECRET_KEY` — exposée une fois par erreur de
   frappe (collée sur la ligne de commande au lieu du prompt), rotation
   différée par décision explicite de l'utilisateur.
 - Invoicing Stripe (numérotation déjà partagée avec d'autres activités,
-  non touchée sans validation), UI cliente "Payer" (aucun bouton ne
-  déclenche encore `createCommercialCheckoutSession` — prématuré tant que
-  la politique fiscale bloque systématiquement l'éligibilité).
+  non touchée sans validation).
 
 ## 10. Ce qui n'a pas changé, volontairement
 

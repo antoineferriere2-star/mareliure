@@ -1,6 +1,8 @@
-import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getMyCustomerCase } from "@/marketplace/services/marketplace.data.functions";
+import { createCommercialCheckoutSession } from "@/marketplace/stripe/checkoutSession.server";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { ConversationPanel } from "@/marketplace/pages/ConversationPanel";
 import { DecisionsPanel } from "@/marketplace/pages/DecisionsPanel";
@@ -8,6 +10,35 @@ import { binderSkillLabel, binderSkillLabelEn } from "@/marketplace/binders/skil
 import { formatEuros } from "@/marketplace/pricing/money";
 import { visibleJourney } from "@/marketplace/cases/journey";
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { Button } from "@/components/ui/button";
+
+/**
+ * Le seul déclencheur d'un Checkout réel — appelle uniquement la server
+ * function existante (§11 du brief du 17 septembre 2026), qui recharge la
+ * proposition acceptée et fige le montant côté serveur. Le navigateur ne
+ * transmet jamais de montant, ici pas même un `caseId` de plus que celui déjà
+ * affiché.
+ */
+function PayButton({ caseId, en }: { caseId: string; en: boolean }) {
+  const createSession = useServerFn(createCommercialCheckoutSession);
+  const [error, setError] = useState<string | null>(null);
+  const pay = useMutation({
+    mutationFn: () => createSession({ data: { caseId } }),
+    onSuccess: (result) => {
+      window.location.href = result.url;
+    },
+    onError: (err: Error) => setError(err.message),
+  });
+
+  return (
+    <div className="mt-5">
+      <Button className="w-full" disabled={pay.isPending} onClick={() => pay.mutate()}>
+        {pay.isPending ? (en ? "Redirecting…" : "Redirection…") : en ? "Pay securely" : "Payer"}
+      </Button>
+      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+    </div>
+  );
+}
 
 function customerMessage(status: string, en: boolean): string {
   switch (status) {
@@ -101,6 +132,7 @@ export function CustomerCasePage({
         <p className="mt-5 text-sm leading-6 text-[#4b3a2c]">
           {customerMessage(data.case.status, en)}
         </p>
+        {data.case.paymentEligible && <PayButton caseId={caseId} en={en} />}
       </section>
 
       {/* Le parcours, réduit aux étapes qui existent : `journey.ts` retire

@@ -12,24 +12,50 @@ const PRODUCT_IDS = {
 };
 
 describe("checkoutEligibility", () => {
-  const base = { status: "accepted", acceptedAt: "2026-09-16T00:00:00.000Z", taxPolicy: "TAX_REVIEW_REQUIRED", alreadyPaid: false };
+  const base = {
+    status: "accepted",
+    acceptedAt: "2026-09-16T00:00:00.000Z",
+    taxPolicy: "MANUAL_TAX_REVIEW",
+    taxValidatedAt: null,
+    alreadyPaid: false,
+  };
 
-  it("bloque tant que tax_policy reste TAX_REVIEW_REQUIRED — fail closed par défaut", () => {
+  it("bloque tant que tax_policy reste MANUAL_TAX_REVIEW — fail closed par défaut", () => {
     expect(checkoutEligibility(base)).toEqual({ eligible: false, reason: "tax_review_required" });
   });
 
+  it("bloque même une catégorie fiscale nommée si elle n'a pas été validée (tax_validated_at manquant)", () => {
+    const result = checkoutEligibility({ ...base, taxPolicy: "FR_B2C", taxValidatedAt: null });
+    expect(result).toEqual({ eligible: false, reason: "tax_review_required" });
+  });
+
   it("bloque une proposition non acceptée, même avec une politique fiscale résolue", () => {
-    const result = checkoutEligibility({ ...base, status: "proposed", acceptedAt: null, taxPolicy: "FR_STANDARD" });
+    const result = checkoutEligibility({
+      ...base,
+      status: "proposed",
+      acceptedAt: null,
+      taxPolicy: "FR_B2C",
+      taxValidatedAt: "2026-09-17T00:00:00.000Z",
+    });
     expect(result).toEqual({ eligible: false, reason: "proposal_not_accepted" });
   });
 
   it("bloque un second Checkout si la proposition est déjà payée", () => {
-    const result = checkoutEligibility({ ...base, taxPolicy: "FR_STANDARD", alreadyPaid: true });
+    const result = checkoutEligibility({
+      ...base,
+      taxPolicy: "FR_B2C",
+      taxValidatedAt: "2026-09-17T00:00:00.000Z",
+      alreadyPaid: true,
+    });
     expect(result).toEqual({ eligible: false, reason: "already_paid" });
   });
 
-  it("autorise seulement quand acceptée ET la fiscalité est résolue ET pas déjà payée", () => {
-    const result = checkoutEligibility({ ...base, taxPolicy: "FR_STANDARD" });
+  it("autorise seulement quand acceptée ET la fiscalité est validée ET pas déjà payée", () => {
+    const result = checkoutEligibility({
+      ...base,
+      taxPolicy: "FR_B2C",
+      taxValidatedAt: "2026-09-17T00:00:00.000Z",
+    });
     expect(result).toEqual({ eligible: true });
   });
 });

@@ -21,8 +21,18 @@ import {
 import {
   acceptCommercialProposal,
   createCommercialProposal,
+  getPaymentPreflight,
   listCaseCommercialProposals,
+  validateCommercialProposalTax,
 } from "@/marketplace/services/commercialProposal.data.functions";
+import { TAX_POLICIES, suggestTaxPolicyForCountry } from "@/marketplace/commercial/taxPolicy";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
@@ -261,6 +271,15 @@ function PricingPanel({
  * l'explique (brief du 16 septembre 2026, §5). Interne/admin uniquement :
  * aucun client ne voit cet écran.
  */
+function line(label: string, value: string) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="tabular-nums">{value}</span>
+    </div>
+  );
+}
+
 function EconomicsPanel({
   row,
 }: {
@@ -292,12 +311,6 @@ function EconomicsPanel({
     contribution_floor: "le plancher de contribution",
   };
 
-  const line = (label: string, value: string) => (
-    <div className="flex items-center justify-between gap-3 py-1">
-      <span className="text-muted-foreground">{label}</span>
-      <span className="tabular-nums">{value}</span>
-    </div>
-  );
   const group = (title: string, children: ReactNode) => (
     <div className="mt-4 first:mt-0">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">{title}</p>
@@ -393,6 +406,175 @@ const PROPOSAL_STATUS_LABELS: Record<string, string> = {
   cancelled: "Annulée",
 };
 
+const TAX_POLICY_LABELS: Record<string, string> = {
+  MANUAL_TAX_REVIEW: "À valider manuellement",
+  FR_B2C: "France — particulier",
+  EU_B2C: "UE (hors France) — particulier",
+  NON_EU_B2C: "Hors UE — particulier",
+  NON_EU_TEMPORARY_IMPORT_REEXPORT: "Hors UE — admission temporaire, réexport",
+};
+
+/**
+ * La seule écriture qui fait passer une proposition de `MANUAL_TAX_REVIEW`
+ * à une catégorie fiscale nommée (§6, §9-10 du brief du 17 septembre 2026) —
+ * une décision humaine à chaque fois, jamais une règle automatique : le pays
+ * ne fait que pré-remplir une suggestion (`suggestTaxPolicyForCountry`),
+ * l'admin choisit et valide explicitement.
+ */
+function TaxValidationForm({
+  proposal,
+  caseId,
+}: {
+  proposal: { id: string; version: number };
+  caseId: string;
+}) {
+  const validate = useServerFn(validateCommercialProposalTax);
+  const queryClient = useQueryClient();
+  const queryKey = ["marketplace", "case", caseId, "commercial-proposals"] as const;
+  const [country, setCountry] = useState("");
+  const [policy, setPolicy] = useState<string>("MANUAL_TAX_REVIEW");
+  const [vatRate, setVatRate] = useState("");
+
+  const validating = useMutation({
+    mutationFn: () =>
+      validate({
+        data: {
+          proposalId: proposal.id,
+          taxPolicy: policy,
+          taxCountry: country,
+          customerVatRateBps:
+            vatRate.trim() === ""
+              ? null
+              : Math.round(Number.parseFloat(vatRate.replace(",", ".")) * 100),
+        },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
+    },
+  });
+
+  return (
+    <div className="mt-2 rounded-md border border-dashed border-border p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Valider la fiscalité — v{proposal.version}
+      </p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-3">
+        <div>
+          <Label className="text-xs">Pays de taxation</Label>
+          <Input
+            value={country}
+            maxLength={2}
+            placeholder="FR"
+            onChange={(e) => {
+              const value = e.target.value.toUpperCase();
+              setCountry(value);
+              setPolicy(suggestTaxPolicyForCountry(value || null));
+            }}
+          />
+        </div>
+        <div>
+          <Label className="text-xs">Catégorie</Label>
+          <Select value={policy} onValueChange={setPolicy}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {TAX_POLICIES.filter((p) => p !== "MANUAL_TAX_REVIEW").map((p) => (
+                <SelectItem key={p} value={p}>
+                  {TAX_POLICY_LABELS[p] ?? p}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <Label className="text-xs">TVA (%, laisser vide si non applicable)</Label>
+          <Input value={vatRate} placeholder="20" onChange={(e) => setVatRate(e.target.value)} />
+        </div>
+      </div>
+      {validating.error && (
+        <p className="mt-2 text-xs text-destructive">{(validating.error as Error).message}</p>
+      )}
+      <Button
+        size="sm"
+        className="mt-3"
+        disabled={validating.isPending || !country.trim()}
+        onClick={() => validating.mutate()}
+      >
+        Valider cette fiscalité
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * L'écran de vérification avant le premier vrai paiement (§13) : les mêmes
+ * champs que `checkoutEligibility` plus les à-côtés (compte Stripe,
+ * Products, webhook) qu'elle ne connaît pas — rien n'est recalculé côté
+ * navigateur, tout vient de `getPaymentPreflight`.
+ */
+function PreflightPanel({ caseId }: { caseId: string }) {
+  const fetchPreflight = useServerFn(getPaymentPreflight);
+  const { data, isPending, error, refetch, isFetching } = useQuery({
+    queryKey: ["marketplace", "case", caseId, "payment-preflight"] as const,
+    queryFn: () => fetchPreflight({ data: caseId }),
+  });
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Préflight paiement
+        </h2>
+        <Button size="sm" variant="outline" disabled={isFetching} onClick={() => refetch()}>
+          Rafraîchir
+        </Button>
+      </div>
+      {isPending && <p className="mt-2 text-xs text-muted-foreground">Chargement…</p>}
+      {error && <p className="mt-2 text-xs text-destructive">{(error as Error).message}</p>}
+      {data && !data.found && (
+        <p className="mt-2 text-xs text-destructive">Dossier introuvable.</p>
+      )}
+      {data && data.found && (
+        <div className="mt-3 text-sm">
+          {line("Marque", data.brand ?? "—")}
+          {line("Dossier", data.caseReference ?? "—")}
+          {line("Client", [data.customerName, data.customerEmail].filter(Boolean).join(" · ") || "—")}
+          {line("Service (HT)", data.serviceHtCents !== null ? formatEuros(data.serviceHtCents) : "—")}
+          {line("Transport (HT)", data.shippingHtCents !== null ? formatEuros(data.shippingHtCents) : "—")}
+          {line(
+            "Fiscalité",
+            data.taxPolicy ? (TAX_POLICY_LABELS[data.taxPolicy] ?? data.taxPolicy) : "—",
+          )}
+          {line(
+            "TVA",
+            data.customerVatRateBps !== null
+              ? `${(data.customerVatRateBps / 100).toFixed(1)} % (${
+                  data.customerVatAmountCents !== null ? formatEuros(data.customerVatAmountCents) : "—"
+                })`
+              : "—",
+          )}
+          {line("Total TTC", data.totalTtcCents !== null ? formatEuros(data.totalTtcCents) : "—")}
+          {line("Compte Stripe attendu", data.stripeExpectedAccountId ?? "—")}
+          {line("Compte Stripe joignable", data.stripeAccountOk ? "Oui" : "Non")}
+          {line("Products Stripe configurés", data.stripeProductIds ? "Oui" : "Non")}
+          {line("Descripteur relevé (suffixe)", data.statementDescriptorSuffix ?? "—")}
+          {line("Webhook configuré", data.webhookConfigured ? "Oui" : "Non")}
+          {line("Déjà payé", data.alreadyPaid ? "Oui" : "Non")}
+          <div
+            className={`mt-3 rounded-md p-3 text-sm font-medium ${
+              data.ready ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-900"
+            }`}
+          >
+            {data.ready ? "READY FOR PAYMENT" : `BLOCKED — ${data.blockedReasons.join(", ") || "raison inconnue"}`}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
 /**
  * La couche commerciale immuable (audit §2-3) : chaque version figée d'une
  * proposition pour ce dossier. « Accepter » est réservé à l'administration
@@ -441,32 +623,44 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
       )}
       <ul className="mt-3 space-y-2 text-sm">
         {(proposals ?? []).map((proposal) => (
-          <li
-            key={proposal.id}
-            className="flex items-center justify-between gap-3 rounded-md border border-border p-2"
-          >
-            <div>
-              <p>
-                v{proposal.version} · {PROPOSAL_STATUS_LABELS[proposal.status] ?? proposal.status} ·{" "}
-                {formatEuros(proposal.customerServicePriceCents)}
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Rémunération atelier {formatEuros(proposal.binderPayoutCents)} · plancher :{" "}
-                {proposal.priceBoundBy === "reference"
-                  ? "référence Pricebook"
-                  : proposal.priceBoundBy === "margin_floor"
-                    ? "marge"
-                    : "contribution minimale"}
-              </p>
+          <li key={proposal.id} className="rounded-md border border-border p-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p>
+                  v{proposal.version} · {PROPOSAL_STATUS_LABELS[proposal.status] ?? proposal.status} ·{" "}
+                  {formatEuros(proposal.customerServicePriceCents)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Rémunération atelier {formatEuros(proposal.binderPayoutCents)} · plancher :{" "}
+                  {proposal.priceBoundBy === "reference"
+                    ? "référence Pricebook"
+                    : proposal.priceBoundBy === "margin_floor"
+                      ? "marge"
+                      : "contribution minimale"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Fiscalité :{" "}
+                  {proposal.taxValidatedAt
+                    ? `${TAX_POLICY_LABELS[proposal.taxPolicy] ?? proposal.taxPolicy} · ${proposal.taxCountry} · TVA ${
+                        proposal.customerVatRateBps !== null
+                          ? `${(proposal.customerVatRateBps / 100).toFixed(1)} %`
+                          : "non applicable"
+                      }`
+                    : "à valider"}
+                </p>
+              </div>
+              {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (
+                <Button
+                  size="sm"
+                  disabled={accepting.isPending}
+                  onClick={() => accepting.mutate(proposal.id)}
+                >
+                  Accepter
+                </Button>
+              )}
             </div>
-            {proposal.status === "proposed" && !hasAccepted && (
-              <Button
-                size="sm"
-                disabled={accepting.isPending}
-                onClick={() => accepting.mutate(proposal.id)}
-              >
-                Accepter
-              </Button>
+            {proposal.status === "proposed" && !hasAccepted && !proposal.taxValidatedAt && (
+              <TaxValidationForm proposal={proposal} caseId={caseId} />
             )}
           </li>
         ))}
@@ -594,7 +788,12 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
 
         <EconomicsPanel row={data.case} />
 
-        {data.case.pricing_status === "validated" && <CommercialProposalPanel caseId={caseId} />}
+        {data.case.pricing_status === "validated" && (
+          <>
+            <CommercialProposalPanel caseId={caseId} />
+            <PreflightPanel caseId={caseId} />
+          </>
+        )}
 
         {data.matches.length > 0 && (
           <section className="rounded-lg border border-border bg-card p-5">

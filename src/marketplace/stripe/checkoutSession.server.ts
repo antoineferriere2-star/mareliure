@@ -74,6 +74,7 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
       status: proposal.status,
       acceptedAt: proposal.acceptedAt,
       taxPolicy: proposal.taxPolicy,
+      taxValidatedAt: proposal.taxValidatedAt,
       alreadyPaid: !!paymentState?.paidAt,
     });
     if (!eligibility.eligible) {

@@ -22,8 +22,25 @@ import type { PricingMode } from "@/marketplace/pricing/pricingMode";
 export type CommercialProposalStatus = "draft" | "proposed" | "accepted" | "superseded" | "cancelled";
 export type DepositType = "NONE" | "FIXED" | "PERCENTAGE";
 export type PriceBoundBy = "reference" | "margin_floor" | "contribution_floor";
-/** Une seule valeur possible aujourd'hui (brandPricing.ts) — le type reste ouvert pour la politique fiscale à venir. */
-export type CommercialTaxPolicy = "TAX_REVIEW_REQUIRED";
+/**
+ * `MANUAL_TAX_REVIEW` reste la seule valeur qu'une proposition puisse porter
+ * sans validation humaine (garanti aussi côté base, migration 20260917090000
+ * : les quatre autres exigent `tax_validated_at`). Les quatre autres sont des
+ * catégories que la plateforme sait nommer (§5 du brief du 17 septembre
+ * 2026) — pas encore des taux : voir taxPolicy.ts.
+ */
+export type CommercialTaxPolicy =
+  | "MANUAL_TAX_REVIEW"
+  | "FR_B2C"
+  | "EU_B2C"
+  | "NON_EU_B2C"
+  | "NON_EU_TEMPORARY_IMPORT_REEXPORT";
+
+/** Ce qui a été soumis à la TVA — une seule valeur aujourd'hui (§8 : ne pas présumer que le transport suit le même régime que le service tant que ce n'est pas validé, mais ne pas complexifier avant qu'un vrai cas l'exige). */
+export type TaxBasis = "service_and_shipping";
+
+/** La seule source de validation construite pour l'instant — une décision admin, tracée. Une règle automatique validée par un expert-comptable ajouterait sa propre valeur ici, jamais un remplacement silencieux de celle-ci. */
+export type TaxValidationSource = "manual_admin_review";
 
 /**
  * D'où vient `pricebookReferenceCents` : quelles entrées Pricebook
@@ -98,6 +115,13 @@ export interface CommercialProposalSnapshotInput {
 
   taxPolicy: CommercialTaxPolicy;
   customerVatRateBps: number | null;
+  /** `null` tant que `taxPolicy` vaut `MANUAL_TAX_REVIEW` (§9) — jamais un pays deviné. */
+  taxCountry: string | null;
+  taxBasis: TaxBasis;
+  /** Les trois champs de validation vont ensemble : soit tous `null` (MANUAL_TAX_REVIEW), soit tous renseignés (garanti aussi côté base). */
+  taxValidationSource: TaxValidationSource | null;
+  taxValidatedAt: string | null;
+  taxValidatedBy: string | null;
 
   deposit: DepositPolicyInput;
 
@@ -144,8 +168,13 @@ export interface CommercialProposalSnapshot {
   customerVatRateBps: number | null;
   customerVatAmountCents: number | null;
   customerTotalHtCents: number;
-  /** `null` tant que `taxPolicy` reste TAX_REVIEW_REQUIRED : jamais un TTC calculé sur un taux non validé. */
+  /** `null` tant que `taxPolicy` reste MANUAL_TAX_REVIEW : jamais un TTC calculé sur un taux non validé. */
   customerTotalTtcCents: number | null;
+  taxCountry: string | null;
+  taxBasis: TaxBasis;
+  taxValidationSource: TaxValidationSource | null;
+  taxValidatedAt: string | null;
+  taxValidatedBy: string | null;
 
   depositType: DepositType;
   depositValueBps: number | null;
@@ -223,6 +252,11 @@ export function buildCommercialProposalSnapshot(
     customerVatAmountCents,
     customerTotalHtCents,
     customerTotalTtcCents,
+    taxCountry: input.taxCountry,
+    taxBasis: input.taxBasis,
+    taxValidationSource: input.taxValidationSource,
+    taxValidatedAt: input.taxValidatedAt,
+    taxValidatedBy: input.taxValidatedBy,
     depositType: input.deposit.type,
     depositValueBps: input.deposit.valueBps,
     depositAmountCents: input.deposit.amountCents,
