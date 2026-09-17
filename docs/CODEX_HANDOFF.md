@@ -790,11 +790,14 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 17 septembre 2026 (matin — webhook live enregistré)
+**Date :** 17 septembre 2026 (politique fiscale, éligibilité Checkout, préflight, bouton Payer — déploiement bloqué, voir suite 4)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `a37f6246` (client Stripe marketplace passe par le transport
+**Commit :** `7bc0f2e2` (politique fiscale à cinq catégories, validation
+admin tracée, `checkoutEligibility` exige une fiscalité validée, préflight
+admin, bouton Payer client — migration `20260917090000` **non appliquée en
+production**, voir suite 4), sur `a37f6246` (client Stripe marketplace passe par le transport
 `fetch`, indispensable en Cloudflare Workers), `2afd2dea` (endpoint de
 santé du garde-fou compte Stripe), sur `e0cf1719` (descripteur de relevé
 par marque via `statement_descriptor_suffix`), sur `2d358ba6`, `94897323`, `7b2aaed0`
@@ -810,11 +813,13 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 `b924c9ef` (pages légales Fine Bindery), `611a2e53` → `02186112` (Phases B
 à F Fine Bindery).
 
-**Production : déployée le 17 septembre 2026 (matin).** Worker `mareliure`
-version `76ca610f-1f5b-40b1-aa7d-82332843d912`, via `npm run
-deploy:mareliure`. Migrations `20260916100000`, `20260916110000` et
-`20260916120000` toutes appliquées (`supabase db push --dry-run` →
-`upToDate: true`).
+**Production : toujours la version déployée le 17 septembre 2026 (matin),
+`76ca610f-1f5b-40b1-aa7d-82332843d912`.** Le commit `7bc0f2e2` (suite 4,
+ci-dessous) n'a **pas** été déployé : sa migration `20260917090000` n'a
+pas pu être appliquée (`SUPABASE_ACCESS_TOKEN` expiré). Migrations
+`20260916100000`, `20260916110000` et `20260916120000` toujours celles en
+production (`supabase db push --dry-run` → `upToDate: true` au moment de
+ce déploiement).
 
 ---
 
