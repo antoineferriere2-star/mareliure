@@ -790,17 +790,19 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 17 septembre 2026 (customer_type B2B, audit Stripe live reconfirmé — déploiement toujours bloqué, voir suite 5)
+**Date :** 17 septembre 2026 (soir — les deux migrations fiscales appliquées et déployées en production, voir suite 6)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `49df2dee` (modèle fiscal prêt pour du B2B : `customer_type`,
-`business_name`/`business_vat_number`/`billing_country` — migration
-`20260917100000`, **non appliquée en production**, voir suite 5), sur
+**Commit :** `ee4b20b8` (correction d'un constat erroné sur les capacités
+d'écriture Stripe), sur `a049ad01`, sur `49df2dee` (modèle fiscal prêt
+pour du B2B : `customer_type`, `business_name`/`business_vat_number`/
+`billing_country` — migration `20260917100000`, **appliquée en production
+le 17 septembre au soir**, voir suite 6), sur
 `7bc0f2e2` (politique fiscale à cinq catégories, validation
 admin tracée, `checkoutEligibility` exige une fiscalité validée, préflight
-admin, bouton Payer client — migration `20260917090000` **non appliquée en
-production**, voir suite 4), sur `a37f6246` (client Stripe marketplace passe par le transport
+admin, bouton Payer client — migration `20260917090000` **appliquée en
+production le 17 septembre au soir**, voir suite 6), sur `a37f6246` (client Stripe marketplace passe par le transport
 `fetch`, indispensable en Cloudflare Workers), `2afd2dea` (endpoint de
 santé du garde-fou compte Stripe), sur `e0cf1719` (descripteur de relevé
 par marque via `statement_descriptor_suffix`), sur `2d358ba6`, `94897323`, `7b2aaed0`
@@ -816,14 +818,102 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 `b924c9ef` (pages légales Fine Bindery), `611a2e53` → `02186112` (Phases B
 à F Fine Bindery).
 
-**Production : toujours la version déployée le 17 septembre 2026 (matin),
-`76ca610f-1f5b-40b1-aa7d-82332843d912`.** Ni `7bc0f2e2` (suite 4) ni
-`49df2dee` (suite 5, ci-dessous) n'ont été déployés : leurs deux
-migrations (`20260917090000`, `20260917100000`) n'ont pas pu être
-appliquées — `SUPABASE_ACCESS_TOKEN` toujours invalide, re-testé ce jour
-(voir suite 5). Migrations `20260916100000`, `20260916110000` et
-`20260916120000` toujours celles en production (`supabase db push
---dry-run` → `upToDate: true` au moment de ce déploiement).
+**Production : déployée le 17 septembre 2026 (soir), Worker `mareliure`
+version `1338a6ff-9f2b-48a7-9933-16d61e769514`.** Les deux migrations
+fiscales (`20260917090000`, `20260917100000`) ont été appliquées à la
+production (`hljxohondjvrkzqicexl`) via l'API de gestion Supabase — voir
+suite 6 pour le détail exact (colonnes vérifiées avant/après, comptage des
+migrations). Code et base de production sont alignés.
+
+---
+
+### Chantier de cette session (suite 6) — migrations fiscales appliquées, déploiement en production
+
+Suite directe de la suite 5 : le blocage `SUPABASE_ACCESS_TOKEN` a été
+levé par l'utilisateur au cours de cette même session.
+
+**Deux échecs avant le bon jeton — documentés pour qu'un futur agent ne
+perde pas de temps sur la même confusion** :
+1. Premier remplacement : toujours `Unauthorized`, format vérifié correct
+   (`sbp_`, 44 caractères) — jeton effectivement expiré/révoqué.
+2. Second remplacement : erreur différente (`"JWT could not be decoded"`).
+   Diagnostic (préfixe uniquement, jamais la valeur) : `sb_sec…`, 41
+   caractères — **une clé API de *projet*** (`sb_secret_...`, l'équivalent
+   moderne d'une clé de service), pas un **jeton d'accès personnel**. Les
+   deux sont des credentials Supabase distincts, faciles à confondre : la
+   clé de projet vient de *Project Settings → API*, le jeton de gestion
+   vient de *Account Settings → Access Tokens* et commence par `sbp_`.
+3. Troisième remplacement : `sbp_`, 44 caractères — **valide**.
+
+**Vérifications avant toute écriture (§6-7 du brief)** :
+- `GET /v1/organizations` → `200`, liste vide (le compte n'a pas
+  d'organisation nommée visible par ce jeton — sans conséquence, la suite
+  a confirmé l'accès au bon projet directement).
+- `GET /v1/projects` → un seul projet, `hljxohondjvrkzqicexl`, `"Ma
+  Reliure - production"`, `status: "ACTIVE_HEALTHY"` — la cible attendue,
+  confirmée par le jeton lui-même plutôt que supposée depuis la doc.
+- `supabase_migrations.schema_migrations` : 70 lignes, la plus récente
+  `20260916120000` — exactement ce qui était documenté, aucune migration
+  concurrente ajoutée par ailleurs. 72 fichiers locaux − 70 appliquées = 2
+  en attente (`20260917090000`, `20260917100000`), comme prévu.
+
+**Application** (`POST /v1/projects/hljxohondjvrkzqicexl/database/query`,
+jamais `supabase db push` — toujours injoignable en IPv6 depuis cet
+environnement) :
+- `20260917090000` appliquée, puis vérifiée par lecture directe
+  d'`information_schema.columns` : les 6 colonnes fiscales existent avec
+  les bons types et le bon défaut (`tax_policy` → `MANUAL_TAX_REVIEW`).
+  Enregistrée dans `supabase_migrations.schema_migrations` pour que
+  `supabase migration list`/`db push --dry-run` la reconnaisse.
+- `20260917100000` : la première tentative a été **refusée par le
+  classificateur de permissions de Claude Code** ("Modify Shared
+  Resources") — même catégorie de refus déjà rencontrée le 16 septembre
+  pour `stripe_implementation_planner`. Aucun contournement tenté ; le
+  blocage et la commande exacte ont été communiqués à l'utilisateur, qui
+  a explicitement autorisé la poursuite ("fais toi même"). Réappliquée
+  avec succès, vérifiée de la même façon (les 5 colonnes B2B existent),
+  puis enregistrée dans `schema_migrations`.
+- Compte final : `supabase_migrations.schema_migrations` liste bien
+  `20260917100000`, `20260917090000`, `20260916120000` en tête — les deux
+  nouvelles sont les plus récentes.
+
+**Redéploiement** (§32) : `npx tsc --noEmit` propre, `npx vitest run` → 148
+fichiers/1974 tests verts, `npm run build:mareliure` vert (bundle vérifié
+`hljxohondjvrkzqicexl` uniquement), puis `npm run deploy:mareliure` —
+Worker `mareliure` version `1338a6ff-9f2b-48a7-9933-16d61e769514`,
+92 fichiers uploadés, aucune erreur.
+
+**Smoke tests (§33) — partiels, ce qui est accessible sans identifiants
+admin** :
+- `https://mareliure.fr/` : charge, 0 erreur console, contenu correct.
+- `https://mareliure.fr/auth` : charge (`"Retrouver mes livres — Ma
+  Reliure"`), 0 erreur console.
+- `https://mareliure.fr/partenaires-relieurs` : charge, 0 erreur console.
+- `https://finebindery.com/` : charge (`"Fine Bindery — Exceptional
+  French Bookbinding"`), vérifié dans un onglet neuf pour écarter un faux
+  positif — 0 erreur console, tous les réseaux en 200/304.
+- `https://mareliure.fr/api/marketplace/stripe-health` sans jeton porteur
+  → `401` (comportement attendu, confirme que la route est bien déployée
+  et protégée — pas de vérification du contenu réel, qui exige le jeton
+  `STRIPE_HEALTHCHECK_TOKEN`, un secret que je n'ai pas et ne dois pas
+  avoir).
+- **Non fait, nécessite une session admin réelle** : portail client,
+  espace atelier, admin marketplace, ouverture d'un dossier existant,
+  proposition commerciale, validation tax admin, préflight paiement — je
+  n'ai pas d'identifiants et ne dois pas en demander. **À faire par
+  l'utilisateur** avant de considérer le parcours métier (§34) validé.
+
+**Toujours bloquant avant le premier vrai paiement** (inchangé, aucun de
+ces points n'était du ressort de ce chantier) :
+1. Un taux de TVA validé par un expert-comptable pour au moins un cas réel.
+2. Correction manuelle de l'identité publique Stripe (statement
+   descriptor, support_email/url, product_description) — toujours
+   impossible à écrire via le connecteur MCP, confirmé cette session ;
+   votre accord de principe est noté, l'exécution reste à faire par vous
+   dans le Dashboard.
+3. Rotation de `STRIPE_SECRET_KEY` — différée par décision explicite.
+4. Le parcours métier complet (§34) jusqu'à `READY FOR PAYMENT`, à
+   dérouler par un admin réel.
 
 ---
 
