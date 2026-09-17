@@ -43,6 +43,18 @@ export type TaxBasis = "service_and_shipping";
 export type TaxValidationSource = "manual_admin_review";
 
 /**
+ * `CUSTOMER` par défaut (particulier) — Fine Bindery recevra à terme des
+ * antiquaires, libraires, hôtels, décorateurs, sociétés, family offices
+ * (brief du 17 septembre 2026, §10) : le modèle ne doit jamais présumer
+ * que tout client est un particulier, même si aucune UI B2B complète
+ * n'existe encore.
+ */
+export type CustomerType = "CUSTOMER" | "BUSINESS";
+
+/** `NOT_CHECKED` par défaut — aucune vérification automatique de numéro de TVA n'est construite (§10 : préparer le champ, pas l'automatiser). */
+export type BusinessVatValidationStatus = "NOT_CHECKED" | "VALID" | "INVALID" | "UNAVAILABLE";
+
+/**
  * D'où vient `pricebookReferenceCents` : quelles entrées Pricebook
  * publiées, à quelle version, ont produit ce total — pour pouvoir expliquer
  * a posteriori "prix Pricebook Ma Reliure → coefficient de marque → prix
@@ -123,6 +135,14 @@ export interface CommercialProposalSnapshotInput {
   taxValidatedAt: string | null;
   taxValidatedBy: string | null;
 
+  /** `"CUSTOMER"` sauf décision explicite contraire — jamais deviné depuis le brand ou le pays (§10). */
+  customerType: CustomerType;
+  /** Renseignés seulement pour `customerType: "BUSINESS"` — `null` sinon. */
+  businessName: string | null;
+  businessVatNumber: string | null;
+  businessVatValidationStatus: BusinessVatValidationStatus | null;
+  billingCountry: string | null;
+
   deposit: DepositPolicyInput;
 
   status?: CommercialProposalStatus;
@@ -175,6 +195,12 @@ export interface CommercialProposalSnapshot {
   taxValidationSource: TaxValidationSource | null;
   taxValidatedAt: string | null;
   taxValidatedBy: string | null;
+
+  customerType: CustomerType;
+  businessName: string | null;
+  businessVatNumber: string | null;
+  businessVatValidationStatus: BusinessVatValidationStatus | null;
+  billingCountry: string | null;
 
   depositType: DepositType;
   depositValueBps: number | null;
@@ -257,6 +283,11 @@ export function buildCommercialProposalSnapshot(
     taxValidationSource: input.taxValidationSource,
     taxValidatedAt: input.taxValidatedAt,
     taxValidatedBy: input.taxValidatedBy,
+    customerType: input.customerType,
+    businessName: input.businessName,
+    businessVatNumber: input.businessVatNumber,
+    businessVatValidationStatus: input.businessVatValidationStatus,
+    billingCountry: input.billingCountry,
     depositType: input.deposit.type,
     depositValueBps: input.deposit.valueBps,
     depositAmountCents: input.deposit.amountCents,

@@ -1354,6 +1354,8 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
           acceptedAt: acceptedProposal.acceptedAt,
           taxPolicy: acceptedProposal.taxPolicy,
           taxValidatedAt: acceptedProposal.taxValidatedAt,
+          customerType: acceptedProposal.customerType,
+          businessName: acceptedProposal.businessName,
           alreadyPaid: !!paymentState?.paidAt,
         }).eligible
       : false;

@@ -30,6 +30,11 @@ function baseInput(overrides: Partial<CommercialProposalSnapshotInput> = {}): Co
     taxValidationSource: null,
     taxValidatedAt: null,
     taxValidatedBy: null,
+    customerType: "CUSTOMER",
+    businessName: null,
+    businessVatNumber: null,
+    businessVatValidationStatus: null,
+    billingCountry: null,
     deposit: { type: "NONE", valueBps: null, amountCents: 0 },
     ...overrides,
   };
@@ -96,6 +101,33 @@ describe("buildCommercialProposalSnapshot", () => {
     const snapshot = buildCommercialProposalSnapshot(baseInput({ customerVatRateBps: 2_000 }));
     expect(snapshot.customerVatAmountCents).toBe(10_000);
     expect(snapshot.customerTotalTtcCents).toBe(60_000);
+  });
+
+  /**
+   * §10 du brief du 17 septembre 2026 : le modèle ne doit jamais présumer
+   * qu'un client est forcément un particulier — Fine Bindery recevra des
+   * antiquaires, libraires, hôtels, sociétés.
+   */
+  it("porte une identité BUSINESS de bout en bout, sans la recalculer", () => {
+    const snapshot = buildCommercialProposalSnapshot(
+      baseInput({
+        customerType: "BUSINESS",
+        businessName: "Librairie Ancienne SARL",
+        businessVatNumber: "FR12345678901",
+        businessVatValidationStatus: "NOT_CHECKED",
+        billingCountry: "FR",
+      }),
+    );
+    expect(snapshot.customerType).toBe("BUSINESS");
+    expect(snapshot.businessName).toBe("Librairie Ancienne SARL");
+    expect(snapshot.businessVatNumber).toBe("FR12345678901");
+    expect(snapshot.billingCountry).toBe("FR");
+  });
+
+  it("par défaut, un client est CUSTOMER (particulier) — jamais deviné BUSINESS", () => {
+    const snapshot = buildCommercialProposalSnapshot(baseInput());
+    expect(snapshot.customerType).toBe("CUSTOMER");
+    expect(snapshot.businessName).toBeNull();
   });
 
   /**

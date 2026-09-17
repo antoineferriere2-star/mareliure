@@ -17,6 +17,8 @@ describe("checkoutEligibility", () => {
     acceptedAt: "2026-09-16T00:00:00.000Z",
     taxPolicy: "MANUAL_TAX_REVIEW",
     taxValidatedAt: null,
+    customerType: "CUSTOMER",
+    businessName: null,
     alreadyPaid: false,
   };
 
@@ -55,6 +57,33 @@ describe("checkoutEligibility", () => {
       ...base,
       taxPolicy: "FR_B2C",
       taxValidatedAt: "2026-09-17T00:00:00.000Z",
+    });
+    expect(result).toEqual({ eligible: true });
+  });
+
+  /**
+   * §10, §15 du brief du 17 septembre 2026 : le modèle ne doit jamais
+   * présumer qu'un client est un particulier — Fine Bindery recevra des
+   * antiquaires, libraires, hôtels, sociétés.
+   */
+  it("bloque un client BUSINESS sans raison sociale, même fiscalité validée", () => {
+    const result = checkoutEligibility({
+      ...base,
+      taxPolicy: "FR_B2C",
+      taxValidatedAt: "2026-09-17T00:00:00.000Z",
+      customerType: "BUSINESS",
+      businessName: null,
+    });
+    expect(result).toEqual({ eligible: false, reason: "business_identity_incomplete" });
+  });
+
+  it("autorise un client BUSINESS dont la raison sociale est renseignée", () => {
+    const result = checkoutEligibility({
+      ...base,
+      taxPolicy: "FR_B2C",
+      taxValidatedAt: "2026-09-17T00:00:00.000Z",
+      customerType: "BUSINESS",
+      businessName: "Librairie Ancienne SARL",
     });
     expect(result).toEqual({ eligible: true });
   });

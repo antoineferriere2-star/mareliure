@@ -25,6 +25,9 @@ export interface PaymentPreflightResult {
   caseReference: string | null;
   customerEmail: string | null;
   customerName: string | null;
+  customerType: string | null;
+  businessName: string | null;
+  billingCountry: string | null;
   proposalStatus: string | null;
   serviceHtCents: number | null;
   shippingHtCents: number | null;
@@ -55,6 +58,9 @@ export async function getPaymentPreflight(sb: Supa, caseId: string): Promise<Pay
       caseReference: null,
       customerEmail: null,
       customerName: null,
+      customerType: null,
+      businessName: null,
+      billingCountry: null,
       proposalStatus: null,
       serviceHtCents: null,
       shippingHtCents: null,
@@ -103,6 +109,8 @@ export async function getPaymentPreflight(sb: Supa, caseId: string): Promise<Pay
       acceptedAt: proposal.acceptedAt,
       taxPolicy: proposal.taxPolicy,
       taxValidatedAt: proposal.taxValidatedAt,
+      customerType: proposal.customerType,
+      businessName: proposal.businessName,
       alreadyPaid,
     });
     if (!eligibility.eligible) blockedReasons.push(eligibility.reason);
@@ -118,6 +126,9 @@ export async function getPaymentPreflight(sb: Supa, caseId: string): Promise<Pay
     caseReference: caseContext.row.reference,
     customerEmail: caseContext.customerEmail,
     customerName: caseContext.customerName,
+    customerType: proposal?.customerType ?? null,
+    businessName: proposal?.businessName ?? null,
+    billingCountry: proposal?.billingCountry ?? null,
     proposalStatus: proposal?.status ?? null,
     serviceHtCents: proposal?.customerServicePriceCents ?? null,
     shippingHtCents: proposal?.shippingTotalCents ?? null,

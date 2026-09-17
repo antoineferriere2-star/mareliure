@@ -11,8 +11,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database, Json } from "@/integrations/supabase/types";
 import type {
+  BusinessVatValidationStatus,
   CommercialProposalSnapshot,
   CommercialTaxPolicy,
+  CustomerType,
   PricebookProvenanceEntry,
   TaxBasis,
   TaxValidationSource,
@@ -32,7 +34,7 @@ export interface CommercialProposalRow extends CommercialProposalSnapshot {
 }
 
 const COLUMNS =
-  "id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, tax_country, tax_basis, tax_validation_source, tax_validated_at, tax_validated_by, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at";
+  "id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, tax_country, tax_basis, tax_validation_source, tax_validated_at, tax_validated_by, customer_type, business_name, business_vat_number, business_vat_validation_status, billing_country, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toRow(row: any): CommercialProposalRow {
@@ -76,6 +78,11 @@ function toRow(row: any): CommercialProposalRow {
     taxValidationSource: row.tax_validation_source,
     taxValidatedAt: row.tax_validated_at,
     taxValidatedBy: row.tax_validated_by,
+    customerType: row.customer_type,
+    businessName: row.business_name,
+    businessVatNumber: row.business_vat_number,
+    businessVatValidationStatus: row.business_vat_validation_status,
+    billingCountry: row.billing_country,
     depositType: row.deposit_type,
     depositValueBps: row.deposit_value_bps,
     depositAmountCents: row.deposit_amount_cents,
@@ -156,6 +163,11 @@ export async function insertCommercialProposal(
       tax_validation_source: snapshot.taxValidationSource,
       tax_validated_at: snapshot.taxValidatedAt,
       tax_validated_by: snapshot.taxValidatedBy,
+      customer_type: snapshot.customerType,
+      business_name: snapshot.businessName,
+      business_vat_number: snapshot.businessVatNumber,
+      business_vat_validation_status: snapshot.businessVatValidationStatus,
+      billing_country: snapshot.billingCountry,
       deposit_type: snapshot.depositType,
       deposit_value_bps: snapshot.depositValueBps,
       deposit_amount_cents: snapshot.depositAmountCents,
@@ -235,15 +247,22 @@ export interface TaxValidationUpdate {
   customerVatAmountCents: number | null;
   customerTotalTtcCents: number | null;
   balanceDueCents: number;
+  /** L'identité client se fige au même moment que la fiscalité — les deux sont bloquées ensemble par l'immuabilité après acceptation (§10-11 du brief du 17 septembre 2026). */
+  customerType: CustomerType;
+  businessName: string | null;
+  businessVatNumber: string | null;
+  businessVatValidationStatus: BusinessVatValidationStatus | null;
+  billingCountry: string | null;
 }
 
 /**
- * Valide la fiscalité d'une version encore modifiable — jamais une ligne
- * déjà acceptée (`accepted_at IS NULL` dans le WHERE, en plus du trigger
- * d'immuabilité côté base). C'est la seule écriture qui touche `tax_policy`
- * après la création : la proposition elle-même ne recalcule jamais son
- * prix, seule sa fiscalité change de `MANUAL_TAX_REVIEW` à une catégorie
- * validée (§9-10 du brief du 17 septembre 2026).
+ * Valide la fiscalité (et l'identité client) d'une version encore
+ * modifiable — jamais une ligne déjà acceptée (`accepted_at IS NULL` dans
+ * le WHERE, en plus du trigger d'immuabilité côté base). C'est la seule
+ * écriture qui touche `tax_policy` après la création : la proposition
+ * elle-même ne recalcule jamais son prix, seule sa fiscalité change de
+ * `MANUAL_TAX_REVIEW` à une catégorie validée (§9-10 du brief du
+ * 17 septembre 2026).
  */
 export async function updateProposalTaxValidation(
   sb: Supa,
@@ -263,6 +282,11 @@ export async function updateProposalTaxValidation(
       customer_vat_amount_cents: update.customerVatAmountCents,
       customer_total_ttc_cents: update.customerTotalTtcCents,
       balance_due_cents: update.balanceDueCents,
+      customer_type: update.customerType,
+      business_name: update.businessName,
+      business_vat_number: update.businessVatNumber,
+      business_vat_validation_status: update.businessVatValidationStatus,
+      billing_country: update.billingCountry,
     })
     .eq("id", proposalId)
     .is("accepted_at", null)

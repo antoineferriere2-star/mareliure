@@ -1597,6 +1597,11 @@ export type Database = {
           shipping_outbound_cents: number
           shipping_return_cents: number
           shipping_total_cents: number
+          billing_country: string | null
+          business_name: string | null
+          business_vat_number: string | null
+          business_vat_validation_status: string | null
+          customer_type: string
           status: string
           superseded_at: string | null
           target_margin_bps: number
@@ -1650,6 +1655,11 @@ export type Database = {
           shipping_outbound_cents?: number
           shipping_return_cents?: number
           shipping_total_cents?: number
+          billing_country?: string | null
+          business_name?: string | null
+          business_vat_number?: string | null
+          business_vat_validation_status?: string | null
+          customer_type?: string
           status?: string
           superseded_at?: string | null
           target_margin_bps: number
@@ -1703,6 +1713,11 @@ export type Database = {
           shipping_outbound_cents?: number
           shipping_return_cents?: number
           shipping_total_cents?: number
+          billing_country?: string | null
+          business_name?: string | null
+          business_vat_number?: string | null
+          business_vat_validation_status?: string | null
+          customer_type?: string
           status?: string
           superseded_at?: string | null
           target_margin_bps?: number

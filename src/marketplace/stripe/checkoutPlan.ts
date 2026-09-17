@@ -13,6 +13,7 @@ import type { StripeProductIds } from "./stripeConfig.server";
 export type CheckoutBlockReason =
   | "proposal_not_accepted"
   | "tax_review_required"
+  | "business_identity_incomplete"
   | "already_paid";
 
 export interface CheckoutEligibilityInput {
@@ -21,6 +22,10 @@ export interface CheckoutEligibilityInput {
   taxPolicy: string;
   /** `null` tant que personne n'a validé la fiscalité (§9-10 du brief du 17 septembre 2026) — jamais déduit du seul `taxPolicy`. */
   taxValidatedAt: string | null;
+  /** `"CUSTOMER"` ou `"BUSINESS"` (§10, §15 du brief du 17 septembre 2026) — le modèle ne présume jamais qu'un client est un particulier. */
+  customerType: string;
+  /** Requis quand `customerType` vaut `"BUSINESS"` — `null` sinon. Garanti cohérent en base (contrainte CHECK, migration 20260917100000) ; revérifié ici, jamais supposé. */
+  businessName: string | null;
   alreadyPaid: boolean;
 }
 
@@ -43,6 +48,9 @@ export function checkoutEligibility(input: CheckoutEligibilityInput): CheckoutEl
   }
   if (input.taxPolicy === "MANUAL_TAX_REVIEW" || !input.taxValidatedAt) {
     return { eligible: false, reason: "tax_review_required" };
+  }
+  if (input.customerType === "BUSINESS" && !input.businessName) {
+    return { eligible: false, reason: "business_identity_incomplete" };
   }
   return { eligible: true };
 }

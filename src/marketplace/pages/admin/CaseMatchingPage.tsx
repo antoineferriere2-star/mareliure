@@ -434,6 +434,13 @@ function TaxValidationForm({
   const [country, setCountry] = useState("");
   const [policy, setPolicy] = useState<string>("MANUAL_TAX_REVIEW");
   const [vatRate, setVatRate] = useState("");
+  // CUSTOMER par défaut (§10 du brief du 17 septembre 2026) : Fine Bindery
+  // recevra des antiquaires, libraires, hôtels, sociétés — jamais présumé
+  // particulier ni professionnel sans décision explicite de l'admin.
+  const [customerType, setCustomerType] = useState<"CUSTOMER" | "BUSINESS">("CUSTOMER");
+  const [businessName, setBusinessName] = useState("");
+  const [businessVatNumber, setBusinessVatNumber] = useState("");
+  const [billingCountry, setBillingCountry] = useState("");
 
   const validating = useMutation({
     mutationFn: () =>
@@ -446,6 +453,11 @@ function TaxValidationForm({
             vatRate.trim() === ""
               ? null
               : Math.round(Number.parseFloat(vatRate.replace(",", ".")) * 100),
+          customerType,
+          businessName: customerType === "BUSINESS" ? businessName.trim() : null,
+          businessVatNumber:
+            customerType === "BUSINESS" && businessVatNumber.trim() ? businessVatNumber.trim() : null,
+          billingCountry: billingCountry.trim() || null,
         },
       }),
     onSuccess: () => {
@@ -493,13 +505,50 @@ function TaxValidationForm({
           <Input value={vatRate} placeholder="20" onChange={(e) => setVatRate(e.target.value)} />
         </div>
       </div>
+      <div className="mt-3 grid gap-2 sm:grid-cols-3">
+        <div>
+          <Label className="text-xs">Type de client</Label>
+          <Select value={customerType} onValueChange={(v) => setCustomerType(v as "CUSTOMER" | "BUSINESS")}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="CUSTOMER">Particulier</SelectItem>
+              <SelectItem value="BUSINESS">Professionnel</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {customerType === "BUSINESS" && (
+          <>
+            <div>
+              <Label className="text-xs">Raison sociale</Label>
+              <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">N° TVA (facultatif)</Label>
+              <Input value={businessVatNumber} onChange={(e) => setBusinessVatNumber(e.target.value)} />
+            </div>
+          </>
+        )}
+        <div>
+          <Label className="text-xs">Pays de facturation (facultatif)</Label>
+          <Input
+            value={billingCountry}
+            maxLength={2}
+            placeholder={country || "FR"}
+            onChange={(e) => setBillingCountry(e.target.value.toUpperCase())}
+          />
+        </div>
+      </div>
       {validating.error && (
         <p className="mt-2 text-xs text-destructive">{(validating.error as Error).message}</p>
       )}
       <Button
         size="sm"
         className="mt-3"
-        disabled={validating.isPending || !country.trim()}
+        disabled={
+          validating.isPending || !country.trim() || (customerType === "BUSINESS" && !businessName.trim())
+        }
         onClick={() => validating.mutate()}
       >
         Valider cette fiscalité
@@ -541,6 +590,15 @@ function PreflightPanel({ caseId }: { caseId: string }) {
           {line("Marque", data.brand ?? "—")}
           {line("Dossier", data.caseReference ?? "—")}
           {line("Client", [data.customerName, data.customerEmail].filter(Boolean).join(" · ") || "—")}
+          {line(
+            "Type de client",
+            data.customerType === "BUSINESS"
+              ? `Professionnel — ${data.businessName ?? "raison sociale manquante"}`
+              : data.customerType === "CUSTOMER"
+                ? "Particulier"
+                : "—",
+          )}
+          {line("Pays de facturation", data.billingCountry ?? "—")}
           {line("Service (HT)", data.serviceHtCents !== null ? formatEuros(data.serviceHtCents) : "—")}
           {line("Transport (HT)", data.shippingHtCents !== null ? formatEuros(data.shippingHtCents) : "—")}
           {line(
@@ -647,6 +705,12 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
                           : "non applicable"
                       }`
                     : "à valider"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Client :{" "}
+                  {proposal.customerType === "BUSINESS"
+                    ? `Professionnel — ${proposal.businessName ?? "raison sociale à renseigner"}`
+                    : "Particulier"}
                 </p>
               </div>
               {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (

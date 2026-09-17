@@ -245,6 +245,12 @@ vraie clé secrète (`STRIPE_SECRET_KEY`), jamais la passerelle Lovable.
   que le paramètre `type` legacy) — jamais appelé, aucun Connected
   Account créé. Aucun Connected Account n'existait déjà sur
   `LIVE_ACCOUNT_ID` (`GetAccounts` → liste vide).
+- **Reconfirmé en direct le 17 septembre 2026 (chantier suivant)** via le
+  connecteur MCP Stripe (réautorisé pendant la session) : les 3 Products
+  existent avec les mêmes IDs et sans `default_price`, le webhook répond
+  avec les mêmes 7 événements et `status: "enabled"`, et le compte reste
+  propre — `GetCustomers`/`GetAccounts` (connectés) renvoient toujours des
+  listes vides. Aucune régression entre les deux audits.
 - `assertExpectedStripeAccount` **vérifié fonctionnel de bout en bout** en
   production (`GET /api/marketplace/stripe-health`, protégé par jeton
   porteur) : `{"ok":true,"expectedAccountId":"acct_1UGI34K0Q47WbZPf"}`.
@@ -305,9 +311,26 @@ puisse être choisie en confiance** :
    dans `PreflightPanel`/`TaxValidationForm`, à partir de ce qu'il sait du
    dossier — pas une lacune que ce chantier avait pour objet de combler.
 
+### 9ter. Customer type — pas structurellement B2C-only (17 septembre 2026)
+
+Le modèle ne suppose jamais qu'un client est un particulier :
+`customer_type` (`"CUSTOMER"` par défaut, `"BUSINESS"` sinon) sur
+`marketplace_commercial_proposals`, migration `20260917100000`. Pour
+`BUSINESS` : `business_name` (requis — contrainte CHECK en base),
+`business_vat_number` (facultatif), `business_vat_validation_status`
+(`"NOT_CHECKED"` par défaut — aucune vérification automatique de numéro de
+TVA construite), `billing_country` (facultatif, distinct de `tax_country`
+qui reste le pays de taxation retenu). Se finalise au même moment que la
+fiscalité (`validateCommercialProposalTax`, `TaxValidationForm`), avant
+acceptation — donc figé, contractuel, une fois la proposition acceptée.
+`checkoutEligibility` bloque désormais aussi un client `BUSINESS` sans
+`business_name` (`reason: "business_identity_incomplete"`). Aucune UI
+d'onboarding B2B complète n'existe : l'admin saisit ces champs à la main.
+
 **Éligibilité Checkout finale** (`checkoutEligibility`, `checkoutPlan.ts`) :
 proposition acceptée ET `tax_policy` ≠ `MANUAL_TAX_REVIEW` ET
-`tax_validated_at` renseigné ET pas déjà payée. Le compte Stripe et le
+`tax_validated_at` renseigné ET (`customer_type` ≠ `BUSINESS` OU
+`business_name` renseigné) ET pas déjà payée. Le compte Stripe et le
 mapping Products restent vérifiés séparément (`assertExpectedStripeAccount`,
 `getStripeProductIds`) dans `createCommercialCheckoutSession` et dans
 `getPaymentPreflight` — fail closed sur chacun, jamais un "on fait au
@@ -319,12 +342,16 @@ mieux" combiné dans la fonction pure.
   validation, jamais la validation elle-même.
 - Capture d'un pays/adresse client sur un dossier — l'admin le saisit à la
   main au moment de valider la fiscalité d'une proposition donnée.
+- Vérification automatique de numéro de TVA (VIES ou équivalent) —
+  `business_vat_validation_status` reste `"NOT_CHECKED"`, rien ne l'appelle.
 - Identité publique du compte (statement descriptor "SECURICOM" hérité,
-  support_email/url) — proposition prête, à appliquer par l'utilisateur
-  lui-même dans le Dashboard Stripe (le connecteur MCP n'a que
-  `limited_account_retrieve`, pas d'écriture sur ces paramètres) ; pas
-  re-vérifiée en direct cette session (connecteur MCP Stripe non autorisé
-  dans cette session, voir `CODEX_HANDOFF.md`).
+  support_email `contact@securicom.shop`, pas de `support_url`) — **audit
+  live reconfirmé le 17 septembre 2026** (connecteur MCP Stripe désormais
+  autorisé, lecture complète du compte via `GetAccountsAccount`, plus
+  seulement `limited_account_retrieve` comme le 16 septembre) ; proposition
+  de correction (`OPPE`, `contact@oppe.fr`, `https://mareliure.fr`)
+  toujours en attente de la décision de l'utilisateur avant toute écriture
+  — voir `CODEX_HANDOFF.md`.
 - Rotation de `STRIPE_SECRET_KEY` — exposée une fois par erreur de
   frappe (collée sur la ligne de commande au lieu du prompt), rotation
   différée par décision explicite de l'utilisateur.

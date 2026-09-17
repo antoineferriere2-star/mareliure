@@ -75,6 +75,8 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
       acceptedAt: proposal.acceptedAt,
       taxPolicy: proposal.taxPolicy,
       taxValidatedAt: proposal.taxValidatedAt,
+      customerType: proposal.customerType,
+      businessName: proposal.businessName,
       alreadyPaid: !!paymentState?.paidAt,
     });
     if (!eligibility.eligible) {
@@ -82,6 +84,8 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
         proposal_not_accepted: "Cette proposition n'est pas (encore) acceptée.",
         tax_review_required:
           "Le traitement fiscal de ce dossier doit d'abord être validé par un administrateur.",
+        business_identity_incomplete:
+          "L'identité professionnelle de ce client (raison sociale) doit être renseignée avant paiement.",
         already_paid: "Cette commande est déjà payée.",
       };
       fail(409, messages[eligibility.reason]);

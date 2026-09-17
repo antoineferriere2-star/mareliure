@@ -171,6 +171,15 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
       taxValidationSource: null,
       taxValidatedAt: null,
       taxValidatedBy: null,
+      // L'identité client se finalise avec la fiscalité, avant acceptation
+      // (validateCommercialProposalTax) — jamais devinée à la création
+      // (§10 du brief du 17 septembre 2026 : un client est CUSTOMER par
+      // défaut, jamais présumé BUSINESS).
+      customerType: "CUSTOMER",
+      businessName: null,
+      businessVatNumber: null,
+      businessVatValidationStatus: null,
+      billingCountry: null,
       deposit,
       status: "proposed",
     });
@@ -263,6 +272,13 @@ const validateTaxInput = z.object({
   // Points de base (1/100 de %) — jamais un pourcentage flottant, même
   // convention que le reste du snapshot (customerVatRateBps).
   customerVatRateBps: z.number().int().min(0).nullable(),
+  // L'identité client se finalise ici, avec la fiscalité — les deux sont
+  // figées ensemble avant acceptation (§10-11 du brief du 17 septembre
+  // 2026). "CUSTOMER" par défaut : ne jamais présumer BUSINESS.
+  customerType: z.enum(["CUSTOMER", "BUSINESS"]).default("CUSTOMER"),
+  businessName: z.string().trim().min(1).nullable().default(null),
+  businessVatNumber: z.string().trim().min(1).nullable().default(null),
+  billingCountry: z.string().trim().min(1).nullable().default(null),
 });
 
 /**
@@ -296,6 +312,13 @@ export const validateCommercialProposalTax = createServerFn({ method: "POST" })
       fail(400, messages[check.reason]);
     }
 
+    // Même garde-fou que la contrainte CHECK en base (migration
+    // 20260917100000) — vérifié aussi ici pour un message clair plutôt
+    // qu'une erreur Postgres brute (§10-11 du brief du 17 septembre 2026).
+    if (data.customerType === "BUSINESS" && !data.businessName) {
+      fail(400, "La raison sociale est requise pour un client professionnel (BUSINESS).");
+    }
+
     const sb = await admin();
     const proposal = await loadCommercialProposalById(sb, data.proposalId);
     if (!proposal) fail(404, "Proposition introuvable.");
@@ -320,6 +343,11 @@ export const validateCommercialProposalTax = createServerFn({ method: "POST" })
       customerVatAmountCents: recomputed.customerVatAmountCents,
       customerTotalTtcCents: recomputed.customerTotalTtcCents,
       balanceDueCents: recomputed.balanceDueCents,
+      customerType: data.customerType,
+      businessName: data.businessName,
+      businessVatNumber: data.businessVatNumber,
+      businessVatValidationStatus: data.businessVatNumber ? "NOT_CHECKED" : null,
+      billingCountry: data.billingCountry,
     });
 
     await sb.from("marketplace_events").insert({
@@ -331,6 +359,7 @@ export const validateCommercialProposalTax = createServerFn({ method: "POST" })
         tax_policy: updated.taxPolicy,
         tax_country: updated.taxCountry,
         customer_vat_rate_bps: updated.customerVatRateBps,
+        customer_type: updated.customerType,
       },
     });
 

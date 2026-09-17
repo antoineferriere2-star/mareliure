@@ -96,6 +96,11 @@ describe("traçabilité économique — Pricebook → marque → garde-fous → 
       taxValidationSource: null,
       taxValidatedAt: null,
       taxValidatedBy: null,
+      customerType: "CUSTOMER",
+      businessName: null,
+      businessVatNumber: null,
+      businessVatValidationStatus: null,
+      billingCountry: null,
       deposit: { type: "NONE", valueBps: null, amountCents: 0 },
       status: "accepted",
     });
