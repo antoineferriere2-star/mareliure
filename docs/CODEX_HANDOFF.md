@@ -790,11 +790,14 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 17 septembre 2026 (politique fiscale, éligibilité Checkout, préflight, bouton Payer — déploiement bloqué, voir suite 4)
+**Date :** 17 septembre 2026 (customer_type B2B, audit Stripe live reconfirmé — déploiement toujours bloqué, voir suite 5)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `7bc0f2e2` (politique fiscale à cinq catégories, validation
+**Commit :** `49df2dee` (modèle fiscal prêt pour du B2B : `customer_type`,
+`business_name`/`business_vat_number`/`billing_country` — migration
+`20260917100000`, **non appliquée en production**, voir suite 5), sur
+`7bc0f2e2` (politique fiscale à cinq catégories, validation
 admin tracée, `checkoutEligibility` exige une fiscalité validée, préflight
 admin, bouton Payer client — migration `20260917090000` **non appliquée en
 production**, voir suite 4), sur `a37f6246` (client Stripe marketplace passe par le transport
@@ -814,12 +817,141 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 à F Fine Bindery).
 
 **Production : toujours la version déployée le 17 septembre 2026 (matin),
-`76ca610f-1f5b-40b1-aa7d-82332843d912`.** Le commit `7bc0f2e2` (suite 4,
-ci-dessous) n'a **pas** été déployé : sa migration `20260917090000` n'a
-pas pu être appliquée (`SUPABASE_ACCESS_TOKEN` expiré). Migrations
-`20260916100000`, `20260916110000` et `20260916120000` toujours celles en
-production (`supabase db push --dry-run` → `upToDate: true` au moment de
-ce déploiement).
+`76ca610f-1f5b-40b1-aa7d-82332843d912`.** Ni `7bc0f2e2` (suite 4) ni
+`49df2dee` (suite 5, ci-dessous) n'ont été déployés : leurs deux
+migrations (`20260917090000`, `20260917100000`) n'ont pas pu être
+appliquées — `SUPABASE_ACCESS_TOKEN` toujours invalide, re-testé ce jour
+(voir suite 5). Migrations `20260916100000`, `20260916110000` et
+`20260916120000` toujours celles en production (`supabase db push
+--dry-run` → `upToDate: true` au moment de ce déploiement).
+
+---
+
+### Chantier de cette session (suite 5) — customer_type B2B, vérification Git/Supabase/Stripe réels
+
+Brief du 17 septembre 2026 : reprise depuis l'état réel du dépôt, pas
+depuis une supposition. Toujours aucun paiement/customer/invoice/refund/
+Connected Account/transfer fictif créé.
+
+**0. État Git vérifié** : `git fetch --all --prune` propre, branche locale
+`fix/mareliure-customer-access` à jour avec les commits `7bc0f2e2`/
+`1f45d40a` de la session précédente (confirmés déjà commités, comme
+attendu), 24 commits en avance sur `mareliure/main` (jamais poussés vers
+GitHub — le déploiement production passe par `wrangler`/Cloudflare, pas
+par ce remote). Rien d'inattendu.
+
+**6-7. Supabase — toujours bloqué, revérifié avant toute tentative.**
+`SUPABASE_ACCESS_TOKEN` (`.env.supabase`) retesté par deux appels distincts
+de l'API de gestion (`GET /v1/organizations`, une requête SQL sur
+`supabase_migrations.schema_migrations`) : **`401 Unauthorized`** sur les
+deux, y compris la lecture la plus triviale possible — confirme un jeton
+expiré/révoqué, pas un problème de portée ni de format (longueur 44,
+préfixe `sbp_`, aucun caractère de contrôle parasite — vérifié). Aucun
+contournement tenté (pas de `supabase login` interactif, pas de recherche
+de identifiants ailleurs), conformément à l'instruction explicite de
+l'utilisateur. **STOP maintenu sur toute migration/déploiement** tant
+qu'un nouveau jeton n'est pas fourni dans `.env.supabase`.
+
+**1-4. Stripe — connecteur MCP réautorisé pendant cette session**, ce qui
+n'était pas le cas la fois précédente. Audit live complet, lecture seule :
+- `list_available_accounts_or_orgs` confirme les deux comptes visibles,
+  dont `acct_1UGI34K0Q47WbZPf` (`"Mareliure/finebindery"`, `livemode:
+  true`) — exactement la cible attendue.
+- **3 Products inchangés**, mêmes IDs, aucun `default_price` (montants
+  toujours dynamiques) : `prod_VGu3DtQmcdtp2Z` (Transport),
+  `prod_VGu332vGMShtpJ` (Fine Bindery), `prod_VGu3dUcm5c03W3` (Ma Reliure).
+- **Webhook inchangé** (`we_1UGPd7K0Q47WbZPfCZDzfi6p`) : mêmes 7
+  événements, `status: "enabled"`, URL correcte.
+- **Compte toujours propre** : `GetCustomers` → liste vide,
+  `GetAccounts` (connectés) → liste vide. Aucun Customer, aucun Connected
+  Account, comme au dernier audit.
+- **Identité publique — SECURICOM confirmé toujours présent**, avec un
+  niveau de détail que l'accès restreint de la session précédente ne
+  permettait pas (`GetAccountsAccount` complet, pas seulement
+  `retrieveCurrent`) :
+  - `business_profile.support_email`: `"contact@securicom.shop"`
+  - `business_profile.support_url`: `null`
+  - `business_profile.url`: `"https://www.oppe.fr"`
+  - `settings.card_payments.statement_descriptor_prefix`: `"SECURICOM"`
+  - `settings.payments.statement_descriptor`: `"SECURICOM"`
+  - **Nouveau constat, hors de la liste du brief** :
+    `business_profile.product_description`:
+    `"Plateforme de mise en relation entre professionnels du btp"` —
+    résidu du même compte cloné, décrit une activité BTP, pas de la
+    reliure. `business_profile.mcc`: `"5734"` ("Computer Software
+    Stores") — catégorie marchande probablement héritée aussi, jamais
+    choisie pour Ma Reliure/Fine Bindery.
+  - Le reste est correct : `company.name: "Oppe"`, adresse, SIREN/TVA
+    correspondent à `MARELIURE_PUBLISHER` ; `charges_enabled`/
+    `payouts_enabled: true` ; compte bancaire QONTO (FR, EUR) déjà relié.
+  - **Une capacité d'écriture (`UpdateBrandSettings`, mise à jour du
+    compte) apparaît désormais dans la recherche d'opérations Stripe**,
+    ce qui n'était pas le cas le 16 septembre (`limited_account_retrieve`
+    ne montrait aucune écriture). **Aucune écriture n'a été tentée** :
+    corriger l'identité publique d'un compte Stripe live est un
+    changement visible par les clients (relevé bancaire, e-mail de
+    support) qui requiert une confirmation explicite de l'utilisateur,
+    pas seulement une autorisation technique retrouvée. La proposition de
+    correction reste celle déjà documentée (§21 plus bas).
+
+**10-12. `customer_type` — le modèle n'est plus structurellement
+B2C-only.** Détail complet dans `docs/commercial-billing-model.md` §9ter.
+Résumé : `CommercialTaxPolicy` reste inchangé, un nouveau
+`CustomerType` (`"CUSTOMER"` par défaut, `"BUSINESS"`) rejoint le snapshot,
+avec `business_name` (requis en base si `BUSINESS`, contrainte CHECK),
+`business_vat_number`, `business_vat_validation_status`
+(`"NOT_CHECKED"` par défaut, rien ne l'automatise), `billing_country`.
+Se finalise avec la fiscalité, avant acceptation, dans le même geste
+(`validateCommercialProposalTax`/`TaxValidationForm`). `checkoutEligibility`
+bloque désormais aussi (`reason: "business_identity_incomplete"`) un
+client `BUSINESS` sans raison sociale.
+
+**13, 16. Préflight admin mis à jour** : affiche désormais le type de
+client (particulier/professionnel, raison sociale) et le pays de
+facturation.
+
+**24-25. Facturation / numérotation — rien à auditer pour l'instant.**
+Zéro Invoice existe sur le compte (zéro Customer, cohérent) : il n'y a pas
+de séquence de numérotation à observer avant la première facture réelle.
+Rien construit ni modifié sur ce point ce chantier.
+
+**J-L. Tests, typecheck, lint, build.** `npx vitest run` : 148 fichiers,
+1974 tests verts (4 nouveaux). `npx tsc --noEmit` : propre (types Supabase
+mis à jour à la main pour les 5 nouvelles colonnes, même geste que la
+suite 4). `npm run lint` : 0 erreur, 13 avertissements préexistants sans
+rapport. `npm run build:mareliure` : vert, bundle vérifié
+(`hljxohondjvrkzqicexl` uniquement).
+
+**M-N. Déploiement — toujours BLOQUÉ.** Comme en suite 4 : déployer sans
+les deux migrations casserait `getMyCustomerCase` (colonnes lues qui
+n'existeraient pas encore côté base). **Rien déployé.**
+
+**À faire par l'utilisateur avant de reprendre ce chantier** (inchangé
+depuis la suite 4) :
+1. Générer un nouveau jeton — Dashboard Supabase → compte → Access Tokens
+   → New token — et remplacer la valeur de `SUPABASE_ACCESS_TOKEN` dans
+   `.env.supabase`.
+2. Appliquer LES DEUX migrations (`20260917090000` puis `20260917100000`,
+   dans cet ordre) via l'API de gestion — jamais `supabase db push` en
+   direct, IPv6 non routable depuis cet environnement.
+3. Alors seulement : `npm run deploy:mareliure`, puis les smoke tests
+   (§33 du brief) et le parcours métier sans paiement (§34) jusqu'à
+   `READY FOR PAYMENT`.
+4. Décision séparée, non technique : confirmer si `contact@oppe.fr` est
+   une adresse réellement surveillée avant de l'utiliser comme
+   `support_email` public, et valider la correction de l'identité Stripe
+   (statement descriptor "OPPE", `support_url: https://mareliure.fr`,
+   product_description à corriger aussi — nouveau constat de cette
+   session).
+
+**Toujours bloquant avant le premier vrai paiement** :
+1. Un taux de TVA validé par un expert-comptable pour au moins un cas réel
+   — le mécanisme existe, aucune valeur n'est validée.
+2. Correction manuelle de l'identité publique du compte (statement
+   descriptor, support_email/url, product_description/mcc).
+3. Rotation de `STRIPE_SECRET_KEY` — différée par décision explicite de
+   l'utilisateur.
+4. Les migrations `20260917090000`/`20260917100000` et le déploiement.
 
 ---
 
