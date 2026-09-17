@@ -197,52 +197,66 @@ séparé de `src/lib/stripe.server.ts` (gateway Lovable, abonnements SaaS
 Métré — aucune capacité Connect, aucun rapport avec la marketplace). Une
 vraie clé secrète (`STRIPE_SECRET_KEY`), jamais la passerelle Lovable.
 
-**Construit** :
-- Trois Products permanents (idempotents par metadata,
-  `scripts/setupStripeProducts.ts`) — jamais de Price Stripe fixe, le
-  montant reste toujours `price_data` dynamique depuis le snapshot
-  commercial. Créés sur `TEST_ACCOUNT_ID` pour le développement local
-  (`prod_VGqVa0gxBdKMFv`/`prod_VGqV9v0VrlqutW`/`prod_VGqVuC29bc1dgv`) ;
-  **à recréer séparément sur `LIVE_ACCOUNT_ID`** avant tout premier
-  paiement réel — voir `CODEX_HANDOFF.md` pour l'état exact de cette
-  étape. Trois autres Product IDs existent sur `LEGACY_ACCOUNT_ID`
-  (`prod_VGowujXB5VAtLN`/`prod_VGoxLIJgDWDx7c`/`prod_VGoxkLqYmwcFm6`,
-  créés avant la décision de dédier un compte séparé) — **toujours
-  présents dans les secrets du Worker de production au moment d'écrire
-  ceci**, à remplacer par les IDs `LIVE_ACCOUNT_ID` dès que le connecteur
-  MCP est reconnecté dessus (voir `CODEX_HANDOFF.md`, bloquant), puis à
-  archiver sur `LEGACY_ACCOUNT_ID` sur confirmation explicite (jamais
-  avant).
+**Construit et vérifié en conditions réelles (17 septembre 2026)** :
+- Trois Products permanents sur `LIVE_ACCOUNT_ID`
+  (`prod_VGu3dUcm5c03W3` Ma Reliure, `prod_VGu332vGMShtpJ` Fine Bindery,
+  `prod_VGu3DtQmcdtp2Z` Transport), posés comme secrets du Worker
+  Cloudflare — jamais de Price Stripe fixe, le montant reste toujours
+  `price_data` dynamique depuis le snapshot commercial. Les mêmes trois
+  existent aussi sur `TEST_ACCOUNT_ID` pour le développement local
+  (`scripts/setupStripeProducts.ts`, idempotent, réutilisable sur
+  n'importe quel compte via `STRIPE_EXPECTED_ACCOUNT_ID`). Trois anciens
+  IDs sur `LEGACY_ACCOUNT_ID` ne sont plus référencés nulle part en
+  production ; ni supprimés ni archivés sur ce compte (jamais demandé).
 - `createCommercialCheckoutSession` (`checkoutSession.server.ts`) :
   recharge la proposition **acceptée**, seule source du montant — jamais
   une valeur du navigateur. `checkoutPlan.ts` (pur, testé) bloque tant que
   `tax_policy` vaut `TAX_REVIEW_REQUIRED` (toujours vrai aujourd'hui,
   aucun moteur fiscal construit) : **le premier vrai paiement ne peut donc
-  pas encore avoir lieu**, par construction, pas par bug.
-- Webhook `POST /api/marketplace/stripe-webhook` : signature vérifiée
-  avant toute lecture, idempotent par `event.id`
-  (`marketplace_stripe_webhook_events`), ignore tout paiement sans notre
-  metadata (les cinq autres activités sur ce même compte). **Pas encore
-  enregistré côté Stripe** (`STRIPE_SECRET_KEY` absent, voir
-  `CODEX_HANDOFF.md`, chantier Stripe, point 6).
+  pas encore avoir lieu**, par construction, pas par bug. Descripteur de
+  relevé bancaire par marque via `payment_intent_data.
+  statement_descriptor_suffix` (`"MARELIURE"`/`"FINEBINDERY"`, dérivé du
+  `brand` de la proposition, jamais du navigateur) — combiné par Stripe
+  au préfixe raccourci du compte (`"OPPE"` proposé, pas encore posé côté
+  Dashboard, voir `CODEX_HANDOFF.md`).
+- Webhook live **enregistré et vérifié** sur `LIVE_ACCOUNT_ID`
+  (`we_1UGPd7K0Q47WbZPfCZDzfi6p`,
+  `https://mareliure.fr/api/marketplace/stripe-webhook`) : signature
+  vérifiée avant toute lecture (confirmé : signature manquante/invalide
+  → 400), idempotent par `event.id` (`marketplace_stripe_webhook_events`),
+  ignore tout paiement sans notre metadata (les cinq autres activités sur
+  le compte historique, sans rapport avec ce compte dédié).
 - État de paiement dans `marketplace_commercial_proposal_payments`, une
   table séparée plutôt que des colonnes sur `marketplace_commercial_proposals`
   : cette dernière reste rigoureusement immuable après acceptation (Phase
   1), payer n'est pas un terme commercial.
 - Connect Express préparé (`binderConnect.server.ts`, réutilise
-  `marketplace_binders.stripe_account_id`) — jamais appelé, aucun
-  Connected Account créé. Aucun Connected Account n'existait déjà sur ce
-  compte (`GetAccounts` → liste vide).
+  `marketplace_binders.stripe_account_id`, `controller` explicite plutôt
+  que le paramètre `type` legacy) — jamais appelé, aucun Connected
+  Account créé. Aucun Connected Account n'existait déjà sur
+  `LIVE_ACCOUNT_ID` (`GetAccounts` → liste vide).
+- `assertExpectedStripeAccount` **vérifié fonctionnel de bout en bout** en
+  production (`GET /api/marketplace/stripe-health`, protégé par jeton
+  porteur) : `{"ok":true,"expectedAccountId":"acct_1UGI34K0Q47WbZPf"}`.
+  Le client Stripe marketplace utilise un `httpClient` `fetch` explicite
+  (`Stripe.createFetchHttpClient()`) — indispensable en Cloudflare
+  Workers, qui n'a pas les modules Node `http`/`https` dont le SDK se
+  sert par défaut.
 
 **Non construit / décisions ouvertes** :
 - Politique fiscale concrète (`FR_STANDARD`…) — bloque le premier
   paiement tant qu'elle n'existe pas.
-- Descripteur de relevé bancaire : ce compte partagé affiche "SECURICOM"
-  par défaut pour un Checkout ponctuel (le `statement_descriptor` d'un
-  Product ne s'applique qu'aux abonnements) — décision à prendre.
+- Identité publique du compte (statement descriptor "SECURICOM" hérité,
+  support_email/url) — proposition prête, à appliquer par l'utilisateur
+  lui-même dans le Dashboard Stripe (le connecteur MCP n'a que
+  `limited_account_retrieve`, pas d'écriture sur ces paramètres).
+- Rotation de `STRIPE_SECRET_KEY` — exposée une fois par erreur de
+  frappe (collée sur la ligne de commande au lieu du prompt), rotation
+  différée par décision explicite de l'utilisateur.
 - Invoicing Stripe (numérotation déjà partagée avec d'autres activités,
   non touchée sans validation), UI cliente "Payer" (aucun bouton ne
-  déclenche encore `createCommercialCheckoutSession`).
+  déclenche encore `createCommercialCheckoutSession` — prématuré tant que
+  la politique fiscale bloque systématiquement l'éligibilité).
 
 ## 10. Ce qui n'a pas changé, volontairement
 
