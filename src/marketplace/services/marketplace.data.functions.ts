@@ -34,9 +34,9 @@ import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
 import { isMarketplaceBrand, marketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
-import { loadAcceptedCommercialProposal } from "@/marketplace/services/commercialProposalRepository.server";
-import { loadCommercialPaymentState } from "@/marketplace/services/commercialPaymentRepository.server";
-import { checkoutEligibility } from "@/marketplace/stripe/checkoutPlan";
+import { loadCustomerCommerce } from "@/marketplace/services/customerCommerce.server";
+import { publicCopy } from "@/build/pages/public/publicLocaleContext";
+import { CASE_ANSWER_KEYS } from "@/marketplace/cases/caseProfile";
 
 /** zod needs a literal tuple; WORK_FAMILIES stays the one place the list is written. */
 const WORK_FAMILY_KEYS = WORK_FAMILIES.map((f) => f.key) as [WorkFamilyKey, ...WorkFamilyKey[]];
@@ -47,6 +47,7 @@ import {
   loadCaseContext,
   reconcileCaseTriage,
   resolveCaseByAccessToken,
+  signFirstCasePhoto,
 } from "./caseRepository.server";
 import { loadAggregates, loadPricebook } from "./pricingRepository.server";
 import {
@@ -1288,7 +1289,7 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
     const { data: cases } = await sb
       .from("marketplace_cases")
       .select(
-        "id, reference, status, dossier_id, created_at, customer_price_cents, pricing_currency",
+        "id, reference, status, brand, dossier_id, created_at, customer_price_cents, pricing_status, pricing_currency",
       )
       .eq("customer_user_id", context.userId)
       .order("created_at", { ascending: false });
@@ -1304,20 +1305,38 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
 
     const results = [];
     for (const row of cases ?? []) {
-      const { data: dossier } = await sb
-        .from("build_dossiers")
-        .select("content")
-        .eq("id", row.dossier_id)
-        .maybeSingle();
-      const content = dossier?.content as { missionName?: unknown } | null;
+      // Le titre d'un livre est ce que le client a écrit ; le nom de la Mission
+      // ("Reliure — présenter mon livre") est le même pour tous ses projets et
+      // ne sert que de repli, comme dans `projectCase`.
+      const caseContext = await loadCaseContext(sb, row.id);
+      const locale: CaseLocale = row.brand === "FINE_BINDERY" ? "en-US" : "fr-FR";
+      const intentLine = caseContext?.brief.confirmedInformation.find(
+        (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
+      );
+      const [commerce, thumbnailUrl] = await Promise.all([
+        loadCustomerCommerce(sb, row.id),
+        caseContext ? signFirstCasePhoto(sb, caseContext.answers) : Promise.resolve(null),
+      ]);
+      // Même règle que le détail : un prix n'est montré que validé par un humain.
+      const validatedPriceCents = row.pricing_status === "validated" ? row.customer_price_cents : null;
+      const amountCents = commerce.proposal?.totalTtcCents ?? validatedPriceCents;
       results.push({
         id: row.id,
-        reference: row.reference,
         status: row.status,
         createdAt: row.created_at,
-        title: typeof content?.missionName === "string" ? content.missionName : row.reference,
-        customerPriceCents: row.customer_price_cents,
+        title:
+          caseContext?.profile.title?.trim() ||
+          caseContext?.brief.missionName?.trim() ||
+          row.reference,
+        projectType: intentLine ? publicCopy(locale, intentLine.value) : null,
+        thumbnailUrl,
         currency: row.pricing_currency,
+        amountCents,
+        amountIncludesTax: commerce.proposal?.totalTtcCents != null,
+        hasPrice: validatedPriceCents !== null,
+        proposalAccepted: commerce.proposal !== null,
+        paymentEligible: commerce.paymentEligible,
+        paid: commerce.paidAt !== null,
         unreadCount: unread.get(row.id) ?? 0,
         actionRequired: openDecisionCaseIds.has(row.id),
       });
@@ -1366,23 +1385,19 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
 
     // Le bouton « Payer »/« Pay securely » ne doit jamais apparaître pour un
     // dossier dont le Checkout échouerait à coup sûr (§11 du brief du
-    // 17 septembre 2026) — même garde-fou que `createCommercialCheckoutSession`,
-    // relu ici, jamais recalculé côté navigateur.
-    const acceptedProposal = await loadAcceptedCommercialProposal(sb, data.caseId);
-    const paymentState = acceptedProposal
-      ? await loadCommercialPaymentState(sb, acceptedProposal.id)
-      : null;
-    const paymentEligible = acceptedProposal
-      ? checkoutEligibility({
-          status: acceptedProposal.status,
-          acceptedAt: acceptedProposal.acceptedAt,
-          taxPolicy: acceptedProposal.taxPolicy,
-          taxValidatedAt: acceptedProposal.taxValidatedAt,
-          customerType: acceptedProposal.customerType,
-          businessName: acceptedProposal.businessName,
-          alreadyPaid: !!paymentState?.paidAt,
-        }).eligible
-      : false;
+    // 17 septembre 2026) — même garde-fou que `createCommercialCheckoutSession`
+    // (`checkoutEligibility`, voir customerCommerce.server.ts), relu ici,
+    // jamais recalculé côté navigateur. `commerce.proposal` est la vue client
+    // en liste blanche : ni rémunération d'atelier, ni marge, ni règle.
+    const commerce = await loadCustomerCommerce(sb, data.caseId);
+    const intentLine = caseContext.brief.confirmedInformation.find(
+      (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
+    );
+    const { count: openDecisions } = await sb
+      .from("marketplace_decisions")
+      .select("id", { count: "exact", head: true })
+      .eq("case_id", data.caseId)
+      .eq("status", "open");
 
     return {
       case: {
@@ -1396,8 +1411,12 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
         currency: caseContext.row.pricing_currency,
         priceIncludes: caseContext.row.price_includes,
         createdAt: caseContext.row.created_at,
-        paymentEligible,
+        projectType: intentLine ? publicCopy(locale, intentLine.value) : null,
+        paymentEligible: commerce.paymentEligible,
+        paidAt: commerce.paidAt,
+        openDecisions: openDecisions ?? 0,
       },
+      proposal: commerce.proposal,
       view,
       selectedBinder: binder
         ? {

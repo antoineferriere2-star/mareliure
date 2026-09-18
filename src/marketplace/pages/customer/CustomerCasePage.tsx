@@ -1,68 +1,258 @@
+/**
+ * Le détail d'un projet, vu du client.
+ *
+ * L'écran répond dans l'ordre aux questions qu'il se pose : de quoi s'agit-il,
+ * où en est-il, qu'est-ce que je dois faire, combien, puis seulement les
+ * détails. Le bouton principal d'une action attendue (payer, répondre) est
+ * dans la zone « Prochaine étape », en haut — jamais enfoui sous le Brief.
+ *
+ * Rien ici ne décide de ce qui est payable, de ce qui est visible ou de qui
+ * peut écrire : le serveur renvoie des faits déjà arbitrés (`paymentEligible`,
+ * une vue de proposition en liste blanche, un `CaseView` déjà filtré) et cet
+ * écran les met en page. Aucun message d'erreur du serveur n'est affiché.
+ */
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { ArrowLeft } from "lucide-react";
 import { getMyCustomerCase } from "@/marketplace/services/marketplace.data.functions";
 import { createCommercialCheckoutSession } from "@/marketplace/stripe/checkoutSession.server";
-import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { ConversationPanel } from "@/marketplace/pages/ConversationPanel";
 import { DecisionsPanel } from "@/marketplace/pages/DecisionsPanel";
 import { binderSkillLabel, binderSkillLabelEn } from "@/marketplace/binders/skills";
 import { formatEuros } from "@/marketplace/pricing/money";
-import { visibleJourney } from "@/marketplace/cases/journey";
+import type { CustomerProposalView } from "@/marketplace/commercial/customerProposalView";
+import {
+  customerCopy,
+  customerLocaleForBrand,
+  customerNextStep,
+  customerStatus,
+  customerTimeline,
+  formatCustomerDate,
+  pricingModeLabel,
+  presentBriefLines,
+  type CustomerCaseFacts,
+  type CustomerCopy,
+  type CustomerLocale,
+  type NextStep,
+} from "@/marketplace/customer/customerPresentation";
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { Button } from "@/components/ui/button";
+import { CoverPhoto, CustomerPhotoGallery } from "./CustomerPhotoGallery";
+import { PortalDetailSkeleton, PortalError, StatusBadge } from "./CustomerPortalUi";
+
+const CARD = "rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-5 sm:p-6";
 
 /**
  * Le seul déclencheur d'un Checkout réel — appelle uniquement la server
  * function existante (§11 du brief du 17 septembre 2026), qui recharge la
  * proposition acceptée et fige le montant côté serveur. Le navigateur ne
  * transmet jamais de montant, ici pas même un `caseId` de plus que celui déjà
- * affiché.
+ * affiché. L'erreur, elle, n'est jamais celle de Stripe ou du serveur.
  */
-function PayButton({ caseId, en }: { caseId: string; en: boolean }) {
+function PayButton({ caseId, copy }: { caseId: string; copy: CustomerCopy }) {
   const createSession = useServerFn(createCommercialCheckoutSession);
-  const [error, setError] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
   const pay = useMutation({
     mutationFn: () => createSession({ data: { caseId } }),
     onSuccess: (result) => {
       window.location.href = result.url;
     },
-    onError: (err: Error) => setError(err.message),
+    onError: () => setFailed(true),
   });
 
   return (
-    <div className="mt-5">
-      <Button className="w-full" disabled={pay.isPending} onClick={() => pay.mutate()}>
-        {pay.isPending ? (en ? "Redirecting…" : "Redirection…") : en ? "Pay securely" : "Payer"}
+    <div>
+      <Button
+        size="lg"
+        className="h-11 w-full sm:w-auto"
+        disabled={pay.isPending}
+        onClick={() => {
+          setFailed(false);
+          pay.mutate();
+        }}
+      >
+        {pay.isPending ? copy.payRedirecting : copy.payLabel}
       </Button>
-      {error && <p className="mt-2 text-sm text-destructive">{error}</p>}
+      {failed && (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {copy.payError}
+        </p>
+      )}
     </div>
   );
 }
 
-function customerMessage(status: string, en: boolean): string {
-  switch (status) {
-    case "under_review":
-    case "pricing":
-      return en
-        ? "Fine Bindery is reviewing your project and preparing its price."
-        : "Ma Reliure étudie votre projet et prépare son prix.";
-    case "matching":
-    case "awaiting_binder_response":
-      return en
-        ? "We are looking for the most suitable workshop and checking its availability."
-        : "Nous recherchons l’atelier le plus adapté et vérifions sa disponibilité.";
-    case "binder_accepted":
-      return en
-        ? "A workshop is available. Fine Bindery is finalising your project's handover."
-        : "Un atelier est disponible. Ma Reliure finalise votre prise en charge.";
-    case "binder_selected":
-      return en ? "Your workshop is confirmed." : "Votre atelier est confirmé.";
-    default:
-      return en
-        ? "Your project is moving forward. Fine Bindery keeps you informed at every step."
-        : "Votre projet avance. Ma Reliure vous tient informé à chaque étape.";
-  }
+/** « Prochaine étape » : une phrase, et au plus un bouton principal. */
+function NextStepCard({
+  next,
+  copy,
+  caseId,
+  canPay,
+  showMessageLink,
+}: {
+  next: NextStep;
+  copy: CustomerCopy;
+  caseId: string;
+  canPay: boolean;
+  showMessageLink: boolean;
+}) {
+  const anchor = next.action === "decision" ? "#decisions" : next.action === "proposal" ? "#proposal" : null;
+  return (
+    <section
+      aria-labelledby="next-step-title"
+      className={`rounded-2xl border p-5 sm:p-6 ${
+        next.requiresAction ? "border-[#8a2e1f]/40 bg-[#fdf6f0]" : "border-[#3b2a1d]/15 bg-[#fdfaf3]"
+      }`}
+    >
+      <h2
+        id="next-step-title"
+        className="text-xs font-semibold uppercase tracking-wide text-[#6b5847]"
+      >
+        {copy.nextStep}
+      </h2>
+      <p className="mt-2 font-serif text-xl leading-snug text-[#241a12]">{next.text}</p>
+      {next.hint && <p className="mt-2 text-sm text-[#6b5847]">{next.hint}</p>}
+      <div className="mt-4 flex flex-wrap items-start gap-3">
+        {next.action === "pay" && canPay && <PayButton caseId={caseId} copy={copy} />}
+        {anchor && next.actionLabel && (
+          <Button asChild size="lg" className="h-11">
+            <a href={anchor}>{next.actionLabel}</a>
+          </Button>
+        )}
+        {showMessageLink && (
+          <Button asChild variant="outline" size="lg" className="h-11">
+            <a href="#messages">{copy.messageCta}</a>
+          </Button>
+        )}
+      </div>
+    </section>
+  );
+}
+
+/** Les deux-points : précédés d'une espace en français, collés en anglais. */
+function colon(locale: CustomerLocale): string {
+  return locale === "fr-FR" ? " :" : ":";
+}
+
+function vatRateLabel(bps: number | null, locale: CustomerLocale): string | null {
+  if (bps === null) return null;
+  const percent = bps / 100;
+  const text = new Intl.NumberFormat(locale, { maximumFractionDigits: 2 }).format(percent);
+  return locale === "fr-FR" ? `${text} %` : `${text}%`;
+}
+
+function Row({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+  return (
+    <div className={`flex items-baseline justify-between gap-4 py-2 ${strong ? "border-t border-[#3b2a1d]/20 pt-3" : ""}`}>
+      <dt className={strong ? "font-medium text-[#241a12]" : "text-sm text-[#6b5847]"}>{label}</dt>
+      <dd className={strong ? "font-serif text-2xl text-[#241a12]" : "text-sm text-[#241a12]"}>{value}</dd>
+    </div>
+  );
+}
+
+/**
+ * Votre proposition. Uniquement ce qu'un client a le droit de lire : service,
+ * transport, HT, TVA, TTC. La rémunération de l'atelier, la marge et les
+ * règles de prix ne sont pas dans la donnée reçue — le serveur ne les envoie pas.
+ */
+function ProposalCard({
+  proposal,
+  fallbackPriceCents,
+  includes,
+  paid,
+  paymentEligible,
+  copy,
+  locale,
+}: {
+  proposal: CustomerProposalView | null;
+  fallbackPriceCents: number | null;
+  includes: readonly string[];
+  paid: boolean;
+  paymentEligible: boolean;
+  copy: CustomerCopy;
+  locale: CustomerLocale;
+}) {
+  if (!proposal && fallbackPriceCents === null) return null;
+  const mode = pricingModeLabel(proposal?.pricingMode, locale);
+  const fmt = (cents: number) => formatEuros(cents, locale);
+  const showTax = proposal !== null && proposal.vatCents !== null && proposal.totalTtcCents !== null;
+  const estimate =
+    proposal?.pricingMode === "ESTIMATE_THEN_CONFIRM" &&
+    proposal.estimateMinCents !== null &&
+    proposal.estimateMaxCents !== null
+      ? `${fmt(proposal.estimateMinCents)} – ${fmt(proposal.estimateMaxCents)}`
+      : null;
+
+  return (
+    <section id="proposal" aria-labelledby="proposal-title" className={`${CARD} scroll-mt-6`}>
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="proposal-title" className="font-serif text-2xl text-[#241a12]">
+          {copy.yourProposal}
+        </h2>
+        {mode && (
+          <p className="text-xs text-[#6b5847]">
+            {copy.proposalPriceKind}{colon(locale)} <span className="font-medium text-[#241a12]">{mode}</span>
+          </p>
+        )}
+      </div>
+
+      {proposal ? (
+        <dl className="mt-4">
+          <Row label={copy.proposalService} value={fmt(proposal.serviceCents)} />
+          {proposal.shippingCents > 0 && (
+            <Row label={copy.proposalShipping} value={fmt(proposal.shippingCents)} />
+          )}
+          {showTax ? (
+            <>
+              <Row label={copy.proposalTotalHt} value={fmt(proposal.totalHtCents)} />
+              <Row
+                label={copy.proposalVat(vatRateLabel(proposal.vatRateBps, locale))}
+                value={fmt(proposal.vatCents ?? 0)}
+              />
+              <Row label={copy.proposalTotalTtc} value={fmt(proposal.totalTtcCents ?? 0)} strong />
+            </>
+          ) : (
+            <Row label={copy.proposalTotalHt} value={fmt(proposal.totalHtCents)} strong />
+          )}
+        </dl>
+      ) : (
+        <dl className="mt-4">
+          <Row label={copy.proposalPriceOnly} value={fmt(fallbackPriceCents ?? 0)} strong />
+        </dl>
+      )}
+
+      {estimate && <p className="mt-3 text-sm leading-6 text-[#4b3a2c]">{copy.proposalEstimate(estimate)}</p>}
+      {includes.length > 0 && (
+        <p className="mt-3 text-sm leading-6 text-[#6b5847]">
+          {copy.proposalIncludes}{colon(locale)} {includes.join(", ")}.
+        </p>
+      )}
+      {paid ? (
+        <p className="mt-4 text-sm font-medium text-[#2f4a2b]">{copy.proposalPaid}</p>
+      ) : (
+        !paymentEligible && <p className="mt-4 text-sm text-[#6b5847]">{copy.proposalNotPayable}</p>
+      )}
+    </section>
+  );
+}
+
+function BriefLines({ lines }: { lines: { label: string; value: string; tentative: boolean }[] }) {
+  return (
+    <dl className="divide-y divide-[#3b2a1d]/10">
+      {lines.map((line, index) => (
+        <div key={`${line.label}-${index}`} className="grid gap-1 py-3 sm:grid-cols-3 sm:gap-4">
+          <dt className="text-sm text-[#6b5847]">{line.label}</dt>
+          <dd className="break-words text-[#241a12] sm:col-span-2">{line.value}</dd>
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return <h2 className="font-serif text-2xl text-[#241a12]">{children}</h2>;
 }
 
 export function CustomerCasePage({
@@ -72,127 +262,252 @@ export function CustomerCasePage({
   caseId: string;
   brand: MarketplaceBrand | null;
 }) {
-  const en = brand === "FINE_BINDERY";
-  const locale = en ? "en-US" : "fr-FR";
+  const locale = customerLocaleForBrand(brand);
+  const en = locale === "en-US";
+  const copy = customerCopy(locale);
   const fetchCase = useServerFn(getMyCustomerCase);
-  const { data, isPending, error } = useQuery({
+  const { data, isPending, error, refetch, isFetching } = useQuery({
     queryKey: ["marketplace", "customer", "case", caseId] as const,
     queryFn: () => fetchCase({ data: { caseId } }),
   });
 
+  const back = (
+    <nav aria-label={copy.backNavLabel}>
+      <Link
+        to="/mes-livres"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-md text-sm font-medium text-[#3b2a1d] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b2a1d]/60 focus-visible:ring-offset-2"
+      >
+        <ArrowLeft aria-hidden="true" className="h-4 w-4" />
+        {copy.backToBooks}
+      </Link>
+    </nav>
+  );
+
   if (isPending)
-    return <p className="text-sm text-muted-foreground">{en ? "Loading…" : "Chargement…"}</p>;
-  if (error) return <p className="text-sm text-destructive">{(error as Error).message}</p>;
+    return (
+      <div className="space-y-4">
+        {back}
+        <PortalDetailSkeleton label={copy.loading} />
+      </div>
+    );
+  if (error)
+    return (
+      <div className="space-y-4">
+        {back}
+        <PortalError
+          message={copy.loadError}
+          retryLabel={copy.retry}
+          onRetry={() => void refetch()}
+          busy={isFetching}
+        />
+      </div>
+    );
   if (!data) return null;
 
+  const { view, proposal, selectedBinder } = data;
+  const facts: CustomerCaseFacts = {
+    status: data.case.status,
+    hasPrice: data.case.customerPriceCents !== null,
+    proposalAccepted: proposal !== null,
+    paymentEligible: data.case.paymentEligible,
+    paid: data.case.paidAt !== null,
+    actionRequired: data.case.openDecisions > 0,
+  };
+  const status = customerStatus(facts, locale);
+  const next = customerNextStep(facts, locale);
+  const created = formatCustomerDate(data.case.createdAt, locale);
+  const meta = [data.case.projectType, created ? copy.createdOn(created) : null].filter(Boolean).join(" · ");
+
+  const project = presentBriefLines(view.project, locale);
+  const timing = presentBriefLines(view.budgetAndTiming, locale);
+  const missing = presentBriefLines(view.missingInformation, locale);
+  const constraints = presentBriefLines(view.constraints, locale);
+  const toConfirm = [...new Set([...project.toConfirm, ...timing.toConfirm, ...missing.shown.map((l) => l.label), ...missing.toConfirm])];
+  const hasDetails =
+    constraints.shown.length > 0 ||
+    toConfirm.length > 0 ||
+    Boolean(view.area) ||
+    view.contact !== null ||
+    view.reference !== "";
+
+  const timeline = customerTimeline(
+    {
+      status: data.case.status,
+      createdAt: data.case.createdAt,
+      proposalPreparedAt: proposal?.preparedAt ?? null,
+      proposalConfirmedAt: proposal?.confirmedAt ?? null,
+      paidAt: data.case.paidAt,
+      workshopSelectedAt: selectedBinder?.selectedAt ?? null,
+    },
+    locale,
+  );
+
+  const decisionsOpen = data.case.openDecisions > 0;
+  const decisions = <DecisionsPanel caseId={caseId} role="customer" locale={locale} hideWhenEmpty />;
+
   return (
-    <div className="space-y-10">
-      <CaseBriefPanel view={data.view} locale={locale} />
+    <div className="space-y-8">
+      {back}
 
-      {/* Décisions avant conversation : une confirmation attendue prime sur
-          l'historique du fil (§10 : « que se passe-t-il maintenant ? »). */}
-      <DecisionsPanel caseId={caseId} role="customer" locale={locale} />
-      <ConversationPanel caseId={caseId} viewerRole="customer" locale={locale} />
-      {/* Un prix n'apparaît ici qu'une fois validé par un humain — le serveur
-          ne renvoie même pas les autres. Tant qu'il n'y en a pas, on dit ce
-          qui se passe réellement plutôt que d'afficher un montant provisoire :
-          un chiffre lu une fois devient une promesse, et personne ne retient
-          qu'il était « en cours ». Pas de prix vaut mieux qu'un faux prix. */}
-      <section className="rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-6">
-        <p className="text-sm text-[#6b5847]">
-          {data.case.customerPriceCents
-            ? en
-              ? "Price set by Fine Bindery"
-              : "Prix fixé par Ma Reliure"
-            : en
-              ? "Your estimate"
-              : "Votre estimation"}
-        </p>
-        {data.case.customerPriceCents ? (
-          <p className="mt-1 font-serif text-3xl text-[#241a12]">
-            {formatEuros(data.case.customerPriceCents, locale)}
+      <header className="flex items-start gap-4">
+        <CoverPhoto photo={view.photos[0]} alt="" />
+        <div className="min-w-0">
+          <h1 className="font-serif text-3xl leading-tight text-[#241a12] break-words">{view.title}</h1>
+          {meta && <p className="mt-1 text-sm text-[#6b5847]">{meta}</p>}
+          <div className="mt-3">
+            <StatusBadge status={status} />
+          </div>
+        </div>
+      </header>
+
+      <NextStepCard
+        next={next}
+        copy={copy}
+        caseId={caseId}
+        canPay={data.case.paymentEligible}
+        showMessageLink={status.key !== "cancelled"}
+      />
+
+      {/* Une confirmation attendue est une action : elle passe avant le reste. */}
+      {decisionsOpen && decisions}
+
+      <ProposalCard
+        proposal={proposal}
+        fallbackPriceCents={data.case.customerPriceCents}
+        includes={data.case.priceIncludes}
+        paid={data.case.paidAt !== null}
+        paymentEligible={data.case.paymentEligible}
+        copy={copy}
+        locale={locale}
+      />
+
+      <section className={CARD}>
+        <SectionTitle>{copy.summary}</SectionTitle>
+        {view.summary && <p className="mt-3 leading-7 text-[#4b3a2c]">{view.summary}</p>}
+        {(view.heritage || view.manualReviewRequired) && (
+          <p className="mt-4 rounded-lg border border-[#8a5a2b]/30 bg-[#f3e6d3] px-4 py-3 text-sm leading-6 text-[#5b3a17]">
+            {view.heritage ? copy.heritageNote : copy.manualReviewNote}
           </p>
-        ) : (
-          <>
-            <p className="mt-2 font-serif text-xl text-[#241a12]">
-              {en ? "Your project is under review." : "Votre projet est en cours d’étude."}
-            </p>
-            <p className="mt-2 text-sm leading-6 text-[#4b3a2c]">
-              {en
-                ? "We need to confirm the work required before presenting your price."
-                : "Nous devons confirmer le travail nécessaire avant de vous présenter votre prix."}
-            </p>
-          </>
         )}
-        {data.case.priceIncludes.length > 0 && (
-          <p className="mt-3 text-sm leading-6 text-[#6b5847]">
-            {en ? "Includes" : "Comprend"}: {data.case.priceIncludes.join(", ")}.
-          </p>
+        {project.shown.length > 0 && (
+          <div className="mt-6">
+            <h3 className="font-serif text-lg text-[#241a12]">{copy.theProject}</h3>
+            <BriefLines lines={project.shown} />
+          </div>
         )}
-        <p className="mt-5 text-sm leading-6 text-[#4b3a2c]">
-          {customerMessage(data.case.status, en)}
-        </p>
-        {data.case.paymentEligible && <PayButton caseId={caseId} en={en} />}
+        {timing.shown.length > 0 && (
+          <div className="mt-6">
+            <h3 className="font-serif text-lg text-[#241a12]">{copy.budgetAndTiming}</h3>
+            <BriefLines lines={timing.shown} />
+          </div>
+        )}
       </section>
 
-      {/* Le parcours, réduit aux étapes qui existent : `journey.ts` retire
-          d'office la commande et l'expédition tant qu'elles ne sont pas
-          construites. Une étape franchie porte un filet laiton plein, une
-          étape à venir un filet creux — pas de coche, pas de pourcentage : on
-          raconte où en est un livre, on ne remplit pas une barre. */}
-      <section>
-        <h2 className="font-serif text-2xl">{en ? "Where your book stands" : "Où en est votre livre"}</h2>
-        <ol className="mt-5 space-y-6">
-          {visibleJourney(data.case.status, locale).map((stage) => (
-            <li key={stage.id} className="flex gap-4">
-              <span
-                aria-hidden="true"
-                className={`mt-2 h-px w-8 shrink-0 ${stage.done ? "bg-[#a98c55]" : "bg-[#3b2a1d]/20"}`}
-              />
-              <div>
-                <p
-                  className={`font-serif text-lg ${stage.done ? "text-[#241a12]" : "text-[#6b5847]"}`}
-                >
-                  {stage.title}
-                </p>
-                <p className="mt-1 text-sm leading-6 text-[#4b3a2c]">
-                  {stage.done ? stage.reached : stage.upcoming}
-                </p>
-              </div>
-            </li>
-          ))}
-        </ol>
-      </section>
+      {view.photos.length > 0 && (
+        <section aria-labelledby="photos-title">
+          <h2 id="photos-title" className="font-serif text-2xl text-[#241a12]">
+            {copy.photos}
+          </h2>
+          <div className="mt-4">
+            <CustomerPhotoGallery photos={view.photos} copy={copy} />
+          </div>
+        </section>
+      )}
 
-      {data.selectedBinder && (
+      {selectedBinder && (
         <section>
-          <h2 className="font-serif text-2xl">{en ? "The selected workshop" : "L’atelier retenu"}</h2>
-          <div className="mt-4 rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-6">
+          <SectionTitle>{copy.workshop}</SectionTitle>
+          <div className={`mt-4 ${CARD}`}>
             <p className="font-serif text-xl text-[#241a12]">
-              {data.selectedBinder.workshop_name ?? data.selectedBinder.display_name}
+              {selectedBinder.workshop_name ?? selectedBinder.display_name}
             </p>
             <p className="mt-1 text-sm text-[#6b5847]">
               {[
-                data.selectedBinder.city,
-                data.selectedBinder.years_experience
-                  ? en
-                    ? `${data.selectedBinder.years_experience} years' experience`
-                    : `${data.selectedBinder.years_experience} ans de métier`
-                  : null,
+                selectedBinder.city,
+                selectedBinder.years_experience ? copy.workshopYears(selectedBinder.years_experience) : null,
               ]
                 .filter(Boolean)
                 .join(" · ")}
             </p>
-            {data.selectedBinder.skills.length > 0 && (
+            {selectedBinder.skills.length > 0 && (
               <p className="mt-3 text-sm text-[#6b5847]">
-                {data.selectedBinder.skills.map(en ? binderSkillLabelEn : binderSkillLabel).join(", ")}
+                {selectedBinder.skills.map(en ? binderSkillLabelEn : binderSkillLabel).join(", ")}
               </p>
             )}
-            {data.selectedBinder.bio && (
-              <p className="mt-4 text-sm leading-6 text-[#4b3a2c]">{data.selectedBinder.bio}</p>
+            {selectedBinder.bio && (
+              <p className="mt-4 text-sm leading-6 text-[#4b3a2c]">{selectedBinder.bio}</p>
             )}
           </div>
         </section>
+      )}
+
+      <ConversationPanel caseId={caseId} viewerRole="customer" locale={locale} />
+
+      {!decisionsOpen && decisions}
+
+      {timeline.length > 0 && (
+        <section aria-labelledby="history-title">
+          <h2 id="history-title" className="font-serif text-2xl text-[#241a12]">
+            {copy.history}
+          </h2>
+          <ol className="mt-5 space-y-4">
+            {timeline.map((entry) => {
+              const date = formatCustomerDate(entry.at, locale);
+              return (
+                <li key={entry.key} className="flex gap-4">
+                  <span aria-hidden="true" className="mt-2 h-px w-8 shrink-0 bg-[#a98c55]" />
+                  <div>
+                    <p className="font-serif text-lg text-[#241a12]">{entry.label}</p>
+                    {date && <p className="text-sm text-[#6b5847]">{date}</p>}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
+      )}
+
+      {hasDetails && (
+        <details className="group rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-5">
+          <summary className="-my-2 flex min-h-11 cursor-pointer items-center text-sm font-medium text-[#3b2a1d] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b2a1d]/60">
+            <span className="group-open:hidden">{copy.moreDetails}</span>
+            <span className="hidden group-open:inline">{copy.lessDetails}</span>
+          </summary>
+          <div className="mt-4 space-y-6">
+            {toConfirm.length > 0 && (
+              <div>
+                <h3 className="font-serif text-lg text-[#241a12]">{copy.toConfirmTitle}</h3>
+                <ul className="mt-2 list-disc space-y-1 pl-5 text-sm text-[#4b3a2c]">
+                  {toConfirm.map((label) => (
+                    <li key={label}>{label}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {constraints.shown.length > 0 && <BriefLines lines={constraints.shown} />}
+            {view.area && (
+              <div>
+                <h3 className="font-serif text-lg text-[#241a12]">{copy.location}</h3>
+                <p className="mt-1 text-[#241a12]">{view.area}</p>
+              </div>
+            )}
+            {view.contact && (
+              <div>
+                <h3 className="font-serif text-lg text-[#241a12]">{copy.contact}</h3>
+                <ul className="mt-1 space-y-1 text-[#241a12]">
+                  {view.contact.name && <li>{view.contact.name}</li>}
+                  {view.contact.email && <li>{view.contact.email}</li>}
+                  {view.contact.phone && <li>{view.contact.phone}</li>}
+                </ul>
+              </div>
+            )}
+            {view.reference && (
+              <p className="text-xs text-[#6b5847]">
+                {copy.reference}{colon(locale)} {view.reference}
+              </p>
+            )}
+          </div>
+        </details>
       )}
     </div>
   );

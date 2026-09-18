@@ -790,9 +790,9 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 18 septembre 2026 (corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9)
+**Date :** 18 septembre 2026 — dernier chantier : UX des espaces clients Ma Reliure / Fine Bindery, branche `ux/customer-portals` (suite 10, **non déployé**, en attente de revue). Le bloc de commits ci-dessous décrit la branche `fix/mareliure-customer-access`, fusionnée dans `main` (PR #1) : corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9.
 
-**Branch :** `fix/mareliure-customer-access`.
+**Branch :** `ux/customer-portals` (suite 10) ; `fix/mareliure-customer-access` (suite 9, fusionnée).
 
 **Commit :** `361e7915` (correctif : fuite "Métré" dans le vocabulaire
 d'intake partagé, trouvée en smoke test mobile demandé par l'utilisateur —
@@ -946,6 +946,73 @@ souhaite, je ne l'ai pas fait moi-même.
 4. Un vrai dossier client (RL-006 est un test interne, comme RL-003) : le
    premier Checkout payé doit correspondre à une vraie commande, jamais à
    ce dossier de test.
+
+---
+
+### Chantier de cette session (suite 10) — UX des espaces clients (branche `ux/customer-portals`)
+
+Périmètre : navigation, lisibilité, usage de `/mes-livres` sur les deux
+marques. **Non touchés** : modèle commercial, pricing, fiscalité, Stripe,
+règles d'éligibilité au paiement, permissions, modèle atelier, migrations
+(aucune). Non déployé : la branche attend une revue.
+
+Ce qui a changé :
+- **Un seul vocabulaire client**, `src/marketplace/customer/customerPresentation.ts`
+  (logique pure, testée) : statut lisible (14 états, FR/EN), « Prochaine
+  étape » avec au plus un bouton principal, mode de prix en mots, historique
+  bâti sur des dates que le client peut connaître (jamais `marketplace_events`),
+  nettoyage des valeurs du Brief (`null`/`-`/`N/A`, `true`/`false`, identifiants
+  machine masqués ; « à préciser » devient « ce que nous devons encore
+  confirmer »), textes FR/EN de tout l'espace client.
+- **Liste** : vrai titre du livre (la liste affichait `content.missionName`,
+  identique pour tous les projets d'un client), type, date, statut, montant
+  TTC, prochaine étape, miniature, projets qui attendent le client en premier,
+  état vide, rattachement d'un projet replié.
+- **Détail** : bouton « ← Mes livres » déterministe (`Link to="/mes-livres"`,
+  jamais `history.back`), en-tête + statut, « Prochaine étape » (le bouton
+  Payer y est, plus enfoui sous le Brief), carte « Votre proposition »
+  (Service / Transport / HT / TVA / TTC / mode de prix), résumé, photos
+  (ratio fixe, agrandissement accessible, repli si l'URL signée a expiré),
+  atelier, messages, historique, « Voir tous les détails ».
+- **Serveur, lecture seule** : `getMyCustomerCase` renvoie une vue de
+  proposition en **liste blanche** (`customerProposalView.ts` — jamais
+  rémunération d'atelier, marge, contribution, règles) ; `listMyCustomerCases`
+  applique la même règle « prix validé seulement » que le détail. Les deux
+  passent par `customerCommerce.server.ts`, qui appelle `checkoutEligibility`
+  avec les mêmes entrées que le Checkout.
+- **Messagerie / décisions (rôle client uniquement, l'atelier est inchangé)** :
+  une réponse de décision s'affichait en JSON brut (`{"choice":"…"}`) ; erreurs
+  claires avec « Réessayer » ; un envoi raté conserve le brouillon ; un
+  rechargement raté n'efface plus le fil déjà affiché ; défilement dans le fil
+  au lieu d'un saut de page ; champs nommés pour les lecteurs d'écran.
+- Zones tactiles ≥ 44 px, lien d'évitement, régions de navigation nommées.
+
+QA : rendu réel des vrais composants avec des données de test synthétiques
+(scénarios A à H, deux marques), en navigateur à 375 / 390 / 430 px : aucun
+défilement horizontal, aucune zone tactile < 43 px. **Limites** : aucune session
+cliente réelle n'a été utilisée (l'espace client exige une connexion et je n'en
+ai pas fabriqué) ni l'application déployée ; les server functions ne sont
+testées que par lecture de code et tests de contrat. Chrome headless impose une
+fenêtre d'environ 500 px de large : des captures « 375 px » prises ainsi sont
+mises en page à 500 px puis rognées — pour un vrai rendu mobile, utiliser un
+iframe de la largeur voulue.
+
+Constats hors périmètre, **non corrigés** :
+- `customerWorkshopDirectMessaging` (brandConfig) n'est lu nulle part : un
+  client Fine Bindery voit le même fil client ↔ atelier que Ma Reliure, alors
+  que le modèle concierge l'interdit. C'est une règle de messagerie, pas de
+  présentation.
+- L'acceptation d'une proposition est réservée à l'admin (`acceptCommercialProposal`) :
+  il n'existe donc pas de bouton « Accepter » côté client, et je n'en ai pas
+  créé.
+- `cases/journey.ts` n'est plus utilisé que par son test (le parcours est
+  remplacé par le statut + l'historique) : à supprimer ou à réutiliser.
+- `listMyCustomerCases` fait plusieurs lectures par projet (contexte, commerce,
+  signature d'une photo) : acceptable pour quelques livres, à regrouper au-delà.
+- `components/ui/dialog.tsx` a un bouton de fermeture « Close » en anglais (le
+  lecteur photo l'évite en utilisant Radix directement).
+- Le format des dimensions dans les lignes du Brief Fine Bindery (virgule
+  décimale) n'a pas pu être vérifié sur une donnée réelle.
 
 ---
 

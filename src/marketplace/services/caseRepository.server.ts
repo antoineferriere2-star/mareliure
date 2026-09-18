@@ -304,6 +304,20 @@ export async function signCasePhotos(sb: Supa, answers: Answers): Promise<CaseVi
   return photos;
 }
 
+/**
+ * One signed URL, for the thumbnail on a customer's project list — same private
+ * buckets and same expiring signature as `signCasePhotos`, just not all of them
+ * for a screen that only shows the first.
+ */
+export async function signFirstCasePhoto(sb: Supa, answers: Answers): Promise<string | null> {
+  const [ref] = extractPhotoReferences(answers);
+  if (!ref) return null;
+  const { data } = await sb.storage
+    .from(ref.bucket ?? INSPIRATION_PHOTOS_BUCKET)
+    .createSignedUrl(ref.path, SIGNED_URL_TTL_SECONDS);
+  return data?.signedUrl ?? null;
+}
+
 /** The projection, at the disclosure level the caller has already been granted. */
 export async function buildCaseView(
   sb: Supa,

@@ -19,6 +19,13 @@ import {
 } from "@/marketplace/services/decisions.data.functions";
 import { DECISION_KINDS, type DecisionKind } from "@/marketplace/decisions/decisions";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import {
+  customerCopy,
+  formatCustomerDate,
+  humanizeDecisionAnswer,
+} from "@/marketplace/customer/customerPresentation";
+import { PortalError } from "@/marketplace/pages/customer/CustomerPortalUi";
 
 type Locale = "fr-FR" | "en-US";
 
@@ -66,14 +73,19 @@ export function DecisionsPanel({
   caseId,
   role,
   locale = "fr-FR",
+  hideWhenEmpty = false,
 }: {
   caseId: string;
   /** "customer" answers; "binder" (and admin, from the back-office) requests. */
   role: "customer" | "binder";
   locale?: Locale;
+  /** Customer only: render nothing when there is no decision at all, rather than an empty card. */
+  hideWhenEmpty?: boolean;
 }) {
   const en = locale === "en-US";
   const kindLabels = KIND_LABELS[locale];
+  const customer = role === "customer";
+  const copy = customerCopy(locale);
   const fetchDecisions = useServerFn(listCaseDecisions);
   const answer = useServerFn(answerCaseDecision);
   const request = useServerFn(requestCaseDecision);
@@ -81,7 +93,7 @@ export function DecisionsPanel({
   const queryClient = useQueryClient();
   const queryKey = ["marketplace", "decisions", caseId] as const;
 
-  const { data, isPending, error } = useQuery({
+  const { data, isPending, error, refetch, isFetching } = useQuery({
     queryKey,
     queryFn: () => fetchDecisions({ data: { caseId } }),
   });
@@ -96,26 +108,48 @@ export function DecisionsPanel({
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
   });
 
+  // Le client ne lit jamais un message d'erreur du serveur : une phrase et un
+  // bouton pour réessayer. L'atelier garde son affichage d'origine.
   if (isPending)
-    return (
+    return customer ? (
+      <div role="status" aria-busy="true" className="rounded-lg border border-border bg-card p-5">
+        <span className="sr-only">{copy.loading}</span>
+        <Skeleton className="h-5 w-40" />
+        <Skeleton className="mt-4 h-16 w-full" />
+      </div>
+    ) : (
       <p className="text-sm text-muted-foreground">
         {en ? "Loading decisions…" : "Chargement des décisions…"}
       </p>
     );
-  if (error) return <p className="text-sm text-destructive">{(error as Error).message}</p>;
+  // Même règle que la conversation : un rechargement raté ne masque pas des
+  // décisions déjà affichées.
+  if (error && !(customer && data))
+    return customer ? (
+      <PortalError
+        message={copy.sectionError}
+        retryLabel={copy.retry}
+        onRetry={() => void refetch()}
+        busy={isFetching}
+      />
+    ) : (
+      <p className="text-sm text-destructive">{(error as Error).message}</p>
+    );
 
   const decisions = (data ?? []) as DecisionRow[];
   const open = decisions.filter((d) => d.status === "open");
   const settled = decisions.filter((d) => d.status !== "open");
 
-  return (
-    <section className="rounded-lg border border-border bg-card p-5">
-      <h2 className="font-serif text-lg">{en ? "Decisions" : "Décisions"}</h2>
+  if (customer && hideWhenEmpty && decisions.length === 0) return null;
 
-      {decisions.length === 0 && role === "customer" && (
-        <p className="mt-3 text-sm text-muted-foreground">
-          {en ? "No decision to confirm for now." : "Aucune décision à confirmer pour l'instant."}
-        </p>
+  return (
+    <section id="decisions" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
+      <h2 className="font-serif text-lg">
+        {customer ? copy.decisions : en ? "Decisions" : "Décisions"}
+      </h2>
+
+      {decisions.length === 0 && customer && (
+        <p className="mt-3 text-sm text-muted-foreground">{copy.decisionsEmpty}</p>
       )}
 
       {open.length > 0 && (
@@ -138,10 +172,12 @@ export function DecisionsPanel({
                 <DecisionAnswerForm
                   decisionId={decision.id}
                   kind={decision.kind as DecisionKind}
+                  question={decision.question}
                   options={optionsOf(decision.options)}
                   locale={locale}
                   onAnswer={(value) => answerMutation.mutate({ decisionId: decision.id, answer: value })}
                   pending={answerMutation.isPending}
+                  failed={answerMutation.isError}
                 />
               ) : (
                 <div className="mt-3 flex items-center gap-3">
@@ -170,23 +206,33 @@ export function DecisionsPanel({
           {settled.map((decision) => (
             <li key={decision.id} className="rounded-md border border-border p-3 text-sm">
               <p className="font-medium">{decision.question}</p>
-              {decision.status === "answered" && (
-                <p className="mt-1 text-muted-foreground">
-                  {en ? "Confirmed" : "Confirmé"}{" "}
-                  {decision.answered_at &&
-                    (en
-                      ? `on ${new Date(decision.answered_at).toLocaleDateString("en-US")}`
-                      : `le ${new Date(decision.answered_at).toLocaleDateString("fr-FR")}`)}{" "}
-                  : {JSON.stringify(decision.answer)}
-                  {decision.superseded_by &&
-                    (en
-                      ? " (since corrected — see the more recent decision)"
-                      : " (depuis corrigé — voir la décision plus récente)")}
-                </p>
-              )}
+              {decision.status === "answered" &&
+                (customer ? (
+                  // Le client relit sa réponse en mots — jamais le JSON stocké.
+                  <p className="mt-1 text-muted-foreground">
+                    {copy.decisionConfirmedOn(formatCustomerDate(decision.answered_at, locale))}
+                    {humanizeDecisionAnswer(decision.answer) && (
+                      <> : <span className="text-foreground">{humanizeDecisionAnswer(decision.answer)}</span></>
+                    )}
+                    {decision.superseded_by && <> {copy.decisionSuperseded}</>}
+                  </p>
+                ) : (
+                  <p className="mt-1 text-muted-foreground">
+                    {en ? "Confirmed" : "Confirmé"}{" "}
+                    {decision.answered_at &&
+                      (en
+                        ? `on ${new Date(decision.answered_at).toLocaleDateString("en-US")}`
+                        : `le ${new Date(decision.answered_at).toLocaleDateString("fr-FR")}`)}{" "}
+                    : {JSON.stringify(decision.answer)}
+                    {decision.superseded_by &&
+                      (en
+                        ? " (since corrected — see the more recent decision)"
+                        : " (depuis corrigé — voir la décision plus récente)")}
+                  </p>
+                ))}
               {decision.status === "cancelled" && (
                 <p className="mt-1 text-muted-foreground">
-                  {en ? "Request cancelled." : "Demande annulée."}
+                  {customer ? copy.decisionCancelled : en ? "Request cancelled." : "Demande annulée."}
                 </p>
               )}
             </li>
@@ -204,24 +250,31 @@ export function DecisionsPanel({
   );
 }
 
+// Toujours rendu pour le client (`role === "customer"`) : le formulaire
+// d'atelier, lui, ne répond jamais à une décision.
 function DecisionAnswerForm({
   decisionId,
   kind,
+  question,
   options,
   locale,
   onAnswer,
   pending,
+  failed,
 }: {
   decisionId: string;
   kind: DecisionKind;
+  question: string;
   options: string[];
   locale: Locale;
   onAnswer: (answer: Record<string, unknown>) => void;
   pending: boolean;
+  failed: boolean;
 }) {
-  const en = locale === "en-US";
+  const copy = customerCopy(locale);
   const [choice, setChoice] = useState(options[0] ?? "");
   const [freeText, setFreeText] = useState("");
+  const fieldId = `decision-${decisionId}`;
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -229,40 +282,48 @@ function DecisionAnswerForm({
   }
 
   return (
-    <form onSubmit={handleSubmit} className="mt-3 flex flex-wrap items-end gap-3" key={decisionId}>
-      {options.length > 0 ? (
-        <select
-          className="h-9 rounded-md border border-input bg-background px-2 text-sm"
-          value={choice}
-          onChange={(event) => setChoice(event.target.value)}
-        >
-          {options.map((option) => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      ) : (
-        <input
-          type="text"
-          required
-          value={freeText}
-          onChange={(event) => setFreeText(event.target.value)}
-          placeholder={
-            kind === "GILDING_TEXT"
-              ? en
-                ? "Exact text to be gilded"
-                : "Texte exact à dorer"
-              : en
-                ? "Your answer"
-                : "Votre réponse"
-          }
-          className="h-9 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm"
-        />
+    <form onSubmit={handleSubmit} className="mt-3" key={decisionId}>
+      {/* Le champ est nommé par la question posée : un lecteur d'écran lit
+          « Quelle couleur de toile souhaitez-vous ? », pas « liste déroulante ». */}
+      <label htmlFor={fieldId} className="sr-only">
+        {question}
+      </label>
+      <div className="flex flex-wrap items-end gap-3">
+        {options.length > 0 ? (
+          <select
+            id={fieldId}
+            className="h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm sm:flex-none"
+            value={choice}
+            onChange={(event) => setChoice(event.target.value)}
+          >
+            {options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        ) : (
+          <input
+            id={fieldId}
+            type="text"
+            required
+            value={freeText}
+            onChange={(event) => setFreeText(event.target.value)}
+            placeholder={
+              kind === "GILDING_TEXT" ? copy.decisionGildingPlaceholder : copy.decisionAnswerPlaceholder
+            }
+            className="h-11 min-w-0 flex-1 rounded-md border border-input bg-background px-2 text-sm"
+          />
+        )}
+        <Button type="submit" className="h-11" disabled={pending}>
+          {pending ? copy.decisionConfirming : copy.decisionConfirm}
+        </Button>
+      </div>
+      {failed && (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {copy.decisionError}
+        </p>
       )}
-      <Button type="submit" size="sm" disabled={pending}>
-        {en ? "Confirm" : "Confirmer"}
-      </Button>
     </form>
   );
 }
