@@ -31,7 +31,7 @@ import { suggestManagedPrice, validateManagedPrice } from "@/marketplace/pricing
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
 import { depositCentsFor, pricingModeFor } from "@/marketplace/pricing/pricingMode";
 import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
-import { isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { isMarketplaceBrand, marketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
 import { loadAcceptedCommercialProposal } from "@/marketplace/services/commercialProposalRepository.server";
@@ -547,6 +547,30 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
       p_actor_user_id: context.userId,
     });
     if (error) fail(409, error.message);
+
+    // `marketplace_validate_pricing` ne touche jamais service_price_cents/
+    // pricing_mode/brand_multiplier_bps — seul generateMarketplacePricing
+    // (le moteur automatique) les renseigne, et il s'abstient tant qu'aucun
+    // atelier n'a encore saisi de grille (aggregates vides). Sans ce
+    // complément, un dossier tarifé à la main (le seul cas possible
+    // aujourd'hui) resterait à jamais bloqué devant createCommercialProposal
+    // ("pas de prix client calculé"), alors qu'un admin vient justement de
+    // le fixer. On ne l'écrase jamais si le moteur l'a déjà renseigné.
+    if (result && result.service_price_cents === null) {
+      const brand = isMarketplaceBrand(result.brand) ? result.brand : "MA_RELIURE";
+      const multiplierBps = marketplaceBrandConfig(brand).pricingPolicy.serviceMultiplierBps;
+      const { error: backfillError } = await sb
+        .from("marketplace_cases")
+        .update({
+          service_price_cents: data.customerPriceCents,
+          base_service_price_cents: data.customerPriceCents,
+          brand_multiplier_bps: multiplierBps,
+          pricing_mode: result.pricing_mode ?? "MANUAL_STUDY",
+        })
+        .eq("id", data.caseId);
+      if (backfillError) fail(500, backfillError.message);
+    }
+
     return { case: result, validation };
   });
 
