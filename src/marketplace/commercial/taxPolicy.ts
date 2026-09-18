@@ -11,7 +11,7 @@
  * reste `MANUAL_TAX_REVIEW` (garanti aussi au niveau base, voir la
  * migration 20260917090000).
  */
-import type { CommercialTaxPolicy } from "./commercialProposal";
+import type { CommercialTaxPolicy, TaxValidationSource } from "./commercialProposal";
 
 export const TAX_POLICIES: readonly CommercialTaxPolicy[] = [
   "MANUAL_TAX_REVIEW",
@@ -51,6 +51,37 @@ export function suggestTaxPolicyForCountry(countryCode: string | null): Commerci
   if (EU_MEMBER_COUNTRY_CODES.has(code)) return "EU_B2C";
   if (/^[A-Z]{2}$/.test(code)) return "NON_EU_B2C";
   return "MANUAL_TAX_REVIEW";
+}
+
+/**
+ * Décision opérationnelle temporaire de l'utilisateur (18 septembre 2026,
+ * "Décision fiscale temporaire validée") : le taux normal français
+ * s'applique automatiquement, particulier ou professionnel, tant qu'aucune
+ * règle spécifique ne s'y substitue. C'est la SEULE valeur automatisée —
+ * n'y ajouter un pays ou une catégorie qu'à la demande explicite d'une
+ * décision équivalente, jamais par extrapolation ("si la France, pourquoi
+ * pas l'Allemagne ?" — non, tant que ce n'est pas dit).
+ */
+export const FRANCE_STANDARD_VAT_RATE_BPS = 2_000;
+
+export interface AutomaticTaxPolicy {
+  policy: "FR_B2C";
+  vatRateBps: number;
+  validationSource: TaxValidationSource;
+}
+
+/**
+ * `null` pour tout ce qui n'est pas la France — jamais une extrapolation
+ * "probablement 20 % aussi" pour un pays voisin (§3, §7 du brief du
+ * 18 septembre 2026) : Fine Bindery et tout dossier hors France restent
+ * `MANUAL_TAX_REVIEW` par construction, cette fonction ne renvoyant rien
+ * pour eux. Indépendant de `customerType` : la même règle s'applique à un
+ * particulier et à un professionnel facturés en France (§1-2).
+ */
+export function resolveAutomaticTaxPolicy(billingCountry: string | null): AutomaticTaxPolicy | null {
+  if (!billingCountry) return null;
+  if (billingCountry.trim().toUpperCase() !== "FR") return null;
+  return { policy: "FR_B2C", vatRateBps: FRANCE_STANDARD_VAT_RATE_BPS, validationSource: "FR_STANDARD_VAT_20" };
 }
 
 export interface TaxValidationInput {

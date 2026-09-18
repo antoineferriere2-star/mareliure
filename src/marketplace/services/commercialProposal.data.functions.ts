@@ -28,6 +28,7 @@ import {
 import {
   isCommercialTaxPolicy,
   recomputeProposalTax,
+  resolveAutomaticTaxPolicy,
   validateTaxPolicySelection,
 } from "@/marketplace/commercial/taxPolicy";
 import { getPaymentPreflight as loadPaymentPreflight } from "@/marketplace/stripe/paymentPreflight.server";
@@ -40,6 +41,7 @@ import {
   loadAcceptedCommercialProposal,
   loadCommercialProposalById,
   nextProposalVersion,
+  resetProposalTaxToManualReview as resetProposalTaxToManualReviewRow,
   updateProposalTaxValidation,
 } from "./commercialProposalRepository.server";
 
@@ -361,6 +363,117 @@ export const validateCommercialProposalTax = createServerFn({ method: "POST" })
         customer_vat_rate_bps: updated.customerVatRateBps,
         customer_type: updated.customerType,
       },
+    });
+
+    return updated;
+  });
+
+const applyAutomaticFranceTaxInput = z.object({
+  proposalId: uuid,
+  billingCountry: z.string().trim().min(1),
+  customerType: z.enum(["CUSTOMER", "BUSINESS"]).default("CUSTOMER"),
+  businessName: z.string().trim().min(1).nullable().default(null),
+  businessVatNumber: z.string().trim().min(1).nullable().default(null),
+});
+
+/**
+ * La seule règle fiscale automatisée à ce jour — décision opérationnelle
+ * temporaire de l'utilisateur (18 septembre 2026, "Décision fiscale
+ * temporaire validée") : la TVA française standard (20 %) pour tout
+ * dossier facturé en France, particulier ou professionnel. Refuse tout
+ * autre pays (fail closed, §7 du brief) — ce n'est pas
+ * `validateCommercialProposalTax` avec une valeur pré-remplie, c'est une
+ * porte séparée, volontairement étroite, qui ne peut matériellement pas
+ * s'appliquer à un dossier international.
+ */
+export const applyAutomaticFranceTaxPolicy = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => applyAutomaticFranceTaxInput.parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+
+    const automatic = resolveAutomaticTaxPolicy(data.billingCountry);
+    if (!automatic) {
+      fail(
+        400,
+        "La règle automatique ne s'applique qu'aux dossiers facturés en France (billing_country = FR).",
+      );
+    }
+    if (data.customerType === "BUSINESS" && !data.businessName) {
+      fail(400, "La raison sociale est requise pour un client professionnel (BUSINESS).");
+    }
+
+    const sb = await admin();
+    const proposal = await loadCommercialProposalById(sb, data.proposalId);
+    if (!proposal) fail(404, "Proposition introuvable.");
+    if (proposal.acceptedAt) fail(409, "Cette proposition est déjà acceptée et donc immuable.");
+
+    const recomputed = recomputeProposalTax(
+      {
+        customerServicePriceCents: proposal.customerServicePriceCents,
+        shippingTotalCents: proposal.shippingTotalCents,
+        depositAmountCents: proposal.depositAmountCents,
+      },
+      automatic.vatRateBps,
+    );
+
+    const updated = await updateProposalTaxValidation(sb, data.proposalId, {
+      taxPolicy: automatic.policy,
+      taxCountry: "FR",
+      customerVatRateBps: automatic.vatRateBps,
+      taxBasis: "service_and_shipping",
+      taxValidationSource: automatic.validationSource,
+      // Volontairement `null` : ce n'est pas un admin qui valide (§4 du
+      // brief du 18 septembre 2026) — voir commercialProposal.ts.
+      validatedBy: null,
+      customerVatAmountCents: recomputed.customerVatAmountCents,
+      customerTotalTtcCents: recomputed.customerTotalTtcCents,
+      balanceDueCents: recomputed.balanceDueCents,
+      customerType: data.customerType,
+      businessName: data.businessName,
+      businessVatNumber: data.businessVatNumber,
+      businessVatValidationStatus: data.businessVatNumber ? "NOT_CHECKED" : null,
+      billingCountry: data.billingCountry.trim().toUpperCase(),
+    });
+
+    await sb.from("marketplace_events").insert({
+      case_id: updated.caseId,
+      actor_user_id: context.userId,
+      event_type: "commercial_proposal_tax_auto_validated",
+      metadata: {
+        proposal_id: updated.id,
+        tax_policy: updated.taxPolicy,
+        tax_validation_source: updated.taxValidationSource,
+        customer_type: updated.customerType,
+      },
+    });
+
+    return updated;
+  });
+
+/**
+ * La porte de sortie que l'admin garde toujours (§2, §8 du brief du
+ * 18 septembre 2026) : revenir à `MANUAL_TAX_REVIEW` sur une proposition
+ * que la règle automatique (ou une validation manuelle) avait fixée, si
+ * un cas particulier apparaît avant acceptation.
+ */
+export const resetProposalTaxToManualReview = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => uuid.parse(data))
+  .handler(async ({ context, data: proposalId }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const proposal = await loadCommercialProposalById(sb, proposalId);
+    if (!proposal) fail(404, "Proposition introuvable.");
+    if (proposal.acceptedAt) fail(409, "Cette proposition est déjà acceptée et donc immuable.");
+
+    const updated = await resetProposalTaxToManualReviewRow(sb, proposalId);
+
+    await sb.from("marketplace_events").insert({
+      case_id: updated.caseId,
+      actor_user_id: context.userId,
+      event_type: "commercial_proposal_tax_reset_to_manual_review",
+      metadata: { proposal_id: updated.id },
     });
 
     return updated;

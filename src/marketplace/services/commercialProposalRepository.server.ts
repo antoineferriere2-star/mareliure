@@ -243,7 +243,8 @@ export interface TaxValidationUpdate {
   customerVatRateBps: number | null;
   taxBasis: TaxBasis;
   taxValidationSource: TaxValidationSource;
-  validatedBy: string;
+  /** `null` uniquement pour `taxValidationSource: "FR_STANDARD_VAT_20"` — une validation automatique n'a pas d'admin validateur (§4 du brief du 18 septembre 2026), jamais un UUID inventé. Garanti cohérent en base (migration 20260918090000). */
+  validatedBy: string | null;
   customerVatAmountCents: number | null;
   customerTotalTtcCents: number | null;
   balanceDueCents: number;
@@ -294,6 +295,44 @@ export async function updateProposalTaxValidation(
     .single();
   if (error) throw error;
   return toRow(data);
+}
+
+/**
+ * Revient explicitement à `MANUAL_TAX_REVIEW` — la porte de sortie que
+ * l'admin garde toujours (§2, §8 du brief du 18 septembre 2026) quand un
+ * cas particulier apparaît sur un dossier que la règle française
+ * automatique aurait autrement validé. Recalcule vers l'état "non
+ * calculé" (montants TTC/TVA à `null`, solde revenant au HT) — jamais une
+ * ligne acceptée (même garde que les fonctions ci-dessus).
+ */
+export async function resetProposalTaxToManualReview(
+  sb: Supa,
+  proposalId: string,
+): Promise<CommercialProposalRow> {
+  const { data, error } = await sb
+    .from("marketplace_commercial_proposals")
+    .update({
+      tax_policy: "MANUAL_TAX_REVIEW",
+      tax_country: null,
+      customer_vat_rate_bps: null,
+      customer_vat_amount_cents: null,
+      customer_total_ttc_cents: null,
+      tax_basis: null,
+      tax_validation_source: null,
+      tax_validated_by: null,
+      tax_validated_at: null,
+    })
+    .eq("id", proposalId)
+    .is("accepted_at", null)
+    .select(COLUMNS)
+    .single();
+  if (error) throw error;
+  const row = toRow(data);
+  // `balance_due_cents` dépend de `customer_total_ht_cents`, jamais du TTC
+  // qu'on vient d'effacer (HT-first, §13 du brief du 17 septembre 2026) —
+  // il reste donc inchangé par ce reset, aucune écriture supplémentaire
+  // n'est nécessaire ici.
+  return row;
 }
 
 /**

@@ -20,12 +20,18 @@ import {
 } from "@/marketplace/services/marketplace.data.functions";
 import {
   acceptCommercialProposal,
+  applyAutomaticFranceTaxPolicy,
   createCommercialProposal,
   getPaymentPreflight,
   listCaseCommercialProposals,
+  resetProposalTaxToManualReview,
   validateCommercialProposalTax,
 } from "@/marketplace/services/commercialProposal.data.functions";
-import { TAX_POLICIES, suggestTaxPolicyForCountry } from "@/marketplace/commercial/taxPolicy";
+import {
+  resolveAutomaticTaxPolicy,
+  suggestTaxPolicyForCountry,
+  TAX_POLICIES,
+} from "@/marketplace/commercial/taxPolicy";
 import {
   Select,
   SelectContent,
@@ -429,6 +435,7 @@ function TaxValidationForm({
   caseId: string;
 }) {
   const validate = useServerFn(validateCommercialProposalTax);
+  const applyAutoFrance = useServerFn(applyAutomaticFranceTaxPolicy);
   const queryClient = useQueryClient();
   const queryKey = ["marketplace", "case", caseId, "commercial-proposals"] as const;
   const [country, setCountry] = useState("");
@@ -466,46 +473,35 @@ function TaxValidationForm({
     },
   });
 
+  // Décision opérationnelle temporaire de l'utilisateur (18 septembre
+  // 2026) : la TVA française standard s'applique automatiquement — cette
+  // fonction ne renvoie rien pour tout ce qui n'est pas la France,
+  // Fine Bindery et l'UE hors France restent donc MANUAL_TAX_REVIEW.
+  const automaticFrance = resolveAutomaticTaxPolicy(billingCountry || null);
+  const applyingAutoFrance = useMutation({
+    mutationFn: () =>
+      applyAutoFrance({
+        data: {
+          proposalId: proposal.id,
+          billingCountry,
+          customerType,
+          businessName: customerType === "BUSINESS" ? businessName.trim() : null,
+          businessVatNumber:
+            customerType === "BUSINESS" && businessVatNumber.trim() ? businessVatNumber.trim() : null,
+        },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
+    },
+  });
+
   return (
     <div className="mt-2 rounded-md border border-dashed border-border p-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
         Valider la fiscalité — v{proposal.version}
       </p>
       <div className="mt-2 grid gap-2 sm:grid-cols-3">
-        <div>
-          <Label className="text-xs">Pays de taxation</Label>
-          <Input
-            value={country}
-            maxLength={2}
-            placeholder="FR"
-            onChange={(e) => {
-              const value = e.target.value.toUpperCase();
-              setCountry(value);
-              setPolicy(suggestTaxPolicyForCountry(value || null));
-            }}
-          />
-        </div>
-        <div>
-          <Label className="text-xs">Catégorie</Label>
-          <Select value={policy} onValueChange={setPolicy}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {TAX_POLICIES.filter((p) => p !== "MANUAL_TAX_REVIEW").map((p) => (
-                <SelectItem key={p} value={p}>
-                  {TAX_POLICY_LABELS[p] ?? p}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-        <div>
-          <Label className="text-xs">TVA (%, laisser vide si non applicable)</Label>
-          <Input value={vatRate} placeholder="20" onChange={(e) => setVatRate(e.target.value)} />
-        </div>
-      </div>
-      <div className="mt-3 grid gap-2 sm:grid-cols-3">
         <div>
           <Label className="text-xs">Type de client</Label>
           <Select value={customerType} onValueChange={(v) => setCustomerType(v as "CUSTOMER" | "BUSINESS")}>
@@ -531,28 +527,93 @@ function TaxValidationForm({
           </>
         )}
         <div>
-          <Label className="text-xs">Pays de facturation (facultatif)</Label>
+          <Label className="text-xs">Pays de facturation</Label>
           <Input
             value={billingCountry}
             maxLength={2}
-            placeholder={country || "FR"}
+            placeholder="FR"
             onChange={(e) => setBillingCountry(e.target.value.toUpperCase())}
           />
         </div>
       </div>
-      {validating.error && (
-        <p className="mt-2 text-xs text-destructive">{(validating.error as Error).message}</p>
+
+      {automaticFrance && (
+        <div className="mt-3 rounded-md border border-emerald-600/30 bg-emerald-50 p-3">
+          <p className="text-sm text-emerald-900">
+            France détectée — TVA standard 20 % applicable automatiquement (décision
+            opérationnelle temporaire du 18 septembre 2026).
+          </p>
+          {applyingAutoFrance.error && (
+            <p className="mt-2 text-xs text-destructive">
+              {(applyingAutoFrance.error as Error).message}
+            </p>
+          )}
+          <Button
+            size="sm"
+            className="mt-2"
+            disabled={
+              applyingAutoFrance.isPending || (customerType === "BUSINESS" && !businessName.trim())
+            }
+            onClick={() => applyingAutoFrance.mutate()}
+          >
+            Appliquer TVA France 20 % (automatique)
+          </Button>
+        </div>
       )}
-      <Button
-        size="sm"
-        className="mt-3"
-        disabled={
-          validating.isPending || !country.trim() || (customerType === "BUSINESS" && !businessName.trim())
-        }
-        onClick={() => validating.mutate()}
-      >
-        Valider cette fiscalité
-      </Button>
+
+      <details className="mt-3 text-sm">
+        <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+          Ou valider manuellement une autre catégorie (UE, hors UE, cas particulier…)
+        </summary>
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+          <div>
+            <Label className="text-xs">Pays de taxation</Label>
+            <Input
+              value={country}
+              maxLength={2}
+              placeholder="FR"
+              onChange={(e) => {
+                const value = e.target.value.toUpperCase();
+                setCountry(value);
+                setPolicy(suggestTaxPolicyForCountry(value || null));
+              }}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Catégorie</Label>
+            <Select value={policy} onValueChange={setPolicy}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TAX_POLICIES.filter((p) => p !== "MANUAL_TAX_REVIEW").map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {TAX_POLICY_LABELS[p] ?? p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">TVA (%, laisser vide si non applicable)</Label>
+            <Input value={vatRate} placeholder="20" onChange={(e) => setVatRate(e.target.value)} />
+          </div>
+        </div>
+        {validating.error && (
+          <p className="mt-2 text-xs text-destructive">{(validating.error as Error).message}</p>
+        )}
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-3"
+          disabled={
+            validating.isPending || !country.trim() || (customerType === "BUSINESS" && !businessName.trim())
+          }
+          onClick={() => validating.mutate()}
+        >
+          Valider cette fiscalité manuellement
+        </Button>
+      </details>
     </div>
   );
 }
@@ -606,6 +667,14 @@ function PreflightPanel({ caseId }: { caseId: string }) {
             data.taxPolicy ? (TAX_POLICY_LABELS[data.taxPolicy] ?? data.taxPolicy) : "—",
           )}
           {line(
+            "Source",
+            data.taxValidationSource === "FR_STANDARD_VAT_20"
+              ? "Auto-validée par la politique système (FR_STANDARD_VAT_20)"
+              : (TAX_VALIDATION_SOURCE_LABELS[data.taxValidationSource ?? ""] ??
+                data.taxValidationSource ??
+                "—"),
+          )}
+          {line(
             "TVA",
             data.customerVatRateBps !== null
               ? `${(data.customerVatRateBps / 100).toFixed(1)} % (${
@@ -638,10 +707,16 @@ function PreflightPanel({ caseId }: { caseId: string }) {
  * proposition pour ce dossier. « Accepter » est réservé à l'administration
  * dans cette phase — aucun parcours client ne le fait encore lui-même.
  */
+const TAX_VALIDATION_SOURCE_LABELS: Record<string, string> = {
+  manual_admin_review: "Validation manuelle (admin)",
+  FR_STANDARD_VAT_20: "Automatique — TVA France standard 20 %",
+};
+
 function CommercialProposalPanel({ caseId }: { caseId: string }) {
   const list = useServerFn(listCaseCommercialProposals);
   const create = useServerFn(createCommercialProposal);
   const accept = useServerFn(acceptCommercialProposal);
+  const resetTax = useServerFn(resetProposalTaxToManualReview);
   const queryClient = useQueryClient();
   const queryKey = ["marketplace", "case", caseId, "commercial-proposals"] as const;
 
@@ -658,6 +733,13 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
   const accepting = useMutation({
     mutationFn: (proposalId: string) => accept({ data: proposalId }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+  const resetting = useMutation({
+    mutationFn: (proposalId: string) => resetTax({ data: proposalId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
+    },
   });
 
   const hasAccepted = (proposals ?? []).some((p) => p.status === "accepted");
@@ -678,6 +760,9 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
       )}
       {accepting.error && (
         <p className="mt-2 text-xs text-destructive">{(accepting.error as Error).message}</p>
+      )}
+      {resetting.error && (
+        <p className="mt-2 text-xs text-destructive">{(resetting.error as Error).message}</p>
       )}
       <ul className="mt-3 space-y-2 text-sm">
         {(proposals ?? []).map((proposal) => (
@@ -703,6 +788,9 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
                         proposal.customerVatRateBps !== null
                           ? `${(proposal.customerVatRateBps / 100).toFixed(1)} %`
                           : "non applicable"
+                      } · ${
+                        TAX_VALIDATION_SOURCE_LABELS[proposal.taxValidationSource ?? ""] ??
+                        proposal.taxValidationSource
                       }`
                     : "à valider"}
                 </p>
@@ -713,15 +801,28 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
                     : "Particulier"}
                 </p>
               </div>
-              {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (
-                <Button
-                  size="sm"
-                  disabled={accepting.isPending}
-                  onClick={() => accepting.mutate(proposal.id)}
-                >
-                  Accepter
-                </Button>
-              )}
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (
+                  <Button
+                    size="sm"
+                    disabled={accepting.isPending}
+                    onClick={() => accepting.mutate(proposal.id)}
+                  >
+                    Accepter
+                  </Button>
+                )}
+                {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs"
+                    disabled={resetting.isPending}
+                    onClick={() => resetting.mutate(proposal.id)}
+                  >
+                    Revenir à MANUAL_TAX_REVIEW
+                  </Button>
+                )}
+              </div>
             </div>
             {proposal.status === "proposed" && !hasAccepted && !proposal.taxValidatedAt && (
               <TaxValidationForm proposal={proposal} caseId={caseId} />

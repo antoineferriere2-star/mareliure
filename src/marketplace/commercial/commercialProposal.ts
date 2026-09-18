@@ -39,8 +39,16 @@ export type CommercialTaxPolicy =
 /** Ce qui a été soumis à la TVA — une seule valeur aujourd'hui (§8 : ne pas présumer que le transport suit le même régime que le service tant que ce n'est pas validé, mais ne pas complexifier avant qu'un vrai cas l'exige). */
 export type TaxBasis = "service_and_shipping";
 
-/** La seule source de validation construite pour l'instant — une décision admin, tracée. Une règle automatique validée par un expert-comptable ajouterait sa propre valeur ici, jamais un remplacement silencieux de celle-ci. */
-export type TaxValidationSource = "manual_admin_review";
+/**
+ * `"manual_admin_review"` : une décision humaine, tracée par
+ * `tax_validated_by`. `"FR_STANDARD_VAT_20"` (décision opérationnelle
+ * temporaire de l'utilisateur, 18 septembre 2026) : la TVA française
+ * standard (20 %) appliquée automatiquement par le système pour un
+ * dossier facturé en France — `tax_validated_by` reste alors `null` (ce
+ * n'est délibérément pas un admin qui valide, voir taxPolicy.ts), jamais
+ * un UUID inventé pour satisfaire la contrainte de clé étrangère.
+ */
+export type TaxValidationSource = "manual_admin_review" | "FR_STANDARD_VAT_20";
 
 /**
  * `CUSTOMER` par défaut (particulier) — Fine Bindery recevra à terme des

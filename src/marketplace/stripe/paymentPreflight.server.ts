@@ -34,6 +34,7 @@ export interface PaymentPreflightResult {
   totalHtCents: number | null;
   taxPolicy: string | null;
   taxCountry: string | null;
+  taxValidationSource: string | null;
   customerVatRateBps: number | null;
   customerVatAmountCents: number | null;
   totalTtcCents: number | null;
@@ -67,6 +68,7 @@ export async function getPaymentPreflight(sb: Supa, caseId: string): Promise<Pay
       totalHtCents: null,
       taxPolicy: null,
       taxCountry: null,
+      taxValidationSource: null,
       customerVatRateBps: null,
       customerVatAmountCents: null,
       totalTtcCents: null,
@@ -135,6 +137,7 @@ export async function getPaymentPreflight(sb: Supa, caseId: string): Promise<Pay
     totalHtCents: proposal?.customerTotalHtCents ?? null,
     taxPolicy: proposal?.taxPolicy ?? null,
     taxCountry: proposal?.taxCountry ?? null,
+    taxValidationSource: proposal?.taxValidationSource ?? null,
     customerVatRateBps: proposal?.customerVatRateBps ?? null,
     customerVatAmountCents: proposal?.customerVatAmountCents ?? null,
     totalTtcCents: proposal?.customerTotalTtcCents ?? null,
