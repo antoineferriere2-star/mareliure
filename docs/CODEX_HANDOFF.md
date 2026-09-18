@@ -790,11 +790,14 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 17 septembre 2026 (soir — les deux migrations fiscales appliquées et déployées en production, voir suite 6)
+**Date :** 18 septembre 2026 (TVA France 20 % automatique — décision opérationnelle temporaire, voir suite 7)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `ee4b20b8` (correction d'un constat erroné sur les capacités
+**Commit :** `93252a26` (TVA France 20 % automatique pour tout dossier
+`billing_country = FR`, particulier ou professionnel — migration
+`20260918090000`, **appliquée en production**, voir suite 7), sur
+`ee4b20b8` (correction d'un constat erroné sur les capacités
 d'écriture Stripe), sur `a049ad01`, sur `49df2dee` (modèle fiscal prêt
 pour du B2B : `customer_type`, `business_name`/`business_vat_number`/
 `billing_country` — migration `20260917100000`, **appliquée en production
@@ -818,12 +821,72 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 `b924c9ef` (pages légales Fine Bindery), `611a2e53` → `02186112` (Phases B
 à F Fine Bindery).
 
-**Production : déployée le 17 septembre 2026 (soir), Worker `mareliure`
-version `1338a6ff-9f2b-48a7-9933-16d61e769514`.** Les deux migrations
-fiscales (`20260917090000`, `20260917100000`) ont été appliquées à la
+**Production : déployée le 18 septembre 2026, Worker `mareliure` version
+`08911db0-f9be-4368-b565-da9b8828950f`.** Trois migrations fiscales
+(`20260917090000`, `20260917100000`, `20260918090000`) appliquées à la
 production (`hljxohondjvrkzqicexl`) via l'API de gestion Supabase — voir
-suite 6 pour le détail exact (colonnes vérifiées avant/après, comptage des
-migrations). Code et base de production sont alignés.
+suite 6 et suite 7 pour le détail exact. Code et base de production sont
+alignés.
+
+---
+
+### Chantier de cette session (suite 7) — TVA France 20 % automatique (décision opérationnelle temporaire)
+
+Décision de l'utilisateur (18 septembre 2026, "Décision fiscale temporaire
+validée") pour débloquer les ventes françaises Ma Reliure sans attendre
+une politique fiscale internationale.
+
+**Règle** : tout dossier avec `billing_country = FR` (particulier OU
+professionnel) reçoit automatiquement `tax_policy = FR_B2C`,
+`customer_vat_rate_bps = 2000` (20 %), `tax_validation_source =
+FR_STANDARD_VAT_20`. Tout le reste — Fine Bindery, UE hors France, hors
+UE — reste `MANUAL_TAX_REVIEW`, sans changement : `resolveAutomaticTaxPolicy`
+(`taxPolicy.ts`) ne renvoie rien pour eux, jamais une extrapolation
+("si la France, pourquoi pas l'Allemagne" — non, tant que ce n'est pas
+une décision explicite équivalente).
+
+**`tax_validated_by` reste `NULL` pour cette source** — pas un admin qui
+valide, et surtout pas un UUID inventé (`SYSTEM_POLICY` en texte n'aurait
+pas pu satisfaire la contrainte de clé étrangère vers `auth.users`).
+`tax_validation_source = 'FR_STANDARD_VAT_20'` porte seule cette
+information, sans ambiguïté avec une validation humaine
+(`'manual_admin_review'`, qui exige toujours `tax_validated_by`).
+Garanti par une contrainte CHECK dédiée (migration `20260918090000`,
+appliquée et vérifiée en production — `pg_get_constraintdef` relu après
+coup).
+
+**Nouvelles server functions** (`commercialProposal.data.functions.ts`) :
+- `applyAutomaticFranceTaxPolicy` — fail closed sur tout pays différent
+  de `FR` (§7 du brief : ce n'est pas `validateCommercialProposalTax`
+  avec une valeur pré-remplie, c'est une porte séparée qui ne peut
+  matériellement pas s'appliquer à un dossier international).
+- `resetProposalTaxToManualReview` — la porte de sortie que l'admin garde
+  toujours (§2, §8) pour un cas particulier détecté avant acceptation.
+
+**UI admin** (`CaseMatchingPage.tsx`) : un bandeau vert "France détectée"
+avec un bouton d'application en un clic dès que le pays de facturation
+saisi vaut `FR` ; le formulaire manuel (les quatre autres catégories, ou
+un forçage) reste disponible, replié dans un `<details>`. Le
+`PreflightPanel` affiche désormais la source de validation, avec la
+mention "Auto-validée par la politique système" pour `FR_STANDARD_VAT_20`.
+
+**Tests** (§9 du brief, cas exacts) : `taxPolicy.test.ts` — FR B2C et
+FR B2B, service HT 500 € → TVA 100 € → TTC 600 € ; Fine Bindery UAE, USA,
+et UE hors France (DE, IT) restent `MANUAL_TAX_REVIEW`.
+`npx vitest run` → 148 fichiers, 1981 tests verts (7 nouveaux).
+`npx tsc --noEmit` propre, `npm run lint` 0 erreur, `npm run
+build:mareliure` vert.
+
+**Déployé** : migration `20260918090000` appliquée et vérifiée
+(`pg_get_constraintdef` relu directement), `npm run deploy:mareliure` →
+Worker `mareliure` version `08911db0-f9be-4368-b565-da9b8828950f`. Smoke
+test `https://mareliure.fr/` : 0 erreur console.
+
+**Non fait, nécessite un admin réel** : dérouler le parcours §34 du
+brief du 17 septembre (Project Brief → pricing → proposition → **appliquer
+la TVA France automatique** → accepter → preflight) jusqu'à `READY FOR
+PAYMENT` sur un dossier français réel/interne. Toujours pas d'identifiants
+admin disponibles ici.
 
 ---
 

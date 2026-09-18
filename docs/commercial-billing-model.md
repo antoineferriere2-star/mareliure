@@ -295,16 +295,32 @@ lit jamais, seulement `tax_validated_at`.
 (le montant), `tax_country`, `tax_basis` (`"service_and_shipping"` — une
 seule valeur aujourd'hui, le type reste ouvert si transport et service
 devaient un jour suivre des régimes distincts), `tax_validation_source`
-(`"manual_admin_review"`, seule source construite), `tax_validated_at`,
-`tax_validated_by`. Les trois derniers vont ensemble — jamais l'un sans
-les deux autres (contrainte CHECK en base). Une fois une proposition
-acceptée, ce snapshot est aussi immuable que le reste de la ligne : un
-changement de règle futur ne modifie jamais une commande déjà honorée.
+(deux sources désormais construites — voir plus bas), `tax_validated_at`,
+`tax_validated_by`. Une fois une proposition acceptée, ce snapshot est
+aussi immuable que le reste de la ligne : un changement de règle futur ne
+modifie jamais une commande déjà honorée.
 
-**Ce qui manque avant qu'une catégorie autre que `MANUAL_TAX_REVIEW`
-puisse être choisie en confiance** :
-1. Un taux TVA confirmé par un expert-comptable pour chacun des quatre cas
-   — non fait, volontairement hors du périmètre de ce chantier.
+**Exception construite le 18 septembre 2026 — TVA France 20 %
+automatique** (décision opérationnelle temporaire de l'utilisateur, pas
+une automatisation générale) : tout dossier `billing_country = FR`
+(particulier ou professionnel) reçoit `tax_policy = FR_B2C`,
+`customer_vat_rate_bps = 2000`, `tax_validation_source =
+FR_STANDARD_VAT_20` — sans admin, via `applyAutomaticFranceTaxPolicy`
+(`commercialProposal.data.functions.ts`) et `resolveAutomaticTaxPolicy`
+(`taxPolicy.ts`, pure, testée). Dans ce seul cas, `tax_validated_by` reste
+`NULL` (contrainte CHECK dédiée, migration `20260918090000`) : ce n'est
+délibérément pas une validation humaine. `EU_B2C`/`NON_EU_B2C`/
+`NON_EU_TEMPORARY_IMPORT_REEXPORT` restent entièrement manuels — cette
+fonction ne renvoie rien pour un pays autre que `FR`, jamais une
+extrapolation. `resetProposalTaxToManualReview` permet à l'admin de
+revenir en arrière avant acceptation si un cas particulier apparaît.
+
+**Ce qui manque avant qu'une des trois catégories internationales
+puisse être choisie en confiance** (inchangé pour elles — seule la
+France a une règle) :
+1. Un taux TVA confirmé par un expert-comptable pour chacun des trois cas
+   internationaux — non fait, volontairement hors du périmètre de ce
+   chantier.
 2. Un pays client réellement connu : aucun dossier ne capture aujourd'hui
    une adresse ou un pays du client (seuls `customerEmail`/`customerName`
    existent, via `CaseContext`). L'admin saisit donc le pays à la main
