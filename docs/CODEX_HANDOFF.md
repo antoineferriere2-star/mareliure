@@ -790,11 +790,14 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 18 septembre 2026 (TVA France 20 % automatique — décision opérationnelle temporaire, voir suite 7)
+**Date :** 18 septembre 2026 (parcours commercial complet vérifié de bout en bout, `checkoutEligibility: {eligible: true}` sur un dossier réel — voir suite 8)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `93252a26` (TVA France 20 % automatique pour tout dossier
+**Commit :** `9b5af075` (correctif : `validateMarketplacePricing` renseigne
+désormais `service_price_cents`/`pricing_mode`/`brand_multiplier_bps`,
+bug bloquant découvert en déroulant le parcours réel — voir suite 8), sur
+`93252a26` (TVA France 20 % automatique pour tout dossier
 `billing_country = FR`, particulier ou professionnel — migration
 `20260918090000`, **appliquée en production**, voir suite 7), sur
 `ee4b20b8` (correction d'un constat erroné sur les capacités
@@ -822,11 +825,111 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 à F Fine Bindery).
 
 **Production : déployée le 18 septembre 2026, Worker `mareliure` version
-`08911db0-f9be-4368-b565-da9b8828950f`.** Trois migrations fiscales
+`19dcfd30-1215-4376-b33e-65724dba58d6`.** Trois migrations fiscales
 (`20260917090000`, `20260917100000`, `20260918090000`) appliquées à la
 production (`hljxohondjvrkzqicexl`) via l'API de gestion Supabase — voir
-suite 6 et suite 7 pour le détail exact. Code et base de production sont
-alignés.
+suite 6 et suite 7. Aucune migration supplémentaire pour la suite 8 (correctif
+de code seul). Code et base de production sont alignés.
+
+---
+
+### Chantier de cette session (suite 8) — parcours commercial complet vérifié de bout en bout, un vrai bug bloquant trouvé et corrigé
+
+Suite à "vas-y, connecte-toi en admin et déroule le parcours" : je n'ai pas
+de mot de passe admin (et ne dois jamais en manipuler), donc pas de
+connexion navigateur littérale. À la place, avec l'accord explicite de
+l'utilisateur, j'ai obtenu `SUPABASE_SERVICE_ROLE_KEY` (production, dans un
+fichier local `.env.production-admin-script.txt`, jamais vu par moi ni
+commité — `.env.*` est gitignoré) pour exécuter le **vrai code**
+(`loadCaseContext`, `buildCommercialProposalSnapshot`,
+`insertCommercialProposal`, `resolveAutomaticTaxPolicy`,
+`recomputeProposalTax`, `updateProposalTaxValidation`,
+`acceptCommercialProposal`, `checkoutEligibility`, `getPaymentPreflight` —
+jamais une réimplémentation) via des scripts `tsx` ponctuels (non commités,
+supprimés après usage).
+
+**Dossiers existants audités (lecture seule) avant toute écriture** : 2 cas
+réels en production, tous deux sur le compte de l'utilisateur
+(`antoineferriere2@hotmail.fr`) — RL-003 (Ma Reliure, `validated`, 500 €/
+375 €) et RL-004 (Fine Bindery, `pending`). **RL-003 n'a pas été touché**
+(conservé intact, comme demandé) : relancer le moteur de pricing actuel
+dessus produit `manual_review` (aucune couverture Pricebook pour ses
+travaux sous les règles `bookbinding-2026-09-16-v5`) — la tentative s'est
+arrêtée sans écrire.
+
+**Nouveau dossier de test créé via le vrai parcours public** ("Présenter
+mon livre", `/m/reliure-marketplace-token-000001`), pas par insertion SQL :
+un livre courant, reliure toile, style classique, valeur "Décoration",
+75001 Paris, `antoineferriere2@hotmail.fr`. Deux tentatives : la première
+(**RL-005**) a été laissée incomplète (l'admin ne pouvait pas connaître le
+style/matière depuis un intake où je ne les avais pas remplis, moteur
+abstient avec `work_item_keys: []`) — la seconde, **RL-006**, complète, a
+servi la suite. Upload photo réalisé par script (JS `DataTransfer`
+constructant un `File` factice, l'input `<input type=file>` du formulaire
+ne pouvant pas être piloté par les outils navigateur habituels — jamais
+utilisé pour autre chose qu'un placeholder de photo, jamais pour contourner
+une validation métier).
+
+**Découverte critique** : même avec un dossier neuf et complet, le moteur
+automatique (`suggestManagedPrice`) s'abstient **systématiquement**
+aujourd'hui — `marketplace_binder_rates` est **vide** (0 relieur onboardé,
+confirmé). C'est structurel, pas un bug : "sans référentiel, il n'invente
+rien" (commentaire déjà présent dans le code). RL-003 lui-même n'avait
+donc jamais été tarifé par le moteur — toujours à la main.
+
+**Le vrai bug** : le chemin de tarification manuelle
+(`saveMarketplacePricing` + RPC `marketplace_validate_pricing`) — **le seul
+chemin possible aujourd'hui, pour tous les dossiers** — ne renseigne jamais
+`service_price_cents`/`pricing_mode`/`brand_multiplier_bps`. Seul
+`generateMarketplacePricing` (qui s'abstient toujours) les renseigne.
+Conséquence : **tout dossier tarifé à la main restait bloqué devant
+`createCommercialProposal`** ("pas de prix client calculé"), même après
+validation admin en bonne et due forme. C'est pour cette raison précise que
+RL-003 a d'abord semblé "cassé" — ce n'était pas RL-003, c'était ce chemin.
+
+**Corrigé** (commit `9b5af075`) : `validateMarketplacePricing` complète
+désormais ces trois colonnes quand elles restent `NULL` après la RPC, avec
+le multiplicateur réel de la marque du dossier (`marketplaceBrandConfig`)
+— jamais un écrasement si le moteur les avait déjà renseignées. Testé
+(148 fichiers, 1981 tests verts — un flake isolé sur
+`secretsContract.test.ts` non reproductible, reconfirmé par un second run
+complet), typecheck propre, build vert, **déployé** (Worker `mareliure`
+version `19dcfd30-1215-4376-b33e-65724dba58d6`).
+
+**Résultat du parcours complet sur RL-006** (Ma Reliure, France, 500 € HT) :
+
+| Étape | Résultat |
+| --- | --- |
+| Intake public réel | Dossier créé, `manual_review_required: false` |
+| Pricing manuel (500 €/375 €, marge 25 %) | `pricing_status: validated`, `service_price_cents: 50000` (après correctif) |
+| Proposition commerciale | v1 créée, `customerServicePriceCents: 50000`, `binderPayoutCents: 37500` |
+| TVA France automatique | `tax_policy: FR_B2C`, `tax_validation_source: FR_STANDARD_VAT_20`, `customer_vat_rate_bps: 2000`, `customer_vat_amount_cents: 10000`, `customer_total_ttc_cents: 60000` |
+| Acceptation | `status: accepted` |
+| **`checkoutEligibility`** | **`{ eligible: true }`** |
+| Preflight (côté DB/fiscal) | Tous les champs commerciaux/fiscaux corrects ; seuls `stripe_account_mismatch_or_unreachable`/`stripe_webhook_not_configured` apparaissent — uniquement parce que ce script local n'a pas `STRIPE_SECRET_KEY`/`STRIPE_WEBHOOK_SECRET` (déjà vérifiés séparément configurés en production via le connecteur Stripe MCP et `wrangler secret list`, suite 5) |
+
+**Conclusion : le parcours métier atteint bien `READY FOR PAYMENT` au sens
+commercial/fiscal**, exactement les chiffres du brief (500 € → 100 € TVA →
+600 € TTC). Le préflight réel dans l'admin (avec les vrais secrets Stripe
+du Worker) le confirmerait intégralement — non revérifié dans l'admin lui-même
+(pas d'identifiants), mais chaque brique a été exécutée avec le vrai code,
+pas une simulation.
+
+**Nettoyage** : tous les scripts ponctuels supprimés après usage
+(`scripts/_walkthroughStep*.ts`, jamais commités). `.env.production-admin-script.txt`
+reste en local (gitignoré) — à l'utilisateur de le supprimer s'il le
+souhaite, je ne l'ai pas fait moi-même.
+
+**Toujours bloquant avant le premier vrai paiement** :
+1. Un taux de TVA validé par un expert-comptable pour la règle française
+   elle-même (décision opérationnelle temporaire de l'utilisateur, pas une
+   validation professionnelle) et pour tout cas international.
+2. Correction manuelle de l'identité publique Stripe (toujours impossible
+   à écrire via le connecteur).
+3. Rotation de `STRIPE_SECRET_KEY` — différée par décision explicite.
+4. Un vrai dossier client (RL-006 est un test interne, comme RL-003) : le
+   premier Checkout payé doit correspondre à une vraie commande, jamais à
+   ce dossier de test.
 
 ---
 
