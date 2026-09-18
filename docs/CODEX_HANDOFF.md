@@ -866,7 +866,7 @@ supprimés après usage).
 
 **Dossiers existants audités (lecture seule) avant toute écriture** : 2 cas
 réels en production, tous deux sur le compte de l'utilisateur
-(`antoineferriere2@hotmail.fr`) — RL-003 (Ma Reliure, `validated`, 500 €/
+(`<personal-test-email>`) — RL-003 (Ma Reliure, `validated`, 500 €/
 375 €) et RL-004 (Fine Bindery, `pending`). **RL-003 n'a pas été touché**
 (conservé intact, comme demandé) : relancer le moteur de pricing actuel
 dessus produit `manual_review` (aucune couverture Pricebook pour ses
@@ -876,7 +876,7 @@ arrêtée sans écrire.
 **Nouveau dossier de test créé via le vrai parcours public** ("Présenter
 mon livre", `/m/reliure-marketplace-token-000001`), pas par insertion SQL :
 un livre courant, reliure toile, style classique, valeur "Décoration",
-75001 Paris, `antoineferriere2@hotmail.fr`. Deux tentatives : la première
+75001 Paris, `<personal-test-email>`. Deux tentatives : la première
 (**RL-005**) a été laissée incomplète (l'admin ne pouvait pas connaître le
 style/matière depuis un intake où je ne les avais pas remplis, moteur
 abstient avec `work_item_keys: []`) — la seconde, **RL-006**, complète, a
@@ -2032,7 +2032,7 @@ créer/rejeter le compte visé par l'invitation. Corrigé (commit
 - Tests de non-régression : `authPasswordSignupContract.test.ts`
   verrouille qu'aucun `signUp` ne subsiste dans `MaReliureAuthPage.tsx` ;
   `membership.test.ts` couvre `canSubmitInvitationSignup`.
-- **L'état réel du compte affecté (`antoineferriere2@hotmail.fr` — le
+- **L'état réel du compte affecté (`<personal-test-email>` — le
   compte du testeur lui-même, pas un tiers) n'a PAS pu être vérifié ni
   corrigé en base cette session** : le lire précisément (mot de passe
   présent ou non) ou le corriger exige la clé `service_role` de
@@ -2118,7 +2118,7 @@ console.
    read-only (Products, Checkout, Invoicing, Connect, Separate Charges and
    Transfers, capacités des Connected Accounts) avant toute décision
    d'architecture Phase 2.
-2. **Décider du sort du compte client réel** (`antoineferriere2@hotmail.fr`)
+2. **Décider du sort du compte client réel** (`<personal-test-email>`)
    — voir point 1 ci-dessus. Aucune action prise cette session ; la
    vulnérabilité de code, elle, est corrigée et ne peut plus reproduire ce
    problème sur un compte tiers.
@@ -2482,7 +2482,7 @@ Rien. Working tree propre après le commit de cette session.
 Tout ce qui était listé à la fin de Phase C reste vrai, sans changement,
 sauf :
 
-- Nouveau : un compte client réel (`antoineferriere2@hotmail.fr`, lien
+- Nouveau : un compte client réel (`<personal-test-email>`, lien
   magique) a désormais aussi un mot de passe, ajouté par un test de
   l'inscription atelier cette session — voir Next recommended task, point 1.
 - Nouveau : **pas de rate-limiting sur les formulaires publics de
