@@ -790,11 +790,15 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 18 septembre 2026 (corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country, CGV publiées — voir suite 9)
+**Date :** 18 septembre 2026 (corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `05bb278d` (correctif : traduction des `briefLabel` Fine
+**Commit :** `361e7915` (correctif : fuite "Métré" dans le vocabulaire
+d'intake partagé, trouvée en smoke test mobile demandé par l'utilisateur —
+voir suite 9), sur `37269690` (publication en production de la version 3
+du Playbook Reliure, champ Country — voir suite 9), sur `03d16cbd`
+(documentation), sur `05bb278d` (correctif : traduction des `briefLabel` Fine
 Bindery manquants, trou de couverture i18n trouvé en smoke test navigateur
 après le premier déploiement de cette session — voir suite 9), sur
 `6d4031be` (corrections P0 GTM : e-mail brand-aware Ma Reliure/Fine Bindery,
@@ -830,9 +834,11 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 à F Fine Bindery).
 
 **Production : déployée le 18 septembre 2026, Worker `mareliure` version
-`6ee82d8b-cae0-48ba-9601-725ea3ad802a`** (suite 9 — corrige aussi le bug
-`briefLabel` trouvé en smoke test post-déploiement ; version intermédiaire
-`dffb8f9f-8e75-4413-98c4-ca40da0476e9` supplantée). Trois migrations fiscales
+`7b906286-9ca6-4efe-b90a-cf23151c8469`** (suite 9 — corrige aussi le bug
+`briefLabel` puis la fuite "Métré" du vocabulaire d'intake partagé, tous
+deux trouvés en smoke test post-déploiement ; versions intermédiaires
+`dffb8f9f-8e75-4413-98c4-ca40da0476e9` et
+`6ee82d8b-cae0-48ba-9601-725ea3ad802a` supplantées). Trois migrations fiscales
 (`20260917090000`, `20260917100000`, `20260918090000`) appliquées à la
 production (`hljxohondjvrkzqicexl`) via l'API de gestion Supabase — voir
 suite 6 et suite 7. Suite 9 a aussi publié, sur demande explicite de
@@ -1124,11 +1130,37 @@ médiateur inventé.
 **M/N/O/P. Tests, typecheck, lint, build** : voir "Commandes exécutées"
 ci-dessous — tout au vert.
 
-**Ce qui reste MANUEL avant un vrai lancement grand public** (au-delà de ce
-qui précède) :
-- Mobile non vérifié sur les deux marques (mentionné dans l'état de
-  référence de l'audit, hors des 18 points d'action demandés cette
-  session — à couvrir lors du prochain audit en navigation réelle).
+**Smoke test mobile (375×812, les deux marques)** — fait sur demande
+explicite de l'utilisateur après la publication de la version 3.
+Homepage, tunnel d'intake complet (sélection, saisie de texte, étapes
+obligatoires, bannières de validation), pages CGV et `/auth` : tout lisible,
+tap targets corrects, aucune erreur console. La feuille mobile "Votre
+projet"/"Your project" (`ProjectCanvasMobileSheet`, remplace la colonne
+latérale sous le point de rupture `lg`) s'ouvre et se ferme correctement des
+deux côtés.
+
+**Bug trouvé pendant ce smoke test mobile, corrigé et déployé** : la
+description de cette feuille mobile affichait littéralement **"The project
+details Métré has captured so far."** sur `finebindery.com` — le mot
+"Métré" (nom interne du produit) fuitait dans l'interface Fine Bindery.
+Cause : `RUNTIME_CHROME_STRINGS` (`runtimeChrome.ts`) est un vocabulaire
+partagé par toutes les Missions (Métré Build, Ma Reliure, Fine Bindery), et
+deux de ses chaînes anglaises de base avaient "Métré" codé en dur au lieu
+d'un texte neutre — les traductions françaises existaient déjà sans ce mot
+("Ce qui a été retenu de votre projet jusqu'ici."), seule la version
+anglaise (qui sert de source ET de sortie quand la locale est `en-US`,
+celle de Fine Bindery) le portait encore. Deuxième chaîne du même genre
+trouvée par relecture complète du fichier : "Métré will suggest what it
+notices..." (étape photo d'inspiration). Les deux chaînes de base rendues
+neutres ("The project details captured so far.", "We'll suggest what we
+notice..."), traductions FR/ES mises à jour en conséquence (l'espagnol
+portait aussi "Métré" en dur, jamais utilisé par aucune marque de ce
+chantier mais corrigé par cohérence). Vérifié en navigation réelle mobile
+sur les deux marques après déploiement (Worker `mareliure`, version
+`7b906286-9ca6-4efe-b90a-cf23151c8469`) : Fine Bindery affiche désormais
+"The project details captured so far.", Ma Reliure reste inchangé en
+français.
+
 - Activer le hook d'authentification Supabase (`scripts/configureMareliureAuth.ts`,
   déjà écrit, jamais exécuté) pour que le lien magique passe enfin par le
   gabarit brand-aware plutôt que par le modèle unique du projet Supabase.
