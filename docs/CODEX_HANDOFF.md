@@ -986,7 +986,10 @@ effectué, aucun Connected Account créé**, comme demandé explicitement.
   lien CGV ajouté au pied de page des deux marques.
 - Tests ajoutés/étendus : [`visitorSummaryEmail.server.test.ts`](../src/build/services/visitorSummaryEmail.server.test.ts) (Fine Bindery —
   expéditeur, contenu, absence de fuite "Ma Reliure"), [`bookbindingPlaybook.test.ts`](../src/build/playbooks/bookbindingPlaybook.test.ts)
-  (composant `country`), [`legal.test.ts`](../src/marketplace/legal/legal.test.ts) (CGV publiées, médiateur non inventé).
+  (composant `country`), [`legal.test.ts`](../src/marketplace/legal/legal.test.ts) (CGV publiées, médiateur non inventé),
+  [`enBookbindingCopy.test.ts`](../src/build/pages/public/enBookbindingCopy.test.ts) (couvre désormais `option.briefLabel`, pas
+  seulement `option.label` — voir le bug Canvas trouvé en smoke test, plus
+  bas dans cette même suite).
 - Deux bugs de typage préexistants corrigés au passage dans
   `messaging.data.functions.ts`/`decisions.data.functions.ts` (`loadCaseBrand`
   ne compilait pas — narrowing TypeScript sur la mauvaise expression).
@@ -1065,6 +1068,32 @@ demande une évolution du moteur de validation, explicitement hors périmètre
 ("ne pas refondre l'architecture"). Persisté comme le reste de `answers`
 (JSON), donc déjà exploitable en l'état pour tout dossier qui le renseigne.
 
+**⚠️ NE REMONTE PAS ENCORE AU VISITEUR — trouvé pendant le smoke test
+navigateur de cette session, non résolu, décision explicite de l'utilisateur
+de ne pas toucher à la production maintenant.** `bookbindingPlaybookSchema.ts`
+n'est que le code source : un Playbook publié (`build_playbooks.published_version_id`
+→ `build_playbook_versions.schema`, un instantané figé) est une chose
+distincte, et les deux Missions de production (`BOOKBINDING_MISSION_ID` /
+`FINE_BINDERY_MISSION_ID`, `src/build/constants.ts`) pointent encore vers la
+**version 2**, publiée avant ce composant `country`. Vérifié en lecture seule
+via l'API de gestion Supabase (`hljxohondjvrkzqicexl`, jeton
+`SUPABASE_ACCESS_TOKEN` de `.env.supabase`) : le diff entre le schéma calculé
+localement et le schéma de la version 2 en production ne contient **que** les
+deux changements attendus (composant `country` ajouté, pattern du code postal
+assoupli) — rien d'inattendu. Confirmé aussi en navigation réelle sur
+`finebindery.com` après déploiement : le champ Country **n'apparaît pas** sur
+l'étape de contact.
+
+**Action requise pour que le champ apparaisse réellement** : publier une
+version 3 (soit `npm run seed:bookbinding` puis `npm run seed:fine-bindery`
+avec `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` de production — ces scripts
+réécrivent aussi les autres champs de Mission avec leurs valeurs codées en
+dur, à vérifier avant de les lancer contre la prod ; soit une écriture SQL
+ciblée équivalente, plus étroite, via l'API de gestion). Ni l'un ni l'autre
+n'a été exécuté cette session : geler une écriture directe en base de
+production est exactement le type d'action qui doit être confirmée
+explicitement, pas déduite d'une autorisation générale à "corriger les bugs".
+
 **K. CGV** : publiées aux adresses `/conditions-generales-de-vente` (Ma
 Reliure, FR) et `/terms-of-sale` (Fine Bindery, EN), liées depuis le pied de
 page des deux marques et depuis "Conditions d'utilisation"/"Terms of Use".
@@ -1085,6 +1114,12 @@ ci-dessous — tout au vert.
 
 **Ce qui reste MANUEL avant un vrai lancement grand public** (au-delà de ce
 qui précède) :
+- **Publier la version 3 du Playbook Reliure en production** pour que le
+  champ Country apparaisse réellement sur les deux Missions (Ma Reliure et
+  Fine Bindery) — voir l'encart ⚠️ juste au-dessus. Codé, testé, déployé,
+  mais **inerte côté visiteur** tant que cette publication n'est pas faite ;
+  décision explicite de l'utilisateur de ne pas écrire en production
+  pendant cette session.
 - Mobile non vérifié sur les deux marques (mentionné dans l'état de
   référence de l'audit, hors des 18 points d'action demandés cette
   session — à couvrir lors du prochain audit en navigation réelle).
@@ -1093,6 +1128,20 @@ qui précède) :
   gabarit brand-aware plutôt que par le modèle unique du projet Supabase.
 - DMARC + vérification Resend de `finebindery.com` (voir E-G).
 - Revue juridique des CGV, désignation d'un médiateur réel (voir K/L).
+
+**Bug trouvé et corrigé pendant le smoke test navigateur de cette session,
+absent de l'audit initial** : la barre latérale "Live Project Canvas"
+affichait "Réparation" (français) sur `finebindery.com` alors que la question
+elle-même s'affichait déjà en anglais ("Repair it"). Cause : `optionLabel()`
+(`engine/brief.ts`) préfère `option.briefLabel` à `option.label` pour le
+Canvas et le récapitulatif — un texte volontairement distinct pour le Brief
+remis au relieur — mais le test de couverture i18n (`enBookbindingCopy.test.ts`)
+ne parcourait jamais `briefLabel`, seulement `label`/`reassurance`/etc. Sept
+chaînes concernées (`Réparation`, `Restauration`, `Reliure`,
+`Personnalisation`, `Transformation`, `Protection sur mesure`, `Projet à
+préciser`), toutes traduites ; le test de couverture corrigé pour ne plus
+laisser passer ce genre de trou. Vérifié en navigation réelle après
+redéploiement : corrigé.
 
 ---
 
