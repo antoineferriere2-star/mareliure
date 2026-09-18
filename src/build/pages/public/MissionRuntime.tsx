@@ -675,7 +675,7 @@ function MissionRuntimeContent({
               items={canvasItems}
               title={copy("Your project")}
               triggerLabel={`${copy("Your project")} · ${capturedCount} ${copy(capturedCount === 1 ? "detail captured" : "details captured")} ›`}
-              description={copy("The project details Métré has captured so far.")}
+              description={copy("The project details captured so far.")}
               emptyText={copy("Your project will take shape as you answer.")}
             />
             <section className="intake-panel mt-4 border p-5 sm:p-6 lg:mt-0 lg:p-8">

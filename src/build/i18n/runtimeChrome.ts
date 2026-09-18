@@ -48,7 +48,11 @@ export const RUNTIME_CHROME_STRINGS: readonly string[] = [
   "Your project",
   "Project canvas",
   "Live project canvas",
-  "The project details Métré has captured so far.",
+  // Brand-neutral on purpose (§4/§1 of the 18 September 2026 GTM brief): this
+  // is shared engine chrome, read by Fine Bindery and Ma Reliure visitors as
+  // much as by Métré Build's own — an earlier wording hardcoded "Métré" here
+  // and leaked it straight into the Fine Bindery mobile "Your project" sheet.
+  "The project details captured so far.",
   "Your project will take shape as you answer.",
   "detail captured",
   "details captured",
@@ -78,7 +82,9 @@ export const RUNTIME_CHROME_STRINGS: readonly string[] = [
   "Choose an inspiration image",
   "Looking at your inspiration…",
   "Here's what we noticed — review and confirm",
-  "Métré will suggest what it notices, then you confirm or adjust it.",
+  // Brand-neutral for the same reason as above — reachable by Fine Bindery's
+  // inspiration-photo step, not only Métré Build's own.
+  "We'll suggest what we notice, then you confirm or adjust it.",
   "Image notes captured",
   "Style",
   "Materials",

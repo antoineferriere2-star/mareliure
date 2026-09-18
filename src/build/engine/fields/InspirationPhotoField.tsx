@@ -168,7 +168,7 @@ export function InspirationPhotoField({
               {copy("Choose an inspiration image")}
             </span>
             <span className="mt-1 max-w-sm text-xs leading-5 text-stone-500">
-              {copy("Métré will suggest what it notices, then you confirm or adjust it.")}
+              {copy("We'll suggest what we notice, then you confirm or adjust it.")}
             </span>
           </label>
         )}

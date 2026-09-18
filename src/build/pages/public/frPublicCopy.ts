@@ -55,7 +55,7 @@ export const FR_PUBLIC_COPY: Record<string, string> = {
   "Your project": "Votre projet",
   "Project canvas": "Votre projet",
   "Live project canvas": "Votre projet, en direct",
-  "The project details Métré has captured so far.":
+  "The project details captured so far.":
     "Ce qui a été retenu de votre projet jusqu'ici.",
   "Your project will take shape as you answer.":
     "Votre projet prendra forme au fil de vos réponses.",
@@ -91,7 +91,7 @@ export const FR_PUBLIC_COPY: Record<string, string> = {
   "Looking at your inspiration…": "Analyse de votre inspiration…",
   "Here's what we noticed — review and confirm":
     "Voici ce que nous avons remarqué — vérifiez et confirmez",
-  "Métré will suggest what it notices, then you confirm or adjust it.":
+  "We'll suggest what we notice, then you confirm or adjust it.":
     "Nous vous proposons ce que nous observons ; à vous de confirmer ou de corriger.",
   "Image notes captured": "Observations enregistrées",
   Style: "Style",
