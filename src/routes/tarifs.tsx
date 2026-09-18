@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { TarifsPage } from "@/marketplace/pages/TarifsPage";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
+import { breadcrumbSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/structured-data";
 
 /**
  * `/tarifs` — la page prix de Ma Reliure.
@@ -42,6 +43,9 @@ export const Route = createFileRoute("/tarifs")({
     links: [
       { rel: "canonical", href: `${MARELIURE_CANONICAL_HOME}tarifs` },
       EDITORIAL_FONT_PRELOAD,
+    ],
+    scripts: [
+      jsonLdScript(breadcrumbSchema([{ name: "Tarifs", path: "/tarifs" }], MARELIURE_SITE_URL)),
     ],
   }),
   component: TarifsPage,

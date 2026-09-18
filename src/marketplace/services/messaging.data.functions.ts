@@ -36,6 +36,23 @@ async function loadConversationFacts(sb: Supa, caseId: string): Promise<Conversa
   };
 }
 
+/** `null` brand (row missing/unrecognized) falls back to Ma Reliure — never Fine Bindery by default, same rule as brandConfig.ts. */
+async function loadCaseBrand(sb: Supa, caseId: string) {
+  const { data } = await sb.from("marketplace_cases").select("brand").eq("id", caseId).maybeSingle();
+  const { isMarketplaceBrand, marketplaceBrandConfig, canonicalHome } = await import(
+    "@/marketplace/brand/brandConfig"
+  );
+  const rawBrand = data?.brand ?? "";
+  const brand = isMarketplaceBrand(rawBrand) ? rawBrand : "MA_RELIURE";
+  const config = marketplaceBrandConfig(brand);
+  return {
+    brand,
+    brandName: config.displayName,
+    locale: config.defaultLocale,
+    origin: canonicalHome(brand).replace(/\/+$/, ""),
+  };
+}
+
 /**
  * Best-effort notification to the customer that their conversation moved.
  *
@@ -57,14 +74,20 @@ async function notifyCustomerOfNewMessage(
     const email = auth?.user?.email;
     if (!email) return;
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    const { MARELIURE_CANONICAL_ORIGIN } = await import("@/marketplace/config");
+    const { brand, brandName, locale, origin } = await loadCaseBrand(sb, caseId);
+    const isEn = locale === "en-US";
     await sendTemplateEmail("case-activity", email, {
       templateData: {
-        heading: "Nouveau message sur votre projet",
-        intro: "Votre atelier ou Ma Reliure vous a écrit au sujet de votre livre.",
-        ctaLabel: "Voir la conversation",
-        ctaUrl: `${MARELIURE_CANONICAL_ORIGIN}/mes-livres/${caseId}`,
+        brandName,
+        locale,
+        heading: isEn ? "New message about your project" : "Nouveau message sur votre projet",
+        intro: isEn
+          ? `Your workshop or ${brandName} wrote to you about your book.`
+          : `Votre atelier ou ${brandName} vous a écrit au sujet de votre livre.`,
+        ctaLabel: isEn ? "View the conversation" : "Voir la conversation",
+        ctaUrl: `${origin}/mes-livres/${caseId}`,
       },
+      brand,
     });
   } catch (err) {
     logOperationalError("messaging.notify-customer-failed", err, { caseId });

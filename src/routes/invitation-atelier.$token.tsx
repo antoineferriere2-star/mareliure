@@ -13,8 +13,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { supabase } from "@/integrations/supabase/client";
-import { acceptBinderInvitation } from "@/marketplace/services/marketplace.data.functions";
+import {
+  acceptBinderInvitation,
+  getBinderInvitationEmail,
+} from "@/marketplace/services/marketplace.data.functions";
 import { LandingFooter, LandingHeader } from "@/marketplace/pages/landing/LandingChrome";
+import { canSubmitInvitationSignup } from "@/marketplace/binders/membership";
 
 export const Route = createFileRoute("/invitation-atelier/$token")({
   ssr: false,
@@ -33,12 +37,20 @@ function InvitationPage() {
   const { token } = Route.useParams();
   const navigate = useNavigate();
   const accept = useServerFn(acceptBinderInvitation);
+  const getInvitationEmail = useServerFn(getBinderInvitationEmail);
   const [step, setStep] = useState<Step>("checking");
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"signin" | "signup">("signup");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  // Verrouillé sur l'adresse réelle de l'invitation dès qu'elle est connue —
+  // avant cela, ce formulaire ne doit jamais pouvoir créer ou mettre à jour
+  // un compte pour une adresse différente de celle invitée (voir
+  // resolvePendingInvitationEmail : un test de ce flux a un jour attaché un
+  // mot de passe au compte d'une cliente réelle plutôt qu'à celui invité).
+  // `undefined` = pas encore résolue, `null` = invitation invalide/expirée.
+  const [invitedEmail, setInvitedEmail] = useState<string | null | undefined>(undefined);
 
   async function tryAccept() {
     setStep("accepting");
@@ -54,16 +66,30 @@ function InvitationPage() {
   }
 
   useEffect(() => {
+    let cancelled = false;
+    void getInvitationEmail({ data: { token } }).then((result) => {
+      if (cancelled) return;
+      setInvitedEmail(result.email);
+      if (result.email) setEmail(result.email);
+    });
     supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
       if (data.session) void tryAccept();
       else setStep("signed-out");
     });
+    return () => {
+      cancelled = true;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setError(null);
+    if (!canSubmitInvitationSignup(invitedEmail ?? null, email)) {
+      setError("Cette invitation n'est plus valable, ou l'adresse ne correspond pas à celle invitée.");
+      return;
+    }
     if (mode === "signup") {
       const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
       if (signUpError) {
@@ -116,7 +142,17 @@ function InvitationPage() {
           </p>
         )}
 
-        {step === "signed-out" && (
+        {step === "signed-out" && invitedEmail === undefined && (
+          <p className="mr-body mt-6">Vérification de l'invitation…</p>
+        )}
+
+        {step === "signed-out" && invitedEmail === null && (
+          <p role="alert" className="mr-small mt-6 border-l-2 border-mr-bordeaux pl-4 text-mr-bordeaux">
+            Cette invitation n'est plus valable. Demandez-en une nouvelle à Ma Reliure.
+          </p>
+        )}
+
+        {step === "signed-out" && invitedEmail && (
           <>
             {awaitingConfirmation ? (
               <p role="status" className="mr-body mt-6">
@@ -138,11 +174,15 @@ function InvitationPage() {
                     id="invite-email"
                     type="email"
                     required
+                    readOnly
                     autoComplete="email"
                     value={email}
-                    onChange={(event) => setEmail(event.target.value)}
-                    className="mt-2 w-full rounded-[2px] border border-mr-rule-strong bg-white px-3.5 py-3 text-[1rem] text-mr-ink"
+                    className="mt-2 w-full cursor-not-allowed rounded-[2px] border border-mr-rule-strong bg-mr-paper px-3.5 py-3 text-[1rem] text-mr-ink"
                   />
+                  <p className="mr-small mt-1 text-mr-muted">
+                    L'adresse à laquelle cette invitation a été envoyée — elle ne peut pas être
+                    changée ici.
+                  </p>
                 </div>
                 <div>
                   <label

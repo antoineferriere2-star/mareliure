@@ -237,15 +237,17 @@ const PRESTATIONS = [
 ] as const;
 
 /**
- * Les pages légales, désormais publiées. Seules les conditions générales de
- * vente restent annoncées : elles encadreront la commande et le paiement, qui
- * n'existent pas encore, et les publier aujourd'hui serait décrire un service
- * que personne ne peut acheter.
+ * Les pages légales, désormais toutes publiées — y compris les conditions
+ * générales de vente (chantier GTM du 18 septembre 2026, §9) : certaines de
+ * leurs clauses restent marquées LEGAL REVIEW REQUIRED tant qu'un juriste ne
+ * les a pas validées, mais l'incohérence "seront publiées plus tard" a
+ * disparu du site.
  */
 const LEGAL_LINKS = [
   { href: "/mentions-legales", label: "Mentions légales" },
   { href: "/confidentialite", label: "Confidentialité" },
   { href: "/conditions", label: "Conditions d'utilisation" },
+  { href: "/conditions-generales-de-vente", label: "Conditions générales de vente" },
   { href: `mailto:${MARELIURE_CONTACT_EMAIL}`, label: "Contact" },
 ] as const;
 
@@ -263,7 +265,7 @@ export function LandingFooter() {
           </div>
 
           <div>
-            <h2 className="mr-eyebrow text-mr-graphite">Prestations</h2>
+            <p className="mr-eyebrow text-mr-graphite">Prestations</p>
             <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
               {PRESTATIONS.map((label) => (
                 <li key={label}>{label}</li>
@@ -272,7 +274,7 @@ export function LandingFooter() {
           </div>
 
           <nav aria-label="Le service">
-            <h2 className="mr-eyebrow text-mr-graphite">Le service</h2>
+            <p className="mr-eyebrow text-mr-graphite">Le service</p>
             <ul className="mr-small mt-5 space-y-3">
               {SERVICE_LINKS.map((item) => (
                 <li key={item.href}>
@@ -288,7 +290,7 @@ export function LandingFooter() {
           </nav>
 
           <div>
-            <h2 className="mr-eyebrow text-mr-graphite">Informations</h2>
+            <p className="mr-eyebrow text-mr-graphite">Informations</p>
             <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
               {LEGAL_LINKS.map((item) => (
                 <li key={item.href}>

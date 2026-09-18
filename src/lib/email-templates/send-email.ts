@@ -2,6 +2,7 @@ import * as React from "react";
 import { render } from "@react-email/render";
 import { EmailAPIError, sendLovableEmail } from "@lovable.dev/email-js";
 import { isMaReliure } from "@/brand";
+import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { TEMPLATES } from "./registry";
 import { sendResendEmail } from "./resend";
 
@@ -32,6 +33,41 @@ const FROM_DOMAIN = "notify.metre-pro.fr";
 /** Le domaine vérifié chez Resend. `noreply` : aucune boîte ne lit les réponses. */
 export const MARELIURE_FROM = "Ma Reliure <noreply@mareliure.fr>";
 
+/**
+ * Domaines réellement vérifiés dans Resend pour l'envoi marketplace, au
+ * 18 septembre 2026 — un seul aujourd'hui. `finebindery.com` a un DKIM
+ * absent (`resend._domainkey.finebindery.com` ne résout pas, vérifié par
+ * requête DNS directe) : y envoyer échouerait à l'appel Resend plutôt que
+ * de livrer un e-mail mal authentifié, et cet échec ferait échouer la
+ * connexion Fine Bindery elle-même (le hook d'authentification traite tout
+ * ce qui n'est pas un envoi réussi comme un blocage de connexion, sur les
+ * deux marques). Ne pas retirer `mareliure.fr` de cette liste avant d'avoir
+ * vérifié `finebindery.com` dans Resend et confirmé son DKIM par requête
+ * DNS — jamais en supposant qu'une configuration Dashboard a été faite.
+ */
+const VERIFIED_SENDING_DOMAINS = new Set(["mareliure.fr"]);
+
+/**
+ * Le nom affiché suit toujours la marque réelle ; l'adresse technique reste
+ * sur `mareliure.fr` tant que `finebindery.com` n'a pas son propre domaine
+ * vérifié — voir VERIFIED_SENDING_DOMAINS. Un client Fine Bindery voit donc
+ * "Fine Bindery <noreply@mareliure.fr>", pas "Ma Reliure" : le nom est ce
+ * qu'un client lit en premier dans la plupart des clients mail, l'adresse
+ * elle-même ne l'est presque jamais.
+ */
+async function resolveMarketplaceSender(brand?: MarketplaceBrand): Promise<string> {
+  if (!brand || brand === "MA_RELIURE") return MARELIURE_FROM;
+  // Import différé : send-email.ts sert aussi Métré Build, qui ne doit pas
+  // dépendre du module marketplace pour un envoi qui ne le concerne jamais.
+  const { MARKETPLACE_BRAND_CONFIGS } = await import("@/marketplace/brand/brandConfig");
+  const identity = MARKETPLACE_BRAND_CONFIGS[brand].contactIdentity;
+  const domain = identity.senderEmail.split("@")[1] ?? "";
+  const address = VERIFIED_SENDING_DOMAINS.has(domain)
+    ? identity.senderEmail
+    : "noreply@mareliure.fr";
+  return `${identity.senderName} <${address}>`;
+}
+
 export type SendTemplateEmailResult =
   { sent: true } | { sent: false; reason: "recipient_suppressed" };
 
@@ -40,6 +76,8 @@ export interface SendTemplateEmailOptions {
   /** Dedupes retries of the same logical send; defaults to a random UUID (no dedupe). */
   idempotencyKey?: string;
   replyTo?: string;
+  /** Marketplace only — decides the display name (and, once verified, the domain) of the sender. Ignored for Métré Build sends. */
+  brand?: MarketplaceBrand;
 }
 
 /**
@@ -80,9 +118,10 @@ export async function sendTemplateEmail(
     if (!apiKey) {
       throw new Error("RESEND_API_KEY is not configured");
     }
+    const from = await resolveMarketplaceSender(options.brand);
     await sendResendEmail(
       {
-        from: MARELIURE_FROM,
+        from,
         to: recipient,
         subject,
         html,

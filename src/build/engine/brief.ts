@@ -83,6 +83,12 @@ function formatValue(
       .filter((v): v is string => typeof v === "string" && v.trim().length > 0)
       .join(" ");
   }
+  // A consent/checkbox field's boolean answer, spelled out rather than
+  // `String(value)` — a visitor reading their own recap (or a Fine Bindery
+  // e-mail built from it) should never see the literal word "true". Kept in
+  // English, like the rest of this internal Brief: `visitorSummary.ts`'s own
+  // `translate()` step is what turns it into "Oui" for a French Mission.
+  if (typeof value === "boolean") return value ? "Yes" : "No";
   return String(value);
 }
 

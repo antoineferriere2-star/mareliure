@@ -846,8 +846,7 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "To clarify": "Por aclarar",
   "detail captured": "detalle capturado",
   "details captured": "detalles capturados",
-  "The project details Métré has captured so far.":
-    "Los detalles del proyecto que Métré ha capturado hasta ahora.",
+  "The project details captured so far.": "Los detalles del proyecto capturados hasta ahora.",
   "Your project will take shape as you answer.": "Su proyecto tomará forma a medida que responda.",
   "Send my project": "Enviar mi proyecto",
   "Marked to clarify": "Marcado para aclarar",
@@ -867,8 +866,8 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   "Add photos that help the team understand the site before the first call.":
     "Agregue fotos que ayuden al equipo a entender el sitio antes de la primera llamada.",
   "Choose an inspiration image": "Elija una imagen de inspiración",
-  "Métré will suggest what it notices, then you confirm or adjust it.":
-    "Métré sugerirá lo que observa; luego usted confirma o ajusta.",
+  "We'll suggest what we notice, then you confirm or adjust it.":
+    "Le sugeriremos lo que observamos; luego usted confirma o ajusta.",
   "Looking at your inspiration…": "Observando su inspiración…",
   "Here's what we noticed — review and confirm": "Esto es lo que notamos: revise y confirme",
   "These answers don't seem to work together": "Estas respuestas no parecen funcionar juntas",

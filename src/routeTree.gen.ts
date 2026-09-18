@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CandidatureAtelierRouteImport } from './routes/candidature-atelier'
 import { Route as ConditionsRouteImport } from './routes/conditions'
+import { Route as ConditionsGeneralesDeVenteRouteImport } from './routes/conditions-generales-de-vente'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
@@ -29,9 +30,11 @@ import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
 import { Route as ReliureRouteImport } from './routes/reliure'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TermsOfSaleRouteImport } from './routes/terms-of-sale'
 import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
 import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
@@ -62,6 +65,8 @@ import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
 import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
 import { Route as AuthenticatedPortalTeamRouteImport } from './routes/_authenticated/portal/team'
+import { Route as ApiMarketplaceStripeHealthRouteImport } from './routes/api/marketplace/stripe-health'
+import { Route as ApiMarketplaceStripeWebhookRouteImport } from './routes/api/marketplace/stripe-webhook'
 import { Route as ApiPublicAnalyzeSiteRouteImport } from './routes/api/public/analyze-site'
 import { Route as ApiPublicBuildPublicIntakeRouteImport } from './routes/api/public/build-public-intake'
 import { Route as ApiPublicBuildRuntimeRouteImport } from './routes/api/public/build-runtime'
@@ -88,6 +93,7 @@ import { Route as AuthenticatedPortalDemosNewRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalDossiersIdRouteImport } from './routes/_authenticated/portal/dossiers.$id'
 import { Route as ApiInternalAnalyticsMetricsRouteImport } from './routes/api/internal/analytics/metrics'
 import { Route as ApiInternalHermesProspectFunnelsRouteImport } from './routes/api/internal/hermes/prospect-funnels'
+import { Route as ApiInternalMarketplaceAuthEmailHookRouteImport } from './routes/api/internal/marketplace/auth-email-hook'
 import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/public/payments/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -118,6 +124,12 @@ const ConditionsRoute = ConditionsRouteImport.update({
   path: '/conditions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConditionsGeneralesDeVenteRoute =
+  ConditionsGeneralesDeVenteRouteImport.update({
+    id: '/conditions-generales-de-vente',
+    path: '/conditions-generales-de-vente',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
   id: '/confidentialite',
   path: '/confidentialite',
@@ -193,6 +205,11 @@ const ReliureRoute = ReliureRouteImport.update({
   path: '/reliure',
   getParentRoute: () => rootRouteImport,
 } as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
@@ -206,6 +223,11 @@ const TarifsRoute = TarifsRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfSaleRoute = TermsOfSaleRouteImport.update({
+  id: '/terms-of-sale',
+  path: '/terms-of-sale',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsOfUseRoute = TermsOfUseRouteImport.update({
@@ -380,6 +402,18 @@ const AuthenticatedPortalTeamRoute = AuthenticatedPortalTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedPortalRouteRoute,
 } as any)
+const ApiMarketplaceStripeHealthRoute =
+  ApiMarketplaceStripeHealthRouteImport.update({
+    id: '/api/marketplace/stripe-health',
+    path: '/api/marketplace/stripe-health',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiMarketplaceStripeWebhookRoute =
+  ApiMarketplaceStripeWebhookRouteImport.update({
+    id: '/api/marketplace/stripe-webhook',
+    path: '/api/marketplace/stripe-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicAnalyzeSiteRoute = ApiPublicAnalyzeSiteRouteImport.update({
   id: '/api/public/analyze-site',
   path: '/api/public/analyze-site',
@@ -530,6 +564,12 @@ const ApiInternalHermesProspectFunnelsRoute =
     path: '/api/internal/hermes/prospect-funnels',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiInternalMarketplaceAuthEmailHookRoute =
+  ApiInternalMarketplaceAuthEmailHookRouteImport.update({
+    id: '/api/internal/marketplace/auth-email-hook',
+    path: '/api/internal/marketplace/auth-email-hook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiPublicPaymentsWebhookRoute =
   ApiPublicPaymentsWebhookRouteImport.update({
     id: '/api/public/payments/webhook',
@@ -564,6 +604,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
+  '/conditions-generales-de-vente': typeof ConditionsGeneralesDeVenteRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
@@ -579,9 +620,11 @@ export interface FileRoutesByFullPath {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/build': typeof AuthenticatedBuildRouteRouteWithChildren
@@ -607,6 +650,8 @@ export interface FileRoutesByFullPath {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
+  '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
@@ -631,6 +676,7 @@ export interface FileRoutesByFullPath {
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
   '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRouteWithChildren
+  '/api/internal/marketplace/auth-email-hook': typeof ApiInternalMarketplaceAuthEmailHookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -649,6 +695,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
+  '/conditions-generales-de-vente': typeof ConditionsGeneralesDeVenteRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
@@ -664,9 +711,11 @@ export interface FileRoutesByTo {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
@@ -686,6 +735,8 @@ export interface FileRoutesByTo {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
+  '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
@@ -710,6 +761,7 @@ export interface FileRoutesByTo {
   '/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
   '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRouteWithChildren
+  '/api/internal/marketplace/auth-email-hook': typeof ApiInternalMarketplaceAuthEmailHookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -730,6 +782,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
+  '/conditions-generales-de-vente': typeof ConditionsGeneralesDeVenteRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
@@ -745,9 +798,11 @@ export interface FileRoutesById {
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
   '/reliure': typeof ReliureRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/_authenticated/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/_authenticated/build': typeof AuthenticatedBuildRouteRouteWithChildren
@@ -773,6 +828,8 @@ export interface FileRoutesById {
   '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/_authenticated/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
+  '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
   '/api/public/build-public-intake': typeof ApiPublicBuildPublicIntakeRoute
   '/api/public/build-runtime': typeof ApiPublicBuildRuntimeRoute
@@ -797,6 +854,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/dossiers/$id': typeof AuthenticatedPortalDossiersIdRoute
   '/api/internal/analytics/metrics': typeof ApiInternalAnalyticsMetricsRoute
   '/api/internal/hermes/prospect-funnels': typeof ApiInternalHermesProspectFunnelsRouteWithChildren
+  '/api/internal/marketplace/auth-email-hook': typeof ApiInternalMarketplaceAuthEmailHookRoute
   '/api/public/payments/webhook': typeof ApiPublicPaymentsWebhookRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -817,6 +875,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/candidature-atelier'
     | '/conditions'
+    | '/conditions-generales-de-vente'
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
@@ -832,9 +891,11 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/private-beta'
     | '/reliure'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/terms-of-sale'
     | '/terms-of-use'
     | '/atelier'
     | '/build'
@@ -860,6 +921,8 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/stripe-health'
+    | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
@@ -884,6 +947,7 @@ export interface FileRouteTypes {
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
     | '/api/internal/hermes/prospect-funnels'
+    | '/api/internal/marketplace/auth-email-hook'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -902,6 +966,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/candidature-atelier'
     | '/conditions'
+    | '/conditions-generales-de-vente'
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
@@ -917,9 +982,11 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/private-beta'
     | '/reliure'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/terms-of-sale'
     | '/terms-of-use'
     | '/a/$slug'
     | '/demo/deck-project'
@@ -939,6 +1006,8 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/stripe-health'
+    | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
@@ -963,6 +1032,7 @@ export interface FileRouteTypes {
     | '/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
     | '/api/internal/hermes/prospect-funnels'
+    | '/api/internal/marketplace/auth-email-hook'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -982,6 +1052,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/candidature-atelier'
     | '/conditions'
+    | '/conditions-generales-de-vente'
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
@@ -997,9 +1068,11 @@ export interface FileRouteTypes {
     | '/privacy-policy'
     | '/private-beta'
     | '/reliure'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/terms-of-sale'
     | '/terms-of-use'
     | '/_authenticated/atelier'
     | '/_authenticated/build'
@@ -1025,6 +1098,8 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/settings'
     | '/_authenticated/portal/setup'
     | '/_authenticated/portal/team'
+    | '/api/marketplace/stripe-health'
+    | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
     | '/api/public/build-public-intake'
     | '/api/public/build-runtime'
@@ -1049,6 +1124,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/dossiers/$id'
     | '/api/internal/analytics/metrics'
     | '/api/internal/hermes/prospect-funnels'
+    | '/api/internal/marketplace/auth-email-hook'
     | '/api/public/payments/webhook'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -1069,6 +1145,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CandidatureAtelierRoute: typeof CandidatureAtelierRoute
   ConditionsRoute: typeof ConditionsRoute
+  ConditionsGeneralesDeVenteRoute: typeof ConditionsGeneralesDeVenteRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
   DeckBuildersRoute: typeof DeckBuildersRoute
@@ -1084,15 +1161,19 @@ export interface RootRouteChildren {
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   PrivateBetaRoute: typeof PrivateBetaRoute
   ReliureRoute: typeof ReliureRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TarifsRoute: typeof TarifsRoute
   TermsRoute: typeof TermsRoute
+  TermsOfSaleRoute: typeof TermsOfSaleRoute
   TermsOfUseRoute: typeof TermsOfUseRoute
   ASlugRoute: typeof ASlugRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
   InvitationAtelierTokenRoute: typeof InvitationAtelierTokenRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
   ProjectSummaryAccessTokenRoute: typeof ProjectSummaryAccessTokenRoute
+  ApiMarketplaceStripeHealthRoute: typeof ApiMarketplaceStripeHealthRoute
+  ApiMarketplaceStripeWebhookRoute: typeof ApiMarketplaceStripeWebhookRoute
   ApiPublicAnalyzeSiteRoute: typeof ApiPublicAnalyzeSiteRoute
   ApiPublicBuildPublicIntakeRoute: typeof ApiPublicBuildPublicIntakeRoute
   ApiPublicBuildRuntimeRoute: typeof ApiPublicBuildRuntimeRoute
@@ -1102,6 +1183,7 @@ export interface RootRouteChildren {
   ApiPublicTrackViewRoute: typeof ApiPublicTrackViewRoute
   ApiInternalAnalyticsMetricsRoute: typeof ApiInternalAnalyticsMetricsRoute
   ApiInternalHermesProspectFunnelsRoute: typeof ApiInternalHermesProspectFunnelsRouteWithChildren
+  ApiInternalMarketplaceAuthEmailHookRoute: typeof ApiInternalMarketplaceAuthEmailHookRoute
   ApiPublicPaymentsWebhookRoute: typeof ApiPublicPaymentsWebhookRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
@@ -1143,6 +1225,13 @@ declare module '@tanstack/react-router' {
       path: '/conditions'
       fullPath: '/conditions'
       preLoaderRoute: typeof ConditionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conditions-generales-de-vente': {
+      id: '/conditions-generales-de-vente'
+      path: '/conditions-generales-de-vente'
+      fullPath: '/conditions-generales-de-vente'
+      preLoaderRoute: typeof ConditionsGeneralesDeVenteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/confidentialite': {
@@ -1250,6 +1339,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ReliureRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
@@ -1269,6 +1365,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-sale': {
+      id: '/terms-of-sale'
+      path: '/terms-of-sale'
+      fullPath: '/terms-of-sale'
+      preLoaderRoute: typeof TermsOfSaleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms-of-use': {
@@ -1481,6 +1584,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedPortalTeamRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
     }
+    '/api/marketplace/stripe-health': {
+      id: '/api/marketplace/stripe-health'
+      path: '/api/marketplace/stripe-health'
+      fullPath: '/api/marketplace/stripe-health'
+      preLoaderRoute: typeof ApiMarketplaceStripeHealthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/marketplace/stripe-webhook': {
+      id: '/api/marketplace/stripe-webhook'
+      path: '/api/marketplace/stripe-webhook'
+      fullPath: '/api/marketplace/stripe-webhook'
+      preLoaderRoute: typeof ApiMarketplaceStripeWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/analyze-site': {
       id: '/api/public/analyze-site'
       path: '/api/public/analyze-site'
@@ -1661,6 +1778,13 @@ declare module '@tanstack/react-router' {
       path: '/api/internal/hermes/prospect-funnels'
       fullPath: '/api/internal/hermes/prospect-funnels'
       preLoaderRoute: typeof ApiInternalHermesProspectFunnelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/internal/marketplace/auth-email-hook': {
+      id: '/api/internal/marketplace/auth-email-hook'
+      path: '/api/internal/marketplace/auth-email-hook'
+      fullPath: '/api/internal/marketplace/auth-email-hook'
+      preLoaderRoute: typeof ApiInternalMarketplaceAuthEmailHookRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/public/payments/webhook': {
@@ -1906,6 +2030,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CandidatureAtelierRoute: CandidatureAtelierRoute,
   ConditionsRoute: ConditionsRoute,
+  ConditionsGeneralesDeVenteRoute: ConditionsGeneralesDeVenteRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
   DeckBuildersRoute: DeckBuildersRoute,
@@ -1921,15 +2046,19 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   PrivateBetaRoute: PrivateBetaRoute,
   ReliureRoute: ReliureRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TarifsRoute: TarifsRoute,
   TermsRoute: TermsRoute,
+  TermsOfSaleRoute: TermsOfSaleRoute,
   TermsOfUseRoute: TermsOfUseRoute,
   ASlugRoute: ASlugRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
   InvitationAtelierTokenRoute: InvitationAtelierTokenRoute,
   MPublicTokenRoute: MPublicTokenRoute,
   ProjectSummaryAccessTokenRoute: ProjectSummaryAccessTokenRoute,
+  ApiMarketplaceStripeHealthRoute: ApiMarketplaceStripeHealthRoute,
+  ApiMarketplaceStripeWebhookRoute: ApiMarketplaceStripeWebhookRoute,
   ApiPublicAnalyzeSiteRoute: ApiPublicAnalyzeSiteRoute,
   ApiPublicBuildPublicIntakeRoute: ApiPublicBuildPublicIntakeRoute,
   ApiPublicBuildRuntimeRoute: ApiPublicBuildRuntimeRoute,
@@ -1940,6 +2069,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiInternalAnalyticsMetricsRoute: ApiInternalAnalyticsMetricsRoute,
   ApiInternalHermesProspectFunnelsRoute:
     ApiInternalHermesProspectFunnelsRouteWithChildren,
+  ApiInternalMarketplaceAuthEmailHookRoute:
+    ApiInternalMarketplaceAuthEmailHookRoute,
   ApiPublicPaymentsWebhookRoute: ApiPublicPaymentsWebhookRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,

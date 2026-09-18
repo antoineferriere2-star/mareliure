@@ -25,15 +25,18 @@ import {
   verifiedEmailFromClaims,
 } from "@/marketplace/cases/ownership";
 import { triageMessages } from "@/marketplace/cases/triage";
-import { disclosedSummary } from "@/marketplace/cases/dossierProjection";
+import { disclosedSummary, type CaseLocale } from "@/marketplace/cases/dossierProjection";
 import type { ProjectBrief } from "@/build/schema/brief";
 import { suggestManagedPrice, validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
 import { depositCentsFor, pricingModeFor } from "@/marketplace/pricing/pricingMode";
 import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
-import { isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { isMarketplaceBrand, marketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
+import { loadAcceptedCommercialProposal } from "@/marketplace/services/commercialProposalRepository.server";
+import { loadCommercialPaymentState } from "@/marketplace/services/commercialPaymentRepository.server";
+import { checkoutEligibility } from "@/marketplace/stripe/checkoutPlan";
 
 /** zod needs a literal tuple; WORK_FAMILIES stays the one place the list is written. */
 const WORK_FAMILY_KEYS = WORK_FAMILIES.map((f) => f.key) as [WorkFamilyKey, ...WorkFamilyKey[]];
@@ -45,11 +48,12 @@ import {
   reconcileCaseTriage,
   resolveCaseByAccessToken,
 } from "./caseRepository.server";
-import { loadAggregates } from "./pricingRepository.server";
+import { loadAggregates, loadPricebook } from "./pricingRepository.server";
 import {
   acceptBinderInvitation as acceptBinderInvitationForUser,
   createBinderInvitation,
   findActiveBinderMembership,
+  resolvePendingInvitationEmail,
 } from "./binderMembership.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
 import { unreadCountsByCase } from "./messaging.data.functions";
@@ -388,6 +392,7 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
     // marque — le multiplicateur s'applique après, jamais dans le Pricebook.
     const suggestion = suggestManagedPrice(caseContext.profile, {
       aggregates: await loadAggregates(sb),
+      pricebookEntries: await loadPricebook(sb),
     });
     const abstained = suggestion.status === "manual_review";
     const brand = isMarketplaceBrand(caseContext.row.brand) ? caseContext.row.brand : "MA_RELIURE";
@@ -461,6 +466,8 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
         pricing_components: suggestion.components as unknown as Json,
         pricing_reference_count: suggestion.referenceCount,
         pricing_rule_version: suggestion.ruleVersion,
+        pricing_pricebook_reference_cents: suggestion.pricebookReferenceCents,
+        pricing_price_bound_by: suggestion.priceBoundBy,
         pricing_generated_at: now,
         status: caseContext.row.status === "under_review" ? "under_review" : "pricing",
       })
@@ -540,6 +547,30 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
       p_actor_user_id: context.userId,
     });
     if (error) fail(409, error.message);
+
+    // `marketplace_validate_pricing` ne touche jamais service_price_cents/
+    // pricing_mode/brand_multiplier_bps — seul generateMarketplacePricing
+    // (le moteur automatique) les renseigne, et il s'abstient tant qu'aucun
+    // atelier n'a encore saisi de grille (aggregates vides). Sans ce
+    // complément, un dossier tarifé à la main (le seul cas possible
+    // aujourd'hui) resterait à jamais bloqué devant createCommercialProposal
+    // ("pas de prix client calculé"), alors qu'un admin vient justement de
+    // le fixer. On ne l'écrase jamais si le moteur l'a déjà renseigné.
+    if (result && result.service_price_cents === null) {
+      const brand = isMarketplaceBrand(result.brand) ? result.brand : "MA_RELIURE";
+      const multiplierBps = marketplaceBrandConfig(brand).pricingPolicy.serviceMultiplierBps;
+      const { error: backfillError } = await sb
+        .from("marketplace_cases")
+        .update({
+          service_price_cents: data.customerPriceCents,
+          base_service_price_cents: data.customerPriceCents,
+          brand_multiplier_bps: multiplierBps,
+          pricing_mode: result.pricing_mode ?? "MANUAL_STUDY",
+        })
+        .eq("id", data.caseId);
+      if (backfillError) fail(500, backfillError.message);
+    }
+
     return { case: result, validation };
   });
 
@@ -976,6 +1007,26 @@ export const inviteBinderMember = createServerFn({ method: "POST" })
   });
 
 /**
+ * Public, unauthenticated lookup: which e-mail was this invitation sent to?
+ *
+ * The accept screen (`/invitation-atelier/$token`) uses this to lock its
+ * sign-up/sign-in e-mail field to the invited address, so it can no longer
+ * be used to create or update an account for an arbitrary, different e-mail
+ * before the invitation itself is ever checked — see
+ * `resolvePendingInvitationEmail`'s doc comment. Returns `null` for any
+ * problem (unknown token, expired, already used) — the same generic refusal
+ * `acceptBinderInvitation` gives, so this lookup cannot be used to probe
+ * which tokens exist.
+ */
+export const getBinderInvitationEmail = createServerFn({ method: "GET" })
+  .inputValidator((data: unknown) => z.object({ token: z.string().min(1).max(200) }).parse(data))
+  .handler(async ({ data }) => {
+    const sb = await admin();
+    const email = await resolvePendingInvitationEmail(sb, data.token);
+    return { email };
+  });
+
+/**
  * Accept a binder invitation and become a member of the atelier it names.
  *
  * The caller must already be signed in — this app has no unauthenticated
@@ -1171,8 +1222,13 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
       p_case_id: data.caseId,
       p_binder_id: binder!.id,
       p_accept: data.accept,
-      p_reason_code: data.reasonCode ?? null,
-      p_reason_detail: data.reasonDetail ?? null,
+      // La fonction Postgres accepte NULL (TEXT sans NOT NULL, voir
+      // 20260908210000_managed_pricing_offers.sql) ; les types générés par
+      // cette version de la CLI Supabase les déclarent à tort non-nullables
+      // pour les arguments de fonction — un cast, pas une triche sur le
+      // contrat réel de la fonction.
+      p_reason_code: (data.reasonCode ?? null) as unknown as string,
+      p_reason_detail: (data.reasonDetail ?? null) as unknown as string,
       p_actor_user_id: context.userId,
     });
     if (error) fail(409, error.message);
@@ -1285,7 +1341,11 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     };
     if (!canViewCase(viewer, facts)) fail(403, "Ce dossier n'est pas le vôtre.");
 
-    const view = await buildCaseView(sb, caseContext, caseDisclosure(viewer, facts));
+    // Seul le portail client traduit : l'atelier et l'admin (getBinderCase,
+    // getMarketplaceCase) restent français quelle que soit la marque.
+    const brand = isMarketplaceBrand(caseContext.row.brand) ? caseContext.row.brand : "MA_RELIURE";
+    const locale: CaseLocale = brand === "FINE_BINDERY" ? "en-US" : "fr-FR";
+    const view = await buildCaseView(sb, caseContext, caseDisclosure(viewer, facts), locale);
 
     const { data: selected } = await sb
       .from("marketplace_case_matches")
@@ -1304,6 +1364,26 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
       : { data: null };
     const skills = binder ? await skillsByBinder(sb, [binder.id]) : new Map<string, string[]>();
 
+    // Le bouton « Payer »/« Pay securely » ne doit jamais apparaître pour un
+    // dossier dont le Checkout échouerait à coup sûr (§11 du brief du
+    // 17 septembre 2026) — même garde-fou que `createCommercialCheckoutSession`,
+    // relu ici, jamais recalculé côté navigateur.
+    const acceptedProposal = await loadAcceptedCommercialProposal(sb, data.caseId);
+    const paymentState = acceptedProposal
+      ? await loadCommercialPaymentState(sb, acceptedProposal.id)
+      : null;
+    const paymentEligible = acceptedProposal
+      ? checkoutEligibility({
+          status: acceptedProposal.status,
+          acceptedAt: acceptedProposal.acceptedAt,
+          taxPolicy: acceptedProposal.taxPolicy,
+          taxValidatedAt: acceptedProposal.taxValidatedAt,
+          customerType: acceptedProposal.customerType,
+          businessName: acceptedProposal.businessName,
+          alreadyPaid: !!paymentState?.paidAt,
+        }).eligible
+      : false;
+
     return {
       case: {
         id: caseContext.row.id,
@@ -1316,6 +1396,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
         currency: caseContext.row.pricing_currency,
         priceIncludes: caseContext.row.price_includes,
         createdAt: caseContext.row.created_at,
+        paymentEligible,
       },
       view,
       selectedBinder: binder

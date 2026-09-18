@@ -62,24 +62,34 @@ export const EN_BOOKBINDING_COPY: Record<string, string> = {
     "Repairing a damaged book and creating a one-of-a-kind edition call for different information, and different skills.",
   "Que souhaitez-vous faire ?": "What would you like to do?",
   "Le réparer": "Repair it",
+  // optionLabel() (engine/brief.ts) prefers `briefLabel` over `label` for the
+  // live Project Canvas and the post-submission summary/email — both need an
+  // entry, not just the question-step label above.
+  Réparation: "Repair",
   "Le livre est fatigué et vous voulez pouvoir le manipuler à nouveau.":
     "The book is worn and you would like to be able to handle it again.",
   "Le restaurer": "Restore it",
+  Restauration: "Restoration",
   "L'objectif est de conserver l'ouvrage au plus près de son état d'origine.":
     "The goal is to keep the book as close as possible to its original condition.",
   "Le faire relier": "Have it rebound",
+  Reliure: "Binding",
   "Lui donner une couverture durable : toile, demi-cuir ou plein cuir.":
     "Give it a durable cover: cloth, half-leather or full leather.",
   "Le personnaliser": "Personalise it",
+  Personnalisation: "Personalisation",
   "Dorure, titrage, décor, matières, couleurs ou gardes choisies.":
     "Gilding, lettering, decoration, chosen materials, colours or endpapers.",
   "Le transformer": "Transform it",
+  Transformation: "Transformation",
   "En faire une pièce unique : matières choisies, dorure, étui.":
     "Turn it into a one-of-a-kind piece: chosen materials, gilding, a slipcase.",
   "Le protéger": "Protect it",
+  "Protection sur mesure": "Bespoke protection",
   "Un étui, une chemise, une boîte ou un coffret sur mesure.":
     "A bespoke slipcase, folder, box or case.",
   "Je ne sais pas encore": "I'm not sure yet",
+  "Projet à préciser": "Project to define",
   "Décrivez le livre, un relieur vous dira ce qui est possible.":
     "Describe the book, and a bookbinder will tell you what's possible.",
 
@@ -292,6 +302,7 @@ export const EN_BOOKBINDING_COPY: Record<string, string> = {
     "The town or city is enough. The pickup address will be requested later, once your bookbinder is chosen.",
   "Code postal": "ZIP / postal code",
   Ville: "City",
+  Pays: "Country",
   "J'accepte que Ma Reliure étudie ma demande et en partage le descriptif avec des ateliers partenaires. Mes coordonnées ne sont communiquées qu'à l'atelier retenu.":
     "I agree that Fine Bindery may review my request and share its description with partner workshops. My contact details are only shared with the workshop selected.",
 

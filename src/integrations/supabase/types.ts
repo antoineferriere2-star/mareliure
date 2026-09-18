@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       build_dossier_access_tokens: {
@@ -808,6 +833,262 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_binder_applications: {
+        Row: {
+          average_annual_revenue_band: string | null
+          city: string | null
+          converted_binder_id: string | null
+          created_at: string
+          email: string
+          first_name: string
+          id: string
+          last_name: string
+          legal_entity_type: string | null
+          message: string | null
+          phone: string | null
+          review_note: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          skills: string[]
+          status: string
+          website_url: string | null
+          workshop_name: string
+          years_experience: number | null
+        }
+        Insert: {
+          average_annual_revenue_band?: string | null
+          city?: string | null
+          converted_binder_id?: string | null
+          created_at?: string
+          email: string
+          first_name: string
+          id?: string
+          last_name: string
+          legal_entity_type?: string | null
+          message?: string | null
+          phone?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          skills?: string[]
+          status?: string
+          website_url?: string | null
+          workshop_name: string
+          years_experience?: number | null
+        }
+        Update: {
+          average_annual_revenue_band?: string | null
+          city?: string | null
+          converted_binder_id?: string | null
+          created_at?: string
+          email?: string
+          first_name?: string
+          id?: string
+          last_name?: string
+          legal_entity_type?: string | null
+          message?: string | null
+          phone?: string | null
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          skills?: string[]
+          status?: string
+          website_url?: string | null
+          workshop_name?: string
+          years_experience?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_applications_converted_binder_id_fkey"
+            columns: ["converted_binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_commercial_terms: {
+        Row: {
+          binder_id: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          family_key: string
+          id: string
+          manual_payout_required: boolean
+          payout_multiplier_bps: number
+        }
+        Insert: {
+          binder_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          family_key: string
+          id?: string
+          manual_payout_required?: boolean
+          payout_multiplier_bps?: number
+        }
+        Update: {
+          binder_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          family_key?: string
+          id?: string
+          manual_payout_required?: boolean
+          payout_multiplier_bps?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_commercial_terms_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_invitations: {
+        Row: {
+          accepted_at: string | null
+          accepted_by_user_id: string | null
+          binder_id: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          invited_by: string | null
+          revoked_at: string | null
+          status: string
+          token_hash: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          binder_id: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          invited_by?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_by_user_id?: string | null
+          binder_id?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          invited_by?: string | null
+          revoked_at?: string | null
+          status?: string
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_invitations_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_members: {
+        Row: {
+          account_status: string
+          binder_id: string
+          created_at: string
+          id: string
+          role: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          account_status?: string
+          binder_id: string
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          account_status?: string
+          binder_id?: string
+          created_at?: string
+          id?: string
+          role?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_members_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_portfolio: {
+        Row: {
+          after_photo_path: string | null
+          before_photo_path: string | null
+          binder_id: string
+          created_at: string
+          description: string | null
+          id: string
+          materials: string[]
+          position: number
+          techniques: string[]
+          title: string
+          year: number | null
+        }
+        Insert: {
+          after_photo_path?: string | null
+          before_photo_path?: string | null
+          binder_id: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          materials?: string[]
+          position?: number
+          techniques?: string[]
+          title: string
+          year?: number | null
+        }
+        Update: {
+          after_photo_path?: string | null
+          before_photo_path?: string | null
+          binder_id?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          materials?: string[]
+          position?: number
+          techniques?: string[]
+          title?: string
+          year?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_portfolio_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_binder_rates: {
         Row: {
           binder_id: string
@@ -869,7 +1150,806 @@ export type Database = {
           verified_by?: string | null
           work_item_key?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_rates_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_rates_work_item_key_fkey"
+            columns: ["work_item_key"]
+            isOneToOne: false
+            referencedRelation: "marketplace_work_items"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      marketplace_binder_skills: {
+        Row: {
+          binder_id: string
+          skill_slug: string
+        }
+        Insert: {
+          binder_id: string
+          skill_slug: string
+        }
+        Update: {
+          binder_id?: string
+          skill_slug?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_skills_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binders: {
+        Row: {
+          accepted_project_types: string[]
+          avatar_path: string | null
+          bio: string | null
+          capacity_slots: number
+          city: string | null
+          created_at: string
+          display_name: string
+          id: string
+          is_demo: boolean
+          max_project_cents: number | null
+          min_project_cents: number | null
+          personal_referral_slug: string | null
+          postal_code: string | null
+          rating_avg: number | null
+          rating_count: number
+          response_rate: number | null
+          status: string
+          stripe_account_id: string | null
+          stripe_connect_charges_enabled: boolean
+          stripe_connect_onboarded_at: string | null
+          stripe_connect_payouts_enabled: boolean
+          training: string | null
+          updated_at: string
+          user_id: string | null
+          workshop_name: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          accepted_project_types?: string[]
+          avatar_path?: string | null
+          bio?: string | null
+          capacity_slots?: number
+          city?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          is_demo?: boolean
+          max_project_cents?: number | null
+          min_project_cents?: number | null
+          personal_referral_slug?: string | null
+          postal_code?: string | null
+          rating_avg?: number | null
+          rating_count?: number
+          response_rate?: number | null
+          status?: string
+          stripe_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean
+          stripe_connect_onboarded_at?: string | null
+          stripe_connect_payouts_enabled?: boolean
+          training?: string | null
+          updated_at?: string
+          user_id?: string | null
+          workshop_name?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          accepted_project_types?: string[]
+          avatar_path?: string | null
+          bio?: string | null
+          capacity_slots?: number
+          city?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          is_demo?: boolean
+          max_project_cents?: number | null
+          min_project_cents?: number | null
+          personal_referral_slug?: string | null
+          postal_code?: string | null
+          rating_avg?: number | null
+          rating_count?: number
+          response_rate?: number | null
+          status?: string
+          stripe_account_id?: string | null
+          stripe_connect_charges_enabled?: boolean
+          stripe_connect_onboarded_at?: string | null
+          stripe_connect_payouts_enabled?: boolean
+          training?: string | null
+          updated_at?: string
+          user_id?: string | null
+          workshop_name?: string | null
+          years_experience?: number | null
+        }
         Relationships: []
+      }
+      marketplace_case_matches: {
+        Row: {
+          accepted_at: string | null
+          binder_id: string
+          binder_payout_cents: number | null
+          case_id: string
+          currency: string
+          decline_reason: string | null
+          decline_reason_code: string | null
+          decline_reason_detail: string | null
+          declined_at: string | null
+          expires_at: string | null
+          id: string
+          invited_at: string
+          match_score: number | null
+          minimum_required_payout_cents: number | null
+          offered_at: string | null
+          responded_at: string | null
+          selected_at: string | null
+          state: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          binder_id: string
+          binder_payout_cents?: number | null
+          case_id: string
+          currency?: string
+          decline_reason?: string | null
+          decline_reason_code?: string | null
+          decline_reason_detail?: string | null
+          declined_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invited_at?: string
+          match_score?: number | null
+          minimum_required_payout_cents?: number | null
+          offered_at?: string | null
+          responded_at?: string | null
+          selected_at?: string | null
+          state?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          binder_id?: string
+          binder_payout_cents?: number | null
+          case_id?: string
+          currency?: string
+          decline_reason?: string | null
+          decline_reason_code?: string | null
+          decline_reason_detail?: string | null
+          declined_at?: string | null
+          expires_at?: string | null
+          id?: string
+          invited_at?: string
+          match_score?: number | null
+          minimum_required_payout_cents?: number | null
+          offered_at?: string | null
+          responded_at?: string | null
+          selected_at?: string | null
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_case_matches_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_case_matches_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_cases: {
+        Row: {
+          acquisition_origin: string
+          admin_notes: string | null
+          base_service_price_cents: number | null
+          binder_payout_cents: number | null
+          brand: string
+          brand_multiplier_bps: number | null
+          claim_method: string | null
+          claimed_at: string | null
+          created_at: string
+          customer_price_cents: number | null
+          customer_user_id: string | null
+          declared_value_band: string | null
+          deposit_cents: number | null
+          dossier_id: string
+          heritage_flag: boolean
+          id: string
+          manual_review_required: boolean
+          mission_id: string | null
+          price_includes: string[]
+          pricing_components: Json
+          pricing_confidence: string | null
+          pricing_currency: string
+          pricing_generated_at: string | null
+          pricing_high_estimate_cents: number | null
+          pricing_low_estimate_cents: number | null
+          pricing_mode: string | null
+          pricing_price_bound_by: string | null
+          pricing_pricebook_reference_cents: number | null
+          pricing_reason_codes: string[]
+          pricing_reference_count: number
+          pricing_rule_version: string | null
+          pricing_status: string
+          pricing_validated_at: string | null
+          pricing_validated_by: string | null
+          reference: string
+          referred_binder_id: string | null
+          service_price_cents: number | null
+          status: string
+          suggested_binder_payout_cents: number | null
+          suggested_customer_price_cents: number | null
+          tax_status: string
+          triage_flags: string[]
+          triaged_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          acquisition_origin?: string
+          admin_notes?: string | null
+          base_service_price_cents?: number | null
+          binder_payout_cents?: number | null
+          brand?: string
+          brand_multiplier_bps?: number | null
+          claim_method?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          customer_price_cents?: number | null
+          customer_user_id?: string | null
+          declared_value_band?: string | null
+          deposit_cents?: number | null
+          dossier_id: string
+          heritage_flag?: boolean
+          id?: string
+          manual_review_required?: boolean
+          mission_id?: string | null
+          price_includes?: string[]
+          pricing_components?: Json
+          pricing_confidence?: string | null
+          pricing_currency?: string
+          pricing_generated_at?: string | null
+          pricing_high_estimate_cents?: number | null
+          pricing_low_estimate_cents?: number | null
+          pricing_mode?: string | null
+          pricing_price_bound_by?: string | null
+          pricing_pricebook_reference_cents?: number | null
+          pricing_reason_codes?: string[]
+          pricing_reference_count?: number
+          pricing_rule_version?: string | null
+          pricing_status?: string
+          pricing_validated_at?: string | null
+          pricing_validated_by?: string | null
+          reference: string
+          referred_binder_id?: string | null
+          service_price_cents?: number | null
+          status?: string
+          suggested_binder_payout_cents?: number | null
+          suggested_customer_price_cents?: number | null
+          tax_status?: string
+          triage_flags?: string[]
+          triaged_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          acquisition_origin?: string
+          admin_notes?: string | null
+          base_service_price_cents?: number | null
+          binder_payout_cents?: number | null
+          brand?: string
+          brand_multiplier_bps?: number | null
+          claim_method?: string | null
+          claimed_at?: string | null
+          created_at?: string
+          customer_price_cents?: number | null
+          customer_user_id?: string | null
+          declared_value_band?: string | null
+          deposit_cents?: number | null
+          dossier_id?: string
+          heritage_flag?: boolean
+          id?: string
+          manual_review_required?: boolean
+          mission_id?: string | null
+          price_includes?: string[]
+          pricing_components?: Json
+          pricing_confidence?: string | null
+          pricing_currency?: string
+          pricing_generated_at?: string | null
+          pricing_high_estimate_cents?: number | null
+          pricing_low_estimate_cents?: number | null
+          pricing_mode?: string | null
+          pricing_price_bound_by?: string | null
+          pricing_pricebook_reference_cents?: number | null
+          pricing_reason_codes?: string[]
+          pricing_reference_count?: number
+          pricing_rule_version?: string | null
+          pricing_status?: string
+          pricing_validated_at?: string | null
+          pricing_validated_by?: string | null
+          reference?: string
+          referred_binder_id?: string | null
+          service_price_cents?: number | null
+          status?: string
+          suggested_binder_payout_cents?: number | null
+          suggested_customer_price_cents?: number | null
+          tax_status?: string
+          triage_flags?: string[]
+          triaged_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_cases_dossier_id_fkey"
+            columns: ["dossier_id"]
+            isOneToOne: true
+            referencedRelation: "build_dossiers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_cases_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: false
+            referencedRelation: "build_missions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_cases_referred_binder_id_fkey"
+            columns: ["referred_binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_commercial_proposal_payments: {
+        Row: {
+          created_at: string
+          paid_at: string | null
+          proposal_id: string
+          stripe_checkout_session_id: string | null
+          stripe_invoice_id: string | null
+          stripe_payment_intent_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          paid_at?: string | null
+          proposal_id: string
+          stripe_checkout_session_id?: string | null
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          paid_at?: string | null
+          proposal_id?: string
+          stripe_checkout_session_id?: string | null
+          stripe_invoice_id?: string | null
+          stripe_payment_intent_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_commercial_proposal_payments_proposal_id_fkey"
+            columns: ["proposal_id"]
+            isOneToOne: true
+            referencedRelation: "marketplace_commercial_proposals"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_commercial_proposals: {
+        Row: {
+          accepted_at: string | null
+          balance_due_cents: number
+          binder_payout_cents: number
+          binder_payout_ttc_cents: number | null
+          binder_vat_amount_cents: number | null
+          binder_vat_rate_bps: number | null
+          brand: string
+          brand_multiplier_bps: number
+          brand_reference_cents: number | null
+          case_id: string
+          contribution_floor_cents: number
+          created_at: string
+          created_by: string | null
+          currency: string
+          customer_service_price_cents: number
+          customer_total_ht_cents: number
+          customer_total_ttc_cents: number | null
+          customer_vat_amount_cents: number | null
+          customer_vat_rate_bps: number | null
+          deposit_amount_cents: number
+          deposit_type: string
+          deposit_value_bps: number | null
+          estimate_max_cents: number | null
+          estimate_min_cents: number | null
+          id: string
+          margin_floor_cents: number
+          minimum_contribution_cents: number
+          notes: string | null
+          price_bound_by: string
+          pricebook_provenance: Json | null
+          pricebook_reference_cents: number | null
+          pricing_mode: string
+          pricing_rule_version: string
+          shipping_handling_fee_cents: number
+          shipping_margin_cents: number
+          shipping_other_cents: number
+          shipping_outbound_cents: number
+          shipping_return_cents: number
+          shipping_total_cents: number
+          billing_country: string | null
+          business_name: string | null
+          business_vat_number: string | null
+          business_vat_validation_status: string | null
+          customer_type: string
+          status: string
+          superseded_at: string | null
+          target_margin_bps: number
+          tax_basis: string | null
+          tax_country: string | null
+          tax_policy: string
+          tax_validated_at: string | null
+          tax_validated_by: string | null
+          tax_validation_source: string | null
+          validated_at: string | null
+          validated_by: string | null
+          version: number
+        }
+        Insert: {
+          accepted_at?: string | null
+          balance_due_cents: number
+          binder_payout_cents: number
+          binder_payout_ttc_cents?: number | null
+          binder_vat_amount_cents?: number | null
+          binder_vat_rate_bps?: number | null
+          brand: string
+          brand_multiplier_bps: number
+          brand_reference_cents?: number | null
+          case_id: string
+          contribution_floor_cents: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_service_price_cents: number
+          customer_total_ht_cents: number
+          customer_total_ttc_cents?: number | null
+          customer_vat_amount_cents?: number | null
+          customer_vat_rate_bps?: number | null
+          deposit_amount_cents?: number
+          deposit_type?: string
+          deposit_value_bps?: number | null
+          estimate_max_cents?: number | null
+          estimate_min_cents?: number | null
+          id?: string
+          margin_floor_cents: number
+          minimum_contribution_cents?: number
+          notes?: string | null
+          price_bound_by: string
+          pricebook_provenance?: Json | null
+          pricebook_reference_cents?: number | null
+          pricing_mode: string
+          pricing_rule_version: string
+          shipping_handling_fee_cents?: number
+          shipping_margin_cents?: number
+          shipping_other_cents?: number
+          shipping_outbound_cents?: number
+          shipping_return_cents?: number
+          shipping_total_cents?: number
+          billing_country?: string | null
+          business_name?: string | null
+          business_vat_number?: string | null
+          business_vat_validation_status?: string | null
+          customer_type?: string
+          status?: string
+          superseded_at?: string | null
+          target_margin_bps: number
+          tax_basis?: string | null
+          tax_country?: string | null
+          tax_policy?: string
+          tax_validated_at?: string | null
+          tax_validated_by?: string | null
+          tax_validation_source?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          version: number
+        }
+        Update: {
+          accepted_at?: string | null
+          balance_due_cents?: number
+          binder_payout_cents?: number
+          binder_payout_ttc_cents?: number | null
+          binder_vat_amount_cents?: number | null
+          binder_vat_rate_bps?: number | null
+          brand?: string
+          brand_multiplier_bps?: number
+          brand_reference_cents?: number | null
+          case_id?: string
+          contribution_floor_cents?: number
+          created_at?: string
+          created_by?: string | null
+          currency?: string
+          customer_service_price_cents?: number
+          customer_total_ht_cents?: number
+          customer_total_ttc_cents?: number | null
+          customer_vat_amount_cents?: number | null
+          customer_vat_rate_bps?: number | null
+          deposit_amount_cents?: number
+          deposit_type?: string
+          deposit_value_bps?: number | null
+          estimate_max_cents?: number | null
+          estimate_min_cents?: number | null
+          id?: string
+          margin_floor_cents?: number
+          minimum_contribution_cents?: number
+          notes?: string | null
+          price_bound_by?: string
+          pricebook_provenance?: Json | null
+          pricebook_reference_cents?: number | null
+          pricing_mode?: string
+          pricing_rule_version?: string
+          shipping_handling_fee_cents?: number
+          shipping_margin_cents?: number
+          shipping_other_cents?: number
+          shipping_outbound_cents?: number
+          shipping_return_cents?: number
+          shipping_total_cents?: number
+          billing_country?: string | null
+          business_name?: string | null
+          business_vat_number?: string | null
+          business_vat_validation_status?: string | null
+          customer_type?: string
+          status?: string
+          superseded_at?: string | null
+          target_margin_bps?: number
+          tax_basis?: string | null
+          tax_country?: string | null
+          tax_policy?: string
+          tax_validated_at?: string | null
+          tax_validated_by?: string | null
+          tax_validation_source?: string | null
+          validated_at?: string | null
+          validated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_commercial_proposals_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_conversation_reads: {
+        Row: {
+          case_id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          case_id: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          case_id?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_conversation_reads_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_decisions: {
+        Row: {
+          answer: Json | null
+          answered_at: string | null
+          answered_by: string | null
+          cancelled_at: string | null
+          case_id: string
+          created_at: string
+          id: string
+          kind: string
+          options: Json
+          question: string
+          requested_by: string | null
+          requested_role: string
+          status: string
+          superseded_by: string | null
+        }
+        Insert: {
+          answer?: Json | null
+          answered_at?: string | null
+          answered_by?: string | null
+          cancelled_at?: string | null
+          case_id: string
+          created_at?: string
+          id?: string
+          kind: string
+          options?: Json
+          question: string
+          requested_by?: string | null
+          requested_role: string
+          status?: string
+          superseded_by?: string | null
+        }
+        Update: {
+          answer?: Json | null
+          answered_at?: string | null
+          answered_by?: string | null
+          cancelled_at?: string | null
+          case_id?: string
+          created_at?: string
+          id?: string
+          kind?: string
+          options?: Json
+          question?: string
+          requested_by?: string | null
+          requested_role?: string
+          status?: string
+          superseded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_decisions_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_decisions_superseded_by_fkey"
+            columns: ["superseded_by"]
+            isOneToOne: false
+            referencedRelation: "marketplace_decisions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_events: {
+        Row: {
+          actor_user_id: string | null
+          binder_id: string | null
+          case_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+        }
+        Insert: {
+          actor_user_id?: string | null
+          binder_id?: string | null
+          case_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+        }
+        Update: {
+          actor_user_id?: string | null
+          binder_id?: string | null
+          case_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_events_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_intake_missions: {
+        Row: {
+          brand: string
+          created_at: string
+          mission_id: string
+          vertical_id: string
+        }
+        Insert: {
+          brand?: string
+          created_at?: string
+          mission_id: string
+          vertical_id?: string
+        }
+        Update: {
+          brand?: string
+          created_at?: string
+          mission_id?: string
+          vertical_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_intake_missions_mission_id_fkey"
+            columns: ["mission_id"]
+            isOneToOne: true
+            referencedRelation: "build_missions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_messages: {
+        Row: {
+          attachment_paths: string[]
+          body: string
+          case_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          sender_role: string
+          sender_user_id: string | null
+        }
+        Insert: {
+          attachment_paths?: string[]
+          body?: string
+          case_id: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          sender_role: string
+          sender_user_id?: string | null
+        }
+        Update: {
+          attachment_paths?: string[]
+          body?: string
+          case_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          sender_role?: string
+          sender_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketplace_pricebook: {
         Row: {
@@ -926,6 +2006,137 @@ export type Database = {
           version?: number
           work_item_key?: string
         }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_pricebook_work_item_key_fkey"
+            columns: ["work_item_key"]
+            isOneToOne: false
+            referencedRelation: "marketplace_work_items"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      marketplace_quotes: {
+        Row: {
+          accepted_at: string | null
+          amount_cents: number
+          binder_id: string
+          binder_payout_cents: number | null
+          case_id: string
+          caveats: string | null
+          created_at: string
+          currency: string
+          customer_price_cents: number | null
+          decline_reason_code: string | null
+          decline_reason_detail: string | null
+          declined_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          lead_time_weeks: number | null
+          materials: string | null
+          offered_at: string | null
+          options: string | null
+          selected_at: string | null
+          state: string
+          technique: string | null
+          updated_at: string
+          valid_until: string | null
+        }
+        Insert: {
+          accepted_at?: string | null
+          amount_cents: number
+          binder_id: string
+          binder_payout_cents?: number | null
+          case_id: string
+          caveats?: string | null
+          created_at?: string
+          currency?: string
+          customer_price_cents?: number | null
+          decline_reason_code?: string | null
+          decline_reason_detail?: string | null
+          declined_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          lead_time_weeks?: number | null
+          materials?: string | null
+          offered_at?: string | null
+          options?: string | null
+          selected_at?: string | null
+          state?: string
+          technique?: string | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Update: {
+          accepted_at?: string | null
+          amount_cents?: number
+          binder_id?: string
+          binder_payout_cents?: number | null
+          case_id?: string
+          caveats?: string | null
+          created_at?: string
+          currency?: string
+          customer_price_cents?: number | null
+          decline_reason_code?: string | null
+          decline_reason_detail?: string | null
+          declined_at?: string | null
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          lead_time_weeks?: number | null
+          materials?: string | null
+          offered_at?: string | null
+          options?: string | null
+          selected_at?: string | null
+          state?: string
+          technique?: string | null
+          updated_at?: string
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_quotes_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_quotes_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_stripe_webhook_events: {
+        Row: {
+          id: string
+          payload: Json
+          processed_at: string | null
+          processing_error: string | null
+          received_at: string
+          type: string
+        }
+        Insert: {
+          id: string
+          payload: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+          type: string
+        }
+        Update: {
+          id?: string
+          payload?: Json
+          processed_at?: string | null
+          processing_error?: string | null
+          received_at?: string
+          type?: string
+        }
         Relationships: []
       }
       marketplace_work_items: {
@@ -964,750 +2175,6 @@ export type Database = {
         }
         Relationships: []
       }
-      marketplace_binder_portfolio: {
-        Row: {
-          after_photo_path: string | null
-          before_photo_path: string | null
-          binder_id: string
-          created_at: string
-          description: string | null
-          id: string
-          materials: string[]
-          position: number
-          techniques: string[]
-          title: string
-          year: number | null
-        }
-        Insert: {
-          after_photo_path?: string | null
-          before_photo_path?: string | null
-          binder_id: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          materials?: string[]
-          position?: number
-          techniques?: string[]
-          title: string
-          year?: number | null
-        }
-        Update: {
-          after_photo_path?: string | null
-          before_photo_path?: string | null
-          binder_id?: string
-          created_at?: string
-          description?: string | null
-          id?: string
-          materials?: string[]
-          position?: number
-          techniques?: string[]
-          title?: string
-          year?: number | null
-        }
-        Relationships: []
-      }
-      marketplace_binder_skills: {
-        Row: {
-          binder_id: string
-          skill_slug: string
-        }
-        Insert: {
-          binder_id: string
-          skill_slug: string
-        }
-        Update: {
-          binder_id?: string
-          skill_slug?: string
-        }
-        Relationships: []
-      }
-      marketplace_binders: {
-        Row: {
-          accepted_project_types: string[]
-          avatar_path: string | null
-          bio: string | null
-          capacity_slots: number
-          city: string | null
-          created_at: string
-          display_name: string
-          id: string
-          is_demo: boolean
-          max_project_cents: number | null
-          min_project_cents: number | null
-          personal_referral_slug?: string | null
-          postal_code: string | null
-          rating_avg: number | null
-          rating_count: number
-          response_rate: number | null
-          status: string
-          stripe_account_id: string | null
-          training: string | null
-          updated_at: string
-          user_id: string | null
-          workshop_name: string | null
-          years_experience: number | null
-        }
-        Insert: {
-          accepted_project_types?: string[]
-          avatar_path?: string | null
-          bio?: string | null
-          capacity_slots?: number
-          city?: string | null
-          created_at?: string
-          display_name: string
-          id?: string
-          is_demo?: boolean
-          max_project_cents?: number | null
-          min_project_cents?: number | null
-          personal_referral_slug?: string | null
-          postal_code?: string | null
-          rating_avg?: number | null
-          rating_count?: number
-          response_rate?: number | null
-          status?: string
-          stripe_account_id?: string | null
-          training?: string | null
-          updated_at?: string
-          user_id?: string | null
-          workshop_name?: string | null
-          years_experience?: number | null
-        }
-        Update: {
-          accepted_project_types?: string[]
-          avatar_path?: string | null
-          bio?: string | null
-          capacity_slots?: number
-          city?: string | null
-          created_at?: string
-          display_name?: string
-          id?: string
-          is_demo?: boolean
-          max_project_cents?: number | null
-          min_project_cents?: number | null
-          personal_referral_slug?: string | null
-          postal_code?: string | null
-          rating_avg?: number | null
-          rating_count?: number
-          response_rate?: number | null
-          status?: string
-          stripe_account_id?: string | null
-          training?: string | null
-          updated_at?: string
-          user_id?: string | null
-          workshop_name?: string | null
-          years_experience?: number | null
-        }
-        Relationships: []
-      }
-      marketplace_binder_applications: {
-        Row: {
-          average_annual_revenue_band: string | null
-          city: string | null
-          converted_binder_id: string | null
-          created_at: string
-          email: string
-          first_name: string
-          id: string
-          last_name: string
-          legal_entity_type: string | null
-          message: string | null
-          phone: string | null
-          review_note: string | null
-          reviewed_at: string | null
-          reviewed_by: string | null
-          skills?: string[]
-          status: string
-          website_url?: string | null
-          workshop_name: string
-          years_experience: number | null
-        }
-        Insert: {
-          average_annual_revenue_band?: string | null
-          city?: string | null
-          converted_binder_id?: string | null
-          created_at?: string
-          email: string
-          first_name: string
-          id?: string
-          last_name: string
-          legal_entity_type?: string | null
-          message?: string | null
-          phone?: string | null
-          review_note?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          skills?: string[]
-          status?: string
-          website_url?: string | null
-          workshop_name: string
-          years_experience?: number | null
-        }
-        Update: {
-          average_annual_revenue_band?: string | null
-          city?: string | null
-          converted_binder_id?: string | null
-          created_at?: string
-          email?: string
-          first_name?: string
-          id?: string
-          last_name?: string
-          legal_entity_type?: string | null
-          message?: string | null
-          phone?: string | null
-          review_note?: string | null
-          reviewed_at?: string | null
-          reviewed_by?: string | null
-          skills?: string[]
-          status?: string
-          website_url?: string | null
-          workshop_name?: string
-          years_experience?: number | null
-        }
-        Relationships: []
-      }
-      marketplace_binder_commercial_terms: {
-        Row: {
-          binder_id: string
-          created_at: string
-          created_by: string | null
-          effective_from: string
-          effective_to: string | null
-          family_key: string
-          id: string
-          manual_payout_required: boolean
-          payout_multiplier_bps: number
-        }
-        Insert: {
-          binder_id: string
-          created_at?: string
-          created_by?: string | null
-          effective_from?: string
-          effective_to?: string | null
-          family_key: string
-          id?: string
-          manual_payout_required?: boolean
-          payout_multiplier_bps?: number
-        }
-        Update: {
-          binder_id?: string
-          created_at?: string
-          created_by?: string | null
-          effective_from?: string
-          effective_to?: string | null
-          family_key?: string
-          id?: string
-          manual_payout_required?: boolean
-          payout_multiplier_bps?: number
-        }
-        Relationships: []
-      }
-      marketplace_binder_members: {
-        Row: {
-          account_status: string
-          binder_id: string
-          created_at: string
-          id: string
-          role: string
-          updated_at: string
-          user_id: string
-        }
-        Insert: {
-          account_status?: string
-          binder_id: string
-          created_at?: string
-          id?: string
-          role?: string
-          updated_at?: string
-          user_id: string
-        }
-        Update: {
-          account_status?: string
-          binder_id?: string
-          created_at?: string
-          id?: string
-          role?: string
-          updated_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      marketplace_binder_invitations: {
-        Row: {
-          accepted_at: string | null
-          accepted_by_user_id: string | null
-          binder_id: string
-          created_at: string
-          email: string
-          expires_at: string
-          id: string
-          invited_by: string | null
-          revoked_at: string | null
-          status: string
-          token_hash: string
-        }
-        Insert: {
-          accepted_at?: string | null
-          accepted_by_user_id?: string | null
-          binder_id: string
-          created_at?: string
-          email: string
-          expires_at: string
-          id?: string
-          invited_by?: string | null
-          revoked_at?: string | null
-          status?: string
-          token_hash: string
-        }
-        Update: {
-          accepted_at?: string | null
-          accepted_by_user_id?: string | null
-          binder_id?: string
-          created_at?: string
-          email?: string
-          expires_at?: string
-          id?: string
-          invited_by?: string | null
-          revoked_at?: string | null
-          status?: string
-          token_hash?: string
-        }
-        Relationships: []
-      }
-      marketplace_case_matches: {
-        Row: {
-          accepted_at: string | null
-          binder_id: string
-          binder_payout_cents: number | null
-          case_id: string
-          currency: string
-          decline_reason: string | null
-          decline_reason_code: string | null
-          decline_reason_detail: string | null
-          declined_at: string | null
-          expires_at: string | null
-          id: string
-          invited_at: string
-          minimum_required_payout_cents?: number | null
-          match_score: number | null
-          offered_at: string | null
-          responded_at: string | null
-          selected_at: string | null
-          state: string
-        }
-        Insert: {
-          accepted_at?: string | null
-          binder_id: string
-          binder_payout_cents?: number | null
-          case_id: string
-          currency?: string
-          decline_reason?: string | null
-          decline_reason_code?: string | null
-          decline_reason_detail?: string | null
-          declined_at?: string | null
-          expires_at?: string | null
-          id?: string
-          invited_at?: string
-          minimum_required_payout_cents?: number | null
-          match_score?: number | null
-          offered_at?: string | null
-          responded_at?: string | null
-          selected_at?: string | null
-          state?: string
-        }
-        Update: {
-          accepted_at?: string | null
-          binder_id?: string
-          binder_payout_cents?: number | null
-          case_id?: string
-          currency?: string
-          decline_reason?: string | null
-          decline_reason_code?: string | null
-          decline_reason_detail?: string | null
-          declined_at?: string | null
-          expires_at?: string | null
-          id?: string
-          invited_at?: string
-          minimum_required_payout_cents?: number | null
-          match_score?: number | null
-          offered_at?: string | null
-          responded_at?: string | null
-          selected_at?: string | null
-          state?: string
-        }
-        Relationships: []
-      }
-      marketplace_cases: {
-        Row: {
-          acquisition_origin?: string
-          admin_notes: string | null
-          base_service_price_cents?: number | null
-          binder_payout_cents: number | null
-          brand: string
-          brand_multiplier_bps?: number | null
-          claim_method: string | null
-          claimed_at: string | null
-          customer_user_id: string | null
-          customer_price_cents: number | null
-          created_at: string
-          declared_value_band: string | null
-          deposit_cents?: number | null
-          dossier_id: string
-          heritage_flag: boolean
-          id: string
-          manual_review_required: boolean
-          mission_id: string | null
-          price_includes: string[]
-          pricing_mode?: string | null
-          referred_binder_id?: string | null
-          pricing_components?: Json
-          pricing_low_estimate_cents?: number | null
-          pricing_high_estimate_cents?: number | null
-          pricing_reference_count?: number
-          pricing_confidence: string | null
-          pricing_currency: string
-          pricing_generated_at: string | null
-          pricing_reason_codes: string[]
-          pricing_rule_version: string | null
-          pricing_status: string
-          pricing_validated_at: string | null
-          pricing_validated_by: string | null
-          reference: string
-          service_price_cents?: number | null
-          status: string
-          suggested_binder_payout_cents: number | null
-          suggested_customer_price_cents: number | null
-          tax_status: string
-          triage_flags: string[]
-          triaged_at: string | null
-          updated_at: string
-        }
-        Insert: {
-          acquisition_origin?: string
-          admin_notes?: string | null
-          base_service_price_cents?: number | null
-          binder_payout_cents?: number | null
-          brand?: string
-          brand_multiplier_bps?: number | null
-          claim_method?: string | null
-          claimed_at?: string | null
-          customer_user_id?: string | null
-          customer_price_cents?: number | null
-          created_at?: string
-          declared_value_band?: string | null
-          deposit_cents?: number | null
-          dossier_id: string
-          heritage_flag?: boolean
-          id?: string
-          manual_review_required?: boolean
-          mission_id?: string | null
-          price_includes?: string[]
-          pricing_mode?: string | null
-          referred_binder_id?: string | null
-          pricing_components?: Json
-          pricing_low_estimate_cents?: number | null
-          pricing_high_estimate_cents?: number | null
-          pricing_reference_count?: number
-          pricing_confidence?: string | null
-          pricing_currency?: string
-          pricing_generated_at?: string | null
-          pricing_reason_codes?: string[]
-          pricing_rule_version?: string | null
-          pricing_status?: string
-          pricing_validated_at?: string | null
-          pricing_validated_by?: string | null
-          reference: string
-          service_price_cents?: number | null
-          status?: string
-          suggested_binder_payout_cents?: number | null
-          suggested_customer_price_cents?: number | null
-          tax_status?: string
-          triage_flags?: string[]
-          triaged_at?: string | null
-          updated_at?: string
-        }
-        Update: {
-          acquisition_origin?: string
-          admin_notes?: string | null
-          base_service_price_cents?: number | null
-          binder_payout_cents?: number | null
-          brand?: string
-          brand_multiplier_bps?: number | null
-          claim_method?: string | null
-          claimed_at?: string | null
-          customer_user_id?: string | null
-          customer_price_cents?: number | null
-          created_at?: string
-          declared_value_band?: string | null
-          deposit_cents?: number | null
-          dossier_id?: string
-          heritage_flag?: boolean
-          id?: string
-          manual_review_required?: boolean
-          mission_id?: string | null
-          price_includes?: string[]
-          pricing_mode?: string | null
-          referred_binder_id?: string | null
-          pricing_components?: Json
-          pricing_low_estimate_cents?: number | null
-          pricing_high_estimate_cents?: number | null
-          pricing_reference_count?: number
-          pricing_confidence?: string | null
-          pricing_currency?: string
-          pricing_generated_at?: string | null
-          pricing_reason_codes?: string[]
-          pricing_rule_version?: string | null
-          pricing_status?: string
-          pricing_validated_at?: string | null
-          pricing_validated_by?: string | null
-          reference?: string
-          service_price_cents?: number | null
-          status?: string
-          suggested_binder_payout_cents?: number | null
-          suggested_customer_price_cents?: number | null
-          tax_status?: string
-          triage_flags?: string[]
-          triaged_at?: string | null
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      marketplace_events: {
-        Row: {
-          actor_user_id: string | null
-          binder_id: string | null
-          case_id: string | null
-          created_at: string
-          event_type: string
-          id: string
-          metadata: Json
-        }
-        Insert: {
-          actor_user_id?: string | null
-          binder_id?: string | null
-          case_id?: string | null
-          created_at?: string
-          event_type: string
-          id?: string
-          metadata?: Json
-        }
-        Update: {
-          actor_user_id?: string | null
-          binder_id?: string | null
-          case_id?: string | null
-          created_at?: string
-          event_type?: string
-          id?: string
-          metadata?: Json
-        }
-        Relationships: []
-      }
-      marketplace_messages: {
-        Row: {
-          attachment_paths: string[]
-          body: string
-          case_id: string
-          created_at: string
-          deleted_at: string | null
-          edited_at: string | null
-          id: string
-          sender_role: string
-          sender_user_id: string | null
-        }
-        Insert: {
-          attachment_paths?: string[]
-          body?: string
-          case_id: string
-          created_at?: string
-          deleted_at?: string | null
-          edited_at?: string | null
-          id?: string
-          sender_role: string
-          sender_user_id?: string | null
-        }
-        Update: {
-          attachment_paths?: string[]
-          body?: string
-          case_id?: string
-          created_at?: string
-          deleted_at?: string | null
-          edited_at?: string | null
-          id?: string
-          sender_role?: string
-          sender_user_id?: string | null
-        }
-        Relationships: []
-      }
-      marketplace_conversation_reads: {
-        Row: {
-          case_id: string
-          last_read_at: string
-          user_id: string
-        }
-        Insert: {
-          case_id: string
-          last_read_at?: string
-          user_id: string
-        }
-        Update: {
-          case_id?: string
-          last_read_at?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
-      marketplace_decisions: {
-        Row: {
-          answer: Json | null
-          answered_at: string | null
-          answered_by: string | null
-          cancelled_at: string | null
-          case_id: string
-          created_at: string
-          id: string
-          kind: string
-          options: Json
-          question: string
-          requested_by: string | null
-          requested_role: string
-          status: string
-          superseded_by: string | null
-        }
-        Insert: {
-          answer?: Json | null
-          answered_at?: string | null
-          answered_by?: string | null
-          cancelled_at?: string | null
-          case_id: string
-          created_at?: string
-          id?: string
-          kind: string
-          options?: Json
-          question: string
-          requested_by?: string | null
-          requested_role: string
-          status?: string
-          superseded_by?: string | null
-        }
-        Update: {
-          answer?: Json | null
-          answered_at?: string | null
-          answered_by?: string | null
-          cancelled_at?: string | null
-          case_id?: string
-          created_at?: string
-          id?: string
-          kind?: string
-          options?: Json
-          question?: string
-          requested_by?: string | null
-          requested_role?: string
-          status?: string
-          superseded_by?: string | null
-        }
-        Relationships: []
-      }
-      marketplace_intake_missions: {
-        Row: {
-          brand: string
-          created_at: string
-          mission_id: string
-          vertical_id: string
-        }
-        Insert: {
-          brand?: string
-          created_at?: string
-          mission_id: string
-          vertical_id?: string
-        }
-        Update: {
-          brand?: string
-          created_at?: string
-          mission_id?: string
-          vertical_id?: string
-        }
-        Relationships: []
-      }
-      marketplace_quotes: {
-        Row: {
-          accepted_at: string | null
-          amount_cents: number
-          binder_id: string
-          binder_payout_cents: number | null
-          case_id: string
-          caveats: string | null
-          created_at: string
-          currency: string
-          customer_price_cents: number | null
-          decline_reason_code: string | null
-          decline_reason_detail: string | null
-          declined_at: string | null
-          description: string | null
-          expires_at: string | null
-          id: string
-          lead_time_weeks: number | null
-          materials: string | null
-          options: string | null
-          offered_at: string | null
-          selected_at: string | null
-          state: string
-          technique: string | null
-          updated_at: string
-          valid_until: string | null
-        }
-        Insert: {
-          accepted_at?: string | null
-          amount_cents: number
-          binder_id: string
-          binder_payout_cents?: number | null
-          case_id: string
-          caveats?: string | null
-          created_at?: string
-          currency?: string
-          customer_price_cents?: number | null
-          decline_reason_code?: string | null
-          decline_reason_detail?: string | null
-          declined_at?: string | null
-          description?: string | null
-          id?: string
-          expires_at?: string | null
-          lead_time_weeks?: number | null
-          materials?: string | null
-          options?: string | null
-          offered_at?: string | null
-          selected_at?: string | null
-          state?: string
-          technique?: string | null
-          updated_at?: string
-          valid_until?: string | null
-        }
-        Update: {
-          accepted_at?: string | null
-          amount_cents?: number
-          binder_id?: string
-          binder_payout_cents?: number | null
-          case_id?: string
-          caveats?: string | null
-          created_at?: string
-          currency?: string
-          customer_price_cents?: number | null
-          decline_reason_code?: string | null
-          decline_reason_detail?: string | null
-          declined_at?: string | null
-          description?: string | null
-          expires_at?: string | null
-          id?: string
-          lead_time_weeks?: number | null
-          materials?: string | null
-          options?: string | null
-          offered_at?: string | null
-          selected_at?: string | null
-          state?: string
-          technique?: string | null
-          updated_at?: string
-          valid_until?: string | null
-        }
-        Relationships: []
-      }
       user_roles: {
         Row: {
           created_at: string
@@ -1734,20 +2201,55 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      marketplace_ingest_missing_cases: {
-        Args: Record<PropertyKey, never>
-        Returns: number
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
       }
+      marketplace_ingest_missing_cases: { Args: never; Returns: number }
       marketplace_respond_to_offer: {
         Args: {
           p_accept: boolean
           p_actor_user_id: string
           p_binder_id: string
           p_case_id: string
-          p_reason_code: string | null
-          p_reason_detail: string | null
+          p_reason_code: string
+          p_reason_detail: string
         }
-        Returns: Database["public"]["Tables"]["marketplace_quotes"]["Row"]
+        Returns: {
+          accepted_at: string | null
+          amount_cents: number
+          binder_id: string
+          binder_payout_cents: number | null
+          case_id: string
+          caveats: string | null
+          created_at: string
+          currency: string
+          customer_price_cents: number | null
+          decline_reason_code: string | null
+          decline_reason_detail: string | null
+          declined_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          lead_time_weeks: number | null
+          materials: string | null
+          offered_at: string | null
+          options: string | null
+          selected_at: string | null
+          state: string
+          technique: string | null
+          updated_at: string
+          valid_until: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marketplace_quotes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       marketplace_select_binder_offer: {
         Args: {
@@ -1755,7 +2257,38 @@ export type Database = {
           p_binder_id: string
           p_case_id: string
         }
-        Returns: Database["public"]["Tables"]["marketplace_quotes"]["Row"]
+        Returns: {
+          accepted_at: string | null
+          amount_cents: number
+          binder_id: string
+          binder_payout_cents: number | null
+          case_id: string
+          caveats: string | null
+          created_at: string
+          currency: string
+          customer_price_cents: number | null
+          decline_reason_code: string | null
+          decline_reason_detail: string | null
+          declined_at: string | null
+          description: string | null
+          expires_at: string | null
+          id: string
+          lead_time_weeks: number | null
+          materials: string | null
+          offered_at: string | null
+          options: string | null
+          selected_at: string | null
+          state: string
+          technique: string | null
+          updated_at: string
+          valid_until: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marketplace_quotes"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       marketplace_validate_pricing: {
         Args: {
@@ -1767,14 +2300,58 @@ export type Database = {
           p_minimum_margin_cents: number
           p_price_includes: string[]
         }
-        Returns: Database["public"]["Tables"]["marketplace_cases"]["Row"]
-      }
-      has_role: {
-        Args: {
-          _role: Database["public"]["Enums"]["app_role"]
-          _user_id: string
+        Returns: {
+          acquisition_origin: string
+          admin_notes: string | null
+          base_service_price_cents: number | null
+          binder_payout_cents: number | null
+          brand: string
+          brand_multiplier_bps: number | null
+          claim_method: string | null
+          claimed_at: string | null
+          created_at: string
+          customer_price_cents: number | null
+          customer_user_id: string | null
+          declared_value_band: string | null
+          deposit_cents: number | null
+          dossier_id: string
+          heritage_flag: boolean
+          id: string
+          manual_review_required: boolean
+          mission_id: string | null
+          price_includes: string[]
+          pricing_components: Json
+          pricing_confidence: string | null
+          pricing_currency: string
+          pricing_generated_at: string | null
+          pricing_high_estimate_cents: number | null
+          pricing_low_estimate_cents: number | null
+          pricing_mode: string | null
+          pricing_price_bound_by: string | null
+          pricing_pricebook_reference_cents: number | null
+          pricing_reason_codes: string[]
+          pricing_reference_count: number
+          pricing_rule_version: string | null
+          pricing_status: string
+          pricing_validated_at: string | null
+          pricing_validated_by: string | null
+          reference: string
+          referred_binder_id: string | null
+          service_price_cents: number | null
+          status: string
+          suggested_binder_payout_cents: number | null
+          suggested_customer_price_cents: number | null
+          tax_status: string
+          triage_flags: string[]
+          triaged_at: string | null
+          updated_at: string
         }
-        Returns: boolean
+        SetofOptions: {
+          from: "*"
+          to: "marketplace_cases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       provision_owner_workspace: {
         Args: { _email: string; _user_id: string; _workspace_name: string }
@@ -1814,12 +2391,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1843,11 +2420,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1868,11 +2445,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1893,11 +2470,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1910,11 +2487,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -1924,6 +2501,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       app_role: ["admin", "user"],

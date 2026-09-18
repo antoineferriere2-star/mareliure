@@ -32,7 +32,7 @@ import type {
   PricingValidation,
   ReferenceLookup,
 } from "./pricing.types";
-import { customerPriceForMargin, marginOf } from "./pricebook";
+import { lookupPricebookReference, marginOf, resolveServicePriceFloors } from "./pricebook";
 import type { RateAggregate } from "./rateCard";
 import { resolveWork } from "./workResolver";
 import type { CaseProfile } from "@/marketplace/cases/caseProfile";
@@ -123,6 +123,10 @@ function abstain(
     highEstimateCents: null,
     marginCents: null,
     marginBps: null,
+    pricebookReferenceCents: null,
+    marginFloorCents: null,
+    contributionFloorCents: null,
+    priceBoundBy: null,
     confidence: "manual_review",
     referenceCount: 0,
     components,
@@ -193,29 +197,55 @@ export function suggestManagedPrice(
       components,
     );
 
-  const customerPrice = customerPriceForMargin(
-    payout,
-    policy.targetMarginBps,
-    policy.roundingIncrementCents,
+  // La référence Pricebook du dossier, quand une entrée publiée couvre
+  // chacun de ses travaux (voir lookupPricebookReference) — `null` sinon,
+  // jamais une somme partielle qui aurait l'air complète.
+  const pricebookMatch = lookupPricebookReference(
+    references.pricebookEntries ?? [],
+    work.workItemKeys,
+    work.sizeClass,
+    work.complexityClass,
   );
+
+  // Le prix ne descend plus jamais sous le plus haut de trois candidats
+  // indépendants — la référence Pricebook quand elle existe, un plancher de
+  // marge cible et un plancher de contribution minimale absolue (audit du
+  // 15 septembre 2026, §5-6) — là où seul le plancher de marge s'appliquait
+  // jusqu'ici.
+  const floors = resolveServicePriceFloors({
+    binderPayoutCents: payout,
+    targetMarginBps: policy.targetMarginBps,
+    minimumContributionCents: policy.minimumContributionCents,
+    roundingIncrementCents: policy.roundingIncrementCents,
+    referenceCents: pricebookMatch?.referenceCents ?? null,
+  });
+  const customerPrice = floors.priceCents;
   const validation = validateManagedPrice(customerPrice, payout, policy);
 
   return {
     status: "suggested",
     suggestedBinderPayoutCents: payout,
     suggestedCustomerPriceCents: customerPrice,
-    lowEstimateCents: customerPriceForMargin(
-      lowEstimate,
-      policy.targetMarginBps,
-      policy.roundingIncrementCents,
-    ),
-    highEstimateCents: customerPriceForMargin(
-      highEstimate,
-      policy.targetMarginBps,
-      policy.roundingIncrementCents,
-    ),
+    lowEstimateCents: resolveServicePriceFloors({
+      binderPayoutCents: lowEstimate,
+      targetMarginBps: policy.targetMarginBps,
+      minimumContributionCents: policy.minimumContributionCents,
+      roundingIncrementCents: policy.roundingIncrementCents,
+      referenceCents: null,
+    }).priceCents,
+    highEstimateCents: resolveServicePriceFloors({
+      binderPayoutCents: highEstimate,
+      targetMarginBps: policy.targetMarginBps,
+      minimumContributionCents: policy.minimumContributionCents,
+      roundingIncrementCents: policy.roundingIncrementCents,
+      referenceCents: null,
+    }).priceCents,
     marginCents: validation.marginCents,
     marginBps: validation.marginBps,
+    pricebookReferenceCents: floors.referenceCents,
+    marginFloorCents: floors.marginFloorCents,
+    contributionFloorCents: floors.contributionFloorCents,
+    priceBoundBy: floors.boundBy,
     confidence: assessment.confidence,
     referenceCount: assessment.referenceCount,
     components,

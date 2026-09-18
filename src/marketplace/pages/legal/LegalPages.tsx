@@ -28,9 +28,13 @@ import {
 } from "@/marketplace/pages/fineBindery/FineBinderyChrome";
 import {
   formatLegalPagesUpdatedAt,
+  LEGAL_REVIEW_NOTE_EN,
+  LEGAL_REVIEW_NOTE_FR,
   MARELIURE_CONTACT_EMAIL,
   MARELIURE_PROVIDERS,
   MARELIURE_PUBLISHER,
+  MEDIATOR_PENDING_NOTE_EN,
+  MEDIATOR_PENDING_NOTE_FR,
   SUMMARY_LINK_VALIDITY_DAYS,
 } from "@/marketplace/legal/legalEntity";
 
@@ -47,11 +51,12 @@ const Mail = () => (
   </a>
 );
 
-/** Chaque page renvoie aux deux autres, jamais à elle-même. */
+/** Chaque page renvoie aux autres, jamais à elle-même. */
 const LEGAL_PAGES_FR = [
   { href: "/mentions-legales", label: "mentions légales" },
   { href: "/confidentialite", label: "confidentialité" },
   { href: "/conditions", label: "conditions d'utilisation" },
+  { href: "/conditions-generales-de-vente", label: "conditions générales de vente" },
 ] as const;
 
 /**
@@ -64,6 +69,7 @@ const LEGAL_PAGES_EN = [
   { href: "/legal-notice", label: "legal notice" },
   { href: "/privacy-policy", label: "privacy policy" },
   { href: "/terms-of-use", label: "terms of use" },
+  { href: "/terms-of-sale", label: "terms of sale" },
 ] as const;
 
 type LegalPath = (typeof LEGAL_PAGES_FR)[number]["href"] | (typeof LEGAL_PAGES_EN)[number]["href"];
@@ -259,7 +265,13 @@ const TERMS_SECTIONS: LegalSection[] = [
     heading: "Aucun engagement à ce stade",
     body: [
       "L'envoi d'un projet ne constitue ni une commande, ni une acceptation. Un prix ne devient ferme qu'une fois confirmé par Ma Reliure pour votre projet.",
-      "La commande, le paiement et l'acheminement de votre livre feront l'objet de conditions générales de vente, publiées avant l'ouverture de ces services.",
+      <>
+        La commande, le paiement et l'acheminement de votre livre sont régis par les{" "}
+        <a href="/conditions-generales-de-vente" className="mr-link">
+          conditions générales de vente
+        </a>
+        .
+      </>,
     ],
   },
   {
@@ -319,6 +331,115 @@ export function ConditionsPage() {
       seeAlso="Voir aussi :"
       intro="Ce que vous pouvez attendre du site, et ce qu'il n'engage pas encore."
       sections={TERMS_SECTIONS}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Conditions générales de vente (chantier GTM du 18 septembre 2026, §9)
+//
+// Publiées maintenant plutôt que "à venir" — voir LandingChrome.tsx. Deux
+// registres de contenu, marqués distinctement :
+// - Des faits : qui est partie au contrat, qui vend, qui exécute — tirés du
+//   modèle réel (OPPE vend, l'atelier exécute séparément, le client paie
+//   OPPE), jamais inventés.
+// - Des positions juridiques (rétractation, garanties, responsabilité,
+//   médiation) : formulations usuelles du secteur, explicitement marquées
+//   LEGAL_REVIEW_NOTE_FR tant qu'un juriste ne les a pas validées pour OPPE.
+// ---------------------------------------------------------------------------
+
+const SALES_TERMS_SECTIONS_FR: LegalSection[] = [
+  {
+    heading: "Objet et champ d'application",
+    body: [
+      `Les présentes conditions générales de vente encadrent la commande d'une prestation de reliure, réparation, restauration, embellissement, transformation ou protection de livre auprès de Ma Reliure, une fois un prix confirmé pour votre projet. Elles complètent, sans les remplacer, les conditions d'utilisation du site et sont soumises au droit français.`,
+    ],
+  },
+  {
+    heading: "Les parties au contrat",
+    body: [
+      `Votre contrat de vente se forme avec ${MARELIURE_PUBLISHER.name} ("Ma Reliure"), qui vend la prestation et reste votre interlocuteur pour la commande, le paiement, le suivi et le service après-vente.`,
+      "L'atelier artisanal qui réalise le travail sur votre livre est un partenaire d'exécution indépendant, sélectionné par Ma Reliure pour son savoir-faire. Il n'est pas partie à votre contrat de vente : vous ne le payez pas directement, et c'est Ma Reliure qui reste responsable envers vous de la bonne exécution de la prestation vendue.",
+    ],
+  },
+  {
+    heading: "Prix",
+    body: [
+      "Le prix qui vous est proposé pour votre projet devient définitif au moment où vous le confirmez ; il correspond au prix affiché dans votre espace client au moment de la commande, toutes taxes comprises.",
+      "Le prix ne devient exigible qu'une fois votre commande passée selon les modalités décrites ci-dessous ; le paiement s'effectue par carte bancaire via notre prestataire de paiement, Stripe.",
+    ],
+  },
+  {
+    heading: "Commande et formation du contrat",
+    body: [
+      "Le contrat de vente est formé au moment où vous validez le paiement de votre commande. Vous recevez une confirmation de commande par e-mail.",
+    ],
+  },
+  {
+    heading: "Droit de rétractation",
+    body: [
+      "En tant que consommateur, vous disposez en principe d'un délai de 14 jours pour vous rétracter d'un achat conclu à distance, sans avoir à vous justifier.",
+      LEGAL_REVIEW_NOTE_FR +
+        " En particulier : les conditions d'exercice de ce droit, ses éventuelles exceptions pour une prestation personnalisée sur votre propre livre (article L221-28 du Code de la consommation), et le formulaire type de rétractation restent à rédiger avec un juriste avant l'ouverture de toute vente réelle.",
+    ],
+  },
+  {
+    heading: "Exécution de la prestation",
+    body: [
+      "Ma Reliure organise la prise en charge de votre livre et sa restitution une fois la prestation réalisée, selon les modalités indiquées dans votre espace client. Un retard d'exécution vous est signalé dès qu'il est connu.",
+    ],
+  },
+  {
+    heading: "Garanties",
+    body: [
+      LEGAL_REVIEW_NOTE_FR +
+        " Le rappel des garanties légales de conformité et des vices cachés, obligatoire sur tout contrat de vente à un consommateur (articles L217-3 et suivants, articles 1641 et suivants du Code civil), reste à rédiger avec un juriste avant l'ouverture de toute vente réelle.",
+    ],
+  },
+  {
+    heading: "Responsabilité",
+    body: [
+      LEGAL_REVIEW_NOTE_FR +
+        " L'étendue et les limites de la responsabilité de Ma Reliure, notamment pour un livre ancien ou de valeur, restent à définir avec un juriste avant l'ouverture de toute vente réelle.",
+    ],
+  },
+  {
+    heading: "Médiation de la consommation",
+    body: [MEDIATOR_PENDING_NOTE_FR],
+  },
+  {
+    heading: "Données personnelles",
+    body: [
+      <>
+        Le traitement de vos données est décrit dans la{" "}
+        <a href="/confidentialite" className="mr-link">
+          politique de confidentialité
+        </a>
+        .
+      </>,
+    ],
+  },
+  {
+    heading: "Droit applicable et litiges",
+    body: [
+      "Ces conditions sont soumises au droit français, sous réserve des dispositions plus protectrices dont vous bénéficiez en tant que consommateur dans votre pays de résidence.",
+      <>
+        Pour toute question : <Mail />.
+      </>,
+    ],
+  },
+];
+
+export function ConditionsVentePage() {
+  return (
+    <LegalLayout
+      path="/conditions-generales-de-vente"
+      title="Conditions générales de vente"
+      eyebrow="Informations légales"
+      updatedLabel={`Dernière mise à jour : ${formatLegalPagesUpdatedAt("fr-FR")}`}
+      seeAlso="Voir aussi :"
+      intro="Ce qui régit votre commande, à partir du moment où un prix est confirmé pour votre projet."
+      sections={SALES_TERMS_SECTIONS_FR}
     />
   );
 }
@@ -505,7 +626,13 @@ const TERMS_SECTIONS_EN: LegalSection[] = [
     heading: "No commitment at this stage",
     body: [
       "Sending a project constitutes neither an order nor an acceptance. A price only becomes firm once confirmed by Fine Bindery for your project.",
-      "Ordering, payment and the shipment of your book will be governed by general terms of sale, published before those services open.",
+      <>
+        Ordering, payment and the shipment of your book are governed by the{" "}
+        <a href="/terms-of-sale" className="mr-link">
+          Terms of Sale
+        </a>
+        .
+      </>,
     ],
   },
   {
@@ -566,6 +693,114 @@ export function TermsPage() {
       seeAlso="See also:"
       intro="What you can expect from the site, and what it does not yet commit to."
       sections={TERMS_SECTIONS_EN}
+    />
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Terms of Sale (GTM chantier, 18 September 2026, §9)
+//
+// Fine Bindery is "Worldwide service" (international: true in brandConfig.ts)
+// — a customer's own country's consumer-protection law may add rights this
+// page does not list, and the EU 14-day withdrawal right below only actually
+// applies to a customer buying from within the EU. That variation is exactly
+// why every position below (not the facts about who sells and who executes)
+// carries LEGAL_REVIEW_NOTE_EN rather than a single confident paragraph.
+// ---------------------------------------------------------------------------
+
+const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
+  {
+    heading: "Purpose and scope",
+    body: [
+      `These Terms of Sale govern ordering a bookbinding, repair, restoration, embellishment, transformation or protection service from Fine Bindery, once a price has been confirmed for your project. They complement, without replacing, the Terms of Use, and are governed by French law.`,
+    ],
+  },
+  {
+    heading: "The parties to the contract",
+    body: [
+      `Your sales contract is formed with ${MARELIURE_PUBLISHER.name} ("Fine Bindery"), which sells the service and remains your point of contact for ordering, payment, follow-up and after-sales support.`,
+      "The craft workshop that carries out the work on your book is an independent execution partner, selected by Fine Bindery for its skills. It is not a party to your sales contract: you do not pay it directly, and Fine Bindery remains responsible to you for the proper execution of the service sold.",
+    ],
+  },
+  {
+    heading: "Price",
+    body: [
+      "The price offered for your project becomes final once you confirm it; it matches the price shown in your customer space at the time of ordering, all taxes included.",
+      "The price is only due once your order is placed as described below; payment is made by card through our payment provider, Stripe.",
+    ],
+  },
+  {
+    heading: "Ordering and formation of the contract",
+    body: [
+      "The sales contract is formed when you complete payment for your order. You receive an order confirmation by email.",
+    ],
+  },
+  {
+    heading: "Right of withdrawal",
+    body: [
+      "If you are buying as a consumer within the European Union, you generally have a 14-day right to withdraw from a distance sale without giving a reason.",
+      LEGAL_REVIEW_NOTE_EN +
+        " In particular: the exact conditions for exercising this right, any exception for a service personalised to your own book, the standard withdrawal form, and what applies to a customer buying from outside the EU all remain to be drafted with a lawyer before any real sale opens.",
+    ],
+  },
+  {
+    heading: "Performance of the service",
+    body: [
+      "Fine Bindery arranges for your book to be collected and returned once the service is complete, as described in your customer space. Any delay is communicated to you as soon as it is known.",
+    ],
+  },
+  {
+    heading: "Warranties",
+    body: [
+      LEGAL_REVIEW_NOTE_EN +
+        " The statutory conformity and hidden-defect warranties that apply under French law, and how they interact with warranties a customer may separately be entitled to under their own country's law, remain to be drafted with a lawyer before any real sale opens.",
+    ],
+  },
+  {
+    heading: "Liability",
+    body: [
+      LEGAL_REVIEW_NOTE_EN +
+        " The scope and limits of Fine Bindery's liability, in particular for an antique or valuable book, remain to be defined with a lawyer before any real sale opens.",
+    ],
+  },
+  {
+    heading: "Consumer mediation",
+    body: [MEDIATOR_PENDING_NOTE_EN],
+  },
+  {
+    heading: "Personal data",
+    body: [
+      <>
+        The processing of your data is described in the{" "}
+        <a href="/privacy-policy" className="mr-link">
+          Privacy Policy
+        </a>
+        .
+      </>,
+    ],
+  },
+  {
+    heading: "Governing law and disputes",
+    body: [
+      "These terms are governed by French law, subject to any more protective provisions you benefit from as a consumer under your own country's law.",
+      <>
+        For any question: <Mail />.
+      </>,
+    ],
+  },
+];
+
+export function TermsOfSalePage() {
+  return (
+    <LegalLayout
+      brand="FINE_BINDERY"
+      path="/terms-of-sale"
+      title="Terms of Sale"
+      eyebrow="Legal information"
+      updatedLabel={`Last updated: ${formatLegalPagesUpdatedAt("en-US")}`}
+      seeAlso="See also:"
+      intro="What governs your order, from the moment a price is confirmed for your project."
+      sections={SALES_TERMS_SECTIONS_EN}
     />
   );
 }

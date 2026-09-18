@@ -103,6 +103,7 @@ const LEGAL_LINKS = [
   { href: "/legal-notice", label: "Legal notice" },
   { href: "/privacy-policy", label: "Privacy policy" },
   { href: "/terms-of-use", label: "Terms of use" },
+  { href: "/terms-of-sale", label: "Terms of sale" },
 ] as const;
 
 export function FineBinderyFooter() {
@@ -119,7 +120,7 @@ export function FineBinderyFooter() {
           </div>
 
           <nav aria-label="Fine Bindery">
-            <h2 className="mr-eyebrow text-mr-graphite">Fine Bindery</h2>
+            <p className="mr-eyebrow text-mr-graphite">Fine Bindery</p>
             <ul className="mr-small mt-5 space-y-3">
               {NAV.map((item) => (
                 <li key={item.href}>
@@ -135,7 +136,7 @@ export function FineBinderyFooter() {
           </nav>
 
           <div>
-            <h2 className="mr-eyebrow text-mr-graphite">Information</h2>
+            <p className="mr-eyebrow text-mr-graphite">Information</p>
             <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
               {LEGAL_LINKS.map((item) => (
                 <li key={item.href}>

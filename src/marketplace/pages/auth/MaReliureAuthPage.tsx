@@ -54,8 +54,16 @@ const submitClass =
 const textButtonClass = "mr-link mr-small mr-tap text-left disabled:no-underline disabled:opacity-60";
 
 type Audience = "customer" | "binder";
-/** Repliée sous le lien de connexion — la méthode recommandée reste sans mot de passe (§3). */
-type CustomerMethod = "link" | "password-signin" | "password-signup";
+/**
+ * Plus de "password-signup" ici : créer un mot de passe pour un e-mail
+ * arbitraire, avant toute preuve qu'on en est le titulaire, permettait
+ * d'attacher un mot de passe au compte de n'importe quel client déjà connu
+ * (constaté sur un compte réel — voir CODEX_HANDOFF). La création d'un mot
+ * de passe se fait maintenant uniquement juste après une vérification par
+ * code (CodeSignIn), sur la session que cette vérification vient d'ouvrir —
+ * jamais sur un e-mail saisi à froid.
+ */
+type CustomerMethod = "link" | "password-signin";
 
 const tabClass = (active: boolean) =>
   `mr-tap flex-1 rounded-[2px] border px-4 py-3 text-center text-[0.9375rem] font-semibold transition-colors duration-200 ${
@@ -73,12 +81,9 @@ interface AuthCopy {
   tabBinder: string;
   leadLink: string;
   leadPasswordSignin: string;
-  leadPasswordSignup: string;
   leadBinder: string;
   routingStatus: string;
   preferPassword: string;
-  noPasswordYet: string;
-  alreadyHavePassword: string;
   backToLink: string;
   binderSignInHeading: string;
   binderSignUpHeading: string;
@@ -96,9 +101,12 @@ interface AuthCopy {
   passwordLabel: string;
   signInButton: (loading: boolean) => string;
   wrongCredentials: string;
-  createPasswordButton: (loading: boolean) => string;
-  confirmEmailMessage: string;
-  signUpErrorFallback: string;
+  /** Proposé juste après une connexion par code réussie — jamais avant. */
+  offerPasswordHeading: string;
+  offerPasswordBody: string;
+  createPasswordAfterVerifyButton: (loading: boolean) => string;
+  skipPasswordButton: string;
+  passwordSetError: string;
 }
 
 const MA_RELIURE_COPY: AuthCopy = {
@@ -110,14 +118,10 @@ const MA_RELIURE_COPY: AuthCopy = {
   leadLink:
     "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien et un code de connexion : pas de compte à créer, pas de mot de passe à retenir.",
   leadPasswordSignin: "Connectez-vous avec le mot de passe de votre espace.",
-  leadPasswordSignup:
-    "Créez un mot de passe : vous n'aurez plus à passer par votre boîte mail à chaque connexion.",
   leadBinder:
     "Connectez-vous avec le mot de passe de votre atelier, ou candidatez pour rejoindre le réseau si vous n'avez pas encore de compte.",
   routingStatus: "Ouverture de votre espace…",
-  preferPassword: "Vous préférez un mot de passe ?",
-  noPasswordYet: "Pas encore de mot de passe ? En créer un",
-  alreadyHavePassword: "Déjà un mot de passe ? Se connecter",
+  preferPassword: "Vous avez déjà un mot de passe ?",
   backToLink: "Revenir au lien de connexion par e-mail",
   binderSignInHeading: "Se connecter",
   binderSignUpHeading: "S'inscrire",
@@ -138,10 +142,12 @@ const MA_RELIURE_COPY: AuthCopy = {
   passwordLabel: "Mot de passe",
   signInButton: (loading) => (loading ? "Connexion…" : "Se connecter"),
   wrongCredentials: "Adresse e-mail ou mot de passe incorrect.",
-  createPasswordButton: (loading) => (loading ? "Création…" : "Créer mon mot de passe"),
-  confirmEmailMessage:
-    "Confirmez votre adresse depuis l'e-mail que nous venons d'envoyer, puis revenez vous connecter avec ce mot de passe.",
-  signUpErrorFallback: "Vérifiez l'adresse indiquée et réessayez.",
+  offerPasswordHeading: "Créer un mot de passe pour la prochaine fois ?",
+  offerPasswordBody:
+    "Facultatif : vous n'aurez alors plus besoin de repasser par votre boîte mail à chaque connexion.",
+  createPasswordAfterVerifyButton: (loading) => (loading ? "Création…" : "Créer mon mot de passe"),
+  skipPasswordButton: "Continuer sans mot de passe",
+  passwordSetError: "Le mot de passe n'a pas pu être enregistré. Réessayez dans un instant.",
 };
 
 /** Pas d'onglet atelier (§43 : un atelier Fine Bindery se connecte sur mareliure.fr, jamais ici). */
@@ -154,12 +160,9 @@ const FINE_BINDERY_COPY: AuthCopy = {
   leadLink:
     "Enter the email address you used to present your book. We'll send you a sign-in link and code — no account to create, no password to remember.",
   leadPasswordSignin: "Sign in with your space's password.",
-  leadPasswordSignup: "Create a password so you don't have to check your inbox every time.",
   leadBinder: "",
   routingStatus: "Opening your space…",
-  preferPassword: "Prefer a password?",
-  noPasswordYet: "Don't have a password yet? Create one",
-  alreadyHavePassword: "Already have a password? Sign in",
+  preferPassword: "Already have a password?",
   backToLink: "Back to the email sign-in link",
   binderSignInHeading: "",
   binderSignUpHeading: "",
@@ -179,10 +182,11 @@ const FINE_BINDERY_COPY: AuthCopy = {
   passwordLabel: "Password",
   signInButton: (loading) => (loading ? "Signing in…" : "Sign in"),
   wrongCredentials: "Incorrect email or password.",
-  createPasswordButton: (loading) => (loading ? "Creating…" : "Create my password"),
-  confirmEmailMessage:
-    "Confirm your address from the email we just sent, then come back here to sign in with this password.",
-  signUpErrorFallback: "Check the address you entered and try again.",
+  offerPasswordHeading: "Create a password for next time?",
+  offerPasswordBody: "Optional — you won't need to check your inbox again to sign in.",
+  createPasswordAfterVerifyButton: (loading) => (loading ? "Creating…" : "Create my password"),
+  skipPasswordButton: "Continue without a password",
+  passwordSetError: "The password could not be saved. Please try again in a moment.",
 };
 
 const AUTH_COPY: Record<MarketplaceBrand, AuthCopy> = {
@@ -249,9 +253,7 @@ export function MaReliureAuthPage({
           {audience === "customer"
             ? customerMethod === "link"
               ? t.leadLink
-              : customerMethod === "password-signin"
-                ? t.leadPasswordSignin
-                : t.leadPasswordSignup
+              : t.leadPasswordSignin
             : t.leadBinder}
         </p>
 
@@ -283,23 +285,8 @@ export function MaReliureAuthPage({
               </>
             ) : (
               <>
-                {customerMethod === "password-signin" ? (
-                  <PasswordSignIn t={t} onSignedIn={onSignedIn} />
-                ) : (
-                  <PasswordSignUp t={t} onSignedIn={onSignedIn} />
-                )}
+                <PasswordSignIn t={t} onSignedIn={onSignedIn} />
                 <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 border-t border-mr-rule pt-6">
-                  <button
-                    type="button"
-                    className={textButtonClass}
-                    onClick={() =>
-                      setCustomerMethod(
-                        customerMethod === "password-signin" ? "password-signup" : "password-signin",
-                      )
-                    }
-                  >
-                    {customerMethod === "password-signin" ? t.noPasswordYet : t.alreadyHavePassword}
-                  </button>
                   <button
                     type="button"
                     className={textButtonClass}
@@ -458,6 +445,11 @@ function CodeSignIn({
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  // Le code vient de vérifier que cette personne tient bien la boîte mail —
+  // c'est le seul instant où proposer un mot de passe est sûr : la session
+  // qui vient de s'ouvrir est celle de cet e-mail précis, jamais un autre
+  // saisi à froid (voir la note sur CustomerMethod plus haut).
+  const [verified, setVerified] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -469,7 +461,11 @@ function CodeSignIn({
       setProblem(result.message);
       return;
     }
-    await onSignedIn();
+    setVerified(true);
+  }
+
+  if (verified) {
+    return <SetPasswordAfterVerification t={t} onSignedIn={onSignedIn} />;
   }
 
   return (
@@ -498,6 +494,78 @@ function CodeSignIn({
       <button type="submit" disabled={verifying || code.trim() === ""} className={submitClass}>
         {t.validateCodeButton(verifying)}
       </button>
+    </form>
+  );
+}
+
+/**
+ * `updateUser` agit uniquement sur la session déjà ouverte par le code
+ * qu'on vient de vérifier — contrairement à `signUp`, aucun e-mail n'est
+ * pris en entrée, donc aucun compte tiers ne peut jamais être ciblé.
+ * Facultatif : « Continuer sans mot de passe » garde le lien magique comme
+ * seule méthode, ce qui reste très bien.
+ */
+function SetPasswordAfterVerification({
+  t,
+  onSignedIn,
+}: {
+  t: AuthCopy;
+  onSignedIn: () => Promise<void>;
+}) {
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleSubmit(event: FormEvent) {
+    event.preventDefault();
+    setLoading(true);
+    setError(null);
+    const { error: updateError } = await supabase.auth.updateUser({ password });
+    setLoading(false);
+    if (updateError) {
+      setError(t.passwordSetError);
+      return;
+    }
+    await onSignedIn();
+  }
+
+  return (
+    <form onSubmit={handleSubmit}>
+      <h2 className="mr-heading text-mr-ink">{t.offerPasswordHeading}</h2>
+      <p className="mr-body mt-2">{t.offerPasswordBody}</p>
+      <div className="mt-5">
+        <label htmlFor="mr-auth-new-password" className={labelClass}>
+          {t.passwordLabel}
+        </label>
+        <input
+          id="mr-auth-new-password"
+          type="password"
+          required
+          minLength={8}
+          autoComplete="new-password"
+          value={password}
+          onChange={(event) => setPassword(event.target.value)}
+          className={inputClass}
+        />
+      </div>
+      {error && (
+        <p role="alert" className="mr-small mt-3 text-mr-bordeaux">
+          {error}
+        </p>
+      )}
+      <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3">
+        <button type="submit" disabled={loading} className={submitClass}>
+          {t.createPasswordAfterVerifyButton(loading)}
+        </button>
+        <button
+          type="button"
+          className={textButtonClass}
+          disabled={loading}
+          onClick={() => void onSignedIn()}
+        >
+          {t.skipPasswordButton}
+        </button>
+      </div>
     </form>
   );
 }
@@ -568,95 +636,3 @@ function PasswordSignIn({ t, onSignedIn }: { t: AuthCopy; onSignedIn: () => Prom
   );
 }
 
-/**
- * Créer un mot de passe sur le compte — pour un client qui a déjà reçu un
- * lien de connexion au moins une fois (le compte existe) et ne veut plus
- * repasser par sa boîte mail à chaque visite. N'importe entre-temps rien du
- * flux principal : le lien de connexion reste la méthode recommandée (§3),
- * celle-ci n'est jamais poussée par défaut.
- */
-function PasswordSignUp({ t, onSignedIn }: { t: AuthCopy; onSignedIn: () => Promise<void> }) {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
-
-  async function handleSubmit(event: FormEvent) {
-    event.preventDefault();
-    setLoading(true);
-    setError(null);
-    const { data, error: signUpError } = await supabase.auth.signUp({
-      email: email.trim(),
-      password,
-    });
-    setLoading(false);
-    if (signUpError) {
-      const detail =
-        signUpError.message && signUpError.message.trim() && signUpError.message !== "{}"
-          ? signUpError.message
-          : t.signUpErrorFallback;
-      setError(detail);
-      return;
-    }
-    if (!data.session) {
-      // Confirmation requise avant l'ouverture d'une session — l'e-mail
-      // envoyé porte le même lien que la connexion habituelle.
-      setAwaitingConfirmation(true);
-      return;
-    }
-    await onSignedIn();
-  }
-
-  if (awaitingConfirmation) {
-    return (
-      <p role="status" className="mr-body">
-        {t.confirmEmailMessage}
-      </p>
-    );
-  }
-
-  return (
-    <form onSubmit={handleSubmit}>
-      <div className="space-y-5">
-        <div>
-          <label htmlFor="mr-auth-signup-email" className={labelClass}>
-            {t.passwordEmailLabel}
-          </label>
-          <input
-            id="mr-auth-signup-email"
-            type="email"
-            required
-            autoComplete="email"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            className={inputClass}
-          />
-        </div>
-        <div>
-          <label htmlFor="mr-auth-signup-password" className={labelClass}>
-            {t.passwordLabel}
-          </label>
-          <input
-            id="mr-auth-signup-password"
-            type="password"
-            required
-            minLength={8}
-            autoComplete="new-password"
-            value={password}
-            onChange={(event) => setPassword(event.target.value)}
-            className={inputClass}
-          />
-        </div>
-      </div>
-      {error && (
-        <p role="alert" className="mr-small mt-3 text-mr-bordeaux">
-          {error}
-        </p>
-      )}
-      <button type="submit" disabled={loading} className={submitClass}>
-        {t.createPasswordButton(loading)}
-      </button>
-    </form>
-  );
-}

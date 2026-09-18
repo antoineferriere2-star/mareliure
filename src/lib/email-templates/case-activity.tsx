@@ -1,8 +1,14 @@
 // Notification transactionnelle générique pour l'activité d'un dossier —
-// nouveau message, décision demandée (§19). Ma Reliure uniquement : la
-// messagerie et les décisions sont des fonctions marketplace, pas Métré.
-// Le contenu du message n'est délibérément pas repris ici en entier — un CTA
-// vers l'espace, pas la conversation recopiée dans un e-mail.
+// nouveau message, décision demandée (§19). Marketplace uniquement (Ma
+// Reliure / Fine Bindery) : la messagerie et les décisions sont des
+// fonctions marketplace, pas Métré. Le contenu du message n'est
+// délibérément pas repris ici en entier — un CTA vers l'espace, pas la
+// conversation recopiée dans un e-mail.
+//
+// Brand-aware depuis le chantier GTM du 18 septembre 2026 : ce gabarit
+// servait jusque-là toujours "Ma Reliure" en français, y compris pour un
+// client Fine Bindery — voir send-email.ts pour la même correction côté
+// expéditeur.
 import * as React from "react";
 import {
   Body,
@@ -17,46 +23,73 @@ import {
 } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
 
+type Locale = "fr-FR" | "en-US";
+
 interface CaseActivityEmailProps {
+  brandName?: string;
+  locale?: Locale;
   heading?: string;
   intro?: string;
   ctaLabel?: string;
   ctaUrl?: string;
 }
 
+const FALLBACK_CTA_LABEL: Record<Locale, string> = {
+  "fr-FR": "Voir mon livre",
+  "en-US": "View my book",
+};
+
+function copyForLocale(locale: unknown): Locale {
+  return locale === "en-US" ? "en-US" : "fr-FR";
+}
+
 const CaseActivityEmail = ({
-  heading = "Votre projet a évolué",
-  intro = "Il y a du nouveau sur votre projet Ma Reliure.",
-  ctaLabel = "Voir mon livre",
+  brandName = "Ma Reliure",
+  locale = "fr-FR",
+  heading,
+  intro,
+  ctaLabel,
   ctaUrl = "https://mareliure.fr/mes-livres",
-}: CaseActivityEmailProps) => (
-  <Html lang="fr">
-    <Head />
-    <Preview>{intro}</Preview>
-    <Body style={main}>
-      <Container style={container}>
-        <Text style={eyebrow}>Ma Reliure</Text>
-        <Heading style={heading_}>{heading}</Heading>
-        <Text style={paragraph}>{intro}</Text>
-        <Section style={{ marginTop: "8px" }}>
-          <Button href={ctaUrl} style={button}>
-            {ctaLabel}
-          </Button>
-        </Section>
-      </Container>
-    </Body>
-  </Html>
-);
+}: CaseActivityEmailProps) => {
+  const resolvedLocale = copyForLocale(locale);
+  const resolvedHeading =
+    heading ?? (resolvedLocale === "en-US" ? "Your project has moved forward" : "Votre projet a évolué");
+  const resolvedIntro =
+    intro ??
+    (resolvedLocale === "en-US"
+      ? `There's news on your ${brandName} project.`
+      : `Il y a du nouveau sur votre projet ${brandName}.`);
+  return (
+    <Html lang={resolvedLocale}>
+      <Head />
+      <Preview>{resolvedIntro}</Preview>
+      <Body style={main}>
+        <Container style={container}>
+          <Text style={eyebrow}>{brandName}</Text>
+          <Heading style={heading_}>{resolvedHeading}</Heading>
+          <Text style={paragraph}>{resolvedIntro}</Text>
+          <Section style={{ marginTop: "8px" }}>
+            <Button href={ctaUrl} style={button}>
+              {ctaLabel ?? FALLBACK_CTA_LABEL[resolvedLocale]}
+            </Button>
+          </Section>
+        </Container>
+      </Body>
+    </Html>
+  );
+};
 
 export const template: TemplateEntry = {
   component: CaseActivityEmail,
   subject: (data) => (typeof data.heading === "string" ? data.heading : "Votre projet a évolué"),
   displayName: "Case Activity",
   previewData: {
-    heading: "Nouveau message sur votre projet",
-    intro: "Votre atelier vous a écrit au sujet de votre livre.",
-    ctaLabel: "Voir la conversation",
-    ctaUrl: "https://mareliure.fr/mes-livres/preview",
+    brandName: "Fine Bindery",
+    locale: "en-US",
+    heading: "New message about your project",
+    intro: "Your workshop wrote to you about your book.",
+    ctaLabel: "View the conversation",
+    ctaUrl: "https://finebindery.com/mes-livres/preview",
   },
 };
 

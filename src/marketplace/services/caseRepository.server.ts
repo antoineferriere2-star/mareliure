@@ -24,6 +24,7 @@ import { triageCase } from "@/marketplace/cases/triage";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
 import {
   projectCase,
+  type CaseLocale,
   type CaseView,
   type CaseViewPhoto,
 } from "@/marketplace/cases/dossierProjection";
@@ -63,11 +64,25 @@ export interface CaseRow {
   pricing_high_estimate_cents: number | null;
   pricing_reference_count: number | null;
   pricing_rule_version: string | null;
+  // Migration 20260916110000 : pricebookReferenceCents relu dossier par
+  // dossier (audit §3.1) — null tant qu'une entrée du Pricebook publiée ne
+  // couvre pas chaque travail du dossier.
+  pricing_pricebook_reference_cents: number | null;
+  pricing_price_bound_by: string | null;
   price_includes: string[];
   pricing_generated_at: string | null;
   pricing_validated_at: string | null;
   pricing_validated_by: string | null;
   created_at: string;
+  // Colonnes des migrations 20260913090000 (modes de pricing) et
+  // 20260916090000 (marque) — absentes de la sélection d'origine, ajoutées
+  // ici plutôt que par une requête séparée à chaque appelant.
+  pricing_mode: string | null;
+  deposit_cents: number | null;
+  base_service_price_cents: number | null;
+  brand_multiplier_bps: number | null;
+  service_price_cents: number | null;
+  tax_status: string;
 }
 
 export interface OwnedDossier {
@@ -116,7 +131,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
   const { data: row, error } = await sb
     .from("marketplace_cases")
     .select(
-      "id, dossier_id, reference, status, brand, acquisition_origin, referred_binder_id, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at",
+      "id, dossier_id, reference, status, brand, acquisition_origin, referred_binder_id, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, pricing_pricebook_reference_cents, pricing_price_bound_by, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at, pricing_mode, deposit_cents, base_service_price_cents, brand_multiplier_bps, service_price_cents, tax_status",
     )
     .eq("id", caseId)
     .maybeSingle();
@@ -294,6 +309,7 @@ export async function buildCaseView(
   sb: Supa,
   context: CaseContext,
   disclosure: CaseDisclosure,
+  locale?: CaseLocale,
 ): Promise<CaseView> {
   return projectCase({
     reference: context.row.reference,
@@ -302,6 +318,7 @@ export async function buildCaseView(
     disclosure,
     photos: await signCasePhotos(sb, context.answers),
     manualReviewRequired: context.row.manual_review_required,
+    locale,
   });
 }
 

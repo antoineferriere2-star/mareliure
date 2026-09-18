@@ -26,6 +26,13 @@ function stringsFromField(field: PlaybookField): string[] {
         strings.push(String(option.label));
         if ("reassurance" in option && typeof option.reassurance === "string")
           strings.push(option.reassurance);
+        // optionLabel() (engine/brief.ts) prefers this over `label` whenever
+        // present — it's what the live Project Canvas and the post-submission
+        // summary/email actually render, not the question-step label above.
+        // Missed here once: a Fine Bindery visitor saw "Réparation" in the
+        // canvas sidebar although the question itself showed "Repair it".
+        if ("briefLabel" in option && typeof option.briefLabel === "string")
+          strings.push(option.briefLabel);
       }
     }
   }

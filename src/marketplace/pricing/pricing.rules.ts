@@ -21,10 +21,18 @@ import type { PricingPolicy } from "./pricing.types";
 export const PRICING_POLICY: PricingPolicy = {
   // La version change dès que la politique change : un dossier chiffré hier
   // doit pouvoir dire sous quelle règle il l'a été.
-  version: "bookbinding-2026-09-13-v3",
+  version: "bookbinding-2026-09-16-v5",
   targetMarginBps: 1_800,
   minimumMarginBps: 1_500,
   minimumMarginCents: 2_000,
+  // Décision commerciale du 16 septembre 2026 : 80 € HT, la même valeur
+  // absolue pour les deux marques (Fine Bindery n'a pas son propre plancher
+  // — son ×1,30 s'applique au-dessus d'un prix Ma Reliure déjà plafonné par
+  // celui-ci, voir brandPricing.ts, et donne presque toujours un prix
+  // supérieur au plancher lui-même). Configurable ici, jamais en dur dans
+  // resolveServicePriceFloors ; jamais confondu avec le plancher de marge
+  // (minimumMarginCents) — voir pricing.types.ts.
+  minimumContributionCents: 8_000,
   roundingIncrementCents: 1_000,
   // §25 : 20 % ou 50 €, le plus élevé des deux — jamais un montant fixe.
   depositPercentageBps: 2_000,

@@ -71,7 +71,12 @@ describe("les affirmations correspondent au code", () => {
 
 describe("le tunnel et le site mènent aux pages de Ma Reliure", () => {
   it("existent comme routes", () => {
-    for (const route of ["confidentialite", "conditions", "mentions-legales"])
+    for (const route of [
+      "confidentialite",
+      "conditions",
+      "mentions-legales",
+      "conditions-generales-de-vente",
+    ])
       expect(existsSync(resolve(process.cwd(), `src/routes/${route}.tsx`)), route).toBe(true);
   });
 
@@ -81,12 +86,32 @@ describe("le tunnel et le site mènent aux pages de Ma Reliure", () => {
    * src/routes/terms.tsx) avec un contenu sans rapport.
    */
   it("Fine Bindery a ses propres pages, sur des chemins qui ne collisionnent pas avec Métré", () => {
-    for (const route of ["privacy-policy", "terms-of-use", "legal-notice"])
+    for (const route of ["privacy-policy", "terms-of-use", "legal-notice", "terms-of-sale"])
       expect(existsSync(resolve(process.cwd(), `src/routes/${route}.tsx`)), route).toBe(true);
     for (const forbidden of ["privacy", "terms"]) {
       const metreOwned = read(`src/routes/${forbidden}.tsx`);
       expect(metreOwned, forbidden).toContain("Métré Build");
     }
+  });
+
+  /**
+   * §9 du chantier GTM du 18 septembre 2026 : l'incohérence "les CGV seront
+   * publiées avant l'ouverture du paiement" a disparu — les deux pages
+   * existent et sont liées depuis les conditions d'utilisation.
+   */
+  it("les conditions générales de vente sont publiées, pas seulement annoncées", () => {
+    const conditionsFr = read("src/marketplace/pages/legal/LegalPages.tsx");
+    expect(conditionsFr).toContain("/conditions-generales-de-vente");
+    expect(conditionsFr).toContain("/terms-of-sale");
+    expect(conditionsFr).not.toMatch(/feront l'objet de conditions générales de vente, publiées avant/);
+    expect(conditionsFr).not.toMatch(/will be governed by general terms of sale, published before/);
+  });
+
+  /** §10 : jamais un médiateur inventé — la page doit dire clairement qu'il manque. */
+  it("ne prétend pas avoir un médiateur de la consommation désigné", () => {
+    const pages = read("src/marketplace/pages/legal/LegalPages.tsx");
+    expect(pages).toContain("MEDIATOR_PENDING_NOTE_FR");
+    expect(pages).toContain("MEDIATOR_PENDING_NOTE_EN");
   });
 
   it("remplace, sur Ma Reliure seulement, les liens vers les pages de Métré", () => {
@@ -106,7 +131,17 @@ describe("le tunnel et le site mènent aux pages de Ma Reliure", () => {
 
   it("lie les pages légales depuis le pied de page au lieu de les annoncer", () => {
     const chrome = read("src/marketplace/pages/landing/LandingChrome.tsx");
-    for (const href of ["/mentions-legales", "/confidentialite", "/conditions"])
+    for (const href of [
+      "/mentions-legales",
+      "/confidentialite",
+      "/conditions",
+      "/conditions-generales-de-vente",
+    ])
       expect(chrome).toContain(`href: "${href}"`);
+  });
+
+  it("lie aussi les CGV depuis le pied de page Fine Bindery", () => {
+    const chrome = read("src/marketplace/pages/fineBindery/FineBinderyChrome.tsx");
+    expect(chrome).toContain(`href: "/terms-of-sale"`);
   });
 });

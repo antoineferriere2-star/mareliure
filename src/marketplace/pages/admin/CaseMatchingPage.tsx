@@ -6,7 +6,7 @@
  * box. The admin decides, which is the whole point of a concierge MVP — and of
  * the CLAUDE.md rule that the system proposes and the human disposes.
  */
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -18,6 +18,27 @@ import {
   sendCaseToBinders,
   validateMarketplacePricing,
 } from "@/marketplace/services/marketplace.data.functions";
+import {
+  acceptCommercialProposal,
+  applyAutomaticFranceTaxPolicy,
+  createCommercialProposal,
+  getPaymentPreflight,
+  listCaseCommercialProposals,
+  resetProposalTaxToManualReview,
+  validateCommercialProposalTax,
+} from "@/marketplace/services/commercialProposal.data.functions";
+import {
+  resolveAutomaticTaxPolicy,
+  suggestTaxPolicyForCountry,
+  TAX_POLICIES,
+} from "@/marketplace/commercial/taxPolicy";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
@@ -26,6 +47,8 @@ import { validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { workItemLabel } from "@/marketplace/pricing/catalog";
 import { CONFIDENCE_LABELS, type PricingConfidence } from "@/marketplace/pricing/confidence";
 import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
+import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
+import { MARKETPLACE_BRAND_CONFIGS, isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -242,6 +265,578 @@ function PricingPanel({
   );
 }
 
+/**
+ * La lecture économique du dossier (audit du 15 septembre 2026, §15) : ce
+ * que Ma Reliure/Fine Bindery achète à l'atelier, ce qu'elle vend au
+ * client, et ce qu'il en reste — jamais de comptabilité Stripe ici, cette
+ * phase ne fait que rendre lisible ce que le pricing a déjà décidé.
+ */
+/**
+ * Six blocs, dans l'ordre où le prix se construit — jamais mélangés : le
+ * jour où quelque chose a l'air faux, il faut pouvoir dire lequel des six
+ * l'explique (brief du 16 septembre 2026, §5). Interne/admin uniquement :
+ * aucun client ne voit cet écran.
+ */
+function line(label: string, value: string) {
+  return (
+    <div className="flex items-center justify-between gap-3 py-1">
+      <span className="text-muted-foreground">{label}</span>
+      <span className="tabular-nums">{value}</span>
+    </div>
+  );
+}
+
+function EconomicsPanel({
+  row,
+}: {
+  row: {
+    brand: string;
+    brand_multiplier_bps: number | null;
+    base_service_price_cents: number | null;
+    service_price_cents: number | null;
+    binder_payout_cents: number | null;
+    tax_status: string;
+    pricing_pricebook_reference_cents: number | null;
+    pricing_price_bound_by: string | null;
+  };
+}) {
+  const brand = isMarketplaceBrand(row.brand) ? row.brand : "MA_RELIURE";
+  const grossMarginCents =
+    row.service_price_cents !== null && row.binder_payout_cents !== null
+      ? row.service_price_cents - row.binder_payout_cents
+      : null;
+  const grossMarginRate =
+    grossMarginCents !== null && row.service_price_cents ? grossMarginCents / row.service_price_cents : null;
+  const brandReferenceCents =
+    row.pricing_pricebook_reference_cents !== null && row.brand_multiplier_bps !== null
+      ? Math.round((row.pricing_pricebook_reference_cents * row.brand_multiplier_bps) / 10_000)
+      : null;
+  const boundByLabel: Record<string, string> = {
+    reference: "la référence Pricebook",
+    margin_floor: "le plancher de marge",
+    contribution_floor: "le plancher de contribution",
+  };
+
+  const group = (title: string, children: ReactNode) => (
+    <div className="mt-4 first:mt-0">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground/70">{title}</p>
+      <div className="mt-1">{children}</div>
+    </div>
+  );
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-5">
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+        Économie
+      </h2>
+      <div className="mt-3 text-sm">
+        {group(
+          "Pricebook",
+          line(
+            "Référence (HT)",
+            row.pricing_pricebook_reference_cents !== null
+              ? formatEuros(row.pricing_pricebook_reference_cents)
+              : "Non couverte — aucune entrée publiée pour tous les travaux du dossier",
+          ),
+        )}
+
+        {group(
+          "Marque",
+          <>
+            {line("Marque", MARKETPLACE_BRAND_CONFIGS[brand].displayName)}
+            {line(
+              "Multiplicateur",
+              row.brand_multiplier_bps !== null ? `×${(row.brand_multiplier_bps / 10_000).toFixed(2)}` : "—",
+            )}
+            {brand === "FINE_BINDERY" && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Le ×1,30 est une politique de prix de marque (Brand Pricing Policy) — il ne
+                change ni ce que l'atelier reçoit, ni le transport.
+              </p>
+            )}
+            {brandReferenceCents !== null &&
+              line("Référence Pricebook × marque", formatEuros(brandReferenceCents))}
+          </>,
+        )}
+
+        {group(
+          "Atelier",
+          line(
+            "Rémunération (HT)",
+            row.binder_payout_cents !== null ? formatEuros(row.binder_payout_cents) : "—",
+          ),
+        )}
+
+        {group(
+          "Garde-fous",
+          <>
+            {line("Marge cible", `${(PRICING_POLICY.targetMarginBps / 100).toFixed(1)} %`)}
+            {line("Contribution minimale", formatEuros(PRICING_POLICY.minimumContributionCents))}
+            {row.pricing_price_bound_by &&
+              line(
+                "Prix retenu par",
+                boundByLabel[row.pricing_price_bound_by] ?? row.pricing_price_bound_by,
+              )}
+          </>,
+        )}
+
+        {group(
+          "Client",
+          line(
+            "Prix service suggéré (HT)",
+            row.service_price_cents !== null ? formatEuros(row.service_price_cents) : "—",
+          ),
+        )}
+
+        {group(
+          "Économie",
+          grossMarginCents !== null
+            ? line(
+                "Marge brute",
+                `${formatEuros(grossMarginCents)} · ${grossMarginRate !== null ? (grossMarginRate * 100).toFixed(1) : "—"} %`,
+              )
+            : line("Marge brute", "—"),
+        )}
+
+        {line("Statut fiscal", row.tax_status === "TAX_REVIEW_REQUIRED" ? "À valider" : row.tax_status)}
+      </div>
+    </section>
+  );
+}
+
+const PROPOSAL_STATUS_LABELS: Record<string, string> = {
+  draft: "Brouillon",
+  proposed: "Proposée",
+  accepted: "Acceptée",
+  superseded: "Remplacée",
+  cancelled: "Annulée",
+};
+
+const TAX_POLICY_LABELS: Record<string, string> = {
+  MANUAL_TAX_REVIEW: "À valider manuellement",
+  FR_B2C: "France — particulier",
+  EU_B2C: "UE (hors France) — particulier",
+  NON_EU_B2C: "Hors UE — particulier",
+  NON_EU_TEMPORARY_IMPORT_REEXPORT: "Hors UE — admission temporaire, réexport",
+};
+
+/**
+ * La seule écriture qui fait passer une proposition de `MANUAL_TAX_REVIEW`
+ * à une catégorie fiscale nommée (§6, §9-10 du brief du 17 septembre 2026) —
+ * une décision humaine à chaque fois, jamais une règle automatique : le pays
+ * ne fait que pré-remplir une suggestion (`suggestTaxPolicyForCountry`),
+ * l'admin choisit et valide explicitement.
+ */
+function TaxValidationForm({
+  proposal,
+  caseId,
+}: {
+  proposal: { id: string; version: number };
+  caseId: string;
+}) {
+  const validate = useServerFn(validateCommercialProposalTax);
+  const applyAutoFrance = useServerFn(applyAutomaticFranceTaxPolicy);
+  const queryClient = useQueryClient();
+  const queryKey = ["marketplace", "case", caseId, "commercial-proposals"] as const;
+  const [country, setCountry] = useState("");
+  const [policy, setPolicy] = useState<string>("MANUAL_TAX_REVIEW");
+  const [vatRate, setVatRate] = useState("");
+  // CUSTOMER par défaut (§10 du brief du 17 septembre 2026) : Fine Bindery
+  // recevra des antiquaires, libraires, hôtels, sociétés — jamais présumé
+  // particulier ni professionnel sans décision explicite de l'admin.
+  const [customerType, setCustomerType] = useState<"CUSTOMER" | "BUSINESS">("CUSTOMER");
+  const [businessName, setBusinessName] = useState("");
+  const [businessVatNumber, setBusinessVatNumber] = useState("");
+  const [billingCountry, setBillingCountry] = useState("");
+
+  const validating = useMutation({
+    mutationFn: () =>
+      validate({
+        data: {
+          proposalId: proposal.id,
+          taxPolicy: policy,
+          taxCountry: country,
+          customerVatRateBps:
+            vatRate.trim() === ""
+              ? null
+              : Math.round(Number.parseFloat(vatRate.replace(",", ".")) * 100),
+          customerType,
+          businessName: customerType === "BUSINESS" ? businessName.trim() : null,
+          businessVatNumber:
+            customerType === "BUSINESS" && businessVatNumber.trim() ? businessVatNumber.trim() : null,
+          billingCountry: billingCountry.trim() || null,
+        },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
+    },
+  });
+
+  // Décision opérationnelle temporaire de l'utilisateur (18 septembre
+  // 2026) : la TVA française standard s'applique automatiquement — cette
+  // fonction ne renvoie rien pour tout ce qui n'est pas la France,
+  // Fine Bindery et l'UE hors France restent donc MANUAL_TAX_REVIEW.
+  const automaticFrance = resolveAutomaticTaxPolicy(billingCountry || null);
+  const applyingAutoFrance = useMutation({
+    mutationFn: () =>
+      applyAutoFrance({
+        data: {
+          proposalId: proposal.id,
+          billingCountry,
+          customerType,
+          businessName: customerType === "BUSINESS" ? businessName.trim() : null,
+          businessVatNumber:
+            customerType === "BUSINESS" && businessVatNumber.trim() ? businessVatNumber.trim() : null,
+        },
+      }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
+    },
+  });
+
+  return (
+    <div className="mt-2 rounded-md border border-dashed border-border p-3">
+      <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+        Valider la fiscalité — v{proposal.version}
+      </p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-3">
+        <div>
+          <Label className="text-xs">Type de client</Label>
+          <Select value={customerType} onValueChange={(v) => setCustomerType(v as "CUSTOMER" | "BUSINESS")}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="CUSTOMER">Particulier</SelectItem>
+              <SelectItem value="BUSINESS">Professionnel</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        {customerType === "BUSINESS" && (
+          <>
+            <div>
+              <Label className="text-xs">Raison sociale</Label>
+              <Input value={businessName} onChange={(e) => setBusinessName(e.target.value)} />
+            </div>
+            <div>
+              <Label className="text-xs">N° TVA (facultatif)</Label>
+              <Input value={businessVatNumber} onChange={(e) => setBusinessVatNumber(e.target.value)} />
+            </div>
+          </>
+        )}
+        <div>
+          <Label className="text-xs">Pays de facturation</Label>
+          <Input
+            value={billingCountry}
+            maxLength={2}
+            placeholder="FR"
+            onChange={(e) => setBillingCountry(e.target.value.toUpperCase())}
+          />
+        </div>
+      </div>
+
+      {automaticFrance && (
+        <div className="mt-3 rounded-md border border-emerald-600/30 bg-emerald-50 p-3">
+          <p className="text-sm text-emerald-900">
+            France détectée — TVA standard 20 % applicable automatiquement (décision
+            opérationnelle temporaire du 18 septembre 2026).
+          </p>
+          {applyingAutoFrance.error && (
+            <p className="mt-2 text-xs text-destructive">
+              {(applyingAutoFrance.error as Error).message}
+            </p>
+          )}
+          <Button
+            size="sm"
+            className="mt-2"
+            disabled={
+              applyingAutoFrance.isPending || (customerType === "BUSINESS" && !businessName.trim())
+            }
+            onClick={() => applyingAutoFrance.mutate()}
+          >
+            Appliquer TVA France 20 % (automatique)
+          </Button>
+        </div>
+      )}
+
+      <details className="mt-3 text-sm">
+        <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+          Ou valider manuellement une autre catégorie (UE, hors UE, cas particulier…)
+        </summary>
+        <div className="mt-2 grid gap-2 sm:grid-cols-3">
+          <div>
+            <Label className="text-xs">Pays de taxation</Label>
+            <Input
+              value={country}
+              maxLength={2}
+              placeholder="FR"
+              onChange={(e) => {
+                const value = e.target.value.toUpperCase();
+                setCountry(value);
+                setPolicy(suggestTaxPolicyForCountry(value || null));
+              }}
+            />
+          </div>
+          <div>
+            <Label className="text-xs">Catégorie</Label>
+            <Select value={policy} onValueChange={setPolicy}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {TAX_POLICIES.filter((p) => p !== "MANUAL_TAX_REVIEW").map((p) => (
+                  <SelectItem key={p} value={p}>
+                    {TAX_POLICY_LABELS[p] ?? p}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div>
+            <Label className="text-xs">TVA (%, laisser vide si non applicable)</Label>
+            <Input value={vatRate} placeholder="20" onChange={(e) => setVatRate(e.target.value)} />
+          </div>
+        </div>
+        {validating.error && (
+          <p className="mt-2 text-xs text-destructive">{(validating.error as Error).message}</p>
+        )}
+        <Button
+          size="sm"
+          variant="outline"
+          className="mt-3"
+          disabled={
+            validating.isPending || !country.trim() || (customerType === "BUSINESS" && !businessName.trim())
+          }
+          onClick={() => validating.mutate()}
+        >
+          Valider cette fiscalité manuellement
+        </Button>
+      </details>
+    </div>
+  );
+}
+
+/**
+ * L'écran de vérification avant le premier vrai paiement (§13) : les mêmes
+ * champs que `checkoutEligibility` plus les à-côtés (compte Stripe,
+ * Products, webhook) qu'elle ne connaît pas — rien n'est recalculé côté
+ * navigateur, tout vient de `getPaymentPreflight`.
+ */
+function PreflightPanel({ caseId }: { caseId: string }) {
+  const fetchPreflight = useServerFn(getPaymentPreflight);
+  const { data, isPending, error, refetch, isFetching } = useQuery({
+    queryKey: ["marketplace", "case", caseId, "payment-preflight"] as const,
+    queryFn: () => fetchPreflight({ data: caseId }),
+  });
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Préflight paiement
+        </h2>
+        <Button size="sm" variant="outline" disabled={isFetching} onClick={() => refetch()}>
+          Rafraîchir
+        </Button>
+      </div>
+      {isPending && <p className="mt-2 text-xs text-muted-foreground">Chargement…</p>}
+      {error && <p className="mt-2 text-xs text-destructive">{(error as Error).message}</p>}
+      {data && !data.found && (
+        <p className="mt-2 text-xs text-destructive">Dossier introuvable.</p>
+      )}
+      {data && data.found && (
+        <div className="mt-3 text-sm">
+          {line("Marque", data.brand ?? "—")}
+          {line("Dossier", data.caseReference ?? "—")}
+          {line("Client", [data.customerName, data.customerEmail].filter(Boolean).join(" · ") || "—")}
+          {line(
+            "Type de client",
+            data.customerType === "BUSINESS"
+              ? `Professionnel — ${data.businessName ?? "raison sociale manquante"}`
+              : data.customerType === "CUSTOMER"
+                ? "Particulier"
+                : "—",
+          )}
+          {line("Pays de facturation", data.billingCountry ?? "—")}
+          {line("Service (HT)", data.serviceHtCents !== null ? formatEuros(data.serviceHtCents) : "—")}
+          {line("Transport (HT)", data.shippingHtCents !== null ? formatEuros(data.shippingHtCents) : "—")}
+          {line(
+            "Fiscalité",
+            data.taxPolicy ? (TAX_POLICY_LABELS[data.taxPolicy] ?? data.taxPolicy) : "—",
+          )}
+          {line(
+            "Source",
+            data.taxValidationSource === "FR_STANDARD_VAT_20"
+              ? "Auto-validée par la politique système (FR_STANDARD_VAT_20)"
+              : (TAX_VALIDATION_SOURCE_LABELS[data.taxValidationSource ?? ""] ??
+                data.taxValidationSource ??
+                "—"),
+          )}
+          {line(
+            "TVA",
+            data.customerVatRateBps !== null
+              ? `${(data.customerVatRateBps / 100).toFixed(1)} % (${
+                  data.customerVatAmountCents !== null ? formatEuros(data.customerVatAmountCents) : "—"
+                })`
+              : "—",
+          )}
+          {line("Total TTC", data.totalTtcCents !== null ? formatEuros(data.totalTtcCents) : "—")}
+          {line("Compte Stripe attendu", data.stripeExpectedAccountId ?? "—")}
+          {line("Compte Stripe joignable", data.stripeAccountOk ? "Oui" : "Non")}
+          {line("Products Stripe configurés", data.stripeProductIds ? "Oui" : "Non")}
+          {line("Descripteur relevé (suffixe)", data.statementDescriptorSuffix ?? "—")}
+          {line("Webhook configuré", data.webhookConfigured ? "Oui" : "Non")}
+          {line("Déjà payé", data.alreadyPaid ? "Oui" : "Non")}
+          <div
+            className={`mt-3 rounded-md p-3 text-sm font-medium ${
+              data.ready ? "bg-emerald-50 text-emerald-900" : "bg-amber-50 text-amber-900"
+            }`}
+          >
+            {data.ready ? "READY FOR PAYMENT" : `BLOCKED — ${data.blockedReasons.join(", ") || "raison inconnue"}`}
+          </div>
+        </div>
+      )}
+    </section>
+  );
+}
+
+/**
+ * La couche commerciale immuable (audit §2-3) : chaque version figée d'une
+ * proposition pour ce dossier. « Accepter » est réservé à l'administration
+ * dans cette phase — aucun parcours client ne le fait encore lui-même.
+ */
+const TAX_VALIDATION_SOURCE_LABELS: Record<string, string> = {
+  manual_admin_review: "Validation manuelle (admin)",
+  FR_STANDARD_VAT_20: "Automatique — TVA France standard 20 %",
+};
+
+function CommercialProposalPanel({ caseId }: { caseId: string }) {
+  const list = useServerFn(listCaseCommercialProposals);
+  const create = useServerFn(createCommercialProposal);
+  const accept = useServerFn(acceptCommercialProposal);
+  const resetTax = useServerFn(resetProposalTaxToManualReview);
+  const queryClient = useQueryClient();
+  const queryKey = ["marketplace", "case", caseId, "commercial-proposals"] as const;
+
+  const { data: proposals, isPending } = useQuery({
+    queryKey,
+    queryFn: () => list({ data: caseId }),
+  });
+
+  const creating = useMutation({
+    mutationFn: () =>
+      create({ data: { caseId, shipping: { outboundCents: 0, returnCents: 0, otherCents: 0 } } }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+  const accepting = useMutation({
+    mutationFn: (proposalId: string) => accept({ data: proposalId }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  });
+  const resetting = useMutation({
+    mutationFn: (proposalId: string) => resetTax({ data: proposalId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
+    },
+  });
+
+  const hasAccepted = (proposals ?? []).some((p) => p.status === "accepted");
+
+  return (
+    <section className="rounded-lg border border-border bg-card p-5">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+          Proposition commerciale
+        </h2>
+        <Button size="sm" variant="outline" disabled={creating.isPending} onClick={() => creating.mutate()}>
+          {(proposals ?? []).length === 0 ? "Créer la proposition" : "Nouvelle version"}
+        </Button>
+      </div>
+      {isPending && <p className="mt-2 text-xs text-muted-foreground">Chargement…</p>}
+      {creating.error && (
+        <p className="mt-2 text-xs text-destructive">{(creating.error as Error).message}</p>
+      )}
+      {accepting.error && (
+        <p className="mt-2 text-xs text-destructive">{(accepting.error as Error).message}</p>
+      )}
+      {resetting.error && (
+        <p className="mt-2 text-xs text-destructive">{(resetting.error as Error).message}</p>
+      )}
+      <ul className="mt-3 space-y-2 text-sm">
+        {(proposals ?? []).map((proposal) => (
+          <li key={proposal.id} className="rounded-md border border-border p-2">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p>
+                  v{proposal.version} · {PROPOSAL_STATUS_LABELS[proposal.status] ?? proposal.status} ·{" "}
+                  {formatEuros(proposal.customerServicePriceCents)}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Rémunération atelier {formatEuros(proposal.binderPayoutCents)} · plancher :{" "}
+                  {proposal.priceBoundBy === "reference"
+                    ? "référence Pricebook"
+                    : proposal.priceBoundBy === "margin_floor"
+                      ? "marge"
+                      : "contribution minimale"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Fiscalité :{" "}
+                  {proposal.taxValidatedAt
+                    ? `${TAX_POLICY_LABELS[proposal.taxPolicy] ?? proposal.taxPolicy} · ${proposal.taxCountry} · TVA ${
+                        proposal.customerVatRateBps !== null
+                          ? `${(proposal.customerVatRateBps / 100).toFixed(1)} %`
+                          : "non applicable"
+                      } · ${
+                        TAX_VALIDATION_SOURCE_LABELS[proposal.taxValidationSource ?? ""] ??
+                        proposal.taxValidationSource
+                      }`
+                    : "à valider"}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Client :{" "}
+                  {proposal.customerType === "BUSINESS"
+                    ? `Professionnel — ${proposal.businessName ?? "raison sociale à renseigner"}`
+                    : "Particulier"}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1">
+                {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (
+                  <Button
+                    size="sm"
+                    disabled={accepting.isPending}
+                    onClick={() => accepting.mutate(proposal.id)}
+                  >
+                    Accepter
+                  </Button>
+                )}
+                {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="text-xs"
+                    disabled={resetting.isPending}
+                    onClick={() => resetting.mutate(proposal.id)}
+                  >
+                    Revenir à MANUAL_TAX_REVIEW
+                  </Button>
+                )}
+              </div>
+            </div>
+            {proposal.status === "proposed" && !hasAccepted && !proposal.taxValidatedAt && (
+              <TaxValidationForm proposal={proposal} caseId={caseId} />
+            )}
+          </li>
+        ))}
+      </ul>
+      {(proposals ?? []).length === 0 && !isPending && (
+        <p className="mt-2 text-xs text-muted-foreground">Aucune proposition figée pour l'instant.</p>
+      )}
+    </section>
+  );
+}
+
 export function CaseMatchingPage({ caseId }: { caseId: string }) {
   const fetchCase = useServerFn(getMarketplaceCase);
   const send = useServerFn(sendCaseToBinders);
@@ -355,6 +950,15 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
           row={data.case}
           refresh={() => queryClient.invalidateQueries({ queryKey })}
         />
+
+        <EconomicsPanel row={data.case} />
+
+        {data.case.pricing_status === "validated" && (
+          <>
+            <CommercialProposalPanel caseId={caseId} />
+            <PreflightPanel caseId={caseId} />
+          </>
+        )}
 
         {data.matches.length > 0 && (
           <section className="rounded-lg border border-border bg-card p-5">

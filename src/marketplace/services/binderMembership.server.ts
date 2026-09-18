@@ -103,6 +103,32 @@ export async function createBinderInvitation(
 }
 
 /**
+ * Resolve the e-mail address a pending, unexpired invitation was sent to —
+ * nothing else about it. Public by design: the page that creates or signs
+ * in an account for this invitation locks its e-mail field to this value,
+ * so that step can no longer be used to attach a password to a *different*,
+ * already-existing account (see `acceptBinderInvitation`'s doc comment: the
+ * token proves the invitation, this closes the gap between "an account gets
+ * created/updated" and "the invitation is actually checked").
+ */
+export async function resolvePendingInvitationEmail(
+  sb: Supa,
+  rawToken: string,
+): Promise<string | null> {
+  const { hashAccessToken } = await import("@/build/services/dossierAccessToken.server");
+  const tokenHash = hashAccessToken(rawToken);
+  const { data: invitation } = await sb
+    .from("marketplace_binder_invitations")
+    .select("email, status, expires_at")
+    .eq("token_hash", tokenHash)
+    .maybeSingle();
+  if (!invitation) return null;
+  if (invitation.status !== "pending") return null;
+  if (new Date(invitation.expires_at).getTime() <= Date.now()) return null;
+  return invitation.email;
+}
+
+/**
  * Accept an invitation and become a member of its atelier.
  *
  * Race-safe the same way assignCaseOwner is: the UPDATE that flips the
