@@ -835,13 +835,11 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 `dffb8f9f-8e75-4413-98c4-ca40da0476e9` supplantée). Trois migrations fiscales
 (`20260917090000`, `20260917100000`, `20260918090000`) appliquées à la
 production (`hljxohondjvrkzqicexl`) via l'API de gestion Supabase — voir
-suite 6 et suite 7. **Aucune migration ni écriture en base pour la suite 9**
-(correctif de code seul, déployé au Worker) — **sauf** que le Playbook
-Reliure publié en base (`build_playbook_versions`, version 2) n'a **pas**
-été mis à jour vers la version 3 qui inclurait le champ Country : décision
-explicite de l'utilisateur de ne pas écrire en production pendant cette
-session (voir suite 9, encart ⚠️). Code et base de production divergent
-donc sur ce seul point, jusqu'à cette publication.
+suite 6 et suite 7. Suite 9 a aussi publié, sur demande explicite de
+l'utilisateur, la **version 3** du Playbook Reliure (`build_playbook_versions`,
+id `220eb9f2-d43a-4be2-860c-7047e7f501b8`) — ajoute le champ Country,
+repointe les deux Missions (Ma Reliure et Fine Bindery). Code et base de
+production sont alignés.
 
 ---
 
@@ -1080,31 +1078,33 @@ demande une évolution du moteur de validation, explicitement hors périmètre
 ("ne pas refondre l'architecture"). Persisté comme le reste de `answers`
 (JSON), donc déjà exploitable en l'état pour tout dossier qui le renseigne.
 
-**⚠️ NE REMONTE PAS ENCORE AU VISITEUR — trouvé pendant le smoke test
-navigateur de cette session, non résolu, décision explicite de l'utilisateur
-de ne pas toucher à la production maintenant.** `bookbindingPlaybookSchema.ts`
-n'est que le code source : un Playbook publié (`build_playbooks.published_version_id`
-→ `build_playbook_versions.schema`, un instantané figé) est une chose
+**Publication en base — résolu.** `bookbindingPlaybookSchema.ts` n'est que le
+code source : un Playbook publié (`build_playbooks.published_version_id` →
+`build_playbook_versions.schema`, un instantané figé) est une chose
 distincte, et les deux Missions de production (`BOOKBINDING_MISSION_ID` /
-`FINE_BINDERY_MISSION_ID`, `src/build/constants.ts`) pointent encore vers la
-**version 2**, publiée avant ce composant `country`. Vérifié en lecture seule
-via l'API de gestion Supabase (`hljxohondjvrkzqicexl`, jeton
-`SUPABASE_ACCESS_TOKEN` de `.env.supabase`) : le diff entre le schéma calculé
-localement et le schéma de la version 2 en production ne contient **que** les
-deux changements attendus (composant `country` ajouté, pattern du code postal
-assoupli) — rien d'inattendu. Confirmé aussi en navigation réelle sur
-`finebindery.com` après déploiement : le champ Country **n'apparaît pas** sur
-l'étape de contact.
+`FINE_BINDERY_MISSION_ID`, `src/build/constants.ts`) pointaient encore vers la
+**version 2**, publiée avant ce composant `country` — trouvé en smoke test
+navigateur, le champ n'apparaissait pas sur l'étape de contact. Diff
+préalable entre le schéma calculé localement et la version 2 en production
+(lecture seule, API de gestion Supabase) : **exactement** les deux
+changements attendus (composant `country` ajouté, pattern du code postal
+assoupli), rien d'inattendu.
 
-**Action requise pour que le champ apparaisse réellement** : publier une
-version 3 (soit `npm run seed:bookbinding` puis `npm run seed:fine-bindery`
-avec `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE_KEY` de production — ces scripts
-réécrivent aussi les autres champs de Mission avec leurs valeurs codées en
-dur, à vérifier avant de les lancer contre la prod ; soit une écriture SQL
-ciblée équivalente, plus étroite, via l'API de gestion). Ni l'un ni l'autre
-n'a été exécuté cette session : geler une écriture directe en base de
-production est exactement le type d'action qui doit être confirmée
-explicitement, pas déduite d'une autorisation générale à "corriger les bugs".
+Sur demande explicite de l'utilisateur ("Publie la version 3 du Playbook
+maintenant"), publié le 18 septembre 2026 via une écriture SQL ciblée
+(`POST /v1/projects/hljxohondjvrkzqicexl/database/query`, jeton
+`SUPABASE_ACCESS_TOKEN` de `.env.supabase`) plutôt que les scripts
+`seed:bookbinding`/`seed:fine-bindery` (qui auraient aussi réécrit les autres
+champs de Mission avec leurs valeurs codées en dur) : une seule transaction
+SQL insère `build_playbook_versions` version 3 (id
+`220eb9f2-d43a-4be2-860c-7047e7f501b8`), met à jour
+`build_playbooks.published_version_id`, et repointe `playbook_version_id`
+sur les deux Missions — rien d'autre touché. Vérifié en lecture après
+écriture (les trois lignes pointent bien vers la version 3) **et** en
+navigation réelle sur `finebindery.com` : le champ Country apparaît
+désormais sur l'étape de contact ("ZIP / postal code", "City", "Country").
+Ma Reliure re-testé après coup, toujours intégralement en français, aucune
+régression.
 
 **K. CGV** : publiées aux adresses `/conditions-generales-de-vente` (Ma
 Reliure, FR) et `/terms-of-sale` (Fine Bindery, EN), liées depuis le pied de
@@ -1126,12 +1126,6 @@ ci-dessous — tout au vert.
 
 **Ce qui reste MANUEL avant un vrai lancement grand public** (au-delà de ce
 qui précède) :
-- **Publier la version 3 du Playbook Reliure en production** pour que le
-  champ Country apparaisse réellement sur les deux Missions (Ma Reliure et
-  Fine Bindery) — voir l'encart ⚠️ juste au-dessus. Codé, testé, déployé,
-  mais **inerte côté visiteur** tant que cette publication n'est pas faite ;
-  décision explicite de l'utilisateur de ne pas écrire en production
-  pendant cette session.
 - Mobile non vérifié sur les deux marques (mentionné dans l'état de
   référence de l'audit, hors des 18 points d'action demandés cette
   session — à couvrir lors du prochain audit en navigation réelle).
