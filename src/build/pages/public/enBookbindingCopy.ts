@@ -292,6 +292,7 @@ export const EN_BOOKBINDING_COPY: Record<string, string> = {
     "The town or city is enough. The pickup address will be requested later, once your bookbinder is chosen.",
   "Code postal": "ZIP / postal code",
   Ville: "City",
+  Pays: "Country",
   "J'accepte que Ma Reliure étudie ma demande et en partage le descriptif avec des ateliers partenaires. Mes coordonnées ne sont communiquées qu'à l'atelier retenu.":
     "I agree that Fine Bindery may review my request and share its description with partner workshops. My contact details are only shared with the workshop selected.",
 

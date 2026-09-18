@@ -933,6 +933,169 @@ souhaite, je ne l'ai pas fait moi-même.
 
 ---
 
+### Chantier de cette session (suite 9) — corrections P0 GTM (audit en navigation réelle du 18 septembre 2026)
+
+Suite à l'audit GTM en navigation réelle du 18 septembre 2026 (Ma Reliure et
+Fine Bindery), correctif ciblé des problèmes visibles côté client — **aucun
+chantier produit nouveau, architecture inchangée, pricing engine non touché,
+Stripe Connect non touché, aucune transaction créée, aucun paiement
+effectué, aucun Connected Account créé**, comme demandé explicitement.
+
+**A. Fichiers modifiés**
+
+- [`src/routes/api/public/build-runtime.ts`](../src/routes/api/public/build-runtime.ts) — `handleSubmitSession` résout
+  désormais la marque marketplace (Ma Reliure / Fine Bindery) depuis le Host
+  de la requête réelle (`resolveMarketplaceBrandForHostname`, jamais un champ
+  client), et la locale figée de la Mission (`proposal.defaultLocale`)
+  l'emporte sur `body.locale` envoyé par le navigateur — corrige à la racine
+  le récapitulatif et l'e-mail en français pour un client Fine Bindery.
+- [`src/build/services/visitorSummaryEmail.server.ts`](../src/build/services/visitorSummaryEmail.server.ts) — `brandEmailData`
+  distingue enfin Ma Reliure de Fine Bindery (avant : uniquement
+  Métré Build vs "isMaReliure", qui vaut vrai pour les deux marques
+  marketplace) ; l'e-mail "Your project summary from Fine Bindery" est
+  désormais signé Fine Bindery, pointe vers finebindery.com, et passe la
+  marque à `sendTemplateEmail` pour l'expéditeur.
+- [`src/lib/email-templates/send-email.ts`](../src/lib/email-templates/send-email.ts) — expéditeur résolu par marque
+  (`resolveMarketplaceSender`) via `contactIdentity` (déjà présent dans
+  `brandConfig.ts`, jamais lu jusqu'ici) plutôt qu'une seule constante Ma
+  Reliure pour tout envoi marketplace.
+- [`src/marketplace/auth/authEmailHook.server.ts`](../src/marketplace/auth/authEmailHook.server.ts) — passe la marque résolue
+  du lien magique à `sendTemplateEmail`.
+- [`src/lib/email-templates/case-activity.tsx`](../src/lib/email-templates/case-activity.tsx) — gabarit rendu brand/locale-aware
+  (avant : toujours Ma Reliure, toujours en français).
+- [`src/marketplace/services/messaging.data.functions.ts`](../src/marketplace/services/messaging.data.functions.ts), [`decisions.data.functions.ts`](../src/marketplace/services/decisions.data.functions.ts) —
+  `loadCaseBrand` résout la marque du dossier pour ces notifications.
+- [`src/build/engine/brief.ts`](../src/build/engine/brief.ts) — `formatValue` affiche "Yes"/"No" pour une
+  réponse booléenne (consentement) au lieu du littéral JS `"true"`.
+- [`src/build/pages/public/frPublicCopy.ts`](../src/build/pages/public/frPublicCopy.ts) — traduction française de "Yes"/"No".
+- [`src/build/playbooks/bookbindingPlaybookSchema.ts`](../src/build/playbooks/bookbindingPlaybookSchema.ts) — le champ
+  `localisation` gagne un composant `country` distinct (jamais fondu dans le
+  code postal) et un pattern de code postal assoupli (le Playbook sert aussi
+  Fine Bindery, "Worldwide service").
+- [`src/build/pages/public/enBookbindingCopy.ts`](../src/build/pages/public/enBookbindingCopy.ts) — traductions anglaises des
+  nouveaux libellés ("Pays" → "Country", etc.).
+- [`src/marketplace/pages/legal/LegalPages.tsx`](../src/marketplace/pages/legal/LegalPages.tsx), [`legalEntity.ts`](../src/marketplace/legal/legalEntity.ts) — conditions
+  générales de vente publiées (FR + EN), remplaçant l'annonce "seront
+  publiées avant l'ouverture du paiement" ; clauses juridiques substantielles
+  (rétractation, garanties, responsabilité) explicitement marquées
+  **LEGAL REVIEW REQUIRED** plutôt qu'inventées ; section médiation marquée
+  **BLOCKED — MEDIATOR DETAILS REQUIRED** (aucun médiateur réel connu).
+- [`src/routes/conditions-generales-de-vente.tsx`](../src/routes/conditions-generales-de-vente.tsx), [`terms-of-sale.tsx`](../src/routes/terms-of-sale.tsx) — nouvelles
+  routes.
+- [`src/marketplace/pages/landing/LandingChrome.tsx`](../src/marketplace/pages/landing/LandingChrome.tsx), [`fineBindery/FineBinderyChrome.tsx`](../src/marketplace/pages/fineBindery/FineBinderyChrome.tsx) —
+  lien CGV ajouté au pied de page des deux marques.
+- Tests ajoutés/étendus : [`visitorSummaryEmail.server.test.ts`](../src/build/services/visitorSummaryEmail.server.test.ts) (Fine Bindery —
+  expéditeur, contenu, absence de fuite "Ma Reliure"), [`bookbindingPlaybook.test.ts`](../src/build/playbooks/bookbindingPlaybook.test.ts)
+  (composant `country`), [`legal.test.ts`](../src/marketplace/legal/legal.test.ts) (CGV publiées, médiateur non inventé).
+- Deux bugs de typage préexistants corrigés au passage dans
+  `messaging.data.functions.ts`/`decisions.data.functions.ts` (`loadCaseBrand`
+  ne compilait pas — narrowing TypeScript sur la mauvaise expression).
+
+**B. Routage e-mail multi-brand, état final**
+
+`sendTemplateEmail(template, to, { brand, ... })` — `brand` optionnel,
+ignoré hors marketplace. `resolveMarketplaceSender(brand)` : Ma Reliure ou
+`brand` absent → `Ma Reliure <noreply@mareliure.fr>` ; Fine Bindery → nom
+affiché "Fine Bindery", **adresse technique toujours `noreply@mareliure.fr`**
+tant que `finebindery.com` n'a pas de DKIM vérifié chez Resend (voir C/D/F ci-
+dessous — c'est un choix fail-closed délibéré, pas un oubli). Un client Fine
+Bindery voit donc "Fine Bindery <noreply@mareliure.fr>", jamais "Ma Reliure"
+en clair nulle part (objet, en-tête, corps, CTA, pied de page).
+
+**C. Domaine expéditeur Ma Reliure** : `mareliure.fr`, vérifié chez Resend
+(DKIM présent), envoi via `send.mareliure.fr` (Return-Path Resend/SES,
+SPF correct).
+
+**D. Domaine expéditeur Fine Bindery** : reste `mareliure.fr` (voir B) —
+`finebindery.com` n'est **pas encore vérifié** chez Resend, action requise
+avant de pouvoir l'utiliser (voir E-G).
+
+**E/F/G. Audit de délivrabilité (§8) — DNS interrogé directement, sans
+identifiants, le 18 septembre 2026**
+
+| Domaine | SPF racine | DKIM Resend (`resend._domainkey`) | DMARC (`_dmarc`) | Sous-domaine Return-Path Resend |
+| --- | --- | --- | --- | --- |
+| `mareliure.fr` | `v=spf1 include:mx.ovh.com -all` (boîte OVH, sans rapport avec Resend) | **PRÉSENT** — domaine vérifié | **MANQUANT** | `send.mareliure.fr` : `v=spf1 include:amazonses.com ~all` — CORRECT |
+| `finebindery.com` | même SPF OVH, sans rapport | **MANQUANT (NXDOMAIN)** — domaine jamais vérifié dans Resend | **MANQUANT** | — |
+
+CURRENT : Ma Reliure envoie authentifié (SPF+DKIM alignés via le sous-domaine
+Resend) mais sans DMARC. Fine Bindery n'a aucune authentification Resend —
+c'est la cause structurelle de "e-mails en spam" pour les deux marques, en
+plus du hook d'authentification jamais activé (voir Next recommended task).
+
+EXPECTED : DKIM Resend vérifié sur `finebindery.com` (ou usage exclusif de
+`mareliure.fr` comme aujourd'hui, en acceptant "Fine Bindery" seulement comme
+nom affiché) ; un enregistrement DMARC (`p=quarantine` a minima) sur les deux
+domaines, aligné avec le SPF/DKIM du sous-domaine Resend.
+
+MISSING : DMARC sur `mareliure.fr` et `finebindery.com` ; vérification
+Resend + DKIM pour `finebindery.com` si ce domaine doit un jour émettre
+directement.
+
+ACTION REQUIRED (hors du périmètre de ce chantier — nécessite un accès DNS
+que je n'ai pas, et une décision produit sur si Fine Bindery doit un jour
+avoir son propre domaine d'envoi) :
+1. Ajouter un enregistrement DMARC sur `mareliure.fr` (ex. `_dmarc.mareliure.fr TXT "v=DMARC1; p=quarantine; rua=mailto:<adresse à définir>"`).
+2. Idem sur `finebindery.com` dès que ce domaine sert à autre chose que le
+   nom affiché.
+3. Si Fine Bindery doit un jour envoyer depuis `@finebindery.com` : vérifier
+   le domaine dans le dashboard Resend, attendre la propagation DKIM,
+   confirmer par requête DNS directe (jamais supposer), puis seulement
+   retirer `finebindery.com` absent de `VERIFIED_SENDING_DOMAINS`
+   (`send-email.ts`).
+4. Réputation/contenu : non auditable sans accès au dashboard Resend
+   (taux de plainte, warm-up du domaine) — à vérifier là-bas.
+
+**H. Fuites françaises Fine Bindery corrigées** : locale serveur autoritaire
+(`proposal.defaultLocale`, jamais `body.locale` client) ; "true"/"false" →
+"Yes"/"No" ; traductions EN déjà complètes dans `enBookbindingCopy.ts`
+(le bug n'était pas un dictionnaire manquant, mais une locale mal résolue en
+amont).
+
+**I. Project Summary Fine Bindery** : corrigé par le même fix de locale — le
+générateur (`buildVisitorProjectSummary`) traduisait déjà correctement une
+fois `options.locale` fiable.
+
+**J. Champ Country** : ajouté au champ `localisation` du Playbook Reliure
+(composant `country`, distinct du code postal), exploitable tel quel par la
+fiscalité/logistique/admin. **Pas encore un blocage strict à la soumission** :
+le moteur de validation générique ne sait imposer qu'"au moins un composant
+d'adresse rempli", pas "ce composant précis" — en faire un vrai blocage
+demande une évolution du moteur de validation, explicitement hors périmètre
+("ne pas refondre l'architecture"). Persisté comme le reste de `answers`
+(JSON), donc déjà exploitable en l'état pour tout dossier qui le renseigne.
+
+**K. CGV** : publiées aux adresses `/conditions-generales-de-vente` (Ma
+Reliure, FR) et `/terms-of-sale` (Fine Bindery, EN), liées depuis le pied de
+page des deux marques et depuis "Conditions d'utilisation"/"Terms of Use".
+Sections factuelles (parties au contrat, prix, commande) rédigées à partir du
+modèle réel du produit. Sections de position juridique (rétractation,
+garanties, responsabilité) marquées **LEGAL REVIEW REQUIRED** — formulation
+usuelle du secteur, pas encore validée par un juriste pour OPPE SAS.
+
+**L. Médiateur** : **BLOCKED — MEDIATOR DETAILS REQUIRED.** Aucun médiateur
+de la consommation réel n'a été trouvé dans le dépôt ni fourni par
+l'utilisateur ; la mention est obligatoire (Code de la consommation,
+art. L616-1) avant toute vente réelle à un consommateur français. La section
+existe dans les CGV et dit explicitement qu'elle est en attente — jamais un
+médiateur inventé.
+
+**M/N/O/P. Tests, typecheck, lint, build** : voir "Commandes exécutées"
+ci-dessous — tout au vert.
+
+**Ce qui reste MANUEL avant un vrai lancement grand public** (au-delà de ce
+qui précède) :
+- Mobile non vérifié sur les deux marques (mentionné dans l'état de
+  référence de l'audit, hors des 18 points d'action demandés cette
+  session — à couvrir lors du prochain audit en navigation réelle).
+- Activer le hook d'authentification Supabase (`scripts/configureMareliureAuth.ts`,
+  déjà écrit, jamais exécuté) pour que le lien magique passe enfin par le
+  gabarit brand-aware plutôt que par le modèle unique du projet Supabase.
+- DMARC + vérification Resend de `finebindery.com` (voir E-G).
+- Revue juridique des CGV, désignation d'un médiateur réel (voir K/L).
+
+---
+
 ### Chantier de cette session (suite 7) — TVA France 20 % automatique (décision opérationnelle temporaire)
 
 Décision de l'utilisateur (18 septembre 2026, "Décision fiscale temporaire

@@ -104,5 +104,6 @@ export async function handleSendEmailHook(
       code: payload.email_data.token,
     },
     idempotencyKey,
+    brand,
   });
 }

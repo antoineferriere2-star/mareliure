@@ -107,6 +107,22 @@ describe("the Playbook is publishable as it stands", () => {
     expect(keys).toContain("name");
     expect(keys).toContain("email");
   });
+
+  /**
+   * §7 of the 18 September 2026 GTM brief: Fine Bindery is "Worldwide
+   * service" and must never assume France — the localisation field must
+   * capture a distinct, exploitable country component, not a ZIP/postal-code
+   * string.
+   */
+  it("captures a country on the localisation field, distinct from the zip/postal code", () => {
+    const localisation = bookbindingPlaybookSchema.sections
+      .flatMap((s) => s.steps)
+      .flatMap((s) => s.fields)
+      .find((f) => f.key === "localisation");
+    expect(localisation && "components" in localisation ? localisation.components : undefined).toEqual(
+      expect.arrayContaining([expect.objectContaining({ key: "country" })]),
+    );
+  });
 });
 
 describe("the intent answer drives which questions are asked", () => {

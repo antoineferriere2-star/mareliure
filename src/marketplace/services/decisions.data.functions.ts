@@ -35,6 +35,23 @@ async function loadCaseParties(
   };
 }
 
+/** Same rule as messaging.data.functions.ts's own helper — kept local rather than shared, both are a few lines. */
+async function loadCaseBrand(sb: Supa, caseId: string) {
+  const { data } = await sb.from("marketplace_cases").select("brand").eq("id", caseId).maybeSingle();
+  const { isMarketplaceBrand, marketplaceBrandConfig, canonicalHome } = await import(
+    "@/marketplace/brand/brandConfig"
+  );
+  const rawBrand = data?.brand ?? "";
+  const brand = isMarketplaceBrand(rawBrand) ? rawBrand : "MA_RELIURE";
+  const config = marketplaceBrandConfig(brand);
+  return {
+    brand,
+    brandName: config.displayName,
+    locale: config.defaultLocale,
+    origin: canonicalHome(brand).replace(/\/+$/, ""),
+  };
+}
+
 async function notifyCustomerOfDecisionRequest(
   sb: Supa,
   caseId: string,
@@ -46,14 +63,20 @@ async function notifyCustomerOfDecisionRequest(
     const email = auth?.user?.email;
     if (!email) return;
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    const { MARELIURE_CANONICAL_ORIGIN } = await import("@/marketplace/config");
+    const { brand, brandName, locale, origin } = await loadCaseBrand(sb, caseId);
+    const isEn = locale === "en-US";
     await sendTemplateEmail("case-activity", email, {
       templateData: {
-        heading: "Une confirmation vous est demandée",
-        intro: "Votre atelier a besoin d'une précision pour avancer sur votre livre.",
-        ctaLabel: "Répondre",
-        ctaUrl: `${MARELIURE_CANONICAL_ORIGIN}/mes-livres/${caseId}`,
+        brandName,
+        locale,
+        heading: isEn ? "A confirmation is needed from you" : "Une confirmation vous est demandée",
+        intro: isEn
+          ? "Your workshop needs one more detail to move forward on your book."
+          : "Votre atelier a besoin d'une précision pour avancer sur votre livre.",
+        ctaLabel: isEn ? "Reply" : "Répondre",
+        ctaUrl: `${origin}/mes-livres/${caseId}`,
       },
+      brand,
     });
   } catch (err) {
     logOperationalError("decisions.notify-customer-failed", err, { caseId });

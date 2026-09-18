@@ -13,6 +13,10 @@ import { playbookSchema, type PlaybookField, type PlaybookSchema } from "@/build
 import { missionProposalSchema } from "@/build/schema/missionProposal";
 import type { DeckPreviewSnapshot } from "@/build/visualPreview/deckPreviewParams";
 import { DEFAULT_LOCALE, resolveSupportedLocale } from "@/build/i18n/locales";
+import { isMaReliure } from "@/brand";
+// Type-only: erased at compile time, so importing it here never pulls
+// marketplace runtime code into the Métré Build bundle.
+import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { DEFAULT_MEASUREMENT_SYSTEM } from "@/build/measurements/types";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 import { clientIp, visitorFingerprint } from "@/build/services/visitorFingerprint.server";
@@ -377,6 +381,10 @@ export async function handleSubmitSession(
   secret: string,
   answers?: Record<string, unknown>,
   rawLocale?: string,
+  // Server-read Host header, never a client-supplied field — the only
+  // authority marketplaceBrandForRequest() below is allowed to use (same
+  // rule as resolveRequestBrand.server.ts).
+  requestHost?: string | null,
 ) {
   const session = await verifySessionSecret(supabase, sessionId, secret);
   if (!session) return json(404, { error: "Session not found" });
@@ -462,7 +470,19 @@ export async function handleSubmitSession(
     ? missionProposalSchema.parse(mission.proposal ?? {})
     : {};
   const businessName = await resolveBusinessName(supabase, mission);
-  const locale = resolveSupportedLocale(rawLocale, DEFAULT_LOCALE);
+  // `proposal.defaultLocale` — when a Mission declares one (every Ma Reliure/
+  // Fine Bindery Mission does: "fr-FR"/"en-US", see seedBookbindingPlaybook.ts/
+  // seedFineBinderyMission.ts) — is authoritative and wins over whatever the
+  // client sent. `PublicLocaleContext`'s `locked` already stops the visitor
+  // from switching languages live for exactly this reason; without the same
+  // rule here, a browser that had picked French on an earlier Mission (or any
+  // other stale `body.locale`) could freeze a Fine Bindery submission's
+  // stored visitor_summary — and the confirmation e-mail built from it — in
+  // the wrong language, permanently. `rawLocale` only still matters for a
+  // Mission that leaves the language to the visitor (no defaultLocale set).
+  const locale = proposal.defaultLocale
+    ? resolveSupportedLocale(proposal.defaultLocale, DEFAULT_LOCALE)
+    : resolveSupportedLocale(rawLocale, DEFAULT_LOCALE);
 
   // Visual preview: only ever computed when the Mission's own Playbook
   // opted in (old/other Missions get no visualPreview key at all — see
@@ -566,6 +586,16 @@ export async function handleSubmitSession(
   let emailSent = false;
   if (visitorEmail) {
     const { sendVisitorSummaryEmail } = await import("@/build/services/visitorSummaryEmail.server");
+    // Same Host-based resolution as resolveRequestBrand.server.ts, done
+    // directly here since this handler already holds the raw Request and a
+    // marketplace-only import must stay behind `isMaReliure` (build-runtime.ts
+    // is also compiled into the Métré Build bundle, which never imports
+    // brandConfig.ts).
+    let marketplaceBrand: MarketplaceBrand | null = null;
+    if (isMaReliure) {
+      const { resolveMarketplaceBrandForHostname } = await import("@/marketplace/brand/brandConfig");
+      marketplaceBrand = resolveMarketplaceBrandForHostname(requestHost);
+    }
     emailSent = await sendVisitorSummaryEmail({
       dossierId: dossier.id,
       workspaceId: (mission.workspace_id as string | null) ?? null,
@@ -573,6 +603,7 @@ export async function handleSubmitSession(
       recipientEmail: visitorEmail,
       summary: visitorSummary,
       summaryUrl,
+      marketplaceBrand,
     });
     if (emailSent) {
       await supabase
@@ -804,6 +835,7 @@ export const Route = createFileRoute("/api/public/build-runtime")({
                 body.session_secret,
                 body.answers,
                 body.locale,
+                request.headers.get("host"),
               );
             case "upload_project_photo":
               return await handleUploadProjectPhoto(

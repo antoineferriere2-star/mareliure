@@ -64,6 +64,32 @@ export const SUMMARY_LINK_VALIDITY_DAYS = 90;
 /** La date affichée en tête des pages légales, au format ISO. À changer à chaque révision. */
 export const LEGAL_PAGES_UPDATED_AT = "2026-09-10";
 
+/**
+ * Marque une clause de CGV qui énonce une position juridique — délai de
+ * rétractation, garanties, responsabilité — plutôt qu'un fait tiré du code.
+ * Chantier GTM du 18 septembre 2026, §9 : jamais inventer un texte légal ;
+ * dire clairement où il manque une revue par un juriste plutôt que de
+ * publier une clause non vérifiée comme si elle l'était.
+ */
+export const LEGAL_REVIEW_NOTE_FR =
+  "Cette clause reprend une formulation usuelle du secteur de la vente à distance ; elle n'a pas encore été validée par un juriste pour l'activité réelle d'OPPE SAS. LEGAL REVIEW REQUIRED avant toute vente réelle.";
+export const LEGAL_REVIEW_NOTE_EN =
+  "This clause follows standard distance-selling wording; it has not yet been validated by a lawyer for OPPE SAS's actual business. LEGAL REVIEW REQUIRED before any real sale.";
+
+/**
+ * Le médiateur de la consommation (Code de la consommation, art. L616-1) est
+ * une mention obligatoire pour toute vente à un consommateur en France —
+ * jamais un médiateur inventé : aucun n'a été désigné à ce jour (audit du
+ * 18 septembre 2026, §10). Tant que ce champ n'est pas rempli avec un
+ * médiateur réel, l'ouverture d'un paiement grand public reste bloquée côté
+ * conformité, indépendamment de l'état technique du checkout.
+ */
+export const CONSUMER_MEDIATOR_DESIGNATED = false as const;
+export const MEDIATOR_PENDING_NOTE_FR =
+  "Le médiateur de la consommation compétent n'a pas encore été désigné. BLOCKED — MEDIATOR DETAILS REQUIRED : cette section sera complétée avec ses coordonnées avant l'ouverture de tout paiement.";
+export const MEDIATOR_PENDING_NOTE_EN =
+  "The competent consumer mediator has not been designated yet. BLOCKED — MEDIATOR DETAILS REQUIRED: this section will be completed with their contact details before any payment opens.";
+
 /** Formate {@link LEGAL_PAGES_UPDATED_AT} dans la langue de la page qui l'affiche. */
 export function formatLegalPagesUpdatedAt(locale: "fr-FR" | "en-US"): string {
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(

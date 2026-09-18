@@ -38,6 +38,7 @@ const baseParams = {
   recipientEmail: "not-a-real-address@example.test",
   summary,
   summaryUrl: "https://metre-pro.com/project-summary/deadbeef",
+  marketplaceBrand: null as "MA_RELIURE" | "FINE_BINDERY" | null,
 };
 
 const SUMMARY_FIELDS = [
@@ -52,7 +53,11 @@ const SUMMARY_FIELDS = [
   "summaryUrl",
 ];
 
-type SendCall = [string, string, { templateData: Record<string, unknown>; idempotencyKey: string }];
+type SendCall = [
+  string,
+  string,
+  { templateData: Record<string, unknown>; idempotencyKey: string; brand?: string },
+];
 
 describe("sendVisitorSummaryEmail", () => {
   beforeEach(() => {
@@ -78,13 +83,25 @@ describe("sendVisitorSummaryEmail", () => {
   it("on Ma Reliure, signs as Ma Reliure and points to the customer space on mareliure.fr", async () => {
     brand.isMaReliure = true;
     sendTemplateEmailMock.mockResolvedValue({ sent: true });
-    await sendVisitorSummaryEmail(baseParams);
+    await sendVisitorSummaryEmail({ ...baseParams, marketplaceBrand: "MA_RELIURE" });
     const [, , options] = sendTemplateEmailMock.mock.calls[0] as SendCall;
     expect(Object.keys(options.templateData).sort()).toEqual(
       [...SUMMARY_FIELDS, "brandName", "accentColor", "trackUrl"].sort(),
     );
     expect(options.templateData.brandName).toBe("Ma Reliure");
     expect(options.templateData.trackUrl).toBe("https://mareliure.fr/mes-livres");
+    expect(options.brand).toBe("MA_RELIURE");
+  });
+
+  it("on Fine Bindery, signs as Fine Bindery and points to the customer space on finebindery.com — never Ma Reliure", async () => {
+    brand.isMaReliure = true;
+    sendTemplateEmailMock.mockResolvedValue({ sent: true });
+    await sendVisitorSummaryEmail({ ...baseParams, marketplaceBrand: "FINE_BINDERY" });
+    const [, , options] = sendTemplateEmailMock.mock.calls[0] as SendCall;
+    expect(options.templateData.brandName).toBe("Fine Bindery");
+    expect(options.templateData.trackUrl).toBe("https://finebindery.com/mes-livres");
+    expect(JSON.stringify(options.templateData)).not.toMatch(/Ma Reliure|mareliure\.fr/);
+    expect(options.brand).toBe("FINE_BINDERY");
   });
 
   it("never throws when the send fails, and reports false", async () => {

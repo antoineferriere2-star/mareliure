@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CandidatureAtelierRouteImport } from './routes/candidature-atelier'
 import { Route as ConditionsRouteImport } from './routes/conditions'
+import { Route as ConditionsGeneralesDeVenteRouteImport } from './routes/conditions-generales-de-vente'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
@@ -33,6 +34,7 @@ import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TermsRouteImport } from './routes/terms'
+import { Route as TermsOfSaleRouteImport } from './routes/terms-of-sale'
 import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
 import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
@@ -122,6 +124,12 @@ const ConditionsRoute = ConditionsRouteImport.update({
   path: '/conditions',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ConditionsGeneralesDeVenteRoute =
+  ConditionsGeneralesDeVenteRouteImport.update({
+    id: '/conditions-generales-de-vente',
+    path: '/conditions-generales-de-vente',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ConfidentialiteRoute = ConfidentialiteRouteImport.update({
   id: '/confidentialite',
   path: '/confidentialite',
@@ -215,6 +223,11 @@ const TarifsRoute = TarifsRouteImport.update({
 const TermsRoute = TermsRouteImport.update({
   id: '/terms',
   path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsOfSaleRoute = TermsOfSaleRouteImport.update({
+  id: '/terms-of-sale',
+  path: '/terms-of-sale',
   getParentRoute: () => rootRouteImport,
 } as any)
 const TermsOfUseRoute = TermsOfUseRouteImport.update({
@@ -591,6 +604,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
+  '/conditions-generales-de-vente': typeof ConditionsGeneralesDeVenteRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
@@ -610,6 +624,7 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/build': typeof AuthenticatedBuildRouteRouteWithChildren
@@ -680,6 +695,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
+  '/conditions-generales-de-vente': typeof ConditionsGeneralesDeVenteRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
@@ -699,6 +715,7 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
@@ -765,6 +782,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
+  '/conditions-generales-de-vente': typeof ConditionsGeneralesDeVenteRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
@@ -784,6 +802,7 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
   '/terms': typeof TermsRoute
+  '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/_authenticated/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/_authenticated/build': typeof AuthenticatedBuildRouteRouteWithChildren
@@ -856,6 +875,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/candidature-atelier'
     | '/conditions'
+    | '/conditions-generales-de-vente'
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
@@ -875,6 +895,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/terms-of-sale'
     | '/terms-of-use'
     | '/atelier'
     | '/build'
@@ -945,6 +966,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/candidature-atelier'
     | '/conditions'
+    | '/conditions-generales-de-vente'
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
@@ -964,6 +986,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/terms-of-sale'
     | '/terms-of-use'
     | '/a/$slug'
     | '/demo/deck-project'
@@ -1029,6 +1052,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/candidature-atelier'
     | '/conditions'
+    | '/conditions-generales-de-vente'
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
@@ -1048,6 +1072,7 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/tarifs'
     | '/terms'
+    | '/terms-of-sale'
     | '/terms-of-use'
     | '/_authenticated/atelier'
     | '/_authenticated/build'
@@ -1120,6 +1145,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CandidatureAtelierRoute: typeof CandidatureAtelierRoute
   ConditionsRoute: typeof ConditionsRoute
+  ConditionsGeneralesDeVenteRoute: typeof ConditionsGeneralesDeVenteRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
   DeckBuildersRoute: typeof DeckBuildersRoute
@@ -1139,6 +1165,7 @@ export interface RootRouteChildren {
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TarifsRoute: typeof TarifsRoute
   TermsRoute: typeof TermsRoute
+  TermsOfSaleRoute: typeof TermsOfSaleRoute
   TermsOfUseRoute: typeof TermsOfUseRoute
   ASlugRoute: typeof ASlugRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
@@ -1198,6 +1225,13 @@ declare module '@tanstack/react-router' {
       path: '/conditions'
       fullPath: '/conditions'
       preLoaderRoute: typeof ConditionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conditions-generales-de-vente': {
+      id: '/conditions-generales-de-vente'
+      path: '/conditions-generales-de-vente'
+      fullPath: '/conditions-generales-de-vente'
+      preLoaderRoute: typeof ConditionsGeneralesDeVenteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/confidentialite': {
@@ -1331,6 +1365,13 @@ declare module '@tanstack/react-router' {
       path: '/terms'
       fullPath: '/terms'
       preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms-of-sale': {
+      id: '/terms-of-sale'
+      path: '/terms-of-sale'
+      fullPath: '/terms-of-sale'
+      preLoaderRoute: typeof TermsOfSaleRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/terms-of-use': {
@@ -1989,6 +2030,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CandidatureAtelierRoute: CandidatureAtelierRoute,
   ConditionsRoute: ConditionsRoute,
+  ConditionsGeneralesDeVenteRoute: ConditionsGeneralesDeVenteRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
   DeckBuildersRoute: DeckBuildersRoute,
@@ -2008,6 +2050,7 @@ const rootRouteChildren: RootRouteChildren = {
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TarifsRoute: TarifsRoute,
   TermsRoute: TermsRoute,
+  TermsOfSaleRoute: TermsOfSaleRoute,
   TermsOfUseRoute: TermsOfUseRoute,
   ASlugRoute: ASlugRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,

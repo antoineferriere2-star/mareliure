@@ -882,8 +882,23 @@ export const bookbindingPlaybookSchema: PlaybookSchema = {
               helpText:
                 "La ville suffit. L'adresse d'enlèvement sera demandée plus tard, une fois votre relieur choisi.",
               components: [
-                { key: "zip", label: "Code postal", pattern: "^\\d{5}$" },
+                // Format assoupli (accepte "SW1A 1AA", "K1A 0B1", "90210",
+                // "75001"…) — ce Playbook sert aussi Fine Bindery
+                // ("Worldwide service", brief du 18 septembre 2026 §7) : un
+                // code postal à 5 chiffres n'est qu'une convention française.
+                { key: "zip", label: "Code postal", pattern: "^[A-Za-z0-9][A-Za-z0-9 -]{2,9}$" },
                 { key: "city_state", label: "Ville" },
+                // Un champ à part, jamais fondu dans city_state — exploitable
+                // tel quel par la validation fiscale, le transport et
+                // l'admin (brief §7 : "ne mélange pas ZIP/postal code et
+                // country dans une chaîne texte"). Pas encore rendu
+                // bloquant à la soumission : le moteur de validation
+                // générique (`requireAtLeastOne`) ne sait imposer qu'"au
+                // moins un des champs", pas "ce champ précis" — en faire un
+                // vrai blocage demanderait une évolution du moteur, hors du
+                // périmètre de ce chantier (§13 du brief : ne pas refondre
+                // l'architecture).
+                { key: "country", label: "Pays" },
               ],
               briefMapping: {
                 section: "confirmedInformation",

@@ -103,6 +103,7 @@ const LEGAL_LINKS = [
   { href: "/legal-notice", label: "Legal notice" },
   { href: "/privacy-policy", label: "Privacy policy" },
   { href: "/terms-of-use", label: "Terms of use" },
+  { href: "/terms-of-sale", label: "Terms of sale" },
 ] as const;
 
 export function FineBinderyFooter() {

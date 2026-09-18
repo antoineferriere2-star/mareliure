@@ -24,6 +24,11 @@ export const FR_PUBLIC_COPY: Record<string, string> = {
   "This mission has no questions yet.": "Ce parcours ne comporte pas encore de questions.",
   "This summary link is not available.": "Ce lien de récapitulatif n'est plus disponible.",
 
+  // ---- A consent/checkbox answer, formatted by formatValue() in
+  // engine/brief.ts as "Yes"/"No" (never the raw JS boolean "true") ----
+  Yes: "Oui",
+  No: "Non",
+
   // ---- Navigation ----
   Back: "Retour",
   Continue: "Continuer",
