@@ -790,11 +790,16 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 18 septembre 2026 (parcours commercial complet vérifié de bout en bout, `checkoutEligibility: {eligible: true}` sur un dossier réel — voir suite 8)
+**Date :** 18 septembre 2026 (corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country, CGV publiées — voir suite 9)
 
 **Branch :** `fix/mareliure-customer-access`.
 
-**Commit :** `9b5af075` (correctif : `validateMarketplacePricing` renseigne
+**Commit :** `05bb278d` (correctif : traduction des `briefLabel` Fine
+Bindery manquants, trou de couverture i18n trouvé en smoke test navigateur
+après le premier déploiement de cette session — voir suite 9), sur
+`6d4031be` (corrections P0 GTM : e-mail brand-aware Ma Reliure/Fine Bindery,
+locale serveur autoritaire, champ Country, CGV publiées — voir suite 9), sur
+`9b5af075` (correctif : `validateMarketplacePricing` renseigne
 désormais `service_price_cents`/`pricing_mode`/`brand_multiplier_bps`,
 bug bloquant découvert en déroulant le parcours réel — voir suite 8), sur
 `93252a26` (TVA France 20 % automatique pour tout dossier
@@ -825,11 +830,18 @@ inscription atelier / mot de passe client), sur `2c1af9ae`, `af3aa753`
 à F Fine Bindery).
 
 **Production : déployée le 18 septembre 2026, Worker `mareliure` version
-`19dcfd30-1215-4376-b33e-65724dba58d6`.** Trois migrations fiscales
+`6ee82d8b-cae0-48ba-9601-725ea3ad802a`** (suite 9 — corrige aussi le bug
+`briefLabel` trouvé en smoke test post-déploiement ; version intermédiaire
+`dffb8f9f-8e75-4413-98c4-ca40da0476e9` supplantée). Trois migrations fiscales
 (`20260917090000`, `20260917100000`, `20260918090000`) appliquées à la
 production (`hljxohondjvrkzqicexl`) via l'API de gestion Supabase — voir
-suite 6 et suite 7. Aucune migration supplémentaire pour la suite 8 (correctif
-de code seul). Code et base de production sont alignés.
+suite 6 et suite 7. **Aucune migration ni écriture en base pour la suite 9**
+(correctif de code seul, déployé au Worker) — **sauf** que le Playbook
+Reliure publié en base (`build_playbook_versions`, version 2) n'a **pas**
+été mis à jour vers la version 3 qui inclurait le champ Country : décision
+explicite de l'utilisateur de ne pas écrire en production pendant cette
+session (voir suite 9, encart ⚠️). Code et base de production divergent
+donc sur ce seul point, jusqu'à cette publication.
 
 ---
 
