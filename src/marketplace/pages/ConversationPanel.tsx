@@ -23,8 +23,9 @@
  *
  * Everything under `customer` below is the customer's own presentation only
  * (friendly errors, a kept draft when a send fails, message times, scrolling
- * inside the thread rather than jumping the page). The atelier's view is
- * deliberately untouched, and nothing here changes who may write to whom.
+ * inside the thread rather than jumping the page). Who may read and write is decided
+ * on the server from each message's persisted audience (messaging/audience.ts):
+ * nothing here changes it, and the workshop's own panel only ever receives its channel.
  */
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
