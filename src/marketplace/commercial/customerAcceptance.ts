@@ -11,6 +11,7 @@
  * n'est écrite qu'une fois, et un bouton « Accepter » ne peut pas conduire à un
  * client bloqué devant un « Payer » qui échouerait.
  */
+import type { AmountDueInput } from "@/marketplace/stripe/amountDue";
 import { checkoutEligibility } from "@/marketplace/stripe/checkoutPlan";
 
 export type AcceptanceBlock =
@@ -19,7 +20,9 @@ export type AcceptanceBlock =
   | "case_closed"
   | "price_not_validated"
   | "tax_review_required"
-  | "business_identity_incomplete";
+  | "business_identity_incomplete"
+  /** Le montant exigible n'est pas payable (TVA non résolue, snapshot incohérent, acompte non supporté). */
+  | "not_payable";
 
 export type CustomerAcceptance = { acceptable: true } | { acceptable: false; reason: AcceptanceBlock };
 
@@ -31,6 +34,8 @@ export interface CustomerAcceptanceInput {
   taxValidatedAt: string | null;
   customerType: string;
   businessName: string | null;
+  /** Le snapshot dont dépend le montant : accepter ne doit jamais mener à une commande impayable. */
+  amount: AmountDueInput;
   /** Le prix du dossier a été validé par un humain (`marketplace_cases.pricing_status`). */
   casePriceValidated: boolean;
   /** `marketplace_cases.status` : on n'accepte pas une proposition sur un projet clos. */
@@ -55,11 +60,13 @@ export function customerAcceptance(input: CustomerAcceptanceInput): CustomerAcce
     customerType: input.customerType,
     businessName: input.businessName,
     alreadyPaid: false,
+    amount: input.amount,
   });
   if (!afterAcceptance.eligible) {
     if (afterAcceptance.reason === "business_identity_incomplete") {
       return { acceptable: false, reason: "business_identity_incomplete" };
     }
+    if (afterAcceptance.reason !== "tax_review_required") return { acceptable: false, reason: "not_payable" };
     return { acceptable: false, reason: "tax_review_required" };
   }
   return { acceptable: true };

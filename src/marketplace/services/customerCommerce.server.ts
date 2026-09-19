@@ -67,6 +67,7 @@ export async function loadCustomerCommerce(
       customerType: accepted.customerType,
       businessName: accepted.businessName,
       alreadyPaid: !!paymentState?.paidAt,
+      amount: accepted,
     }).eligible;
 
     return {
@@ -91,6 +92,7 @@ export async function loadCustomerCommerce(
     taxValidatedAt: latest.taxValidatedAt,
     customerType: latest.customerType,
     businessName: latest.businessName,
+    amount: latest,
     casePriceValidated: caseFacts.priceValidated,
     caseStatus: caseFacts.caseStatus,
   });

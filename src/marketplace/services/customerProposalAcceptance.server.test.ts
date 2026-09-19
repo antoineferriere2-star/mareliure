@@ -29,6 +29,8 @@ interface Row {
   customerVatRateBps: number | null;
   customerVatAmountCents: number | null;
   customerTotalTtcCents: number | null;
+  depositType: string;
+  depositAmountCents: number;
   estimateMinCents: number | null;
   estimateMaxCents: number | null;
   createdAt: string;
@@ -125,6 +127,8 @@ function proposal(over: Partial<Row> = {}): Row {
     customerVatRateBps: 2000,
     customerVatAmountCents: 7500,
     customerTotalTtcCents: 45000,
+    depositType: "NONE",
+    depositAmountCents: 0,
     estimateMinCents: null,
     estimateMaxCents: null,
     createdAt: "2026-09-13T09:00:00.000Z",
@@ -317,7 +321,7 @@ describe("accès : le propriétaire du dossier, et personne d'autre", () => {
 describe("le client n'accepte que ce qu'il a vu, et que ce qui est acceptable", () => {
   it("une proposition révisée entre-temps est refusée : le client relit la nouvelle version", async () => {
     const { sb, events } = fakeSb();
-    store.proposals = [proposal({ status: "superseded", supersededAt: "2026-09-19T08:00:00.000Z" }), proposal({ id: P2, version: 2, customerServicePriceCents: 99900 })];
+    store.proposals = [proposal({ status: "superseded", supersededAt: "2026-09-19T08:00:00.000Z" }), proposal({ id: P2, version: 2, customerServicePriceCents: 99900, customerTotalHtCents: 99900, customerVatAmountCents: 19980, customerTotalTtcCents: 119880 })];
     expect(await codeOf(acceptProposalForCustomer(sb, owner({ proposalId: P1 })))).toBe("proposal_changed");
     expect(store.calls.accept).toBe(0);
     expect(events).toHaveLength(0);
@@ -401,7 +405,7 @@ describe("ce que le client voit d'une proposition avant de l'accepter", () => {
 
   it("seule la dernière version est présentée", async () => {
     const { sb } = fakeSb();
-    store.proposals = [proposal({ status: "superseded", supersededAt: "2026-09-19T08:00:00.000Z" }), proposal({ id: P2, version: 2, customerTotalTtcCents: 51000 })];
+    store.proposals = [proposal({ status: "superseded", supersededAt: "2026-09-19T08:00:00.000Z" }), proposal({ id: P2, version: 2, customerServicePriceCents: 42500, customerTotalHtCents: 42500, customerVatAmountCents: 8500, customerTotalTtcCents: 51000 })];
     const commerce = await loadCustomerCommerce(sb, CASE_ID, facts);
     expect(commerce.proposal?.id).toBe(P2);
     expect(commerce.proposal?.totalTtcCents).toBe(51000);

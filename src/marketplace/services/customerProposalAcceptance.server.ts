@@ -132,6 +132,7 @@ export async function acceptProposalForCustomer(
     taxValidatedAt: proposal.taxValidatedAt,
     customerType: proposal.customerType,
     businessName: proposal.businessName,
+    amount: proposal,
     casePriceValidated: caseFacts.priceValidated,
     caseStatus: caseFacts.caseStatus,
   });

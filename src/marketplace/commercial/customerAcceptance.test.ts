@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { amountInput } from "@/marketplace/stripe/amountDue.fixtures";
 import { checkoutEligibility } from "@/marketplace/stripe/checkoutPlan";
 import { customerAcceptance, type CustomerAcceptanceInput } from "./customerAcceptance";
 
@@ -10,6 +11,7 @@ const ok: CustomerAcceptanceInput = {
   taxValidatedAt: "2026-09-18T09:00:00.000Z",
   customerType: "CUSTOMER",
   businessName: null,
+  amount: amountInput(50_000, 0, 2000),
   casePriceValidated: true,
   caseStatus: "matching",
 };
@@ -34,6 +36,9 @@ describe("quand un client peut accepter sa proposition", () => {
     ["projet annulé", { caseStatus: "cancelled" }, "case_closed"],
     ["projet terminé", { caseStatus: "completed" }, "case_closed"],
     ["projet livré", { caseStatus: "delivered" }, "case_closed"],
+    ["TVA non résolue : le client ne verrait pas de montant payable", { amount: amountInput(50_000, 0, null) }, "not_payable"],
+    ["acompte prévu : le paiement en deux temps n'existe pas", { amount: amountInput(50_000, 0, 2000, { depositType: "PERCENTAGE", depositAmountCents: 100 }) }, "not_payable"],
+    ["snapshot incohérent", { amount: amountInput(50_000, 0, 2000, { customerTotalTtcCents: 1 }) }, "not_payable"],
   ] as [string, Partial<CustomerAcceptanceInput>, string][])("refuse une proposition %s", (_label, over, reason) => {
     expect(verdict(over)).toEqual({ acceptable: false, reason });
   });
@@ -49,6 +54,8 @@ describe("quand un client peut accepter sa proposition", () => {
       { customerType: "BUSINESS", businessName: null },
       { taxPolicy: "MANUAL_TAX_REVIEW", taxValidatedAt: null },
       { taxValidatedAt: null },
+      { amount: amountInput(50_000, 0, null) },
+      { amount: amountInput(50_000, 2_490, 2000, { depositType: "FIXED", depositAmountCents: 500 }) },
     ];
     for (const over of cases) {
       const input = { ...ok, ...over };
@@ -63,6 +70,7 @@ describe("quand un client peut accepter sa proposition", () => {
           customerType: input.customerType,
           businessName: input.businessName,
           alreadyPaid: false,
+          amount: input.amount,
         }).eligible,
         JSON.stringify(over),
       ).toBe(true);

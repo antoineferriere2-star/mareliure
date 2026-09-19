@@ -4,6 +4,8 @@ import {
   checkoutEligibility,
   statementDescriptorSuffixForBrand,
 } from "./checkoutPlan";
+import { resolveAmountDue } from "./amountDue";
+import { amountInput } from "./amountDue.fixtures";
 
 const PRODUCT_IDS = {
   maReliureService: "prod_ma_reliure",
@@ -20,6 +22,7 @@ describe("checkoutEligibility", () => {
     customerType: "CUSTOMER",
     businessName: null,
     alreadyPaid: false,
+    amount: amountInput(50_000, 0, 2000),
   };
 
   it("bloque tant que tax_policy reste MANUAL_TAX_REVIEW — fail closed par défaut", () => {
@@ -58,7 +61,7 @@ describe("checkoutEligibility", () => {
       taxPolicy: "FR_B2C",
       taxValidatedAt: "2026-09-17T00:00:00.000Z",
     });
-    expect(result).toEqual({ eligible: true });
+    expect(result).toMatchObject({ eligible: true });
   });
 
   /**
@@ -85,38 +88,33 @@ describe("checkoutEligibility", () => {
       customerType: "BUSINESS",
       businessName: "Librairie Ancienne SARL",
     });
-    expect(result).toEqual({ eligible: true });
+    expect(result).toMatchObject({ eligible: true });
   });
 });
 
+const due = (service: number, shipping: number) => {
+  const r = resolveAmountDue(amountInput(service, shipping, 2000));
+  if (!r.ok) throw new Error("expected a resolved amount");
+  return r;
+};
+
 describe("buildCheckoutLineItems", () => {
-  it("une seule ligne (service) quand il n'y a pas de transport", () => {
-    const lines = buildCheckoutLineItems(
-      { brand: "MA_RELIURE", currency: "EUR", customerServicePriceCents: 50_000, shippingTotalCents: 0 },
-      PRODUCT_IDS,
-    );
-    expect(lines).toEqual([
-      { productId: "prod_ma_reliure", unitAmountCents: 50_000, currency: "eur", quantity: 1 },
-    ]);
+  it("une seule ligne (service, TTC) quand il n'y a pas de transport", () => {
+    const lines = buildCheckoutLineItems({ brand: "MA_RELIURE", amountDue: due(50_000, 0) }, PRODUCT_IDS);
+    expect(lines).toEqual([{ productId: "prod_ma_reliure", unitAmountCents: 60_000, currency: "eur", quantity: 1 }]);
   });
 
-  it("ajoute la ligne transport seulement si elle est non nulle", () => {
-    const lines = buildCheckoutLineItems(
-      { brand: "MA_RELIURE", currency: "EUR", customerServicePriceCents: 50_000, shippingTotalCents: 1_500 },
-      PRODUCT_IDS,
-    );
+  it("ajoute la ligne transport (TTC) seulement si elle est non nulle", () => {
+    const lines = buildCheckoutLineItems({ brand: "MA_RELIURE", amountDue: due(50_000, 1_500) }, PRODUCT_IDS);
     expect(lines).toHaveLength(2);
-    expect(lines[1]).toEqual({ productId: "prod_shipping", unitAmountCents: 1_500, currency: "eur", quantity: 1 });
+    expect(lines[1]).toEqual({ productId: "prod_shipping", unitAmountCents: 1_800, currency: "eur", quantity: 1 });
   });
 
   it("Fine Bindery pointe vers son propre Product, jamais celui de Ma Reliure", () => {
-    const lines = buildCheckoutLineItems(
-      { brand: "FINE_BINDERY", currency: "EUR", customerServicePriceCents: 65_000, shippingTotalCents: 0 },
-      PRODUCT_IDS,
-    );
+    const lines = buildCheckoutLineItems({ brand: "FINE_BINDERY", amountDue: due(65_000, 0) }, PRODUCT_IDS);
     expect(lines[0].productId).toBe("prod_fine_bindery");
-    // Le module ne connaît aucun coefficient : 65 000 est déjà le résultat final (§11).
-    expect(lines[0].unitAmountCents).toBe(65_000);
+    // Le module ne connaît aucun coefficient : 65 000 HT est déjà le résultat final (§11), 78 000 TTC.
+    expect(lines[0].unitAmountCents).toBe(78_000);
   });
 });
 

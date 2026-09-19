@@ -40,20 +40,47 @@ import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./strip
 const uuid = z.string().uuid();
 
 async function isAdminCaller(sb: Awaited<ReturnType<typeof admin>>, userId: string) {
-  const { data } = await sb.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle();
+  const { data } = await sb
+    .from("user_roles")
+    .select("role")
+    .eq("user_id", userId)
+    .eq("role", "admin")
+    .maybeSingle();
   return !!data;
 }
 
 export const createCommercialCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => z.object({ caseId: uuid }).parse(data))
-  .handler(async ({ context, data }) => {
-    const sb = await admin();
+  .handler(async ({ context, data }) =>
+    createCheckoutForCase({
+      sb: await admin(),
+      caseId: data.caseId,
+      userId: context.userId,
+      isAdmin: await isAdminCaller(context.supabase, context.userId),
+      origin: `https://${getRequestHost()}`,
+    }),
+  );
 
+/**
+ * Le cœur du Checkout, hors couche serveur TanStack : tout ce que le navigateur ne décide pas —
+ * qui regarde, quelle proposition, quel montant. Exporté pour être testé de bout en bout
+ * (proposition acceptée → Checkout → montant attendu) sans passer par un jeton de session.
+ */
+export async function createCheckoutForCase(input: {
+  sb: Awaited<ReturnType<typeof admin>>;
+  caseId: string;
+  userId: string;
+  isAdmin: boolean;
+  origin: string;
+}): Promise<{ url: string }> {
+  const { sb, isAdmin, origin } = input;
+  const data = { caseId: input.caseId };
+  const context = { userId: input.userId };
+  {
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable.");
 
-    const isAdmin = await isAdminCaller(context.supabase, context.userId);
     const viewer = isAdmin
       ? ({ role: "admin" } as const)
       : ({ role: "customer", userId: context.userId } as const);
@@ -78,6 +105,7 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
       customerType: proposal.customerType,
       businessName: proposal.businessName,
       alreadyPaid: !!paymentState?.paidAt,
+      amount: proposal,
     });
     if (!eligibility.eligible) {
       const messages: Record<string, string> = {
@@ -87,9 +115,18 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
         business_identity_incomplete:
           "L'identité professionnelle de ce client (raison sociale) doit être renseignée avant paiement.",
         already_paid: "Cette commande est déjà payée.",
+        amount_unresolved: "Le montant TTC de cette commande n'est pas encore déterminé.",
+        amount_inconsistent:
+          "Le montant de cette commande est incohérent : un administrateur doit le vérifier avant paiement.",
+        deposit_flow_unsupported:
+          "Cette commande prévoit un acompte : le paiement en deux temps n'est pas encore disponible. Contactez-nous pour régler votre acompte.",
+        nothing_due: "Aucun montant n'est à régler pour cette commande.",
       };
       fail(409, messages[eligibility.reason]);
     }
+    // Le montant exigible, résolu UNE fois depuis le snapshot commercial figé (TTC) : c'est lui
+    // qu'on envoie à Stripe, lui que le webhook exigera au retour.
+    const { amountDue } = eligibility;
 
     // Avant tout appel Stripe réel — jamais après (§1 du brief du 16
     // septembre 2026, migration vers acct_1UGI34K0Q47WbZPf) : la clé posée
@@ -98,27 +135,33 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
 
     // Idempotent : une session déjà créée pour cette proposition est
     // réutilisée plutôt que dupliquée (§17) — Stripe renvoie l'URL de la
-    // session existante tant qu'elle n'a pas expiré.
+    // session existante tant qu'elle n'a pas expiré. Mais seulement si elle
+    // demande EXACTEMENT le montant exigible : une session ouverte avant la
+    // correction TTC réclamerait encore le HT — elle est expirée, jamais
+    // réutilisée.
     if (paymentState?.stripeCheckoutSessionId) {
       const stripe = getMarketplaceStripeClient();
-      const existing = await stripe.checkout.sessions.retrieve(paymentState.stripeCheckoutSessionId);
+      const existing = await stripe.checkout.sessions.retrieve(
+        paymentState.stripeCheckoutSessionId,
+      );
       if (existing.status === "open" && existing.url) {
-        return { url: existing.url };
+        const sameAmount =
+          existing.amount_total === amountDue.amountCents &&
+          String(existing.currency ?? "").toLowerCase() === amountDue.currency;
+        if (sameAmount) return { url: existing.url };
+        await stripe.checkout.sessions.expire(existing.id);
       }
     }
 
-    const host = getRequestHost();
-    const origin = `https://${host}`;
     const productIds = getStripeProductIds();
-    const lineItems = buildCheckoutLineItems(
-      {
-        brand: proposal.brand,
-        currency: proposal.currency,
-        customerServicePriceCents: proposal.customerServicePriceCents,
-        shippingTotalCents: proposal.shippingTotalCents,
-      },
-      productIds,
-    );
+    const lineItems = buildCheckoutLineItems({ brand: proposal.brand, amountDue }, productIds);
+    // Défense en profondeur : les lignes envoyées à Stripe totalisent EXACTEMENT le montant exigible.
+    if (
+      lineItems.reduce((sum, line) => sum + line.unitAmountCents * line.quantity, 0) !==
+      amountDue.amountCents
+    ) {
+      fail(500, "Le montant des lignes de paiement ne correspond pas au montant exigible.");
+    }
 
     const stripe = getMarketplaceStripeClient();
     const session = await stripe.checkout.sessions.create(
@@ -139,6 +182,7 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
           case_id: data.caseId,
           proposal_id: proposal.id,
           brand: proposal.brand,
+          amount_due_cents: String(amountDue.amountCents),
         },
         payment_intent_data: {
           // Le suffixe de relevé bancaire par marque — jamais fourni par
@@ -151,12 +195,15 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
             case_id: data.caseId,
             proposal_id: proposal.id,
             brand: proposal.brand,
+            amount_due_cents: String(amountDue.amountCents),
           },
         },
       },
-      // Une clé stable par proposition : un retry réseau sur cet appel ne
-      // crée jamais une deuxième session Stripe pour la même commande.
-      { idempotencyKey: `checkout-session-${proposal.id}` },
+      // Une clé stable par proposition ET par montant : un retry réseau sur cet appel ne
+      // crée jamais une deuxième session pour la même commande, et un montant corrigé ne
+      // se voit jamais répondre la session mise en cache pour l'ancien (Stripe refuse
+      // d'ailleurs qu'une même clé serve à des paramètres différents).
+      { idempotencyKey: `checkout-session-${proposal.id}-${amountDue.amountCents}` },
     );
 
     await recordCheckoutSession(sb, proposal.id, session.id);
@@ -170,4 +217,5 @@ export const createCommercialCheckoutSession = createServerFn({ method: "POST" }
 
     if (!session.url) fail(500, "Stripe n'a pas renvoyé d'URL de paiement.");
     return { url: session.url };
-  });
+  }
+}
