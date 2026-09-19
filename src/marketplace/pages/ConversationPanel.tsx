@@ -13,6 +13,18 @@
  * `locale` defaults to French — BinderCasePage never passes it, and an
  * atelier's own conversation stays exactly as it was. Only
  * CustomerCasePage passes "en-US", for a Fine Bindery customer.
+ *
+ * `channel` (customer only) is what the server says this customer's thread is:
+ * "direct" (Ma Reliure — one thread shared with the workshop) or "concierge"
+ * (Fine Bindery — the customer writes to the concierge and never to the
+ * workshop). In "concierge" the panel names the concierge, never mentions the
+ * workshop, and renders no workshop-authored message even if one were sent (the
+ * server already withholds them; this is the second lock, not the first).
+ *
+ * Everything under `customer` below is the customer's own presentation only
+ * (friendly errors, a kept draft when a send fails, message times, scrolling
+ * inside the thread rather than jumping the page). The atelier's view is
+ * deliberately untouched, and nothing here changes who may write to whom.
  */
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -22,6 +34,9 @@ import {
   markConversationRead,
   sendCaseMessage,
 } from "@/marketplace/services/messaging.data.functions";
+import { Skeleton } from "@/components/ui/skeleton";
+import { customerCopy } from "@/marketplace/customer/customerPresentation";
+import { PortalError } from "@/marketplace/pages/customer/CustomerPortalUi";
 
 const POLL_INTERVAL_MS = 15_000;
 
@@ -32,25 +47,38 @@ const SENDER_LABELS: Record<Locale, Record<string, string>> = {
   "en-US": { customer: "You", binder: "Your workshop", admin: "Fine Bindery" },
 };
 
+function formatMessageTime(iso: string, locale: Locale): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" }).format(date);
+}
+
 export function ConversationPanel({
   caseId,
   viewerRole,
   locale = "fr-FR",
+  channel = "direct",
 }: {
   caseId: string;
   viewerRole: "customer" | "binder";
   locale?: Locale;
+  channel?: "direct" | "concierge";
 }) {
   const en = locale === "en-US";
+  const customer = viewerRole === "customer";
+  const concierge = customer && channel === "concierge";
+  const copy = customerCopy(locale);
   const fetchMessages = useServerFn(listCaseMessages);
   const send = useServerFn(sendCaseMessage);
   const markRead = useServerFn(markConversationRead);
   const queryClient = useQueryClient();
   const queryKey = ["marketplace", "conversation", caseId] as const;
   const [draft, setDraft] = useState("");
+  const [sendFailed, setSendFailed] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
+  const threadRef = useRef<HTMLDivElement>(null);
 
-  const { data, isPending, error } = useQuery({
+  const { data, isPending, error, refetch, isFetching } = useQuery({
     queryKey,
     queryFn: () => fetchMessages({ data: { caseId } }),
     refetchInterval: POLL_INTERVAL_MS,
@@ -62,6 +90,7 @@ export function ConversationPanel({
     // sender's own name, before the server confirms it — the mutation's
     // onError below rolls it back if the send actually failed.
     onMutate: async (body: string) => {
+      setSendFailed(false);
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData(queryKey);
       queryClient.setQueryData(queryKey, (current: typeof data) =>
@@ -85,8 +114,13 @@ export function ConversationPanel({
       );
       return { previous };
     },
-    onError: (_err, _body, context) => {
+    onError: (_err, body, context) => {
       if (context?.previous) queryClient.setQueryData(queryKey, context.previous);
+      // Le client ne perd jamais ce qu'il a écrit : le texte revient dans le champ.
+      if (customer) {
+        setSendFailed(true);
+        setDraft((current) => (current.trim() === "" ? body : current));
+      }
     },
     onSettled: () => {
       void queryClient.invalidateQueries({ queryKey });
@@ -102,8 +136,15 @@ export function ConversationPanel({
   }, [caseId, markRead]);
 
   useEffect(() => {
+    if (customer) {
+      // Défilement dans le fil seulement : ne jamais faire sauter la page
+      // jusqu'aux messages quand le client vient de l'ouvrir.
+      const thread = threadRef.current;
+      if (thread) thread.scrollTop = thread.scrollHeight;
+      return;
+    }
     bottomRef.current?.scrollIntoView({ block: "nearest" });
-  }, [data?.messages.length]);
+  }, [data?.messages.length, customer]);
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault();
@@ -114,29 +155,61 @@ export function ConversationPanel({
   }
 
   if (isPending)
-    return (
+    return customer ? (
+      <section id="messages" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
+        <div role="status" aria-busy="true">
+          <span className="sr-only">{copy.messagesLoad}</span>
+          <Skeleton className="h-5 w-32" />
+          <Skeleton className="mt-4 h-10 w-3/4" />
+          <Skeleton className="mt-3 ml-auto h-10 w-2/3" />
+        </div>
+      </section>
+    ) : (
       <p className="text-sm text-muted-foreground">
         {en ? "Loading the conversation…" : "Chargement de la conversation…"}
       </p>
     );
-  if (error) return <p className="text-sm text-destructive">{(error as Error).message}</p>;
+  // Un rechargement qui échoue ne doit pas effacer ce que le client voit déjà :
+  // l'écran d'erreur n'apparaît que s'il n'y a rien à montrer.
+  if (error && !(customer && data))
+    return customer ? (
+      <div id="messages" className="scroll-mt-6">
+        <PortalError
+          message={copy.messagesError}
+          retryLabel={copy.messagesRetry}
+          onRetry={() => void refetch()}
+          busy={isFetching}
+        />
+      </div>
+    ) : (
+      <p className="text-sm text-destructive">{(error as Error).message}</p>
+    );
+
+  const title = concierge ? copy.conciergeTitle : copy.messages;
+  // Le concierge est le seul interlocuteur : un message d'atelier n'a rien à faire ici.
+  const messages = concierge ? data!.messages.filter((message) => message.senderRole !== "binder") : data!.messages;
 
   return (
-    <section className="rounded-lg border border-border bg-card p-5">
-      <h2 className="font-serif text-lg">
-        {viewerRole === "customer"
-          ? en
-            ? "Conversation with your workshop"
-            : "Conversation avec votre atelier"
-          : "Conversation"}
-      </h2>
-      <div className="mt-4 max-h-96 space-y-3 overflow-y-auto pr-1">
-        {data!.messages.length === 0 && (
+    <section id="messages" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
+      <h2 className="font-serif text-lg">{customer ? title : "Conversation"}</h2>
+      {concierge && <p className="mt-1 text-sm leading-6 text-muted-foreground">{copy.conciergeIntro}</p>}
+      <div
+        ref={threadRef}
+        className="mt-4 max-h-96 space-y-3 overflow-y-auto pr-1"
+        {...(customer ? { role: "log", "aria-live": "polite", "aria-label": title } : {})}
+      >
+        {messages.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            {en ? "No messages yet." : "Aucun message pour l'instant."}
+            {concierge
+              ? copy.conciergeEmpty
+              : customer
+                ? copy.messagesEmpty
+                : en
+                  ? "No messages yet."
+                  : "Aucun message pour l'instant."}
           </p>
         )}
-        {data!.messages.map((message) => (
+        {messages.map((message) => (
           <div
             key={message.id}
             className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
@@ -144,16 +217,29 @@ export function ConversationPanel({
             }`}
           >
             <p className="text-xs font-semibold opacity-70">
-              {SENDER_LABELS[locale][message.senderRole] ?? message.senderRole}
+              {concierge && message.senderRole === "admin"
+                ? copy.conciergeAuthor
+                : (SENDER_LABELS[locale][message.senderRole] ?? message.senderRole)}
+              {customer && (
+                <span className="ml-2 font-normal opacity-80">
+                  {formatMessageTime(message.createdAt, locale)}
+                </span>
+              )}
             </p>
-            <p className="mt-0.5 whitespace-pre-wrap">
-              {message.deleted ? (en ? "Message deleted." : "Message supprimé.") : message.body}
+            <p className="mt-0.5 whitespace-pre-wrap break-words">
+              {message.deleted
+                ? customer
+                  ? copy.messageDeleted
+                  : en
+                    ? "Message deleted."
+                    : "Message supprimé."
+                : message.body}
             </p>
           </div>
         ))}
         <div ref={bottomRef} />
       </div>
-      <form onSubmit={handleSubmit} className="mt-4 flex gap-2">
+      <form onSubmit={handleSubmit} className={`mt-4 flex gap-2 ${customer ? "flex-col sm:flex-row" : ""}`}>
         <textarea
           value={draft}
           onChange={(event) => setDraft(event.target.value)}
@@ -164,17 +250,47 @@ export function ConversationPanel({
             }
           }}
           rows={2}
-          placeholder={en ? "Write a message…" : "Écrire un message…"}
+          aria-label={concierge ? copy.conciergePlaceholder : customer ? copy.messagesPlaceholder : undefined}
+          placeholder={
+            concierge
+              ? copy.conciergePlaceholder
+              : customer
+                ? copy.messagesPlaceholder
+                : en
+                  ? "Write a message…"
+                  : "Écrire un message…"
+          }
           className="min-w-0 flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
         <button
           type="submit"
           disabled={draft.trim() === "" || mutation.isPending}
-          className="self-end rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50"
+          className={`rounded-md bg-foreground px-4 py-2 text-sm font-medium text-background disabled:opacity-50 ${
+            customer ? "min-h-11 sm:self-end" : "self-end"
+          }`}
         >
-          {en ? "Send" : "Envoyer"}
+          {customer
+            ? mutation.isPending
+              ? copy.messagesSending
+              : copy.messagesSend
+            : en
+              ? "Send"
+              : "Envoyer"}
         </button>
       </form>
+      {customer && error && (
+        <p role="status" className="mt-2 text-sm text-[#6b5847]">
+          {copy.messagesRefreshError}{" "}
+          <button type="button" className="min-h-11 underline" onClick={() => void refetch()} disabled={isFetching}>
+            {copy.messagesRetry}
+          </button>
+        </p>
+      )}
+      {customer && sendFailed && (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {copy.messagesSendError}
+        </p>
+      )}
     </section>
   );
 }

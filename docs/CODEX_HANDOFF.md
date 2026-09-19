@@ -790,9 +790,9 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 18 septembre 2026 (corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9)
+**Date :** 18 septembre 2026 — dernier chantier : UX des espaces clients Ma Reliure / Fine Bindery, branche `ux/customer-portals` (suite 10, **non déployé**, en attente de revue). Le bloc de commits ci-dessous décrit la branche `fix/mareliure-customer-access`, fusionnée dans `main` (PR #1) : corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9.
 
-**Branch :** `fix/mareliure-customer-access`.
+**Branch :** `ux/customer-portals` (suite 10) ; `fix/mareliure-customer-access` (suite 9, fusionnée).
 
 **Commit :** `361e7915` (correctif : fuite "Métré" dans le vocabulaire
 d'intake partagé, trouvée en smoke test mobile demandé par l'utilisateur —
@@ -946,6 +946,142 @@ souhaite, je ne l'ai pas fait moi-même.
 4. Un vrai dossier client (RL-006 est un test interne, comme RL-003) : le
    premier Checkout payé doit correspondre à une vraie commande, jamais à
    ce dossier de test.
+
+---
+
+### Chantier de cette session (suite 10) — UX des espaces clients (branche `ux/customer-portals`)
+
+Périmètre : navigation, lisibilité, usage de `/mes-livres` sur les deux
+marques. **Non touchés** : modèle commercial, pricing, fiscalité, Stripe,
+règles d'éligibilité au paiement, permissions, modèle atelier, migrations
+(aucune). Non déployé : la branche attend une revue.
+
+Ce qui a changé :
+- **Un seul vocabulaire client**, `src/marketplace/customer/customerPresentation.ts`
+  (logique pure, testée) : statut lisible (14 états, FR/EN), « Prochaine
+  étape » avec au plus un bouton principal, mode de prix en mots, historique
+  bâti sur des dates que le client peut connaître (jamais `marketplace_events`),
+  nettoyage des valeurs du Brief (`null`/`-`/`N/A`, `true`/`false`, identifiants
+  machine masqués ; « à préciser » devient « ce que nous devons encore
+  confirmer »), textes FR/EN de tout l'espace client.
+- **Liste** : vrai titre du livre (la liste affichait `content.missionName`,
+  identique pour tous les projets d'un client), type, date, statut, montant
+  TTC, prochaine étape, miniature, projets qui attendent le client en premier,
+  état vide, rattachement d'un projet replié.
+- **Détail** : bouton « ← Mes livres » déterministe (`Link to="/mes-livres"`,
+  jamais `history.back`), en-tête + statut, « Prochaine étape » (le bouton
+  Payer y est, plus enfoui sous le Brief), carte « Votre proposition »
+  (Service / Transport / HT / TVA / TTC / mode de prix), résumé, photos
+  (ratio fixe, agrandissement accessible, repli si l'URL signée a expiré),
+  atelier, messages, historique, « Voir tous les détails ».
+- **Serveur, lecture seule** : `getMyCustomerCase` renvoie une vue de
+  proposition en **liste blanche** (`customerProposalView.ts` — jamais
+  rémunération d'atelier, marge, contribution, règles) ; `listMyCustomerCases`
+  applique la même règle « prix validé seulement » que le détail. Les deux
+  passent par `customerCommerce.server.ts`, qui appelle `checkoutEligibility`
+  avec les mêmes entrées que le Checkout.
+- **Messagerie / décisions (rôle client uniquement, l'atelier est inchangé)** :
+  une réponse de décision s'affichait en JSON brut (`{"choice":"…"}`) ; erreurs
+  claires avec « Réessayer » ; un envoi raté conserve le brouillon ; un
+  rechargement raté n'efface plus le fil déjà affiché ; défilement dans le fil
+  au lieu d'un saut de page ; champs nommés pour les lecteurs d'écran.
+- Zones tactiles ≥ 44 px, lien d'évitement, régions de navigation nommées.
+
+QA : rendu réel des vrais composants avec des données de test synthétiques
+(scénarios A à H, deux marques), en navigateur à 375 / 390 / 430 px : aucun
+défilement horizontal, aucune zone tactile < 43 px. **Limites** : aucune session
+cliente réelle n'a été utilisée (l'espace client exige une connexion et je n'en
+ai pas fabriqué) ni l'application déployée ; les server functions ne sont
+testées que par lecture de code et tests de contrat. Chrome headless impose une
+fenêtre d'environ 500 px de large : des captures « 375 px » prises ainsi sont
+mises en page à 500 px puis rognées — pour un vrai rendu mobile, utiliser un
+iframe de la largeur voulue.
+
+**Mise à jour de la PR #2 — acceptation client et canal Concierge** (après revue
+du premier rendu ; toujours ni pricing, ni fiscalité, ni Stripe, ni shipping,
+ni espace atelier, ni migration) :
+
+1. *Acceptation client de la proposition.* Le parcours cible est : proposition
+   présentée → le client consulte → **il accepte** → le paiement devient
+   possible → il paie. Avant, seule l'administration pouvait accepter
+   (`acceptCommercialProposal`, inchangée). Ajout de `acceptMyProposal`
+   (`customerProposalAcceptance.data.functions.ts`) qui délègue à la MÊME écriture
+   (`accepted_at` posé, ligne immuable par trigger) après avoir vérifié côté
+   serveur, dans cet ordre : le dossier, son propriétaire (`canViewCase`, rôle
+   client — ni atelier ni admin par ce chemin), la proposition déjà acceptée
+   (idempotent), la proposition demandée (elle doit appartenir au dossier), qu'elle
+   est toujours la dernière version, puis la règle `customerAcceptance`
+   (proposition `proposed`, prix du dossier validé par un humain, projet non clos,
+   et **fiscalité/identité professionnelle jugées par `checkoutEligibility`** —
+   un client ne peut donc jamais accepter vers un « Payer » qui échouerait).
+   Le navigateur n'envoie que `{ caseId, proposalId }` (schéma `.strict()`) :
+   jamais un montant, une taxe ou un statut. Après succès, la possibilité de
+   payer est recalculée (`loadCustomerCommerce` → `checkoutEligibility`).
+   Une proposition révisée pendant la lecture est refusée (le client relit la
+   nouvelle version : il n'accepte jamais un prix qu'il n'a pas vu). Une seconde
+   acceptation de la même proposition (double clic, deux onglets) réussit sans
+   rien réécrire ni second événement. Événement `commercial_proposal_accepted`
+   avec `accepted_by: "customer"`.
+   Visibilité : avant acceptation, le client ne voit la proposition que si elle est
+   acceptable ; une proposition en préparation (fiscalité non validée, prix non
+   validé) n'existe pas encore pour lui. Une proposition déjà acceptée n'est
+   jamais remplacée par une version plus récente. UX : « Accepter la proposition »
+   / « Accept proposal » est l'action principale de « Prochaine étape », avec le
+   total confirmé en toutes lettres ; une fois acceptée, « Payer » / « Pay securely »
+   la remplace. Si une confirmation est aussi demandée, elle garde la première
+   place et le bouton d'acceptation reste accessible dans la carte proposition.
+   Hors périmètre volontaire : aucune case « J'accepte les CGV » n'a été ajoutée
+   (les CGV ne sont pas touchées) — à décider avec le juridique.
+2. *Fine Bindery — modèle concierge.* Constat : il n'existe **qu'un seul fil par
+   dossier** (`marketplace_messages`, sans colonne de canal) partagé client /
+   atelier / admin, et `customerWorkshopDirectMessaging` n'était lu nulle part.
+   Le drapeau est maintenant lu, et un client Fine Bindery : (a) ne reçoit plus
+   aucun message d'atelier (`listCaseMessages` filtre côté serveur avant l'envoi,
+   pour le rôle client seulement — `customerVisibleSenderRoles`) ; (b) ne les voit
+   pas dans ses non-lus (`unreadCountsByCase`) ; (c) n'est plus notifié par e-mail
+   d'un message d'atelier qu'il ne peut pas lire, et le message du concierge le
+   nomme (« Your Fine Bindery concierge… ») ; (d) voit un canal « Your Fine Bindery
+   concierge » (titre, texte, champ, raccourci « Message your concierge », auteur
+   « Fine Bindery concierge »), sans libellé « Your workshop » dans la messagerie ;
+   (e) même si un message d'atelier atteignait le navigateur, l'interface ne le
+   rend pas. Ma Reliure est inchangée (fil partagé). `canAccessConversation`,
+   les permissions et la base ne sont pas modifiés.
+
+   **Manque serveur à traiter dans une PR séparée** (ne pas le faire ici : il
+   touche le modèle de messagerie, les permissions, la base et l'espace atelier) :
+   - le fil reste unique : sur un dossier Fine Bindery, **un message que le
+     client écrit est encore lisible par l'atelier** (`listCaseMessages`, rôle
+     atelier, non filtré) — le client n'écrit pas « à l'atelier » dans
+     l'interface, mais la donnée lui reste visible ;
+   - un message d'atelier n'est plus lisible par le client mais **personne ne le
+     relaie** : il n'existe pas de vue concierge qui distingue « à relayer au
+     client » ; l'atelier croit parler au client et le concierge doit le relire dans
+     le fil admin ;
+   - une vraie séparation exige deux canaux (colonne `channel` ou table dédiée),
+     une politique d'accès par canal dans `conversation.ts`, la lecture atelier
+     limitée au canal atelier, et une UI de relais côté admin ;
+   - l'e-mail « nouveau message » à l'atelier n'existe pas (voir
+     `notifyCustomerOfNewMessage`) : hors sujet ici, à traiter avec le point ci-dessus.
+   La décision `marketplace_decisions` (réponse client à une question de
+   l'atelier) n'a pas de canal de messagerie : elle n'est pas concernée.
+
+QA de cette mise à jour : les vrais composants dans un navigateur, contre un faux
+backend installé au niveau de `fetch` (le client réel : bouton, mutation,
+relecture, focus) — parcours Ma Reliure et Fine Bindery « proposition disponible →
+acceptation → paiement », chemin d'erreur (message générique, jamais le texte du
+serveur), largeurs 375 / 390. **Toujours pas de session cliente réelle ni de
+déploiement** : les server functions sont testées avec un dépôt de propositions en
+mémoire et le vrai `checkoutEligibility`, pas contre Supabase.
+
+Constats hors périmètre, **non corrigés** :
+- `cases/journey.ts` n'est plus utilisé que par son test (le parcours est
+  remplacé par le statut + l'historique) : à supprimer ou à réutiliser.
+- `listMyCustomerCases` fait plusieurs lectures par projet (contexte, commerce,
+  signature d'une photo) : acceptable pour quelques livres, à regrouper au-delà.
+- `components/ui/dialog.tsx` a un bouton de fermeture « Close » en anglais (le
+  lecteur photo l'évite en utilisant Radix directement).
+- Le format des dimensions dans les lignes du Brief Fine Bindery (virgule
+  décimale) n'a pas pu être vérifié sur une donnée réelle.
 
 ---
 

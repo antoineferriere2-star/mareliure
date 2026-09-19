@@ -34,9 +34,9 @@ import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
 import { isMarketplaceBrand, marketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
-import { loadAcceptedCommercialProposal } from "@/marketplace/services/commercialProposalRepository.server";
-import { loadCommercialPaymentState } from "@/marketplace/services/commercialPaymentRepository.server";
-import { checkoutEligibility } from "@/marketplace/stripe/checkoutPlan";
+import { loadCustomerCommerce } from "@/marketplace/services/customerCommerce.server";
+import { publicCopy } from "@/build/pages/public/publicLocaleContext";
+import { CASE_ANSWER_KEYS } from "@/marketplace/cases/caseProfile";
 
 /** zod needs a literal tuple; WORK_FAMILIES stays the one place the list is written. */
 const WORK_FAMILY_KEYS = WORK_FAMILIES.map((f) => f.key) as [WorkFamilyKey, ...WorkFamilyKey[]];
@@ -47,6 +47,7 @@ import {
   loadCaseContext,
   reconcileCaseTriage,
   resolveCaseByAccessToken,
+  signFirstCasePhoto,
 } from "./caseRepository.server";
 import { loadAggregates, loadPricebook } from "./pricingRepository.server";
 import {
@@ -57,6 +58,7 @@ import {
 } from "./binderMembership.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
 import { unreadCountsByCase } from "./messaging.data.functions";
+import { hiddenSenderRolesForCustomer } from "@/marketplace/messaging/conversation";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -1288,14 +1290,25 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
     const { data: cases } = await sb
       .from("marketplace_cases")
       .select(
-        "id, reference, status, dossier_id, created_at, customer_price_cents, pricing_currency",
+        "id, reference, status, brand, dossier_id, created_at, customer_price_cents, pricing_status, pricing_currency",
       )
       .eq("customer_user_id", context.userId)
       .order("created_at", { ascending: false });
 
     const caseIds = (cases ?? []).map((row) => row.id);
+    // Un message d'atelier que ce client ne peut pas lire (Fine Bindery : le
+    // concierge est son seul interlocuteur) ne compte pas dans ses non-lus.
+    const hiddenSenderRoles = new Map(
+      (cases ?? []).map((row) => {
+        const brand = isMarketplaceBrand(row.brand) ? row.brand : "MA_RELIURE";
+        return [
+          row.id,
+          hiddenSenderRolesForCustomer(marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
+        ] as const;
+      }),
+    );
     const [unread, openDecisions] = await Promise.all([
-      unreadCountsByCase(sb, caseIds, context.userId),
+      unreadCountsByCase(sb, caseIds, context.userId, hiddenSenderRoles),
       caseIds.length === 0
         ? Promise.resolve({ data: [] as { case_id: string }[] })
         : sb.from("marketplace_decisions").select("case_id").eq("status", "open").in("case_id", caseIds),
@@ -1304,20 +1317,40 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
 
     const results = [];
     for (const row of cases ?? []) {
-      const { data: dossier } = await sb
-        .from("build_dossiers")
-        .select("content")
-        .eq("id", row.dossier_id)
-        .maybeSingle();
-      const content = dossier?.content as { missionName?: unknown } | null;
+      // Le titre d'un livre est ce que le client a écrit ; le nom de la Mission
+      // ("Reliure — présenter mon livre") est le même pour tous ses projets et
+      // ne sert que de repli, comme dans `projectCase`.
+      const caseContext = await loadCaseContext(sb, row.id);
+      const locale: CaseLocale = row.brand === "FINE_BINDERY" ? "en-US" : "fr-FR";
+      const intentLine = caseContext?.brief.confirmedInformation.find(
+        (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
+      );
+      // Même règle que le détail : un prix n'est montré que validé par un humain.
+      const priceValidated = row.pricing_status === "validated";
+      const [commerce, thumbnailUrl] = await Promise.all([
+        loadCustomerCommerce(sb, row.id, { priceValidated, caseStatus: row.status }),
+        caseContext ? signFirstCasePhoto(sb, caseContext.answers) : Promise.resolve(null),
+      ]);
+      const validatedPriceCents = priceValidated ? row.customer_price_cents : null;
+      const amountCents = commerce.proposal?.totalTtcCents ?? validatedPriceCents;
       results.push({
         id: row.id,
-        reference: row.reference,
         status: row.status,
         createdAt: row.created_at,
-        title: typeof content?.missionName === "string" ? content.missionName : row.reference,
-        customerPriceCents: row.customer_price_cents,
+        title:
+          caseContext?.profile.title?.trim() ||
+          caseContext?.brief.missionName?.trim() ||
+          row.reference,
+        projectType: intentLine ? publicCopy(locale, intentLine.value) : null,
+        thumbnailUrl,
         currency: row.pricing_currency,
+        amountCents,
+        amountIncludesTax: commerce.proposal?.totalTtcCents != null,
+        hasPrice: validatedPriceCents !== null,
+        proposalAccepted: commerce.proposalAccepted,
+        proposalAcceptable: commerce.canAccept,
+        paymentEligible: commerce.paymentEligible,
+        paid: commerce.paidAt !== null,
         unreadCount: unread.get(row.id) ?? 0,
         actionRequired: openDecisionCaseIds.has(row.id),
       });
@@ -1366,23 +1399,22 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
 
     // Le bouton « Payer »/« Pay securely » ne doit jamais apparaître pour un
     // dossier dont le Checkout échouerait à coup sûr (§11 du brief du
-    // 17 septembre 2026) — même garde-fou que `createCommercialCheckoutSession`,
-    // relu ici, jamais recalculé côté navigateur.
-    const acceptedProposal = await loadAcceptedCommercialProposal(sb, data.caseId);
-    const paymentState = acceptedProposal
-      ? await loadCommercialPaymentState(sb, acceptedProposal.id)
-      : null;
-    const paymentEligible = acceptedProposal
-      ? checkoutEligibility({
-          status: acceptedProposal.status,
-          acceptedAt: acceptedProposal.acceptedAt,
-          taxPolicy: acceptedProposal.taxPolicy,
-          taxValidatedAt: acceptedProposal.taxValidatedAt,
-          customerType: acceptedProposal.customerType,
-          businessName: acceptedProposal.businessName,
-          alreadyPaid: !!paymentState?.paidAt,
-        }).eligible
-      : false;
+    // 17 septembre 2026) — même garde-fou que `createCommercialCheckoutSession`
+    // (`checkoutEligibility`, voir customerCommerce.server.ts), relu ici,
+    // jamais recalculé côté navigateur. `commerce.proposal` est la vue client
+    // en liste blanche : ni rémunération d'atelier, ni marge, ni règle.
+    const commerce = await loadCustomerCommerce(sb, data.caseId, {
+      priceValidated: caseContext.row.pricing_status === "validated",
+      caseStatus: caseContext.row.status,
+    });
+    const intentLine = caseContext.brief.confirmedInformation.find(
+      (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
+    );
+    const { count: openDecisions } = await sb
+      .from("marketplace_decisions")
+      .select("id", { count: "exact", head: true })
+      .eq("case_id", data.caseId)
+      .eq("status", "open");
 
     return {
       case: {
@@ -1396,8 +1428,17 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
         currency: caseContext.row.pricing_currency,
         priceIncludes: caseContext.row.price_includes,
         createdAt: caseContext.row.created_at,
-        paymentEligible,
+        projectType: intentLine ? publicCopy(locale, intentLine.value) : null,
+        paymentEligible: commerce.paymentEligible,
+        canAcceptProposal: commerce.canAccept,
+        paidAt: commerce.paidAt,
+        openDecisions: openDecisions ?? 0,
+        // `concierge` : le client n'écrit jamais à l'atelier (Fine Bindery).
+        messagingChannel: marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging
+          ? ("direct" as const)
+          : ("concierge" as const),
       },
+      proposal: commerce.proposal,
       view,
       selectedBinder: binder
         ? {
