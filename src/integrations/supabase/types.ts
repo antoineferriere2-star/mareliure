@@ -2242,8 +2242,10 @@ export type Database = {
       }
       marketplace_commercial_proposal_payments: {
         Row: {
+          amount_paid_cents: number | null
           created_at: string
           paid_at: string | null
+          paid_currency: string | null
           proposal_id: string
           stripe_checkout_session_id: string | null
           stripe_invoice_id: string | null
@@ -2251,8 +2253,10 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          amount_paid_cents?: number | null
           created_at?: string
           paid_at?: string | null
+          paid_currency?: string | null
           proposal_id: string
           stripe_checkout_session_id?: string | null
           stripe_invoice_id?: string | null
@@ -2260,8 +2264,10 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          amount_paid_cents?: number | null
           created_at?: string
           paid_at?: string | null
+          paid_currency?: string | null
           proposal_id?: string
           stripe_checkout_session_id?: string | null
           stripe_invoice_id?: string | null
@@ -2836,27 +2842,39 @@ export type Database = {
       }
       marketplace_stripe_webhook_events: {
         Row: {
+          attempts: number
           id: string
+          last_attempt_at: string | null
           payload: Json
           processed_at: string | null
           processing_error: string | null
+          processing_started_at: string | null
           received_at: string
+          status: string
           type: string
         }
         Insert: {
+          attempts?: number
           id: string
+          last_attempt_at?: string | null
           payload: Json
           processed_at?: string | null
           processing_error?: string | null
+          processing_started_at?: string | null
           received_at?: string
+          status?: string
           type: string
         }
         Update: {
+          attempts?: number
           id?: string
+          last_attempt_at?: string | null
           payload?: Json
           processed_at?: string | null
           processing_error?: string | null
+          processing_started_at?: string | null
           received_at?: string
+          status?: string
           type?: string
         }
         Relationships: []
@@ -2958,11 +2976,33 @@ export type Database = {
         }
         Returns: string
       }
+      marketplace_claim_webhook_event: {
+        Args: {
+          p_id: string
+          p_payload: Json
+          p_stale_after_seconds?: number
+          p_type: string
+        }
+        Returns: {
+          claim_attempts: number
+          claim_outcome: string
+        }[]
+      }
       marketplace_dossier_ids_for_verified_email: {
         Args: { p_email: string }
         Returns: string[]
       }
       marketplace_ingest_missing_cases: { Args: never; Returns: number }
+      marketplace_mark_proposal_paid: {
+        Args: {
+          p_amount_cents: number
+          p_currency: string
+          p_invoice_id: string
+          p_payment_intent_id: string
+          p_proposal_id: string
+        }
+        Returns: string
+      }
       marketplace_respond_to_offer: {
         Args: {
           p_accept: boolean
