@@ -790,9 +790,9 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 18 septembre 2026 — dernier chantier : UX des espaces clients Ma Reliure / Fine Bindery, branche `ux/customer-portals` (suite 10, **non déployé**, en attente de revue). Le bloc de commits ci-dessous décrit la branche `fix/mareliure-customer-access`, fusionnée dans `main` (PR #1) : corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9.
+**Date :** 19 septembre 2026 — dernier chantier : outil devis → facture du relieur, branche `feat/binder-quotes` (suite 11, **non déployé, migration non appliquée**, en attente de revue) ; avant : UX des espaces clients (suite 10, fusionnée, PR #2). Le bloc de commits ci-dessous décrit la branche `fix/mareliure-customer-access`, fusionnée dans `main` (PR #1) : corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9.
 
-**Branch :** `ux/customer-portals` (suite 10) ; `fix/mareliure-customer-access` (suite 9, fusionnée).
+**Branch :** `feat/binder-quotes` (suite 11) ; `ux/customer-portals` (suite 10, fusionnée) ; `fix/mareliure-customer-access` (suite 9, fusionnée).
 
 **Commit :** `361e7915` (correctif : fuite "Métré" dans le vocabulaire
 d'intake partagé, trouvée en smoke test mobile demandé par l'utilisateur —
@@ -946,6 +946,99 @@ souhaite, je ne l'ai pas fait moi-même.
 4. Un vrai dossier client (RL-006 est un test interne, comme RL-003) : le
    premier Checkout payé doit correspondre à une vraie commande, jamais à
    ce dossier de test.
+
+---
+
+### Chantier de cette session (suite 11) — outil devis → facture du relieur (branche `feat/binder-quotes`)
+
+**Non déployé, migration NON appliquée** (à appliquer seulement sur accord explicite : elle
+crée des tables en production). Périmètre : un module très simple pour qu'un relieur chiffre
+un ouvrage pour SES clients, marketplace ou non — *ouvrage → dimensions → prestations →
+calcul → devis → facture*. Ce n'est ni une comptabilité, ni un ERP, ni un CRM. **Pas touchés :**
+Stripe, abonnement / limitation de devis (l'outil est gratuit), encaissement, e-invoicing,
+Factur-X, connexion à une Plateforme Agréée, pricing marketplace, dossiers clients de la
+marketplace.
+
+**Migration** `20260919090000_marketplace_binder_quotes.sql` — additive, rejouable (vérifiée deux
+fois de suite sur un vrai Postgres), rollback en pied de fichier (à ne PAS exécuter dès qu'une
+facture existe). Aucune table existante n'est modifiée.
+- Tables : `marketplace_binder_billing_profiles` (1 par atelier : identité, SIRET, TVA, régime,
+  mention, préfixes, validité, conditions), `marketplace_binder_service_categories`,
+  `marketplace_binder_services` (catalogue de l'atelier : prix HT en centimes, TVA optionnelle,
+  actif, archivé), `marketplace_binder_clients` (les clients DE l'atelier — pas des comptes Ma
+  Reliure), `marketplace_binder_document_counters`, `marketplace_binder_quotes` +
+  `_quote_items`, `marketplace_binder_invoices` + `_invoice_items`.
+- Fonctions SQL (service_role seulement) : `marketplace_binder_next_document_number` (compteur
+  atomique par atelier, type et année), `marketplace_binder_create_quote`,
+  `marketplace_binder_update_quote` (brouillon seulement), `marketplace_binder_convert_quote_to_invoice`
+  (devis `accepted` seulement, verrou `FOR UPDATE`, numéro + facture + lignes dans UNE transaction :
+  pas de trou dans la séquence des factures).
+- Isolation : même patron que tout `marketplace_*` — RLS activée, **deny-all pour anon et
+  authenticated**, `GRANT` à service_role seulement, fonctions révoquées pour PUBLIC/anon/
+  authenticated. Le serveur résout l'atelier de la session (`findActiveBinderMembership` : tout
+  membre ACTIF, pas seulement le propriétaire) et filtre CHAQUE requête par `binder_id` ; un
+  identifiant d'un autre atelier est « introuvable », comme un identifiant inexistant.
+- Snapshots : un devis/une facture porte le client, l'ouvrage, l'identité de l'émetteur, le régime
+  de TVA, les mentions et chaque ligne (libellé, prix, TVA, prix catalogue d'origine). Changer le
+  catalogue ou le profil ne change JAMAIS un document existant. Une **facture est immuable**
+  (trigger : seuls le suivi de paiement et les emplacements externes restent modifiables ; lignes
+  ni modifiables ni supprimables). Un atelier ne peut pas être supprimé sous ses devis/factures
+  (`ON DELETE RESTRICT`) — pièces à conserver.
+- Facture : acompte demandé / payé, `amount_paid_cents`, `payment_status` (`unpaid`, `deposit_paid`,
+  `paid`) — le **modèle** est prêt, aucun paiement n'est encaissé ni aucune action « marquer payée »
+  n'existe. Emplacements NULLABLES, fournisseur non figé et aucune valeur interprétée :
+  `external_provider`, `external_invoice_id`, `external_status`, `electronic_invoice_status`,
+  `electronic_invoice_sent_at`, `external_metadata`. La logique métier ne dépend d'aucun fournisseur.
+
+**Calcul** (`src/marketplace/quotes/quoteCalc.ts`, pur, centimes entiers, aucun flottant sur un
+montant) : quantité (2 décimales) × prix, arrondi au plus proche ; TVA **par taux** (jamais ligne
+par ligne), arrondie une fois par taux ; remise en % ou en € (plafonnée : jamais négatif),
+répartie sur les taux au prorata avec somme exacte ; acompte sur le TTC. Le navigateur affiche ce
+calcul en direct, mais le serveur ne reçoit AUCUN total (schémas `.strict()`) et recalcule tout.
+
+**TVA** : aucun régime n'est présumé — `vat_regime` est `NULL` tant que l'atelier n'a pas choisi
+(`FRANCHISE` ou `VAT_LIABLE`). Un devis exige seulement un nom d'atelier et ce régime (deux champs,
+saisis dans le constructeur) ; une **facture** exige l'identité complète (adresse, SIRET, n° de TVA
+ou mention de franchise). En franchise, les taux enregistrés sont 0. La mention de franchise
+« TVA non applicable, art. 293 B du CGI » n'est qu'une **suggestion modifiable** : à faire valider
+(**LEGAL REVIEW REQUIRED**) — comme les mentions obligatoires d'une facture (pénalités, indemnité de
+recouvrement, forme juridique, capital…), configurables par l'atelier, jamais interprétées.
+
+**PDF** (`documentPdf.ts`, `pdf-lib` — JavaScript pur, sans DOM, compatible Workers, nouvelle
+dépendance) : une mise en page pour devis et facture, pagination, pied de page, bloc « bon pour
+accord » sur un devis. Texte assaini pour l'encodage WinAnsi (espaces insécables, emoji → « ? »,
+jamais d'échec). **Ce n'est PAS une facture électronique réglementaire** (ni Factur-X, ni
+plateforme agréée) : un document imprimable.
+
+**Routes** (`/atelier`, authentifiées) : `/atelier/devis` (liste devis / factures),
+`/atelier/devis/nouveau` (constructeur), `/atelier/devis/$quoteId` (détail, statuts, PDF,
+« Convertir en facture »), `/atelier/devis/$quoteId/modifier` (brouillon), `/atelier/factures/$invoiceId`,
+`/atelier/tarifs` (« Devis et tarifs » : catalogue, TVA, identité). Server functions :
+`services/binderQuotes.data.functions.ts` (logique dans `binderQuotes.server.ts`).
+
+**QA** : les vraies routes parcourues dans un navigateur avec une session simulée et un faux
+backend au niveau `fetch` bâti sur le VRAI code de calcul, de construction et de PDF (pas de
+Supabase réel, pas de session réelle) — scénario du brief (220 × 145 × 32 mm, plein cuir + nerfs +
+dorure titre + étui = 430 € HT, prix ajusté à 340 € sans toucher le catalogue, devis, accepté,
+facture, PDF), largeurs 1280 / 820 / 390. La migration a été exécutée sur un vrai Postgres (pglite,
+hors dépôt) : 40 vérifications SQL (numérotation par atelier/année, atomicité, conversion,
+immuabilité, contraintes, isolation par rôle) + les charges utiles produites par le TypeScript.
+
+**Dettes et points à traiter** (non corrigés ici) :
+- Le **logo** de l'atelier n'est pas géré (le nom sert d'en-tête) : il demande un bucket privé et
+  un téléversement.
+- `integrations/supabase/types.ts` (généré) ne connaît pas les nouvelles tables : le serveur utilise un
+  client typé large. À régénérer après application de la migration.
+- Aucun paiement encaissé, aucune action « marquer payée » : le suivi de paiement est un modèle.
+- Pas de suppression de devis (un devis refusé/expiré reste) ; pas de duplication de devis.
+- Numérotation `PRÉFIXE-AAAA-NNNN`, une séquence par atelier, type et année (repart à 1 chaque année).
+- Un atelier avec factures ne peut pas être supprimé (RESTRICT) : un flux de suppression de compte /
+  RGPD devra les anonymiser ou les archiver, jamais les supprimer.
+- La facturation électronique (réforme française, plateformes agréées) reste entièrement à faire ;
+  vérifier les échéances qui s'appliquent aux ateliers avant toute mise en production réelle.
+- Les tests de service utilisent un faux client Supabase (les filtres d'atelier sont vérifiés par
+  ces tests ET par une lecture du code) ; l'isolation réelle sur Supabase avec deux comptes n'a pas
+  été rejouée (pas de clé service-role locale).
 
 ---
 

@@ -1,0 +1,123 @@
+/**
+ * « Devis et factures » : une liste, deux onglets, un bouton principal.
+ */
+import { useState } from "react";
+import { Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { useServerFn } from "@tanstack/react-start";
+import { getMyInvoices, getMyQuotes } from "@/marketplace/services/binderQuotes.data.functions";
+import { euros, formatDateLong } from "@/marketplace/quotes/quoteFormat";
+import type { QuoteStatus } from "@/marketplace/quotes/quoteStatus";
+import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ErrorNote, PAYMENT_LABELS, PRIMARY_BUTTON, QuoteStatusBadge } from "./quoteUi";
+import { INVOICES_KEY, QUOTES_KEY } from "./quoteQueryKeys";
+
+export function QuotesListPage() {
+  const fetchQuotes = useServerFn(getMyQuotes);
+  const fetchInvoices = useServerFn(getMyInvoices);
+  const [tab, setTab] = useState<"quotes" | "invoices">("quotes");
+  const quotes = useQuery({ queryKey: QUOTES_KEY, queryFn: () => fetchQuotes() });
+  const invoices = useQuery({ queryKey: INVOICES_KEY, queryFn: () => fetchInvoices() });
+  const active = tab === "quotes" ? quotes : invoices;
+  const rows = (active.data ?? []) as DocumentSummary[];
+
+  return (
+    <div className="space-y-6">
+      <header className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <h1 className="font-serif text-2xl">Devis et factures</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Le livre, les dimensions, les prestations : le prix se calcule tout seul.</p>
+        </div>
+        <Link to="/atelier/devis/nouveau" className={PRIMARY_BUTTON}>
+          Nouveau devis
+        </Link>
+      </header>
+
+      <div role="tablist" aria-label="Type de document" className="flex gap-2 border-b border-border">
+        {(
+          [
+            ["quotes", "Devis", quotes.data?.length],
+            ["invoices", "Factures", invoices.data?.length],
+          ] as const
+        ).map(([key, label, count]) => (
+          <button
+            key={key}
+            role="tab"
+            type="button"
+            aria-selected={tab === key}
+            onClick={() => setTab(key)}
+            className={`-mb-px min-h-11 border-b-2 px-4 text-sm font-medium ${tab === key ? "border-foreground" : "border-transparent text-muted-foreground"}`}
+          >
+            {label}
+            {count ? <span className="ml-2 text-xs text-muted-foreground">{count}</span> : null}
+          </button>
+        ))}
+      </div>
+
+      {active.isPending ? (
+        <div role="status" aria-busy="true" className="space-y-3">
+          <span className="sr-only">Chargement…</span>
+          <Skeleton className="h-16 w-full" />
+          <Skeleton className="h-16 w-full" />
+        </div>
+      ) : active.error ? (
+        <ErrorNote>Impossible de charger la liste. Rechargez la page.</ErrorNote>
+      ) : rows.length === 0 ? (
+        <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center">
+          <p className="font-serif text-xl">{tab === "quotes" ? "Aucun devis pour le moment" : "Aucune facture pour le moment"}</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            {tab === "quotes"
+              ? "Prenez un livre, saisissez ses dimensions, cochez les prestations : votre premier devis est prêt en quelques minutes."
+              : "Une facture se crée en un clic depuis un devis accepté."}
+          </p>
+          {tab === "quotes" && (
+            <Link to="/atelier/devis/nouveau" className={`${PRIMARY_BUTTON} mt-5`}>
+              Créer mon premier devis
+            </Link>
+          )}
+        </div>
+      ) : (
+        <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+          {rows.map((row) => (
+            <li key={row.id}>
+              {row.kind === "quote" ? (
+                <Link to="/atelier/devis/$quoteId" params={{ quoteId: row.id }} className="block px-4 py-3 hover:bg-accent focus-visible:bg-accent focus-visible:outline-none sm:px-5">
+                  <RowBody row={row} />
+                </Link>
+              ) : (
+                <Link to="/atelier/factures/$invoiceId" params={{ invoiceId: row.id }} className="block px-4 py-3 hover:bg-accent focus-visible:bg-accent focus-visible:outline-none sm:px-5">
+                  <RowBody row={row} />
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function RowBody({ row }: { row: DocumentSummary }) {
+  return (
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium">
+          {row.clientName}
+          {row.bookTitle ? <span className="font-normal text-muted-foreground"> · {row.bookTitle}</span> : null}
+        </p>
+        <p className="text-xs text-muted-foreground">
+          {row.number} · {formatDateLong(row.issueDate)}
+        </p>
+      </div>
+      {row.kind === "quote" ? (
+        <QuoteStatusBadge status={row.status as QuoteStatus} validUntil={row.validUntil} />
+      ) : (
+        <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold">
+          {PAYMENT_LABELS[row.status as keyof typeof PAYMENT_LABELS] ?? "Émise"}
+        </span>
+      )}
+      <p className="w-28 text-right font-serif text-lg tabular-nums">{euros(row.totalTtcCents)}</p>
+    </div>
+  );
+}

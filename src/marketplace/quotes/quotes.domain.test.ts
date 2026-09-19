@@ -148,6 +148,18 @@ describe("acompte", () => {
     expect(totals.balanceCents).toBe(35000);
   });
 
+  it("l'acompte se calcule sur le total TTC, pas sur le HT : 30 % de 516 € = 154,80 €", () => {
+    const totals = computeQuote({
+      lines: [line(28000), line(3000), line(4500), line(7500)],
+      vatRegime: "VAT_LIABLE",
+      deposit: { type: "PERCENT", bps: 3000 },
+    });
+    expect(totals.totalHtCents).toBe(43000);
+    expect(totals.totalTtcCents).toBe(51600);
+    expect(totals.depositCents).toBe(15480);
+    expect(totals.balanceCents).toBe(36120);
+  });
+
   it("un acompte fixe est plafonné au total ; sans acompte, le solde est le total", () => {
     expect(computeQuote({ lines: [line(1000)], vatRegime: "FRANCHISE", deposit: { type: "AMOUNT", cents: 5000 } }).depositCents).toBe(1000);
     const none = computeQuote({ lines: [line(1000)], vatRegime: "FRANCHISE" });

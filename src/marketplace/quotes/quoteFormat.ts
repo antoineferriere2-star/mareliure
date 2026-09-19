@@ -10,7 +10,7 @@ const MAX_CENTS = 100_000_000;
 
 /** « 280 » → 28000 ; « 280,5 » → 28050 ; « 1 250,00 » → 125000 ; `null` si vide ou invalide. */
 export function parseEurosToCents(input: string): number | null {
-  const cleaned = input.replace(/[\s  €]/g, "");
+  const cleaned = input.replace(/[\s\u00A0\u202F\u20AC]/g, "");
   if (cleaned === "" || /[^0-9.,]/.test(cleaned)) return null;
   // Le dernier séparateur est la virgule décimale ; les autres sont des milliers.
   const lastSep = Math.max(cleaned.lastIndexOf(","), cleaned.lastIndexOf("."));

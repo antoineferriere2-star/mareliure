@@ -6,6 +6,7 @@
  * la PR — ; ici on teste ce que le SERVEUR envoie et comment il isole deux
  * ateliers l'un de l'autre.
  */
+/* eslint-disable @typescript-eslint/no-explicit-any -- le faux client Supabase est volontairement non typé */
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   archiveService,
@@ -552,6 +553,23 @@ describe("devis accepté → facture", () => {
     await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
     return quote;
   }
+
+  it("un devis non accepté est refusé AVANT de parler d'identité : le relieur lit la vraie raison", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput({ siret: null, addressLine1: null }));
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    // Brouillon + profil incomplet : le blocage est le statut, pas le SIRET.
+    expect(await codeOf(convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY))).toBe("conflict");
+  });
+
+  it("un devis envoyé (figé) ne peut plus être modifié, même si la base ne l'imposait pas", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    await setQuoteStatus(world.sb, BINDER_A, quote.id, "sent");
+    const before = world.rpcCalls.length;
+    expect(await codeOf(updateQuote(world.sb, BINDER_A, quote.id, quoteInput({ lines: [line("Autre", 1)] })))).toBe("conflict");
+    // Le serveur refuse avant même d'appeler la fonction SQL de modification.
+    expect(world.rpcCalls.slice(before).some((c) => c.name === "marketplace_binder_update_quote")).toBe(false);
+  });
 
   it("seul un devis accepté se convertit", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput());

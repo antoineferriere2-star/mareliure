@@ -52,7 +52,7 @@ const quantityLabel = (q: number) => String(q).replace(".", ",");
 /** Texte imprimable en WinAnsi. */
 export function toPrintable(text: string, allowed: ReadonlySet<number>): string {
   let out = "";
-  for (const char of text.replace(/[    ]/g, " ").replace(/[\r\t]/g, " ")) {
+  for (const char of text.replace(/[\u00A0\u202F\u2009\u2007]/g, " ").replace(/[\r\t]/g, " ")) {
     const code = char.codePointAt(0)!;
     out += code === 10 || allowed.has(code) ? char : "?";
   }

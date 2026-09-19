@@ -47,6 +47,7 @@ import { Route as InvitationAtelierTokenRouteImport } from './routes/invitation-
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as ProjectSummaryAccessTokenRouteImport } from './routes/project-summary.$accessToken'
 import { Route as AuthenticatedAtelierIndexRouteImport } from './routes/_authenticated/atelier/index'
+import { Route as AuthenticatedAtelierTarifsRouteImport } from './routes/_authenticated/atelier/tarifs'
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
 import { Route as AuthenticatedBuildActivityRouteImport } from './routes/_authenticated/build/activity'
 import { Route as AuthenticatedBuildDashboardRouteImport } from './routes/_authenticated/build/dashboard'
@@ -75,6 +76,9 @@ import { Route as ApiPublicFaqAskRouteImport } from './routes/api/public/faq-ask
 import { Route as ApiPublicProjectSummaryRouteImport } from './routes/api/public/project-summary'
 import { Route as ApiPublicTrackViewRouteImport } from './routes/api/public/track-view'
 import { Route as AuthenticatedAtelierCasesCaseIdRouteImport } from './routes/_authenticated/atelier/cases.$caseId'
+import { Route as AuthenticatedAtelierDevisIndexRouteImport } from './routes/_authenticated/atelier/devis.index'
+import { Route as AuthenticatedAtelierDevisNouveauRouteImport } from './routes/_authenticated/atelier/devis.nouveau'
+import { Route as AuthenticatedAtelierFacturesInvoiceIdRouteImport } from './routes/_authenticated/atelier/factures.$invoiceId'
 import { Route as AuthenticatedBuildDossiersIndexRouteImport } from './routes/_authenticated/build/dossiers.index'
 import { Route as AuthenticatedBuildDossiersIdRouteImport } from './routes/_authenticated/build/dossiers.$id'
 import { Route as AuthenticatedBuildMissionsIndexRouteImport } from './routes/_authenticated/build/missions.index'
@@ -98,6 +102,8 @@ import { Route as ApiPublicPaymentsWebhookRouteImport } from './routes/api/publi
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailTransactionalPreviewRouteImport } from './routes/lovable/email/transactional/preview'
+import { Route as AuthenticatedAtelierDevisQuoteIdIndexRouteImport } from './routes/_authenticated/atelier/devis.$quoteId.index'
+import { Route as AuthenticatedAtelierDevisQuoteIdModifierRouteImport } from './routes/_authenticated/atelier/devis.$quoteId.modifier'
 import { Route as ApiInternalHermesProspectFunnelsMetricsRouteImport } from './routes/api/internal/hermes/prospect-funnels.metrics'
 
 const IndexRoute = IndexRouteImport.update({
@@ -296,6 +302,12 @@ const AuthenticatedAtelierIndexRoute =
     path: '/',
     getParentRoute: () => AuthenticatedAtelierRouteRoute,
   } as any)
+const AuthenticatedAtelierTarifsRoute =
+  AuthenticatedAtelierTarifsRouteImport.update({
+    id: '/tarifs',
+    path: '/tarifs',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
 const AuthenticatedBuildIndexRoute = AuthenticatedBuildIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -456,6 +468,24 @@ const AuthenticatedAtelierCasesCaseIdRoute =
     path: '/cases/$caseId',
     getParentRoute: () => AuthenticatedAtelierRouteRoute,
   } as any)
+const AuthenticatedAtelierDevisIndexRoute =
+  AuthenticatedAtelierDevisIndexRouteImport.update({
+    id: '/devis/',
+    path: '/devis/',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedAtelierDevisNouveauRoute =
+  AuthenticatedAtelierDevisNouveauRouteImport.update({
+    id: '/devis/nouveau',
+    path: '/devis/nouveau',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedAtelierFacturesInvoiceIdRoute =
+  AuthenticatedAtelierFacturesInvoiceIdRouteImport.update({
+    id: '/factures/$invoiceId',
+    path: '/factures/$invoiceId',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
 const AuthenticatedBuildDossiersIndexRoute =
   AuthenticatedBuildDossiersIndexRouteImport.update({
     id: '/dossiers/',
@@ -592,6 +622,18 @@ const LovableEmailTransactionalPreviewRoute =
     path: '/lovable/email/transactional/preview',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedAtelierDevisQuoteIdIndexRoute =
+  AuthenticatedAtelierDevisQuoteIdIndexRouteImport.update({
+    id: '/devis/$quoteId/',
+    path: '/devis/$quoteId/',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedAtelierDevisQuoteIdModifierRoute =
+  AuthenticatedAtelierDevisQuoteIdModifierRouteImport.update({
+    id: '/devis/$quoteId/modifier',
+    path: '/devis/$quoteId/modifier',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
 const ApiInternalHermesProspectFunnelsMetricsRoute =
   ApiInternalHermesProspectFunnelsMetricsRouteImport.update({
     id: '/metrics',
@@ -636,6 +678,7 @@ export interface FileRoutesByFullPath {
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
   '/build/dashboard': typeof AuthenticatedBuildDashboardRoute
   '/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
@@ -665,6 +708,8 @@ export interface FileRoutesByFullPath {
   '/mes-livres/': typeof AuthenticatedMesLivresIndexRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
   '/atelier/cases/$caseId': typeof AuthenticatedAtelierCasesCaseIdRoute
+  '/atelier/devis/nouveau': typeof AuthenticatedAtelierDevisNouveauRoute
+  '/atelier/factures/$invoiceId': typeof AuthenticatedAtelierFacturesInvoiceIdRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
@@ -681,6 +726,7 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/atelier/devis/': typeof AuthenticatedAtelierDevisIndexRoute
   '/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
   '/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
@@ -688,7 +734,9 @@ export interface FileRoutesByFullPath {
   '/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
   '/marketplace/cases/': typeof AuthenticatedMarketplaceCasesIndexRoute
   '/marketplace/pricing/': typeof AuthenticatedMarketplacePricingIndexRoute
+  '/atelier/devis/$quoteId/modifier': typeof AuthenticatedAtelierDevisQuoteIdModifierRoute
   '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
+  '/atelier/devis/$quoteId/': typeof AuthenticatedAtelierDevisQuoteIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -722,6 +770,7 @@ export interface FileRoutesByTo {
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
   '/build/dashboard': typeof AuthenticatedBuildDashboardRoute
   '/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
@@ -750,6 +799,8 @@ export interface FileRoutesByTo {
   '/mes-livres': typeof AuthenticatedMesLivresIndexRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
   '/atelier/cases/$caseId': typeof AuthenticatedAtelierCasesCaseIdRoute
+  '/atelier/devis/nouveau': typeof AuthenticatedAtelierDevisNouveauRoute
+  '/atelier/factures/$invoiceId': typeof AuthenticatedAtelierFacturesInvoiceIdRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
@@ -766,6 +817,7 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/atelier/devis': typeof AuthenticatedAtelierDevisIndexRoute
   '/build/dossiers': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions': typeof AuthenticatedBuildMissionsIndexRoute
   '/build/playbooks': typeof AuthenticatedBuildPlaybooksIndexRoute
@@ -773,7 +825,9 @@ export interface FileRoutesByTo {
   '/build/workspaces': typeof AuthenticatedBuildWorkspacesIndexRoute
   '/marketplace/cases': typeof AuthenticatedMarketplaceCasesIndexRoute
   '/marketplace/pricing': typeof AuthenticatedMarketplacePricingIndexRoute
+  '/atelier/devis/$quoteId/modifier': typeof AuthenticatedAtelierDevisQuoteIdModifierRoute
   '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
+  '/atelier/devis/$quoteId': typeof AuthenticatedAtelierDevisQuoteIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -814,6 +868,7 @@ export interface FileRoutesById {
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/_authenticated/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/_authenticated/build/activity': typeof AuthenticatedBuildActivityRoute
   '/_authenticated/build/dashboard': typeof AuthenticatedBuildDashboardRoute
   '/_authenticated/build/knowledge': typeof AuthenticatedBuildKnowledgeRoute
@@ -843,6 +898,8 @@ export interface FileRoutesById {
   '/_authenticated/mes-livres/': typeof AuthenticatedMesLivresIndexRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
   '/_authenticated/atelier/cases/$caseId': typeof AuthenticatedAtelierCasesCaseIdRoute
+  '/_authenticated/atelier/devis/nouveau': typeof AuthenticatedAtelierDevisNouveauRoute
+  '/_authenticated/atelier/factures/$invoiceId': typeof AuthenticatedAtelierFacturesInvoiceIdRoute
   '/_authenticated/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/_authenticated/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
   '/_authenticated/build/missions/new': typeof AuthenticatedBuildMissionsNewRoute
@@ -859,6 +916,7 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/_authenticated/atelier/devis/': typeof AuthenticatedAtelierDevisIndexRoute
   '/_authenticated/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/_authenticated/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
   '/_authenticated/build/playbooks/': typeof AuthenticatedBuildPlaybooksIndexRoute
@@ -866,7 +924,9 @@ export interface FileRoutesById {
   '/_authenticated/build/workspaces/': typeof AuthenticatedBuildWorkspacesIndexRoute
   '/_authenticated/marketplace/cases/': typeof AuthenticatedMarketplaceCasesIndexRoute
   '/_authenticated/marketplace/pricing/': typeof AuthenticatedMarketplacePricingIndexRoute
+  '/_authenticated/atelier/devis/$quoteId/modifier': typeof AuthenticatedAtelierDevisQuoteIdModifierRoute
   '/api/internal/hermes/prospect-funnels/metrics': typeof ApiInternalHermesProspectFunnelsMetricsRoute
+  '/_authenticated/atelier/devis/$quoteId/': typeof AuthenticatedAtelierDevisQuoteIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -907,6 +967,7 @@ export interface FileRouteTypes {
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/atelier/tarifs'
     | '/build/activity'
     | '/build/dashboard'
     | '/build/knowledge'
@@ -936,6 +997,8 @@ export interface FileRouteTypes {
     | '/mes-livres/'
     | '/portal/'
     | '/atelier/cases/$caseId'
+    | '/atelier/devis/nouveau'
+    | '/atelier/factures/$invoiceId'
     | '/build/dossiers/$id'
     | '/build/missions/$id'
     | '/build/missions/new'
@@ -952,6 +1015,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/atelier/devis/'
     | '/build/dossiers/'
     | '/build/missions/'
     | '/build/playbooks/'
@@ -959,7 +1023,9 @@ export interface FileRouteTypes {
     | '/build/workspaces/'
     | '/marketplace/cases/'
     | '/marketplace/pricing/'
+    | '/atelier/devis/$quoteId/modifier'
     | '/api/internal/hermes/prospect-funnels/metrics'
+    | '/atelier/devis/$quoteId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -993,6 +1059,7 @@ export interface FileRouteTypes {
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/atelier/tarifs'
     | '/build/activity'
     | '/build/dashboard'
     | '/build/knowledge'
@@ -1021,6 +1088,8 @@ export interface FileRouteTypes {
     | '/mes-livres'
     | '/portal'
     | '/atelier/cases/$caseId'
+    | '/atelier/devis/nouveau'
+    | '/atelier/factures/$invoiceId'
     | '/build/dossiers/$id'
     | '/build/missions/$id'
     | '/build/missions/new'
@@ -1037,6 +1106,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/atelier/devis'
     | '/build/dossiers'
     | '/build/missions'
     | '/build/playbooks'
@@ -1044,7 +1114,9 @@ export interface FileRouteTypes {
     | '/build/workspaces'
     | '/marketplace/cases'
     | '/marketplace/pricing'
+    | '/atelier/devis/$quoteId/modifier'
     | '/api/internal/hermes/prospect-funnels/metrics'
+    | '/atelier/devis/$quoteId'
   id:
     | '__root__'
     | '/'
@@ -1084,6 +1156,7 @@ export interface FileRouteTypes {
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/_authenticated/atelier/tarifs'
     | '/_authenticated/build/activity'
     | '/_authenticated/build/dashboard'
     | '/_authenticated/build/knowledge'
@@ -1113,6 +1186,8 @@ export interface FileRouteTypes {
     | '/_authenticated/mes-livres/'
     | '/_authenticated/portal/'
     | '/_authenticated/atelier/cases/$caseId'
+    | '/_authenticated/atelier/devis/nouveau'
+    | '/_authenticated/atelier/factures/$invoiceId'
     | '/_authenticated/build/dossiers/$id'
     | '/_authenticated/build/missions/$id'
     | '/_authenticated/build/missions/new'
@@ -1129,6 +1204,7 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/_authenticated/atelier/devis/'
     | '/_authenticated/build/dossiers/'
     | '/_authenticated/build/missions/'
     | '/_authenticated/build/playbooks/'
@@ -1136,7 +1212,9 @@ export interface FileRouteTypes {
     | '/_authenticated/build/workspaces/'
     | '/_authenticated/marketplace/cases/'
     | '/_authenticated/marketplace/pricing/'
+    | '/_authenticated/atelier/devis/$quoteId/modifier'
     | '/api/internal/hermes/prospect-funnels/metrics'
+    | '/_authenticated/atelier/devis/$quoteId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -1458,6 +1536,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAtelierIndexRouteImport
       parentRoute: typeof AuthenticatedAtelierRouteRoute
     }
+    '/_authenticated/atelier/tarifs': {
+      id: '/_authenticated/atelier/tarifs'
+      path: '/tarifs'
+      fullPath: '/atelier/tarifs'
+      preLoaderRoute: typeof AuthenticatedAtelierTarifsRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
     '/_authenticated/build/': {
       id: '/_authenticated/build/'
       path: '/'
@@ -1654,6 +1739,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAtelierCasesCaseIdRouteImport
       parentRoute: typeof AuthenticatedAtelierRouteRoute
     }
+    '/_authenticated/atelier/devis/': {
+      id: '/_authenticated/atelier/devis/'
+      path: '/devis'
+      fullPath: '/atelier/devis/'
+      preLoaderRoute: typeof AuthenticatedAtelierDevisIndexRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/atelier/devis/nouveau': {
+      id: '/_authenticated/atelier/devis/nouveau'
+      path: '/devis/nouveau'
+      fullPath: '/atelier/devis/nouveau'
+      preLoaderRoute: typeof AuthenticatedAtelierDevisNouveauRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/atelier/factures/$invoiceId': {
+      id: '/_authenticated/atelier/factures/$invoiceId'
+      path: '/factures/$invoiceId'
+      fullPath: '/atelier/factures/$invoiceId'
+      preLoaderRoute: typeof AuthenticatedAtelierFacturesInvoiceIdRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
     '/_authenticated/build/dossiers/': {
       id: '/_authenticated/build/dossiers/'
       path: '/dossiers'
@@ -1815,6 +1921,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailTransactionalPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/atelier/devis/$quoteId/': {
+      id: '/_authenticated/atelier/devis/$quoteId/'
+      path: '/devis/$quoteId'
+      fullPath: '/atelier/devis/$quoteId/'
+      preLoaderRoute: typeof AuthenticatedAtelierDevisQuoteIdIndexRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/atelier/devis/$quoteId/modifier': {
+      id: '/_authenticated/atelier/devis/$quoteId/modifier'
+      path: '/devis/$quoteId/modifier'
+      fullPath: '/atelier/devis/$quoteId/modifier'
+      preLoaderRoute: typeof AuthenticatedAtelierDevisQuoteIdModifierRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
     '/api/internal/hermes/prospect-funnels/metrics': {
       id: '/api/internal/hermes/prospect-funnels/metrics'
       path: '/metrics'
@@ -1826,14 +1946,30 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAtelierRouteRouteChildren {
+  AuthenticatedAtelierTarifsRoute: typeof AuthenticatedAtelierTarifsRoute
   AuthenticatedAtelierIndexRoute: typeof AuthenticatedAtelierIndexRoute
   AuthenticatedAtelierCasesCaseIdRoute: typeof AuthenticatedAtelierCasesCaseIdRoute
+  AuthenticatedAtelierDevisNouveauRoute: typeof AuthenticatedAtelierDevisNouveauRoute
+  AuthenticatedAtelierFacturesInvoiceIdRoute: typeof AuthenticatedAtelierFacturesInvoiceIdRoute
+  AuthenticatedAtelierDevisIndexRoute: typeof AuthenticatedAtelierDevisIndexRoute
+  AuthenticatedAtelierDevisQuoteIdModifierRoute: typeof AuthenticatedAtelierDevisQuoteIdModifierRoute
+  AuthenticatedAtelierDevisQuoteIdIndexRoute: typeof AuthenticatedAtelierDevisQuoteIdIndexRoute
 }
 
 const AuthenticatedAtelierRouteRouteChildren: AuthenticatedAtelierRouteRouteChildren =
   {
+    AuthenticatedAtelierTarifsRoute: AuthenticatedAtelierTarifsRoute,
     AuthenticatedAtelierIndexRoute: AuthenticatedAtelierIndexRoute,
     AuthenticatedAtelierCasesCaseIdRoute: AuthenticatedAtelierCasesCaseIdRoute,
+    AuthenticatedAtelierDevisNouveauRoute:
+      AuthenticatedAtelierDevisNouveauRoute,
+    AuthenticatedAtelierFacturesInvoiceIdRoute:
+      AuthenticatedAtelierFacturesInvoiceIdRoute,
+    AuthenticatedAtelierDevisIndexRoute: AuthenticatedAtelierDevisIndexRoute,
+    AuthenticatedAtelierDevisQuoteIdModifierRoute:
+      AuthenticatedAtelierDevisQuoteIdModifierRoute,
+    AuthenticatedAtelierDevisQuoteIdIndexRoute:
+      AuthenticatedAtelierDevisQuoteIdIndexRoute,
   }
 
 const AuthenticatedAtelierRouteRouteWithChildren =
