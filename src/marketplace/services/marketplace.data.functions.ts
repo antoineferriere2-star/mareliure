@@ -59,7 +59,7 @@ import {
 } from "./binderMembership.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
 import { unreadCountsByCase } from "./messaging.data.functions";
-import { hiddenSenderRolesForCustomer } from "@/marketplace/messaging/conversation";
+import { readableAudiences } from "@/marketplace/messaging/audience";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -1099,7 +1099,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     const caseIds = matches.map((m) => m.case_id);
     const { data: cases } = await sb
       .from("marketplace_cases")
-      .select("id, reference, status, dossier_id")
+      .select("id, reference, status, dossier_id, brand")
       .in("id", caseIds);
 
     // Titles again come from the Dossier the case points at, never from a copy.
@@ -1137,7 +1137,19 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
       .in("case_id", caseIds)
       .eq("binder_id", binder!.id);
 
-    const unread = await unreadCountsByCase(sb, caseIds, context.userId);
+    // Seul l'atelier RETENU lit une conversation (et seulement ses audiences) : un atelier invité ou
+    // disponible n'y a aucun droit, ses messages ne comptent donc pas — 0, jamais un compte qui les trahirait.
+    const readableByCase = new Map<string, readonly string[]>();
+    for (const match of matches) {
+      if (match.state !== "selected") continue;
+      const brandRaw = (cases ?? []).find((c) => c.id === match.case_id)?.brand;
+      const brand = isMarketplaceBrand(brandRaw ?? "") ? (brandRaw as "MA_RELIURE" | "FINE_BINDERY") : "MA_RELIURE";
+      readableByCase.set(
+        match.case_id,
+        readableAudiences("binder", marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
+      );
+    }
+    const unread = await unreadCountsByCase(sb, caseIds, context.userId, readableByCase);
 
     return matches.map((match) => {
       const row = (cases ?? []).find((c) => c.id === match.case_id);
@@ -1302,19 +1314,19 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
 
     const caseIds = (cases ?? []).map((row) => row.id);
-    // Un message d'atelier que ce client ne peut pas lire (Fine Bindery : le
-    // concierge est son seul interlocuteur) ne compte pas dans ses non-lus.
-    const hiddenSenderRoles = new Map(
+    // Seuls les messages des audiences que ce client peut lire comptent dans ses non-lus (Fine Bindery :
+    // le concierge est son seul interlocuteur — jamais un message d'atelier).
+    const readableAudiencesByCase = new Map(
       (cases ?? []).map((row) => {
         const brand = isMarketplaceBrand(row.brand) ? row.brand : "MA_RELIURE";
         return [
           row.id,
-          hiddenSenderRolesForCustomer(marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
+          readableAudiences("customer", marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
         ] as const;
       }),
     );
     const [unread, openDecisions] = await Promise.all([
-      unreadCountsByCase(sb, caseIds, context.userId, hiddenSenderRoles),
+      unreadCountsByCase(sb, caseIds, context.userId, readableAudiencesByCase),
       caseIds.length === 0
         ? Promise.resolve({ data: [] as { case_id: string }[] })
         : sb.from("marketplace_decisions").select("case_id").eq("status", "open").in("case_id", caseIds),

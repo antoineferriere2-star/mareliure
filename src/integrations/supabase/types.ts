@@ -2638,6 +2638,7 @@ export type Database = {
       marketplace_messages: {
         Row: {
           attachment_paths: string[]
+          audience: string
           body: string
           case_id: string
           created_at: string
@@ -2649,6 +2650,7 @@ export type Database = {
         }
         Insert: {
           attachment_paths?: string[]
+          audience?: string
           body?: string
           case_id: string
           created_at?: string
@@ -2660,6 +2662,7 @@ export type Database = {
         }
         Update: {
           attachment_paths?: string[]
+          audience?: string
           body?: string
           case_id?: string
           created_at?: string

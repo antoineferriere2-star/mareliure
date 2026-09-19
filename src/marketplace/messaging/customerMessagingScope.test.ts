@@ -47,7 +47,7 @@ vi.mock("@/lib/email-templates/send-email", () => ({
 const { listCaseMessages, sendCaseMessage, unreadCountsByCase } = await import(
   "@/marketplace/services/messaging.data.functions"
 );
-const { customerVisibleSenderRoles, hiddenSenderRolesForCustomer } = await import("./conversation");
+const { readableAudiences } = await import("./audience");
 
 const CASE_FB = "11111111-1111-4111-8111-111111111111";
 const CASE_MR = "22222222-2222-4222-8222-222222222222";
@@ -96,11 +96,12 @@ function fakeSb(tables: Record<string, Row[]>) {
   };
 }
 
-const message = (id: string, caseId: string, role: string, body: string, minute: number): Row => ({
+const message = (id: string, caseId: string, role: string, body: string, minute: number, audience = "shared"): Row => ({
   id,
   case_id: caseId,
   sender_user_id: role === "customer" ? CUSTOMER : `user-${role}`,
   sender_role: role,
+  audience,
   body,
   attachment_paths: null,
   created_at: `2026-09-18T10:0${minute}:00.000Z`,
@@ -117,10 +118,16 @@ function world() {
       { case_id: CASE_FB, binder_id: "b1", state: "selected" },
       { case_id: CASE_MR, binder_id: "b1", state: "selected" },
     ],
+    marketplace_binders: [
+      { id: "b1", status: "approved" },
+      { id: "b-susp", status: "suspended" },
+      { id: "b-rej", status: "rejected" },
+    ],
     marketplace_messages: [
-      message("f1", CASE_FB, "customer", "customer question", 1),
-      message("f2", CASE_FB, "admin", "concierge answer", 2),
-      message("f3", CASE_FB, "binder", "workshop note", 3),
+      message("f1", CASE_FB, "customer", "customer question", 1, "customer_concierge"),
+      message("f2", CASE_FB, "admin", "concierge answer", 2, "customer_concierge"),
+      message("f3", CASE_FB, "binder", "workshop note", 3, "workshop_platform"),
+      message("f4", CASE_FB, "admin", "concierge to workshop", 4, "workshop_platform"),
       message("m1", CASE_MR, "customer", "question client", 1),
       message("m2", CASE_MR, "admin", "réponse équipe", 2),
       message("m3", CASE_MR, "binder", "note de l'atelier", 3),
@@ -139,12 +146,12 @@ beforeEach(() => {
   state.viewer = asCustomer();
 });
 
-describe("la règle : qui lit quoi", () => {
-  it("Ma Reliure : tout le fil ; Fine Bindery : jamais un message d'atelier", () => {
-    expect(customerVisibleSenderRoles(true)).toEqual(["customer", "binder", "admin"]);
-    expect(customerVisibleSenderRoles(false)).toEqual(["customer", "admin"]);
-    expect(hiddenSenderRolesForCustomer(true)).toEqual([]);
-    expect(hiddenSenderRolesForCustomer(false)).toEqual(["binder"]);
+describe("la règle : qui lit quoi (audiences persistées)", () => {
+  it("le client : Ma Reliure le fil partagé ; Fine Bindery seulement son canal concierge — jamais celui de l'atelier", () => {
+    expect(readableAudiences("customer", true)).toEqual(["shared", "customer_concierge"]);
+    expect(readableAudiences("customer", false)).toEqual(["customer_concierge"]);
+    expect(readableAudiences("customer", true)).not.toContain("workshop_platform");
+    expect(readableAudiences("customer", false)).not.toContain("workshop_platform");
   });
 });
 
@@ -155,6 +162,7 @@ describe("listCaseMessages", () => {
     const result = await listCaseMessages({ context: context(CUSTOMER), data: { caseId: CASE_FB } } as never);
     expect(bodies(result as never)).toEqual(["customer question", "concierge answer"]);
     expect(JSON.stringify(result)).not.toContain("workshop note");
+    expect(JSON.stringify(result)).not.toContain("concierge to workshop");
     expect((result as { messages: { senderRole: string }[] }).messages.map((m) => m.senderRole)).not.toContain("binder");
   });
 
@@ -165,20 +173,30 @@ describe("listCaseMessages", () => {
     expect(bodies(result as never)).toEqual(["question client", "réponse équipe", "note de l'atelier"]);
   });
 
-  it("l'atelier lit toujours le fil entier, y compris sur Fine Bindery — l'espace atelier n'est pas touché", async () => {
+  it("Fine Bindery — l'atelier retenu ne lit QUE son canal avec la plateforme, jamais l'échange client ↔ concierge (P1-6)", async () => {
     const { sb } = world();
     state.sb = sb;
     state.viewer = { role: "binder", binderId: "b1" };
     const result = await listCaseMessages({ context: context("user-binder"), data: { caseId: CASE_FB } } as never);
-    expect(bodies(result as never)).toEqual(["customer question", "concierge answer", "workshop note"]);
+    expect(bodies(result as never)).toEqual(["workshop note", "concierge to workshop"]);
+    expect(JSON.stringify(result)).not.toContain("customer question");
+    expect(JSON.stringify(result)).not.toContain("concierge answer");
   });
 
-  it("l'admin lit le fil entier", async () => {
+  it("Ma Reliure — l'atelier retenu lit toujours le fil partagé, comme avant", async () => {
+    const { sb } = world();
+    state.sb = sb;
+    state.viewer = { role: "binder", binderId: "b1" };
+    const result = await listCaseMessages({ context: context("user-binder"), data: { caseId: CASE_MR } } as never);
+    expect(bodies(result as never)).toEqual(["question client", "réponse équipe", "note de l'atelier"]);
+  });
+
+  it("l'admin (le concierge) lit tous les canaux", async () => {
     const { sb } = world();
     state.sb = sb;
     state.viewer = { role: "admin" };
     const result = await listCaseMessages({ context: context("user-admin"), data: { caseId: CASE_FB } } as never);
-    expect(bodies(result as never)).toHaveLength(3);
+    expect(bodies(result as never)).toHaveLength(4);
   });
 
   it("un autre compte n'a accès à aucun fil", async () => {
@@ -192,23 +210,30 @@ describe("listCaseMessages", () => {
 });
 
 describe("unreadCountsByCase", () => {
-  it("un message d'atelier que le client ne peut pas lire n'entre pas dans ses non-lus", async () => {
+  it("un message d'un canal que le client ne peut pas lire n'entre pas dans ses non-lus", async () => {
     const { sb } = world();
-    const hidden = new Map<string, readonly string[]>([
-      [CASE_FB, hiddenSenderRolesForCustomer(false)],
-      [CASE_MR, hiddenSenderRolesForCustomer(true)],
+    const readable = new Map<string, readonly string[]>([
+      [CASE_FB, readableAudiences("customer", false)],
+      [CASE_MR, readableAudiences("customer", true)],
     ]);
-    const counts = await unreadCountsByCase(sb as never, [CASE_FB, CASE_MR], CUSTOMER, hidden);
+    const counts = await unreadCountsByCase(sb as never, [CASE_FB, CASE_MR], CUSTOMER, readable);
     // FB : seul le concierge (le client ne compte pas ses propres messages) ; MR : équipe + atelier.
     expect(counts.get(CASE_FB)).toBe(1);
     expect(counts.get(CASE_MR)).toBe(2);
   });
 
-  it("sans règle fournie, le comptage est celui d'avant (atelier et binder inchangés)", async () => {
+  it("un dossier sans audience lisible (atelier invité, non retenu) n'a AUCUN non-lu — jamais un compte qui trahirait le fil", async () => {
     const { sb } = world();
-    const counts = await unreadCountsByCase(sb as never, [CASE_FB, CASE_MR], CUSTOMER);
-    expect(counts.get(CASE_FB)).toBe(2);
-    expect(counts.get(CASE_MR)).toBe(2);
+    const counts = await unreadCountsByCase(sb as never, [CASE_FB, CASE_MR], "user-binder", new Map());
+    expect(counts.get(CASE_FB)).toBe(0);
+    expect(counts.get(CASE_MR)).toBe(0);
+  });
+
+  it("l'atelier retenu ne compte que son canal sur Fine Bindery", async () => {
+    const { sb } = world();
+    const counts = await unreadCountsByCase(sb as never, [CASE_FB], "user-binder", new Map([[CASE_FB, readableAudiences("binder", false)]]));
+    // f3 (sien, ignoré) ; f4 (concierge → atelier) compte.
+    expect(counts.get(CASE_FB)).toBe(1);
   });
 });
 
@@ -256,7 +281,7 @@ describe("sendCaseMessage : la notification e-mail du client", () => {
 describe("le contrat de la marque", () => {
   it("la règle vient du drapeau de marque customerWorkshopDirectMessaging — désormais lu", () => {
     const server = readFileSync(resolve(process.cwd(), "src/marketplace/services/messaging.data.functions.ts"), "utf8");
-    expect(server).toContain("customerVisibleSenderRoles(directWorkshopMessaging)");
+    expect(server).toContain("customerCanReadAudience(audience, directWorkshopMessaging)");
     expect(server).toContain("config.messaging.customerWorkshopDirectMessaging");
     const list = readFileSync(resolve(process.cwd(), "src/marketplace/services/marketplace.data.functions.ts"), "utf8");
     expect(list).toContain("marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging");
