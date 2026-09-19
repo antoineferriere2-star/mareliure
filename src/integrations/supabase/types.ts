@@ -2957,6 +2957,10 @@ export type Database = {
         }
         Returns: string
       }
+      marketplace_dossier_ids_for_verified_email: {
+        Args: { p_email: string }
+        Returns: string[]
+      }
       marketplace_ingest_missing_cases: { Args: never; Returns: number }
       marketplace_respond_to_offer: {
         Args: {
