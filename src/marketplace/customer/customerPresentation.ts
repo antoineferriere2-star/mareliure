@@ -23,6 +23,8 @@ export interface CustomerCaseFacts {
   hasPrice: boolean;
   /** Une proposition commerciale acceptée existe. */
   proposalAccepted: boolean;
+  /** Le serveur affirme que le client peut, maintenant, accepter la proposition qu'on lui présente. */
+  proposalAcceptable: boolean;
   /** Le serveur affirme que le paiement peut démarrer (checkoutEligibility). */
   paymentEligible: boolean;
   /** Le paiement est enregistré. */
@@ -140,7 +142,9 @@ export function customerStatusKey(facts: CustomerCaseFacts): CustomerStatusKey {
 
 export function customerStatus(facts: CustomerCaseFacts, locale: CustomerLocale): CustomerStatus {
   const key = customerStatusKey(facts);
-  return { key, label: STATUS_LABELS[locale][key], tone: STATUS_TONES[key] };
+  // Une proposition qui attend l'acceptation du client est une action, pas une simple info.
+  const tone = key === "proposal_ready" && facts.proposalAcceptable ? "action" : STATUS_TONES[key];
+  return { key, label: STATUS_LABELS[locale][key], tone };
 }
 
 // ---------------------------------------------------------------------------
@@ -149,10 +153,10 @@ export function customerStatus(facts: CustomerCaseFacts, locale: CustomerLocale)
 
 /**
  * Ce que le bouton principal de la zone « Prochaine étape » déclenche.
- * `pay` n'est jamais décidé ici : le composant qui le rend appelle la server
- * function existante, qui revalide tout côté serveur.
+ * `pay` et `accept` ne sont jamais décidés ici : le composant qui les rend
+ * appelle la server function correspondante, qui revalide tout côté serveur.
  */
-export type NextStepAction = "pay" | "decision" | "proposal" | "messages";
+export type NextStepAction = "accept" | "pay" | "decision" | "proposal" | "messages";
 
 export interface NextStep {
   /** Une phrase, à l'indicatif, sans jargon. */
@@ -193,7 +197,7 @@ const NEXT_STEP_COPY: Record<CustomerLocale, Record<CustomerStatusKey, NextStepC
       label: "Répondre",
     },
     payment_due: {
-      text: "Votre proposition est validée. Votre paiement est attendu pour lancer la prise en charge.",
+      text: "Votre proposition est acceptée. Votre paiement est attendu pour lancer la prise en charge.",
       action: "pay",
       label: "Payer",
     },
@@ -225,7 +229,7 @@ const NEXT_STEP_COPY: Record<CustomerLocale, Record<CustomerStatusKey, NextStepC
       label: "Reply",
     },
     payment_due: {
-      text: "Your proposal is validated. Your payment is awaited to begin work.",
+      text: "Your proposal is accepted. Payment is now due to begin work.",
       action: "pay",
       label: "Pay securely",
     },
@@ -233,7 +237,7 @@ const NEXT_STEP_COPY: Record<CustomerLocale, Record<CustomerStatusKey, NextStepC
     workshop_selected: { text: "Your workshop is confirmed. We are preparing what comes next." },
     in_progress: { text: "Your book is being worked on." },
     needs_approval: {
-      text: "The workshop is waiting for your approval to continue.",
+      text: "We need your approval to continue.",
       action: "decision",
       label: "Reply",
     },
@@ -245,9 +249,24 @@ const NEXT_STEP_COPY: Record<CustomerLocale, Record<CustomerStatusKey, NextStepC
   },
 };
 
+/** « Votre proposition est prête » quand le client peut l'accepter : l'acceptation est son action. */
+const ACCEPT_STEP_COPY: Record<CustomerLocale, NextStepCopy> = {
+  "fr-FR": {
+    text: "Votre proposition est prête. Acceptez-la pour passer au paiement.",
+    action: "accept",
+    label: "Accepter la proposition",
+  },
+  "en-US": {
+    text: "Your proposal is ready. Accept it to move on to payment.",
+    action: "accept",
+    label: "Accept proposal",
+  },
+};
+
 export function customerNextStep(facts: CustomerCaseFacts, locale: CustomerLocale): NextStep {
   const key = customerStatusKey(facts);
-  const copy = NEXT_STEP_COPY[locale][key];
+  const copy =
+    key === "proposal_ready" && facts.proposalAcceptable ? ACCEPT_STEP_COPY[locale] : NEXT_STEP_COPY[locale][key];
   const action = copy.action ?? null;
   return {
     text: copy.text,
@@ -267,15 +286,16 @@ export interface SortableCustomerRow {
   createdAt: string;
   actionRequired: boolean;
   paymentEligible: boolean;
+  proposalAcceptable: boolean;
 }
 
 /**
- * Un projet qui attend le client (une réponse, un paiement) passe avant les
+ * Un projet qui attend le client (une réponse, une acceptation, un paiement) passe avant les
  * autres ; à égalité, le plus récent d'abord. « Qu'est-ce que je dois faire
  * maintenant ? » est la première question d'une liste.
  */
 export function sortForCustomer<T extends SortableCustomerRow>(rows: readonly T[]): T[] {
-  const waiting = (row: T) => (row.actionRequired || row.paymentEligible ? 0 : 1);
+  const waiting = (row: T) => (row.actionRequired || row.paymentEligible || row.proposalAcceptable ? 0 : 1);
   return [...rows].sort((a, b) => waiting(a) - waiting(b) || b.createdAt.localeCompare(a.createdAt));
 }
 
@@ -525,7 +545,15 @@ export interface CustomerCopy {
   proposalEstimate: (range: string) => string;
   proposalIncludes: string;
   proposalNotPayable: string;
+  proposalPayAfterAccept: string;
+  proposalAcceptedOn: (date: string) => string;
   proposalPaid: string;
+  acceptLabel: string;
+  acceptBusy: string;
+  acceptError: string;
+  acceptedNotice: string;
+  /** « En acceptant, vous confirmez le total de … » — le total est celui que le serveur a envoyé. */
+  acceptSummary: (total: string, taxIncluded: boolean) => string;
   payLabel: string;
   payRedirecting: string;
   payError: string;
@@ -591,6 +619,12 @@ export interface CustomerCopy {
   skipToContent: string;
   backNavLabel: string;
   messagesRefreshError: string;
+  conciergeTitle: string;
+  conciergeIntro: string;
+  conciergeEmpty: string;
+  conciergePlaceholder: string;
+  conciergeAuthor: string;
+  conciergeCta: string;
 }
 
 const FR: CustomerCopy = {
@@ -619,7 +653,14 @@ const FR: CustomerCopy = {
   proposalEstimate: (range) => `Estimation : ${range}. Le prix définitif est confirmé après examen du livre par l'atelier.`,
   proposalIncludes: "Comprend",
   proposalNotPayable: "Le paiement sera disponible après validation de votre proposition.",
+  proposalPayAfterAccept: "Le paiement sera disponible dès que vous aurez accepté la proposition.",
+  proposalAcceptedOn: (d) => `Proposition acceptée le ${d}.`,
   proposalPaid: "Paiement reçu. Merci.",
+  acceptLabel: "Accepter la proposition",
+  acceptBusy: "Enregistrement…",
+  acceptError: "Nous n'avons pas pu enregistrer votre acceptation. Réessayez.",
+  acceptedNotice: "Proposition acceptée. Vous pouvez maintenant payer.",
+  acceptSummary: (total, tax) => `En acceptant, vous confirmez le total de ${total}${tax ? " TTC" : " HT"} indiqué ci-dessous.`,
   payLabel: "Payer",
   payRedirecting: "Redirection…",
   payError: "Le paiement n'a pas pu démarrer. Réessayez dans un instant.",
@@ -685,6 +726,12 @@ const FR: CustomerCopy = {
   skipToContent: "Aller au contenu",
   backNavLabel: "Retour à la liste de vos livres",
   messagesRefreshError: "Impossible d'actualiser les messages pour le moment.",
+  conciergeTitle: "Votre interlocuteur Ma Reliure",
+  conciergeIntro: "Écrivez ici pour toute question sur votre livre.",
+  conciergeEmpty: "Aucun message pour l'instant.",
+  conciergePlaceholder: "Écrivez votre message…",
+  conciergeAuthor: "Ma Reliure",
+  conciergeCta: "Envoyer un message",
 };
 
 const EN: CustomerCopy = {
@@ -713,7 +760,14 @@ const EN: CustomerCopy = {
   proposalEstimate: (range) => `Estimate: ${range}. The final price is confirmed after the workshop has examined the book.`,
   proposalIncludes: "Includes",
   proposalNotPayable: "Payment will be available once your proposal has been validated.",
+  proposalPayAfterAccept: "Payment will be available as soon as you accept the proposal.",
+  proposalAcceptedOn: (d) => `Proposal accepted on ${d}.`,
   proposalPaid: "Payment received. Thank you.",
+  acceptLabel: "Accept proposal",
+  acceptBusy: "Saving…",
+  acceptError: "We couldn't record your acceptance. Please try again.",
+  acceptedNotice: "Proposal accepted. You can now pay securely.",
+  acceptSummary: (total, tax) => `By accepting, you confirm the total of ${total}${tax ? " incl. tax" : " excl. tax"} shown below.`,
   payLabel: "Pay securely",
   payRedirecting: "Redirecting…",
   payError: "We couldn't start the payment. Please try again in a moment.",
@@ -779,6 +833,12 @@ const EN: CustomerCopy = {
   skipToContent: "Skip to content",
   backNavLabel: "Back to your books",
   messagesRefreshError: "We couldn't refresh your messages just now.",
+  conciergeTitle: "Your Fine Bindery concierge",
+  conciergeIntro: "Write here about anything to do with your book. Your concierge looks after it with you and coordinates with the workshop on your behalf.",
+  conciergeEmpty: "No messages yet. Ask your concierge anything about your project.",
+  conciergePlaceholder: "Write to your concierge…",
+  conciergeAuthor: "Fine Bindery concierge",
+  conciergeCta: "Message your concierge",
 };
 
 export function customerCopy(locale: CustomerLocale): CustomerCopy {

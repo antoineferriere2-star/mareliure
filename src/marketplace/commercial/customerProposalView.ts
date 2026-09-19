@@ -1,5 +1,6 @@
 /**
- * Ce qu'un client a le droit de lire d'une proposition commerciale acceptée.
+ * Ce qu'un client a le droit de lire d'une proposition commerciale — celle qu'on
+ * lui présente, ou celle qu'il a acceptée.
  *
  * Une liste blanche, construite champ par champ : jamais un `...proposal`.
  * La ligne de base contient la rémunération de l'atelier, la marge visée, les
@@ -8,13 +9,14 @@
  * navigateur, et l'ajout d'une colonne à la table ne doit jamais changer ce
  * qu'un client reçoit. Un champ est exposé parce qu'il est écrit ici.
  *
- * Aucun calcul : les montants sont ceux du snapshot figé à l'acceptation
- * (immuable en base). Ce module ne recalcule ni HT, ni TVA, ni TTC.
+ * Aucun calcul : les montants sont ceux du snapshot enregistré (figé, donc
+ * immuable, dès l'acceptation). Ce module ne recalcule ni HT, ni TVA, ni TTC.
  */
 import type { PricingMode } from "@/marketplace/pricing/pricingMode";
 
 /** Les seuls champs d'une proposition qu'un client peut lire. */
 export interface CustomerProposalSource {
+  id: string;
   pricingMode: PricingMode;
   currency: string;
   customerServicePriceCents: number;
@@ -30,6 +32,12 @@ export interface CustomerProposalSource {
 }
 
 export interface CustomerProposalView {
+  /**
+   * L'identité de la proposition que le client a sous les yeux. Il la renvoie
+   * pour accepter : le serveur vérifie que c'est toujours la proposition en
+   * cours. Jamais un montant — aucun prix ne voyage du navigateur au serveur.
+   */
+  id: string;
   pricingMode: PricingMode;
   currency: string;
   serviceCents: number;
@@ -47,6 +55,7 @@ export interface CustomerProposalView {
 
 export function toCustomerProposalView(source: CustomerProposalSource): CustomerProposalView {
   return {
+    id: source.id,
     pricingMode: source.pricingMode,
     currency: source.currency,
     serviceCents: source.customerServicePriceCents,

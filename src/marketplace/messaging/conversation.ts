@@ -59,6 +59,29 @@ export function senderRoleFor(viewer: Viewer): SenderRole | null {
   }
 }
 
+/**
+ * Ce que le client d'une marque lit dans le fil de son dossier.
+ *
+ * Ma Reliure : tout — le fil est partagé entre le client, son atelier et
+ * l'équipe. Fine Bindery (`customerWorkshopDirectMessaging: false`, modèle
+ * concierge) : jamais un message d'atelier — son seul interlocuteur est le
+ * concierge, qui relaie. Un message d'atelier n'est donc ni envoyé au navigateur
+ * de ce client, ni compté dans ses non-lus.
+ *
+ * Ceci ne décide que de ce que LIT le client. Ce que lit l'atelier (le fil
+ * entier, messages du client compris) n'est pas touché ici : voir la section
+ * « modèle concierge » de docs/CODEX_HANDOFF.md.
+ */
+export function customerVisibleSenderRoles(directWorkshopMessaging: boolean): readonly SenderRole[] {
+  return directWorkshopMessaging ? ["customer", "binder", "admin"] : ["customer", "admin"];
+}
+
+/** Les rôles d'auteur dont un client ne reçoit aucun message — le complément du précédent. */
+export function hiddenSenderRolesForCustomer(directWorkshopMessaging: boolean): readonly SenderRole[] {
+  const visible = customerVisibleSenderRoles(directWorkshopMessaging);
+  return (["customer", "binder", "admin"] as const).filter((role) => !visible.includes(role));
+}
+
 export interface ConversationMessageFacts {
   senderUserId: string | null;
   createdAt: string;

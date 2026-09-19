@@ -46,6 +46,7 @@ export interface CustomerListRow {
   amountIncludesTax: boolean;
   hasPrice: boolean;
   proposalAccepted: boolean;
+  proposalAcceptable: boolean;
   paymentEligible: boolean;
   paid: boolean;
   unreadCount: number;
@@ -57,6 +58,7 @@ function factsOf(row: CustomerListRow): CustomerCaseFacts {
     status: row.status,
     hasPrice: row.hasPrice,
     proposalAccepted: row.proposalAccepted,
+    proposalAcceptable: row.proposalAcceptable,
     paymentEligible: row.paymentEligible,
     paid: row.paid,
     actionRequired: row.actionRequired,
@@ -100,7 +102,7 @@ function ProjectCard({
   const next = customerNextStep(facts, locale);
   const created = formatCustomerDate(row.createdAt, locale);
   const meta = [row.projectType, created ? copy.createdOn(created) : null].filter(Boolean).join(" · ");
-  const urgent = row.actionRequired || row.paymentEligible;
+  const urgent = row.actionRequired || row.paymentEligible || row.proposalAcceptable;
 
   return (
     <Link

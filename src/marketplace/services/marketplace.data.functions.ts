@@ -58,6 +58,7 @@ import {
 } from "./binderMembership.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
 import { unreadCountsByCase } from "./messaging.data.functions";
+import { hiddenSenderRolesForCustomer } from "@/marketplace/messaging/conversation";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -1295,8 +1296,19 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
 
     const caseIds = (cases ?? []).map((row) => row.id);
+    // Un message d'atelier que ce client ne peut pas lire (Fine Bindery : le
+    // concierge est son seul interlocuteur) ne compte pas dans ses non-lus.
+    const hiddenSenderRoles = new Map(
+      (cases ?? []).map((row) => {
+        const brand = isMarketplaceBrand(row.brand) ? row.brand : "MA_RELIURE";
+        return [
+          row.id,
+          hiddenSenderRolesForCustomer(marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
+        ] as const;
+      }),
+    );
     const [unread, openDecisions] = await Promise.all([
-      unreadCountsByCase(sb, caseIds, context.userId),
+      unreadCountsByCase(sb, caseIds, context.userId, hiddenSenderRoles),
       caseIds.length === 0
         ? Promise.resolve({ data: [] as { case_id: string }[] })
         : sb.from("marketplace_decisions").select("case_id").eq("status", "open").in("case_id", caseIds),
@@ -1313,12 +1325,13 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       const intentLine = caseContext?.brief.confirmedInformation.find(
         (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
       );
+      // Même règle que le détail : un prix n'est montré que validé par un humain.
+      const priceValidated = row.pricing_status === "validated";
       const [commerce, thumbnailUrl] = await Promise.all([
-        loadCustomerCommerce(sb, row.id),
+        loadCustomerCommerce(sb, row.id, { priceValidated, caseStatus: row.status }),
         caseContext ? signFirstCasePhoto(sb, caseContext.answers) : Promise.resolve(null),
       ]);
-      // Même règle que le détail : un prix n'est montré que validé par un humain.
-      const validatedPriceCents = row.pricing_status === "validated" ? row.customer_price_cents : null;
+      const validatedPriceCents = priceValidated ? row.customer_price_cents : null;
       const amountCents = commerce.proposal?.totalTtcCents ?? validatedPriceCents;
       results.push({
         id: row.id,
@@ -1334,7 +1347,8 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
         amountCents,
         amountIncludesTax: commerce.proposal?.totalTtcCents != null,
         hasPrice: validatedPriceCents !== null,
-        proposalAccepted: commerce.proposal !== null,
+        proposalAccepted: commerce.proposalAccepted,
+        proposalAcceptable: commerce.canAccept,
         paymentEligible: commerce.paymentEligible,
         paid: commerce.paidAt !== null,
         unreadCount: unread.get(row.id) ?? 0,
@@ -1389,7 +1403,10 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     // (`checkoutEligibility`, voir customerCommerce.server.ts), relu ici,
     // jamais recalculé côté navigateur. `commerce.proposal` est la vue client
     // en liste blanche : ni rémunération d'atelier, ni marge, ni règle.
-    const commerce = await loadCustomerCommerce(sb, data.caseId);
+    const commerce = await loadCustomerCommerce(sb, data.caseId, {
+      priceValidated: caseContext.row.pricing_status === "validated",
+      caseStatus: caseContext.row.status,
+    });
     const intentLine = caseContext.brief.confirmedInformation.find(
       (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
     );
@@ -1413,8 +1430,13 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
         createdAt: caseContext.row.created_at,
         projectType: intentLine ? publicCopy(locale, intentLine.value) : null,
         paymentEligible: commerce.paymentEligible,
+        canAcceptProposal: commerce.canAccept,
         paidAt: commerce.paidAt,
         openDecisions: openDecisions ?? 0,
+        // `concierge` : le client n'écrit jamais à l'atelier (Fine Bindery).
+        messagingChannel: marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging
+          ? ("direct" as const)
+          : ("concierge" as const),
       },
       proposal: commerce.proposal,
       view,

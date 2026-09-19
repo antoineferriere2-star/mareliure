@@ -997,14 +997,83 @@ fenêtre d'environ 500 px de large : des captures « 375 px » prises ainsi sont
 mises en page à 500 px puis rognées — pour un vrai rendu mobile, utiliser un
 iframe de la largeur voulue.
 
+**Mise à jour de la PR #2 — acceptation client et canal Concierge** (après revue
+du premier rendu ; toujours ni pricing, ni fiscalité, ni Stripe, ni shipping,
+ni espace atelier, ni migration) :
+
+1. *Acceptation client de la proposition.* Le parcours cible est : proposition
+   présentée → le client consulte → **il accepte** → le paiement devient
+   possible → il paie. Avant, seule l'administration pouvait accepter
+   (`acceptCommercialProposal`, inchangée). Ajout de `acceptMyProposal`
+   (`customerProposalAcceptance.data.functions.ts`) qui délègue à la MÊME écriture
+   (`accepted_at` posé, ligne immuable par trigger) après avoir vérifié côté
+   serveur, dans cet ordre : le dossier, son propriétaire (`canViewCase`, rôle
+   client — ni atelier ni admin par ce chemin), la proposition déjà acceptée
+   (idempotent), la proposition demandée (elle doit appartenir au dossier), qu'elle
+   est toujours la dernière version, puis la règle `customerAcceptance`
+   (proposition `proposed`, prix du dossier validé par un humain, projet non clos,
+   et **fiscalité/identité professionnelle jugées par `checkoutEligibility`** —
+   un client ne peut donc jamais accepter vers un « Payer » qui échouerait).
+   Le navigateur n'envoie que `{ caseId, proposalId }` (schéma `.strict()`) :
+   jamais un montant, une taxe ou un statut. Après succès, la possibilité de
+   payer est recalculée (`loadCustomerCommerce` → `checkoutEligibility`).
+   Une proposition révisée pendant la lecture est refusée (le client relit la
+   nouvelle version : il n'accepte jamais un prix qu'il n'a pas vu). Une seconde
+   acceptation de la même proposition (double clic, deux onglets) réussit sans
+   rien réécrire ni second événement. Événement `commercial_proposal_accepted`
+   avec `accepted_by: "customer"`.
+   Visibilité : avant acceptation, le client ne voit la proposition que si elle est
+   acceptable ; une proposition en préparation (fiscalité non validée, prix non
+   validé) n'existe pas encore pour lui. Une proposition déjà acceptée n'est
+   jamais remplacée par une version plus récente. UX : « Accepter la proposition »
+   / « Accept proposal » est l'action principale de « Prochaine étape », avec le
+   total confirmé en toutes lettres ; une fois acceptée, « Payer » / « Pay securely »
+   la remplace. Si une confirmation est aussi demandée, elle garde la première
+   place et le bouton d'acceptation reste accessible dans la carte proposition.
+   Hors périmètre volontaire : aucune case « J'accepte les CGV » n'a été ajoutée
+   (les CGV ne sont pas touchées) — à décider avec le juridique.
+2. *Fine Bindery — modèle concierge.* Constat : il n'existe **qu'un seul fil par
+   dossier** (`marketplace_messages`, sans colonne de canal) partagé client /
+   atelier / admin, et `customerWorkshopDirectMessaging` n'était lu nulle part.
+   Le drapeau est maintenant lu, et un client Fine Bindery : (a) ne reçoit plus
+   aucun message d'atelier (`listCaseMessages` filtre côté serveur avant l'envoi,
+   pour le rôle client seulement — `customerVisibleSenderRoles`) ; (b) ne les voit
+   pas dans ses non-lus (`unreadCountsByCase`) ; (c) n'est plus notifié par e-mail
+   d'un message d'atelier qu'il ne peut pas lire, et le message du concierge le
+   nomme (« Your Fine Bindery concierge… ») ; (d) voit un canal « Your Fine Bindery
+   concierge » (titre, texte, champ, raccourci « Message your concierge », auteur
+   « Fine Bindery concierge »), sans libellé « Your workshop » dans la messagerie ;
+   (e) même si un message d'atelier atteignait le navigateur, l'interface ne le
+   rend pas. Ma Reliure est inchangée (fil partagé). `canAccessConversation`,
+   les permissions et la base ne sont pas modifiés.
+
+   **Manque serveur à traiter dans une PR séparée** (ne pas le faire ici : il
+   touche le modèle de messagerie, les permissions, la base et l'espace atelier) :
+   - le fil reste unique : sur un dossier Fine Bindery, **un message que le
+     client écrit est encore lisible par l'atelier** (`listCaseMessages`, rôle
+     atelier, non filtré) — le client n'écrit pas « à l'atelier » dans
+     l'interface, mais la donnée lui reste visible ;
+   - un message d'atelier n'est plus lisible par le client mais **personne ne le
+     relaie** : il n'existe pas de vue concierge qui distingue « à relayer au
+     client » ; l'atelier croit parler au client et le concierge doit le relire dans
+     le fil admin ;
+   - une vraie séparation exige deux canaux (colonne `channel` ou table dédiée),
+     une politique d'accès par canal dans `conversation.ts`, la lecture atelier
+     limitée au canal atelier, et une UI de relais côté admin ;
+   - l'e-mail « nouveau message » à l'atelier n'existe pas (voir
+     `notifyCustomerOfNewMessage`) : hors sujet ici, à traiter avec le point ci-dessus.
+   La décision `marketplace_decisions` (réponse client à une question de
+   l'atelier) n'a pas de canal de messagerie : elle n'est pas concernée.
+
+QA de cette mise à jour : les vrais composants dans un navigateur, contre un faux
+backend installé au niveau de `fetch` (le client réel : bouton, mutation,
+relecture, focus) — parcours Ma Reliure et Fine Bindery « proposition disponible →
+acceptation → paiement », chemin d'erreur (message générique, jamais le texte du
+serveur), largeurs 375 / 390. **Toujours pas de session cliente réelle ni de
+déploiement** : les server functions sont testées avec un dépôt de propositions en
+mémoire et le vrai `checkoutEligibility`, pas contre Supabase.
+
 Constats hors périmètre, **non corrigés** :
-- `customerWorkshopDirectMessaging` (brandConfig) n'est lu nulle part : un
-  client Fine Bindery voit le même fil client ↔ atelier que Ma Reliure, alors
-  que le modèle concierge l'interdit. C'est une règle de messagerie, pas de
-  présentation.
-- L'acceptation d'une proposition est réservée à l'admin (`acceptCommercialProposal`) :
-  il n'existe donc pas de bouton « Accepter » côté client, et je n'en ai pas
-  créé.
 - `cases/journey.ts` n'est plus utilisé que par son test (le parcours est
   remplacé par le statut + l'historique) : à supprimer ou à réutiliser.
 - `listMyCustomerCases` fait plusieurs lectures par projet (contexte, commerce,

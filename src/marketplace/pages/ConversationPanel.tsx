@@ -14,6 +14,13 @@
  * atelier's own conversation stays exactly as it was. Only
  * CustomerCasePage passes "en-US", for a Fine Bindery customer.
  *
+ * `channel` (customer only) is what the server says this customer's thread is:
+ * "direct" (Ma Reliure — one thread shared with the workshop) or "concierge"
+ * (Fine Bindery — the customer writes to the concierge and never to the
+ * workshop). In "concierge" the panel names the concierge, never mentions the
+ * workshop, and renders no workshop-authored message even if one were sent (the
+ * server already withholds them; this is the second lock, not the first).
+ *
  * Everything under `customer` below is the customer's own presentation only
  * (friendly errors, a kept draft when a send fails, message times, scrolling
  * inside the thread rather than jumping the page). The atelier's view is
@@ -50,13 +57,16 @@ export function ConversationPanel({
   caseId,
   viewerRole,
   locale = "fr-FR",
+  channel = "direct",
 }: {
   caseId: string;
   viewerRole: "customer" | "binder";
   locale?: Locale;
+  channel?: "direct" | "concierge";
 }) {
   const en = locale === "en-US";
   const customer = viewerRole === "customer";
+  const concierge = customer && channel === "concierge";
   const copy = customerCopy(locale);
   const fetchMessages = useServerFn(listCaseMessages);
   const send = useServerFn(sendCaseMessage);
@@ -175,24 +185,31 @@ export function ConversationPanel({
       <p className="text-sm text-destructive">{(error as Error).message}</p>
     );
 
+  const title = concierge ? copy.conciergeTitle : copy.messages;
+  // Le concierge est le seul interlocuteur : un message d'atelier n'a rien à faire ici.
+  const messages = concierge ? data!.messages.filter((message) => message.senderRole !== "binder") : data!.messages;
+
   return (
     <section id="messages" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
-      <h2 className="font-serif text-lg">
-        {customer
-          ? copy.messages
-          : "Conversation"}
-      </h2>
+      <h2 className="font-serif text-lg">{customer ? title : "Conversation"}</h2>
+      {concierge && <p className="mt-1 text-sm leading-6 text-muted-foreground">{copy.conciergeIntro}</p>}
       <div
         ref={threadRef}
         className="mt-4 max-h-96 space-y-3 overflow-y-auto pr-1"
-        {...(customer ? { role: "log", "aria-live": "polite", "aria-label": copy.messages } : {})}
+        {...(customer ? { role: "log", "aria-live": "polite", "aria-label": title } : {})}
       >
-        {data!.messages.length === 0 && (
+        {messages.length === 0 && (
           <p className="text-sm text-muted-foreground">
-            {customer ? copy.messagesEmpty : en ? "No messages yet." : "Aucun message pour l'instant."}
+            {concierge
+              ? copy.conciergeEmpty
+              : customer
+                ? copy.messagesEmpty
+                : en
+                  ? "No messages yet."
+                  : "Aucun message pour l'instant."}
           </p>
         )}
-        {data!.messages.map((message) => (
+        {messages.map((message) => (
           <div
             key={message.id}
             className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${
@@ -200,7 +217,9 @@ export function ConversationPanel({
             }`}
           >
             <p className="text-xs font-semibold opacity-70">
-              {SENDER_LABELS[locale][message.senderRole] ?? message.senderRole}
+              {concierge && message.senderRole === "admin"
+                ? copy.conciergeAuthor
+                : (SENDER_LABELS[locale][message.senderRole] ?? message.senderRole)}
               {customer && (
                 <span className="ml-2 font-normal opacity-80">
                   {formatMessageTime(message.createdAt, locale)}
@@ -231,8 +250,16 @@ export function ConversationPanel({
             }
           }}
           rows={2}
-          aria-label={customer ? copy.messagesPlaceholder : undefined}
-          placeholder={customer ? copy.messagesPlaceholder : en ? "Write a message…" : "Écrire un message…"}
+          aria-label={concierge ? copy.conciergePlaceholder : customer ? copy.messagesPlaceholder : undefined}
+          placeholder={
+            concierge
+              ? copy.conciergePlaceholder
+              : customer
+                ? copy.messagesPlaceholder
+                : en
+                  ? "Write a message…"
+                  : "Écrire un message…"
+          }
           className="min-w-0 flex-1 resize-none rounded-md border border-input bg-background px-3 py-2 text-sm"
         />
         <button

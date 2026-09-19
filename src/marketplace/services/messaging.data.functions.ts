@@ -12,10 +12,12 @@ import { fail } from "@/build/services/serverError";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 import {
   canAccessConversation,
+  customerVisibleSenderRoles,
   LIVE_MATCH_STATES,
   senderRoleFor,
   unreadCount,
   type ConversationAccessFacts,
+  type SenderRole,
 } from "@/marketplace/messaging/conversation";
 import { resolveViewer } from "./marketplace.data.functions";
 
@@ -49,12 +51,17 @@ async function loadCaseBrand(sb: Supa, caseId: string) {
     brand,
     brandName: config.displayName,
     locale: config.defaultLocale,
+    directWorkshopMessaging: config.messaging.customerWorkshopDirectMessaging,
     origin: canonicalHome(brand).replace(/\/+$/, ""),
   };
 }
 
 /**
  * Best-effort notification to the customer that their conversation moved.
+ *
+ * A customer who may not read workshop messages (Fine Bindery: the concierge is
+ * their only correspondent) is never notified of one — they would open the
+ * conversation and find nothing. What the concierge writes still notifies.
  *
  * Only the customer direction is covered in Phase B: a workshop can now have
  * more than one member (Phase A) and none is yet designated as the contact
@@ -66,24 +73,27 @@ async function notifyCustomerOfNewMessage(
   sb: Supa,
   caseId: string,
   customerUserId: string | null,
-  senderIsCustomer: boolean,
+  senderRole: SenderRole,
 ): Promise<void> {
-  if (!customerUserId || senderIsCustomer) return;
+  if (!customerUserId || senderRole === "customer") return;
   try {
+    const { brand, brandName, locale, origin, directWorkshopMessaging } = await loadCaseBrand(sb, caseId);
+    if (!customerVisibleSenderRoles(directWorkshopMessaging).includes(senderRole)) return;
     const { data: auth } = await sb.auth.admin.getUserById(customerUserId);
     const email = auth?.user?.email;
     if (!email) return;
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    const { brand, brandName, locale, origin } = await loadCaseBrand(sb, caseId);
     const isEn = locale === "en-US";
     await sendTemplateEmail("case-activity", email, {
       templateData: {
         brandName,
         locale,
         heading: isEn ? "New message about your project" : "Nouveau message sur votre projet",
-        intro: isEn
-          ? `Your workshop or ${brandName} wrote to you about your book.`
-          : `Votre atelier ou ${brandName} vous a écrit au sujet de votre livre.`,
+        intro: !directWorkshopMessaging
+          ? `Your ${brandName} concierge wrote to you about your book.`
+          : isEn
+            ? `Your workshop or ${brandName} wrote to you about your book.`
+            : `Votre atelier ou ${brandName} vous a écrit au sujet de votre livre.`,
         ctaLabel: isEn ? "View the conversation" : "Voir la conversation",
         ctaUrl: `${origin}/mes-livres/${caseId}`,
       },
@@ -112,6 +122,16 @@ export const listCaseMessages = createServerFn({ method: "GET" })
       .order("created_at", { ascending: true });
     if (error) fail(500, error.message);
 
+    // Un client ne reçoit que les messages que son modèle de marque lui donne le
+    // droit de lire (Fine Bindery : jamais ceux d'un atelier) — filtré ici, avant
+    // l'envoi, pas masqué dans le navigateur.
+    let readable = rows ?? [];
+    if (viewer.role === "customer") {
+      const { directWorkshopMessaging } = await loadCaseBrand(sb, data.caseId);
+      const visibleRoles: readonly string[] = customerVisibleSenderRoles(directWorkshopMessaging);
+      readable = readable.filter((row) => visibleRoles.includes(row.sender_role));
+    }
+
     const { data: readRow } = await sb
       .from("marketplace_conversation_reads")
       .select("last_read_at")
@@ -120,7 +140,7 @@ export const listCaseMessages = createServerFn({ method: "GET" })
       .maybeSingle();
 
     return {
-      messages: (rows ?? []).map((row) => ({
+      messages: readable.map((row) => ({
         id: row.id,
         senderRole: row.sender_role,
         isMine: row.sender_user_id === context.userId,
@@ -177,7 +197,7 @@ export const sendCaseMessage = createServerFn({ method: "POST" })
       metadata: { sender_role: role },
     });
 
-    await notifyCustomerOfNewMessage(sb, data.caseId, facts.customerUserId, role === "customer");
+    await notifyCustomerOfNewMessage(sb, data.caseId, facts.customerUserId, role!);
 
     return { id: inserted!.id, createdAt: inserted!.created_at };
   });
@@ -209,6 +229,8 @@ export async function unreadCountsByCase(
   sb: Supa,
   caseIds: readonly string[],
   userId: string,
+  /** Par dossier, les rôles d'auteur dont ce lecteur ne peut pas lire les messages — ils ne comptent pas. */
+  hiddenSenderRolesByCase?: ReadonlyMap<string, readonly string[]>,
 ): Promise<Map<string, number>> {
   const counts = new Map<string, number>();
   if (caseIds.length === 0) return counts;
@@ -216,7 +238,7 @@ export async function unreadCountsByCase(
   const [{ data: messages }, { data: reads }] = await Promise.all([
     sb
       .from("marketplace_messages")
-      .select("case_id, sender_user_id, created_at")
+      .select("case_id, sender_user_id, sender_role, created_at")
       .in("case_id", caseIds as string[]),
     sb
       .from("marketplace_conversation_reads")
@@ -227,6 +249,7 @@ export async function unreadCountsByCase(
   const lastReadByCase = new Map((reads ?? []).map((r) => [r.case_id, r.last_read_at]));
   const byCase = new Map<string, { senderUserId: string | null; createdAt: string }[]>();
   for (const message of messages ?? []) {
+    if (hiddenSenderRolesByCase?.get(message.case_id)?.includes(message.sender_role)) continue;
     const list = byCase.get(message.case_id) ?? [];
     list.push({ senderUserId: message.sender_user_id, createdAt: message.created_at });
     byCase.set(message.case_id, list);

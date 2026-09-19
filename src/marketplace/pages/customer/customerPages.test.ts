@@ -16,6 +16,7 @@ import {
   decisionsFixture,
   detailFixture,
   listFixture,
+  PROPOSAL_ID,
   type Brand,
 } from "@/marketplace/customer/customerTestFixtures";
 
@@ -45,6 +46,7 @@ vi.mock("@/marketplace/services/decisions.data.functions", () => ({
   requestCaseDecision: vi.fn(),
 }));
 vi.mock("@/marketplace/stripe/checkoutSession.server", () => ({ createCommercialCheckoutSession: vi.fn() }));
+vi.mock("@/marketplace/services/customerProposalAcceptance.data.functions", () => ({ acceptMyProposal: vi.fn() }));
 
 const { CustomerCaseListPage } = await import("./CustomerCaseListPage");
 const { CustomerCasePage } = await import("./CustomerCasePage");
@@ -55,22 +57,32 @@ const { customerCopy, sortForCustomer } = await import("@/marketplace/customer/c
 
 const CASE_ID = "11111111-1111-4111-8111-111111111111";
 
-function client(brand: Brand, scenario: string, only: "list" | "detail") {
+interface DetailOverrides {
+  /** Corrige le fait `case` renvoyé par le serveur (ex. une décision en attente en plus). */
+  caseFacts?: Record<string, unknown>;
+  /** Remplace le fil de messages renvoyé par le serveur. */
+  messages?: ReturnType<typeof conversationFixture>["messages"];
+}
+
+function client(brand: Brand, scenario: string, only: "list" | "detail", over: DetailOverrides = {}) {
   const c = new QueryClient({ defaultOptions: { queries: { staleTime: Infinity, retry: false } } });
   if (only === "list") c.setQueryData(["marketplace", "customer", "cases"], listFixture(brand, scenario));
   else {
-    c.setQueryData(["marketplace", "customer", "case", CASE_ID], detailFixture(brand, scenario));
-    c.setQueryData(["marketplace", "conversation", CASE_ID], conversationFixture(brand, scenario));
-    c.setQueryData(["marketplace", "decisions", CASE_ID], decisionsFixture(brand, scenario));
+    const base = detailFixture(brand, scenario);
+    c.setQueryData(["marketplace", "customer", "case", CASE_ID], { ...base, case: { ...base.case, ...over.caseFacts } });
+    const thread = conversationFixture(brand, scenario);
+    c.setQueryData(["marketplace", "conversation", CASE_ID], over.messages ? { ...thread, messages: over.messages } : thread);
+    const decisions = decisionsFixture(brand, over.caseFacts?.openDecisions ? "G" : scenario);
+    c.setQueryData(["marketplace", "decisions", CASE_ID], decisions);
   }
   return c;
 }
 
-const detail = (brand: Brand, scenario: string) =>
+const detail = (brand: Brand, scenario: string, over: DetailOverrides = {}) =>
   renderToStaticMarkup(
     createElement(
       QueryClientProvider,
-      { client: client(brand, scenario, "detail") },
+      { client: client(brand, scenario, "detail", over) },
       createElement(CustomerCasePage, { caseId: CASE_ID, brand }),
     ),
   );
@@ -88,7 +100,7 @@ const count = (html: string, needle: string) => html.split(needle).length - 1;
 /** Le code sans ses commentaires : un commentaire peut citer ce que le code s'interdit. */
 const stripComments = (code: string) =>
   code.replace(/\/\*[\s\S]*?\*\//g, "").replace(/^\s*\/\/.*$/gm, "");
-const SCENARIOS = ["A", "C", "D", "E", "F", "G", "H"];
+const SCENARIOS = ["A", "C", "D", "E", "F", "G", "H", "I"];
 const BRANDS: Brand[] = ["MA_RELIURE", "FINE_BINDERY"];
 
 /** Ce qu'un client ne doit lire dans aucun scénario, aucune marque. */
@@ -173,14 +185,15 @@ describe("détail : ce que le client lit", () => {
     expect(html).not.toContain(">Payer<");
   });
 
-  it("C — proposition disponible : un prix, sans bouton, avec le message d'attente du paiement", () => {
-    const html = detail("MA_RELIURE", "C");
+  it("I — prix validé, proposition pas encore présentée : un prix, sans bouton, avec le message d'attente du paiement", () => {
+    const html = detail("MA_RELIURE", "I");
     expect(html).toContain("Votre proposition");
     expect(html).toContain("Prix de votre projet");
     expect(html).toContain("Voir ma proposition");
     expect(html).toContain('href="#proposal"');
     expect(html).toContain("Le paiement sera disponible après validation de votre proposition.");
     expect(html).not.toContain(">Payer<");
+    expect(html).not.toContain("Accepter la proposition");
   });
 
   it("D — proposition confirmée mais paiement impossible : HT seulement, jamais un bouton désactivé", () => {
@@ -445,14 +458,171 @@ describe("paiement : conditions du bouton", () => {
   });
 });
 
-describe("messagerie : aucun nouveau canal", () => {
-  it("le détail n'ajoute aucun lien direct vers l'atelier ; le fil reste celui du serveur", () => {
+describe("acceptation de la proposition", () => {
+  it("Ma Reliure — proposition non acceptée : « Accepter la proposition » est l'action principale, pas « Payer »", () => {
+    const html = detail("MA_RELIURE", "C");
+    expect(count(html, ">Accepter la proposition<")).toBe(1);
+    expect(html).not.toContain(">Payer<");
+    expect(html).toContain("Proposition disponible");
+    // Le bouton est dans « Prochaine étape », avant la proposition détaillée.
+    expect(html.indexOf('id="next-step-title"')).toBeLessThan(html.indexOf(">Accepter la proposition<"));
+    expect(html.indexOf(">Accepter la proposition<")).toBeLessThan(html.indexOf('id="proposal-title"'));
+    // Le client voit ce qu'il accepte, et pourquoi le paiement n'est pas encore offert.
+    expect(html).toContain("En acceptant, vous confirmez le total de 478,80");
+    expect(html).toContain("TTC indiqué ci-dessous");
+    expect(html).toContain("Le paiement sera disponible dès que vous aurez accepté la proposition.");
+    // Une proposition présentée montre sa ventilation complète.
+    expect(html).toContain("Total HT");
+    expect(html).toContain("TVA (20 %)");
+    expect(html).toContain("Total TTC");
+    expect(html).not.toContain("Proposition acceptée le");
+    expect(html).not.toContain("Voir ma proposition");
+  });
+
+  it("Ma Reliure — proposition acceptée et payable : « Payer » remplace « Accepter »", () => {
+    const html = detail("MA_RELIURE", "E");
+    expect(count(html, ">Payer<")).toBe(1);
+    expect(html).not.toContain("Accepter la proposition");
+    expect(html).toContain("Proposition acceptée le 14 septembre 2026.");
+    expect(html).toContain("Paiement attendu");
+  });
+
+  it("Fine Bindery — Accept proposal, puis Pay securely, en anglais seulement", () => {
+    const open = detail("FINE_BINDERY", "C");
+    expect(count(open, ">Accept proposal<")).toBe(1);
+    expect(open).not.toContain(">Pay securely<");
+    expect(open).toContain("By accepting, you confirm the total of");
+    expect(open).toContain("incl. tax shown below.");
+    expect(open).toContain("Payment will be available as soon as you accept the proposal.");
+
+    const accepted = detail("FINE_BINDERY", "E");
+    expect(count(accepted, ">Pay securely<")).toBe(1);
+    expect(accepted).not.toContain("Accept proposal");
+    expect(accepted).toContain("Proposal accepted on September 14, 2026.");
+  });
+
+  it("jamais « Accepter » et « Payer » ensemble, dans aucun scénario ni aucune marque", () => {
     for (const brand of BRANDS) {
-      const html = detail(brand, "G");
-      expect(html).toContain('id="messages"');
-      expect(html).not.toMatch(/mailto:|tel:/);
-      // Le titre du fil n'affirme pas un canal atelier direct pour Fine Bindery.
-      expect(html).not.toMatch(/Conversation with your workshop|Conversation avec votre atelier/);
+      for (const scenario of SCENARIOS) {
+        const html = detail(brand, scenario);
+        const accept = brand === "MA_RELIURE" ? "Accepter la proposition" : "Accept proposal";
+        const pay = brand === "MA_RELIURE" ? ">Payer<" : ">Pay securely<";
+        expect(html.includes(accept) && html.includes(pay), `${brand}/${scenario}`).toBe(false);
+      }
     }
+  });
+
+  it("un projet payé, terminé ou sans proposition présentée ne propose jamais d'accepter", () => {
+    for (const brand of BRANDS) {
+      for (const scenario of ["A", "D", "F", "G", "H", "I"]) {
+        const html = detail(brand, scenario);
+        expect(html, `${brand}/${scenario}`).not.toMatch(/Accepter la proposition|Accept proposal/);
+      }
+    }
+  });
+
+  it("une confirmation en attente garde la première place ; l'acceptation reste possible, près de la proposition", () => {
+    const html = detail("MA_RELIURE", "C", { caseFacts: { openDecisions: 1 } });
+    expect(html).toContain("En attente de votre confirmation");
+    expect(html).toContain(">Répondre<");
+    expect(count(html, ">Accepter la proposition<")).toBe(1);
+    expect(html.indexOf(">Accepter la proposition<")).toBeGreaterThan(html.indexOf('id="proposal-title"'));
+  });
+
+  it("le navigateur n'envoie que deux identifiants : le dossier et la proposition qu'il a sous les yeux", () => {
+    const source = stripComments(
+      readFileSync(resolve(process.cwd(), "src/marketplace/pages/customer/CustomerCasePage.tsx"), "utf8"),
+    );
+    expect(source).toContain("accept({ data: { caseId, proposalId } })");
+    expect(source).not.toMatch(/accept\(\{[^)]*(amount|cents|total|price|status)/i);
+    // L'identifiant vient de la vue serveur ; il est bien dans la donnée de test.
+    expect(PROPOSAL_ID).toMatch(/^[0-9a-f-]{36}$/);
+    expect(count(source, "<AcceptButton")).toBe(2);
+  });
+
+  it("une erreur d'acceptation n'est jamais celle du serveur ; l'écran relit ce que le serveur présente", () => {
+    const source = stripComments(
+      readFileSync(resolve(process.cwd(), "src/marketplace/pages/customer/CustomerCasePage.tsx"), "utf8"),
+    );
+    expect(source).toContain("copy.acceptError");
+    const onError = source.slice(source.indexOf("onError: async"), source.indexOf("onError: async") + 200);
+    expect(onError).toContain("setFailed(true)");
+    expect(onError).toContain("refresh()");
+  });
+
+  it("aucun champ interne dans la page d'un client qui peut accepter", () => {
+    for (const brand of BRANDS) {
+      const html = detail(brand, "C");
+      for (const leak of RAW_LEAKS) expect(html, leak).not.toContain(leak);
+      // \b : « Fine Bindery » n'est pas une fuite de « binder » (l'atelier, côté données).
+      expect(html).not.toMatch(/\bbinder\b|rémunération|payout|marge\b|\bmargin\b|contribution|pricebook/i);
+    }
+  });
+});
+
+describe("messagerie : Ma Reliure garde son fil, Fine Bindery passe par son concierge", () => {
+  const messagesSection = (html: string) => {
+    const start = html.indexOf('id="messages"');
+    return html.slice(start, html.indexOf("</section>", start));
+  };
+
+  it("Ma Reliure — le fil partagé avec l'atelier est inchangé", () => {
+    const html = detail("MA_RELIURE", "G");
+    const section = messagesSection(html);
+    expect(section).toContain("Messages");
+    expect(section).toContain("Votre atelier");
+    expect(section).toContain("Bonjour, j&#x27;ai bien reçu le livre.");
+    expect(section).toContain("Écrivez votre message…");
+    expect(html).toContain("Envoyer un message");
+    expect(html).not.toMatch(/concierge/i);
+  });
+
+  it("Fine Bindery — un canal Concierge, aucun libellé ni message d'atelier", () => {
+    for (const scenario of ["A", "C", "E", "G", "H"]) {
+      const html = detail("FINE_BINDERY", scenario);
+      const section = messagesSection(html);
+      expect(section, scenario).toContain("Your Fine Bindery concierge");
+      expect(section, scenario).toContain("Write to your concierge…");
+      // Aucune affirmation d'un échange direct avec l'atelier, ni son libellé d'auteur.
+      expect(section, scenario).not.toContain("Your workshop");
+      expect(section, scenario).not.toContain("Write your message…");
+      expect(section, scenario).not.toContain("Conversation with your workshop");
+    }
+    const withThread = messagesSection(detail("FINE_BINDERY", "G"));
+    expect(withThread).toContain("Fine Bindery concierge");
+    expect(withThread).toContain("Hello, we have received your project.");
+  });
+
+  it("Fine Bindery — même si un message d'atelier atteignait le navigateur, il n'est pas rendu", () => {
+    const leaked = [
+      ...conversationFixture("FINE_BINDERY", "G").messages,
+      { id: "leak", senderRole: "binder", isMine: false, body: "Direct workshop note", deleted: false, attachmentCount: 0, createdAt: "2026-09-18T10:00:00Z" },
+    ];
+    const html = detail("FINE_BINDERY", "G", { messages: leaked });
+    expect(html).not.toContain("Direct workshop note");
+    expect(html).not.toContain("Your workshop</p>");
+  });
+
+  it("Fine Bindery — le raccourci de la prochaine étape mène au concierge, jamais à l'atelier", () => {
+    const html = detail("FINE_BINDERY", "E");
+    expect(html).toContain("Message your concierge");
+    expect(html).not.toMatch(/Send a message|Message the workshop|Contact the workshop/);
+    expect(html).toContain('href="#messages"');
+  });
+
+  it("aucun scénario, aucune marque : pas de moyen de joindre l'atelier en direct", () => {
+    for (const brand of BRANDS) {
+      for (const scenario of SCENARIOS) {
+        const html = detail(brand, scenario);
+        expect(html, `${brand}/${scenario}`).not.toMatch(/mailto:|tel:/);
+        expect(html, `${brand}/${scenario}`).not.toMatch(/Contact the workshop|Message the workshop|Écrire à l.atelier|Contacter l.atelier/);
+      }
+    }
+  });
+
+  it("Fine Bindery — le texte d'attente d'une confirmation ne fait pas parler l'atelier au client", () => {
+    const html = detail("FINE_BINDERY", "C", { caseFacts: { openDecisions: 1 } });
+    expect(html).toContain("We need a confirmation from you");
+    expect(html).not.toContain("The workshop is waiting");
   });
 });

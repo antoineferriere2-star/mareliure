@@ -23,6 +23,7 @@ const base: CustomerCaseFacts = {
   status: "pricing",
   hasPrice: false,
   proposalAccepted: false,
+  proposalAcceptable: false,
   paymentEligible: false,
   paid: false,
   actionRequired: false,

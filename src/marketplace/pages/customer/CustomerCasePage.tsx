@@ -6,18 +6,20 @@
  * détails. Le bouton principal d'une action attendue (payer, répondre) est
  * dans la zone « Prochaine étape », en haut — jamais enfoui sous le Brief.
  *
- * Rien ici ne décide de ce qui est payable, de ce qui est visible ou de qui
- * peut écrire : le serveur renvoie des faits déjà arbitrés (`paymentEligible`,
- * une vue de proposition en liste blanche, un `CaseView` déjà filtré) et cet
- * écran les met en page. Aucun message d'erreur du serveur n'est affiché.
+ * Rien ici ne décide de ce qui est payable, de ce qui est acceptable, de ce qui
+ * est visible ou de qui peut écrire : le serveur renvoie des faits déjà arbitrés
+ * (`paymentEligible`, `canAcceptProposal`, `messagingChannel`, une vue de
+ * proposition en liste blanche, un `CaseView` déjà filtré) et cet écran les met
+ * en page. Aucun message d'erreur du serveur n'est affiché.
  */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { ArrowLeft } from "lucide-react";
 import { getMyCustomerCase } from "@/marketplace/services/marketplace.data.functions";
 import { createCommercialCheckoutSession } from "@/marketplace/stripe/checkoutSession.server";
+import { acceptMyProposal } from "@/marketplace/services/customerProposalAcceptance.data.functions";
 import { ConversationPanel } from "@/marketplace/pages/ConversationPanel";
 import { DecisionsPanel } from "@/marketplace/pages/DecisionsPanel";
 import { binderSkillLabel, binderSkillLabelEn } from "@/marketplace/binders/skills";
@@ -66,6 +68,7 @@ function PayButton({ caseId, copy }: { caseId: string; copy: CustomerCopy }) {
     <div>
       <Button
         size="lg"
+        data-primary-action=""
         className="h-11 w-full sm:w-auto"
         disabled={pay.isPending}
         onClick={() => {
@@ -84,23 +87,107 @@ function PayButton({ caseId, copy }: { caseId: string; copy: CustomerCopy }) {
   );
 }
 
+/**
+ * Accepter la proposition affichée. Le navigateur n'envoie que deux identifiants
+ * (le dossier, et la proposition qu'il a sous les yeux) : jamais un montant.
+ * Le serveur revérifie que ce client est le propriétaire, que cette proposition
+ * est toujours la dernière et acceptable, puis écrit ; la possibilité de payer
+ * est recalculée côté serveur, et l'écran la relit — il ne la suppose pas.
+ *
+ * Le bouton reste « en cours » jusqu'à ce que le dossier relu montre le nouvel
+ * état : pas de clignotement où « Accepter » réapparaîtrait avant « Payer ».
+ * L'erreur n'est jamais celle du serveur ; et comme l'équipe a pu réviser la
+ * proposition entre-temps, l'écran relit ce que le serveur présente maintenant.
+ */
+function AcceptButton({
+  caseId,
+  proposalId,
+  copy,
+  onAccepted,
+}: {
+  caseId: string;
+  proposalId: string;
+  copy: CustomerCopy;
+  onAccepted: () => void;
+}) {
+  const accept = useServerFn(acceptMyProposal);
+  const queryClient = useQueryClient();
+  const [failed, setFailed] = useState(false);
+  const refresh = () =>
+    Promise.all([
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "customer", "case", caseId] }),
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "customer", "cases"] }),
+    ]);
+  const mutation = useMutation({
+    mutationFn: () => accept({ data: { caseId, proposalId } }),
+    onSuccess: async () => {
+      setFailed(false);
+      await refresh();
+      onAccepted();
+    },
+    onError: async () => {
+      setFailed(true);
+      await refresh();
+    },
+  });
+
+  return (
+    <div>
+      <Button
+        size="lg"
+        data-primary-action=""
+        className="h-11 w-full sm:w-auto"
+        disabled={mutation.isPending}
+        onClick={() => {
+          setFailed(false);
+          mutation.mutate();
+        }}
+      >
+        {mutation.isPending ? copy.acceptBusy : copy.acceptLabel}
+      </Button>
+      {failed && (
+        <p role="alert" className="mt-2 text-sm text-destructive">
+          {copy.acceptError}
+        </p>
+      )}
+    </div>
+  );
+}
+
 /** « Prochaine étape » : une phrase, et au plus un bouton principal. */
 function NextStepCard({
   next,
   copy,
+  locale,
   caseId,
+  proposal,
   canPay,
+  conciergeChannel,
   showMessageLink,
 }: {
   next: NextStep;
   copy: CustomerCopy;
+  locale: CustomerLocale;
   caseId: string;
+  proposal: CustomerProposalView | null;
   canPay: boolean;
+  /** Fine Bindery : le client écrit à son concierge, jamais à l'atelier. */
+  conciergeChannel: boolean;
   showMessageLink: boolean;
 }) {
   const anchor = next.action === "decision" ? "#decisions" : next.action === "proposal" ? "#proposal" : null;
+  const sectionRef = useRef<HTMLElement>(null);
+  const [justAccepted, setJustAccepted] = useState(false);
+  // Le bouton « Accepter » disparaît une fois la proposition acceptée : le focus
+  // ne doit pas se perdre, il passe au bouton principal suivant (« Payer »).
+  const handleAccepted = () => {
+    setJustAccepted(true);
+    setTimeout(() => sectionRef.current?.querySelector<HTMLElement>("[data-primary-action]")?.focus(), 0);
+  };
+  const total = proposal ? (proposal.totalTtcCents ?? proposal.totalHtCents) : null;
   return (
     <section
+      ref={sectionRef}
       aria-labelledby="next-step-title"
       className={`rounded-2xl border p-5 sm:p-6 ${
         next.requiresAction ? "border-[#8a2e1f]/40 bg-[#fdf6f0]" : "border-[#3b2a1d]/15 bg-[#fdfaf3]"
@@ -114,7 +201,19 @@ function NextStepCard({
       </h2>
       <p className="mt-2 font-serif text-xl leading-snug text-[#241a12]">{next.text}</p>
       {next.hint && <p className="mt-2 text-sm text-[#6b5847]">{next.hint}</p>}
+      {next.action === "accept" && proposal && total !== null && (
+        <p className="mt-2 text-sm text-[#4b3a2c]">
+          {copy.acceptSummary(formatEuros(total, locale), proposal.totalTtcCents !== null)}
+        </p>
+      )}
+      {/* Annonce l'acceptation aux lecteurs d'écran ; le texte visible ci-dessus change déjà. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {justAccepted ? copy.acceptedNotice : ""}
+      </div>
       <div className="mt-4 flex flex-wrap items-start gap-3">
+        {next.action === "accept" && proposal && (
+          <AcceptButton caseId={caseId} proposalId={proposal.id} copy={copy} onAccepted={handleAccepted} />
+        )}
         {next.action === "pay" && canPay && <PayButton caseId={caseId} copy={copy} />}
         {anchor && next.actionLabel && (
           <Button asChild size="lg" className="h-11">
@@ -123,7 +222,7 @@ function NextStepCard({
         )}
         {showMessageLink && (
           <Button asChild variant="outline" size="lg" className="h-11">
-            <a href="#messages">{copy.messageCta}</a>
+            <a href="#messages">{conciergeChannel ? copy.conciergeCta : copy.messageCta}</a>
           </Button>
         )}
       </div>
@@ -163,6 +262,8 @@ function ProposalCard({
   includes,
   paid,
   paymentEligible,
+  canAccept,
+  acceptSlot,
   copy,
   locale,
 }: {
@@ -171,10 +272,15 @@ function ProposalCard({
   includes: readonly string[];
   paid: boolean;
   paymentEligible: boolean;
+  /** Le client peut accepter cette proposition (verdict du serveur). */
+  canAccept: boolean;
+  /** Le bouton « Accepter » quand la zone « Prochaine étape » a déjà autre chose à demander. */
+  acceptSlot: React.ReactNode;
   copy: CustomerCopy;
   locale: CustomerLocale;
 }) {
   if (!proposal && fallbackPriceCents === null) return null;
+  const acceptedOn = proposal?.confirmedAt ? formatCustomerDate(proposal.confirmedAt, locale) : null;
   const mode = pricingModeLabel(proposal?.pricingMode, locale);
   const fmt = (cents: number) => formatEuros(cents, locale);
   const showTax = proposal !== null && proposal.vatCents !== null && proposal.totalTtcCents !== null;
@@ -229,11 +335,15 @@ function ProposalCard({
           {copy.proposalIncludes}{colon(locale)} {includes.join(", ")}.
         </p>
       )}
+      {acceptedOn && <p className="mt-3 text-sm text-[#6b5847]">{copy.proposalAcceptedOn(acceptedOn)}</p>}
       {paid ? (
         <p className="mt-4 text-sm font-medium text-[#2f4a2b]">{copy.proposalPaid}</p>
+      ) : canAccept ? (
+        <p className="mt-4 text-sm text-[#6b5847]">{copy.proposalPayAfterAccept}</p>
       ) : (
         !paymentEligible && <p className="mt-4 text-sm text-[#6b5847]">{copy.proposalNotPayable}</p>
       )}
+      {acceptSlot && <div className="mt-4">{acceptSlot}</div>}
     </section>
   );
 }
@@ -308,7 +418,8 @@ export function CustomerCasePage({
   const facts: CustomerCaseFacts = {
     status: data.case.status,
     hasPrice: data.case.customerPriceCents !== null,
-    proposalAccepted: proposal !== null,
+    proposalAccepted: proposal?.confirmedAt != null,
+    proposalAcceptable: data.case.canAcceptProposal,
     paymentEligible: data.case.paymentEligible,
     paid: data.case.paidAt !== null,
     actionRequired: data.case.openDecisions > 0,
@@ -342,6 +453,7 @@ export function CustomerCasePage({
     locale,
   );
 
+  const conciergeChannel = data.case.messagingChannel === "concierge";
   const decisionsOpen = data.case.openDecisions > 0;
   const decisions = <DecisionsPanel caseId={caseId} role="customer" locale={locale} hideWhenEmpty />;
 
@@ -363,8 +475,11 @@ export function CustomerCasePage({
       <NextStepCard
         next={next}
         copy={copy}
+        locale={locale}
         caseId={caseId}
+        proposal={proposal}
         canPay={data.case.paymentEligible}
+        conciergeChannel={conciergeChannel}
         showMessageLink={status.key !== "cancelled"}
       />
 
@@ -377,6 +492,12 @@ export function CustomerCasePage({
         includes={data.case.priceIncludes}
         paid={data.case.paidAt !== null}
         paymentEligible={data.case.paymentEligible}
+        canAccept={data.case.canAcceptProposal}
+        acceptSlot={
+          data.case.canAcceptProposal && proposal && next.action !== "accept" ? (
+            <AcceptButton caseId={caseId} proposalId={proposal.id} copy={copy} onAccepted={() => undefined} />
+          ) : null
+        }
         copy={copy}
         locale={locale}
       />
@@ -441,7 +562,12 @@ export function CustomerCasePage({
         </section>
       )}
 
-      <ConversationPanel caseId={caseId} viewerRole="customer" locale={locale} />
+      <ConversationPanel
+        caseId={caseId}
+        viewerRole="customer"
+        locale={locale}
+        channel={data.case.messagingChannel}
+      />
 
       {!decisionsOpen && decisions}
 

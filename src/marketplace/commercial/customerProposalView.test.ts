@@ -73,6 +73,7 @@ describe("vue client d'une proposition", () => {
         "currency",
         "estimateMaxCents",
         "estimateMinCents",
+        "id",
         "pricingMode",
         "preparedAt",
         "serviceCents",
@@ -134,10 +135,13 @@ describe("le chargeur client du commerce", () => {
       expect(source).toContain(input);
     }
     expect(source).toContain("toCustomerProposalView(accepted)");
+    // La proposition présentée avant acceptation passe par la même liste blanche.
+    expect(source).toContain("toCustomerProposalView(latest)");
+    expect(source).toContain("customerAcceptance({");
   });
 
   it("ne renvoie jamais la ligne de proposition brute", () => {
-    expect(source).not.toMatch(/proposal:\s*accepted\b/);
+    expect(source).not.toMatch(/proposal:\s*(accepted|latest)\b/);
     // Lecture seule : il importe la décision d'éligibilité (checkoutPlan, pure),
     // jamais le client Stripe ni la création d'une session.
     expect(source).not.toMatch(/stripeClient|stripeConfig|new Stripe|checkout\.sessions|createCheckoutSession|createCommercialCheckoutSession/);

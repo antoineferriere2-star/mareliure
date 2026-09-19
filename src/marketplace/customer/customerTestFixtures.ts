@@ -4,36 +4,45 @@
  * Partagées par les tests de rendu et par le harnais de QA local, pour que ce
  * que l'on teste soit exactement ce que l'on regarde.
  *
- * Scénarios : A projet sans proposition · B plusieurs projets · C proposition
- * disponible · D proposition confirmée, paiement pas encore possible · E
- * paiement possible · F payé · G atelier sélectionné + décision en attente ·
- * H terminé · empty : aucun projet.
+ * Scénarios : A projet sans prix · B plusieurs projets · C proposition présentée,
+ * le client peut l'accepter · D proposition acceptée, paiement pas encore
+ * possible · E acceptée, paiement possible · F payé · G atelier sélectionné +
+ * décision en attente · H terminé · I prix validé, proposition pas encore
+ * présentée · empty : aucun projet.
+ *
+ * Les fils de messages respectent le contrat serveur : un client Fine Bindery ne
+ * reçoit jamais un message d'atelier.
  */
 export type Brand = "MA_RELIURE" | "FINE_BINDERY";
 const fr = (b: Brand) => b === "MA_RELIURE";
 
 const PHOTOS = ["/photos/ferriere-baudelaire-480.webp", "/photos/academie-avant-480.webp", "/photos/academie-apres-480.webp"];
 
+export const PROPOSAL_ID = "22222222-2222-4222-8222-222222222222";
+
 function proposal(scenario: string) {
-  if (["A", "C"].includes(scenario)) return null;
+  if (["A", "I"].includes(scenario)) return null;
   const withTax = scenario !== "D";
   return {
+    id: PROPOSAL_ID,
     pricingMode: "FIXED_PRICE" as const,
     currency: "EUR",
     serviceCents: 37500,
-    shippingCents: scenario === "E" ? 2400 : 0,
-    totalHtCents: 37500 + (scenario === "E" ? 2400 : 0),
+    // C et E : la même proposition avant et après acceptation — le total ne change pas.
+    shippingCents: ["C", "E"].includes(scenario) ? 2400 : 0,
+    totalHtCents: 37500 + (["C", "E"].includes(scenario) ? 2400 : 0),
     vatRateBps: withTax ? 2000 : null,
-    vatCents: withTax ? (scenario === "E" ? 7980 : 7500) : null,
-    totalTtcCents: withTax ? (scenario === "E" ? 47880 : 45000) : null,
+    vatCents: withTax ? (["C", "E"].includes(scenario) ? 7980 : 7500) : null,
+    totalTtcCents: withTax ? (["C", "E"].includes(scenario) ? 47880 : 45000) : null,
     estimateMinCents: null,
     estimateMaxCents: null,
     preparedAt: "2026-09-13T09:00:00Z",
-    confirmedAt: "2026-09-14T10:00:00Z",
+    // C : proposée, pas encore acceptée par le client.
+    confirmedAt: scenario === "C" ? null : "2026-09-14T10:00:00Z",
   };
 }
 
-const STATUS: Record<string, string> = { A: "pricing", C: "matching", D: "matching", E: "matching", F: "paid", G: "binder_selected", H: "completed" };
+const STATUS: Record<string, string> = { A: "pricing", I: "matching", C: "matching", D: "matching", E: "matching", F: "paid", G: "binder_selected", H: "completed" };
 
 export function listFixture(brand: Brand, scenario: string) {
   const F = fr(brand);
@@ -49,6 +58,7 @@ export function listFixture(brand: Brand, scenario: string) {
     amountIncludesTax: false,
     hasPrice: false,
     proposalAccepted: false,
+    proposalAcceptable: false,
     paymentEligible: false,
     paid: false,
     unreadCount: 0,
@@ -68,11 +78,12 @@ export function listFixture(brand: Brand, scenario: string) {
     row({
       status: STATUS[scenario] ?? "pricing",
       hasPrice: scenario !== "A",
-      proposalAccepted: p !== null,
+      proposalAccepted: p !== null && p.confirmedAt !== null,
+      proposalAcceptable: scenario === "C",
       paymentEligible: scenario === "E",
       paid: scenario === "F" || scenario === "G" || scenario === "H",
       actionRequired: scenario === "G",
-      amountCents: p?.totalTtcCents ?? (scenario === "C" ? 37500 : null),
+      amountCents: p?.totalTtcCents ?? (scenario === "I" ? 37500 : null),
       amountIncludesTax: p?.totalTtcCents != null,
     }),
   ];
@@ -94,8 +105,10 @@ export function detailFixture(brand: Brand, scenario: string) {
       createdAt: "2026-09-12T09:30:00Z",
       projectType: F ? "Réparation" : "Repair",
       paymentEligible: scenario === "E",
+      canAcceptProposal: scenario === "C",
       paidAt: paid ? "2026-09-15T08:00:00Z" : null,
       openDecisions: scenario === "G" ? 1 : 0,
+      messagingChannel: (F ? "direct" : "concierge") as "direct" | "concierge",
     },
     proposal: p,
     view: {
@@ -147,7 +160,9 @@ export function conversationFixture(brand: Brand, scenario: string) {
     messages: [
       { id: "m1", senderRole: "admin", isMine: false, body: F ? "Bonjour, nous avons bien reçu votre projet." : "Hello, we have received your project.", deleted: false, attachmentCount: 0, createdAt: "2026-09-13T08:00:00Z" },
       { id: "m2", senderRole: "customer", isMine: true, body: F ? "Merci, à quelle date pensez-vous avoir un prix ?" : "Thank you, when can I expect a price?", deleted: false, attachmentCount: 0, createdAt: "2026-09-13T09:10:00Z" },
-      ...(["G", "H"].includes(scenario)
+      // Ma Reliure : le fil est partagé avec l'atelier. Fine Bindery : le serveur ne
+      // renvoie jamais un message d'atelier à un client.
+      ...(F && ["G", "H"].includes(scenario)
         ? [{ id: "m3", senderRole: "binder", isMine: false, body: F ? "Bonjour, j'ai bien reçu le livre." : "Hello, I have received the book.", deleted: false, attachmentCount: 0, createdAt: "2026-09-17T14:32:00Z" }]
         : []),
     ],
