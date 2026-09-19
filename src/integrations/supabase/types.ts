@@ -907,6 +907,148 @@ export type Database = {
           },
         ]
       }
+      marketplace_binder_billing_profiles: {
+        Row: {
+          address_line1: string | null
+          address_line2: string | null
+          binder_id: string
+          city: string | null
+          country: string
+          created_at: string
+          default_vat_rate_bps: number
+          email: string | null
+          invoice_notes: string | null
+          invoice_prefix: string
+          legal_name: string | null
+          legal_notes: string | null
+          payment_terms: string | null
+          phone: string | null
+          postal_code: string | null
+          quote_notes: string | null
+          quote_prefix: string
+          quote_validity_days: number
+          siret: string | null
+          updated_at: string
+          vat_mention: string | null
+          vat_number: string | null
+          vat_regime: string | null
+          workshop_name: string | null
+        }
+        Insert: {
+          address_line1?: string | null
+          address_line2?: string | null
+          binder_id: string
+          city?: string | null
+          country?: string
+          created_at?: string
+          default_vat_rate_bps?: number
+          email?: string | null
+          invoice_notes?: string | null
+          invoice_prefix?: string
+          legal_name?: string | null
+          legal_notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          quote_notes?: string | null
+          quote_prefix?: string
+          quote_validity_days?: number
+          siret?: string | null
+          updated_at?: string
+          vat_mention?: string | null
+          vat_number?: string | null
+          vat_regime?: string | null
+          workshop_name?: string | null
+        }
+        Update: {
+          address_line1?: string | null
+          address_line2?: string | null
+          binder_id?: string
+          city?: string | null
+          country?: string
+          created_at?: string
+          default_vat_rate_bps?: number
+          email?: string | null
+          invoice_notes?: string | null
+          invoice_prefix?: string
+          legal_name?: string | null
+          legal_notes?: string | null
+          payment_terms?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          quote_notes?: string | null
+          quote_prefix?: string
+          quote_validity_days?: number
+          siret?: string | null
+          updated_at?: string
+          vat_mention?: string | null
+          vat_number?: string | null
+          vat_regime?: string | null
+          workshop_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_billing_profiles_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: true
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_clients: {
+        Row: {
+          address_line1: string | null
+          binder_id: string
+          city: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          id: string
+          name: string
+          notes: string | null
+          phone: string | null
+          postal_code: string | null
+          updated_at: string
+        }
+        Insert: {
+          address_line1?: string | null
+          binder_id: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name: string
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          updated_at?: string
+        }
+        Update: {
+          address_line1?: string | null
+          binder_id?: string
+          city?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          id?: string
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          postal_code?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_clients_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_binder_commercial_terms: {
         Row: {
           binder_id: string
@@ -944,6 +1086,35 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "marketplace_binder_commercial_terms_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_document_counters: {
+        Row: {
+          binder_id: string
+          kind: string
+          last_value: number
+          year: number
+        }
+        Insert: {
+          binder_id: string
+          kind: string
+          last_value?: number
+          year: number
+        }
+        Update: {
+          binder_id?: string
+          kind?: string
+          last_value?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_document_counters_binder_id_fkey"
             columns: ["binder_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binders"
@@ -997,6 +1168,248 @@ export type Database = {
             columns: ["binder_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_invoice_items: {
+        Row: {
+          binder_id: string
+          description: string | null
+          id: string
+          invoice_id: string
+          label: string
+          position: number
+          quantity: number
+          service_id: string | null
+          total_ht_cents: number
+          unit: string | null
+          unit_price_cents: number
+          vat_rate_bps: number
+        }
+        Insert: {
+          binder_id: string
+          description?: string | null
+          id?: string
+          invoice_id: string
+          label: string
+          position: number
+          quantity?: number
+          service_id?: string | null
+          total_ht_cents: number
+          unit?: string | null
+          unit_price_cents: number
+          vat_rate_bps: number
+        }
+        Update: {
+          binder_id?: string
+          description?: string | null
+          id?: string
+          invoice_id?: string
+          label?: string
+          position?: number
+          quantity?: number
+          service_id?: string | null
+          total_ht_cents?: number
+          unit?: string | null
+          unit_price_cents?: number
+          vat_rate_bps?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_invoice_items_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_invoice_items_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_invoices"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_invoice_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_invoices: {
+        Row: {
+          amount_paid_cents: number
+          binder_id: string
+          book_author: string | null
+          book_notes: string | null
+          book_title: string | null
+          client_address_line1: string | null
+          client_city: string | null
+          client_country: string | null
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          client_phone: string | null
+          client_postal_code: string | null
+          created_at: string
+          currency: string
+          deposit_cents: number
+          deposit_paid_cents: number
+          deposit_type: string
+          deposit_value: number
+          discount_cents: number
+          discount_type: string
+          discount_value: number
+          electronic_invoice_sent_at: string | null
+          electronic_invoice_status: string | null
+          external_invoice_id: string | null
+          external_metadata: Json | null
+          external_provider: string | null
+          external_status: string | null
+          height_mm: number | null
+          id: string
+          invoice_number: string
+          issue_date: string
+          issuer: Json
+          notes: string | null
+          paid_at: string | null
+          payment_status: string
+          payment_terms: string | null
+          quote_id: string
+          spine_mm: number | null
+          subtotal_cents: number
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          updated_at: string
+          vat_breakdown: Json
+          vat_mention: string | null
+          vat_regime: string
+          width_mm: number | null
+        }
+        Insert: {
+          amount_paid_cents?: number
+          binder_id: string
+          book_author?: string | null
+          book_notes?: string | null
+          book_title?: string | null
+          client_address_line1?: string | null
+          client_city?: string | null
+          client_country?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          client_name: string
+          client_phone?: string | null
+          client_postal_code?: string | null
+          created_at?: string
+          currency?: string
+          deposit_cents?: number
+          deposit_paid_cents?: number
+          deposit_type?: string
+          deposit_value?: number
+          discount_cents?: number
+          discount_type?: string
+          discount_value?: number
+          electronic_invoice_sent_at?: string | null
+          electronic_invoice_status?: string | null
+          external_invoice_id?: string | null
+          external_metadata?: Json | null
+          external_provider?: string | null
+          external_status?: string | null
+          height_mm?: number | null
+          id?: string
+          invoice_number: string
+          issue_date: string
+          issuer?: Json
+          notes?: string | null
+          paid_at?: string | null
+          payment_status?: string
+          payment_terms?: string | null
+          quote_id: string
+          spine_mm?: number | null
+          subtotal_cents: number
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          updated_at?: string
+          vat_breakdown?: Json
+          vat_mention?: string | null
+          vat_regime: string
+          width_mm?: number | null
+        }
+        Update: {
+          amount_paid_cents?: number
+          binder_id?: string
+          book_author?: string | null
+          book_notes?: string | null
+          book_title?: string | null
+          client_address_line1?: string | null
+          client_city?: string | null
+          client_country?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          client_phone?: string | null
+          client_postal_code?: string | null
+          created_at?: string
+          currency?: string
+          deposit_cents?: number
+          deposit_paid_cents?: number
+          deposit_type?: string
+          deposit_value?: number
+          discount_cents?: number
+          discount_type?: string
+          discount_value?: number
+          electronic_invoice_sent_at?: string | null
+          electronic_invoice_status?: string | null
+          external_invoice_id?: string | null
+          external_metadata?: Json | null
+          external_provider?: string | null
+          external_status?: string | null
+          height_mm?: number | null
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          issuer?: Json
+          notes?: string | null
+          paid_at?: string | null
+          payment_status?: string
+          payment_terms?: string | null
+          quote_id?: string
+          spine_mm?: number | null
+          subtotal_cents?: number
+          total_ht_cents?: number
+          total_ttc_cents?: number
+          total_vat_cents?: number
+          updated_at?: string
+          vat_breakdown?: Json
+          vat_mention?: string | null
+          vat_regime?: string
+          width_mm?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_invoices_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_invoices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_invoices_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: true
+            referencedRelation: "marketplace_binder_quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -1089,6 +1502,217 @@ export type Database = {
           },
         ]
       }
+      marketplace_binder_quote_items: {
+        Row: {
+          binder_id: string
+          catalog_price_cents: number | null
+          description: string | null
+          id: string
+          label: string
+          position: number
+          quantity: number
+          quote_id: string
+          service_id: string | null
+          total_ht_cents: number
+          unit: string | null
+          unit_price_cents: number
+          vat_rate_bps: number
+        }
+        Insert: {
+          binder_id: string
+          catalog_price_cents?: number | null
+          description?: string | null
+          id?: string
+          label: string
+          position: number
+          quantity?: number
+          quote_id: string
+          service_id?: string | null
+          total_ht_cents: number
+          unit?: string | null
+          unit_price_cents: number
+          vat_rate_bps: number
+        }
+        Update: {
+          binder_id?: string
+          catalog_price_cents?: number | null
+          description?: string | null
+          id?: string
+          label?: string
+          position?: number
+          quantity?: number
+          quote_id?: string
+          service_id?: string | null
+          total_ht_cents?: number
+          unit?: string | null
+          unit_price_cents?: number
+          vat_rate_bps?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_quote_items_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_quote_items_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_quotes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_quote_items_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_quotes: {
+        Row: {
+          binder_id: string
+          book_author: string | null
+          book_notes: string | null
+          book_title: string | null
+          client_address_line1: string | null
+          client_city: string | null
+          client_country: string | null
+          client_email: string | null
+          client_id: string | null
+          client_name: string
+          client_phone: string | null
+          client_postal_code: string | null
+          created_at: string
+          currency: string
+          deposit_cents: number
+          deposit_type: string
+          deposit_value: number
+          discount_cents: number
+          discount_type: string
+          discount_value: number
+          height_mm: number | null
+          id: string
+          issue_date: string
+          issuer: Json
+          notes: string | null
+          payment_terms: string | null
+          quote_number: string
+          spine_mm: number | null
+          status: string
+          subtotal_cents: number
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          updated_at: string
+          valid_until: string
+          vat_breakdown: Json
+          vat_mention: string | null
+          vat_regime: string
+          width_mm: number | null
+        }
+        Insert: {
+          binder_id: string
+          book_author?: string | null
+          book_notes?: string | null
+          book_title?: string | null
+          client_address_line1?: string | null
+          client_city?: string | null
+          client_country?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          client_name: string
+          client_phone?: string | null
+          client_postal_code?: string | null
+          created_at?: string
+          currency?: string
+          deposit_cents?: number
+          deposit_type?: string
+          deposit_value?: number
+          discount_cents?: number
+          discount_type?: string
+          discount_value?: number
+          height_mm?: number | null
+          id?: string
+          issue_date: string
+          issuer?: Json
+          notes?: string | null
+          payment_terms?: string | null
+          quote_number: string
+          spine_mm?: number | null
+          status?: string
+          subtotal_cents: number
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          updated_at?: string
+          valid_until: string
+          vat_breakdown?: Json
+          vat_mention?: string | null
+          vat_regime: string
+          width_mm?: number | null
+        }
+        Update: {
+          binder_id?: string
+          book_author?: string | null
+          book_notes?: string | null
+          book_title?: string | null
+          client_address_line1?: string | null
+          client_city?: string | null
+          client_country?: string | null
+          client_email?: string | null
+          client_id?: string | null
+          client_name?: string
+          client_phone?: string | null
+          client_postal_code?: string | null
+          created_at?: string
+          currency?: string
+          deposit_cents?: number
+          deposit_type?: string
+          deposit_value?: number
+          discount_cents?: number
+          discount_type?: string
+          discount_value?: number
+          height_mm?: number | null
+          id?: string
+          issue_date?: string
+          issuer?: Json
+          notes?: string | null
+          payment_terms?: string | null
+          quote_number?: string
+          spine_mm?: number | null
+          status?: string
+          subtotal_cents?: number
+          total_ht_cents?: number
+          total_ttc_cents?: number
+          total_vat_cents?: number
+          updated_at?: string
+          valid_until?: string
+          vat_breakdown?: Json
+          vat_mention?: string | null
+          vat_regime?: string
+          width_mm?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_quotes_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_quotes_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_binder_rates: {
         Row: {
           binder_id: string
@@ -1164,6 +1788,104 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "marketplace_work_items"
             referencedColumns: ["key"]
+          },
+        ]
+      }
+      marketplace_binder_service_categories: {
+        Row: {
+          binder_id: string
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          binder_id: string
+          created_at?: string
+          id?: string
+          name: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          binder_id?: string
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_service_categories_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_services: {
+        Row: {
+          archived_at: string | null
+          binder_id: string
+          category_id: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          name: string
+          sort_order: number
+          unit: string | null
+          unit_price_cents: number
+          updated_at: string
+          vat_rate_bps: number | null
+        }
+        Insert: {
+          archived_at?: string | null
+          binder_id: string
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          unit?: string | null
+          unit_price_cents?: number
+          updated_at?: string
+          vat_rate_bps?: number | null
+        }
+        Update: {
+          archived_at?: string | null
+          binder_id?: string
+          category_id?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          unit?: string | null
+          unit_price_cents?: number
+          updated_at?: string
+          vat_rate_bps?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_services_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_services_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_service_categories"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1560,6 +2282,7 @@ export type Database = {
         Row: {
           accepted_at: string | null
           balance_due_cents: number
+          billing_country: string | null
           binder_payout_cents: number
           binder_payout_ttc_cents: number | null
           binder_vat_amount_cents: number | null
@@ -1567,6 +2290,9 @@ export type Database = {
           brand: string
           brand_multiplier_bps: number
           brand_reference_cents: number | null
+          business_name: string | null
+          business_vat_number: string | null
+          business_vat_validation_status: string | null
           case_id: string
           contribution_floor_cents: number
           created_at: string
@@ -1575,6 +2301,7 @@ export type Database = {
           customer_service_price_cents: number
           customer_total_ht_cents: number
           customer_total_ttc_cents: number | null
+          customer_type: string
           customer_vat_amount_cents: number | null
           customer_vat_rate_bps: number | null
           deposit_amount_cents: number
@@ -1597,11 +2324,6 @@ export type Database = {
           shipping_outbound_cents: number
           shipping_return_cents: number
           shipping_total_cents: number
-          billing_country: string | null
-          business_name: string | null
-          business_vat_number: string | null
-          business_vat_validation_status: string | null
-          customer_type: string
           status: string
           superseded_at: string | null
           target_margin_bps: number
@@ -1618,6 +2340,7 @@ export type Database = {
         Insert: {
           accepted_at?: string | null
           balance_due_cents: number
+          billing_country?: string | null
           binder_payout_cents: number
           binder_payout_ttc_cents?: number | null
           binder_vat_amount_cents?: number | null
@@ -1625,6 +2348,9 @@ export type Database = {
           brand: string
           brand_multiplier_bps: number
           brand_reference_cents?: number | null
+          business_name?: string | null
+          business_vat_number?: string | null
+          business_vat_validation_status?: string | null
           case_id: string
           contribution_floor_cents: number
           created_at?: string
@@ -1633,6 +2359,7 @@ export type Database = {
           customer_service_price_cents: number
           customer_total_ht_cents: number
           customer_total_ttc_cents?: number | null
+          customer_type?: string
           customer_vat_amount_cents?: number | null
           customer_vat_rate_bps?: number | null
           deposit_amount_cents?: number
@@ -1655,11 +2382,6 @@ export type Database = {
           shipping_outbound_cents?: number
           shipping_return_cents?: number
           shipping_total_cents?: number
-          billing_country?: string | null
-          business_name?: string | null
-          business_vat_number?: string | null
-          business_vat_validation_status?: string | null
-          customer_type?: string
           status?: string
           superseded_at?: string | null
           target_margin_bps: number
@@ -1676,6 +2398,7 @@ export type Database = {
         Update: {
           accepted_at?: string | null
           balance_due_cents?: number
+          billing_country?: string | null
           binder_payout_cents?: number
           binder_payout_ttc_cents?: number | null
           binder_vat_amount_cents?: number | null
@@ -1683,6 +2406,9 @@ export type Database = {
           brand?: string
           brand_multiplier_bps?: number
           brand_reference_cents?: number | null
+          business_name?: string | null
+          business_vat_number?: string | null
+          business_vat_validation_status?: string | null
           case_id?: string
           contribution_floor_cents?: number
           created_at?: string
@@ -1691,6 +2417,7 @@ export type Database = {
           customer_service_price_cents?: number
           customer_total_ht_cents?: number
           customer_total_ttc_cents?: number | null
+          customer_type?: string
           customer_vat_amount_cents?: number | null
           customer_vat_rate_bps?: number | null
           deposit_amount_cents?: number
@@ -1713,11 +2440,6 @@ export type Database = {
           shipping_outbound_cents?: number
           shipping_return_cents?: number
           shipping_total_cents?: number
-          billing_country?: string | null
-          business_name?: string | null
-          business_vat_number?: string | null
-          business_vat_validation_status?: string | null
-          customer_type?: string
           status?: string
           superseded_at?: string | null
           target_margin_bps?: number
@@ -2207,6 +2929,33 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      marketplace_binder_convert_quote_to_invoice: {
+        Args: {
+          p_binder_id: string
+          p_invoice_notes: string
+          p_issue_date: string
+          p_issuer: Json
+          p_quote_id: string
+        }
+        Returns: string
+      }
+      marketplace_binder_create_quote: {
+        Args: { p_binder_id: string; p_items: Json; p_quote: Json }
+        Returns: string
+      }
+      marketplace_binder_next_document_number: {
+        Args: { p_binder_id: string; p_kind: string; p_year: number }
+        Returns: string
+      }
+      marketplace_binder_update_quote: {
+        Args: {
+          p_binder_id: string
+          p_items: Json
+          p_quote: Json
+          p_quote_id: string
+        }
+        Returns: string
       }
       marketplace_ingest_missing_cases: { Args: never; Returns: number }
       marketplace_respond_to_offer: {

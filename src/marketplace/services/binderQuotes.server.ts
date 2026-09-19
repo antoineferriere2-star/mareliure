@@ -10,12 +10,13 @@
  * qui appartient à un autre atelier n'est jamais « refusé » — il est introuvable :
  * même réponse qu'un identifiant inexistant.
  *
- * Les tables ne figurent pas encore dans `integrations/supabase/types.ts` (fichier
- * généré : à régénérer après application de la migration) ; le client est donc
- * typé large ici, et les formes sont portées par quoteViews.ts / quoteBuild.ts.
+ * Le client est typé par `integrations/supabase/types.ts` (généré depuis la base).
+ * Les unions que la base garantit par CHECK (régime de TVA, type de remise…) et les
+ * colonnes jsonb (émetteur, ventilation de TVA) y sont des `string` / `Json` : elles
+ * sont précisées en UN seul endroit, aux frontières `asQuoteRow`, `asInvoiceRow` et
+ * `profileFromRow`, jamais par un client non typé.
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
-import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Json, Tables } from "@/integrations/supabase/types";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { findActiveBinderMembership } from "./binderMembership.server";
 import {
@@ -45,8 +46,13 @@ import {
   type QuoteDbRow,
 } from "@/marketplace/quotes/quoteViews";
 
-type Db = SupabaseClient<any, "public", any>;
-const db = (sb: Supa): Db => sb as unknown as Db;
+// Frontières typées : ce que la base garantit par CHECK / par construction du serveur.
+const asQuoteRow = (row: Tables<"marketplace_binder_quotes">) => row as unknown as QuoteDbRow;
+const asInvoiceRow = (row: Tables<"marketplace_binder_invoices">) => row as unknown as InvoiceDbRow;
+const asItemRows = (rows: Tables<"marketplace_binder_quote_items">[] | Tables<"marketplace_binder_invoice_items">[]) =>
+  rows as unknown as ItemDbRow[];
+/** Une valeur du domaine transmise à une fonction SQL en jsonb. */
+const asJson = (value: unknown) => value as Json;
 
 export type BinderQuotesErrorCode =
   | "no_binder"
@@ -96,7 +102,7 @@ const fromQuoteError = (error: unknown): never => {
 // Profil de facturation
 // ---------------------------------------------------------------------------
 
-function profileFromRow(row: any): BillingProfile {
+function profileFromRow(row: Tables<"marketplace_binder_billing_profiles">): BillingProfile {
   return {
     workshopName: row.workshop_name,
     legalName: row.legal_name,
@@ -110,7 +116,7 @@ function profileFromRow(row: any): BillingProfile {
     legalNotes: row.legal_notes,
     email: row.email,
     phone: row.phone,
-    vatRegime: row.vat_regime,
+    vatRegime: row.vat_regime as BillingProfile["vatRegime"],
     defaultVatRateBps: row.default_vat_rate_bps,
     vatMention: row.vat_mention,
     quotePrefix: row.quote_prefix,
@@ -123,7 +129,7 @@ function profileFromRow(row: any): BillingProfile {
 }
 
 export async function loadBillingProfile(sb: Supa, binderId: string): Promise<BillingProfile> {
-  const { data, error } = await db(sb)
+  const { data, error } = await sb
     .from("marketplace_binder_billing_profiles")
     .select("*")
     .eq("binder_id", binderId)
@@ -131,7 +137,7 @@ export async function loadBillingProfile(sb: Supa, binderId: string): Promise<Bi
   if (error) throw new BinderQuotesError("failed");
   if (data) return profileFromRow(data);
   // Aucun profil encore : le nom de l'atelier (déjà connu de Ma Reliure) sert de départ, jamais un régime de TVA.
-  const { data: binder } = await db(sb)
+  const { data: binder } = await sb
     .from("marketplace_binders")
     .select("workshop_name, display_name, city, postal_code")
     .eq("id", binderId)
@@ -145,7 +151,7 @@ export async function loadBillingProfile(sb: Supa, binderId: string): Promise<Bi
 }
 
 export async function saveBillingProfile(sb: Supa, binderId: string, input: BillingProfileInput): Promise<BillingProfile> {
-  const { data, error } = await db(sb)
+  const { data, error } = await sb
     .from("marketplace_binder_billing_profiles")
     .upsert(
       {
@@ -201,8 +207,8 @@ export interface ServiceView {
   archived: boolean;
 }
 
-const categoryView = (row: any): CategoryView => ({ id: row.id, name: row.name, sortOrder: row.sort_order });
-const serviceView = (row: any): ServiceView => ({
+const categoryView = (row: Tables<"marketplace_binder_service_categories">): CategoryView => ({ id: row.id, name: row.name, sortOrder: row.sort_order });
+const serviceView = (row: Tables<"marketplace_binder_services">): ServiceView => ({
   id: row.id,
   categoryId: row.category_id,
   name: row.name,
@@ -220,8 +226,8 @@ export async function listCatalog(
   options: { includeArchived?: boolean } = {},
 ): Promise<{ categories: CategoryView[]; services: ServiceView[] }> {
   const [categories, services] = await Promise.all([
-    db(sb).from("marketplace_binder_service_categories").select("*").eq("binder_id", binderId).order("sort_order"),
-    db(sb).from("marketplace_binder_services").select("*").eq("binder_id", binderId).order("sort_order"),
+    sb.from("marketplace_binder_service_categories").select("*").eq("binder_id", binderId).order("sort_order"),
+    sb.from("marketplace_binder_services").select("*").eq("binder_id", binderId).order("sort_order"),
   ]);
   if (categories.error || services.error) throw new BinderQuotesError("failed");
   return {
@@ -232,7 +238,7 @@ export async function listCatalog(
 
 async function assertOwnCategory(sb: Supa, binderId: string, categoryId: string | null) {
   if (!categoryId) return;
-  const { data } = await db(sb)
+  const { data } = await sb
     .from("marketplace_binder_service_categories")
     .select("id")
     .eq("id", categoryId)
@@ -244,8 +250,8 @@ async function assertOwnCategory(sb: Supa, binderId: string, categoryId: string 
 export async function saveCategory(sb: Supa, binderId: string, input: CategoryInput): Promise<CategoryView> {
   const values = { name: input.name, sort_order: input.sortOrder };
   const query = input.id
-    ? db(sb).from("marketplace_binder_service_categories").update(values).eq("id", input.id).eq("binder_id", binderId)
-    : db(sb).from("marketplace_binder_service_categories").insert({ ...values, binder_id: binderId });
+    ? sb.from("marketplace_binder_service_categories").update(values).eq("id", input.id).eq("binder_id", binderId)
+    : sb.from("marketplace_binder_service_categories").insert({ ...values, binder_id: binderId });
   const { data, error } = await query.select("*").maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!data) throw new BinderQuotesError("not_found");
@@ -264,8 +270,8 @@ export async function saveService(sb: Supa, binderId: string, input: ServiceInpu
     is_active: input.isActive,
   };
   const query = input.id
-    ? db(sb).from("marketplace_binder_services").update(values).eq("id", input.id).eq("binder_id", binderId)
-    : db(sb).from("marketplace_binder_services").insert({ ...values, binder_id: binderId });
+    ? sb.from("marketplace_binder_services").update(values).eq("id", input.id).eq("binder_id", binderId)
+    : sb.from("marketplace_binder_services").insert({ ...values, binder_id: binderId });
   const { data, error } = await query.select("*").maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!data) throw new BinderQuotesError("not_found");
@@ -274,7 +280,7 @@ export async function saveService(sb: Supa, binderId: string, input: ServiceInpu
 
 /** Retire une prestation du constructeur sans rien casser : les anciens devis gardent leur snapshot. */
 export async function archiveService(sb: Supa, binderId: string, serviceId: string): Promise<void> {
-  const { data, error } = await db(sb)
+  const { data, error } = await sb
     .from("marketplace_binder_services")
     .update({ archived_at: new Date().toISOString(), is_active: false })
     .eq("id", serviceId)
@@ -292,16 +298,16 @@ export async function archiveService(sb: Supa, binderId: string, serviceId: stri
  * l'atelier.
  */
 export async function importStarterCatalog(sb: Supa, binderId: string): Promise<{ imported: boolean }> {
-  const existing = await db(sb).from("marketplace_binder_service_categories").select("id").eq("binder_id", binderId).limit(1);
+  const existing = await sb.from("marketplace_binder_service_categories").select("id").eq("binder_id", binderId).limit(1);
   if (existing.error) throw new BinderQuotesError("failed");
   if ((existing.data ?? []).length > 0) return { imported: false };
 
-  const categories = await db(sb)
+  const categories = await sb
     .from("marketplace_binder_service_categories")
     .insert(STARTER_CATALOG.map((c, i) => ({ binder_id: binderId, name: c.name, sort_order: i })))
     .select("id, name");
   if (categories.error) throw new BinderQuotesError("failed");
-  const idByName = new Map<string, string>((categories.data ?? []).map((c: any) => [c.name, c.id]));
+  const idByName = new Map<string, string>((categories.data ?? []).map((c) => [c.name, c.id] as const));
 
   const rows = STARTER_CATALOG.flatMap((category) =>
     category.services.map((name, i) => ({
@@ -313,7 +319,7 @@ export async function importStarterCatalog(sb: Supa, binderId: string): Promise<
       sort_order: i,
     })),
   );
-  const services = await db(sb).from("marketplace_binder_services").insert(rows);
+  const services = await sb.from("marketplace_binder_services").insert(rows);
   if (services.error) throw new BinderQuotesError("failed");
   return { imported: true };
 }
@@ -333,7 +339,7 @@ export interface ClientView {
   country: string | null;
   notes: string | null;
 }
-const clientView = (row: any): ClientView => ({
+const clientView = (row: Tables<"marketplace_binder_clients">): ClientView => ({
   id: row.id,
   name: row.name,
   email: row.email,
@@ -346,7 +352,7 @@ const clientView = (row: any): ClientView => ({
 });
 
 export async function listClients(sb: Supa, binderId: string): Promise<ClientView[]> {
-  const { data, error } = await db(sb).from("marketplace_binder_clients").select("*").eq("binder_id", binderId).order("name");
+  const { data, error } = await sb.from("marketplace_binder_clients").select("*").eq("binder_id", binderId).order("name");
   if (error) throw new BinderQuotesError("failed");
   return (data ?? []).map(clientView);
 }
@@ -363,8 +369,8 @@ export async function saveClient(sb: Supa, binderId: string, input: ClientInput)
     notes: input.notes,
   };
   const query = input.id
-    ? db(sb).from("marketplace_binder_clients").update(values).eq("id", input.id).eq("binder_id", binderId)
-    : db(sb).from("marketplace_binder_clients").insert({ ...values, binder_id: binderId });
+    ? sb.from("marketplace_binder_clients").update(values).eq("id", input.id).eq("binder_id", binderId)
+    : sb.from("marketplace_binder_clients").insert({ ...values, binder_id: binderId });
   const { data, error } = await query.select("*").maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!data) throw new BinderQuotesError("not_found");
@@ -374,7 +380,7 @@ export async function saveClient(sb: Supa, binderId: string, input: ClientInput)
 /** Le client d'un devis : un client existant DE CET ATELIER, ou une nouvelle fiche créée à la volée. */
 async function resolveClientId(sb: Supa, binderId: string, input: QuoteInput): Promise<string> {
   if (input.clientId) {
-    const { data } = await db(sb)
+    const { data } = await sb
       .from("marketplace_binder_clients")
       .select("id")
       .eq("id", input.clientId)
@@ -390,7 +396,7 @@ async function resolveClientId(sb: Supa, binderId: string, input: QuoteInput): P
 async function assertOwnServices(sb: Supa, binderId: string, input: QuoteInput) {
   const ids = [...new Set(input.lines.map((l) => l.serviceId).filter((id): id is string => Boolean(id)))];
   if (ids.length === 0) return;
-  const { data, error } = await db(sb).from("marketplace_binder_services").select("id").eq("binder_id", binderId).in("id", ids);
+  const { data, error } = await sb.from("marketplace_binder_services").select("id").eq("binder_id", binderId).in("id", ids);
   if (error) throw new BinderQuotesError("failed");
   if ((data ?? []).length !== ids.length) throw new BinderQuotesError("invalid_input");
 }
@@ -400,35 +406,35 @@ async function assertOwnServices(sb: Supa, binderId: string, input: QuoteInput) 
 // ---------------------------------------------------------------------------
 
 async function loadQuoteRow(sb: Supa, binderId: string, quoteId: string): Promise<QuoteDbRow | null> {
-  const { data, error } = await db(sb)
+  const { data, error } = await sb
     .from("marketplace_binder_quotes")
     .select("*")
     .eq("id", quoteId)
     .eq("binder_id", binderId)
     .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
-  return data ?? null;
+  return data ? asQuoteRow(data) : null;
 }
 
 export async function getQuote(sb: Supa, binderId: string, quoteId: string): Promise<DocumentView> {
   const row = await loadQuoteRow(sb, binderId, quoteId);
   if (!row) throw new BinderQuotesError("not_found");
   const [items, invoice] = await Promise.all([
-    db(sb).from("marketplace_binder_quote_items").select("*").eq("quote_id", quoteId).eq("binder_id", binderId).order("position"),
-    db(sb).from("marketplace_binder_invoices").select("id, invoice_number").eq("quote_id", quoteId).eq("binder_id", binderId).maybeSingle(),
+    sb.from("marketplace_binder_quote_items").select("*").eq("quote_id", quoteId).eq("binder_id", binderId).order("position"),
+    sb.from("marketplace_binder_invoices").select("id, invoice_number").eq("quote_id", quoteId).eq("binder_id", binderId).maybeSingle(),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
-  return quoteView(row, (items.data ?? []) as ItemDbRow[], invoice.data ?? null);
+  return quoteView(row, asItemRows(items.data ?? []), invoice.data ?? null);
 }
 
 export async function listQuotes(sb: Supa, binderId: string): Promise<DocumentSummary[]> {
-  const { data, error } = await db(sb)
+  const { data, error } = await sb
     .from("marketplace_binder_quotes")
     .select("id, quote_number, status, issue_date, valid_until, client_name, book_title, total_ttc_cents, currency")
     .eq("binder_id", binderId)
     .order("created_at", { ascending: false });
   if (error) throw new BinderQuotesError("failed");
-  return (data ?? []).map((row: any) => ({
+  return (data ?? []).map((row) => ({
     kind: "quote" as const,
     id: row.id,
     number: row.quote_number,
@@ -458,10 +464,10 @@ export async function createQuote(sb: Supa, binderId: string, input: QuoteInput,
   const clientId = await resolveClientId(sb, binderId, input);
   const { quote, items } = buildQuoteRows({ input, profile, issueDate: today, clientId });
 
-  const { data, error } = await db(sb).rpc("marketplace_binder_create_quote", {
+  const { data, error } = await sb.rpc("marketplace_binder_create_quote", {
     p_binder_id: binderId,
-    p_quote: quote,
-    p_items: items,
+    p_quote: asJson(quote),
+    p_items: asJson(items),
   });
   if (error || !data) throw new BinderQuotesError("failed");
   return getQuote(sb, binderId, data as string);
@@ -483,11 +489,11 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
   } catch (error) {
     return fromQuoteError(error);
   }
-  const { error } = await db(sb).rpc("marketplace_binder_update_quote", {
+  const { error } = await sb.rpc("marketplace_binder_update_quote", {
     p_binder_id: binderId,
     p_quote_id: quoteId,
-    p_quote: built.quote,
-    p_items: built.items,
+    p_quote: asJson(built.quote),
+    p_items: asJson(built.items),
   });
   if (error) {
     if (String(error.message).includes("quote_not_editable")) throw new BinderQuotesError("conflict");
@@ -504,7 +510,7 @@ export async function setQuoteStatus(sb: Supa, binderId: string, quoteId: string
   const from = row.status as QuoteStatus;
   if (!canTransition(from, to)) throw new BinderQuotesError("conflict");
   // Garde optimiste : le changement n'a lieu que si le statut est encore celui qu'on vient de lire.
-  const { data, error } = await db(sb)
+  const { data, error } = await sb
     .from("marketplace_binder_quotes")
     .update({ status: to })
     .eq("id", quoteId)
@@ -535,12 +541,13 @@ export async function convertQuoteToInvoice(sb: Supa, binderId: string, quoteId:
   const readiness = profileReadiness({ ...profile, vatRegime: quote.vat_regime, vatMention: quote.vat_mention ?? profile.vatMention }, "invoice");
   if (!readiness.ready) throw new BinderQuotesError("profile_incomplete", readiness.missing);
 
-  const { data, error } = await db(sb).rpc("marketplace_binder_convert_quote_to_invoice", {
+  const { data, error } = await sb.rpc("marketplace_binder_convert_quote_to_invoice", {
     p_binder_id: binderId,
     p_quote_id: quoteId,
     p_issue_date: today,
-    p_invoice_notes: profile.invoiceNotes,
-    p_issuer: issuerOf(profile),
+    // Nullable côté SQL (« pas de mentions ») ; le générateur type les arguments de fonction non-nullables.
+    p_invoice_notes: profile.invoiceNotes as unknown as string,
+    p_issuer: asJson(issuerOf(profile)),
   });
   if (error || !data) {
     const message = String(error?.message ?? "");
@@ -552,7 +559,7 @@ export async function convertQuoteToInvoice(sb: Supa, binderId: string, quoteId:
 }
 
 export async function getInvoice(sb: Supa, binderId: string, invoiceId: string): Promise<DocumentView> {
-  const { data: row, error } = await db(sb)
+  const { data: row, error } = await sb
     .from("marketplace_binder_invoices")
     .select("*")
     .eq("id", invoiceId)
@@ -561,21 +568,21 @@ export async function getInvoice(sb: Supa, binderId: string, invoiceId: string):
   if (error) throw new BinderQuotesError("failed");
   if (!row) throw new BinderQuotesError("not_found");
   const [items, quote] = await Promise.all([
-    db(sb).from("marketplace_binder_invoice_items").select("*").eq("invoice_id", invoiceId).eq("binder_id", binderId).order("position"),
-    db(sb).from("marketplace_binder_quotes").select("id, quote_number").eq("id", row.quote_id).eq("binder_id", binderId).maybeSingle(),
+    sb.from("marketplace_binder_invoice_items").select("*").eq("invoice_id", invoiceId).eq("binder_id", binderId).order("position"),
+    sb.from("marketplace_binder_quotes").select("id, quote_number").eq("id", row.quote_id).eq("binder_id", binderId).maybeSingle(),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
-  return invoiceView(row as InvoiceDbRow, (items.data ?? []) as ItemDbRow[], quote.data ?? null);
+  return invoiceView(asInvoiceRow(row), asItemRows(items.data ?? []), quote.data ?? null);
 }
 
 export async function listInvoices(sb: Supa, binderId: string): Promise<DocumentSummary[]> {
-  const { data, error } = await db(sb)
+  const { data, error } = await sb
     .from("marketplace_binder_invoices")
     .select("id, invoice_number, issue_date, client_name, book_title, total_ttc_cents, currency, payment_status")
     .eq("binder_id", binderId)
     .order("created_at", { ascending: false });
   if (error) throw new BinderQuotesError("failed");
-  return (data ?? []).map((row: any) => ({
+  return (data ?? []).map((row) => ({
     kind: "invoice" as const,
     id: row.id,
     number: row.invoice_number,
