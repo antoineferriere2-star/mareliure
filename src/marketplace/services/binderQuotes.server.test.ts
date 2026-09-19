@@ -502,7 +502,8 @@ describe("deux relieurs, deux mondes", () => {
       .replace(/^\s*\/\/.*$/gm, "");
     // Chaque accès à une table de l'outil (ou à l'atelier lui-même) est écrit avec `binderId`
     // dans la même chaîne d'appel : filtre `eq`, valeur insérée, ou argument de la fonction SQL.
-    const chains = src.split("db(sb)").slice(1);
+    // Une « chaîne » commence à chaque `sb.from(` / `sb.rpc(` du client typé.
+    const chains = src.split(/\bsb\s*\.(?=from\(|rpc\()/).slice(1);
     let checked = 0;
     for (const chain of chains) {
       const stop = chain.search(/;\s*\n/);
