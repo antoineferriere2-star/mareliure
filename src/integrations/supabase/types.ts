@@ -2937,6 +2937,7 @@ export type Database = {
           p_issue_date: string
           p_issuer: Json
           p_quote_id: string
+          p_vat_mention?: string
         }
         Returns: string
       }

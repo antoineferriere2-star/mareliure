@@ -119,6 +119,21 @@ export class QuoteError extends Error {
 const filled = (value: string | null | undefined) => Boolean(value && value.trim());
 
 /**
+ * La mention de TVA qui sera figée dans la facture d'un devis.
+ *
+ * Un devis se chiffre sans administratif : un devis en franchise peut donc naître
+ * SANS mention, l'atelier complétant son profil plus tard. La facture, elle, doit
+ * la porter. Règle unique, appliquée à l'identique par la fonction SQL de
+ * conversion : la mention non blanche du devis prime (elle a été promise au client),
+ * à défaut celle du profil. Une chaîne blanche vaut absence.
+ */
+export function effectiveVatMention(quoteMention: string | null, profileMention: string | null): string | null {
+  if (filled(quoteMention)) return quoteMention!.trim();
+  if (filled(profileMention)) return profileMention!.trim();
+  return null;
+}
+
+/**
  * Ce qu'il faut avoir renseigné avant d'émettre. Volontairement court pour un
  * devis (un nom, un régime de TVA) : le relieur n'est jamais bloqué par de
  * l'administratif pour chiffrer un livre. Une facture exige l'identité complète.
