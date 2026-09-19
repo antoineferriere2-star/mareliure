@@ -50,6 +50,7 @@ import {
   signFirstCasePhoto,
 } from "./caseRepository.server";
 import { loadAggregates, loadPricebook } from "./pricingRepository.server";
+import { assertPricingOpen } from "./pricingGuards.server";
 import {
   acceptBinderInvitation as acceptBinderInvitationForUser,
   createBinderInvitation,
@@ -385,6 +386,9 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
+    // Un dossier engagé (proposition acceptée, atelier retenu, offres en cours) ne repart jamais
+    // en chiffrage : refus net avant toute écriture (la base le garantit aussi).
+    await assertPricingOpen(sb, data.caseId);
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable");
 
@@ -480,6 +484,9 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
       actor_user_id: context.userId,
       event_type: abstained ? "pricing_manual_review" : "pricing_generated",
       metadata: {
+        // Ce qu'une régénération remplace : la correction humaine ne disparaît pas sans trace.
+        previous_pricing_status: caseContext.row.pricing_status,
+        previous_customer_price_cents: caseContext.row.customer_price_cents,
         brand,
         customer_price_cents: brandPrice?.servicePriceCents ?? null,
         base_service_price_cents: brandPrice?.baseServicePriceCents ?? null,
@@ -509,6 +516,7 @@ export const saveMarketplacePricing = createServerFn({ method: "POST" })
     const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
     if (!validation.valid) fail(422, validation.errors.join(" "));
     const sb = await admin();
+    await assertPricingOpen(sb, data.caseId);
     const { error } = await sb
       .from("marketplace_cases")
       .update({
@@ -539,6 +547,7 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
     const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
     if (!validation.valid) fail(422, validation.errors.join(" "));
     const sb = await admin();
+    await assertPricingOpen(sb, data.caseId);
     const { data: result, error } = await sb.rpc("marketplace_validate_pricing", {
       p_case_id: data.caseId,
       p_customer_price_cents: data.customerPriceCents,
@@ -550,21 +559,18 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
     });
     if (error) fail(409, error.message);
 
-    // `marketplace_validate_pricing` ne touche jamais service_price_cents/
-    // pricing_mode/brand_multiplier_bps — seul generateMarketplacePricing
-    // (le moteur automatique) les renseigne, et il s'abstient tant qu'aucun
-    // atelier n'a encore saisi de grille (aggregates vides). Sans ce
-    // complément, un dossier tarifé à la main (le seul cas possible
-    // aujourd'hui) resterait à jamais bloqué devant createCommercialProposal
-    // ("pas de prix client calculé"), alors qu'un admin vient justement de
-    // le fixer. On ne l'écrase jamais si le moteur l'a déjà renseigné.
-    if (result && result.service_price_cents === null) {
+    // `marketplace_validate_pricing` recopie le prix validé dans service_price_cents (une seule
+    // vérité de prix, P1-4) mais ne touche jamais pricing_mode / brand_multiplier_bps /
+    // base_service_price_cents — seul generateMarketplacePricing (le moteur automatique) les
+    // renseigne, et il s'abstient tant qu'aucun atelier n'a saisi de grille. Sans ce complément un
+    // dossier tarifé à la main resterait sans mode ni multiplicateur. On ne l'écrase jamais si le
+    // moteur les a déjà renseignés.
+    if (result && result.brand_multiplier_bps === null) {
       const brand = isMarketplaceBrand(result.brand) ? result.brand : "MA_RELIURE";
       const multiplierBps = marketplaceBrandConfig(brand).pricingPolicy.serviceMultiplierBps;
       const { error: backfillError } = await sb
         .from("marketplace_cases")
         .update({
-          service_price_cents: data.customerPriceCents,
           base_service_price_cents: data.customerPriceCents,
           brand_multiplier_bps: multiplierBps,
           pricing_mode: result.pricing_mode ?? "MANUAL_STUDY",
@@ -1328,7 +1334,7 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       // Même règle que le détail : un prix n'est montré que validé par un humain.
       const priceValidated = row.pricing_status === "validated";
       const [commerce, thumbnailUrl] = await Promise.all([
-        loadCustomerCommerce(sb, row.id, { priceValidated, caseStatus: row.status }),
+        loadCustomerCommerce(sb, row.id, { priceValidated, customerPriceCents: row.customer_price_cents, caseStatus: row.status }),
         caseContext ? signFirstCasePhoto(sb, caseContext.answers) : Promise.resolve(null),
       ]);
       const validatedPriceCents = priceValidated ? row.customer_price_cents : null;
@@ -1405,6 +1411,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     // en liste blanche : ni rémunération d'atelier, ni marge, ni règle.
     const commerce = await loadCustomerCommerce(sb, data.caseId, {
       priceValidated: caseContext.row.pricing_status === "validated",
+      customerPriceCents: caseContext.row.customer_price_cents,
       caseStatus: caseContext.row.status,
     });
     const intentLine = caseContext.brief.confirmedInformation.find(

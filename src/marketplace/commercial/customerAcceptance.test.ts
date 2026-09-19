@@ -12,6 +12,7 @@ const ok: CustomerAcceptanceInput = {
   customerType: "CUSTOMER",
   businessName: null,
   amount: amountInput(50_000, 0, 2000),
+  proposalPriceCurrent: true,
   casePriceValidated: true,
   caseStatus: "matching",
 };
@@ -29,6 +30,7 @@ describe("quand un client peut accepter sa proposition", () => {
     ["remplacée", { status: "superseded" }, "not_open"],
     ["marquée remplacée par sa date", { supersededAt: "2026-09-19T08:00:00.000Z" }, "not_open"],
     ["prix non validé", { casePriceValidated: false }, "price_not_validated"],
+    ["prix re-validé depuis sa création (proposition périmée)", { proposalPriceCurrent: false }, "price_changed"],
     ["fiscalité à revoir", { taxPolicy: "MANUAL_TAX_REVIEW", taxValidatedAt: null }, "tax_review_required"],
     ["fiscalité sans date de validation", { taxValidatedAt: null }, "tax_review_required"],
     ["politique « à revoir » malgré une date", { taxPolicy: "MANUAL_TAX_REVIEW" }, "tax_review_required"],

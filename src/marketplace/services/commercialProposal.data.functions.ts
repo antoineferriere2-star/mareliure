@@ -16,6 +16,8 @@ import { admin, assertAdmin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
+import { authoritativeServicePrice } from "@/marketplace/commercial/authoritativePrice";
+import { REPRICE_BLOCK_MESSAGES } from "@/marketplace/cases/engagement";
 import { lookupPricebookReference, resolveServicePriceFloors } from "@/marketplace/pricing/pricebook";
 import { resolveWork } from "@/marketplace/pricing/workResolver";
 import { PRICING_MODES, type PricingMode } from "@/marketplace/pricing/pricingMode";
@@ -34,6 +36,7 @@ import {
 import { getPaymentPreflight as loadPaymentPreflight } from "@/marketplace/stripe/paymentPreflight.server";
 import { loadCaseContext } from "./caseRepository.server";
 import { loadPricebook } from "./pricingRepository.server";
+import { assertProposalPriceCurrent } from "./pricingGuards.server";
 import {
   acceptCommercialProposal as acceptCommercialProposalRow,
   insertCommercialProposal,
@@ -84,8 +87,25 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
     if (!caseContext) fail(404, "Dossier introuvable");
     const row = caseContext.row;
 
-    if (row.service_price_cents === null || row.binder_payout_cents === null) {
-      fail(409, "Ce dossier n'a pas encore de prix client calculé.");
+    // Une proposition acceptée fige le dossier : une évolution commerciale n'est jamais un simple
+    // « nouvelle version » silencieuse sur une commande déjà acceptée (P1-5).
+    if (await loadAcceptedCommercialProposal(sb, data.caseId)) fail(409, REPRICE_BLOCK_MESSAGES.proposal_accepted);
+
+    // UNE autorité de prix (P1-4) : le prix client RETENU et VALIDÉ par un humain — jamais la sortie
+    // brute du moteur (`service_price_cents`), qui peut avoir été corrigée depuis.
+    const price = authoritativeServicePrice({
+      pricingStatus: row.pricing_status,
+      customerPriceCents: row.customer_price_cents,
+      binderPayoutCents: row.binder_payout_cents,
+      suggestedCustomerPriceCents: row.suggested_customer_price_cents,
+    });
+    if (!price.ok) {
+      fail(
+        409,
+        price.reason === "price_not_validated"
+          ? "Le prix de ce dossier doit d'abord être validé avant de construire une proposition."
+          : "Ce dossier n'a pas de prix client validé.",
+      );
     }
     const pricingMode: PricingMode = PRICING_MODES.includes(row.pricing_mode as PricingMode)
       ? (row.pricing_mode as PricingMode)
@@ -129,7 +149,7 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
       : null;
 
     const floors = resolveServicePriceFloors({
-      binderPayoutCents: row.binder_payout_cents,
+      binderPayoutCents: price.binderPayoutCents,
       targetMarginBps: PRICING_POLICY.targetMarginBps,
       minimumContributionCents: PRICING_POLICY.minimumContributionCents,
       roundingIncrementCents: PRICING_POLICY.roundingIncrementCents,
@@ -155,14 +175,14 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
       pricebookProvenance,
       brandMultiplierBps,
       brandReferenceCents,
-      binderPayoutCents: row.binder_payout_cents,
+      binderPayoutCents: price.binderPayoutCents,
       binderVatRateBps: null,
       targetMarginBps: PRICING_POLICY.targetMarginBps,
       minimumContributionCents: PRICING_POLICY.minimumContributionCents,
       marginFloorCents: floors.marginFloorCents,
       contributionFloorCents: floors.contributionFloorCents,
       priceBoundBy: floors.boundBy,
-      customerServicePriceCents: row.service_price_cents,
+      customerServicePriceCents: price.priceCents,
       estimateMinCents: pricingMode === "ESTIMATE_THEN_CONFIRM" ? row.pricing_low_estimate_cents : null,
       estimateMaxCents: pricingMode === "ESTIMATE_THEN_CONFIRM" ? row.pricing_high_estimate_cents : null,
       shipping: data.shipping,
@@ -200,6 +220,9 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
         customer_service_price_cents: proposal.customerServicePriceCents,
         binder_payout_cents: proposal.binderPayoutCents,
         price_bound_by: proposal.priceBoundBy,
+        // Traçabilité : la suggestion initiale du moteur et la correction humaine éventuelle.
+        suggested_price_cents: price.suggestedPriceCents,
+        price_corrected_by_human: price.correctedByHuman,
       },
     });
 
@@ -227,6 +250,9 @@ export const acceptCommercialProposal = createServerFn({ method: "POST" })
   .handler(async ({ context, data: proposalId }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
+
+    // Jamais d'acceptation d'une proposition périmée (P1-4).
+    await assertProposalPriceCurrent(sb, proposalId);
 
     let accepted;
     try {

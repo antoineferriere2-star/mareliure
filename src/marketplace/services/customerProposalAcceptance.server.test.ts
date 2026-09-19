@@ -45,7 +45,7 @@ interface Row {
 const store = vi.hoisted(() => ({
   proposals: [] as Row[],
   caseRow: null as null | {
-    row: { pricing_status: string; status: string };
+    row: { pricing_status: string; status: string; customer_price_cents: number | null };
     customerUserId: string | null;
     invitedBinderIds: string[];
     selectedBinderId: string | null;
@@ -177,7 +177,7 @@ async function codeOf(promise: Promise<unknown>): Promise<string> {
 beforeEach(() => {
   store.proposals = [proposal()];
   store.caseRow = {
-    row: { pricing_status: "validated", status: "matching" },
+    row: { pricing_status: "validated", status: "matching", customer_price_cents: 37500 },
     customerUserId: OWNER,
     invitedBinderIds: [],
     selectedBinderId: null,
@@ -207,7 +207,7 @@ describe("le propriétaire accepte sa proposition", () => {
 
   it("RECALCULE la possibilité de payer après l'acceptation (checkoutEligibility), sans la supposer", async () => {
     const { sb } = fakeSb();
-    const before = await loadCustomerCommerce(sb, CASE_ID, { priceValidated: true, caseStatus: "matching" });
+    const before = await loadCustomerCommerce(sb, CASE_ID, { priceValidated: true, customerPriceCents: 37500, caseStatus: "matching" });
     expect(before).toMatchObject({ canAccept: true, proposalAccepted: false, paymentEligible: false });
 
     const result = await acceptProposalForCustomer(sb, owner());
@@ -221,7 +221,7 @@ describe("le propriétaire accepte sa proposition", () => {
     // L'immuabilité est garantie en base ; côté lecture, un état non payable reste non payable.
     store.proposals[0].taxPolicy = "MANUAL_TAX_REVIEW";
     store.proposals[0].taxValidatedAt = null;
-    const commerce = await loadCustomerCommerce(sb, CASE_ID, { priceValidated: true, caseStatus: "matching" });
+    const commerce = await loadCustomerCommerce(sb, CASE_ID, { priceValidated: true, customerPriceCents: 37500, caseStatus: "matching" });
     expect(commerce.paymentEligible).toBe(false);
   });
 
@@ -238,7 +238,7 @@ describe("le propriétaire accepte sa proposition", () => {
     const { sb } = fakeSb();
     await acceptProposalForCustomer(sb, owner());
     store.paidAt = "2026-09-20T08:00:00.000Z";
-    const commerce = await loadCustomerCommerce(sb, CASE_ID, { priceValidated: true, caseStatus: "paid" });
+    const commerce = await loadCustomerCommerce(sb, CASE_ID, { priceValidated: true, customerPriceCents: 37500, caseStatus: "paid" });
     expect(commerce).toMatchObject({ paymentEligible: false, paidAt: "2026-09-20T08:00:00.000Z", proposalAccepted: true });
   });
 });
@@ -325,7 +325,8 @@ describe("le client n'accepte que ce qu'il a vu, et que ce qui est acceptable", 
     expect(await codeOf(acceptProposalForCustomer(sb, owner({ proposalId: P1 })))).toBe("proposal_changed");
     expect(store.calls.accept).toBe(0);
     expect(events).toHaveLength(0);
-    // La nouvelle version, elle, est acceptable.
+    // La nouvelle version, elle, est acceptable : le prix du dossier a été re-validé à 999 €.
+    store.caseRow!.row.customer_price_cents = 99900;
     expect((await acceptProposalForCustomer(sb, owner({ proposalId: P2 }))).outcome).toBe("accepted");
   });
 
@@ -347,7 +348,7 @@ describe("le client n'accepte que ce qu'il a vu, et que ce qui est acceptable", 
     expect(store.calls.accept).toBe(0);
   });
 
-  const refused: [string, Partial<Row>, Partial<{ pricing_status: string; status: string }>][] = [
+  const refused: [string, Partial<Row>, Partial<{ pricing_status: string; status: string; customer_price_cents: number | null }>][] = [
     ["une proposition en préparation (draft)", { status: "draft" }, {}],
     ["une proposition retirée (cancelled)", { status: "cancelled" }, {}],
     ["une proposition remplacée (superseded)", { status: "superseded", supersededAt: "2026-09-19T08:00:00.000Z" }, {}],
@@ -355,6 +356,7 @@ describe("le client n'accepte que ce qu'il a vu, et que ce qui est acceptable", 
     ["une fiscalité étiquetée validée sans date de validation", { taxValidatedAt: null }, {}],
     ["un client professionnel sans raison sociale", { customerType: "BUSINESS", businessName: null }, {}],
     ["un prix que personne n'a validé", {}, { pricing_status: "suggested" }],
+    ["un prix re-validé depuis la création de la proposition (proposition périmée)", {}, { customer_price_cents: 40000 }],
     ["un projet annulé", {}, { status: "cancelled" }],
     ["un projet terminé", {}, { status: "completed" }],
   ];
@@ -380,7 +382,7 @@ describe("le client n'accepte que ce qu'il a vu, et que ce qui est acceptable", 
 });
 
 describe("ce que le client voit d'une proposition avant de l'accepter", () => {
-  const facts = { priceValidated: true, caseStatus: "matching" };
+  const facts = { priceValidated: true, customerPriceCents: 37500, caseStatus: "matching" };
 
   it("la proposition acceptable est présentée, sans être payable", async () => {
     const { sb } = fakeSb();
@@ -397,7 +399,7 @@ describe("ce que le client voit d'une proposition avant de l'accepter", () => {
       expect(await loadCustomerCommerce(sb, CASE_ID, facts)).toMatchObject({ proposal: null, canAccept: false });
     }
     store.proposals = [proposal()];
-    expect(await loadCustomerCommerce(sb, CASE_ID, { priceValidated: false, caseStatus: "matching" })).toMatchObject({
+    expect(await loadCustomerCommerce(sb, CASE_ID, { priceValidated: false, customerPriceCents: 37500, caseStatus: "matching" })).toMatchObject({
       proposal: null,
       canAccept: false,
     });
@@ -406,7 +408,7 @@ describe("ce que le client voit d'une proposition avant de l'accepter", () => {
   it("seule la dernière version est présentée", async () => {
     const { sb } = fakeSb();
     store.proposals = [proposal({ status: "superseded", supersededAt: "2026-09-19T08:00:00.000Z" }), proposal({ id: P2, version: 2, customerServicePriceCents: 42500, customerTotalHtCents: 42500, customerVatAmountCents: 8500, customerTotalTtcCents: 51000 })];
-    const commerce = await loadCustomerCommerce(sb, CASE_ID, facts);
+    const commerce = await loadCustomerCommerce(sb, CASE_ID, { ...facts, customerPriceCents: 42500 });
     expect(commerce.proposal?.id).toBe(P2);
     expect(commerce.proposal?.totalTtcCents).toBe(51000);
   });

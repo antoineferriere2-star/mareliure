@@ -19,6 +19,8 @@ export type AcceptanceBlock =
   | "not_open"
   | "case_closed"
   | "price_not_validated"
+  /** Le prix validé du dossier n'est plus celui de cette proposition : elle est périmée. */
+  | "price_changed"
   | "tax_review_required"
   | "business_identity_incomplete"
   /** Le montant exigible n'est pas payable (TVA non résolue, snapshot incohérent, acompte non supporté). */
@@ -38,6 +40,12 @@ export interface CustomerAcceptanceInput {
   amount: AmountDueInput;
   /** Le prix du dossier a été validé par un humain (`marketplace_cases.pricing_status`). */
   casePriceValidated: boolean;
+  /**
+   * Cette proposition porte-t-elle encore le prix validé courant du dossier ? Un prix re-validé
+   * depuis sa création la rend périmée : il faut une nouvelle version, jamais l'acceptation d'un prix
+   * que le dossier n'a plus (P1-4 — la proposition prend toujours le dernier prix validé).
+   */
+  proposalPriceCurrent: boolean;
   /** `marketplace_cases.status` : on n'accepte pas une proposition sur un projet clos. */
   caseStatus: string;
 }
@@ -51,6 +59,7 @@ export function customerAcceptance(input: CustomerAcceptanceInput): CustomerAcce
   if (input.status !== "proposed" || input.supersededAt) return { acceptable: false, reason: "not_open" };
   if (CLOSED_CASE_STATUSES.includes(input.caseStatus)) return { acceptable: false, reason: "case_closed" };
   if (!input.casePriceValidated) return { acceptable: false, reason: "price_not_validated" };
+  if (!input.proposalPriceCurrent) return { acceptable: false, reason: "price_changed" };
 
   const afterAcceptance = checkoutEligibility({
     status: "accepted",

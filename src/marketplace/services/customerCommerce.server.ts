@@ -13,6 +13,7 @@
  */
 import type { Supa } from "@/build/services/adminAuth.server";
 import { customerAcceptance } from "@/marketplace/commercial/customerAcceptance";
+import { proposalCarriesCurrentPrice } from "@/marketplace/commercial/authoritativePrice";
 import { toCustomerProposalView, type CustomerProposalView } from "@/marketplace/commercial/customerProposalView";
 import {
   loadAcceptedCommercialProposal,
@@ -47,6 +48,8 @@ const NONE: CustomerCommerce = {
 export interface CaseCommerceFacts {
   /** `marketplace_cases.pricing_status === "validated"` — un prix validé par un humain. */
   priceValidated: boolean;
+  /** `marketplace_cases.customer_price_cents` — la seule autorité de prix, lue seulement si elle est validée. */
+  customerPriceCents: number | null;
   /** `marketplace_cases.status`. */
   caseStatus: string;
 }
@@ -94,6 +97,10 @@ export async function loadCustomerCommerce(
     businessName: latest.businessName,
     amount: latest,
     casePriceValidated: caseFacts.priceValidated,
+    proposalPriceCurrent: proposalCarriesCurrentPrice(latest.customerServicePriceCents, {
+      pricingStatus: caseFacts.priceValidated ? "validated" : null,
+      customerPriceCents: caseFacts.customerPriceCents,
+    }),
     caseStatus: caseFacts.caseStatus,
   });
   if (!verdict.acceptable) return NONE;
