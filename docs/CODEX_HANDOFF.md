@@ -2852,14 +2852,15 @@ chemin pour Fine Bindery (phase D) ; on ne l'a pas fait ici pour ne pas exiger d
   Les aperçus n'existent que pendant la session : après reprise, la photo s'affiche « enregistrée » (une URL signée par vignette serait un changement serveur).
 - Vocabulaire : « Un mot vous échappe ? » sous l'étape, seulement les mots que le texte de l'étape emploie (`engine/glossary.ts`).
 - Récapitulatif : nombre de questions sans réponse (jamais bloquant), photos en images libellées par vue, « Je ne sais pas » / « Oui » en français.
-- Confirmation : « Et maintenant ? » en trois étapes avec l'acteur et un délai indicatif.
+- Confirmation : « Et maintenant ? » en trois étapes avec l'acteur qui agit ; le délai est **sans chiffre** (« Nous revenons vers vous dans les prochains jours ouvrés »).
 - Reprise de session : on revient **à l'étape atteinte** (première question obligatoire restante), pas à l'écran 1 ; message « Content de vous revoir ».
 - Mobile 390 px : barre Retour / Continuer collante, cibles de 44 px, message d'erreur amené à l'écran (le bouton refusé n'a plus l'air mort), titres plus petits.
 - Correctifs en chemin : erreur d'adresse restée en anglais, écran de chargement / d'échec du chargement en anglais (la langue de la Mission n'arrive qu'avec la Mission :
   la route donne `initialLocale`), double point après un libellé de consentement.
 
-**À décider par le propriétaire avant déploiement.** `RELIURE_REPLY_DELAY` (« 2 à 3 jours ouvrés », `reliureIntakeGuidance.ts`) est un **délai commercial affiché**,
-pas une mesure : rien dans le produit ne l'engage aujourd'hui. Le texte dit « indicatif » ; la valeur est à confirmer ou à changer.
+**Décision du propriétaire (20/09/2026) : aucun délai chiffré tant qu'il n'est pas validé opérationnellement.** `RELIURE_REPLY_NOTICE` (`reliureIntakeGuidance.ts`) dit
+« Nous revenons vers vous dans les prochains jours ouvrés » ; un test interdit d'y remettre un chiffre (heures, jours, « sous », « garanti »). Le jour où un délai
+réel est validé (SLA mesuré), c'est cette seule constante qui change — et le test avec elle.
 
 **QA.** Banc hors dépôt (Playwright + Chrome, faux endpoint du runtime servi avec le vrai Playbook, état conservé entre rechargements) : desktop 1280, tablette 820, mobile 390 ;
 reprise après vrai rechargement, ajout / remplacement / retrait de photos, échec d'envoi puis reprise, fichier refusé, chargement lent, échec de chargement, récapitulatif, soumission.

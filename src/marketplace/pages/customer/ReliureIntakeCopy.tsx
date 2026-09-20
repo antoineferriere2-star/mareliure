@@ -9,7 +9,7 @@
  * Aucune promesse de plus que la page d'accueil n'en fait déjà.
  */
 import { Clock, FileText, Package } from "lucide-react";
-import { RELIURE_INTAKE_MINUTES, RELIURE_REPLY_DELAY } from "./reliureIntakeGuidance";
+import { RELIURE_INTAKE_MINUTES, RELIURE_REPLY_NOTICE } from "./reliureIntakeGuidance";
 
 /** Avant la première question : ce qu'on obtient, combien de temps, et le geste à ne pas faire. */
 export function ReliureIntakeIntro() {
@@ -72,7 +72,7 @@ const STEPS: { title: string; who: string; detail: string }[] = [
   {
     title: "Ma Reliure étudie votre projet",
     who: "Ma Reliure",
-    detail: `Délai indicatif : ${RELIURE_REPLY_DELAY}.`,
+    detail: RELIURE_REPLY_NOTICE,
   },
   {
     title: "Vous recevez une proposition chiffrée",

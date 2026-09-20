@@ -2,7 +2,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ReliureIntakeIntro, ReliureNextSteps, ReliureReviewNotice } from "./ReliureIntakeCopy";
-import { RELIURE_INTAKE_MINUTES, RELIURE_REPLY_DELAY } from "./reliureIntakeGuidance";
+import { RELIURE_INTAKE_MINUTES, RELIURE_REPLY_NOTICE } from "./reliureIntakeGuidance";
 
 const html = (component: () => ReturnType<typeof ReliureIntakeIntro>) =>
   renderToStaticMarkup(createElement(component)).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ");
@@ -47,9 +47,12 @@ describe("at the last look", () => {
 describe("after sending", () => {
   const text = html(ReliureNextSteps);
 
-  it("orders three steps, names who acts, and gives an indicative — not a promised — delay", () => {
+  it("orders three steps, names who acts, and promises no figure for the reply", () => {
     expect(text).toContain("Ma Reliure étudie votre projet");
-    expect(text).toContain(`Délai indicatif : ${RELIURE_REPLY_DELAY}`);
+    expect(text).toContain(RELIURE_REPLY_NOTICE);
+    // No SLA has been validated operationally: not a number of days, not hours.
+    expect(text).not.toMatch(/Délai indicatif/);
+    expect(text).not.toMatch(/\d\s*(h\b|heure|jour)|sous \d|dans les \d/i);
     expect(text).toContain("Vous recevez une proposition chiffrée");
     expect(text).toContain("Si vous acceptez : paiement, puis envoi du livre");
     expect(text.indexOf("étudie")).toBeLessThan(text.indexOf("proposition chiffrée"));

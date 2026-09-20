@@ -12,7 +12,7 @@ import {
   RELIURE_GLOSSARY,
   RELIURE_INTAKE_MINUTES,
   RELIURE_PHOTO_SHOTS,
-  RELIURE_REPLY_DELAY,
+  RELIURE_REPLY_NOTICE,
 } from "./reliureIntakeGuidance";
 
 const fields = playbook.sections.flatMap((section) => section.steps.flatMap((step) => step.fields));
@@ -116,7 +116,12 @@ describe("the figures the intake states", () => {
     expect(RELIURE_INTAKE_MINUTES).toBe(5);
   });
 
-  it("keeps the indicative delay a plain, non-contractual phrase", () => {
-    expect(RELIURE_REPLY_DELAY).toMatch(/jours ouvrés/);
+  it("states the reply delay as a plain, non-contractual phrase — never a figure", () => {
+    // Until an SLA is validated operationally, Ma Reliure promises no number of
+    // hours or days. A digit, a « sous », a « garanti » here is a promise made
+    // by accident.
+    expect(RELIURE_REPLY_NOTICE).toBe("Nous revenons vers vous dans les prochains jours ouvrés.");
+    expect(RELIURE_REPLY_NOTICE).not.toMatch(/\d/);
+    expect(RELIURE_REPLY_NOTICE).not.toMatch(/\bsous\b|garanti|maximum|au plus tard|48|24/i);
   });
 });

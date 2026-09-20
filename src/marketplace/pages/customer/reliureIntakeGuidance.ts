@@ -17,12 +17,14 @@ import type { IntakeGuidance } from "@/build/pages/public/intakeGuidance";
 export const RELIURE_INTAKE_MINUTES = 5;
 
 /**
- * Délai indicatif de première réponse, affiché après l'envoi. **C'est une valeur
- * commerciale, pas technique** : rien dans le produit ne l'engage (pas de SLA
- * mesuré aujourd'hui). À confirmer par Ma Reliure avant déploiement — la formule
- * reste volontairement « indicatif » tant qu'elle n'est pas tenue.
+ * Ce que la confirmation dit du délai de première réponse — **volontairement sans
+ * chiffre**. Rien dans le produit n'engage un délai précis aujourd'hui (aucun SLA
+ * mesuré ni validé opérationnellement) : promettre « 48 h » ou « 2 à 3 jours »
+ * serait une promesse commerciale que personne ne tient. Tant que Ma Reliure n'a
+ * pas validé un délai, la phrase reste vague — et un test interdit d'y remettre
+ * un chiffre par mégarde.
  */
-export const RELIURE_REPLY_DELAY = "2 à 3 jours ouvrés";
+export const RELIURE_REPLY_NOTICE = "Nous revenons vers vous dans les prochains jours ouvrés.";
 
 export const RELIURE_PHOTO_SHOTS: NonNullable<IntakeGuidance["photoShots"]> = {
   photos: [
