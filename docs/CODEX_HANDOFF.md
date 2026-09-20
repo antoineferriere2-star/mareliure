@@ -2914,3 +2914,53 @@ rejouabilité). Tests : `binderWorks.server.test.ts` (isolation entre deux ateli
 l'archivage d'un ouvrage d'un autre atelier (l'erreur n'arrivait qu'après l'écriture), le nom d'un contact d'un autre atelier dans une liste corrompue, une facture d'un autre atelier rattachée par un devis. QA navigateur (faux Auth, server functions simulées, hors dépôt) : desktop 1280, tablette
 820, mobile 390 — création contact → ouvrage → devis prérempli, recherche sans accents, archivage, erreur de saisie, cibles de 44 px, aucun défilement horizontal. Non exercé : le runtime réel
 contre Supabase (pas de clé de service locale).
+
+## PR 2a — Référentiel métier + catalogue de l'atelier (21 septembre 2026)
+
+Branche `feat/reference-catalog`, depuis `main` `1859c82a` (PR #9 fusionnée et déployée). **Une migration additive, NON appliquée en production** ; ne pas déployer cette branche avant qu'elle le soit
+(les écrans lisent `is_favorite`, `reference_version`, `reference_operation_key`). Arbitrages Q1–Q9 du propriétaire (20/09/2026) : voir le rapport de la PR et `docs/reference/reliure-fr-v1/`.
+
+**Le principe.** Le relieur doit sentir : « tout mon métier est disponible si j'en ai besoin, mais ce sont mes prestations, mes mots et mes prix ». Un **référentiel commun en lecture seule**
+(dans le code) se cherche ; un **catalogue personnel** (en base) se possède. Le lien est facultatif, informatif, jamais une contrainte.
+
+**Ressource `reliure-fr-v1`** (`src/marketplace/reference/reliure-fr-v1/` : `manifest.json`, `operations.json`, `relations.json`) — Q1 option A : versionnée dans le code, pas de tables globales.
+- Clés stables `OPR-0001…0195` (aucun slug ; un CHECK en base et un test l'interdisent). Le libellé peut changer, l'identité jamais.
+- 195 entrées : 162 `operation`, 23 `package`, 1 `diagnostic` (**186 importables**) + 5 `adjustment`, 3 `material_choice`, 1 `generic_quote` (non importables). 79 `needsBinderValidation` (74 de la source + 5 ajoutées ; INTERNE : jamais affiché au relieur).
+- Relations en trois familles nommées par rôle (Q2), **descriptives** : `operation_sequences` (prerequisite / dependent : « habituellement après ou avec », jamais obligatoire — 35), `operation_components`
+  (composite / component : « peut inclure » — 10), `operation_alternatives` (paire non orientée a < b — 4). Un test interdit `from` / `to` / `depends_on` et tout champ « obligatoire / bloquant ».
+  Aucun blocage, aucune case cochée : elles serviront à « Opérations généralement associées » (pas encore affichée).
+- Natures importables (Q3, **modifié par le propriétaire**) : `operation`, `package`, `diagnostic`. **Pas `adjustment`** : une majoration ou une remise n'est pas une opération technique, elle reste un mécanisme du devis.
+  Exclus aussi : `material_choice` et « Prestation sur devis » (= la ligne libre). Une entrée `active: false` n'est jamais proposée (seule OPR-0187 l'est).
+- Unités (Q4) : vocabulaire contrôlé de **20** (`units.ts`) + « Autre » ; le **mode de prix** (unité / heure / forfait / sur devis → `pricingModes`) est séparé, **sans colonne en base** (le pilote dira). En base, `unit` reste du
+  texte libre : le vocabulaire propose, il n'enferme pas.
+- Chargement à la demande (`loadReference`, import dynamique par version) : le navigateur ne le télécharge qu'en ouvrant le catalogue. Une nouvelle version = un dossier + une ligne dans `LOADERS`.
+
+**Normalisation (Q6).** `scripts/buildReliureReference.mjs` lit `operations-reliure.json` et `operations-relations.json` **hors du dépôt** (`RELIURE_REFERENCE_SOURCE`), n'en modifie rien, ne lit **aucun prix**
+et produit ressource + **journal** (`docs/reference/reliure-fr-v1/normalization-journal.md`, détail entrée par entrée dans `journal.json`) : ancien contenu, nouveau contenu, raison, type, impact. Déterministe (rejouable).
+381 corrections : A1 26 · A2 22 · A3 3 · A4 8 · A5 1 · A6 59 · A7 34 · A8 10 · A9 195 · A10 1 · A11 16 · V3 6. Décisions éditoriales à valider par un relieur : la séquence Grecquage/Couture (l'entrée disait le contraire de l'ordre d'atelier
+usuel) et 9 prérequis d'entrées convertis en séquences.
+
+**Prix publics (Q8).** Jamais lus, jamais importés, jamais exposés, jamais un prix conseillé. Contrat (`noPublicPrices.contract.test.ts`) : aucun marqueur du fichier de prix dans `src/`, liste blanche stricte des champs d'une entrée (un prix
+la ferait échouer), aucun montant dans la ressource, le script ne lit que les deux fichiers d'opérations, **aucun marqueur dans le bundle construit**, le champ prix du formulaire part vide.
+
+**Base** (`20260921100000_marketplace_binder_reference_links.sql`, additive, rejouable, retour arrière en pied de fichier) : `marketplace_binder_services` + `reference_version`, `reference_operation_key`, `is_favorite` ;
+`marketplace_binder_quote_items` + `reference_version`, `reference_operation_key`. CHECK sur les deux tables : (version, clé) tous deux présents ou tous deux absents, clé `OPR-0000`, version `[a-z0-9-]`. **Pas de clé étrangère** :
+une mise à jour du référentiel ne peut casser ni prestation ni devis. Aucune table, fonction, politique, droit ni trigger touché ; facture, immutabilité et conversion de la Phase 0 intactes. Vérifié sur un vrai Postgres (43 contrôles).
+`types.ts` est édité à la main pour ces 5 colonnes : **à régénérer depuis la production après application** (comme pour la PR #9).
+
+**Serveur.** `addReferenceService` (l'opération doit exister dans la version ET être importable — refuse ajustement, matériau, inconnue, inactive) et `setServiceFavorite` (`binderReferenceCatalog.server.ts`), entrées `.strict()`
+(pas de prix, pas de lien libre). `saveService` gagne `isFavorite` **facultatif** (absent : le favori ne bouge pas ; enregistrer un prix ne défavorise jamais) et **ne peut pas** écrire le lien. **Provenance des lignes de devis** :
+`createQuote` / `updateQuote` recopient (version, clé) depuis la prestation de l'ATELIER (jamais depuis le navigateur) ; libellé, unité, quantité et prix restent des snapshots ; sans lien, les clés envoyées sont exactement `QUOTE_ITEM_ROW_KEYS`.
+**L'import massif du catalogue de départ (56 prestations à 0 €) est supprimé** (fonction, server function, données, tests).
+
+**Écrans** (`/atelier/tarifs`, `pages/binder/quotes/catalog/`). Atelier vide : « Ajouter mes premières prestations », recherche, dix suggestions facultatives (`starterSuggestions.ts`), zéro prestation possible. Sinon : Mes favoris → Mes
+prestations (par catégorie, avec unité libre, étoile, actif) → Ajouter une prestation (recherche dans le référentiel, résultat compact « Dorure & titrage › Titrage », mini-formulaire nom / unité / prix / favori — **prix vide**, jamais prérempli).
+Prestation personnalisée toujours proposée. Corrigé au passage (défaut préexistant) : le champ de prix d'une ligne n'enregistrait pas en le quittant (`MoneyInput.onCommit`).
+
+**Préparation de PR 2b** (pas commencée) : `searchServices` (cherche le nom, la description ET les synonymes de l'opération liée), `is_favorite`, la provenance sur les lignes, `getMyCatalog` renvoie déjà favori et lien. Le constructeur de devis n'a été touché
+que pour retirer le bouton d'import massif (« Ajouter mes premières prestations » renvoie vers Tarifs).
+
+**Vérifié.** Tests : `reference.test.ts` (invariants, relations, recherche — sondes nerf / coiffe / titre / cuir —, unités), `serviceForm.test.ts`, `noPublicPrices.contract.test.ts`, `binderReferenceCatalog.server.test.ts` (import, renommage, unité libre,
+prix, favori, personnelle, isolation, provenance, snapshots), `binderReferenceLinksMigrationContract.test.ts`. Mutations : 38 mutants (serveur, recherche, formulaire, natures), **tous détectés sur une référence verte** ; 4 survivants initiaux
+(synonyme seul, mot-clé seul, sémantique ET, priorité du nom exact) ont donné des tests. QA navigateur (faux Auth, server functions simulées, **vrai référentiel chargé**, hors dépôt) : desktop 1280, tablette 820, mobile 390 — catalogue vide, recherche, ajout,
+favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizontal, aucune erreur console. Non exercé : le runtime réel contre Supabase (pas de clé de service locale).

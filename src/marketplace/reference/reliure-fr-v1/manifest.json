@@ -1,0 +1,78 @@
+{
+  "version": "reliure-fr-v1",
+  "publishedOn": "2026-09-20",
+  "language": "fr",
+  "sourceDataset": {
+    "title": "Référentiel technique reliure, restauration et dorure",
+    "version": "2026-09-20",
+    "files": [
+      {
+        "name": "operations-reliure.json",
+        "sha256": "d1ace276fdef51ad09047910d10b16b6c93fa18d7cfa3b9aaf02c1345e71dff0"
+      },
+      {
+        "name": "operations-relations.json",
+        "sha256": "c8d6bab715353c21ced082aca01118ce651871c3da01e4b2d3bb53f1c9ee2638"
+      }
+    ]
+  },
+  "domains": {
+    "CORPS_D_OUVRAGE": "Corps d'ouvrage",
+    "COUTURE": "Couture",
+    "COUVRURE": "Couvrure",
+    "DORURE_TITRAGE": "Dorure & titrage",
+    "DOS_ENDOSSURE": "Dos & endossure",
+    "EXAMEN_PREPARATION": "Examen & préparation",
+    "FINITIONS": "Finitions",
+    "GARDES": "Gardes",
+    "PLATS_CARTONS": "Plats & cartons",
+    "PRESTATIONS_COMMERCIALES": "Prestations commerciales",
+    "PROTECTION_CARTONNAGE": "Protection & cartonnage",
+    "RESTAURATION_PAPIER": "Restauration du papier",
+    "RESTAURATION_RELIURE": "Restauration de la reliure",
+    "TRANCHES": "Tranches"
+  },
+  "sources": {
+    "cap": "https://referentiels-professionnels.eduscol.education.fr/CAP_ARTS_RELIURE/Ref_CAP_Reliure.pdf",
+    "capPage": "https://sti.eduscol.education.fr/formations/cap/cap-arts-de-la-reliure",
+    "bnfConservation": "https://www.bnf.fr/sites/default/files/2018-11/conservation_dll_1998.pdf",
+    "bnfDorure": "https://classes.bnf.fr/pdf/reliure.pdf",
+    "bnfTitrage": "https://www.bnf.fr/sites/default/files/2020-06/La%20maintenance%20titrage%20et%20le%20titrage%20des%20reliures%20%C3%A0%20la%20Biblioth%C3%A8que%20nationale%20de%20France_0.pdf",
+    "bnfJob": "https://emploi.bnf.fr/drh/emploi.nsf/IXURL01/RE2026000213_Relieur-Restaurateur-H-F?n=2&openDocument=&statut=2",
+    "archives": "https://archives.tarn.fr/fileadmin/mediatheque/Archives_departementales/Documents/EtVosArchives/Manuel_reliure_juin09.pdf",
+    "pci": "https://www.culture.gouv.fr/Media/Thematiques/Patrimoine-culturel-immateriel/Files/Fiches-inventaire-du-PCI/La-reliure-dorure-atelier-Nathalie-et-Christophe-Legrand-a-Perigueux",
+    "formation": "https://reliure.fr/wp-content/uploads/2019/08/programme-et-planning-CAP1_2019_2020.pdf",
+    "cfrpe": "https://www.cfrpe.com/formations-professionnelles",
+    "chatillon": "https://www.lesreliuresdechatillon.com/tarifs",
+    "selune": "https://www.reliures-selune.com/faq",
+    "devauchelle": "https://www.atelierdevauchelle.com/_files/ugd/ea01d0_98835ce14bb0451fb1f2abf736e765ba.pdf",
+    "que": "https://atelierdurelieur.com/tarif-2017.html",
+    "helena": "https://www.helenafrere.com/tarification-reliure"
+  },
+  "importableKinds": [
+    "operation",
+    "package",
+    "diagnostic"
+  ],
+  "counts": {
+    "operations": 195,
+    "byKind": {
+      "operation": 162,
+      "package": 23,
+      "diagnostic": 1,
+      "adjustment": 5,
+      "material_choice": 3,
+      "generic_quote": 1
+    },
+    "active": 194,
+    "importable": 186,
+    "needsBinderValidation": 79,
+    "customerVisible": 161,
+    "relations": {
+      "operation_sequences": 35,
+      "operation_components": 10,
+      "operation_alternatives": 4
+    },
+    "relationsNeedingValidation": 27
+  }
+}

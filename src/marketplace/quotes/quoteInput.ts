@@ -131,6 +131,8 @@ export const serviceInput = z
     vatRateBps: z.number().int().min(0).max(10_000).nullable(),
     unit: optionalText(40),
     isActive: z.boolean(),
+    /** Absent : le favori ne change pas. Le lien au référentiel n'est PAS un champ d'ici (voir `referenceServiceInput`). */
+    isFavorite: z.boolean().optional(),
   })
   .strict();
 

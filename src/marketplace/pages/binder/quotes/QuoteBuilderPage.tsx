@@ -20,7 +20,6 @@ import {
   getMyCatalog,
   getMyClients,
   getMyQuote,
-  importMyStarterCatalog,
   saveMyService,
   updateMyQuote,
 } from "@/marketplace/services/binderQuotes.data.functions";
@@ -125,7 +124,6 @@ function BuilderForm({
   const create = useServerFn(createMyQuote);
   const update = useServerFn(updateMyQuote);
   const saveService = useServerFn(saveMyService);
-  const importStarter = useServerFn(importMyStarterCatalog);
 
   const [state, setState] = useState<BuilderState>(initial);
   const [search, setSearch] = useState("");
@@ -164,11 +162,6 @@ function BuilderForm({
   ]
     .map((g) => ({ ...g, items: needle ? g.items.filter((s) => s.name.toLowerCase().includes(needle)) : g.items }))
     .filter((g) => g.items.length > 0);
-
-  const importStarterMutation = useMutation({
-    mutationFn: () => importStarter(),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: CATALOG_KEY }),
-  });
 
   /** « Enregistrer cette ligne dans mon catalogue » : la ligne libre devient une prestation. */
   const saveLineToCatalog = useMutation({
@@ -322,13 +315,8 @@ function BuilderForm({
                 Configurez vos prestations et vos prix une fois : vous les retrouverez à chaque devis. Ma Reliure ne fixe aucun tarif.
               </p>
               <div className="mt-4 flex flex-wrap justify-center gap-2">
-                {categories.length === 0 && (
-                  <button type="button" className={SECONDARY_BUTTON} onClick={() => importStarterMutation.mutate()} disabled={importStarterMutation.isPending}>
-                    Partir d'un catalogue de reliure
-                  </button>
-                )}
                 <Link to="/atelier/tarifs" className={PRIMARY_BUTTON}>
-                  Saisir mes prix
+                  Ajouter mes premières prestations
                 </Link>
               </div>
               <p className="mt-3 text-xs text-muted-foreground">En attendant, ajoutez une ligne libre dans le résumé.</p>

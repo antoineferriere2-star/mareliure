@@ -15,7 +15,6 @@ import {
   createQuote,
   getInvoice,
   getQuote,
-  importStarterCatalog,
   listCatalog,
   listClients,
   listInvoices,
@@ -23,6 +22,7 @@ import {
   loadBillingProfile,
   requireBinderId,
   saveBillingProfile,
+  saveCategory,
   saveClient,
   saveService,
   setQuoteStatus,
@@ -306,21 +306,15 @@ describe("catalogue : à l'atelier seul", () => {
 
   it("une prestation ne peut pas être rangée dans la catégorie d'un autre atelier", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput());
-    await importStarterCatalog(world.sb, BINDER_A);
-    const foreignCategory = (await listCatalog(world.sb, BINDER_A)).categories[0].id;
+    const foreignCategory = (await saveCategory(world.sb, BINDER_A, { id: null, name: "Étuis", sortOrder: 0 })).id;
     expect(await codeOf(saveService(world.sb, BINDER_B, service({ categoryId: foreignCategory })))).toBe("invalid_input");
   });
 
-  it("le catalogue de départ : des noms sans prix, inactifs, importé une seule fois, pour cet atelier seulement", async () => {
-    expect(await importStarterCatalog(world.sb, BINDER_A)).toEqual({ imported: true });
-    const { categories, services } = await listCatalog(world.sb, BINDER_A);
-    expect(categories.length).toBe(10);
-    expect(services.length).toBeGreaterThan(50);
-    expect(services.every((s) => s.unitPriceCents === 0 && s.isActive === false)).toBe(true);
-    expect(services.find((s) => s.name === "Plein cuir")?.categoryId).toBe(categories.find((c) => c.name === "Type de reliure")?.id);
-    expect(await importStarterCatalog(world.sb, BINDER_A)).toEqual({ imported: false });
-    expect((await listCatalog(world.sb, BINDER_A)).services).toHaveLength(services.length);
-    expect((await listCatalog(world.sb, BINDER_B)).services).toHaveLength(0);
+  it("il n'existe plus d'import massif : un catalogue neuf est vide, et le reste zéro prestation configurée", async () => {
+    expect((await listCatalog(world.sb, BINDER_A)).services).toHaveLength(0);
+    expect((await listCatalog(world.sb, BINDER_A)).categories).toHaveLength(0);
+    const server = await import("./binderQuotes.server");
+    expect(Object.keys(server)).not.toContain("importStarterCatalog");
   });
 });
 
@@ -515,15 +509,11 @@ describe("deux relieurs, deux mondes", () => {
       const text = chain.slice(0, stop > 0 ? stop : 700);
       if (!/marketplace_binder|\.rpc\(/.test(text)) continue;
       checked += 1;
-      // Seule exception : l'import du catalogue de départ insère des lignes construites juste
-      // au-dessus, chacune avec `binder_id: binderId` (vérifié ci-dessous).
-      if (text.includes(".insert(rows)")) {
-        expect(src).toMatch(/const rows = STARTER_CATALOG\.flatMap[\s\S]{0,200}binder_id: binderId/);
-        continue;
-      }
       expect(text, text.slice(0, 140)).toContain("binderId");
     }
-    expect(checked).toBeGreaterThan(30);
+    // Un plancher, pas un compte exact : il garantit seulement que la lecture du code a trouvé de vraies
+    // requêtes (le catalogue de départ, retiré en PR 2a, en comptait quatre de plus).
+    expect(checked).toBeGreaterThan(25);
   });
 });
 
