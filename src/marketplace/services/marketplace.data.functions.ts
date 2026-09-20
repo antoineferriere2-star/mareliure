@@ -59,7 +59,7 @@ import {
 } from "./binderMembership.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
 import { unreadCountsByCase } from "./messaging.data.functions";
-import { readableAudiences } from "@/marketplace/messaging/audience";
+import { MESSAGE_AUDIENCES, readableAudiences } from "@/marketplace/messaging/audience";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -250,11 +250,21 @@ export const listMarketplaceCases = createServerFn({ method: "GET" })
       }
     }
 
+    // Le concierge doit SAVOIR qu'un message l'attend : il lit tous les canaux (client et atelier), et
+    // chacun de leurs messages non lus compte ici — sans quoi le canal atelier resterait sans lecteur.
+    const unread = await unreadCountsByCase(
+      sb,
+      ids,
+      context.userId,
+      new Map(ids.map((id) => [id, MESSAGE_AUDIENCES] as const)),
+    );
+
     return (cases ?? []).map((row) => ({
       ...row,
       title: titles.get(row.dossier_id) ?? row.reference,
       invitedCount: counts.get(row.id)?.offered ?? 0,
       acceptedCount: counts.get(row.id)?.accepted ?? 0,
+      unreadMessages: unread.get(row.id) ?? 0,
     }));
   });
 

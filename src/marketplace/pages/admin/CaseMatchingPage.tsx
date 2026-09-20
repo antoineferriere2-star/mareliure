@@ -50,6 +50,7 @@ import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
 import { MARKETPLACE_BRAND_CONFIGS, isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { Button } from "@/components/ui/button";
+import { AdminConversations } from "@/marketplace/pages/admin/AdminConversations";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
@@ -959,6 +960,12 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
             <PreflightPanel caseId={caseId} />
           </>
         )}
+
+        <AdminConversations
+          caseId={caseId}
+          brand={data.case.brand}
+          workshopSelected={data.matches.some((offer) => offer.state === "selected")}
+        />
 
         {data.matches.length > 0 && (
           <section className="rounded-lg border border-border bg-card p-5">

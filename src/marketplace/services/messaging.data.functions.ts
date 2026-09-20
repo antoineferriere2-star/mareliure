@@ -34,6 +34,12 @@ import { resolveViewer } from "./marketplace.data.functions";
 
 const MESSAGE_BODY_MAX = 4000;
 const uuid = z.object({ caseId: z.string().uuid() });
+/**
+ * `audience` (facultatif) ne fait que RESTREINDRE la lecture à un canal : l'intersection avec ce que le
+ * lecteur a le droit de lire — jamais un moyen d'élargir. L'écran admin s'en sert pour afficher ses deux canaux
+ * (client · atelier) séparément.
+ */
+const listInput = z.object({ caseId: z.string().uuid(), audience: z.enum(MESSAGE_AUDIENCES).optional() });
 
 /** A workshop the platform has suspended or rejected is out of every conversation, even if its match still says `selected`. */
 const BINDER_STATUSES_OUT_OF_CONVERSATIONS: readonly string[] = ["suspended", "rejected"];
@@ -125,7 +131,7 @@ async function notifyCustomerOfNewMessage(
 
 export const listCaseMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .inputValidator((data: unknown) => listInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const viewer = await resolveViewer(context.supabase, sb, context.userId);
@@ -139,11 +145,13 @@ export const listCaseMessages = createServerFn({ method: "GET" })
     const role = senderRoleFor(viewer);
     if (!role) fail(403, "Non autorisé.");
     const { directWorkshopMessaging } = await loadCaseBrand(sb, data.caseId);
-    const audiences = readableAudiences(role!, directWorkshopMessaging);
+    const readable = readableAudiences(role!, directWorkshopMessaging);
+    // Le canal demandé restreint, il n'élargit jamais : hors de ses droits, le lecteur reçoit une liste vide.
+    const audiences = data.audience ? readable.filter((a) => a === data.audience) : readable;
 
-    const { data: readable, error } = await sb
+    const { data: rows, error } = await sb
       .from("marketplace_messages")
-      .select("id, sender_user_id, sender_role, body, attachment_paths, created_at, deleted_at")
+      .select("id, sender_user_id, sender_role, audience, body, attachment_paths, created_at, deleted_at")
       .eq("case_id", data.caseId)
       .in("audience", [...audiences])
       .order("created_at", { ascending: true });
@@ -157,9 +165,10 @@ export const listCaseMessages = createServerFn({ method: "GET" })
       .maybeSingle();
 
     return {
-      messages: (readable ?? []).map((row) => ({
+      messages: (rows ?? []).map((row) => ({
         id: row.id,
         senderRole: row.sender_role,
+        audience: row.audience,
         isMine: row.sender_user_id === context.userId,
         // The body of a deleted message never leaves the server — a soft
         // delete that still shipped the text would not be one.

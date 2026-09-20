@@ -95,7 +95,12 @@ function CaseRow({ row }: { row: Row }) {
             {row.heritage_flag && " · ouvrage patrimonial"}
           </span>
         </span>
-        <span className="shrink-0 text-xs text-muted-foreground">
+        <span className="flex shrink-0 items-center gap-3 text-xs text-muted-foreground">
+          {row.unreadMessages > 0 && (
+            <span className="rounded-full bg-foreground px-2 py-0.5 font-medium text-background">
+              {row.unreadMessages} message(s) non lu(s)
+            </span>
+          )}
           {row.invitedCount} atelier(s) sollicité(s)
         </span>
       </Link>

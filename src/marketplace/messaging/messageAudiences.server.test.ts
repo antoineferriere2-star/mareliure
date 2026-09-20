@@ -37,7 +37,9 @@ vi.mock("@/lib/email-templates/send-email", () => ({
   sendTemplateEmail: async (_name: string, to: string) => void state.sent.push({ to }),
 }));
 
-const { listCaseMessages, sendCaseMessage, markConversationRead } = await import("@/marketplace/services/messaging.data.functions");
+const { listCaseMessages, sendCaseMessage, markConversationRead, unreadCountsByCase } = await import("@/marketplace/services/messaging.data.functions");
+const { MESSAGE_AUDIENCES, readableAudiences } = await import("./audience");
+const { adminChannelsFor } = await import("./adminChannels");
 
 const CASE_FB = "11111111-1111-4111-8111-111111111111";
 const CASE_MR = "22222222-2222-4222-8222-222222222222";
@@ -57,7 +59,10 @@ function fakeSb(tables: Record<string, Row[]>) {
       single: async () => ({ data: inserted ?? rows[0] ?? null, error: null }),
       insert: (values: Row) => {
         writes.push({ table, values });
-        inserted = { id: "new-message", created_at: "2026-09-19T12:00:00.000Z" };
+        const seq = (tables[table]?.length ?? 0) + 1;
+        inserted = { id: `new-message-${seq}`, created_at: `2026-09-19T12:00:${String(seq).padStart(2, "0")}.000Z` };
+        // Le message écrit existe pour les lectures suivantes : c'est ce qui rend le parcours réel.
+        if (table === "marketplace_messages") (tables[table] ??= []).push({ ...values, ...inserted, attachment_paths: null, deleted_at: null });
         return query;
       },
       upsert: async (values: Row) => (writes.push({ table, values }), { error: null }),
@@ -254,5 +259,139 @@ describe("la lecture est filtrée DANS la requête, pas après coup", () => {
     const list = src.slice(src.indexOf("export const listCaseMessages"), src.indexOf("export const sendCaseMessage"));
     expect(list).toMatch(/\.in\("audience", \[\.\.\.audiences\]\)/);
     expect(list.indexOf('.in("audience"')).toBeLessThan(list.indexOf(".order("));
+  });
+});
+
+describe("parcours réel : atelier retenu → message privé à la plateforme → concierge lit → concierge répond → le client ne voit rien", () => {
+  const listBodies = async (caseId: string, userId: string, audience?: string) =>
+    (
+      (await listCaseMessages({ context: ctx(userId), data: { caseId, ...(audience ? { audience } : {}) } } as never)) as {
+        messages: { body: string; audience: string }[];
+      }
+    ).messages;
+
+  it("Fine Bindery, de bout en bout, avec un état qui persiste d'une étape à l'autre", async () => {
+    const w = world();
+    state.sb = w.sb;
+
+    // 1. L'atelier retenu écrit à la plateforme (le panneau atelier n'envoie que la conversation et le texte).
+    as(workshop);
+    await sendCaseMessage({ context: ctx("user-binder"), data: { caseId: CASE_FB, body: "Le papier est très fragile, je propose une consolidation." } } as never);
+    expect(w.writes.filter((x) => x.table === "marketplace_messages").at(-1)?.values).toMatchObject({
+      sender_role: "binder",
+      audience: "workshop_platform",
+    });
+    expect(state.sent).toHaveLength(0); // le client n'est pas notifié d'un message qu'il ne peut pas lire
+
+    // 2. Le concierge (admin) LIT ce message dans le canal atelier — et pas dans celui du client.
+    as(platform);
+    const workshopChannel = await listBodies(CASE_FB, "user-admin", "workshop_platform");
+    expect(workshopChannel.map((m) => m.body)).toContain("Le papier est très fragile, je propose une consolidation.");
+    expect((await listBodies(CASE_FB, "user-admin", "customer_concierge")).map((m) => m.body)).not.toContain(
+      "Le papier est très fragile, je propose une consolidation.",
+    );
+
+    // 3. Il sait qu'un message l'attend : le compteur de non-lus de l'admin couvre tous les canaux.
+    const adminUnread = await unreadCountsByCase(w.sb as never, [CASE_FB], "user-admin", new Map([[CASE_FB, MESSAGE_AUDIENCES]]));
+    expect(adminUnread.get(CASE_FB)).toBeGreaterThan(0);
+
+    // 4. Il répond DANS le canal atelier (choisi explicitement).
+    await sendCaseMessage({
+      context: ctx("user-admin"),
+      data: { caseId: CASE_FB, body: "Merci, consolidation validée. Je préviens le client.", audience: "workshop_platform" },
+    } as never);
+    expect(w.writes.filter((x) => x.table === "marketplace_messages").at(-1)?.values).toMatchObject({
+      sender_role: "admin",
+      audience: "workshop_platform",
+    });
+    expect(state.sent).toHaveLength(0); // ni e-mail au client pour un message interne
+
+    // 5. L'atelier retenu lit la réponse.
+    as(workshop);
+    const workshopSees = (await listBodies(CASE_FB, "user-binder")).map((m) => m.body);
+    expect(workshopSees).toContain("Merci, consolidation validée. Je préviens le client.");
+    const workshopUnread = await unreadCountsByCase(w.sb as never, [CASE_FB], "user-binder", new Map([[CASE_FB, readableAudiences("binder", false)]]));
+    expect(workshopUnread.get(CASE_FB)).toBeGreaterThan(0);
+
+    // 6. Le client ne voit RIEN de tout cela — ni en lecture directe, ni en demandant explicitement le canal atelier.
+    as(customer);
+    const customerSees = (await listBodies(CASE_FB, CUSTOMER)).map((m) => m.body);
+    for (const secret of ["consolidation", "papier est très fragile", "Merci, consolidation validée"]) {
+      expect(JSON.stringify(customerSees)).not.toContain(secret);
+    }
+    expect(await listBodies(CASE_FB, CUSTOMER, "workshop_platform")).toEqual([]);
+    const customerUnread = await unreadCountsByCase(w.sb as never, [CASE_FB], CUSTOMER, new Map([[CASE_FB, readableAudiences("customer", false)]]));
+    // Seuls les 2 messages de SON canal (le jeu de données ne porte pas son user_id sur ses propres messages) :
+    // ni le message de l'atelier ni la réponse du concierge à l'atelier ne comptent.
+    expect(customerUnread.get(CASE_FB)).toBe(2);
+
+    // 7. Et l'atelier, lui, ne lit toujours pas l'échange du client avec le concierge.
+    as(workshop);
+    expect(JSON.stringify(await listBodies(CASE_FB, "user-binder"))).not.toContain("client -> concierge");
+  });
+
+  it("le canal demandé restreint, il n'élargit jamais", async () => {
+    state.sb = world().sb;
+    as(workshop);
+    expect(await listBodies(CASE_FB, "user-binder", "customer_concierge")).toEqual([]);
+    expect(await listBodies(CASE_FB, "user-binder", "shared")).toEqual([]);
+    as(customer);
+    expect(await listBodies(CASE_FB, CUSTOMER, "workshop_platform")).toEqual([]);
+    expect((await listBodies(CASE_FB, CUSTOMER, "customer_concierge")).map((m) => m.body)).toEqual(["client -> concierge", "concierge -> client"]);
+    as(platform);
+    expect((await listBodies(CASE_FB, "user-admin", "workshop_platform")).map((m) => m.body)).toEqual(["concierge -> atelier", "atelier -> concierge"]);
+  });
+
+  it("un atelier invité ou retiré ne peut ni lire ni répondre, même via le canal atelier", async () => {
+    for (const matchState of ["offered", "accepted", "cancelled"]) {
+      const w = world({ matchState });
+      state.sb = w.sb;
+      as(workshop);
+      expect(await rejected(list(CASE_FB, "user-binder"))).toBe(403);
+      expect(await rejected(sendCaseMessage({ context: ctx("user-binder"), data: { caseId: CASE_FB, body: "Bonjour", audience: "workshop_platform" } } as never))).toBe(403);
+      expect(w.writes).toHaveLength(0);
+    }
+    const suspended = world({ binderStatus: "suspended" });
+    state.sb = suspended.sb;
+    expect(await rejected(list(CASE_FB, "user-binder"))).toBe(403);
+  });
+
+  it("Ma Reliure : le fil partagé reste partagé, et le canal privé atelier reste invisible du client", async () => {
+    const w = world();
+    state.sb = w.sb;
+    as(platform);
+    await sendCaseMessage({ context: ctx("user-admin"), data: { caseId: CASE_MR, body: "Note privée à l'atelier", audience: "workshop_platform" } } as never);
+    as(customer);
+    expect(JSON.stringify(await listBodies(CASE_MR, CUSTOMER))).not.toContain("Note privée");
+    as(workshop);
+    expect((await listBodies(CASE_MR, "user-binder")).map((m) => m.body)).toContain("Note privée à l'atelier");
+  });
+});
+
+describe("les canaux que l'équipe voit", () => {
+  it("Fine Bindery : Client (concierge) et Atelier retenu — jamais un fil partagé", () => {
+    expect(adminChannelsFor("FINE_BINDERY").map((c) => c.audience)).toEqual(["customer_concierge", "workshop_platform"]);
+  });
+  it("Ma Reliure : le fil partagé et le canal privé atelier", () => {
+    expect(adminChannelsFor("MA_RELIURE").map((c) => c.audience)).toEqual(["shared", "workshop_platform"]);
+  });
+  it("une marque inconnue retombe sur Ma Reliure, jamais sur Fine Bindery", () => {
+    expect(adminChannelsFor("???").map((c) => c.audience)).toEqual(["shared", "workshop_platform"]);
+  });
+  it("chaque canal a un titre et une aide qui disent qui le lit", () => {
+    for (const c of [...adminChannelsFor("FINE_BINDERY"), ...adminChannelsFor("MA_RELIURE")]) {
+      expect(c.heading.length).toBeGreaterThan(3);
+      expect(c.hint).toMatch(/client|atelier/i);
+    }
+  });
+});
+
+describe("le concierge est prévenu : l'admin voit un compteur de non-lus, tous canaux confondus", () => {
+  it("listMarketplaceCases calcule les non-lus de l'admin sur toutes les audiences (contrat de source)", async () => {
+    const { readFileSync } = await import("node:fs");
+    const src = readFileSync(new URL("../services/marketplace.data.functions.ts", import.meta.url), "utf8");
+    const list = src.slice(src.indexOf("export const listMarketplaceCases"), src.indexOf("export const getMarketplaceCase"));
+    expect(list).toMatch(/unreadCountsByCase\(\s*sb,\s*ids,\s*context\.userId,\s*new Map\(ids\.map\(\(id\) => \[id, MESSAGE_AUDIENCES\]/);
+    expect(list).toMatch(/unreadMessages: unread\.get\(row\.id\) \?\? 0/);
   });
 });

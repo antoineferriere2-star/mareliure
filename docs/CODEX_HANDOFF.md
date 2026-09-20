@@ -1141,7 +1141,7 @@ ni espace atelier, ni migration) :
    les permissions et la base ne sont pas modifiés.
 
    > **Mise à jour Phase 0 (P1-6)** : le manque serveur ci-dessous est traité — audiences de messages persistées,
-   > lecture atelier limitée à son canal, accès réservé à l'atelier retenu. Reste la vue admin de relais. Voir « Phase 0 » en fin de document.
+   > lecture atelier limitée à son canal, accès réservé à l'atelier retenu, vue admin des deux canaux ajoutée. Voir « Phase 0 » en fin de document.
 
    **Manque serveur à traiter dans une PR séparée** (ne pas le faire ici : il
    touche le modèle de messagerie, les permissions, la base et l'espace atelier) :
@@ -2776,7 +2776,13 @@ pour ces migrations : le régénérer depuis la base après application.
   19/09/2026 : une seule proposition, sans acompte, 500 € HT → 600 € TTC). **Décision produit à prendre.**
 - Une proposition dont le prix validé a changé n'est plus acceptable : créer une nouvelle version.
 - Un atelier invité ou disponible ne voit plus la conversation avant d'être retenu ; en Fine Bindery l'atelier ne lit plus les
-  échanges client ↔ concierge. Le « manque serveur » du modèle concierge (suite 10, point 2) est donc traité ; **reste** :
-  la vue admin de relais (aucune UI n'affiche ni ne répond dans le canal atelier côté plateforme).
+  échanges client ↔ concierge. Le « manque serveur » du modèle concierge (suite 10, point 2) est donc traité. Côté plateforme,
+  le dossier admin (`CaseMatchingPage`) affiche maintenant les deux canaux séparés (`AdminConversations` : Client · Atelier
+  retenu ; Ma Reliure : fil partagé · Atelier retenu), le concierge y lit et y répond, et la liste admin porte un compteur de
+  non-lus (tous canaux). Ce n'est **pas** un deuxième système de messagerie : le `ConversationPanel` existant, fixé sur un
+  canal. **Reste** : aucun e-mail « nouveau message » vers l'atelier ni vers le concierge (signal = compteurs de non-lus).
+- Recette Stripe **en mode test** (compte `acct_1UGISJKB3EBc6Slh`, clé `sk_test`) le 20/09/2026 : Checkout Session réelle à
+  60 000 EUR, session `unpaid` non soldée, paiements de test (`pm_card_visa`) rapprochés, mauvais montant/devise refusés,
+  doublon sans effet, reprise après échec idempotente. Script rejouable hors dépôt ; aucune carte réelle, aucun live.
 - Un événement Stripe en échec répond 500 (avant : 200). Les événements des autres produits du compte partagé, sans notre
   metadata, sont toujours ignorés en 200.
