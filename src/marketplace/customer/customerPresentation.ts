@@ -617,6 +617,10 @@ export interface CustomerCopy {
   sectionError: string;
   messageCta: string;
   skipToContent: string;
+  /** « Se déconnecter » : sans lui, un compte ouvert sur un appareil ne pouvait plus être quitté. */
+  signOut: string;
+  /** Préfixe accessible de l'adresse affichée à côté du bouton : « Connecté en tant que ». */
+  signedInAs: string;
   backNavLabel: string;
   messagesRefreshError: string;
   conciergeTitle: string;
@@ -724,6 +728,8 @@ const FR: CustomerCopy = {
   sectionError: "Impossible de charger cette section. Réessayez.",
   messageCta: "Envoyer un message",
   skipToContent: "Aller au contenu",
+  signOut: "Se déconnecter",
+  signedInAs: "Connecté en tant que",
   backNavLabel: "Retour à la liste de vos livres",
   messagesRefreshError: "Impossible d'actualiser les messages pour le moment.",
   conciergeTitle: "Votre interlocuteur Ma Reliure",
@@ -831,6 +837,8 @@ const EN: CustomerCopy = {
   sectionError: "We couldn't load this section. Please try again.",
   messageCta: "Send a message",
   skipToContent: "Skip to content",
+  signOut: "Sign out",
+  signedInAs: "Signed in as",
   backNavLabel: "Back to your books",
   messagesRefreshError: "We couldn't refresh your messages just now.",
   conciergeTitle: "Your Fine Bindery concierge",

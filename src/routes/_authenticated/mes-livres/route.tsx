@@ -7,6 +7,8 @@ import { createFileRoute, Outlet } from "@tanstack/react-router";
 import { isMaReliure } from "@/brand";
 import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBrand.server";
 import { CustomerPortalShell } from "@/marketplace/pages/customer/CustomerPortalShell";
+import { customerCopy, customerLocaleForBrand } from "@/marketplace/customer/customerPresentation";
+import { SignOutButton } from "@/marketplace/pages/SignOutButton";
 
 export const Route = createFileRoute("/_authenticated/mes-livres")({
   ssr: false,
@@ -24,8 +26,12 @@ export const Route = createFileRoute("/_authenticated/mes-livres")({
 
 function CustomerLayout() {
   const { brand } = Route.useRouteContext();
+  const copy = customerCopy(customerLocaleForBrand(brand));
   return (
-    <CustomerPortalShell brand={brand}>
+    <CustomerPortalShell
+      brand={brand}
+      account={<SignOutButton label={copy.signOut} signedInAs={copy.signedInAs} />}
+    >
       <Outlet />
     </CustomerPortalShell>
   );

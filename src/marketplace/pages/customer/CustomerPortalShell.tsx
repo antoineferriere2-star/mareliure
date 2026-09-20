@@ -15,9 +15,16 @@ import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 export function CustomerPortalShell({
   brand,
   children,
+  account,
 }: {
   brand: MarketplaceBrand | null;
   children: ReactNode;
+  /**
+   * Le compte ouvert et la sortie (voir SignOutButton) — donnés par la route,
+   * qui seule connaît la session. Le cadre ne fait que lui réserver la place,
+   * ce qui le garde rendable sans routeur ni session.
+   */
+  account?: ReactNode;
 }) {
   const copy = customerCopy(customerLocaleForBrand(brand));
   return (
@@ -37,15 +44,18 @@ export function CustomerPortalShell({
           >
             {copy.brandHome}
           </a>
-          <nav aria-label={copy.myBooks}>
-            <Link
-              to="/mes-livres"
-              className="inline-flex min-h-11 items-center rounded-md px-2 text-sm text-[#4b3a2c] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b2a1d]/60"
-              activeProps={{ className: "font-semibold text-[#241a12] underline" }}
-            >
-              {copy.myBooks}
-            </Link>
-          </nav>
+          <div className="flex items-center gap-2 sm:gap-4">
+            <nav aria-label={copy.myBooks}>
+              <Link
+                to="/mes-livres"
+                className="inline-flex min-h-11 items-center rounded-md px-2 text-sm text-[#4b3a2c] underline-offset-4 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b2a1d]/60"
+                activeProps={{ className: "font-semibold text-[#241a12] underline" }}
+              >
+                {copy.myBooks}
+              </Link>
+            </nav>
+            {account}
+          </div>
         </div>
       </header>
       <main id="main" className="mx-auto max-w-4xl px-5 py-6 sm:py-8">

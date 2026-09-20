@@ -5,6 +5,7 @@
  * to it. The layout is chrome, never a permission.
  */
 import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { SignOutButton } from "@/marketplace/pages/SignOutButton";
 
 export const Route = createFileRoute("/_authenticated/atelier")({
   ssr: false,
@@ -34,6 +35,9 @@ function AtelierLayout() {
               Tarifs
             </Link>
           </nav>
+          <div className="ml-auto">
+            <SignOutButton label="Se déconnecter" signedInAs="Connecté en tant que" />
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-5 py-8">
