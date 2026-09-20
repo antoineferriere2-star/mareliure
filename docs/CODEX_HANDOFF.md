@@ -2917,8 +2917,8 @@ contre Supabase (pas de clé de service locale).
 
 ## PR 2a — Référentiel métier + catalogue de l'atelier (21 septembre 2026)
 
-Branche `feat/reference-catalog`, depuis `main` `1859c82a` (PR #9 fusionnée et déployée). **Une migration additive, NON appliquée en production** ; ne pas déployer cette branche avant qu'elle le soit
-(les écrans lisent `is_favorite`, `reference_version`, `reference_operation_key`). Arbitrages Q1–Q9 du propriétaire (20/09/2026) : voir le rapport de la PR et `docs/reference/reliure-fr-v1/`.
+Branche `feat/reference-catalog`, depuis `main` `1859c82a` (PR #9 fusionnée et déployée). **Une migration additive, appliquée en production le 20/09/2026 AVANT le déploiement du code** (voir « Application de la migration »).
+Arbitrages Q1–Q9 du propriétaire (20/09/2026) : voir le rapport de la PR et `docs/reference/reliure-fr-v1/`.
 
 **Le principe.** Le relieur doit sentir : « tout mon métier est disponible si j'en ai besoin, mais ce sont mes prestations, mes mots et mes prix ». Un **référentiel commun en lecture seule**
 (dans le code) se cherche ; un **catalogue personnel** (en base) se possède. Le lien est facultatif, informatif, jamais une contrainte.
@@ -2946,7 +2946,14 @@ la ferait échouer), aucun montant dans la ressource, le script ne lit que les d
 **Base** (`20260921100000_marketplace_binder_reference_links.sql`, additive, rejouable, retour arrière en pied de fichier) : `marketplace_binder_services` + `reference_version`, `reference_operation_key`, `is_favorite` ;
 `marketplace_binder_quote_items` + `reference_version`, `reference_operation_key`. CHECK sur les deux tables : (version, clé) tous deux présents ou tous deux absents, clé `OPR-0000`, version `[a-z0-9-]`. **Pas de clé étrangère** :
 une mise à jour du référentiel ne peut casser ni prestation ni devis. Aucune table, fonction, politique, droit ni trigger touché ; facture, immutabilité et conversion de la Phase 0 intactes. Vérifié sur un vrai Postgres (43 contrôles).
-`types.ts` est édité à la main pour ces 5 colonnes : **à régénérer depuis la production après application** (comme pour la PR #9).
+
+**Application de la migration (faite, autorisée par le propriétaire).** Cible explicite `Ma Reliure - production` ; une requête = une transaction, puis inscription (`20260921100000`). Avant : 80 migrations appliquées, exactement une en attente,
+les 5 colonnes absentes, empreinte de tous les objets et données préexistants. Après : **aucun objet ni ligne préexistant modifié** (RLS, droits, 29 fonctions dont celles de la Phase 0, triggers, factures identiques) ; seuls ajouts : 5 colonnes,
+2 CHECK, 2 index. Les CHECK ont été exercés en production dans une transaction qui échoue toujours (rien conservé).
+**Nom de la migration** : `20260921100000` est conservé. Convention du dépôt : `AAAAMMJJHHMMSS`, croissant, un créneau par heure ; la dernière migration appliquée en production est `20260921090000` (PR #9) — une migration datée du 20/09 se
+classerait *avant* elle, hors ordre. Aucune autre branche ouverte n'utilise ce créneau. **Retour arrière** : uniquement en commentaires au pied du fichier (jamais exécuté) ; les deux `DROP CONSTRAINT IF EXISTS` exécutables ne visent que les contraintes de
+CETTE migration, pour qu'elle soit rejouable.
+**Types** : `types.ts` régénéré depuis la production (schémas `public,graphql_public`) — **identique** à l'édition manuelle faite avant application ; `main` + 15 lignes (5 colonnes × Row/Insert/Update).
 
 **Serveur.** `addReferenceService` (l'opération doit exister dans la version ET être importable — refuse ajustement, matériau, inconnue, inactive) et `setServiceFavorite` (`binderReferenceCatalog.server.ts`), entrées `.strict()`
 (pas de prix, pas de lien libre). `saveService` gagne `isFavorite` **facultatif** (absent : le favori ne bouge pas ; enregistrer un prix ne défavorise jamais) et **ne peut pas** écrire le lien. **Provenance des lignes de devis** :
