@@ -1726,13 +1726,6 @@ export type Database = {
         }
         Relationships: [
           {
-            foreignKeyName: "marketplace_binder_quotes_work_id_fkey"
-            columns: ["work_id"]
-            isOneToOne: false
-            referencedRelation: "marketplace_binder_works"
-            referencedColumns: ["id"]
-          },
-          {
             foreignKeyName: "marketplace_binder_quotes_binder_id_fkey"
             columns: ["binder_id"]
             isOneToOne: false
@@ -1744,6 +1737,13 @@ export type Database = {
             columns: ["client_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binder_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_quotes_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_works"
             referencedColumns: ["id"]
           },
         ]

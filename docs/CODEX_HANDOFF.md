@@ -2869,8 +2869,7 @@ Non exercé : le runtime réel contre Supabase (pas de clé de service locale) e
 ## PR 1 — Contacts + Ouvrages (21 septembre 2026)
 
 Branche `feat/binder-contacts-works`, depuis `main` `a47b3ac3`. Première marche de « tout part d'un ouvrage » : un **contact** et un **ouvrage** vivants dans l'atelier, et le devis
-qui s'y rattache. **Une migration, NON appliquée en production** (voir plus bas) ; tant qu'elle ne l'est pas, ne pas déployer cette branche : les écrans `/atelier/ouvrages` et
-`/atelier/contacts` liraient des colonnes et des tables qui n'existent pas encore.
+qui s'y rattache. **Une migration**, appliquée en production le 20/09/2026 *avant* le déploiement du code (voir « Application de la migration »).
 
 **Périmètre, strictement.** Contacts + Ouvrages + les relations nécessaires. Pas de devis rapide, pas de workflow d'atelier, pas de logistique, pas de Sendcloud, pas de nouvelle
 facturation, pas de refonte des prestations, pas de référentiel de 195 opérations (en attente d'arbitrage).
@@ -2898,12 +2897,20 @@ l'atelier est toujours « mon client » ; un ouvrage issu d'un projet Ma Reliure
 dit sans ambiguïté la provenance (« Mon client · Aucune commission Ma Reliure »). « Créer un devis » depuis la fiche ouvre le constructeur avec contact et livre déjà remplis
 (`/atelier/devis/nouveau?workId=`, jamais une autorisation : le serveur vérifie que l'ouvrage est celui de l'atelier). Les notes internes de l'ouvrage ne passent jamais dans le devis.
 
-**Application de la migration (à autoriser par le propriétaire).** Hors production jusqu'à décision. Ensuite : appliquer, puis **régénérer `src/integrations/supabase/types.ts` depuis la
-base** — il est ici édité à la main, à l'identique du SQL (colonnes, tables, fonctions).
+**Application de la migration (faite, autorisée par le propriétaire).** Cible explicite `Ma Reliure - production` (`hljxohondjvrkzqicexl`), jamais un projet « lié » ; une requête = une
+transaction, puis inscription dans `supabase_migrations.schema_migrations` (version `20260921090000`). Avant : historique (79 appliquées, exactement une en attente), objets neufs absents,
+empreinte de tous les objets et données préexistants (48 tables, 250 contraintes, 141 index, 27 triggers, 47 politiques, 25 fonctions, 484 lignes). Après : **aucun objet ni ligne préexistant
+modifié** ; seuls ajouts = 3 tables, 4 fonctions, 3 triggers, 7 colonnes, 3 contraintes et 3 index attendus. La production ne contenait alors ni contact, ni devis, ni facture à migrer.
+Fermeture vérifiée avec la clé publique du bundle : `INSERT` refusé par la RLS, `create_work` / `next_work_reference` en « permission denied », lectures vides.
+Les droits de table `anon`/`authenticated` sont les droits par défaut de Supabase : **la porte, c'est la RLS deny-all**, comme pour toutes les tables `marketplace_*`.
+
+**Types.** `src/integrations/supabase/types.ts` est **généré depuis la production** (API Management `types/typescript`, schémas `public,graphql_public`) : `main` + 205 lignes, rien d'autre.
+Une première version écrite à la main ne différait que par l'ordre d'une clé étrangère ; elle a été remplacée. Ne plus éditer ce fichier à la main : le régénérer après chaque migration.
 
 **Vérifié.** Migration rejouée sur un vrai Postgres (pglite) : 46 contrôles (contraintes, numérotation par atelier, triggers d'isolation, refus des rôles `anon`/`authenticated`,
 rejouabilité). Tests : `binderWorks.server.test.ts` (isolation entre deux ateliers, données forgées, lignes croisées, lien devis→ouvrage), `works/works.domain.test.ts`,
-`works/worksSurface.test.ts`, `binderWorksMigrationContract.test.ts`. Mutations sur le serveur : 18 filtres `binder_id` retirés un par un + 2 sur le devis, tous détectés (un premier
-passage en laissait survivre 10, dont l'archivage d'un ouvrage d'un autre atelier — test renforcé). QA navigateur (faux Auth, server functions simulées, hors dépôt) : desktop 1280, tablette
+`works/worksSurface.test.ts`, `binderWorksMigrationContract.test.ts`. Mutations sur le serveur : 18 filtres `binder_id` retirés un par un + 4 contrôles de propriété (contact / ouvrage / lien devis), 22 mutants, tous détectés
+**sur une référence verte** (le script refuse de tourner si la référence est rouge : un premier passage « tout tué » était faux, un test cassé échouait sans mutant). Ont été durcis en chemin :
+l'archivage d'un ouvrage d'un autre atelier (l'erreur n'arrivait qu'après l'écriture), le nom d'un contact d'un autre atelier dans une liste corrompue, une facture d'un autre atelier rattachée par un devis. QA navigateur (faux Auth, server functions simulées, hors dépôt) : desktop 1280, tablette
 820, mobile 390 — création contact → ouvrage → devis prérempli, recherche sans accents, archivage, erreur de saisie, cibles de 44 px, aucun défilement horizontal. Non exercé : le runtime réel
 contre Supabase (pas de clé de service locale).

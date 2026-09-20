@@ -324,6 +324,25 @@ describe("ouvrages", () => {
     expect(fiche.invoices).toEqual([]);
   });
 
+  it("une référence croisée corrompue ne fait jamais fuiter le nom d'un contact, ni une facture, de l'autre atelier", async () => {
+    const a = await saveContact(world.sb, BINDER_A, contact());
+    const foreign = await saveContact(world.sb, BINDER_B, contact({ firstName: "Secret", lastName: "Contact-de-B" }));
+    const w = await saveWork(world.sb, BINDER_A, work(a.id));
+    // Corruption que la base interdit (deux triggers) : l'ouvrage de A pointe le contact de B.
+    world.tables.marketplace_binder_works[0].contact_id = foreign.id;
+    expect((await listWorks(world.sb, BINDER_A))[0].contactName).toBeNull();
+    expect((await getWork(world.sb, BINDER_A, w.work.id)).contact).toBeNull();
+    // Un devis de A sur cet ouvrage, et une facture de B qui prétend en être issue.
+    world.tables.marketplace_binder_works[0].contact_id = a.id;
+    const base = { issue_date: "2026-09-20", valid_until: "2026-10-20", client_name: "x", book_title: null, total_ttc_cents: 100, currency: "EUR", created_at: "2026-09-20" };
+    world.tables.marketplace_binder_quotes = [{ ...base, id: "qa", binder_id: BINDER_A, work_id: w.work.id, quote_number: "D-2026-0001", status: "invoiced" }];
+    world.tables.marketplace_binder_invoices = [
+      { ...base, id: "ib", binder_id: BINDER_B, quote_id: "qa", invoice_number: "F-2026-0001", payment_status: "unpaid" },
+      { ...base, id: "ia", binder_id: BINDER_A, quote_id: "qa", invoice_number: "F-2026-0002", payment_status: "unpaid" },
+    ];
+    expect((await getWork(world.sb, BINDER_A, w.work.id)).invoices.map((i) => i.number)).toEqual(["F-2026-0002"]);
+  });
+
   it("re-pointer son propre ouvrage vers le contact d'un autre atelier est refusé", async () => {
     const a = await saveContact(world.sb, BINDER_A, contact());
     const foreign = await saveContact(world.sb, BINDER_B, contact());
