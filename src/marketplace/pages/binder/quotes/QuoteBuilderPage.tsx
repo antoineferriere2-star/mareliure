@@ -26,7 +26,9 @@ import {
 } from "@/marketplace/services/binderQuotes.data.functions";
 import { profileReadiness, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
 import { lineTotalCents } from "@/marketplace/quotes/quoteCalc";
-import { emptyBuilder, stateFromDocument, toQuoteInput, totalsOf, type AdjustmentType, type BuilderState } from "@/marketplace/quotes/builderState";
+import { emptyBuilder, stateFromDocument, stateFromWork, toQuoteInput, totalsOf, type AdjustmentType, type BuilderState } from "@/marketplace/quotes/builderState";
+import { getMyWork } from "@/marketplace/services/binderWorks.data.functions";
+import { WORK_KEY, WORKS_KEY } from "@/marketplace/pages/binder/works/workKeys";
 import { formatDimensions, freeLine, isPriceAdjusted, lineFromService, parseMillimetres, type CatalogService, type QuoteLine } from "@/marketplace/quotes/quoteLines";
 import { euros, parseServerError } from "@/marketplace/quotes/quoteFormat";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -37,11 +39,18 @@ import { CATALOG_KEY, CLIENTS_KEY, PROFILE_QUERY_KEY, QUOTES_KEY } from "./quote
 let lineCounter = 0;
 const nextKey = () => `line-${Date.now().toString(36)}-${++lineCounter}`;
 
-export function QuoteBuilderPage({ quoteId }: { quoteId?: string }) {
+export function QuoteBuilderPage({ quoteId, workId }: { quoteId?: string; workId?: string }) {
   const fetchProfile = useServerFn(getBillingProfile);
   const fetchCatalog = useServerFn(getMyCatalog);
   const fetchClients = useServerFn(getMyClients);
   const fetchQuote = useServerFn(getMyQuote);
+  const fetchWork = useServerFn(getMyWork);
+  // Un devis qui part d'un ouvrage : le contact et le livre arrivent déjà remplis.
+  const fromWork = useQuery({
+    queryKey: [...WORK_KEY, workId] as const,
+    queryFn: () => fetchWork({ data: { id: workId! } }),
+    enabled: Boolean(workId) && !quoteId,
+  });
 
   const profile = useQuery({ queryKey: PROFILE_QUERY_KEY, queryFn: () => fetchProfile() });
   const catalog = useQuery({ queryKey: CATALOG_KEY, queryFn: () => fetchCatalog({ data: {} }) });
@@ -52,7 +61,7 @@ export function QuoteBuilderPage({ quoteId }: { quoteId?: string }) {
     enabled: Boolean(quoteId),
   });
 
-  if (profile.isPending || catalog.isPending || clients.isPending || (quoteId && existing.isPending)) {
+  if (profile.isPending || catalog.isPending || clients.isPending || (quoteId && existing.isPending) || (workId && !quoteId && fromWork.isPending)) {
     return (
       <div role="status" aria-busy="true" className="space-y-4">
         <span className="sr-only">Chargement…</span>
@@ -81,7 +90,14 @@ export function QuoteBuilderPage({ quoteId }: { quoteId?: string }) {
       services={catalog.data.services}
       categories={catalog.data.categories}
       clients={clients.data}
-      initial={existing.data ? stateFromDocument(existing.data) : emptyBuilder()}
+      initial={
+        existing.data
+          ? stateFromDocument(existing.data)
+          : fromWork.data
+            ? stateFromWork(fromWork.data.work, fromWork.data.contact)
+            : emptyBuilder()
+      }
+      fromWork={fromWork.data ? { reference: fromWork.data.work.reference, title: fromWork.data.work.title } : null}
     />
   );
 }
@@ -93,6 +109,7 @@ function BuilderForm({
   categories,
   clients,
   initial,
+  fromWork,
 }: {
   quoteId?: string;
   profile: BillingProfile;
@@ -100,6 +117,8 @@ function BuilderForm({
   categories: { id: string; name: string }[];
   clients: { id: string; name: string; email: string | null; phone: string | null; addressLine1: string | null; postalCode: string | null; city: string | null }[];
   initial: BuilderState;
+  /** L'ouvrage d'où l'on vient, pour le dire en haut de page. */
+  fromWork?: { reference: string; title: string } | null;
 }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -183,6 +202,8 @@ function BuilderForm({
     onSuccess: (quote) => {
       void queryClient.invalidateQueries({ queryKey: QUOTES_KEY });
       void queryClient.invalidateQueries({ queryKey: CLIENTS_KEY });
+      void queryClient.invalidateQueries({ queryKey: WORK_KEY });
+      void queryClient.invalidateQueries({ queryKey: WORKS_KEY });
       void navigate({ to: "/atelier/devis/$quoteId", params: { quoteId: quote.id } });
     },
     onError: (error) => {
@@ -215,6 +236,11 @@ function BuilderForm({
         <Link to="/atelier/devis" className="text-sm text-muted-foreground underline">
           Retour aux devis
         </Link>
+        {fromWork && !quoteId && (
+          <p className="w-full text-sm text-muted-foreground">
+            Pour l'ouvrage « {fromWork.title} » ({fromWork.reference}) — le contact et le livre sont déjà remplis.
+          </p>
+        )}
       </header>
 
       {!readiness.ready && (

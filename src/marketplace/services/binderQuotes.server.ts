@@ -355,7 +355,8 @@ const clientView = (row: Tables<"marketplace_binder_clients">): ClientView => ({
 export async function listClients(sb: Supa, binderId: string): Promise<ClientView[]> {
   const { data, error } = await sb.from("marketplace_binder_clients").select("*").eq("binder_id", binderId).order("name");
   if (error) throw new BinderQuotesError("failed");
-  return (data ?? []).map(clientView);
+  // Les contacts archivés ne sont plus proposés dans le constructeur (ils restent lisibles dans leurs devis).
+  return (data ?? []).filter((row) => !row.archived_at).map(clientView);
 }
 
 export async function saveClient(sb: Supa, binderId: string, input: ClientInput): Promise<ClientView> {
@@ -392,6 +393,20 @@ async function resolveClientId(sb: Supa, binderId: string, input: QuoteInput): P
   }
   const created = await saveClient(sb, binderId, { id: null, ...input.client, notes: null });
   return created.id;
+}
+
+/** L'ouvrage d'un devis : un ouvrage DE CET ATELIER, ou une erreur — jamais celui d'un autre. */
+async function assertOwnWork(sb: Supa, binderId: string, workId: string | null | undefined): Promise<string | null> {
+  if (!workId) return null;
+  const { data, error } = await sb
+    .from("marketplace_binder_works")
+    .select("id")
+    .eq("id", workId)
+    .eq("binder_id", binderId)
+    .maybeSingle();
+  if (error) throw new BinderQuotesError("failed");
+  if (!data) throw new BinderQuotesError("invalid_input");
+  return data.id;
 }
 
 async function assertOwnServices(sb: Supa, binderId: string, input: QuoteInput) {
@@ -456,6 +471,7 @@ export async function listQuotes(sb: Supa, binderId: string): Promise<DocumentSu
 export async function createQuote(sb: Supa, binderId: string, input: QuoteInput, today: string): Promise<DocumentView> {
   const profile = await loadBillingProfile(sb, binderId);
   await assertOwnServices(sb, binderId, input);
+  const workId = await assertOwnWork(sb, binderId, input.workId);
   // Le profil est contrôlé AVANT d'écrire quoi que ce soit (pas de fiche client créée pour rien).
   try {
     buildQuoteRows({ input, profile, issueDate: today, clientId: null });
@@ -465,9 +481,11 @@ export async function createQuote(sb: Supa, binderId: string, input: QuoteInput,
   const clientId = await resolveClientId(sb, binderId, input);
   const { quote, items } = buildQuoteRows({ input, profile, issueDate: today, clientId });
 
+  // `work_id` n'est PAS une clé du devis calculé (QUOTE_ROW_KEYS) : c'est une référence, ajoutée ici
+  // seulement quand elle existe. La fonction SQL la stocke sans changement (jsonb_populate_record).
   const { data, error } = await sb.rpc("marketplace_binder_create_quote", {
     p_binder_id: binderId,
-    p_quote: asJson(quote),
+    p_quote: asJson(workId ? { ...quote, work_id: workId } : quote),
     p_items: asJson(items),
   });
   if (error || !data) throw new BinderQuotesError("failed");

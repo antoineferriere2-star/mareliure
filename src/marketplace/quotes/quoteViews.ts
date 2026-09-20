@@ -74,6 +74,11 @@ export interface DocumentView {
   linkedQuoteNumber: string | null;
   linkedInvoiceId: string | null;
   linkedInvoiceNumber: string | null;
+  /**
+   * Devis seulement : l'ouvrage auquel il se rattache, s'il y en a un. Une référence — les
+   * blocs `client` et `book` ci-dessus restent le snapshot du document.
+   */
+  workId?: string | null;
   createdAt: string;
   /** Facture seulement : le suivi de paiement (aucun encaissement n'est fait ici). */
   payment: { status: "unpaid" | "deposit_paid" | "paid"; amountPaidCents: number; depositPaidCents: number } | null;
@@ -121,6 +126,7 @@ export interface QuoteDbRow extends CommonRow {
   quote_number: string;
   status: string;
   valid_until: string;
+  work_id?: string | null;
 }
 
 export interface InvoiceDbRow extends CommonRow {
@@ -218,6 +224,7 @@ export function quoteView(
     linkedQuoteNumber: null,
     linkedInvoiceId: invoice?.id ?? null,
     linkedInvoiceNumber: invoice?.invoice_number ?? null,
+    ...(row.work_id ? { workId: row.work_id } : {}),
     payment: null,
   };
 }
