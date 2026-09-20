@@ -790,9 +790,9 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 **Agent :** Claude Code (Sonnet 5)
 
-**Date :** 19 septembre 2026 — dernier chantier : outil devis → facture du relieur, branche `feat/binder-quotes` (suite 11, **non déployé, migration non appliquée**, en attente de revue) ; avant : UX des espaces clients (suite 10, fusionnée, PR #2). Le bloc de commits ci-dessous décrit la branche `fix/mareliure-customer-access`, fusionnée dans `main` (PR #1) : corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9.
+**Date :** 20 septembre 2026 — dernier chantier : **Phase 0 (audit du 19 septembre, 8 P1)**, PR #5 fusionnée dans `main` (`158df5eb`), **5 migrations appliquées en production et Worker déployé** — voir « Phase 0 — publication » en fin de document ; avant : outil devis → facture du relieur (suite 11, PR #3, fusionnée, migration appliquée et déployé le 19/09) ; avant : UX des espaces clients (suite 10, fusionnée, PR #2). Le bloc de commits ci-dessous décrit la branche `fix/mareliure-customer-access`, fusionnée dans `main` (PR #1) : corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9.
 
-**Branch :** `feat/binder-quotes` (suite 11) ; `ux/customer-portals` (suite 10, fusionnée) ; `fix/mareliure-customer-access` (suite 9, fusionnée).
+**Branch :** `main` (Phase 0 fusionnée ; branche `fix/audit-phase0-integrity-security` conservée) ; `feat/binder-quotes` (suite 11, fusionnée) ; `ux/customer-portals` (suite 10, fusionnée) ; `fix/mareliure-customer-access` (suite 9, fusionnée).
 
 **Commit :** `361e7915` (correctif : fuite "Métré" dans le vocabulaire
 d'intake partagé, trouvée en smoke test mobile demandé par l'utilisateur —
@@ -951,8 +951,10 @@ souhaite, je ne l'ai pas fait moi-même.
 
 ### Chantier de cette session (suite 11) — outil devis → facture du relieur (branche `feat/binder-quotes`)
 
-**Non déployé, migration NON appliquée** (à appliquer seulement sur accord explicite : elle
-crée des tables en production). Périmètre : un module très simple pour qu'un relieur chiffre
+**Statut mis à jour le 20/09/2026 : fusionné (PR #3, types PR #4), migration `20260919090000` appliquée en production
+le 19/09, Worker déployé.** La recette réelle avec deux comptes atelier (points 6 à 15) n'a **pas** été faite : elle attend
+deux utilisateurs Supabase créés par l'utilisateur (les règles interdisent de les créer). Note d'origine : la migration
+crée des tables en production. Périmètre : un module très simple pour qu'un relieur chiffre
 un ouvrage pour SES clients, marketplace ou non — *ouvrage → dimensions → prestations →
 calcul → devis → facture*. Ce n'est ni une comptabilité, ni un ERP, ni un CRM. **Pas touchés :**
 Stripe, abonnement / limitation de devis (l'outil est gratuit), encaissement, e-invoicing,
@@ -2746,7 +2748,7 @@ Tout ce qui était listé à la fin de Phase C reste vrai. S'y ajoute :
 
 ## Phase 0 — audit du 19 septembre 2026 (P1-1 … P1-8)
 
-Branche `fix/audit-phase0-integrity-security`, une PR, **non fusionnée, non déployée, migrations non appliquées**.
+Branche `fix/audit-phase0-integrity-security`, PR #5 — **fusionnée le 20/09/2026 (merge commit `158df5eb`), migrations appliquées, déployée** (voir « Phase 0 — publication »).
 Détail des preuves (défaut confirmé sur `main`, correction, tests) dans la description de la PR.
 
 | P1 | Défaut | Correction |
@@ -2786,3 +2788,46 @@ pour ces migrations : le régénérer depuis la base après application.
   doublon sans effet, reprise après échec idempotente. Script rejouable hors dépôt ; aucune carte réelle, aucun live.
 - Un événement Stripe en échec répond 500 (avant : 200). Les événements des autres produits du compte partagé, sans notre
   metadata, sont toujours ignorés en 200.
+
+---
+
+## Phase 0 — publication (20 septembre 2026)
+
+Ordre suivi : migrations → types → tests/tsc/lint/build → merge → `main` local en fast-forward → déploiement → QA production.
+
+- **Migrations appliquées en production** (`hljxohondjvrkzqicexl`, « Ma Reliure - production », cible vérifiée : seul projet visible, `ACTIVE_HEALTHY`),
+  une requête atomique par migration puis enregistrement dans `supabase_migrations.schema_migrations` (mécanisme identique à celui des devis ;
+  jamais `supabase db push`) : `20260920090000`, `…100000`, `…110000`, `…120000`, `…130000`. Empreintes sha256 figées, 74 migrations
+  déjà appliquées → 79. Comptes avant/après identiques (1 proposition, 0 paiement, 0 événement webhook, 0 message, 6 dossiers) et empreinte des
+  dossiers inchangée. Vérifié ensuite : droits des fonctions (`anon`/`authenticated` sans `EXECUTE`, `service_role` seul), une seule surcharge de
+  la conversion (6 arguments), 2 triggers actifs, 7 colonnes, 2 CHECK, 2 index, RLS toujours active.
+- **Types Supabase régénérés depuis la production** : **aucune dérive**, fichier identique octet pour octet à celui de la PR (édité à la main).
+- **PR #5** fusionnée en merge commit normal (sans squash, branche conservée) ; `main` local synchronisé en fast-forward (`3e5148c0` → `158df5eb`).
+- **Déploiement** : `npm run deploy:mareliure` depuis `main` `158df5eb` — Worker `mareliure`, Version ID `3de67d1d-b9f8-4d29-99a7-16b113efcee6`
+  (bundle vérifié `hljxohondjvrkzqicexl` seulement). Version précédente : `4369d077-b729-4e64-87e1-6b7c9462dde2` (retour arrière possible par `wrangler rollback`).
+- **Validation avant merge** : 172 fichiers / 2 511 tests verts, `tsc` 0 erreur, `eslint` 0 erreur (13 avertissements préexistants), build vert.
+
+### QA production ciblée (sans compte de test, sans paiement)
+
+HTTP : 6 routes répondent ; le webhook Stripe répond 400 sans signature et 400 avec une signature falsifiée (rien n'est enregistré) ; le chunk de la page
+admin déployé contient les canaux « Client » / « Atelier retenu ». **Base réelle**, dans des transactions qui **s'annulent toujours** (chaque test se termine par une
+exception forcée ; contrôle final : 0 message, 0 événement, 0 paiement, empreinte des dossiers inchangée) :
+
+| P1 | Constat en production |
+| --- | --- |
+| 4 / 5 | Sur le dossier réel dont la proposition est acceptée : modifier le prix client, le prix de service, le statut de retour vers `pricing` / `under_review`, le `pricing_status`, ou re-valider le prix → **tous bloqués** (`case_engaged`) ; une écriture non commerciale reste permise |
+| 3 | Machine d'états du webhook sur la vraie fonction : première livraison `claimed` ; concurrente `in_progress` ; redélivrance après échec `claimed`, tentative 2 ; après succès `already_processed` |
+| 6 | Sur un vrai dossier Fine Bindery : message d'atelier inséré sans audience → `workshop_platform` ; client → `customer_concierge` ; admin → `customer_concierge` ; Ma Reliure reste `shared` |
+| 7 | `marketplace_dossier_ids_for_verified_email` : `%` et blanc ne correspondent à rien |
+| 2 | Vérification de la preuve de paiement : recette Stripe **TEST** du 20/09 (Checkout réel à 60 000 EUR, `unpaid` non soldé, paiements de test rapprochés, mauvais montant / devise refusés, doublon sans effet, reprise idempotente) |
+
+**Non exercé** (à faire quand les conditions existent) : (a) la **page Checkout hébergée** payée avec une carte de test — abandonnée à la demande de l'utilisateur
+(la session de test a été expirée) ; (b) la messagerie Fine Bindery **avec de vrais comptes** client / atelier retenu / atelier invité / concierge (aucun atelier,
+aucun match, aucun message en production) ; (c) P1-1 (Checkout au TTC) et P1-8 (mention de franchise) **en production** : aucun paiement réel ni devis n'existe ;
+couverts par les tests, Postgres réel (pglite) et la recette TEST. Le seul dossier payable réel (500 € HT → 600 € TTC) sera le premier Checkout réel.
+
+### Suite
+
+La roadmap produit / UX (phases A → E, une branche et une PR par phase, repartir de `main` contenant la phase précédente) démarre depuis `main` `158df5eb`.
+Points ouverts hérités : décision produit sur l'**acompte** (propositions avec acompte bloquées) ; e-mail « nouveau message » vers l'atelier et le concierge
+(le signal est un compteur de non-lus) ; recette production des devis/factures avec deux comptes atelier ; `docs` : la suite 11 garde son récit d'origine.
