@@ -45,6 +45,41 @@ export interface FieldComponentProps<F extends PlaybookField = PlaybookField> {
     mediaType: string;
     filename: string;
   }) => Promise<UploadedProjectPhoto>;
+  /**
+   * The views a `photo` field asks the visitor to capture, each with an
+   * illustrated example — supplied by the deployment's guidance, never decided
+   * here. Absent: the field is the plain drop zone it always was.
+   */
+  photoShots?: PhotoShot[];
+  /** In-session thumbnails of what the visitor picked, shared with the recap. */
+  photoPreviews?: PhotoPreviewStore;
+}
+
+/** One view of the object the visitor is asked to photograph. */
+export interface PhotoShot {
+  /** Stable key, recorded on the photo (`PhotoAnswerEntry.shot`). */
+  key: string;
+  /** "Front cover", "Spine" — short, what to point the camera at. */
+  label: string;
+  /** One sentence on how to frame it. */
+  hint: string;
+  /** An example of a good photo of this view, shown until the visitor adds theirs. */
+  exampleSrc?: string;
+}
+
+/**
+ * Object URLs for the photos picked in this session.
+ *
+ * Thumbnails only exist while the browser still holds the file: after a resume
+ * the answer keeps the stored path but the visitor's device no longer has the
+ * bytes on screen, so a resumed photo shows as "saved", not as a picture. That
+ * is deliberate — the alternative is a signed-URL round-trip per thumbnail on
+ * the public endpoint, which is a server change this surface does not need.
+ */
+export interface PhotoPreviewStore {
+  get(key: string): string | undefined;
+  set(key: string, url: string): void;
+  release(key: string): void;
 }
 
 /** Mirrors the public runtime API's upload_project_photo response. */

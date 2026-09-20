@@ -961,6 +961,38 @@ export const ES_PUBLIC_COPY: Record<string, string> = {
   Steps: "Pasos",
   "current step": "paso actual",
   "Last look before sending": "Última revisión antes de enviar",
+  // Honest progress: position and time left, never a percentage.
+  "of at least": "de al menos",
+  About: "Unos",
+  "min left": "min restantes",
+  "Less than a minute left": "Menos de un minuto restante",
+  // Guided photo views, and replacing or removing a photo.
+  "Photo saved": "Foto guardada",
+  Added: "Añadida",
+  Example: "Ejemplo",
+  Add: "Añadir",
+  Replace: "Reemplazar",
+  Remove: "Quitar",
+  "Other photos": "Otras fotos",
+  "recommended views added": "vistas recomendadas añadidas",
+  "recommended view added": "vista recomendada añadida",
+  "This file type is not supported.": "Este tipo de archivo no es compatible.",
+  "Each photo must be under": "Cada foto debe pesar menos de",
+  "Unable to upload that photo.": "No se pudo subir esa foto.",
+  "Unable to store the photo.": "No se pudo guardar la foto.",
+  // The last look.
+  "question left unanswered": "pregunta sin responder",
+  "questions left unanswered": "preguntas sin responder",
+  "You can still send your project — every detail you add helps.":
+    "Aún puede enviar su proyecto: cada detalle ayuda.",
+  "Go to the first one": "Ir a la primera",
+  // Coming back to a saved session.
+  "Welcome back — your answers are here, you pick up where you left off.":
+    "Le damos la bienvenida de nuevo: sus respuestas están aquí y continúa donde lo dejó.",
+  // Vocabulary help.
+  "A word you don't know?": "¿Hay una palabra que no conoce?",
+  "term explained": "término explicado",
+  "terms explained": "términos explicados",
   "Questions to explore (from the inspiration photo)":
     "Preguntas a explorar (a partir de la foto de inspiración)",
 };

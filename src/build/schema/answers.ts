@@ -18,6 +18,15 @@ export interface PhotoAnswerEntry {
    * name of a file nobody kept, and there is no way to recover it.
    */
   storagePath?: string;
+  /**
+   * The view of the object this photo was added for — "spine", "damage" — when
+   * the visitor added it through a guided slot rather than the free drop zone.
+   * A key the deployment's guidance defines, opaque to the engine. Optional and
+   * additive: every answer recorded before guided slots existed lacks it, and
+   * `validateFieldFormat` reads only `mimeType` and `sizeBytes`, so it travels
+   * untouched through save/submit.
+   */
+  shot?: string;
 }
 
 export interface AddressAnswerValue {

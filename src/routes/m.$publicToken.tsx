@@ -1,10 +1,20 @@
 import { useMemo, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
+import type { IntakeGuidance } from "@/build/pages/public/intakeGuidance";
 import { CustomerSpaceOffer } from "@/marketplace/pages/customer/CustomerSpaceOffer";
+import {
+  ReliureIntakeIntro,
+  ReliureNextSteps,
+  ReliureReviewNotice,
+} from "@/marketplace/pages/customer/ReliureIntakeCopy";
+import {
+  RELIURE_GLOSSARY,
+  RELIURE_PHOTO_SHOTS,
+} from "@/marketplace/pages/customer/reliureIntakeGuidance";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
 import { isMaReliure } from "@/brand";
-import { FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
+import { BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
 
 /**
  * Le titre de l'onglet pendant tout le parcours.
@@ -40,6 +50,19 @@ export const Route = createFileRoute("/m/$publicToken")({
   component: RuntimePage,
 });
 
+/**
+ * Ce que Ma Reliure dit autour du parcours des particuliers : promesse au
+ * départ, guide photo, vocabulaire, rappel avant l'envoi. Réservé à la Mission
+ * « Présenter mon livre » : Fine Bindery (autre langue, autre parcours) n'en
+ * reçoit rien tant que son propre chantier n'est pas ouvert.
+ */
+const RELIURE_GUIDANCE: IntakeGuidance = {
+  intro: <ReliureIntakeIntro />,
+  photoShots: RELIURE_PHOTO_SHOTS,
+  glossary: RELIURE_GLOSSARY,
+  reviewNotice: <ReliureReviewNotice />,
+};
+
 function RuntimePage() {
   const { publicToken } = Route.useParams();
   const { ref } = Route.useSearch();
@@ -47,6 +70,7 @@ function RuntimePage() {
     () => (ref ? { [REFERRAL_ANSWER_KEY]: ref } : undefined),
     [ref],
   );
+  const isReliureIntake = isMaReliure && publicToken === BOOKBINDING_PUBLIC_TOKEN;
   // Sur Ma Reliure et Fine Bindery, la proposition de suivre son livre —
   // CustomerSpaceOffer choisit sa langue depuis le même publicToken que
   // celui qui a déjà décidé le titre de l'onglet ci-dessus. Le runtime, lui,
@@ -54,7 +78,10 @@ function RuntimePage() {
   // la route le remplit — la Mission ne connaît pas la marketplace.
   const afterSubmission = isMaReliure
     ? ({ visitorEmail }: { visitorEmail: string | null }): ReactNode => (
-        <CustomerSpaceOffer email={visitorEmail} publicToken={publicToken} />
+        <>
+          {isReliureIntake && <ReliureNextSteps />}
+          <CustomerSpaceOffer email={visitorEmail} publicToken={publicToken} />
+        </>
       )
     : undefined;
   return (
@@ -62,6 +89,8 @@ function RuntimePage() {
       publicToken={publicToken}
       renderAfterSubmission={afterSubmission}
       seedAnswers={seedAnswers}
+      guidance={isReliureIntake ? RELIURE_GUIDANCE : undefined}
+      initialLocale={isReliureIntake ? "fr-FR" : undefined}
     />
   );
 }

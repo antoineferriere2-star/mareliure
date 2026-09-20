@@ -153,4 +153,43 @@ export const FR_PUBLIC_COPY: Record<string, string> = {
   "Runtime error": "Une erreur est survenue.",
   "Too many requests. Please try again later.":
     "Trop de requêtes. Merci de réessayer dans un moment.",
+
+  // ---- Honest progress: position and time left, never a percentage ----
+  "of at least": "sur au moins",
+  About: "Environ",
+  "min left": "min restantes",
+  "Less than a minute left": "Moins d'une minute restante",
+
+  // ---- Guided photo views, and replacing or removing a photo ----
+  "Photo saved": "Photo enregistrée",
+  Added: "Ajoutée",
+  Example: "Exemple",
+  Add: "Ajouter",
+  Replace: "Remplacer",
+  Remove: "Retirer",
+  "Other photos": "Autres photos",
+  "recommended views added": "vues recommandées ajoutées",
+  "recommended view added": "vue recommandée ajoutée",
+  "This file type is not supported.": "Ce type de fichier n'est pas pris en charge.",
+  "Each photo must be under": "Chaque photo doit peser moins de",
+  "MB.": "Mo.",
+  "Unable to upload that photo.": "Impossible d'envoyer cette photo.",
+  "Unable to store the photo.": "Impossible d'enregistrer la photo.",
+
+  // ---- The last look ----
+  "Not sure": "Je ne sais pas",
+  "question left unanswered": "question sans réponse",
+  "questions left unanswered": "questions sans réponse",
+  "You can still send your project — every detail you add helps.":
+    "Vous pouvez tout de même envoyer votre projet — chaque précision aide.",
+  "Go to the first one": "Aller à la première",
+
+  // ---- Coming back to a saved session ----
+  "Welcome back — your answers are here, you pick up where you left off.":
+    "Content de vous revoir — vos réponses sont là, vous reprenez où vous en étiez.",
+
+  // ---- Vocabulary help ----
+  "A word you don't know?": "Un mot vous échappe ?",
+  "term explained": "mot expliqué",
+  "terms explained": "mots expliqués",
 };

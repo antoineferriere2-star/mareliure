@@ -2831,3 +2831,36 @@ couverts par les tests, Postgres réel (pglite) et la recette TEST. Le seul doss
 La roadmap produit / UX (phases A → E, une branche et une PR par phase, repartir de `main` contenant la phase précédente) démarre depuis `main` `158df5eb`.
 Points ouverts hérités : décision produit sur l'**acompte** (propositions avec acompte bloquées) ; e-mail « nouveau message » vers l'atelier et le concierge
 (le signal est un compteur de non-lus) ; recette production des devis/factures avec deux comptes atelier ; `docs` : la suite 11 garde son récit d'origine.
+
+## Phase A — parcours particulier Ma Reliure (20 septembre 2026)
+
+Branche `feat/ux-mareliure-customer-flow`, depuis `main` `767299f9`. **Aucune migration**, aucune écriture en base, aucune modification du Playbook publié : tout est du code (et 4 illustrations SVG dans `public/photo-guide/`), actif dès le déploiement.
+
+**Le principe.** `MissionRuntime` reste générique : il ne sait pas ce qu'est un dos. Ce que Ma Reliure ajoute lui est donné par la route
+(`src/routes/m.$publicToken.tsx`) dans une prop `guidance` (`src/build/pages/public/intakeGuidance.ts`), le même passage que `renderAfterSubmission`. Réservé à la
+Mission « Présenter mon livre » (`BOOKBINDING_PUBLIC_TOKEN`) : Fine Bindery et Métré reçoivent seulement les améliorations génériques (progression, barre collante).
+Le contenu — vues photo, vocabulaire, textes — vit dans `src/marketplace/pages/customer/reliureIntakeGuidance.ts` et `ReliureIntakeCopy.tsx`, relié au Playbook
+par un test de contrat (`reliureIntakeGuidance.test.ts`). Le déplacer un jour dans les données du Playbook (schéma + republication) est possible et serait le bon
+chemin pour Fine Bindery (phase D) ; on ne l'a pas fait ici pour ne pas exiger de réécriture du Playbook de production.
+
+**Ce qui change pour la personne.**
+- Progression honnête (`engine/progress.ts`, `pages/public/progressLabel.ts`) : « Étape 3 sur 9 · Environ 4 min restantes », « sur au moins 8 » tant qu'une étape
+  peut encore apparaître selon une réponse à venir. Plus de pourcentage (il partait de 13 % avant toute réponse). Le temps est estimé d'après le *type* des questions restantes.
+- Promesse avant la première question : ce qu'on obtient, environ 5 minutes, **ne pas envoyer le livre maintenant**. Rappel au dernier regard : envoyer n'engage à rien.
+- Guide photo : une vignette illustrée par vue (couverture, dos, tranche ; dommage principal) avec ajout / remplacement / retrait par vue, aperçu de la vraie photo,
+  refus immédiat (type, poids) avant envoi. La photo porte un champ optionnel `shot` dans la réponse (additif : `validateFieldFormat` ne lit que `mimeType` et `sizeBytes`).
+  Les aperçus n'existent que pendant la session : après reprise, la photo s'affiche « enregistrée » (une URL signée par vignette serait un changement serveur).
+- Vocabulaire : « Un mot vous échappe ? » sous l'étape, seulement les mots que le texte de l'étape emploie (`engine/glossary.ts`).
+- Récapitulatif : nombre de questions sans réponse (jamais bloquant), photos en images libellées par vue, « Je ne sais pas » / « Oui » en français.
+- Confirmation : « Et maintenant ? » en trois étapes avec l'acteur et un délai indicatif.
+- Reprise de session : on revient **à l'étape atteinte** (première question obligatoire restante), pas à l'écran 1 ; message « Content de vous revoir ».
+- Mobile 390 px : barre Retour / Continuer collante, cibles de 44 px, message d'erreur amené à l'écran (le bouton refusé n'a plus l'air mort), titres plus petits.
+- Correctifs en chemin : erreur d'adresse restée en anglais, écran de chargement / d'échec du chargement en anglais (la langue de la Mission n'arrive qu'avec la Mission :
+  la route donne `initialLocale`), double point après un libellé de consentement.
+
+**À décider par le propriétaire avant déploiement.** `RELIURE_REPLY_DELAY` (« 2 à 3 jours ouvrés », `reliureIntakeGuidance.ts`) est un **délai commercial affiché**,
+pas une mesure : rien dans le produit ne l'engage aujourd'hui. Le texte dit « indicatif » ; la valeur est à confirmer ou à changer.
+
+**QA.** Banc hors dépôt (Playwright + Chrome, faux endpoint du runtime servi avec le vrai Playbook, état conservé entre rechargements) : desktop 1280, tablette 820, mobile 390 ;
+reprise après vrai rechargement, ajout / remplacement / retrait de photos, échec d'envoi puis reprise, fichier refusé, chargement lent, échec de chargement, récapitulatif, soumission.
+Non exercé : le runtime réel contre Supabase (pas de clé de service locale) et un vrai envoi de photo vers le stockage.

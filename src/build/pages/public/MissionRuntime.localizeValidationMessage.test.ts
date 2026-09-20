@@ -31,6 +31,14 @@ describe("localizeValidationMessage", () => {
     expect(message).toBe('"Código postal" no es válido.');
   });
 
+  it("also matches the address field's own label — the whole-address 'is required' message quotes it", () => {
+    // Regression (Phase A QA): on the French intake this came out as
+    // `"Où se trouve le livre ?" is required.` — the only English sentence on
+    // the page — because only the components' labels were looked for.
+    const message = localizeValidationMessage('"Address" is required.', addressField, esCopy);
+    expect(message).toBe('"Address" es obligatorio.');
+  });
+
   it("preserves an interpolated count while translating the surrounding phrase", () => {
     const multiField: PlaybookField = {
       key: "widgets",
