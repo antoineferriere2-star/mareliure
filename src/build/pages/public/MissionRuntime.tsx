@@ -1,9 +1,22 @@
 /* eslint-disable react-refresh/only-export-components -- localizeField is exported for unit testing */
-import { useCallback, useEffect, useMemo, useState, type CSSProperties, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { ArrowRight, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FIELD_COMPONENTS, type InspirationPhotoAnalysis } from "@/build/engine/fields";
+import { PhotoThumb } from "@/build/engine/fields/PhotoField";
+import { createPhotoPreviewStore } from "@/build/engine/fields/photoPreviews";
+import type { PhotoPreviewStore, PhotoShot } from "@/build/engine/fields/types";
 import { computeVisibleSteps, validateField, type VisibleStep } from "@/build/engine/validation";
+import { describeProgress, resumeStepIndex } from "@/build/engine/progress";
+import { findGlossaryEntries } from "@/build/engine/glossary";
 import {
   evaluatePlaybookConsistency,
   evaluateStepConsistency,
@@ -11,7 +24,12 @@ import {
   type TriggeredConsistency,
 } from "@/build/engine/consistency";
 import { formatAnswerForDisplay } from "@/build/engine/brief";
-import type { Answers, AnswerValue } from "@/build/schema/answers";
+import {
+  NOT_SURE_VALUE,
+  type Answers,
+  type AnswerValue,
+  type PhotoAnswerEntry,
+} from "@/build/schema/answers";
 import type { ProjectBrief } from "@/build/schema/brief";
 import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
 import type { PlaybookSchema } from "@/build/schema/playbook";
@@ -31,6 +49,9 @@ import { readableTextColor } from "@/build/branding/contrast";
 import { publicCopy, usePublicLocale } from "./publicLocaleContext";
 import { isSupportedLocale, type SupportedLocale } from "@/build/i18n";
 import { MissionRuntimeSkeleton } from "./MissionRuntimeStates";
+import { StepGlossary } from "./StepGlossary";
+import { formatProgress } from "./progressLabel";
+import type { IntakeGuidance } from "./intakeGuidance";
 
 /** How long the initial load can run before we tell the visitor it's taking
  * longer than usual — long enough to not fire on a normal cold start, short
@@ -143,8 +164,12 @@ export function localizeValidationMessage(
   field: PlaybookField,
   copy: CopyFn,
 ): string {
+  // An address is validated as a whole ("<label> is required.") and per
+  // component ("ZIP code is not valid."), so either label can be the quoted one.
   const labelCandidates =
-    field.type === "address" ? field.components.map((c) => c.label) : [field.label];
+    field.type === "address"
+      ? [field.label, ...field.components.map((c) => c.label)]
+      : [field.label];
 
   let template = message;
   let localizedLabel: string | null = null;
@@ -213,9 +238,26 @@ export function MissionRuntime({
   publicToken,
   renderAfterSubmission,
   seedAnswers,
+  guidance,
+  initialLocale,
 }: {
   publicToken: string;
   renderAfterSubmission?: RenderAfterSubmission;
+  /**
+   * What the deployment wants said around the questions — a promise up front,
+   * photo views to capture, words to explain, a reminder before sending. The
+   * runtime places these and never reads them: see intakeGuidance.ts.
+   */
+  guidance?: IntakeGuidance;
+  /**
+   * The language to speak until the Mission says its own. A Mission declares its
+   * language in the payload this component is still fetching, so the skeleton
+   * and — worse — the "could not load" card would otherwise appear in English to
+   * a French visitor, at the one moment they most need to understand the page.
+   * The route knows which Mission it serves; the Mission's own declaration
+   * still wins once it arrives.
+   */
+  initialLocale?: SupportedLocale;
   /**
    * Answers to merge in when a fresh session starts (never on resume) — the
    * generic half of carrying an opaque tag through the tunnel. The runtime
@@ -243,7 +285,7 @@ export function MissionRuntime({
       showFaqLauncher={false}
       chrome="embedded"
       businessName={businessName}
-      lockedLocale={missionLocale}
+      lockedLocale={missionLocale ?? initialLocale ?? null}
     >
       <MissionRuntimeContent
         publicToken={publicToken}
@@ -251,6 +293,7 @@ export function MissionRuntime({
         onMissionLocale={setMissionLocale}
         renderAfterSubmission={renderAfterSubmission}
         seedAnswers={seedAnswers}
+        guidance={guidance}
       />
     </BuildPublicShell>
   );
@@ -262,15 +305,23 @@ function MissionRuntimeContent({
   onMissionLocale,
   renderAfterSubmission,
   seedAnswers,
+  guidance,
 }: {
   publicToken: string;
   onBusinessName: (name: string | null) => void;
   onMissionLocale: (locale: SupportedLocale | null) => void;
   renderAfterSubmission?: RenderAfterSubmission;
   seedAnswers?: Record<string, string>;
+  guidance?: IntakeGuidance;
 }) {
   const { locale } = usePublicLocale();
   const copy = useCallback((text: string) => publicCopy(locale, text), [locale]);
+  // Thumbnails of what the visitor picked, shared by the photo fields and the
+  // recap. One store for the whole session: a field unmounts on every step
+  // change, and the pictures must outlive it.
+  const [photoPreviews] = useState(() => createPhotoPreviewStore());
+  useEffect(() => () => photoPreviews.dispose(), [photoPreviews]);
+  const errorRef = useRef<HTMLDivElement | null>(null);
   const [mission, setMission] = useState<PublicMission | null>(null);
   const [schema, setSchema] = useState<PlaybookSchema | null>(null);
   const [sessionAuth, setSessionAuth] = useState<SessionAuth | null>(null);
@@ -293,6 +344,9 @@ function MissionRuntimeContent({
   const [slowLoad, setSlowLoad] = useState(false);
   const [saving, setSaving] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  // The visitor came back to a saved session and was placed on the step they had
+  // reached. Said once, and gone as soon as they move.
+  const [resumed, setResumed] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -358,7 +412,19 @@ function MissionRuntimeContent({
         onMissionLocale(missionLocale(data.mission));
         setSchema(data.playbook_schema);
         setSessionAuth(stored);
-        setAnswers(data.session.answers ?? {});
+        const resumedAnswers = data.session.answers ?? {};
+        setAnswers(resumedAnswers);
+        // Land where the visitor left off, not on the first screen: the
+        // answers come back, and pressing Continue past every finished step
+        // was the price of having closed the tab.
+        if (!data.dossier && Object.keys(resumedAnswers).length > 0) {
+          const landing = resumeStepIndex(
+            computeVisibleSteps(data.playbook_schema, resumedAnswers),
+            resumedAnswers,
+          );
+          setStepIndex(landing);
+          setResumed(landing > 0);
+        }
         if (data.dossier) setDossier(data.dossier);
       } catch {
         // Stored session is gone/invalid — fall back to a fresh one.
@@ -384,6 +450,15 @@ function MissionRuntimeContent({
     // does start a fresh session, which is the correct behaviour.
   }, [publicToken, reloadKey, onBusinessName, onMissionLocale, seedAnswers]);
 
+  // A refused Continue must be seen. The message sits at the top of the card
+  // while the button that caused it sits at the bottom of the screen — on a
+  // phone, that is a tap that appears to do nothing.
+  useEffect(() => {
+    if (error || consistencyErrors.length > 0) {
+      errorRef.current?.scrollIntoView?.({ block: "center", behavior: "smooth" });
+    }
+  }, [error, consistencyErrors]);
+
   function retryLoad() {
     // Bump the effect's dependency rather than clearing storage first — a
     // stored session might still be valid and this was just a transient
@@ -407,9 +482,11 @@ function MissionRuntimeContent({
    */
   function startNewProject() {
     clearStoredAuth(publicToken);
+    photoPreviews.dispose();
     setDossier(null);
     setAnswers({});
     setStepIndex(0);
+    setResumed(false);
     setReviewing(false);
     setConsistencyErrors([]);
     setConsistencyWarnings([]);
@@ -448,9 +525,23 @@ function MissionRuntimeContent({
         "--metre-accent-soft": `color-mix(in oklab, ${accent} 12%, white)`,
       } as CSSProperties)
     : undefined;
-  const progress =
-    visibleSteps.length > 0 ? Math.round(((clampedStepIndex + 1) / visibleSteps.length) * 100) : 0;
+  const progress = useMemo(
+    () =>
+      schema
+        ? describeProgress({ schema, answers, steps: visibleSteps, index: clampedStepIndex })
+        : null,
+    [schema, answers, visibleSteps, clampedStepIndex],
+  );
   const isLastStep = clampedStepIndex >= visibleSteps.length - 1;
+  // Words this step actually uses, from the Playbook's own text — not from what
+  // the visitor typed, and not translated: the glossary is the deployment's.
+  const glossaryEntries = useMemo(
+    () =>
+      guidance?.glossary && currentStep && !reviewing
+        ? findGlossaryEntries(stepTexts(currentStep), guidance.glossary)
+        : [],
+    [guidance?.glossary, currentStep, reviewing],
+  );
   const canvasItems = useMemo(
     () =>
       projectCanvasItemsFromRuntime(
@@ -521,7 +612,10 @@ function MissionRuntimeContent({
       const labels = currentStep.visibleFields
         .filter((field) => blockingKeys.includes(field.key))
         .map((field) => copy(field.label));
-      setError(`${copy("Please check the following before continuing:")} ${labels.join(", ")}.`);
+      // A consent field is labelled by its whole sentence, which already ends
+      // in a full stop — don't add a second one.
+      const named = labels.join(", ").replace(/[.\s]+$/, "");
+      setError(`${copy("Please check the following before continuing:")} ${named}.`);
       return;
     }
 
@@ -549,10 +643,12 @@ function MissionRuntimeContent({
       setReviewing(true);
       return;
     }
+    setResumed(false);
     setStepIndex((i) => Math.min(i + 1, visibleSteps.length - 1));
   }
 
   function goBack() {
+    setResumed(false);
     if (reviewing) {
       setReviewing(false);
       return;
@@ -562,6 +658,7 @@ function MissionRuntimeContent({
 
   /** Jump straight back to the step that holds a given answer, from the review. */
   function editStep(index: number) {
+    setResumed(false);
     setReviewing(false);
     setError(null);
     setStepIndex(index);
@@ -696,7 +793,7 @@ function MissionRuntimeContent({
               {branding.introTitle && !reviewing && clampedStepIndex === 0 && (
                 <p className="mt-4 text-lg font-medium text-stone-900">{branding.introTitle}</p>
               )}
-              <h1 className="mt-3 max-w-3xl text-3xl font-semibold leading-tight tracking-normal text-stone-950 sm:text-4xl">
+              <h1 className="mt-3 max-w-3xl text-2xl font-semibold leading-tight tracking-normal text-stone-950 sm:text-4xl">
                 {reviewing ? copy("Your project") : copy(currentStep?.step.title ?? mission.name)}
               </h1>
               {branding.introText && !reviewing && clampedStepIndex === 0 && (
@@ -710,7 +807,7 @@ function MissionRuntimeContent({
                 </p>
               )}
               {currentStep?.step.why && !reviewing && (
-                <p className="mt-4 max-w-2xl text-base leading-7 text-stone-600 sm:text-lg">
+                <p className="mt-3 max-w-2xl text-base leading-7 text-stone-600 sm:mt-4 sm:text-lg">
                   {copy(currentStep.step.why)}
                 </p>
               )}
@@ -743,33 +840,50 @@ function MissionRuntimeContent({
                       );
                     })}
                   </ol>
-                  <p className="mt-2 text-sm font-medium text-stone-500">
-                    {reviewing ? (
-                      copy("Last look before sending")
-                    ) : (
-                      <>
-                        {/* Through copy(), like everything else the visitor
-                            reads. These two were hardcoded ternaries on
-                            es-US, so adding a third locale left them in
-                            English on a page that was otherwise translated —
-                            invisible to every test, because they never
-                            reached the dictionary. */}
-                        {copy("Step")} {clampedStepIndex + 1} {copy("of")} {visibleSteps.length} ·{" "}
-                        {progress}% {copy("complete")}
-                      </>
-                    )}
+                  {/* Position and time left, never a percentage: the total
+                      moves as the visitor answers, so "13% complete" on the
+                      first screen was a figure nobody could stand behind. The
+                      label is words the dictionary owns, whole pieces at a
+                      time — see progressLabel.ts. */}
+                  <p className="mt-3 text-sm font-medium text-stone-600" aria-live="polite">
+                    {reviewing
+                      ? copy("Last look before sending")
+                      : progress
+                        ? formatProgress(progress, copy)
+                        : null}
                   </p>
                 </>
               )}
             </section>
+            {/* What the deployment promises before the first question. Placed by
+                the runtime, written by the route: see intakeGuidance.ts. */}
+            {guidance?.intro && !reviewing && clampedStepIndex === 0 && (
+              <div className="mt-4">{guidance.intro}</div>
+            )}
             <section className="mt-4 rounded-lg border border-stone-300 bg-white p-5 shadow-sm sm:p-6 lg:p-8">
+              {resumed && !reviewing && (
+                <p
+                  role="status"
+                  className="mb-5 rounded-lg border border-emerald-200 bg-emerald-50 p-3 text-sm text-emerald-900"
+                >
+                  {copy("Welcome back — your answers are here, you pick up where you left off.")}
+                </p>
+              )}
               {error && (
-                <div className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                <div
+                  ref={errorRef}
+                  role="alert"
+                  className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+                >
                   {copy(error)}
                 </div>
               )}
               {consistencyErrors.length > 0 && (
-                <div className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800">
+                <div
+                  ref={error ? undefined : errorRef}
+                  role="alert"
+                  className="mb-5 rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-800"
+                >
                   <p className="font-medium">{copy("These answers don't seem to work together")}</p>
                   <ul className="mt-2 list-disc space-y-1 pl-5">
                     {consistencyErrors.map((notice) => (
@@ -798,56 +912,91 @@ function MissionRuntimeContent({
                 </div>
               )}
               {reviewing ? (
-                <ReviewAnswers
-                  steps={visibleSteps}
-                  answers={answers}
-                  copy={copy}
-                  onEdit={editStep}
-                />
+                <>
+                  <ReviewAnswers
+                    steps={visibleSteps}
+                    answers={answers}
+                    copy={copy}
+                    onEdit={editStep}
+                    previews={photoPreviews}
+                    photoShots={guidance?.photoShots}
+                  />
+                  {guidance?.reviewNotice && <div className="mt-6">{guidance.reviewNotice}</div>}
+                </>
               ) : currentStep ? (
-                <div className="grid gap-6">
-                  {currentStep.visibleFields.map((field) => {
-                    const FieldComponent = FIELD_COMPONENTS[field.type];
-                    return (
-                      <FieldComponent
-                        key={field.key}
-                        field={localizeField(field, copy)}
-                        value={answers[field.key]}
-                        onChange={(value) => setAnswer(field.key, value)}
-                        error={fieldErrors[field.key]}
-                        analyzeInspirationPhoto={(image) =>
-                          analyzeInspirationPhoto(field.key, image)
-                        }
-                        uploadProjectPhoto={(file) => uploadProjectPhoto(field.key, file)}
-                      />
-                    );
-                  })}
-                </div>
+                <>
+                  <div className="grid gap-6">
+                    {currentStep.visibleFields.map((field) => {
+                      const FieldComponent = FIELD_COMPONENTS[field.type];
+                      return (
+                        <FieldComponent
+                          key={field.key}
+                          field={localizeField(field, copy)}
+                          value={answers[field.key]}
+                          onChange={(value) => setAnswer(field.key, value)}
+                          error={fieldErrors[field.key]}
+                          analyzeInspirationPhoto={(image) =>
+                            analyzeInspirationPhoto(field.key, image)
+                          }
+                          uploadProjectPhoto={(file) => uploadProjectPhoto(field.key, file)}
+                          photoShots={guidance?.photoShots?.[field.key]}
+                          photoPreviews={photoPreviews}
+                        />
+                      );
+                    })}
+                  </div>
+                  <StepGlossary
+                    key={currentStep.step.id}
+                    entries={glossaryEntries}
+                    copy={copy}
+                  />
+                </>
               ) : (
                 <p className="text-sm text-stone-600">
                   {copy("This mission has no questions yet.")}
                 </p>
               )}
-              <div className="mt-8 flex flex-wrap items-center gap-3">
-                <Button
-                  variant="outline"
-                  disabled={clampedStepIndex === 0 && !reviewing}
-                  onClick={goBack}
-                >
-                  {copy("Back")}
-                </Button>
-                {reviewing ? (
-                  <Button onClick={submit} disabled={saving} style={accentStyle}>
-                    {saving ? copy("Working…") : copy("Send my project")}
-                    <FileText className="ml-2 h-4 w-4" />
+              {/* Sticky on a phone: a step with photos or a long choice grid
+                  is several screens tall, and Continue used to sit at the
+                  bottom of all of them. From `lg` up the page has room and
+                  the bar is an ordinary row again. */}
+              <div className="sticky bottom-0 z-10 -mx-5 mt-8 border-t border-stone-200 bg-white/95 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-3 backdrop-blur sm:-mx-6 sm:px-6 lg:static lg:mx-0 lg:border-t-0 lg:bg-transparent lg:p-0 lg:pb-0 lg:pt-0 lg:backdrop-blur-none">
+                <div className="flex items-center gap-3">
+                  <Button
+                    variant="outline"
+                    className="min-h-11"
+                    disabled={clampedStepIndex === 0 && !reviewing}
+                    onClick={goBack}
+                  >
+                    {copy("Back")}
                   </Button>
-                ) : (
-                  <Button onClick={goNext} disabled={saving} style={accentStyle}>
-                    {isLastStep ? copy("Review my answers") : copy("Continue")}
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Button>
-                )}
-                <p className="text-sm leading-6 text-stone-500">
+                  {reviewing ? (
+                    <Button
+                      onClick={submit}
+                      disabled={saving}
+                      style={accentStyle}
+                      className="min-h-11 flex-1 sm:flex-none"
+                    >
+                      {saving ? copy("Working…") : copy("Send my project")}
+                      <FileText className="ml-2 h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      onClick={goNext}
+                      disabled={saving}
+                      style={accentStyle}
+                      className="min-h-11 flex-1 sm:flex-none"
+                    >
+                      {saving
+                        ? copy("Working…")
+                        : isLastStep
+                          ? copy("Review my answers")
+                          : copy("Continue")}
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+                <p className="mt-2 text-xs leading-5 text-stone-500 sm:text-sm sm:leading-6">
                   {copy("Your answers are saved as you go — you can close this tab and come back.")}
                 </p>
               </div>
@@ -878,22 +1027,53 @@ function MissionRuntimeContent({
  * Unanswered optional fields are listed as such instead of being hidden: on an
  * eleven-step intake, "you left this blank" is exactly what a recap is for.
  */
-function ReviewAnswers({
+export function ReviewAnswers({
   steps,
   answers,
   copy,
   onEdit,
+  previews,
+  photoShots,
 }: {
   steps: VisibleStep[];
   answers: Answers;
   copy: CopyFn;
   onEdit: (index: number) => void;
+  previews: PhotoPreviewStore;
+  photoShots?: Record<string, PhotoShot[]>;
 }) {
+  // Fields still blank, by step: the recap's job is to make "you left this
+  // out" visible before sending, without ever blocking it — the required ones
+  // were already enforced step by step.
+  const blanks = steps.map((step) =>
+    step.visibleFields.filter((field) => !formatAnswerForDisplay(field, answers[field.key] as AnswerValue)),
+  );
+  const blankCount = blanks.reduce((total, fields) => total + fields.length, 0);
+  const firstBlankStep = blanks.findIndex((fields) => fields.length > 0);
+
   return (
     <div className="grid gap-6">
       <p className="max-w-2xl text-base leading-7 text-stone-600">
         {copy("Nothing has been sent yet. Change anything that is not right.")}
       </p>
+      {blankCount > 0 && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          <p className="font-medium">
+            {blankCount}{" "}
+            {copy(blankCount === 1 ? "question left unanswered" : "questions left unanswered")}
+          </p>
+          <p className="mt-1 leading-6">
+            {copy("You can still send your project — every detail you add helps.")}
+          </p>
+          <button
+            type="button"
+            onClick={() => onEdit(firstBlankStep)}
+            className="mt-3 inline-flex min-h-11 items-center rounded-md border border-amber-300 bg-white px-4 text-sm font-semibold text-amber-950 hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--metre-accent)]"
+          >
+            {copy("Go to the first one")}
+          </button>
+        </div>
+      )}
       {steps.map((step, index) => (
         <section key={step.step.id} className="border-t border-stone-300 pt-5">
           <div className="flex flex-wrap items-center justify-between gap-3">
@@ -903,23 +1083,58 @@ function ReviewAnswers({
             <button
               type="button"
               onClick={() => onEdit(index)}
-              className="rounded-full border border-stone-300 px-3 py-1 text-xs font-semibold text-stone-700 hover:border-[color:var(--metre-accent)] hover:text-stone-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--metre-accent)]"
+              className="inline-flex min-h-11 items-center rounded-full border border-stone-300 px-4 text-sm font-semibold text-stone-700 hover:border-[color:var(--metre-accent)] hover:text-stone-950 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--metre-accent)]"
             >
               {copy("Edit")}
             </button>
           </div>
           <dl className="mt-4 grid gap-3">
             {step.visibleFields.map((field) => {
-              const text = formatAnswerForDisplay(field, answers[field.key] as AnswerValue);
+              const value = answers[field.key] as AnswerValue;
+              const text = formatAnswerForDisplay(field, value);
+              // The engine words "not sure" and a ticked consent ("Yes") in
+              // English on purpose (they feed the internal Brief); the visitor
+              // reads them here, so they go through the dictionary — and only
+              // these cases do, never free text a visitor typed.
+              const shown =
+                value === NOT_SURE_VALUE
+                  ? copy("Not sure")
+                  : typeof value === "boolean"
+                    ? copy(text)
+                    : text;
+              const photos =
+                field.type === "photo" && Array.isArray(value) ? (value as PhotoAnswerEntry[]) : [];
               return (
                 <div key={field.key} className="grid gap-1 sm:grid-cols-[220px_1fr] sm:gap-4">
                   <dt className="text-sm font-medium text-stone-500">{copy(field.label)}</dt>
                   <dd
                     className={
-                      text ? "text-base text-stone-950" : "text-base italic text-stone-400"
+                      shown ? "text-base text-stone-950" : "text-base italic text-stone-400"
                     }
                   >
-                    {text || copy("Not answered")}
+                    {photos.length > 0 ? (
+                      <ul className="flex flex-wrap gap-3">
+                        {photos.map((photo, photoIndex) => {
+                          const view = photoShots?.[field.key]?.find((s) => s.key === photo.shot);
+                          return (
+                            <li key={photo.storagePath ?? `${photo.filename}-${photoIndex}`} className="w-20">
+                              <span className="block aspect-square overflow-hidden rounded-md border border-stone-200 bg-stone-100">
+                                <PhotoThumb
+                                  photo={photo}
+                                  previews={previews}
+                                  savedLabel={copy("Photo saved")}
+                                />
+                              </span>
+                              <span className="mt-1 block truncate text-xs text-stone-600">
+                                {view?.label ?? photo.filename}
+                              </span>
+                            </li>
+                          );
+                        })}
+                      </ul>
+                    ) : (
+                      shown || copy("Not answered")
+                    )}
                   </dd>
                 </div>
               );
@@ -929,4 +1144,24 @@ function ReviewAnswers({
       ))}
     </div>
   );
+}
+
+/** Every piece of visitor-facing text a step carries, for the glossary to read. */
+function stepTexts(step: VisibleStep): string[] {
+  const texts: string[] = [step.step.title, step.step.why ?? ""];
+  for (const field of step.visibleFields) {
+    texts.push(field.label, field.helpText ?? "");
+    const options = (field as { options?: unknown }).options;
+    if (Array.isArray(options)) {
+      for (const option of options) {
+        if (typeof option === "string") texts.push(option);
+        else if (option && typeof option === "object") {
+          const { label, reassurance } = option as { label?: unknown; reassurance?: unknown };
+          if (typeof label === "string") texts.push(label);
+          if (typeof reassurance === "string") texts.push(reassurance);
+        }
+      }
+    }
+  }
+  return texts;
 }
