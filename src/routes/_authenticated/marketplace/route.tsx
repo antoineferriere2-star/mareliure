@@ -6,6 +6,7 @@
 import { createFileRoute, Outlet, Link, redirect, isRedirect } from "@tanstack/react-router";
 import { requireBuildAdmin } from "@/build/services/admin.functions";
 import { BookMarked, Inbox, Receipt } from "lucide-react";
+import { SignOutButton } from "@/marketplace/pages/SignOutButton";
 
 export const Route = createFileRoute("/_authenticated/marketplace")({
   ssr: false,
@@ -46,6 +47,9 @@ function MarketplaceAdminLayout() {
               </Link>
             ))}
           </nav>
+          <div className="ml-auto">
+            <SignOutButton label="Se déconnecter" signedInAs="Connecté en tant que" />
+          </div>
         </div>
       </header>
       <main className="mx-auto max-w-7xl px-5 py-8">
