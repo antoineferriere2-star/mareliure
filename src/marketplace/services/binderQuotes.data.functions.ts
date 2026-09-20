@@ -28,7 +28,6 @@ import {
   createQuote,
   getInvoice,
   getQuote,
-  importStarterCatalog,
   listCatalog,
   listClients,
   listInvoices,
@@ -108,10 +107,6 @@ export const archiveMyService = createServerFn({ method: "POST" })
       return { ok: true as const };
     }),
   );
-
-export const importMyStarterCatalog = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(({ context }) => run(context.userId, (binderId, sb) => importStarterCatalog(sb, binderId)));
 
 export const getMyClients = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

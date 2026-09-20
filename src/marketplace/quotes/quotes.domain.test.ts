@@ -19,7 +19,6 @@ import {
   QUOTE_STATUSES,
 } from "./quoteStatus";
 import { billingProfileInput, quoteInput } from "./quoteInput";
-import { STARTER_CATALOG } from "./starterCatalog";
 
 const line = (unit: number, quantity = 1, vat = 2000): CalcLine => ({ quantity, unitPriceCents: unit, vatRateBps: vat });
 
@@ -310,17 +309,6 @@ describe("ce que le navigateur peut envoyer", () => {
     expect(billingProfileInput.safeParse(profile).success).toBe(true);
     expect(billingProfileInput.safeParse({ ...profile, quotePrefix: "D 1/" }).success).toBe(false);
     expect(billingProfileInput.safeParse({ ...profile, vatRegime: "AUTRE" }).success).toBe(false);
-  });
-});
-
-describe("catalogue de départ", () => {
-  it("propose les catégories du brief, sans aucun prix", () => {
-    const names = STARTER_CATALOG.map((c) => c.name);
-    expect(names).toContain("Type de reliure");
-    expect(names).toContain("Dorure / titrage");
-    const services = STARTER_CATALOG.flatMap((c) => c.services);
-    for (const expected of ["Plein cuir", "Nerfs", "Dorure titre", "Étui"]) expect(services).toContain(expected);
-    expect(JSON.stringify(STARTER_CATALOG)).not.toMatch(/\d\s*€|price|prix|cents/i);
   });
 });
 

@@ -36,7 +36,6 @@ import type {
   ServiceInput,
 } from "@/marketplace/quotes/quoteInput";
 import { canTransition, isQuoteStatus, type QuoteStatus } from "@/marketplace/quotes/quoteStatus";
-import { STARTER_CATALOG } from "@/marketplace/quotes/starterCatalog";
 import {
   invoiceView,
   quoteView,
@@ -206,10 +205,14 @@ export interface ServiceView {
   unit: string | null;
   isActive: boolean;
   archived: boolean;
+  /** L'opération du référentiel dont vient cette prestation — les deux ensemble, ou aucune (prestation personnelle). */
+  referenceVersion: string | null;
+  referenceOperationKey: string | null;
+  isFavorite: boolean;
 }
 
 const categoryView = (row: Tables<"marketplace_binder_service_categories">): CategoryView => ({ id: row.id, name: row.name, sortOrder: row.sort_order });
-const serviceView = (row: Tables<"marketplace_binder_services">): ServiceView => ({
+export const serviceView = (row: Tables<"marketplace_binder_services">): ServiceView => ({
   id: row.id,
   categoryId: row.category_id,
   name: row.name,
@@ -219,6 +222,9 @@ const serviceView = (row: Tables<"marketplace_binder_services">): ServiceView =>
   unit: row.unit,
   isActive: row.is_active,
   archived: row.archived_at !== null,
+  referenceVersion: row.reference_version,
+  referenceOperationKey: row.reference_operation_key,
+  isFavorite: row.is_favorite,
 });
 
 export async function listCatalog(
@@ -237,7 +243,7 @@ export async function listCatalog(
   };
 }
 
-async function assertOwnCategory(sb: Supa, binderId: string, categoryId: string | null) {
+export async function assertOwnCategory(sb: Supa, binderId: string, categoryId: string | null) {
   if (!categoryId) return;
   const { data } = await sb
     .from("marketplace_binder_service_categories")
@@ -269,6 +275,9 @@ export async function saveService(sb: Supa, binderId: string, input: ServiceInpu
     vat_rate_bps: input.vatRateBps,
     unit: input.unit,
     is_active: input.isActive,
+    // Le favori ne change que si l'appelant le dit : enregistrer un prix ne défavorise jamais une prestation.
+    // Le LIEN au référentiel, lui, n'est jamais modifiable ici (voir binderReferenceCatalog.server.ts).
+    ...(input.isFavorite === undefined ? {} : { is_favorite: input.isFavorite }),
   };
   const query = input.id
     ? sb.from("marketplace_binder_services").update(values).eq("id", input.id).eq("binder_id", binderId)
@@ -290,39 +299,6 @@ export async function archiveService(sb: Supa, binderId: string, serviceId: stri
     .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!data) throw new BinderQuotesError("not_found");
-}
-
-/**
- * Charge le catalogue de départ — des noms, jamais un prix. Une seule fois : si
- * l'atelier a déjà une catégorie, rien n'est écrit (jamais de doublon, jamais
- * d'écrasement). Les prestations arrivent inactives, à 0 €, en attente du prix de
- * l'atelier.
- */
-export async function importStarterCatalog(sb: Supa, binderId: string): Promise<{ imported: boolean }> {
-  const existing = await sb.from("marketplace_binder_service_categories").select("id").eq("binder_id", binderId).limit(1);
-  if (existing.error) throw new BinderQuotesError("failed");
-  if ((existing.data ?? []).length > 0) return { imported: false };
-
-  const categories = await sb
-    .from("marketplace_binder_service_categories")
-    .insert(STARTER_CATALOG.map((c, i) => ({ binder_id: binderId, name: c.name, sort_order: i })))
-    .select("id, name");
-  if (categories.error) throw new BinderQuotesError("failed");
-  const idByName = new Map<string, string>((categories.data ?? []).map((c) => [c.name, c.id] as const));
-
-  const rows = STARTER_CATALOG.flatMap((category) =>
-    category.services.map((name, i) => ({
-      binder_id: binderId,
-      category_id: idByName.get(category.name) ?? null,
-      name,
-      unit_price_cents: 0,
-      is_active: false,
-      sort_order: i,
-    })),
-  );
-  const services = await sb.from("marketplace_binder_services").insert(rows);
-  if (services.error) throw new BinderQuotesError("failed");
-  return { imported: true };
 }
 
 // ---------------------------------------------------------------------------
@@ -409,12 +385,43 @@ async function assertOwnWork(sb: Supa, binderId: string, workId: string | null |
   return data.id;
 }
 
-async function assertOwnServices(sb: Supa, binderId: string, input: QuoteInput) {
+/** La provenance métier d'une prestation de l'atelier : les deux ensemble, ou aucune. */
+type Provenance = { reference_version: string; reference_operation_key: string };
+
+/**
+ * Chaque prestation citée par une ligne doit être CELLE DE L'ATELIER. Renvoie la provenance de
+ * chacune : elle vient de la base, jamais du navigateur (la ligne de devis n'a aucun champ pour la dire).
+ */
+async function assertOwnServices(sb: Supa, binderId: string, input: QuoteInput): Promise<Map<string, Provenance>> {
+  const provenance = new Map<string, Provenance>();
   const ids = [...new Set(input.lines.map((l) => l.serviceId).filter((id): id is string => Boolean(id)))];
-  if (ids.length === 0) return;
-  const { data, error } = await sb.from("marketplace_binder_services").select("id").eq("binder_id", binderId).in("id", ids);
+  if (ids.length === 0) return provenance;
+  const { data, error } = await sb
+    .from("marketplace_binder_services")
+    .select("id, reference_version, reference_operation_key")
+    .eq("binder_id", binderId)
+    .in("id", ids);
   if (error) throw new BinderQuotesError("failed");
   if ((data ?? []).length !== ids.length) throw new BinderQuotesError("invalid_input");
+  for (const row of data ?? []) {
+    if (row.reference_version && row.reference_operation_key) {
+      provenance.set(row.id, { reference_version: row.reference_version, reference_operation_key: row.reference_operation_key });
+    }
+  }
+  return provenance;
+}
+
+/**
+ * Recopie la provenance sur les lignes issues d'une prestation liée au référentiel — À LA CRÉATION de la
+ * ligne. Libellé, unité, quantité et prix restent des snapshots : une évolution du référentiel ou du
+ * catalogue ne modifie jamais un devis. Une ligne libre, ou d'une prestation personnelle, n'a aucune clé
+ * de plus : ses clés restent exactement celles d'avant (`QUOTE_ITEM_ROW_KEYS`).
+ */
+function withProvenance<T extends { service_id: string | null }>(items: T[], provenance: Map<string, Provenance>): (T | (T & Provenance))[] {
+  return items.map((item) => {
+    const p = item.service_id ? provenance.get(item.service_id) : undefined;
+    return p ? { ...item, ...p } : item;
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -470,7 +477,7 @@ export async function listQuotes(sb: Supa, binderId: string): Promise<DocumentSu
  */
 export async function createQuote(sb: Supa, binderId: string, input: QuoteInput, today: string): Promise<DocumentView> {
   const profile = await loadBillingProfile(sb, binderId);
-  await assertOwnServices(sb, binderId, input);
+  const provenance = await assertOwnServices(sb, binderId, input);
   const workId = await assertOwnWork(sb, binderId, input.workId);
   // Le profil est contrôlé AVANT d'écrire quoi que ce soit (pas de fiche client créée pour rien).
   try {
@@ -486,7 +493,7 @@ export async function createQuote(sb: Supa, binderId: string, input: QuoteInput,
   const { data, error } = await sb.rpc("marketplace_binder_create_quote", {
     p_binder_id: binderId,
     p_quote: asJson(workId ? { ...quote, work_id: workId } : quote),
-    p_items: asJson(items),
+    p_items: asJson(withProvenance(items, provenance)),
   });
   if (error || !data) throw new BinderQuotesError("failed");
   return getQuote(sb, binderId, data as string);
@@ -499,7 +506,7 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
   if (existing.status !== "draft") throw new BinderQuotesError("conflict");
 
   const profile = await loadBillingProfile(sb, binderId);
-  await assertOwnServices(sb, binderId, input);
+  const provenance = await assertOwnServices(sb, binderId, input);
   const clientId = await resolveClientId(sb, binderId, input);
   let built;
   try {
@@ -512,7 +519,7 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
     p_binder_id: binderId,
     p_quote_id: quoteId,
     p_quote: asJson(built.quote),
-    p_items: asJson(built.items),
+    p_items: asJson(withProvenance(built.items, provenance)),
   });
   if (error) {
     if (String(error.message).includes("quote_not_editable")) throw new BinderQuotesError("conflict");

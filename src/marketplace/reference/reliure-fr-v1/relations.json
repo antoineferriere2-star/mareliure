@@ -1,0 +1,400 @@
+{
+  "operation_sequences": [
+    {
+      "id": "REL-0001",
+      "prerequisite": "OPR-0001",
+      "dependent": "OPR-0002",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Constat d’état intervient habituellement après ou avec Examen de l’ouvrage."
+    },
+    {
+      "id": "REL-0002",
+      "prerequisite": "OPR-0001",
+      "dependent": "OPR-0011",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Débrochage intervient habituellement après ou avec Examen de l’ouvrage."
+    },
+    {
+      "id": "REL-0003",
+      "prerequisite": "OPR-0004",
+      "dependent": "OPR-0027",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Couture de cahiers intervient habituellement après ou avec Collationnement."
+    },
+    {
+      "id": "REL-0004",
+      "prerequisite": "OPR-0028",
+      "dependent": "OPR-0033",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Couture à la grecque intervient habituellement après ou avec Grecquage."
+    },
+    {
+      "id": "REL-0005",
+      "prerequisite": "OPR-0027",
+      "dependent": "OPR-0039",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Endossure intervient habituellement après ou avec Couture de cahiers."
+    },
+    {
+      "id": "REL-0006",
+      "prerequisite": "OPR-0039",
+      "dependent": "OPR-0042",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Formation des mors intervient habituellement après ou avec Endossure."
+    },
+    {
+      "id": "REL-0007",
+      "prerequisite": "OPR-0029",
+      "dependent": "OPR-0038",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Passure des ficelles intervient habituellement après ou avec Couture sur ficelles."
+    },
+    {
+      "id": "REL-0008",
+      "prerequisite": "OPR-0045",
+      "dependent": "OPR-0122",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Dorure des nerfs intervient habituellement après ou avec Pose de nerfs véritables."
+    },
+    {
+      "id": "REL-0009",
+      "prerequisite": "OPR-0051",
+      "dependent": "OPR-0052",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Montage des plats intervient habituellement après ou avec Coupe des cartons."
+    },
+    {
+      "id": "REL-0010",
+      "prerequisite": "OPR-0052",
+      "dependent": "OPR-0061",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Couvrure intervient habituellement après ou avec Montage des plats."
+    },
+    {
+      "id": "REL-0011",
+      "prerequisite": "OPR-0074",
+      "dependent": "OPR-0061",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Couvrure intervient habituellement après ou avec Parure générale du cuir."
+    },
+    {
+      "id": "REL-0012",
+      "prerequisite": "OPR-0061",
+      "dependent": "OPR-0079",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Réalisation des remplis intervient habituellement après ou avec Couvrure."
+    },
+    {
+      "id": "REL-0013",
+      "prerequisite": "OPR-0061",
+      "dependent": "OPR-0049",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Formation des coiffes intervient habituellement après ou avec Couvrure."
+    },
+    {
+      "id": "REL-0014",
+      "prerequisite": "OPR-0081",
+      "dependent": "OPR-0072",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Emboîtage intervient habituellement après ou avec Pose de gardes blanches."
+    },
+    {
+      "id": "REL-0015",
+      "prerequisite": "OPR-0107",
+      "dependent": "OPR-0110",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Dorure sur pièce de titre intervient habituellement après ou avec Pose de pièce de titre."
+    },
+    {
+      "id": "REL-0016",
+      "prerequisite": "OPR-0101",
+      "dependent": "OPR-0103",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Titrage au dos intervient habituellement après ou avec Préparation à la dorure."
+    },
+    {
+      "id": "REL-0017",
+      "prerequisite": "OPR-0101",
+      "dependent": "OPR-0109",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Dorure directe sur cuir intervient habituellement après ou avec Préparation à la dorure."
+    },
+    {
+      "id": "REL-0018",
+      "prerequisite": "OPR-0102",
+      "dependent": "OPR-0103",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Titrage au dos intervient habituellement après ou avec Composition typographique."
+    },
+    {
+      "id": "REL-0019",
+      "prerequisite": "OPR-0126",
+      "dependent": "OPR-0131",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Dorure associée à mosaïque intervient habituellement après ou avec Mosaïque incrustée."
+    },
+    {
+      "id": "REL-0020",
+      "prerequisite": "OPR-0012",
+      "dependent": "OPR-0022",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Montage de couverture conservée intervient habituellement après ou avec Dépose de la couverture."
+    },
+    {
+      "id": "REL-0021",
+      "prerequisite": "OPR-0013",
+      "dependent": "OPR-0139",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Remontage d’ancien dos intervient habituellement après ou avec Dépose du dos."
+    },
+    {
+      "id": "REL-0022",
+      "prerequisite": "OPR-0016",
+      "dependent": "OPR-0036",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Couture complète intervient habituellement après ou avec Réparation de cahier."
+    },
+    {
+      "id": "REL-0023",
+      "prerequisite": "OPR-0157",
+      "dependent": "OPR-0172",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Titrage de boîte intervient habituellement après ou avec Étui simple."
+    },
+    {
+      "id": "REL-0025",
+      "prerequisite": "OPR-0175",
+      "dependent": "OPR-0176",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Montage de structure de boîte intervient habituellement après ou avec Découpe de structure de boîte."
+    },
+    {
+      "id": "REL-0026",
+      "prerequisite": "OPR-0176",
+      "dependent": "OPR-0174",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Habillage de boîte intervient habituellement après ou avec Montage de structure de boîte."
+    },
+    {
+      "id": "REL-0027",
+      "prerequisite": "OPR-0061",
+      "dependent": "OPR-0182",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Contrôle final intervient habituellement après ou avec Couvrure."
+    },
+    {
+      "id": "REL-0040",
+      "prerequisite": "OPR-0002",
+      "dependent": "OPR-0003",
+      "origin": "entry_prerequisites",
+      "needsBinderValidation": true,
+      "notes": null
+    },
+    {
+      "id": "REL-0041",
+      "prerequisite": "OPR-0001",
+      "dependent": "OPR-0006",
+      "origin": "entry_prerequisites",
+      "needsBinderValidation": true,
+      "notes": null
+    },
+    {
+      "id": "REL-0042",
+      "prerequisite": "OPR-0002",
+      "dependent": "OPR-0006",
+      "origin": "entry_prerequisites",
+      "needsBinderValidation": true,
+      "notes": null
+    },
+    {
+      "id": "REL-0043",
+      "prerequisite": "OPR-0001",
+      "dependent": "OPR-0012",
+      "origin": "entry_prerequisites",
+      "needsBinderValidation": true,
+      "notes": null
+    },
+    {
+      "id": "REL-0044",
+      "prerequisite": "OPR-0027",
+      "dependent": "OPR-0038",
+      "origin": "entry_prerequisites",
+      "needsBinderValidation": true,
+      "notes": null
+    },
+    {
+      "id": "REL-0045",
+      "prerequisite": "OPR-0027",
+      "dependent": "OPR-0041",
+      "origin": "entry_prerequisites",
+      "needsBinderValidation": true,
+      "notes": null
+    },
+    {
+      "id": "REL-0046",
+      "prerequisite": "OPR-0027",
+      "dependent": "OPR-0052",
+      "origin": "entry_prerequisites",
+      "needsBinderValidation": true,
+      "notes": null
+    },
+    {
+      "id": "REL-0047",
+      "prerequisite": "OPR-0101",
+      "dependent": "OPR-0102",
+      "origin": "entry_prerequisites",
+      "needsBinderValidation": true,
+      "notes": null
+    },
+    {
+      "id": "REL-0048",
+      "prerequisite": "OPR-0101",
+      "dependent": "OPR-0110",
+      "origin": "entry_prerequisites",
+      "needsBinderValidation": true,
+      "notes": null
+    }
+  ],
+  "operation_components": [
+    {
+      "id": "REL-0028",
+      "composite": "OPR-0064",
+      "component": "OPR-0074",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Reliure plein cuir peut inclure Parure générale du cuir selon le projet et les méthodes de l’atelier."
+    },
+    {
+      "id": "REL-0029",
+      "composite": "OPR-0064",
+      "component": "OPR-0061",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Reliure plein cuir peut inclure Couvrure selon le projet et les méthodes de l’atelier."
+    },
+    {
+      "id": "REL-0030",
+      "composite": "OPR-0064",
+      "component": "OPR-0049",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Reliure plein cuir peut inclure Formation des coiffes selon le projet et les méthodes de l’atelier."
+    },
+    {
+      "id": "REL-0031",
+      "composite": "OPR-0065",
+      "component": "OPR-0078",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Demi-reliure cuir peut inclure Pose des coins selon le projet et les méthodes de l’atelier."
+    },
+    {
+      "id": "REL-0032",
+      "composite": "OPR-0071",
+      "component": "OPR-0072",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Reliure Bradel peut inclure Emboîtage selon le projet et les méthodes de l’atelier."
+    },
+    {
+      "id": "REL-0033",
+      "composite": "OPR-0164",
+      "component": "OPR-0170",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Boîte de conservation peut inclure Calage intérieur selon le projet et les méthodes de l’atelier."
+    },
+    {
+      "id": "REL-0034",
+      "composite": "OPR-0162",
+      "component": "OPR-0161",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Chemise-étui peut inclure Chemise à rabats selon le projet et les méthodes de l’atelier."
+    },
+    {
+      "id": "REL-0035",
+      "composite": "OPR-0162",
+      "component": "OPR-0157",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Chemise-étui peut inclure Étui simple selon le projet et les méthodes de l’atelier."
+    },
+    {
+      "id": "REL-0049",
+      "composite": "OPR-0021",
+      "component": "OPR-0072",
+      "origin": "commonly_bundled",
+      "needsBinderValidation": true,
+      "notes": "Issu du texte libre « emboîtage »."
+    },
+    {
+      "id": "REL-0050",
+      "composite": "OPR-0027",
+      "component": "OPR-0028",
+      "origin": "commonly_bundled",
+      "needsBinderValidation": true,
+      "notes": "Issu du texte libre « grecquage »."
+    }
+  ],
+  "operation_alternatives": [
+    {
+      "id": "REL-0036",
+      "a": "OPR-0039",
+      "b": "OPR-0044",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Endossure et Dos brisé sont des alternatives ou stratégies distinctes selon l’ouvrage."
+    },
+    {
+      "id": "REL-0037",
+      "a": "OPR-0111",
+      "b": "OPR-0112",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Dorure à la feuille et Dorure au film sont des alternatives ou stratégies distinctes selon l’ouvrage."
+    },
+    {
+      "id": "REL-0038",
+      "a": "OPR-0047",
+      "b": "OPR-0048",
+      "origin": "relations",
+      "needsBinderValidation": false,
+      "notes": "Pose de tranchefiles mécaniques et Broderie de tranchefiles main sont des alternatives ou stratégies distinctes selon l’ouvrage."
+    },
+    {
+      "id": "REL-0039",
+      "a": "OPR-0087",
+      "b": "OPR-0088",
+      "origin": "relations",
+      "needsBinderValidation": true,
+      "notes": "Remplacement de gardes et Restauration de garde sont des alternatives ou stratégies distinctes selon l’ouvrage."
+    }
+  ]
+}

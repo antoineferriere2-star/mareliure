@@ -1,0 +1,4543 @@
+{
+  "version": "reliure-fr-v1",
+  "generatedFrom": [
+    {
+      "name": "operations-reliure.json",
+      "sha256": "d1ace276fdef51ad09047910d10b16b6c93fa18d7cfa3b9aaf02c1345e71dff0"
+    },
+    {
+      "name": "operations-relations.json",
+      "sha256": "c8d6bab715353c21ced082aca01118ce651871c3da01e4b2d3bb53f1c9ee2638"
+    }
+  ],
+  "entries": [
+    {
+      "id": "J-0001",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0001",
+      "before": "OPR-0001-examen_de_l_ouvrage",
+      "after": "OPR-0001",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0002",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0002",
+      "before": "OPR-0002-constat_d_etat",
+      "after": "OPR-0002",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0003",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0003",
+      "before": "OPR-0003-releve_photographique_avant_intervention",
+      "after": "OPR-0003",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0004",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0004",
+      "before": "OPR-0004-collationnement",
+      "after": "OPR-0004",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0005",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0005",
+      "before": "OPR-0005-releve_de_structure",
+      "after": "OPR-0005",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0006",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0006",
+      "before": "OPR-0006-choix_du_protocole_d_intervention",
+      "after": "OPR-0006",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0007",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0007",
+      "before": "OPR-0007-depoussierage",
+      "after": "OPR-0007",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0008",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0008",
+      "before": "OPR-0008-nettoyage_a_sec_preparatoire",
+      "after": "OPR-0008",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0009",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0009",
+      "before": "OPR-0009-mise_en_presse_preparatoire",
+      "after": "OPR-0009",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0010",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0010",
+      "before": "OPR-0010-tri_des_cahiers",
+      "after": "OPR-0010",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0011",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0011",
+      "before": "OPR-0011-debrochage",
+      "after": "OPR-0011",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0012",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0012",
+      "before": "OPR-0012-depose_de_la_couverture",
+      "after": "OPR-0012",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0013",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0013",
+      "before": "OPR-0013-depose_du_dos",
+      "after": "OPR-0013",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0014",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0014",
+      "before": "OPR-0014-depose_des_gardes",
+      "after": "OPR-0014",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0015",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0015",
+      "before": "OPR-0015-retrait_des_adhesifs_non_compatibles",
+      "after": "OPR-0015",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0016",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0016",
+      "before": "OPR-0016-reparation_de_cahier",
+      "after": "OPR-0016",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0017",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0017",
+      "before": "OPR-0017-reparation_de_fond_de_cahier",
+      "after": "OPR-0017",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0018",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0018",
+      "before": "OPR-0018-reparation_de_dechirure_de_feuillet",
+      "after": "OPR-0018",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0019",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0019",
+      "before": "OPR-0019-comblement_de_lacune_de_feuillet",
+      "after": "OPR-0019",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0020",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0020",
+      "before": "OPR-0020-montage_sur_onglets",
+      "after": "OPR-0020",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0021",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0021",
+      "before": "OPR-0021-ajout_de_fausse_garde",
+      "after": "OPR-0021",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0022",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0022",
+      "before": "OPR-0022-montage_de_couverture_conservee",
+      "after": "OPR-0022",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0023",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0023",
+      "before": "OPR-0023-reencollage_de_cahier",
+      "after": "OPR-0023",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0024",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0024",
+      "before": "OPR-0024-consolidation_de_charniere_interne",
+      "after": "OPR-0024",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0025",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0025",
+      "before": "OPR-0025-reprise_de_couture_existante",
+      "after": "OPR-0025",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0026",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0026",
+      "before": "OPR-0026-remontage_du_corps_d_ouvrage",
+      "after": "OPR-0026",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0027",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0027",
+      "before": "OPR-0027-couture_de_cahiers",
+      "after": "OPR-0027",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0028",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0028",
+      "before": "OPR-0028-grecquage",
+      "after": "OPR-0028",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0029",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0029",
+      "before": "OPR-0029-couture_sur_ficelles",
+      "after": "OPR-0029",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0030",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0030",
+      "before": "OPR-0030-couture_sur_nerfs",
+      "after": "OPR-0030",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0031",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0031",
+      "before": "OPR-0031-couture_sur_rubans",
+      "after": "OPR-0031",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0032",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0032",
+      "before": "OPR-0032-couture_apparente",
+      "after": "OPR-0032",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0033",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0033",
+      "before": "OPR-0033-couture_a_la_grecque",
+      "after": "OPR-0033",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0034",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0034",
+      "before": "OPR-0034-surjet_de_cahiers",
+      "after": "OPR-0034",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0035",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0035",
+      "before": "OPR-0035-couture_de_conservation",
+      "after": "OPR-0035",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0036",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0036",
+      "before": "OPR-0036-couture_complete",
+      "after": "OPR-0036",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0037",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0037",
+      "before": "OPR-0037-couture_de_renfort",
+      "after": "OPR-0037",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0038",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0038",
+      "before": "OPR-0038-passure_des_ficelles",
+      "after": "OPR-0038",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0039",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0039",
+      "before": "OPR-0039-endossure",
+      "after": "OPR-0039",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0040",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0040",
+      "before": "OPR-0040-encollage_du_dos",
+      "after": "OPR-0040",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0041",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0041",
+      "before": "OPR-0041-arrondissure",
+      "after": "OPR-0041",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0042",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0042",
+      "before": "OPR-0042-formation_des_mors",
+      "after": "OPR-0042",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0043",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0043",
+      "before": "OPR-0043-pose_de_faux_dos",
+      "after": "OPR-0043",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0044",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0044",
+      "before": "OPR-0044-dos_brise",
+      "after": "OPR-0044",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0045",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0045",
+      "before": "OPR-0045-pose_de_nerfs_veritables",
+      "after": "OPR-0045",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0046",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0046",
+      "before": "OPR-0046-pose_de_faux_nerfs",
+      "after": "OPR-0046",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0047",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0047",
+      "before": "OPR-0047-pose_de_tranchefiles_mecaniques",
+      "after": "OPR-0047",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0048",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0048",
+      "before": "OPR-0048-broderie_de_tranchefiles_main",
+      "after": "OPR-0048",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0049",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0049",
+      "before": "OPR-0049-formation_des_coiffes",
+      "after": "OPR-0049",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0050",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0050",
+      "before": "OPR-0050-consolidation_du_dos",
+      "after": "OPR-0050",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0051",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0051",
+      "before": "OPR-0051-coupe_des_cartons",
+      "after": "OPR-0051",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0052",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0052",
+      "before": "OPR-0052-montage_des_plats",
+      "after": "OPR-0052",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0053",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0053",
+      "before": "OPR-0053-remplacement_de_plats",
+      "after": "OPR-0053",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0054",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0054",
+      "before": "OPR-0054-consolidation_de_plats",
+      "after": "OPR-0054",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0055",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0055",
+      "before": "OPR-0055-biseautage_des_cartons",
+      "after": "OPR-0055",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0056",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0056",
+      "before": "OPR-0056-chanfreinage_des_cartons",
+      "after": "OPR-0056",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0057",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0057",
+      "before": "OPR-0057-cambrure_des_plats",
+      "after": "OPR-0057",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0058",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0058",
+      "before": "OPR-0058-contre_collage_des_plats",
+      "after": "OPR-0058",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0059",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0059",
+      "before": "OPR-0059-remplissage_des_plats",
+      "after": "OPR-0059",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0060",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0060",
+      "before": "OPR-0060-mise_sous_presse_des_plats",
+      "after": "OPR-0060",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0061",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0061",
+      "before": "OPR-0061-couvrure",
+      "after": "OPR-0061",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0062",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0062",
+      "before": "OPR-0062-reliure_pleine_toile",
+      "after": "OPR-0062",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0063",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0063",
+      "before": "OPR-0063-reliure_pleine_papier",
+      "after": "OPR-0063",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0064",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0064",
+      "before": "OPR-0064-reliure_plein_cuir",
+      "after": "OPR-0064",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0065",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0065",
+      "before": "OPR-0065-demi_reliure_cuir",
+      "after": "OPR-0065",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0066",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0066",
+      "before": "OPR-0066-demi_reliure_a_coins",
+      "after": "OPR-0066",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0067",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0067",
+      "before": "OPR-0067-demi_reliure_a_bandes",
+      "after": "OPR-0067",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0068",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0068",
+      "before": "OPR-0068-quart_de_reliure",
+      "after": "OPR-0068",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0069",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0069",
+      "before": "OPR-0069-reliure_plein_parchemin",
+      "after": "OPR-0069",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0070",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0070",
+      "before": "OPR-0070-demi_parchemin",
+      "after": "OPR-0070",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0071",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0071",
+      "before": "OPR-0071-reliure_bradel",
+      "after": "OPR-0071",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0072",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0072",
+      "before": "OPR-0072-emboitage",
+      "after": "OPR-0072",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0073",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0073",
+      "before": "OPR-0073-reemboitage",
+      "after": "OPR-0073",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0074",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0074",
+      "before": "OPR-0074-parure_generale_du_cuir",
+      "after": "OPR-0074",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0075",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0075",
+      "before": "OPR-0075-parure_des_remplis",
+      "after": "OPR-0075",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0076",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0076",
+      "before": "OPR-0076-parure_des_coiffes",
+      "after": "OPR-0076",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0077",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0077",
+      "before": "OPR-0077-parure_des_mors",
+      "after": "OPR-0077",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0078",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0078",
+      "before": "OPR-0078-pose_des_coins",
+      "after": "OPR-0078",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0079",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0079",
+      "before": "OPR-0079-realisation_des_remplis",
+      "after": "OPR-0079",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0080",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0080",
+      "before": "OPR-0080-finition_de_couvrure",
+      "after": "OPR-0080",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0081",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0081",
+      "before": "OPR-0081-pose_de_gardes_blanches",
+      "after": "OPR-0081",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0082",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0082",
+      "before": "OPR-0082-pose_de_gardes_couleur",
+      "after": "OPR-0082",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0083",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0083",
+      "before": "OPR-0083-pose_de_gardes_marbrees",
+      "after": "OPR-0083",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0084",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0084",
+      "before": "OPR-0084-pose_de_gardes_decorees",
+      "after": "OPR-0084",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0085",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0085",
+      "before": "OPR-0085-pose_de_gardes_en_soie",
+      "after": "OPR-0085",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0086",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0086",
+      "before": "OPR-0086-pose_de_contre_gardes",
+      "after": "OPR-0086",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0087",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0087",
+      "before": "OPR-0087-remplacement_de_gardes",
+      "after": "OPR-0087",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0088",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0088",
+      "before": "OPR-0088-restauration_de_garde",
+      "after": "OPR-0088",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0089",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0089",
+      "before": "OPR-0089-charniere_de_garde",
+      "after": "OPR-0089",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0090",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0090",
+      "before": "OPR-0090-montage_de_garde_sur_onglet",
+      "after": "OPR-0090",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0091",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0091",
+      "before": "OPR-0091-rognage",
+      "after": "OPR-0091",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0092",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0092",
+      "before": "OPR-0092-ebarbage",
+      "after": "OPR-0092",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0093",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0093",
+      "before": "OPR-0093-poncage_des_tranches",
+      "after": "OPR-0093",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0094",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0094",
+      "before": "OPR-0094-coloration_de_tranche",
+      "after": "OPR-0094",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0095",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0095",
+      "before": "OPR-0095-jaspure_de_tranche",
+      "after": "OPR-0095",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0096",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0096",
+      "before": "OPR-0096-moucheture_de_tranche",
+      "after": "OPR-0096",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0097",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0097",
+      "before": "OPR-0097-dorure_sur_tranche",
+      "after": "OPR-0097",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0098",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0098",
+      "before": "OPR-0098-graphitage_de_tranche",
+      "after": "OPR-0098",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0099",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0099",
+      "before": "OPR-0099-decor_de_tranche",
+      "after": "OPR-0099",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0100",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0100",
+      "before": "OPR-0100-restauration_de_tranche",
+      "after": "OPR-0100",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0101",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0101",
+      "before": "OPR-0101-preparation_a_la_dorure",
+      "after": "OPR-0101",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0102",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0102",
+      "before": "OPR-0102-composition_typographique",
+      "after": "OPR-0102",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0103",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0103",
+      "before": "OPR-0103-titrage_au_dos",
+      "after": "OPR-0103",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0104",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0104",
+      "before": "OPR-0104-titrage_d_auteur",
+      "after": "OPR-0104",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0105",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0105",
+      "before": "OPR-0105-titrage_de_date",
+      "after": "OPR-0105",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0106",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0106",
+      "before": "OPR-0106-titrage_de_tomaison",
+      "after": "OPR-0106",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0107",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0107",
+      "before": "OPR-0107-pose_de_piece_de_titre",
+      "after": "OPR-0107",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0108",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0108",
+      "before": "OPR-0108-pose_de_piece_de_tomaison",
+      "after": "OPR-0108",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0109",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0109",
+      "before": "OPR-0109-dorure_directe_sur_cuir",
+      "after": "OPR-0109",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0110",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0110",
+      "before": "OPR-0110-dorure_sur_piece_de_titre",
+      "after": "OPR-0110",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0111",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0111",
+      "before": "OPR-0111-dorure_a_la_feuille",
+      "after": "OPR-0111",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0112",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0112",
+      "before": "OPR-0112-dorure_au_film",
+      "after": "OPR-0112",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0113",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0113",
+      "before": "OPR-0113-dorure_a_chaud_a_la_presse",
+      "after": "OPR-0113",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0114",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0114",
+      "before": "OPR-0114-dorure_manuelle",
+      "after": "OPR-0114",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0115",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0115",
+      "before": "OPR-0115-reprise_de_dorure",
+      "after": "OPR-0115",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0116",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0116",
+      "before": "OPR-0116-filet_dore",
+      "after": "OPR-0116",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0117",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0117",
+      "before": "OPR-0117-palette_doree",
+      "after": "OPR-0117",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0118",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0118",
+      "before": "OPR-0118-fleuron_dore",
+      "after": "OPR-0118",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0119",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0119",
+      "before": "OPR-0119-dorure_a_la_roulette",
+      "after": "OPR-0119",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0120",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0120",
+      "before": "OPR-0120-encadrement_dore",
+      "after": "OPR-0120",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0121",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0121",
+      "before": "OPR-0121-dorure_des_compartiments",
+      "after": "OPR-0121",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0122",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0122",
+      "before": "OPR-0122-dorure_des_nerfs",
+      "after": "OPR-0122",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0123",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0123",
+      "before": "OPR-0123-decor_a_froid",
+      "after": "OPR-0123",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0124",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0124",
+      "before": "OPR-0124-empreinte_a_sec",
+      "after": "OPR-0124",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0125",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0125",
+      "before": "OPR-0125-decor_peint_lie_a_la_reliure",
+      "after": "OPR-0125",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0126",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0126",
+      "before": "OPR-0126-mosaique_incrustee",
+      "after": "OPR-0126",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0127",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0127",
+      "before": "OPR-0127-mosaique_sertie",
+      "after": "OPR-0127",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0128",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0128",
+      "before": "OPR-0128-mosaique_superposee",
+      "after": "OPR-0128",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0129",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0129",
+      "before": "OPR-0129-decoupe_de_mosaique",
+      "after": "OPR-0129",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0130",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0130",
+      "before": "OPR-0130-sertissage_de_mosaique",
+      "after": "OPR-0130",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0131",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0131",
+      "before": "OPR-0131-dorure_associee_a_mosaique",
+      "after": "OPR-0131",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0132",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0132",
+      "before": "OPR-0132-reprise_de_coiffe",
+      "after": "OPR-0132",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0133",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0133",
+      "before": "OPR-0133-reparation_de_mors",
+      "after": "OPR-0133",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0134",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0134",
+      "before": "OPR-0134-reparation_de_coin",
+      "after": "OPR-0134",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0135",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0135",
+      "before": "OPR-0135-reparation_de_chant",
+      "after": "OPR-0135",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0136",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0136",
+      "before": "OPR-0136-consolidation_de_cuir",
+      "after": "OPR-0136",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0137",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0137",
+      "before": "OPR-0137-reintegration_de_cuir",
+      "after": "OPR-0137",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0138",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0138",
+      "before": "OPR-0138-reprise_de_dos",
+      "after": "OPR-0138",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0139",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0139",
+      "before": "OPR-0139-remontage_d_ancien_dos",
+      "after": "OPR-0139",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0140",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0140",
+      "before": "OPR-0140-remplacement_de_dos",
+      "after": "OPR-0140",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0141",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0141",
+      "before": "OPR-0141-restauration_de_parchemin",
+      "after": "OPR-0141",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0142",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0142",
+      "before": "OPR-0142-restauration_de_toile_de_couvrure",
+      "after": "OPR-0142",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0143",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0143",
+      "before": "OPR-0143-restauration_de_papier_de_couverture",
+      "after": "OPR-0143",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0144",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0144",
+      "before": "OPR-0144-conservation_des_elements_anciens",
+      "after": "OPR-0144",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0145",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0145",
+      "before": "OPR-0145-derestauration",
+      "after": "OPR-0145",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0146",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0146",
+      "before": "OPR-0146-nettoyage_a_sec_de_feuillet",
+      "after": "OPR-0146",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0147",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0147",
+      "before": "OPR-0147-gommage_de_feuillet",
+      "after": "OPR-0147",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0148",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0148",
+      "before": "OPR-0148-mise_a_plat_de_feuillet",
+      "after": "OPR-0148",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0149",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0149",
+      "before": "OPR-0149-doublage_de_feuillet",
+      "after": "OPR-0149",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0150",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0150",
+      "before": "OPR-0150-renfort_localise_de_feuillet",
+      "after": "OPR-0150",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0151",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0151",
+      "before": "OPR-0151-consolidation_de_papier",
+      "after": "OPR-0151",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0152",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0152",
+      "before": "OPR-0152-traitement_ponctuel_de_tache",
+      "after": "OPR-0152",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0153",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0153",
+      "before": "OPR-0153-lavage_de_papier_lie_au_livre",
+      "after": "OPR-0153",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0154",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0154",
+      "before": "OPR-0154-desacidification",
+      "after": "OPR-0154",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0155",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0155",
+      "before": "OPR-0155-reparation_de_pli",
+      "after": "OPR-0155",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0156",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0156",
+      "before": "OPR-0156-reparation_de_cahier_papier",
+      "after": "OPR-0156",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0157",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0157",
+      "before": "OPR-0157-etui_simple",
+      "after": "OPR-0157",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0158",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0158",
+      "before": "OPR-0158-etui_borde",
+      "after": "OPR-0158",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0159",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0159",
+      "before": "OPR-0159-etui_gaine",
+      "after": "OPR-0159",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0160",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0160",
+      "before": "OPR-0160-etui_cigare",
+      "after": "OPR-0160",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0161",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0161",
+      "before": "OPR-0161-chemise_a_rabats",
+      "after": "OPR-0161",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0162",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0162",
+      "before": "OPR-0162-chemise_etui",
+      "after": "OPR-0162",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0163",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0163",
+      "before": "OPR-0163-boite_cloche",
+      "after": "OPR-0163",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0164",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0164",
+      "before": "OPR-0164-boite_de_conservation",
+      "after": "OPR-0164",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0165",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0165",
+      "before": "OPR-0165-boite_a_dos",
+      "after": "OPR-0165",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0166",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0166",
+      "before": "OPR-0166-boite_a_chasses",
+      "after": "OPR-0166",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0167",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0167",
+      "before": "OPR-0167-boite_portefeuille",
+      "after": "OPR-0167",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0168",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0168",
+      "before": "OPR-0168-coffret",
+      "after": "OPR-0168",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0169",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0169",
+      "before": "OPR-0169-plateau_de_conservation",
+      "after": "OPR-0169",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0170",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0170",
+      "before": "OPR-0170-calage_interieur",
+      "after": "OPR-0170",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0171",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0171",
+      "before": "OPR-0171-compartiment_de_boite",
+      "after": "OPR-0171",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0172",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0172",
+      "before": "OPR-0172-titrage_de_boite",
+      "after": "OPR-0172",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0173",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0173",
+      "before": "OPR-0173-decor_de_boite",
+      "after": "OPR-0173",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0174",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0174",
+      "before": "OPR-0174-habillage_de_boite",
+      "after": "OPR-0174",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0175",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0175",
+      "before": "OPR-0175-decoupe_de_structure_de_boite",
+      "after": "OPR-0175",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0176",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0176",
+      "before": "OPR-0176-montage_de_structure_de_boite",
+      "after": "OPR-0176",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0177",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0177",
+      "before": "OPR-0177-nettoyage_final",
+      "after": "OPR-0177",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0178",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0178",
+      "before": "OPR-0178-lustrage_de_cuir",
+      "after": "OPR-0178",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0179",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0179",
+      "before": "OPR-0179-cirage_de_cuir",
+      "after": "OPR-0179",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0180",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0180",
+      "before": "OPR-0180-sechage_controle",
+      "after": "OPR-0180",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0181",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0181",
+      "before": "OPR-0181-mise_sous_presse_finale",
+      "after": "OPR-0181",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0182",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0182",
+      "before": "OPR-0182-controle_final",
+      "after": "OPR-0182",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0183",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0183",
+      "before": "OPR-0183-retouche_de_finition",
+      "after": "OPR-0183",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0184",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0184",
+      "before": "OPR-0184-photographie_apres_intervention",
+      "after": "OPR-0184",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0185",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0185",
+      "before": "OPR-0185-conditionnement_de_retour",
+      "after": "OPR-0185",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0186",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0186",
+      "before": "OPR-0186-diagnostic_sur_devis",
+      "after": "OPR-0186",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0187",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0187",
+      "before": "OPR-0187-prestation_sur_devis",
+      "after": "OPR-0187",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0188",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0188",
+      "before": "OPR-0188-forfait_de_preparation_non_standard",
+      "after": "OPR-0188",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0189",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0189",
+      "before": "OPR-0189-majoration_de_grand_format",
+      "after": "OPR-0189",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0190",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0190",
+      "before": "OPR-0190-majoration_de_materiau",
+      "after": "OPR-0190",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0191",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0191",
+      "before": "OPR-0191-majoration_d_urgence",
+      "after": "OPR-0191",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0192",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0192",
+      "before": "OPR-0192-remise_de_serie",
+      "after": "OPR-0192",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0193",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0193",
+      "before": "OPR-0193-choix_de_cuir",
+      "after": "OPR-0193",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0194",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0194",
+      "before": "OPR-0194-choix_de_papier_decore",
+      "after": "OPR-0194",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0195",
+      "rule": "A9",
+      "type": "identifiant",
+      "subject": "OPR-0195",
+      "before": "OPR-0195-choix_de_toile",
+      "after": "OPR-0195",
+      "reason": "Le suffixe reprenait un slug du libellé : corriger le libellé aurait changé l'identité.",
+      "impact": "Aucune dépendance ne doit utiliser un slug ; les liens du référentiel et des prestations d'atelier portent la clé stable."
+    },
+    {
+      "id": "J-0196",
+      "rule": "A10",
+      "type": "code de domaine",
+      "subject": "EXAMEN_PRÉPARATION",
+      "before": "EXAMEN_PRÉPARATION",
+      "after": "EXAMEN_PREPARATION",
+      "reason": "Code irrégulier : un accent au milieu de codes ASCII.",
+      "impact": "15 entrées ; aucun effet visible (le libellé affiché est « Examen & préparation »)."
+    },
+    {
+      "id": "J-0197",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "price_drivers",
+      "before": {
+        "entriesWithAValue": 0,
+        "of": 195,
+        "samples": []
+      },
+      "after": null,
+      "reason": "Vide sur les 195 entrées : le référentiel ne porte aucune logique de prix.",
+      "impact": "Aucune information perdue."
+    },
+    {
+      "id": "J-0198",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "complexity_drivers",
+      "before": {
+        "entriesWithAValue": 0,
+        "of": 195,
+        "samples": []
+      },
+      "after": null,
+      "reason": "Vide sur les 195 entrées.",
+      "impact": "Aucune information perdue."
+    },
+    {
+      "id": "J-0199",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "condition_driver",
+      "before": {
+        "entriesWithAValue": 0,
+        "of": 195,
+        "samples": []
+      },
+      "after": null,
+      "reason": "« unknown » sur les 195 entrées.",
+      "impact": "Aucune information perdue."
+    },
+    {
+      "id": "J-0200",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "preferred_unit_if_documented",
+      "before": {
+        "entriesWithAValue": 0,
+        "of": 195,
+        "samples": []
+      },
+      "after": null,
+      "reason": "« unknown » sur les 195 entrées.",
+      "impact": "Aucune information perdue."
+    },
+    {
+      "id": "J-0201",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "historical_terms",
+      "before": {
+        "entriesWithAValue": 0,
+        "of": 195,
+        "samples": []
+      },
+      "after": null,
+      "reason": "Vide sur les 195 entrées : aucun terme historique n'est retenu dans cette version.",
+      "impact": "Aucune information perdue."
+    },
+    {
+      "id": "J-0202",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "minimum_charge_possible",
+      "before": {
+        "entriesWithAValue": 195,
+        "of": 195,
+        "samples": [
+          "\"possible selon politique de l’atelier\""
+        ]
+      },
+      "after": null,
+      "reason": "Texte identique sur les 195 entrées (« possible selon politique de l'atelier ») : ce n'est pas une donnée.",
+      "impact": "195 valeur(s) non vide(s) abandonnée(s) : conservée(s) dans la source brute uniquement."
+    },
+    {
+      "id": "J-0203",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "dimension_driver",
+      "before": {
+        "entriesWithAValue": 195,
+        "of": 195,
+        "samples": [
+          "\"format, hauteur, largeur et épaisseur\"",
+          "\"hauteur, largeur et épaisseur\""
+        ]
+      },
+      "after": null,
+      "reason": "Texte quasi identique (« format, hauteur, largeur et épaisseur ») : boilerplate.",
+      "impact": "195 valeur(s) non vide(s) abandonnée(s) : conservée(s) dans la source brute uniquement."
+    },
+    {
+      "id": "J-0204",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "quantity_driver",
+      "before": {
+        "entriesWithAValue": 2,
+        "of": 195,
+        "samples": [
+          "\"nombre de cahiers et points de couture\"",
+          "\"nombre d’exemplaires homogènes\""
+        ]
+      },
+      "after": null,
+      "reason": "« unknown » sur 193 entrées ; les 2 valeurs renseignées ne suffisent pas à un pilotage.",
+      "impact": "2 valeur(s) non vide(s) abandonnée(s) : conservée(s) dans la source brute uniquement."
+    },
+    {
+      "id": "J-0205",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "material_driver",
+      "before": {
+        "entriesWithAValue": 3,
+        "of": 195,
+        "samples": [
+          "\"type de fil et supports de couture\"",
+          "\"qualité et type de matériau\"",
+          "\"espèce, tannage, qualité, couleur et surface\""
+        ]
+      },
+      "after": null,
+      "reason": "« unknown » sur 192 entrées ; les 3 valeurs renseignées ne suffisent pas à un pilotage.",
+      "impact": "3 valeur(s) non vide(s) abandonnée(s) : conservée(s) dans la source brute uniquement."
+    },
+    {
+      "id": "J-0206",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "incompatible_with",
+      "before": {
+        "entriesWithAValue": 0,
+        "of": 195,
+        "samples": []
+      },
+      "after": null,
+      "reason": "Vide sur les 195 entrées.",
+      "impact": "Aucune information perdue."
+    },
+    {
+      "id": "J-0207",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "tools_or_techniques",
+      "before": {
+        "entriesWithAValue": 17,
+        "of": 195,
+        "samples": [
+          "[\"brosse\",\"aspiration filtrée\"]",
+          "[\"gomme\",\"poudre de gomme\"]",
+          "[\"presse\"]"
+        ]
+      },
+      "after": null,
+      "reason": "Non utilisé par le produit en V1.",
+      "impact": "17 valeur(s) non vide(s) abandonnée(s) : conservée(s) dans la source brute uniquement."
+    },
+    {
+      "id": "J-0208",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "applicable_to",
+      "before": {
+        "entriesWithAValue": 195,
+        "of": 195,
+        "samples": [
+          "[\"livre imprimé\",\"ouvrage cousu\"]",
+          "[\"ouvrage cousu\",\"livre à dos arrondi\"]",
+          "[\"livre relié\",\"ouvrage fragile\"]"
+        ]
+      },
+      "after": null,
+      "reason": "Non utilisé par le produit en V1.",
+      "impact": "195 valeur(s) non vide(s) abandonnée(s) : conservée(s) dans la source brute uniquement."
+    },
+    {
+      "id": "J-0209",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "materials_commonly_used",
+      "before": {
+        "entriesWithAValue": 42,
+        "of": 195,
+        "samples": [
+          "[\"brosse souple\"]",
+          "[\"gomme adaptée\"]",
+          "[\"papier de montage\",\"onglets\"]"
+        ]
+      },
+      "after": null,
+      "reason": "Texte libre non relié au référentiel des matériaux : ne doit pas faire remonter une opération sur un mot de matériau (recherche « cuir »).",
+      "impact": "42 valeur(s) non vide(s) abandonnée(s) : conservée(s) dans la source brute uniquement."
+    },
+    {
+      "id": "J-0210",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "internal_only_possible",
+      "before": {
+        "entriesWithAValue": 195,
+        "of": 195,
+        "samples": [
+          "true",
+          "false"
+        ]
+      },
+      "after": null,
+      "reason": "Non utilisé par le produit en V1.",
+      "impact": "195 valeur(s) non vide(s) abandonnée(s) : conservée(s) dans la source brute uniquement."
+    },
+    {
+      "id": "J-0211",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "hierarchy_level",
+      "before": {
+        "entriesWithAValue": 195,
+        "of": 195,
+        "samples": [
+          "3",
+          "4"
+        ]
+      },
+      "after": null,
+      "reason": "Niveaux mélangés (A8) : la hiérarchie est remplacée par le seul lien de variante `variantOf`.",
+      "impact": "195 valeur(s) non vide(s) abandonnée(s) : conservée(s) dans la source brute uniquement."
+    },
+    {
+      "id": "J-0212",
+      "rule": "A11",
+      "type": "champ retiré",
+      "subject": "notes (texte répété)",
+      "before": {
+        "repeatedTexts": [
+          "Unité et séquence à adapter aux usages de l’atelier."
+        ],
+        "entries": 191
+      },
+      "after": null,
+      "reason": "Texte répété sur 10 entrées ou plus : c'est du boilerplate. Les notes propres à une entrée sont conservées (`internalNotes`).",
+      "impact": "Aucune information propre à une entrée perdue."
+    },
+    {
+      "id": "J-0213",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0029",
+      "before": {
+        "parent": "OPR-0027-couture_de_cahiers",
+        "level": 4
+      },
+      "after": {
+        "variantOf": "OPR-0027"
+      },
+      "reason": "Vraie variante d'une même opération (type de couture, d'étui, de boîte) : conservée sous `variantOf`, un concept à part des prérequis.",
+      "impact": "Aucun effet sur la recherche ; une variante n'est jamais un prérequis."
+    },
+    {
+      "id": "J-0214",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0030",
+      "before": {
+        "parent": "OPR-0027-couture_de_cahiers",
+        "level": 4
+      },
+      "after": {
+        "variantOf": "OPR-0027"
+      },
+      "reason": "Vraie variante d'une même opération (type de couture, d'étui, de boîte) : conservée sous `variantOf`, un concept à part des prérequis.",
+      "impact": "Aucun effet sur la recherche ; une variante n'est jamais un prérequis."
+    },
+    {
+      "id": "J-0215",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0031",
+      "before": {
+        "parent": "OPR-0027-couture_de_cahiers",
+        "level": 4
+      },
+      "after": {
+        "variantOf": "OPR-0027"
+      },
+      "reason": "Vraie variante d'une même opération (type de couture, d'étui, de boîte) : conservée sous `variantOf`, un concept à part des prérequis.",
+      "impact": "Aucun effet sur la recherche ; une variante n'est jamais un prérequis."
+    },
+    {
+      "id": "J-0216",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0033",
+      "before": {
+        "parent": "OPR-0027-couture_de_cahiers",
+        "level": 4
+      },
+      "after": {
+        "variantOf": "OPR-0027"
+      },
+      "reason": "Vraie variante d'une même opération (type de couture, d'étui, de boîte) : conservée sous `variantOf`, un concept à part des prérequis.",
+      "impact": "Aucun effet sur la recherche ; une variante n'est jamais un prérequis."
+    },
+    {
+      "id": "J-0217",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0036",
+      "before": {
+        "parent": "OPR-0027-couture_de_cahiers",
+        "level": 4
+      },
+      "after": {
+        "variantOf": "OPR-0027"
+      },
+      "reason": "Vraie variante d'une même opération (type de couture, d'étui, de boîte) : conservée sous `variantOf`, un concept à part des prérequis.",
+      "impact": "Aucun effet sur la recherche ; une variante n'est jamais un prérequis."
+    },
+    {
+      "id": "J-0218",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0062",
+      "before": {
+        "parent": "OPR-0061-couvrure",
+        "level": 4
+      },
+      "after": {
+        "variantOf": null
+      },
+      "reason": "Le « parent » (Couvrure) est aussi un composant de ce service (il l'inclut) : ce n'est pas une variante. La classification par domaine COUVRURE reste.",
+      "impact": "Aucun effet visible. Le composant éventuel est décrit par les relations `operation_components`, pas par une hiérarchie."
+    },
+    {
+      "id": "J-0219",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0064",
+      "before": {
+        "parent": "OPR-0061-couvrure",
+        "level": 4
+      },
+      "after": {
+        "variantOf": null
+      },
+      "reason": "Le « parent » (Couvrure) est aussi un composant de ce service (il l'inclut) : ce n'est pas une variante. La classification par domaine COUVRURE reste.",
+      "impact": "Aucun effet visible. Le composant éventuel est décrit par les relations `operation_components`, pas par une hiérarchie."
+    },
+    {
+      "id": "J-0220",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0065",
+      "before": {
+        "parent": "OPR-0061-couvrure",
+        "level": 4
+      },
+      "after": {
+        "variantOf": null
+      },
+      "reason": "Le « parent » (Couvrure) est aussi un composant de ce service (il l'inclut) : ce n'est pas une variante. La classification par domaine COUVRURE reste.",
+      "impact": "Aucun effet visible. Le composant éventuel est décrit par les relations `operation_components`, pas par une hiérarchie."
+    },
+    {
+      "id": "J-0221",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0158",
+      "before": {
+        "parent": "OPR-0157-etui_simple",
+        "level": 4
+      },
+      "after": {
+        "variantOf": "OPR-0157"
+      },
+      "reason": "Vraie variante d'une même opération (type de couture, d'étui, de boîte) : conservée sous `variantOf`, un concept à part des prérequis.",
+      "impact": "Aucun effet sur la recherche ; une variante n'est jamais un prérequis."
+    },
+    {
+      "id": "J-0222",
+      "rule": "A8",
+      "type": "hiérarchie",
+      "subject": "OPR-0166",
+      "before": {
+        "parent": "OPR-0164-boite_de_conservation",
+        "level": 4
+      },
+      "after": {
+        "variantOf": "OPR-0164"
+      },
+      "reason": "Vraie variante d'une même opération (type de couture, d'étui, de boîte) : conservée sous `variantOf`, un concept à part des prérequis.",
+      "impact": "Aucun effet sur la recherche ; une variante n'est jamais un prérequis."
+    },
+    {
+      "id": "J-0223",
+      "rule": "V3",
+      "type": "à valider",
+      "subject": "OPR-0009",
+      "before": {
+        "needs_binder_validation": false
+      },
+      "after": {
+        "needsBinderValidation": true
+      },
+      "reason": "Trois « mises sous presse » au vocabulaire incohérent (« en presse » / « sous presse »).",
+      "impact": "Signalée pour relecture par un relieur du pilote (interne : jamais affichée au relieur)."
+    },
+    {
+      "id": "J-0224",
+      "rule": "V3",
+      "type": "à valider",
+      "subject": "OPR-0016",
+      "before": {
+        "needs_binder_validation": false
+      },
+      "after": {
+        "needsBinderValidation": true
+      },
+      "reason": "Recouvrement fonctionnel probable avec deux autres « réparations de cahier » : à trancher par un relieur.",
+      "impact": "Signalée pour relecture par un relieur du pilote (interne : jamais affichée au relieur)."
+    },
+    {
+      "id": "J-0225",
+      "rule": "V3",
+      "type": "à valider",
+      "subject": "OPR-0060",
+      "before": {
+        "needs_binder_validation": false
+      },
+      "after": {
+        "needsBinderValidation": true
+      },
+      "reason": "Trois « mises sous presse » au vocabulaire incohérent (« en presse » / « sous presse »).",
+      "impact": "Signalée pour relecture par un relieur du pilote (interne : jamais affichée au relieur)."
+    },
+    {
+      "id": "J-0226",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0062",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Reliure pleine toile"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0227",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0063",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Reliure pleine papier"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0228",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0064",
+      "before": {
+        "entity_type": "composite_operation",
+        "name": "Reliure plein cuir"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0229",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0065",
+      "before": {
+        "entity_type": "composite_operation",
+        "name": "Demi-reliure cuir"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0230",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0066",
+      "before": {
+        "entity_type": "composite_operation",
+        "name": "Demi-reliure à coins"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0231",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0067",
+      "before": {
+        "entity_type": "composite_operation",
+        "name": "Demi-reliure à bandes"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0232",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0068",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Quart de reliure"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0233",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0069",
+      "before": {
+        "entity_type": "composite_operation",
+        "name": "Reliure plein parchemin"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0234",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0070",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Demi-parchemin"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0235",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0071",
+      "before": {
+        "entity_type": "composite_operation",
+        "name": "Reliure Bradel"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0236",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0072",
+      "before": {
+        "entity_type": "composite_operation",
+        "name": "Emboîtage"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0237",
+      "rule": "V3",
+      "type": "à valider",
+      "subject": "OPR-0072",
+      "before": {
+        "needs_binder_validation": false
+      },
+      "after": {
+        "needsBinderValidation": true
+      },
+      "reason": "Son synonyme « réemboîtage » est aussi une entrée distincte (OPR-0073).",
+      "impact": "Signalée pour relecture par un relieur du pilote (interne : jamais affichée au relieur)."
+    },
+    {
+      "id": "J-0238",
+      "rule": "V3",
+      "type": "synonyme en collision",
+      "subject": "OPR-0072",
+      "before": {
+        "synonyms": [
+          "réemboîtage",
+          "emboîter"
+        ]
+      },
+      "after": {
+        "synonyms": [
+          "emboîter"
+        ]
+      },
+      "reason": "« réemboîtage » est aussi le nom canonique d'une autre entrée (OPR-0073) : un même mot ne désigne pas deux entrées.",
+      "impact": "La recherche « réemboîtage » remonte OPR-0073 en premier."
+    },
+    {
+      "id": "J-0239",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0157",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Étui simple"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0240",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0158",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Étui bordé"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0241",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0159",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Étui gainé"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0242",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0160",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Étui cigare"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0243",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0161",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Chemise à rabats"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0244",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0162",
+      "before": {
+        "entity_type": "composite_operation",
+        "name": "Chemise-étui"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0245",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0163",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Boîte cloche"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0246",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0164",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Boîte de conservation"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0247",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0165",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Boîte à dos"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0248",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0166",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Boîte à chasses"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0249",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0167",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Boîte portefeuille"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0250",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0168",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Coffret"
+      },
+      "after": {
+        "kind": "package"
+      },
+      "reason": "Prestation commerciale ou composée : proposée comme une prestation à part entière (jamais comme une checklist).",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0251",
+      "rule": "V3",
+      "type": "à valider",
+      "subject": "OPR-0181",
+      "before": {
+        "needs_binder_validation": false
+      },
+      "after": {
+        "needsBinderValidation": true
+      },
+      "reason": "Trois « mises sous presse » au vocabulaire incohérent (« en presse » / « sous presse »).",
+      "impact": "Signalée pour relecture par un relieur du pilote (interne : jamais affichée au relieur)."
+    },
+    {
+      "id": "J-0252",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0186",
+      "before": {
+        "entity_type": "diagnostic",
+        "name": "Diagnostic sur devis"
+      },
+      "after": {
+        "kind": "diagnostic"
+      },
+      "reason": "Diagnostic : proposé comme une prestation.",
+      "impact": "Importable dans le catalogue de l'atelier."
+    },
+    {
+      "id": "J-0253",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0187",
+      "before": {
+        "entity_type": "commercial_service",
+        "name": "Prestation sur devis"
+      },
+      "after": {
+        "kind": "generic_quote"
+      },
+      "reason": "« Prestation sur devis » est la ligne libre du devis, déjà offerte partout : ce n'est pas une prestation à importer.",
+      "impact": "Non importable dans le catalogue de l'atelier ; conservée dans la ressource."
+    },
+    {
+      "id": "J-0254",
+      "rule": "A7",
+      "type": "entrée inactive",
+      "subject": "OPR-0187",
+      "before": {
+        "active": true
+      },
+      "after": {
+        "active": false
+      },
+      "reason": "Remplacée par la ligne libre du devis (toujours disponible) : retirée des propositions.",
+      "impact": "Jamais proposée ni importée."
+    },
+    {
+      "id": "J-0255",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0188",
+      "before": {
+        "entity_type": "surcharge",
+        "name": "Forfait de préparation non standard"
+      },
+      "after": {
+        "kind": "adjustment"
+      },
+      "reason": "Majoration, remise ou forfait de préparation : un ajustement commercial, pas une opération technique. Il reste un mécanisme distinct du devis et n'est pas proposé dans la recherche métier.",
+      "impact": "Non importable dans le catalogue de l'atelier ; conservée dans la ressource."
+    },
+    {
+      "id": "J-0256",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0189",
+      "before": {
+        "entity_type": "surcharge",
+        "name": "Majoration de grand format"
+      },
+      "after": {
+        "kind": "adjustment"
+      },
+      "reason": "Majoration, remise ou forfait de préparation : un ajustement commercial, pas une opération technique. Il reste un mécanisme distinct du devis et n'est pas proposé dans la recherche métier.",
+      "impact": "Non importable dans le catalogue de l'atelier ; conservée dans la ressource."
+    },
+    {
+      "id": "J-0257",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0190",
+      "before": {
+        "entity_type": "surcharge",
+        "name": "Majoration de matériau"
+      },
+      "after": {
+        "kind": "adjustment"
+      },
+      "reason": "Majoration, remise ou forfait de préparation : un ajustement commercial, pas une opération technique. Il reste un mécanisme distinct du devis et n'est pas proposé dans la recherche métier.",
+      "impact": "Non importable dans le catalogue de l'atelier ; conservée dans la ressource."
+    },
+    {
+      "id": "J-0258",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0191",
+      "before": {
+        "entity_type": "surcharge",
+        "name": "Majoration d’urgence"
+      },
+      "after": {
+        "kind": "adjustment"
+      },
+      "reason": "Majoration, remise ou forfait de préparation : un ajustement commercial, pas une opération technique. Il reste un mécanisme distinct du devis et n'est pas proposé dans la recherche métier.",
+      "impact": "Non importable dans le catalogue de l'atelier ; conservée dans la ressource."
+    },
+    {
+      "id": "J-0259",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0192",
+      "before": {
+        "entity_type": "option",
+        "name": "Remise de série"
+      },
+      "after": {
+        "kind": "adjustment"
+      },
+      "reason": "Majoration, remise ou forfait de préparation : un ajustement commercial, pas une opération technique. Il reste un mécanisme distinct du devis et n'est pas proposé dans la recherche métier.",
+      "impact": "Non importable dans le catalogue de l'atelier ; conservée dans la ressource."
+    },
+    {
+      "id": "J-0260",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0193",
+      "before": {
+        "entity_type": "material",
+        "name": "Choix de cuir"
+      },
+      "after": {
+        "kind": "material_choice"
+      },
+      "reason": "Choix de matériau, pas une prestation : ne doit jamais remonter comme si c'en était une.",
+      "impact": "Non importable dans le catalogue de l'atelier ; conservée dans la ressource."
+    },
+    {
+      "id": "J-0261",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0194",
+      "before": {
+        "entity_type": "material",
+        "name": "Choix de papier décoré"
+      },
+      "after": {
+        "kind": "material_choice"
+      },
+      "reason": "Choix de matériau, pas une prestation : ne doit jamais remonter comme si c'en était une.",
+      "impact": "Non importable dans le catalogue de l'atelier ; conservée dans la ressource."
+    },
+    {
+      "id": "J-0262",
+      "rule": "A7",
+      "type": "nature de l'entrée",
+      "subject": "OPR-0195",
+      "before": {
+        "entity_type": "material",
+        "name": "Choix de toile"
+      },
+      "after": {
+        "kind": "material_choice"
+      },
+      "reason": "Choix de matériau, pas une prestation : ne doit jamais remonter comme si c'en était une.",
+      "impact": "Non importable dans le catalogue de l'atelier ; conservée dans la ressource."
+    },
+    {
+      "id": "J-0263",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par ouvrage",
+      "before": "par ouvrage",
+      "after": {
+        "unit": "ouvrage"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "148 entrées."
+    },
+    {
+      "id": "J-0264",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par volume",
+      "before": "par volume",
+      "after": {
+        "unit": "volume"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "8 entrées."
+    },
+    {
+      "id": "J-0265",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par cahier",
+      "before": "par cahier",
+      "after": {
+        "unit": "cahier"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "21 entrées."
+    },
+    {
+      "id": "J-0266",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par feuillet",
+      "before": "par feuillet",
+      "after": {
+        "unit": "feuillet"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "20 entrées."
+    },
+    {
+      "id": "J-0267",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par tranche",
+      "before": "par tranche",
+      "after": {
+        "unit": "tranche"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "10 entrées."
+    },
+    {
+      "id": "J-0268",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par plat",
+      "before": "par plat",
+      "after": {
+        "unit": "plat"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "31 entrées."
+    },
+    {
+      "id": "J-0269",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par dos",
+      "before": "par dos",
+      "after": {
+        "unit": "dos"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "21 entrées."
+    },
+    {
+      "id": "J-0270",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par garde",
+      "before": "par garde",
+      "after": {
+        "unit": "garde"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "9 entrées."
+    },
+    {
+      "id": "J-0271",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par coin",
+      "before": "par coin",
+      "after": {
+        "unit": "coin"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "3 entrées."
+    },
+    {
+      "id": "J-0272",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par coiffe",
+      "before": "par coiffe",
+      "after": {
+        "unit": "coiffe"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "3 entrées."
+    },
+    {
+      "id": "J-0273",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par mors",
+      "before": "par mors",
+      "after": {
+        "unit": "mors"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "3 entrées."
+    },
+    {
+      "id": "J-0274",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par nerf",
+      "before": "par nerf",
+      "after": {
+        "unit": "nerf"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "9 entrées."
+    },
+    {
+      "id": "J-0275",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par titre",
+      "before": "par titre",
+      "after": {
+        "unit": "titre"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "7 entrées."
+    },
+    {
+      "id": "J-0276",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par ligne",
+      "before": "par ligne",
+      "after": {
+        "unit": "ligne"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "14 entrées."
+    },
+    {
+      "id": "J-0277",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par caractère",
+      "before": "par caractère",
+      "after": {
+        "unit": "caractère"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "5 entrées."
+    },
+    {
+      "id": "J-0278",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par pièce",
+      "before": "par pièce",
+      "after": {
+        "unit": "pièce"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "10 entrées."
+    },
+    {
+      "id": "J-0279",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par motif",
+      "before": "par motif",
+      "after": {
+        "unit": "motif"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "20 entrées."
+    },
+    {
+      "id": "J-0280",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par boîte",
+      "before": "par boîte",
+      "after": {
+        "unit": "boîte"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "12 entrées."
+    },
+    {
+      "id": "J-0281",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par cm",
+      "before": "par cm",
+      "after": {
+        "unit": "cm"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "5 entrées."
+    },
+    {
+      "id": "J-0282",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par cm²",
+      "before": "par cm²",
+      "after": {
+        "unit": "cm²"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "12 entrées."
+    },
+    {
+      "id": "J-0283",
+      "rule": "A6",
+      "type": "unité",
+      "subject": "par feuille",
+      "before": "par feuille",
+      "after": {
+        "unit": "feuillet"
+      },
+      "reason": "Unité du vocabulaire contrôlé (20 unités + « Autre » côté atelier).",
+      "impact": "1 entrées."
+    },
+    {
+      "id": "J-0284",
+      "rule": "A6",
+      "type": "mode de prix",
+      "subject": "par heure",
+      "before": {
+        "unit_candidates": "par heure"
+      },
+      "after": {
+        "pricingModes": "hourly"
+      },
+      "reason": "« par heure » est un mode de tarification, pas une unité : séparé de `unitCandidates`.",
+      "impact": "64 entrées."
+    },
+    {
+      "id": "J-0285",
+      "rule": "A6",
+      "type": "mode de prix",
+      "subject": "forfait",
+      "before": {
+        "unit_candidates": "forfait"
+      },
+      "after": {
+        "pricingModes": "fixed"
+      },
+      "reason": "« forfait » est un mode de tarification, pas une unité : séparé de `unitCandidates`.",
+      "impact": "17 entrées."
+    },
+    {
+      "id": "J-0286",
+      "rule": "A6",
+      "type": "mode de prix",
+      "subject": "sur devis",
+      "before": {
+        "unit_candidates": "sur devis"
+      },
+      "after": {
+        "pricingModes": "on_quote"
+      },
+      "reason": "« sur devis » est un mode de tarification, pas une unité : séparé de `unitCandidates`.",
+      "impact": "64 entrées."
+    },
+    {
+      "id": "J-0287",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par paire de plats",
+      "before": "par paire de plats",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "6 entrée(s) : OPR-0051, OPR-0052, OPR-0053, OPR-0055, OPR-0057, OPR-0058. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0288",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par filet",
+      "before": "par filet",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "5 entrée(s) : OPR-0114, OPR-0116, OPR-0120, OPR-0123, OPR-0131. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0289",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par page",
+      "before": "par page",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "5 entrée(s) : OPR-0146, OPR-0147, OPR-0148, OPR-0149, OPR-0155. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0290",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par étui",
+      "before": "par étui",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "5 entrée(s) : OPR-0157, OPR-0158, OPR-0159, OPR-0160, OPR-0176. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0291",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par zone",
+      "before": "par zone",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "4 entrée(s) : OPR-0101, OPR-0115, OPR-0150, OPR-0183. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0292",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par compartiment",
+      "before": "par compartiment",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "4 entrée(s) : OPR-0117, OPR-0121, OPR-0170, OPR-0171. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0293",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par peau",
+      "before": "par peau",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "3 entrée(s) : OPR-0074, OPR-0190, OPR-0193. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0294",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par mot",
+      "before": "par mot",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "3 entrée(s) : OPR-0102, OPR-0103, OPR-0104. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0295",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par vue",
+      "before": "par vue",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "2 entrée(s) : OPR-0003, OPR-0184. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0296",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par lacune",
+      "before": "par lacune",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "2 entrée(s) : OPR-0019, OPR-0137. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0297",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par couverture",
+      "before": "par couverture",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "2 entrée(s) : OPR-0022, OPR-0143. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0298",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par charnière",
+      "before": "par charnière",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "2 entrée(s) : OPR-0024, OPR-0089. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0299",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par tranchefile",
+      "before": "par tranchefile",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "2 entrée(s) : OPR-0047, OPR-0048. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0300",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par fleuron",
+      "before": "par fleuron",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "2 entrée(s) : OPR-0114, OPR-0118. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0301",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par déchirure",
+      "before": "par déchirure",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0018. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0302",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par hors-texte",
+      "before": "par hors-texte",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0020. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0303",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par point",
+      "before": "par point",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0025. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0304",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par ficelle",
+      "before": "par ficelle",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0029. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0305",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par ruban",
+      "before": "par ruban",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0031. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0306",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par couture",
+      "before": "par couture",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0032. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0307",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par couvrure",
+      "before": "par couvrure",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0061. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0308",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par bande",
+      "before": "par bande",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0067. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0309",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par palette",
+      "before": "par palette",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0117. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0310",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par chant",
+      "before": "par chant",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0135. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0311",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par élément",
+      "before": "par élément",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0144. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0312",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par tache",
+      "before": "par tache",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0152. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0313",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par chemise",
+      "before": "par chemise",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0161. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0314",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par ensemble",
+      "before": "par ensemble",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0162. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0315",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par portefeuille",
+      "before": "par portefeuille",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0167. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0316",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par coffret",
+      "before": "par coffret",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0168. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0317",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par plateau",
+      "before": "par plateau",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0169. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0318",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par étiquette",
+      "before": "par étiquette",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0172. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0319",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "pourcentage",
+      "before": "pourcentage",
+      "after": null,
+      "reason": "Un pourcentage est un ajustement, pas un mode de prix de reliure : hors vocabulaire.",
+      "impact": "1 entrée(s) : OPR-0191. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0320",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par exemplaire",
+      "before": "par exemplaire",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0192. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0321",
+      "rule": "A6",
+      "type": "unité non retenue",
+      "subject": "par mètre",
+      "before": "par mètre",
+      "after": null,
+      "reason": "Unité de longue traîne (hors du vocabulaire contrôlé court). L'atelier la saisit via « Autre » s'il la pratique.",
+      "impact": "1 entrée(s) : OPR-0195. Aucune information de prix perdue."
+    },
+    {
+      "id": "J-0322",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0001",
+      "before": {
+        "from": "OPR-0001-examen_de_l_ouvrage",
+        "to": "OPR-0002-constat_d_etat",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0001",
+        "dependent": "OPR-0002"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0323",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0002",
+      "before": {
+        "from": "OPR-0001-examen_de_l_ouvrage",
+        "to": "OPR-0011-debrochage",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0001",
+        "dependent": "OPR-0011"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0324",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0003",
+      "before": {
+        "from": "OPR-0004-collationnement",
+        "to": "OPR-0027-couture_de_cahiers",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0004",
+        "dependent": "OPR-0027"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0325",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0004",
+      "before": {
+        "from": "OPR-0028-grecquage",
+        "to": "OPR-0033-couture_a_la_grecque",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0028",
+        "dependent": "OPR-0033"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0326",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0005",
+      "before": {
+        "from": "OPR-0027-couture_de_cahiers",
+        "to": "OPR-0039-endossure",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0027",
+        "dependent": "OPR-0039"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0327",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0006",
+      "before": {
+        "from": "OPR-0039-endossure",
+        "to": "OPR-0042-formation_des_mors",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0039",
+        "dependent": "OPR-0042"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0328",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0007",
+      "before": {
+        "from": "OPR-0029-couture_sur_ficelles",
+        "to": "OPR-0038-passure_des_ficelles",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0029",
+        "dependent": "OPR-0038"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0329",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0008",
+      "before": {
+        "from": "OPR-0045-pose_de_nerfs_veritables",
+        "to": "OPR-0122-dorure_des_nerfs",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0045",
+        "dependent": "OPR-0122"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0330",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0009",
+      "before": {
+        "from": "OPR-0051-coupe_des_cartons",
+        "to": "OPR-0052-montage_des_plats",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0051",
+        "dependent": "OPR-0052"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0331",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0010",
+      "before": {
+        "from": "OPR-0052-montage_des_plats",
+        "to": "OPR-0061-couvrure",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0052",
+        "dependent": "OPR-0061"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0332",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0011",
+      "before": {
+        "from": "OPR-0074-parure_generale_du_cuir",
+        "to": "OPR-0061-couvrure",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0074",
+        "dependent": "OPR-0061"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0333",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0012",
+      "before": {
+        "from": "OPR-0061-couvrure",
+        "to": "OPR-0079-realisation_des_remplis",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0061",
+        "dependent": "OPR-0079"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0334",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0013",
+      "before": {
+        "from": "OPR-0061-couvrure",
+        "to": "OPR-0049-formation_des_coiffes",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0061",
+        "dependent": "OPR-0049"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0335",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0014",
+      "before": {
+        "from": "OPR-0081-pose_de_gardes_blanches",
+        "to": "OPR-0072-emboitage",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0081",
+        "dependent": "OPR-0072"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0336",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0015",
+      "before": {
+        "from": "OPR-0107-pose_de_piece_de_titre",
+        "to": "OPR-0110-dorure_sur_piece_de_titre",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0107",
+        "dependent": "OPR-0110"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0337",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0016",
+      "before": {
+        "from": "OPR-0101-preparation_a_la_dorure",
+        "to": "OPR-0103-titrage_au_dos",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0101",
+        "dependent": "OPR-0103"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0338",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0017",
+      "before": {
+        "from": "OPR-0101-preparation_a_la_dorure",
+        "to": "OPR-0109-dorure_directe_sur_cuir",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0101",
+        "dependent": "OPR-0109"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0339",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0018",
+      "before": {
+        "from": "OPR-0102-composition_typographique",
+        "to": "OPR-0103-titrage_au_dos",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0102",
+        "dependent": "OPR-0103"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0340",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0019",
+      "before": {
+        "from": "OPR-0126-mosaique_incrustee",
+        "to": "OPR-0131-dorure_associee_a_mosaique",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0126",
+        "dependent": "OPR-0131"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0341",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0020",
+      "before": {
+        "from": "OPR-0012-depose_de_la_couverture",
+        "to": "OPR-0022-montage_de_couverture_conservee",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0012",
+        "dependent": "OPR-0022"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0342",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0021",
+      "before": {
+        "from": "OPR-0013-depose_du_dos",
+        "to": "OPR-0139-remontage_d_ancien_dos",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0013",
+        "dependent": "OPR-0139"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0343",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0022",
+      "before": {
+        "from": "OPR-0016-reparation_de_cahier",
+        "to": "OPR-0036-couture_complete",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0016",
+        "dependent": "OPR-0036"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0344",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0023",
+      "before": {
+        "from": "OPR-0157-etui_simple",
+        "to": "OPR-0172-titrage_de_boite",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0157",
+        "dependent": "OPR-0172"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0345",
+      "rule": "A5",
+      "type": "relation en double",
+      "subject": "REL-0024",
+      "before": {
+        "relation": "REL-0024",
+        "type": "depends_on",
+        "from": "OPR-0164-boite_de_conservation",
+        "to": "OPR-0170-calage_interieur"
+      },
+      "after": null,
+      "reason": "La même paire est aussi typée « may_include » (REL-0033). Une paire ne figure que dans une seule famille : l'inclusion est conservée.",
+      "impact": "Aucun effet : l'inclusion (« peut inclure ») décrit mieux Boîte de conservation → Calage intérieur qu'une séquence."
+    },
+    {
+      "id": "J-0346",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0025",
+      "before": {
+        "from": "OPR-0175-decoupe_de_structure_de_boite",
+        "to": "OPR-0176-montage_de_structure_de_boite",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0175",
+        "dependent": "OPR-0176"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0347",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0026",
+      "before": {
+        "from": "OPR-0176-montage_de_structure_de_boite",
+        "to": "OPR-0174-habillage_de_boite",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0176",
+        "dependent": "OPR-0174"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0348",
+      "rule": "A1",
+      "type": "sens de la relation",
+      "subject": "REL-0027",
+      "before": {
+        "from": "OPR-0061-couvrure",
+        "to": "OPR-0182-controle_final",
+        "type": "depends_on"
+      },
+      "after": {
+        "prerequisite": "OPR-0061",
+        "dependent": "OPR-0182"
+      },
+      "reason": "Le gabarit du fichier est « `to` intervient habituellement après ou avec `from` » : lu littéralement, « from depends_on to » dit le contraire. Les colonnes sont désormais nommées par rôle.",
+      "impact": "Sens inchangé, nom corrigé. C'est descriptif (« habituellement après ou avec »), jamais une contrainte."
+    },
+    {
+      "id": "J-0349",
+      "rule": "A2",
+      "type": "prérequis redondant",
+      "subject": "OPR-0002 ← OPR-0001",
+      "before": {
+        "entry": "OPR-0002",
+        "prerequisites": "OPR-0001-examen_de_l_ouvrage"
+      },
+      "after": null,
+      "reason": "Déjà décrit par une relation `operation_sequences`.",
+      "impact": "Aucune perte."
+    },
+    {
+      "id": "J-0350",
+      "rule": "A2",
+      "type": "prérequis converti en relation",
+      "subject": "OPR-0003 ← OPR-0002",
+      "before": {
+        "entry": "OPR-0003",
+        "prerequisites": "OPR-0002-constat_d_etat"
+      },
+      "after": {
+        "relation": "REL-0040",
+        "prerequisite": "OPR-0002",
+        "dependent": "OPR-0003"
+      },
+      "reason": "Le prérequis déclaré dans l'entrée n'était décrit nulle part ailleurs : il devient une relation `operation_sequences` explicite (descriptive), à valider.",
+      "impact": "Nouvelle relation informative « habituellement après ou avec »."
+    },
+    {
+      "id": "J-0351",
+      "rule": "A2",
+      "type": "prérequis converti en relation",
+      "subject": "OPR-0006 ← OPR-0001",
+      "before": {
+        "entry": "OPR-0006",
+        "prerequisites": "OPR-0001-examen_de_l_ouvrage"
+      },
+      "after": {
+        "relation": "REL-0041",
+        "prerequisite": "OPR-0001",
+        "dependent": "OPR-0006"
+      },
+      "reason": "Le prérequis déclaré dans l'entrée n'était décrit nulle part ailleurs : il devient une relation `operation_sequences` explicite (descriptive), à valider.",
+      "impact": "Nouvelle relation informative « habituellement après ou avec »."
+    },
+    {
+      "id": "J-0352",
+      "rule": "A2",
+      "type": "prérequis converti en relation",
+      "subject": "OPR-0006 ← OPR-0002",
+      "before": {
+        "entry": "OPR-0006",
+        "prerequisites": "OPR-0002-constat_d_etat"
+      },
+      "after": {
+        "relation": "REL-0042",
+        "prerequisite": "OPR-0002",
+        "dependent": "OPR-0006"
+      },
+      "reason": "Le prérequis déclaré dans l'entrée n'était décrit nulle part ailleurs : il devient une relation `operation_sequences` explicite (descriptive), à valider.",
+      "impact": "Nouvelle relation informative « habituellement après ou avec »."
+    },
+    {
+      "id": "J-0353",
+      "rule": "A2",
+      "type": "prérequis redondant",
+      "subject": "OPR-0011 ← OPR-0001",
+      "before": {
+        "entry": "OPR-0011",
+        "prerequisites": "OPR-0001-examen_de_l_ouvrage"
+      },
+      "after": null,
+      "reason": "Déjà décrit par une relation `operation_sequences`.",
+      "impact": "Aucune perte."
+    },
+    {
+      "id": "J-0354",
+      "rule": "A2",
+      "type": "prérequis converti en relation",
+      "subject": "OPR-0012 ← OPR-0001",
+      "before": {
+        "entry": "OPR-0012",
+        "prerequisites": "OPR-0001-examen_de_l_ouvrage"
+      },
+      "after": {
+        "relation": "REL-0043",
+        "prerequisite": "OPR-0001",
+        "dependent": "OPR-0012"
+      },
+      "reason": "Le prérequis déclaré dans l'entrée n'était décrit nulle part ailleurs : il devient une relation `operation_sequences` explicite (descriptive), à valider.",
+      "impact": "Nouvelle relation informative « habituellement après ou avec »."
+    },
+    {
+      "id": "J-0355",
+      "rule": "A2",
+      "type": "prérequis contredit (ordre d'atelier)",
+      "subject": "OPR-0028 ← OPR-0027",
+      "before": {
+        "entry": "OPR-0028",
+        "prerequisites": "OPR-0027-couture_de_cahiers"
+      },
+      "after": null,
+      "reason": "Dans l'ordre d'atelier usuel le grecquage précède la couture ; la relation REL-0004 place d'ailleurs Grecquage avant la couture à la grecque. Décision éditoriale à valider par un relieur du pilote.",
+      "impact": "Retiré ; à valider par un relieur."
+    },
+    {
+      "id": "J-0356",
+      "rule": "A3",
+      "type": "variante codée comme prérequis",
+      "subject": "OPR-0029 ← OPR-0027",
+      "before": {
+        "entry": "OPR-0029",
+        "prerequisites": "OPR-0027-couture_de_cahiers"
+      },
+      "after": null,
+      "reason": "« est une variante de » n'est pas « nécessite » : la couture sur ficelles / nerfs / à la grecque est une variante de la couture de cahiers.",
+      "impact": "Le lien de variante est conservé sous `variantOf` ; plus aucun prérequis."
+    },
+    {
+      "id": "J-0357",
+      "rule": "A3",
+      "type": "variante codée comme prérequis",
+      "subject": "OPR-0030 ← OPR-0027",
+      "before": {
+        "entry": "OPR-0030",
+        "prerequisites": "OPR-0027-couture_de_cahiers"
+      },
+      "after": null,
+      "reason": "« est une variante de » n'est pas « nécessite » : la couture sur ficelles / nerfs / à la grecque est une variante de la couture de cahiers.",
+      "impact": "Le lien de variante est conservé sous `variantOf` ; plus aucun prérequis."
+    },
+    {
+      "id": "J-0358",
+      "rule": "A3",
+      "type": "variante codée comme prérequis",
+      "subject": "OPR-0033 ← OPR-0027",
+      "before": {
+        "entry": "OPR-0033",
+        "prerequisites": "OPR-0027-couture_de_cahiers"
+      },
+      "after": null,
+      "reason": "« est une variante de » n'est pas « nécessite » : la couture sur ficelles / nerfs / à la grecque est une variante de la couture de cahiers.",
+      "impact": "Le lien de variante est conservé sous `variantOf` ; plus aucun prérequis."
+    },
+    {
+      "id": "J-0359",
+      "rule": "A2",
+      "type": "prérequis converti en relation",
+      "subject": "OPR-0038 ← OPR-0027",
+      "before": {
+        "entry": "OPR-0038",
+        "prerequisites": "OPR-0027-couture_de_cahiers"
+      },
+      "after": {
+        "relation": "REL-0044",
+        "prerequisite": "OPR-0027",
+        "dependent": "OPR-0038"
+      },
+      "reason": "Le prérequis déclaré dans l'entrée n'était décrit nulle part ailleurs : il devient une relation `operation_sequences` explicite (descriptive), à valider.",
+      "impact": "Nouvelle relation informative « habituellement après ou avec »."
+    },
+    {
+      "id": "J-0360",
+      "rule": "A2",
+      "type": "prérequis converti en relation",
+      "subject": "OPR-0041 ← OPR-0027",
+      "before": {
+        "entry": "OPR-0041",
+        "prerequisites": "OPR-0027-couture_de_cahiers"
+      },
+      "after": {
+        "relation": "REL-0045",
+        "prerequisite": "OPR-0027",
+        "dependent": "OPR-0041"
+      },
+      "reason": "Le prérequis déclaré dans l'entrée n'était décrit nulle part ailleurs : il devient une relation `operation_sequences` explicite (descriptive), à valider.",
+      "impact": "Nouvelle relation informative « habituellement après ou avec »."
+    },
+    {
+      "id": "J-0361",
+      "rule": "A2",
+      "type": "prérequis redondant",
+      "subject": "OPR-0042 ← OPR-0039",
+      "before": {
+        "entry": "OPR-0042",
+        "prerequisites": "OPR-0039-endossure"
+      },
+      "after": null,
+      "reason": "Déjà décrit par une relation `operation_sequences`.",
+      "impact": "Aucune perte."
+    },
+    {
+      "id": "J-0362",
+      "rule": "A2",
+      "type": "prérequis converti en relation",
+      "subject": "OPR-0052 ← OPR-0027",
+      "before": {
+        "entry": "OPR-0052",
+        "prerequisites": "OPR-0027-couture_de_cahiers"
+      },
+      "after": {
+        "relation": "REL-0046",
+        "prerequisite": "OPR-0027",
+        "dependent": "OPR-0052"
+      },
+      "reason": "Le prérequis déclaré dans l'entrée n'était décrit nulle part ailleurs : il devient une relation `operation_sequences` explicite (descriptive), à valider.",
+      "impact": "Nouvelle relation informative « habituellement après ou avec »."
+    },
+    {
+      "id": "J-0363",
+      "rule": "A2",
+      "type": "prérequis contredit",
+      "subject": "OPR-0074 ← OPR-0061",
+      "before": {
+        "entry": "OPR-0074",
+        "prerequisites": "OPR-0061-couvrure"
+      },
+      "after": null,
+      "reason": "Le sens inverse est décrit par les relations (REL-0011) : l'ordre métier retenu est celui du fichier de relations.",
+      "impact": "L'entrée n'est plus en contradiction avec les relations. À valider par un relieur."
+    },
+    {
+      "id": "J-0364",
+      "rule": "A2",
+      "type": "prérequis converti en relation",
+      "subject": "OPR-0102 ← OPR-0101",
+      "before": {
+        "entry": "OPR-0102",
+        "prerequisites": "OPR-0101-preparation_a_la_dorure"
+      },
+      "after": {
+        "relation": "REL-0047",
+        "prerequisite": "OPR-0101",
+        "dependent": "OPR-0102"
+      },
+      "reason": "Le prérequis déclaré dans l'entrée n'était décrit nulle part ailleurs : il devient une relation `operation_sequences` explicite (descriptive), à valider.",
+      "impact": "Nouvelle relation informative « habituellement après ou avec »."
+    },
+    {
+      "id": "J-0365",
+      "rule": "A2",
+      "type": "prérequis redondant",
+      "subject": "OPR-0103 ← OPR-0101",
+      "before": {
+        "entry": "OPR-0103",
+        "prerequisites": "OPR-0101-preparation_a_la_dorure"
+      },
+      "after": null,
+      "reason": "Déjà décrit par une relation `operation_sequences`.",
+      "impact": "Aucune perte."
+    },
+    {
+      "id": "J-0366",
+      "rule": "A2",
+      "type": "prérequis redondant",
+      "subject": "OPR-0109 ← OPR-0101",
+      "before": {
+        "entry": "OPR-0109",
+        "prerequisites": "OPR-0101-preparation_a_la_dorure"
+      },
+      "after": null,
+      "reason": "Déjà décrit par une relation `operation_sequences`.",
+      "impact": "Aucune perte."
+    },
+    {
+      "id": "J-0367",
+      "rule": "A2",
+      "type": "prérequis redondant",
+      "subject": "OPR-0110 ← OPR-0107",
+      "before": {
+        "entry": "OPR-0110",
+        "prerequisites": "OPR-0107-pose_de_piece_de_titre"
+      },
+      "after": null,
+      "reason": "Déjà décrit par une relation `operation_sequences`.",
+      "impact": "Aucune perte."
+    },
+    {
+      "id": "J-0368",
+      "rule": "A2",
+      "type": "prérequis converti en relation",
+      "subject": "OPR-0110 ← OPR-0101",
+      "before": {
+        "entry": "OPR-0110",
+        "prerequisites": "OPR-0101-preparation_a_la_dorure"
+      },
+      "after": {
+        "relation": "REL-0048",
+        "prerequisite": "OPR-0101",
+        "dependent": "OPR-0110"
+      },
+      "reason": "Le prérequis déclaré dans l'entrée n'était décrit nulle part ailleurs : il devient une relation `operation_sequences` explicite (descriptive), à valider.",
+      "impact": "Nouvelle relation informative « habituellement après ou avec »."
+    },
+    {
+      "id": "J-0369",
+      "rule": "A4",
+      "type": "texte libre non résolu",
+      "subject": "OPR-0021 ~ pose de gardes",
+      "before": {
+        "commonly_bundled": "pose de gardes"
+      },
+      "after": null,
+      "reason": "Le texte ne désigne aucune entrée (ou un domaine, pas une opération).",
+      "impact": "Aucune relation créée ; l'information reste dans la source brute."
+    },
+    {
+      "id": "J-0370",
+      "rule": "A4",
+      "type": "texte libre résolu",
+      "subject": "OPR-0021 ~ emboîtage",
+      "before": {
+        "commonly_bundled": "emboîtage"
+      },
+      "after": {
+        "relation": "REL-0049",
+        "composite": "OPR-0021",
+        "component": "OPR-0072"
+      },
+      "reason": "Le texte désigne exactement une entrée : il devient une relation `operation_components` (« peut inclure »), à valider.",
+      "impact": "Nouvelle relation informative."
+    },
+    {
+      "id": "J-0371",
+      "rule": "A4",
+      "type": "texte libre résolu",
+      "subject": "OPR-0027 ~ grecquage",
+      "before": {
+        "commonly_bundled": "grecquage"
+      },
+      "after": {
+        "relation": "REL-0050",
+        "composite": "OPR-0027",
+        "component": "OPR-0028"
+      },
+      "reason": "Le texte désigne exactement une entrée : il devient une relation `operation_components` (« peut inclure »), à valider.",
+      "impact": "Nouvelle relation informative."
+    },
+    {
+      "id": "J-0372",
+      "rule": "A4",
+      "type": "texte libre non résolu",
+      "subject": "OPR-0027 ~ apprêture du dos",
+      "before": {
+        "commonly_bundled": "apprêture du dos"
+      },
+      "after": null,
+      "reason": "Le texte ne désigne aucune entrée (ou un domaine, pas une opération).",
+      "impact": "Aucune relation créée ; l'information reste dans la source brute."
+    },
+    {
+      "id": "J-0373",
+      "rule": "A4",
+      "type": "texte libre non résolu",
+      "subject": "OPR-0064 ~ parure du cuir",
+      "before": {
+        "commonly_bundled": "parure du cuir"
+      },
+      "after": null,
+      "reason": "Le texte ne désigne aucune entrée (ou un domaine, pas une opération).",
+      "impact": "Aucune relation créée ; l'information reste dans la source brute."
+    },
+    {
+      "id": "J-0374",
+      "rule": "A4",
+      "type": "texte libre déjà décrit",
+      "subject": "OPR-0064 ~ formation des coiffes",
+      "before": {
+        "commonly_bundled": "formation des coiffes"
+      },
+      "after": {
+        "component": "OPR-0049"
+      },
+      "reason": "Le texte désigne une entrée dont la paire figure déjà dans une relation.",
+      "impact": "Aucun ajout."
+    },
+    {
+      "id": "J-0375",
+      "rule": "A4",
+      "type": "texte libre non résolu",
+      "subject": "OPR-0064 ~ remplis",
+      "before": {
+        "commonly_bundled": "remplis"
+      },
+      "after": null,
+      "reason": "Le texte ne désigne aucune entrée (ou un domaine, pas une opération).",
+      "impact": "Aucune relation créée ; l'information reste dans la source brute."
+    },
+    {
+      "id": "J-0376",
+      "rule": "A4",
+      "type": "texte libre non résolu",
+      "subject": "OPR-0064 ~ dorure",
+      "before": {
+        "commonly_bundled": "dorure"
+      },
+      "after": null,
+      "reason": "Le texte ne désigne aucune entrée (ou un domaine, pas une opération).",
+      "impact": "Aucune relation créée ; l'information reste dans la source brute."
+    },
+    {
+      "id": "J-0377",
+      "rule": "A2",
+      "type": "opération liée (hors des trois familles)",
+      "subject": "OPR-0033 ~ OPR-0028",
+      "before": {
+        "related_operations": "OPR-0028-grecquage"
+      },
+      "after": null,
+      "reason": "Paire déjà décrite dans operation_sequences.",
+      "impact": "Aucune perte."
+    },
+    {
+      "id": "J-0378",
+      "rule": "A2",
+      "type": "opération liée (hors des trois familles)",
+      "subject": "OPR-0041 ~ OPR-0039",
+      "before": {
+        "related_operations": "OPR-0039-endossure"
+      },
+      "after": null,
+      "reason": "« Liée à » n'est ni une séquence, ni une inclusion, ni une alternative : pas de famille pour la porter.",
+      "impact": "Information non reprise ; à réintroduire dans la bonne famille après relecture."
+    },
+    {
+      "id": "J-0379",
+      "rule": "A2",
+      "type": "opération liée (hors des trois familles)",
+      "subject": "OPR-0186 ~ OPR-0001",
+      "before": {
+        "related_operations": "OPR-0001-examen_de_l_ouvrage"
+      },
+      "after": null,
+      "reason": "« Liée à » n'est ni une séquence, ni une inclusion, ni une alternative : pas de famille pour la porter.",
+      "impact": "Information non reprise ; à réintroduire dans la bonne famille après relecture."
+    },
+    {
+      "id": "J-0380",
+      "rule": "A2",
+      "type": "opération liée (hors des trois familles)",
+      "subject": "OPR-0186 ~ OPR-0002",
+      "before": {
+        "related_operations": "OPR-0002-constat_d_etat"
+      },
+      "after": null,
+      "reason": "« Liée à » n'est ni une séquence, ni une inclusion, ni une alternative : pas de famille pour la porter.",
+      "impact": "Information non reprise ; à réintroduire dans la bonne famille après relecture."
+    },
+    {
+      "id": "J-0381",
+      "rule": "A2",
+      "type": "indicateur de validation des relations",
+      "subject": "39 relations d'origine",
+      "before": {
+        "needs_binder_validation": "absent (jamais marqué)"
+      },
+      "after": {
+        "needsBinderValidation": "true si créée par conversion, contredite, ou si une extrémité est à valider"
+      },
+      "reason": "La séquence exacte des opérations fait partie des zones à faire relire : aucune des 39 relations n'était marquée.",
+      "impact": "Interne au pilotage du référentiel ; jamais affiché au relieur."
+    }
+  ]
+}

@@ -65,6 +65,7 @@ export function MoneyInput({
   label,
   className = FIELD,
   invalid,
+  onCommit,
 }: {
   cents: number;
   onChange: (cents: number) => void;
@@ -72,6 +73,8 @@ export function MoneyInput({
   label: string;
   className?: string;
   invalid?: boolean;
+  /** Appelé quand le relieur QUITTE le champ (un prix saisi puis abandonné doit s'enregistrer). */
+  onCommit?: () => void;
 }) {
   const [text, setText] = useState(centsToEuroInput(cents));
   useEffect(() => {
@@ -92,7 +95,10 @@ export function MoneyInput({
         const parsed = parseEurosToCents(event.target.value);
         if (parsed !== null) onChange(parsed);
       }}
-      onBlur={() => setText(centsToEuroInput(cents))}
+      onBlur={() => {
+        setText(centsToEuroInput(cents));
+        onCommit?.();
+      }}
     />
   );
 }

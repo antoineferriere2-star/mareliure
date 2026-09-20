@@ -154,9 +154,11 @@ describe("migration Contacts + Ouvrages", () => {
 });
 
 describe("l'historique des migrations", () => {
-  it("la nouvelle migration est la plus récente : elle s'applique après toutes les autres", () => {
+  it("la migration s'applique APRÈS celle du devis (elle en étend les tables) ; d'autres peuvent lui succéder", () => {
     const names = readdirSync(DIR).filter((f) => f.endsWith(".sql")).sort();
-    expect(names[names.length - 1]).toBe(NAME);
+    expect(names).toContain("20260919090000_marketplace_binder_quotes.sql");
+    expect(names.indexOf(NAME)).toBeGreaterThan(names.indexOf("20260919090000_marketplace_binder_quotes.sql"));
+    expect(names.indexOf(NAME)).toBeGreaterThan(names.indexOf("20260920130000_marketplace_message_audiences.sql"));
   });
 
   it("aucune migration antérieure ne mentionne les objets créés ici (rien d'appliqué n'a été réécrit)", () => {

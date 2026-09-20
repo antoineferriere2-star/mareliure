@@ -1537,6 +1537,8 @@ export type Database = {
           position: number
           quantity: number
           quote_id: string
+          reference_operation_key: string | null
+          reference_version: string | null
           service_id: string | null
           total_ht_cents: number
           unit: string | null
@@ -1552,6 +1554,8 @@ export type Database = {
           position: number
           quantity?: number
           quote_id: string
+          reference_operation_key?: string | null
+          reference_version?: string | null
           service_id?: string | null
           total_ht_cents: number
           unit?: string | null
@@ -1567,6 +1571,8 @@ export type Database = {
           position?: number
           quantity?: number
           quote_id?: string
+          reference_operation_key?: string | null
+          reference_version?: string | null
           service_id?: string | null
           total_ht_cents?: number
           unit?: string | null
@@ -1870,7 +1876,10 @@ export type Database = {
           description: string | null
           id: string
           is_active: boolean
+          is_favorite: boolean
           name: string
+          reference_operation_key: string | null
+          reference_version: string | null
           sort_order: number
           unit: string | null
           unit_price_cents: number
@@ -1885,7 +1894,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_favorite?: boolean
           name: string
+          reference_operation_key?: string | null
+          reference_version?: string | null
           sort_order?: number
           unit?: string | null
           unit_price_cents?: number
@@ -1900,7 +1912,10 @@ export type Database = {
           description?: string | null
           id?: string
           is_active?: boolean
+          is_favorite?: boolean
           name?: string
+          reference_operation_key?: string | null
+          reference_version?: string | null
           sort_order?: number
           unit?: string | null
           unit_price_cents?: number
