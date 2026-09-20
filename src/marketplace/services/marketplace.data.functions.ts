@@ -50,6 +50,7 @@ import {
   signFirstCasePhoto,
 } from "./caseRepository.server";
 import { loadAggregates, loadPricebook } from "./pricingRepository.server";
+import { assertPricingOpen } from "./pricingGuards.server";
 import {
   acceptBinderInvitation as acceptBinderInvitationForUser,
   createBinderInvitation,
@@ -58,7 +59,7 @@ import {
 } from "./binderMembership.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
 import { unreadCountsByCase } from "./messaging.data.functions";
-import { hiddenSenderRolesForCustomer } from "@/marketplace/messaging/conversation";
+import { MESSAGE_AUDIENCES, readableAudiences } from "@/marketplace/messaging/audience";
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -249,11 +250,21 @@ export const listMarketplaceCases = createServerFn({ method: "GET" })
       }
     }
 
+    // Le concierge doit SAVOIR qu'un message l'attend : il lit tous les canaux (client et atelier), et
+    // chacun de leurs messages non lus compte ici — sans quoi le canal atelier resterait sans lecteur.
+    const unread = await unreadCountsByCase(
+      sb,
+      ids,
+      context.userId,
+      new Map(ids.map((id) => [id, MESSAGE_AUDIENCES] as const)),
+    );
+
     return (cases ?? []).map((row) => ({
       ...row,
       title: titles.get(row.dossier_id) ?? row.reference,
       invitedCount: counts.get(row.id)?.offered ?? 0,
       acceptedCount: counts.get(row.id)?.accepted ?? 0,
+      unreadMessages: unread.get(row.id) ?? 0,
     }));
   });
 
@@ -385,6 +396,9 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
+    // Un dossier engagé (proposition acceptée, atelier retenu, offres en cours) ne repart jamais
+    // en chiffrage : refus net avant toute écriture (la base le garantit aussi).
+    await assertPricingOpen(sb, data.caseId);
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable");
 
@@ -480,6 +494,9 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
       actor_user_id: context.userId,
       event_type: abstained ? "pricing_manual_review" : "pricing_generated",
       metadata: {
+        // Ce qu'une régénération remplace : la correction humaine ne disparaît pas sans trace.
+        previous_pricing_status: caseContext.row.pricing_status,
+        previous_customer_price_cents: caseContext.row.customer_price_cents,
         brand,
         customer_price_cents: brandPrice?.servicePriceCents ?? null,
         base_service_price_cents: brandPrice?.baseServicePriceCents ?? null,
@@ -509,6 +526,7 @@ export const saveMarketplacePricing = createServerFn({ method: "POST" })
     const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
     if (!validation.valid) fail(422, validation.errors.join(" "));
     const sb = await admin();
+    await assertPricingOpen(sb, data.caseId);
     const { error } = await sb
       .from("marketplace_cases")
       .update({
@@ -539,6 +557,7 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
     const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
     if (!validation.valid) fail(422, validation.errors.join(" "));
     const sb = await admin();
+    await assertPricingOpen(sb, data.caseId);
     const { data: result, error } = await sb.rpc("marketplace_validate_pricing", {
       p_case_id: data.caseId,
       p_customer_price_cents: data.customerPriceCents,
@@ -550,21 +569,18 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
     });
     if (error) fail(409, error.message);
 
-    // `marketplace_validate_pricing` ne touche jamais service_price_cents/
-    // pricing_mode/brand_multiplier_bps — seul generateMarketplacePricing
-    // (le moteur automatique) les renseigne, et il s'abstient tant qu'aucun
-    // atelier n'a encore saisi de grille (aggregates vides). Sans ce
-    // complément, un dossier tarifé à la main (le seul cas possible
-    // aujourd'hui) resterait à jamais bloqué devant createCommercialProposal
-    // ("pas de prix client calculé"), alors qu'un admin vient justement de
-    // le fixer. On ne l'écrase jamais si le moteur l'a déjà renseigné.
-    if (result && result.service_price_cents === null) {
+    // `marketplace_validate_pricing` recopie le prix validé dans service_price_cents (une seule
+    // vérité de prix, P1-4) mais ne touche jamais pricing_mode / brand_multiplier_bps /
+    // base_service_price_cents — seul generateMarketplacePricing (le moteur automatique) les
+    // renseigne, et il s'abstient tant qu'aucun atelier n'a saisi de grille. Sans ce complément un
+    // dossier tarifé à la main resterait sans mode ni multiplicateur. On ne l'écrase jamais si le
+    // moteur les a déjà renseignés.
+    if (result && result.brand_multiplier_bps === null) {
       const brand = isMarketplaceBrand(result.brand) ? result.brand : "MA_RELIURE";
       const multiplierBps = marketplaceBrandConfig(brand).pricingPolicy.serviceMultiplierBps;
       const { error: backfillError } = await sb
         .from("marketplace_cases")
         .update({
-          service_price_cents: data.customerPriceCents,
           base_service_price_cents: data.customerPriceCents,
           brand_multiplier_bps: multiplierBps,
           pricing_mode: result.pricing_mode ?? "MANUAL_STUDY",
@@ -1093,7 +1109,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     const caseIds = matches.map((m) => m.case_id);
     const { data: cases } = await sb
       .from("marketplace_cases")
-      .select("id, reference, status, dossier_id")
+      .select("id, reference, status, dossier_id, brand")
       .in("id", caseIds);
 
     // Titles again come from the Dossier the case points at, never from a copy.
@@ -1131,7 +1147,19 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
       .in("case_id", caseIds)
       .eq("binder_id", binder!.id);
 
-    const unread = await unreadCountsByCase(sb, caseIds, context.userId);
+    // Seul l'atelier RETENU lit une conversation (et seulement ses audiences) : un atelier invité ou
+    // disponible n'y a aucun droit, ses messages ne comptent donc pas — 0, jamais un compte qui les trahirait.
+    const readableByCase = new Map<string, readonly string[]>();
+    for (const match of matches) {
+      if (match.state !== "selected") continue;
+      const brandRaw = (cases ?? []).find((c) => c.id === match.case_id)?.brand;
+      const brand = isMarketplaceBrand(brandRaw ?? "") ? (brandRaw as "MA_RELIURE" | "FINE_BINDERY") : "MA_RELIURE";
+      readableByCase.set(
+        match.case_id,
+        readableAudiences("binder", marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
+      );
+    }
+    const unread = await unreadCountsByCase(sb, caseIds, context.userId, readableByCase);
 
     return matches.map((match) => {
       const row = (cases ?? []).find((c) => c.id === match.case_id);
@@ -1296,19 +1324,19 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       .order("created_at", { ascending: false });
 
     const caseIds = (cases ?? []).map((row) => row.id);
-    // Un message d'atelier que ce client ne peut pas lire (Fine Bindery : le
-    // concierge est son seul interlocuteur) ne compte pas dans ses non-lus.
-    const hiddenSenderRoles = new Map(
+    // Seuls les messages des audiences que ce client peut lire comptent dans ses non-lus (Fine Bindery :
+    // le concierge est son seul interlocuteur — jamais un message d'atelier).
+    const readableAudiencesByCase = new Map(
       (cases ?? []).map((row) => {
         const brand = isMarketplaceBrand(row.brand) ? row.brand : "MA_RELIURE";
         return [
           row.id,
-          hiddenSenderRolesForCustomer(marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
+          readableAudiences("customer", marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
         ] as const;
       }),
     );
     const [unread, openDecisions] = await Promise.all([
-      unreadCountsByCase(sb, caseIds, context.userId, hiddenSenderRoles),
+      unreadCountsByCase(sb, caseIds, context.userId, readableAudiencesByCase),
       caseIds.length === 0
         ? Promise.resolve({ data: [] as { case_id: string }[] })
         : sb.from("marketplace_decisions").select("case_id").eq("status", "open").in("case_id", caseIds),
@@ -1328,7 +1356,7 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       // Même règle que le détail : un prix n'est montré que validé par un humain.
       const priceValidated = row.pricing_status === "validated";
       const [commerce, thumbnailUrl] = await Promise.all([
-        loadCustomerCommerce(sb, row.id, { priceValidated, caseStatus: row.status }),
+        loadCustomerCommerce(sb, row.id, { priceValidated, customerPriceCents: row.customer_price_cents, caseStatus: row.status }),
         caseContext ? signFirstCasePhoto(sb, caseContext.answers) : Promise.resolve(null),
       ]);
       const validatedPriceCents = priceValidated ? row.customer_price_cents : null;
@@ -1405,6 +1433,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     // en liste blanche : ni rémunération d'atelier, ni marge, ni règle.
     const commerce = await loadCustomerCommerce(sb, data.caseId, {
       priceValidated: caseContext.row.pricing_status === "validated",
+      customerPriceCents: caseContext.row.customer_price_cents,
       caseStatus: caseContext.row.status,
     });
     const intentLine = caseContext.brief.confirmedInformation.find(

@@ -3,26 +3,27 @@
  *
  * Deliberately its own access decision, not a reuse of permissions.ts'
  * canViewCase — a relieur sollicité mais non retenu keeps a
- * marketplace_case_matches row after being passed over (state moves to
- * 'declined' or 'cancelled', the row itself is not deleted), and canViewCase
- * treats "has any match row" as "may view". That is correct for the case
- * record itself, but a conversation carries what the customer and the
- * selected atelier actually said to each other — an atelier that lost the
- * job must not keep reading it (§72: "BINDER sollicité mais non retenu perd
- * l'accès au contenu privé approprié"). So this module only ever considers
- * binder ids whose match is still live (`offered` or `accepted`) plus
- * whichever one was `selected`.
+ * marketplace_case_matches row (state 'offered', 'accepted', 'declined',
+ * 'cancelled'…), and canViewCase treats "has any match row" as "may view".
+ * That is correct for the case record itself, but a conversation carries what
+ * the customer and the platform actually said — an atelier that is merely
+ * INVITED (`offered`) or available (`accepted`) has no right to it yet
+ * (Phase 0 / P1-6; before, both could read and write the whole thread), and
+ * one that lost the job must not keep reading it (§72). So the only workshop
+ * that ever enters a conversation is the one that was `selected`.
+ *
+ * What each party READS inside the conversation is bounded by the message's
+ * persisted audience — see audience.ts.
  *
  * Pure and framework-free, like permissions.ts.
  */
 import type { Viewer } from "@/marketplace/permissions";
 
-/** Match states that still give a workshop a live stake in the case. */
-export const LIVE_MATCH_STATES = ["offered", "accepted", "selected"] as const;
-
 export interface ConversationAccessFacts {
-  /** binder_ids whose match is offered/accepted/selected — never declined or cancelled. */
-  liveBinderIds: readonly string[];
+  /**
+   * The workshop whose match is `selected` AND that is still in good standing
+   * (a suspended or rejected workshop is `null` here) — the only one that may enter.
+   */
   selectedBinderId: string | null;
   customerUserId: string | null;
 }
@@ -34,10 +35,7 @@ export function canAccessConversation(viewer: Viewer, facts: ConversationAccessF
     case "customer":
       return facts.customerUserId !== null && facts.customerUserId === viewer.userId;
     case "binder":
-      return (
-        facts.liveBinderIds.includes(viewer.binderId) ||
-        facts.selectedBinderId === viewer.binderId
-      );
+      return facts.selectedBinderId !== null && facts.selectedBinderId === viewer.binderId;
     case "anonymous":
       return false;
   }
@@ -57,29 +55,6 @@ export function senderRoleFor(viewer: Viewer): SenderRole | null {
     case "anonymous":
       return null;
   }
-}
-
-/**
- * Ce que le client d'une marque lit dans le fil de son dossier.
- *
- * Ma Reliure : tout — le fil est partagé entre le client, son atelier et
- * l'équipe. Fine Bindery (`customerWorkshopDirectMessaging: false`, modèle
- * concierge) : jamais un message d'atelier — son seul interlocuteur est le
- * concierge, qui relaie. Un message d'atelier n'est donc ni envoyé au navigateur
- * de ce client, ni compté dans ses non-lus.
- *
- * Ceci ne décide que de ce que LIT le client. Ce que lit l'atelier (le fil
- * entier, messages du client compris) n'est pas touché ici : voir la section
- * « modèle concierge » de docs/CODEX_HANDOFF.md.
- */
-export function customerVisibleSenderRoles(directWorkshopMessaging: boolean): readonly SenderRole[] {
-  return directWorkshopMessaging ? ["customer", "binder", "admin"] : ["customer", "admin"];
-}
-
-/** Les rôles d'auteur dont un client ne reçoit aucun message — le complément du précédent. */
-export function hiddenSenderRolesForCustomer(directWorkshopMessaging: boolean): readonly SenderRole[] {
-  const visible = customerVisibleSenderRoles(directWorkshopMessaging);
-  return (["customer", "binder", "admin"] as const).filter((role) => !visible.includes(role));
 }
 
 export interface ConversationMessageFacts {

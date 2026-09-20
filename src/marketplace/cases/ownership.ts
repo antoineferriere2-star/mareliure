@@ -77,6 +77,16 @@ export function extractAccessToken(input: string): string | null {
 }
 
 /**
+ * The one normalisation applied before two addresses are compared: surrounding
+ * whitespace dropped, lower-cased. Nothing cleverer — no plus-tag stripping, no
+ * dot folding — because two addresses that differ are two mailboxes, and a
+ * rapprochement that guesses wrong hands one person another person's book.
+ */
+export function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+/**
  * The account's e-mail, but only when the identity provider states it is
  * verified.
  *
@@ -89,7 +99,7 @@ export function extractAccessToken(input: string): string | null {
  * sent, and nobody inherits a stranger's book.
  */
 export function verifiedEmailFromClaims(claims: Record<string, unknown>): string | null {
-  const email = typeof claims.email === "string" ? claims.email.trim().toLowerCase() : "";
+  const email = typeof claims.email === "string" ? normalizeEmail(claims.email) : "";
   if (!email) return null;
 
   const metadata =

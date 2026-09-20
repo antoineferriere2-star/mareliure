@@ -70,21 +70,36 @@ export async function recordCheckoutSession(
   if (error) throw error;
 }
 
-/** Le webhook est l'unique appelant : un paiement ne se marque jamais depuis un retour de navigateur. */
+export type PaymentRecording =
+  /** Premier enregistrement de ce paiement. */
+  | "marked"
+  /** Le même PaymentIntent, déjà enregistré (doublon d'événement, reprise) — rien n'est réécrit. */
+  | "already_paid_same"
+  /** La proposition est déjà payée par UN AUTRE PaymentIntent (double paiement) — rien n'est écrasé. */
+  | "other_payment";
+
+/**
+ * Le webhook est l'unique appelant : un paiement ne se marque jamais depuis un retour de navigateur.
+ *
+ * Ce qui a été encaissé (montant, devise) est conservé, et un paiement déjà enregistré n'est JAMAIS
+ * réécrit (`paid_at`, PaymentIntent) : la décision est atomique côté base
+ * (`marketplace_mark_proposal_paid`), pas un upsert qui écraserait la première date de paiement.
+ */
 export async function markCommercialPaymentSucceeded(
   sb: Supa,
   proposalId: string,
-  input: { paymentIntentId: string; invoiceId?: string | null },
-): Promise<void> {
-  const { error } = await sb.from("marketplace_commercial_proposal_payments").upsert(
-    {
-      proposal_id: proposalId,
-      stripe_payment_intent_id: input.paymentIntentId,
-      stripe_invoice_id: input.invoiceId ?? null,
-      paid_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    },
-    { onConflict: "proposal_id" },
-  );
+  input: { paymentIntentId: string; invoiceId?: string | null; amountCents: number; currency: string },
+): Promise<PaymentRecording> {
+  const { data, error } = await sb.rpc("marketplace_mark_proposal_paid", {
+    p_proposal_id: proposalId,
+    p_payment_intent_id: input.paymentIntentId,
+    p_invoice_id: (input.invoiceId ?? null) as unknown as string,
+    p_amount_cents: input.amountCents,
+    p_currency: input.currency,
+  });
   if (error) throw error;
+  if (data !== "marked" && data !== "already_paid_same" && data !== "other_payment") {
+    throw new Error("marketplace_mark_proposal_paid returned no usable outcome");
+  }
+  return data;
 }

@@ -114,6 +114,7 @@ export async function getPaymentPreflight(sb: Supa, caseId: string): Promise<Pay
       customerType: proposal.customerType,
       businessName: proposal.businessName,
       alreadyPaid,
+      amount: proposal,
     });
     if (!eligibility.eligible) blockedReasons.push(eligibility.reason);
   }

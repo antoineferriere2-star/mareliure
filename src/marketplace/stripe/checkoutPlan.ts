@@ -8,13 +8,15 @@
  * traduit un snapshot déjà figé en lignes Stripe.
  */
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { resolveAmountDue, type AmountDue, type AmountDueBlock, type AmountDueInput } from "./amountDue";
 import type { StripeProductIds } from "./stripeConfig.server";
 
 export type CheckoutBlockReason =
   | "proposal_not_accepted"
   | "tax_review_required"
   | "business_identity_incomplete"
-  | "already_paid";
+  | "already_paid"
+  | AmountDueBlock;
 
 export interface CheckoutEligibilityInput {
   status: string;
@@ -27,10 +29,12 @@ export interface CheckoutEligibilityInput {
   /** Requis quand `customerType` vaut `"BUSINESS"` — `null` sinon. Garanti cohérent en base (contrainte CHECK, migration 20260917100000) ; revérifié ici, jamais supposé. */
   businessName: string | null;
   alreadyPaid: boolean;
+  /** Le snapshot commercial dont dépend le montant : sans montant exigible résolu, aucun Checkout (P1-1). */
+  amount: AmountDueInput;
 }
 
 export type CheckoutEligibility =
-  | { eligible: true }
+  | { eligible: true; amountDue: AmountDue }
   | { eligible: false; reason: CheckoutBlockReason };
 
 /**
@@ -52,7 +56,9 @@ export function checkoutEligibility(input: CheckoutEligibilityInput): CheckoutEl
   if (input.customerType === "BUSINESS" && !input.businessName) {
     return { eligible: false, reason: "business_identity_incomplete" };
   }
-  return { eligible: true };
+  const amountDue = resolveAmountDue(input.amount);
+  if (!amountDue.ok) return { eligible: false, reason: amountDue.reason };
+  return { eligible: true, amountDue };
 }
 
 export interface CheckoutLineItem {
@@ -64,35 +70,36 @@ export interface CheckoutLineItem {
 
 export interface ProposalForCheckout {
   brand: MarketplaceBrand;
-  currency: string;
-  customerServicePriceCents: number;
-  shippingTotalCents: number;
+  /** Le montant exigible résolu par `checkoutEligibility` — jamais recalculé ici. */
+  amountDue: AmountDue;
 }
 
 /**
  * Le service en ligne 1, le transport en ligne 2 seulement s'il y en a un —
- * jamais une ligne à 0 (§9-11). Fine Bindery ne reçoit ici que le résultat
- * final déjà multiplié : ce module ne connaît aucun coefficient de marque.
+ * jamais une ligne à 0 (§9-11). Les lignes sont TTC (TVA du snapshot validé
+ * incluse) et leur somme vaut EXACTEMENT `amountDue.amountCents`. Fine Bindery
+ * ne reçoit ici que le résultat final déjà multiplié : ce module ne connaît
+ * aucun coefficient de marque.
  */
 export function buildCheckoutLineItems(
   proposal: ProposalForCheckout,
   productIds: StripeProductIds,
 ): CheckoutLineItem[] {
-  const currency = proposal.currency.toLowerCase();
+  const { amountDue } = proposal;
   const lines: CheckoutLineItem[] = [
     {
       productId:
         proposal.brand === "FINE_BINDERY" ? productIds.fineBinderyService : productIds.maReliureService,
-      unitAmountCents: proposal.customerServicePriceCents,
-      currency,
+      unitAmountCents: amountDue.serviceLineCents,
+      currency: amountDue.currency,
       quantity: 1,
     },
   ];
-  if (proposal.shippingTotalCents > 0) {
+  if (amountDue.shippingLineCents > 0) {
     lines.push({
       productId: productIds.shipping,
-      unitAmountCents: proposal.shippingTotalCents,
-      currency,
+      unitAmountCents: amountDue.shippingLineCents,
+      currency: amountDue.currency,
       quantity: 1,
     });
   }

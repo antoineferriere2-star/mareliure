@@ -25,6 +25,7 @@
 import { z } from "zod";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { customerAcceptance } from "@/marketplace/commercial/customerAcceptance";
+import { proposalCarriesCurrentPrice } from "@/marketplace/commercial/authoritativePrice";
 import { canViewCase } from "@/marketplace/permissions";
 import { loadCaseContext } from "@/marketplace/services/caseRepository.server";
 import {
@@ -101,6 +102,7 @@ export async function acceptProposalForCustomer(
 
   const caseFacts = {
     priceValidated: caseContext.row.pricing_status === "validated",
+    customerPriceCents: caseContext.row.customer_price_cents,
     caseStatus: caseContext.row.status,
   };
   const alreadyAccepted = async (): Promise<AcceptProposalResult> => ({
@@ -132,7 +134,12 @@ export async function acceptProposalForCustomer(
     taxValidatedAt: proposal.taxValidatedAt,
     customerType: proposal.customerType,
     businessName: proposal.businessName,
+    amount: proposal,
     casePriceValidated: caseFacts.priceValidated,
+    proposalPriceCurrent: proposalCarriesCurrentPrice(proposal.customerServicePriceCents, {
+      pricingStatus: caseFacts.priceValidated ? "validated" : null,
+      customerPriceCents: caseFacts.customerPriceCents,
+    }),
     caseStatus: caseFacts.caseStatus,
   });
   if (!verdict.acceptable) throw new CustomerAcceptanceError("not_acceptable");

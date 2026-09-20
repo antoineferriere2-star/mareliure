@@ -23,8 +23,9 @@
  *
  * Everything under `customer` below is the customer's own presentation only
  * (friendly errors, a kept draft when a send fails, message times, scrolling
- * inside the thread rather than jumping the page). The atelier's view is
- * deliberately untouched, and nothing here changes who may write to whom.
+ * inside the thread rather than jumping the page). Who may read and write is decided
+ * on the server from each message's persisted audience (messaging/audience.ts):
+ * nothing here changes it, and the workshop's own panel only ever receives its channel.
  */
 import { useEffect, useRef, useState, type FormEvent } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -36,6 +37,7 @@ import {
 } from "@/marketplace/services/messaging.data.functions";
 import { Skeleton } from "@/components/ui/skeleton";
 import { customerCopy } from "@/marketplace/customer/customerPresentation";
+import type { MessageAudience } from "@/marketplace/messaging/audience";
 import { PortalError } from "@/marketplace/pages/customer/CustomerPortalUi";
 
 const POLL_INTERVAL_MS = 15_000;
@@ -46,6 +48,9 @@ const SENDER_LABELS: Record<Locale, Record<string, string>> = {
   "fr-FR": { customer: "Vous", binder: "Votre atelier", admin: "Ma Reliure" },
   "en-US": { customer: "You", binder: "Your workshop", admin: "Fine Bindery" },
 };
+
+/** Ce que voit l'équipe (le concierge) : elle nomme les parties, elle ne parle pas « à la première personne ». */
+const ADMIN_SENDER_LABELS: Record<string, string> = { customer: "Client", binder: "Atelier", admin: "Équipe" };
 
 function formatMessageTime(iso: string, locale: Locale): string {
   const date = new Date(iso);
@@ -58,11 +63,19 @@ export function ConversationPanel({
   viewerRole,
   locale = "fr-FR",
   channel = "direct",
+  audience,
+  heading,
 }: {
   caseId: string;
-  viewerRole: "customer" | "binder";
+  viewerRole: "customer" | "binder" | "admin";
   locale?: Locale;
   channel?: "direct" | "concierge";
+  /**
+   * Le canal affiché et dans lequel on écrit — pour l'équipe seulement (qui lit tous les canaux). Client et atelier
+   * n'en choisissent jamais : le serveur les range dans leur seul canal.
+   */
+  audience?: MessageAudience;
+  heading?: string;
 }) {
   const en = locale === "en-US";
   const customer = viewerRole === "customer";
@@ -72,7 +85,10 @@ export function ConversationPanel({
   const send = useServerFn(sendCaseMessage);
   const markRead = useServerFn(markConversationRead);
   const queryClient = useQueryClient();
-  const queryKey = ["marketplace", "conversation", caseId] as const;
+  // La clé du client et de l'atelier ne change pas ; seul un canal explicite (l'équipe) en ajoute un.
+  const queryKey = (audience
+    ? (["marketplace", "conversation", caseId, audience] as const)
+    : (["marketplace", "conversation", caseId] as const)) as readonly unknown[];
   const [draft, setDraft] = useState("");
   const [sendFailed, setSendFailed] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -80,12 +96,12 @@ export function ConversationPanel({
 
   const { data, isPending, error, refetch, isFetching } = useQuery({
     queryKey,
-    queryFn: () => fetchMessages({ data: { caseId } }),
+    queryFn: () => fetchMessages({ data: { caseId, ...(audience ? { audience } : {}) } }),
     refetchInterval: POLL_INTERVAL_MS,
   });
 
   const mutation = useMutation({
-    mutationFn: (body: string) => send({ data: { caseId, body } }),
+    mutationFn: (body: string) => send({ data: { caseId, body, ...(audience ? { audience } : {}) } }),
     // Optimistic update: the message appears immediately, under the
     // sender's own name, before the server confirms it — the mutation's
     // onError below rolls it back if the send actually failed.
@@ -102,6 +118,7 @@ export function ConversationPanel({
                 {
                   id: `optimistic-${Date.now()}`,
                   senderRole: viewerRole,
+                  audience: audience ?? "shared",
                   isMine: true,
                   body,
                   deleted: false,
@@ -191,7 +208,7 @@ export function ConversationPanel({
 
   return (
     <section id="messages" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
-      <h2 className="font-serif text-lg">{customer ? title : "Conversation"}</h2>
+      <h2 className="font-serif text-lg">{customer ? title : (heading ?? "Conversation")}</h2>
       {concierge && <p className="mt-1 text-sm leading-6 text-muted-foreground">{copy.conciergeIntro}</p>}
       <div
         ref={threadRef}
@@ -219,7 +236,9 @@ export function ConversationPanel({
             <p className="text-xs font-semibold opacity-70">
               {concierge && message.senderRole === "admin"
                 ? copy.conciergeAuthor
-                : (SENDER_LABELS[locale][message.senderRole] ?? message.senderRole)}
+                : viewerRole === "admin"
+                  ? (ADMIN_SENDER_LABELS[message.senderRole] ?? message.senderRole)
+                  : (SENDER_LABELS[locale][message.senderRole] ?? message.senderRole)}
               {customer && (
                 <span className="ml-2 font-normal opacity-80">
                   {formatMessageTime(message.createdAt, locale)}

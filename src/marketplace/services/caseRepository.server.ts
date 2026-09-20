@@ -20,6 +20,7 @@ import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
 import { extractPhotoReferences } from "@/build/engine/visitorSummary";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
 import { buildCaseProfile, type CaseProfile } from "@/marketplace/cases/caseProfile";
+import { normalizeEmail } from "@/marketplace/cases/ownership";
 import { triageCase } from "@/marketplace/cases/triage";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
 import {
@@ -245,11 +246,20 @@ export async function claimCasesByVerifiedEmail(
   userId: string,
   verifiedEmail: string,
 ): Promise<number> {
-  const { data: dossiers } = await sb
-    .from("build_dossiers")
-    .select("id")
-    .ilike("visitor_email", verifiedEmail);
-  const dossierIds = (dossiers ?? []).map((d) => d.id);
+  const wanted = normalizeEmail(verifiedEmail);
+  if (!wanted) return 0;
+
+  // Exact equality on the normalised address, decided by the database
+  // (`lower(btrim(visitor_email)) = wanted`). Never a pattern operator: `_` and
+  // `%` are wildcards in LIKE/ILIKE, so `marie_dupont@…` would also have matched
+  // `marieXdupont@…` — another visitor's Dossier.
+  const { data: matched, error } = await sb.rpc("marketplace_dossier_ids_for_verified_email", {
+    p_email: wanted,
+  });
+  // Fail closed: if the lookup cannot run, nothing is attached (the customer still
+  // has the access link), never a looser fallback.
+  if (error) return 0;
+  const dossierIds = (matched ?? []) as string[];
   if (dossierIds.length === 0) return 0;
 
   const { data: claimed } = await sb

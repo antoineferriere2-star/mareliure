@@ -22,6 +22,7 @@ import { findActiveBinderMembership } from "./binderMembership.server";
 import {
   buildQuoteRows,
   EMPTY_BILLING_PROFILE,
+  effectiveVatMention,
   issuerOf,
   profileReadiness,
   QuoteError,
@@ -538,7 +539,10 @@ export async function convertQuoteToInvoice(sb: Supa, binderId: string, quoteId:
   if (quote.status !== "accepted") throw new BinderQuotesError("conflict");
 
   const profile = await loadBillingProfile(sb, binderId);
-  const readiness = profileReadiness({ ...profile, vatRegime: quote.vat_regime, vatMention: quote.vat_mention ?? profile.vatMention }, "invoice");
+  // Le devis a pu naître en franchise SANS mention (profil complété depuis) : ce qui sera figé dans la
+  // facture est la mention effective — celle du devis si elle existe, sinon celle du profil.
+  const vatMention = effectiveVatMention(quote.vat_mention, profile.vatMention);
+  const readiness = profileReadiness({ ...profile, vatRegime: quote.vat_regime, vatMention }, "invoice");
   if (!readiness.ready) throw new BinderQuotesError("profile_incomplete", readiness.missing);
 
   const { data, error } = await sb.rpc("marketplace_binder_convert_quote_to_invoice", {
@@ -548,10 +552,12 @@ export async function convertQuoteToInvoice(sb: Supa, binderId: string, quoteId:
     // Nullable côté SQL (« pas de mentions ») ; le générateur type les arguments de fonction non-nullables.
     p_invoice_notes: profile.invoiceNotes as unknown as string,
     p_issuer: asJson(issuerOf(profile)),
+    p_vat_mention: vatMention as unknown as string,
   });
   if (error || !data) {
     const message = String(error?.message ?? "");
     if (message.includes("quote_not_found")) throw new BinderQuotesError("not_found");
+    if (message.includes("vat_mention_required")) throw new BinderQuotesError("profile_incomplete", ["Mention de TVA"]);
     if (message.includes("quote_not_accepted") || message.includes("quote_already_invoiced")) throw new BinderQuotesError("conflict");
     throw new BinderQuotesError("failed");
   }

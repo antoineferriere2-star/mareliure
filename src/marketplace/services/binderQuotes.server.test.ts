@@ -139,10 +139,15 @@ function makeDb() {
       if (!q) return { data: null, error: { message: "quote_not_found" } };
       if (q.status === "invoiced") return { data: null, error: { message: "quote_already_invoiced" } };
       if (q.status !== "accepted") return { data: null, error: { message: "quote_not_accepted" } };
+      // Modèle de la fonction SQL : en franchise, la mention effective (celle du devis si elle est
+      // renseignée, sinon celle transmise par le serveur) est obligatoire, et c'est elle qui est figée.
+      const frozenMention = String(q.vat_mention ?? "").trim() || String(args.p_vat_mention ?? "").trim() || null;
+      if (q.vat_regime === "FRANCHISE" && !frozenMention) return { data: null, error: { message: "vat_mention_required" } };
       const id = uid();
       const { id: _i, quote_number: _n, status: _s, valid_until: _v, ...copy } = q;
       rows("marketplace_binder_invoices").push({
-        ...copy, id, quote_id: q.id, binder_id: q.binder_id, issue_date: args.p_issue_date,
+        ...copy, vat_mention: q.vat_regime === "FRANCHISE" ? frozenMention : q.vat_mention,
+        id, quote_id: q.id, binder_id: q.binder_id, issue_date: args.p_issue_date,
         invoice_number: number(q.binder_id, "invoice", Number(String(args.p_issue_date).slice(0, 4))),
         notes: args.p_invoice_notes, issuer: args.p_issuer ?? q.issuer,
         payment_status: "unpaid", amount_paid_cents: 0, deposit_paid_cents: 0,
@@ -639,6 +644,78 @@ describe("devis accepté → facture", () => {
     const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
     await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
     await expect(convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY)).rejects.toMatchObject({ code: "profile_incomplete", missing: ["Mention de TVA"] });
+  });
+
+  describe("P1-8 — la mention de franchise est figée dans la facture", () => {
+    const MENTION = "TVA non applicable, art. 293 B du CGI";
+    const franchiseQuoteWithoutMention = async () => {
+      await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: null }));
+      const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+      expect(quote.vatMention).toBeNull(); // un devis se chiffre sans administratif
+      await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
+      return quote;
+    };
+
+    it("devis en franchise sans mention → profil complété → conversion : la mention est dans la facture", async () => {
+      const quote = await franchiseQuoteWithoutMention();
+      await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: MENTION }));
+
+      const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+
+      expect(invoice.vatRegime).toBe("FRANCHISE");
+      expect(invoice.vatMention).toBe(MENTION);
+      // …et elle est effectivement imprimée sur le PDF de la facture.
+      expect((await renderDocumentPdf(invoice)).printed.join("\n")).toContain(MENTION);
+      // Relue depuis la base : figée, pas recalculée à l'affichage.
+      expect((await getInvoice(world.sb, BINDER_A, invoice.id)).vatMention).toBe(MENTION);
+    });
+
+    it("la mention figée ne bouge plus quand le profil change ensuite", async () => {
+      const quote = await franchiseQuoteWithoutMention();
+      await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: MENTION }));
+      const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+      await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: "Autre texte" }));
+      expect((await getInvoice(world.sb, BINDER_A, invoice.id)).vatMention).toBe(MENTION);
+    });
+
+    it("la mention déjà portée par le devis prime sur celle du profil", async () => {
+      await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: "Mention du devis" }));
+      const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+      await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
+      await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: "Mention du profil" }));
+      expect((await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY)).vatMention).toBe("Mention du devis");
+    });
+
+    it("une mention de devis blanche est traitée comme absente", async () => {
+      const quote = await franchiseQuoteWithoutMention();
+      world.tables.marketplace_binder_quotes.find((r) => r.id === quote.id)!.vat_mention = "   ";
+      await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: MENTION }));
+      expect((await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY)).vatMention).toBe(MENTION);
+    });
+
+    it("sans mention nulle part : refus, aucune facture, aucun numéro consommé", async () => {
+      const quote = await franchiseQuoteWithoutMention();
+      await expect(convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY)).rejects.toMatchObject({ code: "profile_incomplete", missing: ["Mention de TVA"] });
+      expect(await listInvoices(world.sb, BINDER_A)).toHaveLength(0);
+      expect((await getQuote(world.sb, BINDER_A, quote.id)).status).toBe("accepted");
+    });
+
+    it("le serveur transmet la mention effective à la fonction SQL", async () => {
+      const quote = await franchiseQuoteWithoutMention();
+      await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: MENTION }));
+      await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+      const call = world.rpcCalls.find((c) => c.name === "marketplace_binder_convert_quote_to_invoice");
+      expect(call?.args.p_vat_mention).toBe(MENTION);
+    });
+
+    it("un devis assujetti à la TVA n'est pas touché : pas de mention inventée", async () => {
+      await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatMention: "Texte du profil" }));
+      const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+      await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
+      const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+      expect(invoice.vatRegime).toBe("VAT_LIABLE");
+      expect(invoice.vatMention).toBe(quote.vatMention);
+    });
   });
 
   it("l'identité de l'émetteur sur la facture est celle du jour de la facture", async () => {

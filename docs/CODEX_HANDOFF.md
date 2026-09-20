@@ -1140,6 +1140,9 @@ ni espace atelier, ni migration) :
    rend pas. Ma Reliure est inchangée (fil partagé). `canAccessConversation`,
    les permissions et la base ne sont pas modifiés.
 
+   > **Mise à jour Phase 0 (P1-6)** : le manque serveur ci-dessous est traité — audiences de messages persistées,
+   > lecture atelier limitée à son canal, accès réservé à l'atelier retenu, vue admin des deux canaux ajoutée. Voir « Phase 0 » en fin de document.
+
    **Manque serveur à traiter dans une PR séparée** (ne pas le faire ici : il
    touche le modèle de messagerie, les permissions, la base et l'espace atelier) :
    - le fil reste unique : sur un dossier Fine Bindery, **un message que le
@@ -2737,3 +2740,49 @@ Tout ce qui était listé à la fin de Phase C reste vrai. S'y ajoute :
 - **`SHELL`/`SectionHead` vivent dans `LandingChrome.tsx`, pas dans
   `ReliureLanding.tsx`.** Toute nouvelle page éditoriale Ma Reliure doit les
   importer de là, jamais en redéclarer une copie.
+
+
+---
+
+## Phase 0 — audit du 19 septembre 2026 (P1-1 … P1-8)
+
+Branche `fix/audit-phase0-integrity-security`, une PR, **non fusionnée, non déployée, migrations non appliquées**.
+Détail des preuves (défaut confirmé sur `main`, correction, tests) dans la description de la PR.
+
+| P1 | Défaut | Correction |
+| --- | --- | --- |
+| 1 | Le Checkout facturait le HT | `stripe/amountDue.ts` : montant exigible = TTC du snapshot figé, vérifié de bout en bout ; lignes TTC dont la somme vaut exactement le TTC ; session ouverte au mauvais montant expirée, jamais réutilisée ; **acompte bloqué (fail closed)** |
+| 2 | « Payé » sans vérifier | `webhookEvents.ts` + `paymentVerification.ts` : `payment_status`, montant, devise, session, dossier ; `unpaid` / `no_payment_required` ne marquent rien ; `async_payment_succeeded` géré ; un paiement enregistré n'est jamais réécrit |
+| 3 | Événement en échec absorbé comme doublon | états `received/processing/processed/failed` + tentatives + dernière erreur (`marketplace_claim_webhook_event`) ; seul `processed` est absorbé ; échec ⇒ 500 (Stripe redélivre, plafonné à 8 tentatives) |
+| 4 | Deux sources de prix | `commercial/authoritativePrice.ts` : seule autorité = `customer_price_cents` validé ; proposition périmée non acceptable |
+| 5 | Dossier engagé qui revient au chiffrage | `cases/engagement.ts` + trigger `marketplace_cases_guard_engagement` (transactionnel) ; nouvelle version refusée après acceptation |
+| 6 | Un seul fil, atelier invité admis | `messaging/audience.ts` + colonne `marketplace_messages.audience` ; seul l'atelier **retenu** et en règle entre dans une conversation |
+| 7 | `ilike` sur l'e-mail (jokers `_` `%`) | `marketplace_dossier_ids_for_verified_email` : égalité exacte sur adresse normalisée |
+| 8 | Mention de franchise perdue à la facture | `marketplace_binder_convert_quote_to_invoice(… p_vat_mention)` : mention effective figée, refus sinon |
+
+### Migrations (dans cet ordre, **avant** de déployer le code)
+
+`20260920090000_marketplace_verified_email_exact_match` · `20260920100000_marketplace_binder_invoice_vat_mention` ·
+`20260920110000_marketplace_stripe_webhook_states` · `20260920120000_marketplace_case_engagement_guard` ·
+`20260920130000_marketplace_message_audiences`. Toutes additives et rejouables ; `20260919090000` (déjà appliquée) n'est pas éditée.
+Le code appelle les nouvelles fonctions SQL : **déployer le code avant les migrations casse** le rapprochement e-mail, la
+conversion en facture, le webhook et la messagerie (échec fermé, jamais d'exposition). `types.ts` a été complété à la main
+pour ces migrations : le régénérer depuis la base après application.
+
+### Ce qui change pour l'exploitation
+
+- **Paiement par acompte impossible** (proposition `ESTIMATE_THEN_CONFIRM` avec acompte) tant que le paiement en deux temps
+  n'existe pas : ni acceptable par le client, ni payable. Aucune proposition de ce type n'existe en production (constaté le
+  19/09/2026 : une seule proposition, sans acompte, 500 € HT → 600 € TTC). **Décision produit à prendre.**
+- Une proposition dont le prix validé a changé n'est plus acceptable : créer une nouvelle version.
+- Un atelier invité ou disponible ne voit plus la conversation avant d'être retenu ; en Fine Bindery l'atelier ne lit plus les
+  échanges client ↔ concierge. Le « manque serveur » du modèle concierge (suite 10, point 2) est donc traité. Côté plateforme,
+  le dossier admin (`CaseMatchingPage`) affiche maintenant les deux canaux séparés (`AdminConversations` : Client · Atelier
+  retenu ; Ma Reliure : fil partagé · Atelier retenu), le concierge y lit et y répond, et la liste admin porte un compteur de
+  non-lus (tous canaux). Ce n'est **pas** un deuxième système de messagerie : le `ConversationPanel` existant, fixé sur un
+  canal. **Reste** : aucun e-mail « nouveau message » vers l'atelier ni vers le concierge (signal = compteurs de non-lus).
+- Recette Stripe **en mode test** (compte `acct_1UGISJKB3EBc6Slh`, clé `sk_test`) le 20/09/2026 : Checkout Session réelle à
+  60 000 EUR, session `unpaid` non soldée, paiements de test (`pm_card_visa`) rapprochés, mauvais montant/devise refusés,
+  doublon sans effet, reprise après échec idempotente. Script rejouable hors dépôt ; aucune carte réelle, aucun live.
+- Un événement Stripe en échec répond 500 (avant : 200). Les événements des autres produits du compte partagé, sans notre
+  metadata, sont toujours ignorés en 200.

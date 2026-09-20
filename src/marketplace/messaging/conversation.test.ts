@@ -3,7 +3,7 @@ import { canAccessConversation, senderRoleFor, unreadCount } from "./conversatio
 import type { Viewer } from "@/marketplace/permissions";
 
 describe("canAccessConversation", () => {
-  const facts = { liveBinderIds: ["b-live"], selectedBinderId: "b-selected", customerUserId: "u1" };
+  const facts = { selectedBinderId: "b-selected", customerUserId: "u1" };
 
   it("admin always sees the conversation", () => {
     expect(canAccessConversation({ role: "admin" }, facts)).toBe(true);
@@ -26,25 +26,22 @@ describe("canAccessConversation", () => {
     ).toBe(false);
   });
 
-  it("a binder with a live match (offered/accepted) sees it", () => {
-    expect(canAccessConversation({ role: "binder", binderId: "b-live" }, facts)).toBe(true);
+  it("the SELECTED binder sees it", () => {
+    expect(canAccessConversation({ role: "binder", binderId: "b-selected" }, facts)).toBe(true);
   });
 
-  it("the selected binder sees it even if not in liveBinderIds", () => {
-    expect(
-      canAccessConversation(
-        { role: "binder", binderId: "b-selected" },
-        { ...facts, liveBinderIds: [] },
-      ),
-    ).toBe(true);
+  it("a binder that is merely invited or available (offered/accepted) — not selected — cannot see it (P1-6)", () => {
+    // Before Phase 0 an invited workshop was admitted (LIVE_MATCH_STATES) and could read what the
+    // customer said before having any right to the customer.
+    expect(canAccessConversation({ role: "binder", binderId: "b-invited" }, facts)).toBe(false);
   });
 
-  it("a binder who was declined or cancelled — not in liveBinderIds, not selected — cannot see it", () => {
-    // The whole point of this module over a raw canViewCase reuse (§72):
-    // a workshop passed over must lose access to what the customer and the
-    // chosen atelier say to each other, even though its match row still
-    // exists (state 'declined' or 'cancelled', not deleted).
+  it("a binder who was declined or cancelled cannot see it either", () => {
     expect(canAccessConversation({ role: "binder", binderId: "b-declined" }, facts)).toBe(false);
+  });
+
+  it("with no selected workshop (or one out of good standing — null), no binder is admitted", () => {
+    expect(canAccessConversation({ role: "binder", binderId: "b-selected" }, { ...facts, selectedBinderId: null })).toBe(false);
   });
 
   it("anonymous never sees it", () => {
