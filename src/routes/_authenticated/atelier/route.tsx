@@ -28,8 +28,14 @@ function AtelierLayout() {
             <Link to="/atelier" activeOptions={{ exact: true }} activeProps={NAV_ACTIVE} className={NAV_LINK}>
               Projets
             </Link>
+            <Link to="/atelier/ouvrages" activeProps={NAV_ACTIVE} className={NAV_LINK}>
+              Ouvrages
+            </Link>
             <Link to="/atelier/devis" activeProps={NAV_ACTIVE} className={NAV_LINK}>
               Devis et factures
+            </Link>
+            <Link to="/atelier/contacts" activeProps={NAV_ACTIVE} className={NAV_LINK}>
+              Contacts
             </Link>
             <Link to="/atelier/tarifs" activeProps={NAV_ACTIVE} className={NAV_LINK}>
               Tarifs

@@ -999,42 +999,60 @@ export type Database = {
       marketplace_binder_clients: {
         Row: {
           address_line1: string | null
+          archived_at: string | null
           binder_id: string
           city: string | null
           country: string | null
           created_at: string
           email: string | null
+          first_name: string | null
           id: string
+          last_name: string | null
           name: string
           notes: string | null
+          organization: string | null
+          origin: string
+          origin_case_id: string | null
           phone: string | null
           postal_code: string | null
           updated_at: string
         }
         Insert: {
           address_line1?: string | null
+          archived_at?: string | null
           binder_id: string
           city?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           name: string
           notes?: string | null
+          organization?: string | null
+          origin?: string
+          origin_case_id?: string | null
           phone?: string | null
           postal_code?: string | null
           updated_at?: string
         }
         Update: {
           address_line1?: string | null
+          archived_at?: string | null
           binder_id?: string
           city?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
+          first_name?: string | null
           id?: string
+          last_name?: string | null
           name?: string
           notes?: string | null
+          organization?: string | null
+          origin?: string
+          origin_case_id?: string | null
           phone?: string | null
           postal_code?: string | null
           updated_at?: string
@@ -1045,6 +1063,13 @@ export type Database = {
             columns: ["binder_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_clients_origin_case_id_fkey"
+            columns: ["origin_case_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_cases"
             referencedColumns: ["id"]
           },
         ]
@@ -1613,6 +1638,7 @@ export type Database = {
           vat_mention: string | null
           vat_regime: string
           width_mm: number | null
+          work_id: string | null
         }
         Insert: {
           binder_id: string
@@ -1654,6 +1680,7 @@ export type Database = {
           vat_mention?: string | null
           vat_regime: string
           width_mm?: number | null
+          work_id?: string | null
         }
         Update: {
           binder_id?: string
@@ -1695,8 +1722,16 @@ export type Database = {
           vat_mention?: string | null
           vat_regime?: string
           width_mm?: number | null
+          work_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_quotes_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_works"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "marketplace_binder_quotes_binder_id_fkey"
             columns: ["binder_id"]
@@ -1908,6 +1943,168 @@ export type Database = {
             columns: ["binder_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_work_counters: {
+        Row: {
+          binder_id: string
+          last_value: number
+          year: number
+        }
+        Insert: {
+          binder_id: string
+          last_value?: number
+          year: number
+        }
+        Update: {
+          binder_id?: string
+          last_value?: number
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_work_counters_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_work_photos: {
+        Row: {
+          binder_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          stage: string
+          storage_path: string
+          work_id: string
+        }
+        Insert: {
+          binder_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          stage: string
+          storage_path: string
+          work_id: string
+        }
+        Update: {
+          binder_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          stage?: string
+          storage_path?: string
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_work_photos_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_work_photos_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_works: {
+        Row: {
+          author: string | null
+          binder_id: string
+          case_id: string | null
+          condition_notes: string | null
+          contact_id: string | null
+          created_at: string
+          declared_value_cents: number | null
+          description: string | null
+          edition_note: string | null
+          height_mm: number | null
+          id: string
+          internal_notes: string | null
+          reference: string
+          source: string
+          status: string
+          thickness_mm: number | null
+          title: string
+          updated_at: string
+          weight_grams: number | null
+          width_mm: number | null
+        }
+        Insert: {
+          author?: string | null
+          binder_id: string
+          case_id?: string | null
+          condition_notes?: string | null
+          contact_id?: string | null
+          created_at?: string
+          declared_value_cents?: number | null
+          description?: string | null
+          edition_note?: string | null
+          height_mm?: number | null
+          id?: string
+          internal_notes?: string | null
+          reference: string
+          source?: string
+          status?: string
+          thickness_mm?: number | null
+          title: string
+          updated_at?: string
+          weight_grams?: number | null
+          width_mm?: number | null
+        }
+        Update: {
+          author?: string | null
+          binder_id?: string
+          case_id?: string | null
+          condition_notes?: string | null
+          contact_id?: string | null
+          created_at?: string
+          declared_value_cents?: number | null
+          description?: string | null
+          edition_note?: string | null
+          height_mm?: number | null
+          id?: string
+          internal_notes?: string | null
+          reference?: string
+          source?: string
+          status?: string
+          thickness_mm?: number | null
+          title?: string
+          updated_at?: string
+          weight_grams?: number | null
+          width_mm?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_works_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_works_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_works_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_clients"
             referencedColumns: ["id"]
           },
         ]
@@ -2966,8 +3163,16 @@ export type Database = {
         Args: { p_binder_id: string; p_items: Json; p_quote: Json }
         Returns: string
       }
+      marketplace_binder_create_work: {
+        Args: { p_binder_id: string; p_work: Json }
+        Returns: string
+      }
       marketplace_binder_next_document_number: {
         Args: { p_binder_id: string; p_kind: string; p_year: number }
+        Returns: string
+      }
+      marketplace_binder_next_work_reference: {
+        Args: { p_binder_id: string; p_year: number }
         Returns: string
       }
       marketplace_binder_update_quote: {

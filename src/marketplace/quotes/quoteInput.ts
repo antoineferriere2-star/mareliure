@@ -44,6 +44,12 @@ const discountInput = z.discriminatedUnion("type", [
 
 export const quoteInput = z
   .object({
+    /**
+     * L'ouvrage auquel ce devis se rattache (facultatif). Une référence, pas une source de
+     * vérité : le devis garde son propre snapshot du client et de l'ouvrage. Le serveur
+     * vérifie que l'ouvrage est celui de CET atelier ; la base le vérifie aussi.
+     */
+    workId: uuid.optional(),
     /** Client existant ; `null` : un nouveau client est créé à partir de `client`. */
     clientId: uuid.nullable(),
     client: z

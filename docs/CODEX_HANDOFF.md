@@ -2865,3 +2865,45 @@ réel est validé (SLA mesuré), c'est cette seule constante qui change — et l
 **QA.** Banc hors dépôt (Playwright + Chrome, faux endpoint du runtime servi avec le vrai Playbook, état conservé entre rechargements) : desktop 1280, tablette 820, mobile 390 ;
 reprise après vrai rechargement, ajout / remplacement / retrait de photos, échec d'envoi puis reprise, fichier refusé, chargement lent, échec de chargement, récapitulatif, soumission.
 Non exercé : le runtime réel contre Supabase (pas de clé de service locale) et un vrai envoi de photo vers le stockage.
+
+## PR 1 — Contacts + Ouvrages (21 septembre 2026)
+
+Branche `feat/binder-contacts-works`, depuis `main` `a47b3ac3`. Première marche de « tout part d'un ouvrage » : un **contact** et un **ouvrage** vivants dans l'atelier, et le devis
+qui s'y rattache. **Une migration, NON appliquée en production** (voir plus bas) ; tant qu'elle ne l'est pas, ne pas déployer cette branche : les écrans `/atelier/ouvrages` et
+`/atelier/contacts` liraient des colonnes et des tables qui n'existent pas encore.
+
+**Périmètre, strictement.** Contacts + Ouvrages + les relations nécessaires. Pas de devis rapide, pas de workflow d'atelier, pas de logistique, pas de Sendcloud, pas de nouvelle
+facturation, pas de refonte des prestations, pas de référentiel de 195 opérations (en attente d'arbitrage).
+
+**Modèle** (`supabase/migrations/20260921090000_marketplace_binder_contacts_works.sql`, additive, rejouable, retour arrière en pied de fichier) :
+- **Contact = `marketplace_binder_clients`, étendue** (pas de second système) : `first_name`, `last_name`, `organization`, `origin` (`mon_client` | `ma_reliure`, défaut `mon_client`),
+  `origin_case_id`, `archived_at`. Aucune colonne existante n'est modifiée. `name` reste le nom d'affichage, déduit côté serveur (`works/contactName.ts`).
+- **Ouvrage = `marketplace_binder_works`** : contact, référence lisible `O-AAAA-NNNN` (une suite par atelier et par année, `marketplace_binder_work_counters`, séparée des
+  devis/factures qui sont des pièces comptables sans trou), titre, auteur, édition, description, hauteur / largeur / épaisseur (mm), poids (g, facultatif), valeur déclarée (cts),
+  état, notes internes, `status` (`active` | `archived` — cycle de vie de la *fiche*, pas l'état de travail, qui viendra avec l'intervention), `source` (`mon_client` | `ma_reliure`)
+  et `case_id` (unique).
+- **Photos** : `marketplace_binder_work_photos`, structure seulement (étapes `intake / before / reception / during / after`). Aucune UX, aucun bucket.
+- **Lien** `marketplace_binder_quotes.work_id` (nullable, `ON DELETE SET NULL`). Les documents émis gardent leurs snapshots : le lien est une référence, jamais une source de vérité.
+  La facture n'est **pas** touchée (elle se rattache à l'ouvrage par son devis) : ni sa table, ni son trigger d'immutabilité, ni la fonction de conversion de la Phase 0.
+- `work_id` n'est volontairement **pas** dans `QUOTE_ROW_KEYS` : un devis sans ouvrage envoie exactement ce qu'il envoyait avant (test).
+
+**Isolation.** RLS activée, refus total pour `anon`/`authenticated`, accès par server functions en service-role qui résolvent l'atelier depuis la session (`requireBinderId`) et
+filtrent chaque requête par `binder_id` : l'objet d'un autre atelier est « introuvable ». Aucun schéma d'entrée n'accepte l'atelier, la référence, la source, l'origine ni le dossier
+(`.strict()`). En plus, la **base** refuse (deux triggers) qu'un ouvrage pointe le contact d'un autre atelier, ou qu'un devis pointe l'ouvrage d'un autre atelier. Fonctions non exposées
+(`REVOKE`), aucune `SECURITY DEFINER`. `marketplace_binder_create_work` impose atelier, référence, statut `active`, source `mon_client` et dossier `NULL` : un ouvrage créé depuis
+l'atelier est toujours « mon client » ; un ouvrage issu d'un projet Ma Reliure passera par sa propre fonction, dans la PR qui l'introduit (D1/D5 : jamais de conversion implicite).
+
+**Écrans.** `/atelier/contacts` (+ fiche), `/atelier/ouvrages` (+ fiche, création, modification). Nav atelier : Projets · Ouvrages · Devis et factures · Contacts · Tarifs (le bouton
+« Se déconnecter » de la PR #8 est conservé). Création d'un ouvrage : trois champs suffisent (contact, titre, dimensions), le reste se replie ; le contact se crée sur place. La fiche
+dit sans ambiguïté la provenance (« Mon client · Aucune commission Ma Reliure »). « Créer un devis » depuis la fiche ouvre le constructeur avec contact et livre déjà remplis
+(`/atelier/devis/nouveau?workId=`, jamais une autorisation : le serveur vérifie que l'ouvrage est celui de l'atelier). Les notes internes de l'ouvrage ne passent jamais dans le devis.
+
+**Application de la migration (à autoriser par le propriétaire).** Hors production jusqu'à décision. Ensuite : appliquer, puis **régénérer `src/integrations/supabase/types.ts` depuis la
+base** — il est ici édité à la main, à l'identique du SQL (colonnes, tables, fonctions).
+
+**Vérifié.** Migration rejouée sur un vrai Postgres (pglite) : 46 contrôles (contraintes, numérotation par atelier, triggers d'isolation, refus des rôles `anon`/`authenticated`,
+rejouabilité). Tests : `binderWorks.server.test.ts` (isolation entre deux ateliers, données forgées, lignes croisées, lien devis→ouvrage), `works/works.domain.test.ts`,
+`works/worksSurface.test.ts`, `binderWorksMigrationContract.test.ts`. Mutations sur le serveur : 18 filtres `binder_id` retirés un par un + 2 sur le devis, tous détectés (un premier
+passage en laissait survivre 10, dont l'archivage d'un ouvrage d'un autre atelier — test renforcé). QA navigateur (faux Auth, server functions simulées, hors dépôt) : desktop 1280, tablette
+820, mobile 390 — création contact → ouvrage → devis prérempli, recherche sans accents, archivage, erreur de saisie, cibles de 44 px, aucun défilement horizontal. Non exercé : le runtime réel
+contre Supabase (pas de clé de service locale).

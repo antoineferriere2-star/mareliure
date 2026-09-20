@@ -12,10 +12,13 @@ import { parseEurosToCents, parsePercentToBps, centsToEuroInput, bpsToPercentInp
 import { parseMillimetres, type QuoteLine } from "./quoteLines";
 import { quoteInput, type QuoteInput } from "./quoteInput";
 import type { DocumentView } from "./quoteViews";
+import type { ContactView, WorkView } from "@/marketplace/works/workViews";
 
 export type AdjustmentType = "NONE" | "PERCENT" | "AMOUNT";
 
 export interface BuilderState {
+  /** L'ouvrage d'où vient ce devis (« Créer un devis » depuis sa fiche), ou `null`. */
+  workId: string | null;
   clientId: string | null;
   clientName: string;
   clientEmail: string;
@@ -41,6 +44,7 @@ export interface BuilderState {
 }
 
 export const emptyBuilder = (): BuilderState => ({
+  workId: null,
   clientId: null,
   clientName: "",
   clientEmail: "",
@@ -111,6 +115,8 @@ export function toQuoteInput(state: BuilderState): BuiltInput {
   if (validity !== null && !(Number.isInteger(validity) && validity >= 1 && validity <= 365)) problems.push("Validité : entre 1 et 365 jours.");
 
   const candidate = {
+    // Ajouté seulement s'il existe : un devis sans ouvrage envoie exactement ce qu'il envoyait avant.
+    ...(state.workId ? { workId: state.workId } : {}),
     clientId: state.clientId,
     client: {
       name: state.clientName,
@@ -150,6 +156,32 @@ export function toQuoteInput(state: BuilderState): BuiltInput {
   return unique.length === 0 && parsed.success ? { ok: true, input: parsed.data } : { ok: false, problems: unique.length ? unique : ["Vérifiez le devis."] };
 }
 
+/**
+ * Un devis qui part d'un ouvrage : le contact et le livre sont déjà connus, on ne les ressaisit
+ * pas. Le devis en gardera un SNAPSHOT (comme toujours) : modifier la fiche de l'ouvrage plus
+ * tard ne change pas ce devis.
+ */
+export function stateFromWork(work: WorkView, contact: ContactView | null): BuilderState {
+  const mm = (v: number | null) => (v === null ? "" : String(v));
+  return {
+    ...emptyBuilder(),
+    workId: work.id,
+    clientId: contact?.id ?? null,
+    clientName: contact?.name ?? "",
+    clientEmail: contact?.email ?? "",
+    clientPhone: contact?.phone ?? "",
+    clientAddress: contact?.addressLine1 ?? "",
+    clientPostalCode: contact?.postalCode ?? "",
+    clientCity: contact?.city ?? "",
+    title: work.title,
+    author: work.author ?? "",
+    bookNotes: work.conditionNotes ?? "",
+    height: mm(work.heightMm),
+    width: mm(work.widthMm),
+    spine: mm(work.thicknessMm),
+  };
+}
+
 /** Un devis existant, remis dans le constructeur pour être modifié. */
 export function stateFromDocument(doc: DocumentView): BuilderState {
   const adj = (type: "NONE" | "PERCENT" | "AMOUNT", value: number): [AdjustmentType, string] =>
@@ -158,6 +190,7 @@ export function stateFromDocument(doc: DocumentView): BuilderState {
   const [depositType, depositValue] = adj(doc.depositType, doc.depositValue);
   const mm = (v: number | null) => (v === null ? "" : String(v));
   return {
+    workId: doc.workId ?? null,
     clientId: doc.client.id,
     clientName: doc.client.name,
     clientEmail: doc.client.email ?? "",
