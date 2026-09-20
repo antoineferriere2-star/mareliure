@@ -6,6 +6,7 @@
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { loadEnv } from "vite";
+import { resolve as resolvePath } from "node:path";
 
 /**
  * Which Supabase project the *browser* talks to.
@@ -58,6 +59,15 @@ console.info(`[supabase] client → ${SUPABASE_URL}`);
 
 export default defineConfig({
   vite: {
+    resolve: {
+      alias: [
+        // `pdf-lib` déclare `main: cjs/index.js` : le bundle Worker en tire `tslib` 1.x (UMD/CJS) dont
+        // l'interopérabilité échoue à l'évaluation sous workerd (« Cannot destructure property '__extends' »),
+        // ce qui faisait répondre 500 à TOUTES les server functions du module devis (voir binderQuotes.data.functions).
+        // Son build ES importe `tslib` par des exports nommés : il se charge sans interop.
+        { find: /^pdf-lib$/, replacement: resolvePath(process.cwd(), "node_modules/pdf-lib/es/index.js") },
+      ],
+    },
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(SUPABASE_URL),
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(SUPABASE_PUBLISHABLE_KEY),
