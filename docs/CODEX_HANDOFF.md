@@ -788,7 +788,7 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 ## Latest handoff
 
-**Agent :** Codex (GPT-6)  
+**Agent :** Codex (GPT-6)
 **Date :** 21 septembre 2026 — PR A1 tarif de base Ma Reliure, prête à relire sur `feat/mareliure-base-prices-a1`.
 
 - Ajoute la migration `20260921110000_marketplace_base_prices.sql` : tables distinctes `marketplace_reference_default_prices` et `marketplace_reference_price_operation_links`, RLS deny-all, versions de ligne et contraintes `fixed` / `unit` / `starting_from` / `manual_review`. Zéro est autorisé comme prix explicite ; `manual_review` impose `NULL`.
