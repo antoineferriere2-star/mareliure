@@ -40,7 +40,7 @@ describe("migration des tarifs de base Ma Reliure", () => {
       "marketplace_reference_price_operation_links",
     ]) {
       expect(STATEMENTS).toContain(`ALTER TABLE public.${table} ENABLE ROW LEVEL SECURITY;`);
-      expect(STATEMENTS).toContain(`DROP POLICY IF EXISTS \"No direct access to ${table}\"`);
+      expect(STATEMENTS).toContain(`DROP POLICY IF EXISTS "No direct access to ${table}"`);
     }
   });
 
