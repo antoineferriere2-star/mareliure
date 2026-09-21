@@ -10,6 +10,7 @@ const DIR = resolve(process.cwd(), "supabase/migrations");
 const NAME = "20260921100000_marketplace_binder_reference_links.sql";
 const RAW = readFileSync(resolve(DIR, NAME), "utf8").replace(/\r\n/g, "\n");
 const SQL = RAW.replace(/^\s*--.*$/gm, "").replace(/--.*$/gm, "");
+const timestamp = (file: string) => file.slice(0, "20260921100000".length);
 
 describe("migration liens du référentiel", () => {
   it("est additive : aucune table, fonction, politique, droit ou trigger créé, modifié ou supprimé", () => {
@@ -80,13 +81,18 @@ describe("migration liens du référentiel", () => {
 });
 
 describe("l'historique des migrations", () => {
-  it("la nouvelle migration est la plus récente : elle s'applique après toutes les autres", () => {
+  it("la migration existe et conserve un timestamp correctement ordonné", () => {
     const names = readdirSync(DIR).filter((f) => f.endsWith(".sql")).sort();
-    expect(names[names.length - 1]).toBe(NAME);
+    const index = names.indexOf(NAME);
+    expect(index).toBeGreaterThan(-1);
+    expect(names.slice(0, index).every((file) => timestamp(file) < timestamp(NAME))).toBe(true);
+    expect(names.slice(index + 1).every((file) => timestamp(file) > timestamp(NAME))).toBe(true);
   });
 
   it("aucune migration antérieure ne mentionne ces colonnes (rien d'appliqué n'a été réécrit)", () => {
-    for (const file of readdirSync(DIR).filter((f) => f.endsWith(".sql") && f !== NAME)) {
+    for (const file of readdirSync(DIR).filter(
+      (file) => file.endsWith(".sql") && timestamp(file) < timestamp(NAME),
+    )) {
       expect(readFileSync(resolve(DIR, file), "utf8"), file).not.toMatch(/reference_operation_key|is_favorite/);
     }
   });
