@@ -93,3 +93,25 @@ if (wrong.length > 0) {
 }
 
 console.info(`\n✓ Bundle client vérifié : il ne référence que ${expectedRef}.\n`);
+
+// Le Worker. Une bibliothèque CommonJS/UMD mal interopérée (`tslib` 1.x tiré par le point d'entrée CJS de
+// `pdf-lib`) s'évalue sous Node mais PAS sous workerd : chaque server function du module concerné répond alors
+// 500 en production, sans que le build ni les tests ne le voient. On refuse donc ce motif dans l'artefact.
+const SERVER_DIR = ".output/server";
+if (existsSync(SERVER_DIR)) {
+  const BROKEN_TSLIB_INTEROP = /var \{ __extends[^}]*\} = \(\/\* @__PURE__ \*\/ __toESM\(/;
+  const offenders = [];
+  for (const entry of readdirSync(SERVER_DIR, { recursive: true })) {
+    const name = String(entry);
+    if (!name.endsWith(".mjs")) continue;
+    if (BROKEN_TSLIB_INTEROP.test(readFileSync(resolve(SERVER_DIR, name), "utf8"))) offenders.push(name);
+  }
+  if (offenders.length > 0) {
+    fail(
+      `le bundle serveur embarque tslib en interopérabilité CommonJS (échoue sous workerd : « Cannot destructure property '__extends' »).\n` +
+        `  fichier(s) : ${offenders.join(", ")}\n` +
+        `  voir l'alias de pdf-lib dans vite.config.ts.`,
+    );
+  }
+  console.info(`✓ Bundle serveur vérifié : aucune interopérabilité tslib/CommonJS connue pour casser workerd.\n`);
+}
