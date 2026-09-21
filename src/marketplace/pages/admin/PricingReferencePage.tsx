@@ -24,8 +24,40 @@ import {
 import { formatEuros } from "@/marketplace/pricing/money";
 import { PUBLISHABLE_MINIMUM_REFERENCES } from "@/marketplace/pricing/rateCard";
 import { PricingSimulator } from "./PricingSimulator";
+import { BasePriceReferencePanel } from "./BasePriceReferencePanel";
 
 export function PricingReferencePage() {
+  const [tab, setTab] = useState<"base" | "observations">("base");
+  return (
+    <div className="space-y-6">
+      <header>
+        <h1 className="font-serif text-2xl">Référentiel tarifaire</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Les tarifs de base Ma Reliure et les observations ateliers restent deux référentiels distincts.
+        </p>
+      </header>
+      <div className="flex gap-2 border-b border-border">
+        <button
+          type="button"
+          className={`border-b-2 px-3 py-2 text-sm ${tab === "base" ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground"}`}
+          onClick={() => setTab("base")}
+        >
+          Tarifs de base Ma Reliure
+        </button>
+        <button
+          type="button"
+          className={`border-b-2 px-3 py-2 text-sm ${tab === "observations" ? "border-primary font-medium text-foreground" : "border-transparent text-muted-foreground"}`}
+          onClick={() => setTab("observations")}
+        >
+          Observations ateliers
+        </button>
+      </div>
+      {tab === "base" ? <BasePriceReferencePanel /> : <WorkshopObservationsPanel />}
+    </div>
+  );
+}
+
+function WorkshopObservationsPanel() {
   const fetchAggregates = useServerFn(getRateAggregates);
   const { data, isPending, error } = useQuery({
     queryKey: ["marketplace", "pricing", "aggregates"] as const,
@@ -41,13 +73,10 @@ export function PricingReferencePage() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="font-serif text-2xl">Référentiel tarifaire</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {rateCount} ligne(s) de grille, {binderCount} atelier(s) contributeur(s),{" "}
-          {aggregates.length} combinaison(s) couverte(s).
-        </p>
-      </header>
+      <p className="text-sm text-muted-foreground">
+        {rateCount} ligne(s) de grille, {binderCount} atelier(s) contributeur(s),{" "}
+        {aggregates.length} combinaison(s) couverte(s).
+      </p>
 
       {aggregates.length === 0 ? (
         <section className="rounded-lg border border-amber-300 bg-amber-50 p-5">
