@@ -103,7 +103,10 @@ export const getBasePriceReference = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const sb = await admin();
+    // La table est créée par la migration A1 mais les types Supabase ne seront
+    // régénérés depuis la production qu'après son application. Cet adaptateur
+    // est local à A1 ; il n'élargit aucun accès côté client.
+    const sb = (await admin()) as any;
     const { data, error } = await sb
       .from("marketplace_reference_default_prices")
       .select(BASE_PRICE_COLUMNS)
@@ -139,7 +142,9 @@ export const saveBasePrice = createServerFn({ method: "POST" })
     await assertAdmin(context.supabase, context.userId);
     const errors = validateBasePriceDraft(data);
     if (errors.length > 0) fail(422, errors.join(" "));
-    const sb = await admin();
+    // Voir getBasePriceReference : les types générés suivent la migration au
+    // déploiement, tandis que cette fonction doit déjà compiler dans la PR.
+    const sb = (await admin()) as any;
     const now = new Date().toISOString();
     const { data: previous, error: previousError } = await sb
       .from("marketplace_reference_default_prices")
