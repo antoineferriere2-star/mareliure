@@ -9,7 +9,7 @@ const SQL = readFileSync(
 
 describe("seed Tarif de base Ma Reliure V1", () => {
   it("charge exactement les 45 prestations validées", () => {
-    const rows = [...SQL.matchAll(/^  \('([^']+)', 'mareliure-base-prices-v1', (NULL|\d+)/gm)];
+    const rows = [...SQL.matchAll(/^ {2}\('([^']+)', 'mareliure-base-prices-v1', (NULL|\d+)/gm)];
 
     expect(rows).toHaveLength(45);
     expect(rows.filter(([, , amount]) => amount !== "NULL")).toHaveLength(41);
