@@ -95,6 +95,8 @@ export type BuiltInput = { ok: true; input: QuoteInput } | { ok: false; problems
 
 export function toQuoteInput(state: BuilderState): BuiltInput {
   const problems: string[] = [];
+  if (state.lines.some((line) => line.requiresManualPrice && line.unitPriceCents <= 0))
+    problems.push("Définissez le prix pour chaque prestation sur étude.");
   const dim = (raw: string, label: string) => {
     if (raw.trim() === "") return null;
     const value = parseMillimetres(raw);
@@ -214,6 +216,8 @@ export function stateFromDocument(doc: DocumentView): BuilderState {
       unitPriceCents: item.unitPriceCents,
       catalogPriceCents: item.catalogPriceCents,
       vatRateBps: item.vatRateBps,
+      priceSource: item.serviceId ? "catalog" : "manual",
+      requiresManualPrice: false,
     })),
     discountType,
     discountValue,

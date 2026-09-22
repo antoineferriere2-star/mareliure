@@ -18,6 +18,7 @@ import {
   createMyQuote,
   getBillingProfile,
   getMyCatalog,
+  getMyBasePriceServices,
   getMyClients,
   getMyQuote,
   saveMyService,
@@ -28,7 +29,7 @@ import { lineTotalCents } from "@/marketplace/quotes/quoteCalc";
 import { emptyBuilder, stateFromDocument, stateFromWork, toQuoteInput, totalsOf, type AdjustmentType, type BuilderState } from "@/marketplace/quotes/builderState";
 import { getMyWork } from "@/marketplace/services/binderWorks.data.functions";
 import { WORK_KEY, WORKS_KEY } from "@/marketplace/pages/binder/works/workKeys";
-import { formatDimensions, freeLine, isPriceAdjusted, lineFromService, parseMillimetres, type CatalogService, type QuoteLine } from "@/marketplace/quotes/quoteLines";
+import { formatDimensions, freeLine, isPriceAdjusted, lineFromBasePrice, lineFromService, parseMillimetres, type CatalogService, type QuoteLine } from "@/marketplace/quotes/quoteLines";
 import { euros, parseServerError } from "@/marketplace/quotes/quoteFormat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, MoneyInput, PRIMARY_BUTTON, QuantityInput, SECONDARY_BUTTON } from "./quoteUi";
@@ -41,6 +42,7 @@ const nextKey = () => `line-${Date.now().toString(36)}-${++lineCounter}`;
 export function QuoteBuilderPage({ quoteId, workId }: { quoteId?: string; workId?: string }) {
   const fetchProfile = useServerFn(getBillingProfile);
   const fetchCatalog = useServerFn(getMyCatalog);
+  const fetchBasePrices = useServerFn(getMyBasePriceServices);
   const fetchClients = useServerFn(getMyClients);
   const fetchQuote = useServerFn(getMyQuote);
   const fetchWork = useServerFn(getMyWork);
@@ -53,6 +55,7 @@ export function QuoteBuilderPage({ quoteId, workId }: { quoteId?: string; workId
 
   const profile = useQuery({ queryKey: PROFILE_QUERY_KEY, queryFn: () => fetchProfile() });
   const catalog = useQuery({ queryKey: CATALOG_KEY, queryFn: () => fetchCatalog({ data: {} }) });
+  const basePrices = useQuery({ queryKey: ["binder", "base-prices", "v1"], queryFn: () => fetchBasePrices() });
   const clients = useQuery({ queryKey: CLIENTS_KEY, queryFn: () => fetchClients() });
   const existing = useQuery({
     queryKey: [...QUOTES_KEY, quoteId] as const,
@@ -60,7 +63,7 @@ export function QuoteBuilderPage({ quoteId, workId }: { quoteId?: string; workId
     enabled: Boolean(quoteId),
   });
 
-  if (profile.isPending || catalog.isPending || clients.isPending || (quoteId && existing.isPending) || (workId && !quoteId && fromWork.isPending)) {
+  if (profile.isPending || catalog.isPending || basePrices.isPending || clients.isPending || (quoteId && existing.isPending) || (workId && !quoteId && fromWork.isPending)) {
     return (
       <div role="status" aria-busy="true" className="space-y-4">
         <span className="sr-only">Chargement…</span>
@@ -69,7 +72,7 @@ export function QuoteBuilderPage({ quoteId, workId }: { quoteId?: string; workId
       </div>
     );
   }
-  if (profile.error || catalog.error || clients.error || existing.error || !profile.data || !catalog.data || !clients.data) {
+  if (profile.error || catalog.error || basePrices.error || clients.error || existing.error || !profile.data || !catalog.data || !basePrices.data || !clients.data) {
     return <ErrorNote>Impossible de charger le constructeur. Rechargez la page.</ErrorNote>;
   }
   if (existing.data && existing.data.status !== "draft") {
@@ -87,6 +90,7 @@ export function QuoteBuilderPage({ quoteId, workId }: { quoteId?: string; workId
       quoteId={quoteId}
       profile={profile.data}
       services={catalog.data.services}
+      basePrices={basePrices.data}
       categories={catalog.data.categories}
       clients={clients.data}
       initial={
@@ -105,6 +109,7 @@ function BuilderForm({
   quoteId,
   profile,
   services,
+  basePrices,
   categories,
   clients,
   initial,
@@ -112,7 +117,8 @@ function BuilderForm({
 }: {
   quoteId?: string;
   profile: BillingProfile;
-  services: { id: string; categoryId: string | null; name: string; description: string | null; unitPriceCents: number; vatRateBps: number | null; unit: string | null; isActive: boolean }[];
+  services: { id: string; categoryId: string | null; name: string; description: string | null; unitPriceCents: number; vatRateBps: number | null; unit: string | null; isActive: boolean; isFavorite: boolean }[];
+  basePrices: { pricingKey: string; label: string; unit: string; unitPriceCents: number | null; pricingMode: string }[];
   categories: { id: string; name: string }[];
   clients: { id: string; name: string; email: string | null; phone: string | null; addressLine1: string | null; postalCode: string | null; city: string | null }[];
   initial: BuilderState;
@@ -144,6 +150,7 @@ function BuilderForm({
   const catalogServices: CatalogService[] = services
     .filter((s) => s.isActive)
     .map((s) => ({ id: s.id, categoryId: s.categoryId, name: s.name, description: s.description, unitPriceCents: s.unitPriceCents, vatRateBps: s.vatRateBps, unit: s.unit }));
+  const favoriteServices = services.filter((service) => service.isActive && service.isFavorite).map((service) => catalogServices.find((item) => item.id === service.id)!);
 
   // --- Catalogue ----------------------------------------------------------------
   const selectedServiceIds = new Set(state.lines.map((l) => l.serviceId).filter(Boolean));
@@ -153,9 +160,12 @@ function BuilderForm({
         ? { ...s, lines: s.lines.filter((l) => l.serviceId !== service.id) }
         : { ...s, lines: [...s.lines, lineFromService(service, profile.defaultVatRateBps, nextKey())] },
     );
+  const addBasePrice = (service: (typeof basePrices)[number]) =>
+    setState((s) => ({ ...s, lines: [...s.lines, lineFromBasePrice(service, profile.defaultVatRateBps, nextKey())] }));
   const addFreeLine = (label = "") => setState((s) => ({ ...s, lines: [...s.lines, freeLine(profile.defaultVatRateBps, nextKey(), label)] }));
 
   const needle = search.trim().toLowerCase();
+  const baseMatches = basePrices.filter((service) => !needle || `${service.label} ${service.pricingKey}`.toLowerCase().includes(needle));
   const groups = [
     ...categories.map((c) => ({ id: c.id, name: c.name, items: catalogServices.filter((s) => s.categoryId === c.id) })),
     { id: "none", name: "Autres", items: catalogServices.filter((s) => s.categoryId === null || !categories.some((c) => c.id === s.categoryId)) },
@@ -308,7 +318,7 @@ function BuilderForm({
             )}
           </div>
 
-          {catalogServices.length === 0 ? (
+          {catalogServices.length === 0 && baseMatches.length === 0 ? (
             <div className="mt-4 rounded-md border border-dashed border-border p-5 text-center">
               <p className="font-medium">Votre catalogue est vide.</p>
               <p className="mx-auto mt-1 max-w-sm text-sm text-muted-foreground">
@@ -323,7 +333,31 @@ function BuilderForm({
             </div>
           ) : (
             <div className="mt-4 space-y-5">
-              {groups.length === 0 && <p className="text-sm text-muted-foreground">Aucune prestation ne correspond à « {search} ».</p>}
+              {favoriteServices.length > 0 && !needle && (
+                <div>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">★ Favoris</h3>
+                  <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                    {favoriteServices.map((service) => <ServiceChoice key={service.id} service={service} selected={selectedServiceIds.has(service.id)} onClick={() => toggleService(service)} />)}
+                  </ul>
+                </div>
+              )}
+              {baseMatches.length > 0 && (
+                <div>
+                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tarifs de base Ma Reliure</h3>
+                  <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
+                    {baseMatches.map((service) => (
+                      <li key={service.pricingKey}>
+                        <button type="button" onClick={() => addBasePrice(service)} className="flex min-h-11 w-full items-center gap-3 rounded-md border border-input bg-background px-3 py-2 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+                          <span aria-hidden="true" className="text-muted-foreground">+</span>
+                          <span className="min-w-0 flex-1 break-words leading-snug">{service.label}</span>
+                          <span className="shrink-0 tabular-nums text-muted-foreground">{service.pricingMode === "manual_review" ? "Sur étude" : euros(service.unitPriceCents ?? 0)}</span>
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {groups.length === 0 && baseMatches.length === 0 && <p className="text-sm text-muted-foreground">Aucune prestation ne correspond à « {search} ».</p>}
               {groups.map((group) => (
                 <div key={group.id}>
                   <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.name}</h3>
@@ -382,11 +416,7 @@ function BuilderForm({
                   return (
                     <li key={line.key} className="rounded-md border border-border p-3">
                       <div className="flex items-start gap-2">
-                        {line.serviceId === null ? (
-                          <input aria-label="Libellé de la ligne" placeholder="Libellé (ex. Réparation du premier cahier)" className={`${FIELD} flex-1`} value={line.label} onChange={(e) => setLine(line.key, { label: e.target.value })} />
-                        ) : (
-                          <p className="flex-1 pt-2.5 text-sm font-medium">{line.label}</p>
-                        )}
+                        <input aria-label="Libellé de la ligne" placeholder="Libellé (ex. Réparation du premier cahier)" className={`${FIELD} flex-1 font-medium`} value={line.label} onChange={(e) => setLine(line.key, { label: e.target.value })} />
                         <button type="button" aria-label={`Retirer ${line.label || "cette ligne"}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent" onClick={() => setState((s) => ({ ...s, lines: s.lines.filter((l) => l.key !== line.key) }))}>
                           <X aria-hidden="true" className="h-4 w-4" />
                         </button>
@@ -396,6 +426,17 @@ function BuilderForm({
                         <MoneyInput id={`price-${line.key}`} label={`Prix HT — ${line.label || "ligne"}`} cents={line.unitPriceCents} onChange={(unitPriceCents) => setLine(line.key, { unitPriceCents })} invalid={line.serviceId === null && line.unitPriceCents === 0} />
                         <span className="w-20 text-right text-sm font-medium tabular-nums">{euros(total)}</span>
                       </div>
+                      <div className="mt-2 grid grid-cols-2 gap-2">
+                        <input aria-label={`Unité — ${line.label || "ligne"}`} placeholder="Unité" className={FIELD} value={line.unit ?? ""} onChange={(e) => setLine(line.key, { unit: e.target.value || null })} />
+                        <select aria-label={`TVA — ${line.label || "ligne"}`} className={FIELD} value={line.vatRateBps} onChange={(e) => setLine(line.key, { vatRateBps: Number(e.target.value) })}>
+                          <option value={0}>TVA 0 %</option>
+                          <option value={550}>TVA 5,5 %</option>
+                          <option value={1000}>TVA 10 %</option>
+                          <option value={2000}>TVA 20 %</option>
+                        </select>
+                      </div>
+                      {line.priceSource === "base" && <p className="mt-1 text-xs text-muted-foreground">Tarif de base Ma Reliure</p>}
+                      {line.requiresManualPrice && line.unitPriceCents <= 0 && <p className="mt-1 text-xs text-amber-800">Définissez le prix pour ce devis.</p>}
                       {adjusted && (
                         <p className="mt-1 text-xs text-amber-800">
                           Prix ajusté pour ce devis (catalogue : {euros(line.catalogPriceCents ?? 0)}).{" "}
@@ -492,6 +533,23 @@ function Row({ label, value, strong = false }: { label: string; value: string; s
       <dt className={strong ? "" : "text-muted-foreground"}>{label}</dt>
       <dd className="tabular-nums" data-testid={strong ? "grand-total" : undefined}>{value}</dd>
     </div>
+  );
+}
+
+function ServiceChoice({ service, selected, onClick }: { service: CatalogService; selected: boolean; onClick: () => void }) {
+  return (
+    <li>
+      <button
+        type="button"
+        aria-pressed={selected}
+        onClick={onClick}
+        className={`flex min-h-11 w-full items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${selected ? "border-foreground bg-foreground/5" : "border-input bg-background hover:bg-accent"}`}
+      >
+        <span aria-hidden="true" className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs ${selected ? "border-foreground bg-foreground text-background" : "border-input"}`}>{selected ? "✓" : ""}</span>
+        <span className="min-w-0 flex-1 break-words leading-snug">{service.name}</span>
+        <span className="shrink-0 tabular-nums text-muted-foreground">{euros(service.unitPriceCents)}</span>
+      </button>
+    </li>
   );
 }
 

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { emptyBuilder, stateFromDocument, toQuoteInput, totalsOf, type BuilderState } from "./builderState";
 import { buildQuoteRows, EMPTY_BILLING_PROFILE } from "./quoteBuild";
-import { freeLine, lineFromService, type CatalogService } from "./quoteLines";
+import { freeLine, lineFromBasePrice, lineFromService, type CatalogService } from "./quoteLines";
 import { quoteView, type QuoteDbRow } from "./quoteViews";
 
 const service = (name: string, cents: number, id: string): CatalogService => ({ id, categoryId: null, name, description: null, unitPriceCents: cents, vatRateBps: null, unit: null });
@@ -68,6 +68,14 @@ describe("la saisie envoyée au serveur", () => {
   it("il suffit d'un client et d'une ligne : ouvrage, dimensions, titre sont facultatifs", () => {
     const s = { ...emptyBuilder(), clientName: "M. Petit", lines: [{ ...freeLine(2000, "a", "Réparation"), unitPriceCents: 4000 }] };
     expect(toQuoteInput(s).ok).toBe(true);
+  });
+
+  it("une prestation sur étude réclame son prix, sans injecter de zéro dans le devis", () => {
+    const line = lineFromBasePrice({ pricingKey: "reliure_de_creation", label: "Reliure de création", unit: "ouvrage", unitPriceCents: null, pricingMode: "manual_review" }, 2000, "manual");
+    const missing = toQuoteInput({ ...emptyBuilder(), clientName: "Mme Martin", lines: [line] });
+    expect(missing.ok).toBe(false);
+    if (!missing.ok) expect(missing.problems).toContain("Définissez le prix pour chaque prestation sur étude.");
+    expect(toQuoteInput({ ...emptyBuilder(), clientName: "Mme Martin", lines: [{ ...line, unitPriceCents: 45000 }] }).ok).toBe(true);
   });
 
   it("dit ce qui manque, dans les mots du relieur", () => {

@@ -31,6 +31,9 @@ export interface QuoteLine {
   /** Prix du catalogue au moment de l'ajout ; `null` pour une ligne libre. */
   catalogPriceCents: number | null;
   vatRateBps: number;
+  /** Indication d'interface seulement : le devis enregistre toujours son snapshot. */
+  priceSource: "catalog" | "base" | "manual";
+  requiresManualPrice: boolean;
 }
 
 export function lineFromService(
@@ -48,6 +51,29 @@ export function lineFromService(
     unitPriceCents: service.unitPriceCents,
     catalogPriceCents: service.unitPriceCents,
     vatRateBps: service.vatRateBps ?? defaultVatRateBps,
+    priceSource: "catalog",
+    requiresManualPrice: false,
+  };
+}
+
+export function lineFromBasePrice(
+  service: { pricingKey: string; label: string; unit: string; unitPriceCents: number | null; pricingMode: string },
+  defaultVatRateBps: number,
+  key: string,
+): QuoteLine {
+  return {
+    key,
+    serviceId: null,
+    label: service.label,
+    description: service.pricingMode === "manual_review" ? "Prestation sur étude — prix à définir pour ce devis." : "Tarif de base Ma Reliure",
+    unit: service.unit,
+    quantity: 1,
+    // Une prestation sur étude ne reçoit jamais un zéro automatique : le validateur demandera un prix.
+    unitPriceCents: service.unitPriceCents ?? 0,
+    catalogPriceCents: null,
+    vatRateBps: defaultVatRateBps,
+    priceSource: "base",
+    requiresManualPrice: service.pricingMode === "manual_review",
   };
 }
 
@@ -62,6 +88,8 @@ export function freeLine(defaultVatRateBps: number, key: string, label = ""): Qu
     unitPriceCents: 0,
     catalogPriceCents: null,
     vatRateBps: defaultVatRateBps,
+    priceSource: "manual",
+    requiresManualPrice: false,
   };
 }
 
