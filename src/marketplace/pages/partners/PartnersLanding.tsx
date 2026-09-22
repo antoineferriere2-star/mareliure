@@ -70,8 +70,8 @@ function Hero() {
         Vous gardez votre atelier, votre nom, et le choix d'accepter ou non chaque projet.
       </p>
       <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
-        <a href="#candidature" className="mr-tap inline-flex items-center justify-center rounded-[2px] bg-mr-ink px-7 py-4 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-walnut">
-          Présenter mon atelier
+        <a href="/auth?space=atelier" className="mr-tap inline-flex items-center justify-center rounded-[2px] bg-mr-ink px-7 py-4 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-walnut">
+          Créer mon espace atelier
         </a>
         <a href="#comment-ca-marche-relieur" className="mr-link mr-tap text-[1.0625rem]">
           Voir comment ça marche
@@ -446,10 +446,10 @@ function FinalCta() {
       </h2>
       <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
         <a
-          href="#candidature"
+          href="/auth?space=atelier"
           className="mr-tap inline-flex items-center justify-center rounded-[2px] bg-mr-ink px-7 py-4 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-walnut"
         >
-          Présenter mon atelier
+          Créer mon espace atelier
         </a>
         <IntakeCta variant="outline" />
       </div>
@@ -528,10 +528,13 @@ function ApplicationForm() {
     <section id="candidature" className="scroll-mt-24 bg-mr-paper-warm">
       <div className={`${SHELL} py-section-sm sm:py-section`}>
         <SectionHead
-          eyebrow="Candidater"
-          title="Présentez votre atelier."
-          lead="Ma Reliure lit chaque candidature et vous recontacte — aucun compte n'est créé avant que nous ne vous contactions."
+          eyebrow="Sans compte"
+          title="Vous préférez d'abord nous présenter votre atelier ?"
+          lead="Ce formulaire reste possible si vous souhaitez être recontacté avant de créer votre espace. L'accès aux leads exige toujours une validation par Ma Reliure."
         />
+        <a href="/auth?space=atelier" className="mr-link mr-small mt-6 inline-block">
+          Créer mon espace atelier dès maintenant
+        </a>
 
         {sent ? (
           <p role="status" className="mr-body mt-10 max-w-[32rem]">

@@ -91,6 +91,16 @@ export async function requireBinderId(sb: Supa, userId: string): Promise<string>
   return membership.binderId;
 }
 
+/** Lead access is separate from access to an atelier's private tools. */
+export async function requireLeadApprovedBinderId(sb: Supa, userId: string): Promise<string> {
+  const binderId = await requireBinderId(sb, userId);
+  const { data, error } = await sb.from("marketplace_binders")
+    .select("status").eq("id", binderId).single();
+  if (error) throw error;
+  if (data.status !== "approved") throw new BinderQuotesError("no_binder");
+  return binderId;
+}
+
 const fromQuoteError = (error: unknown): never => {
   if (error instanceof QuoteError) {
     throw new BinderQuotesError(error.code === "profile_incomplete" ? "profile_incomplete" : "invalid_input", error.missing);
