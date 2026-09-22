@@ -7,6 +7,8 @@
  * le catalogue plus tard ne touche jamais une ligne déjà créée.
  */
 import type { VatRegime } from "./quoteCalc";
+import { PRICEABLE_SERVICE_MAPPINGS } from "@/marketplace/pricing/basePrices";
+import { CURRENT_REFERENCE_VERSION } from "@/marketplace/reference";
 
 export interface CatalogService {
   id: string;
@@ -17,6 +19,8 @@ export interface CatalogService {
   /** `null` : le taux par défaut du profil. */
   vatRateBps: number | null;
   unit: string | null;
+  referenceVersion?: string | null;
+  referenceOperationKey?: string | null;
 }
 
 export interface QuoteLine {
@@ -31,6 +35,11 @@ export interface QuoteLine {
   /** Prix du catalogue au moment de l'ajout ; `null` pour une ligne libre. */
   catalogPriceCents: number | null;
   vatRateBps: number;
+  /** Indication d'interface seulement : le devis enregistre toujours son snapshot. */
+  priceSource: "catalog" | "base" | "manual";
+  requiresManualPrice: boolean;
+  referenceVersion?: string | null;
+  referenceOperationKey?: string | null;
 }
 
 export function lineFromService(
@@ -48,6 +57,35 @@ export function lineFromService(
     unitPriceCents: service.unitPriceCents,
     catalogPriceCents: service.unitPriceCents,
     vatRateBps: service.vatRateBps ?? defaultVatRateBps,
+    priceSource: "catalog",
+    requiresManualPrice: false,
+    referenceVersion: service.referenceVersion ?? null,
+    referenceOperationKey: service.referenceOperationKey ?? null,
+  };
+}
+
+export function lineFromBasePrice(
+  service: { pricingKey: string; label: string; unit: string; unitPriceCents: number | null; pricingMode: string },
+  defaultVatRateBps: number,
+  key: string,
+): QuoteLine {
+  const mapping = PRICEABLE_SERVICE_MAPPINGS.find((item) => item.pricingKey === service.pricingKey);
+  const exactKey = mapping?.mappingType === "exact" ? mapping.referenceOperationKeys[0] : null;
+  return {
+    key,
+    serviceId: null,
+    label: service.label,
+    description: service.pricingMode === "manual_review" ? "Prestation sur étude — prix à définir pour ce devis." : "Tarif de base Ma Reliure",
+    unit: service.unit,
+    quantity: 1,
+    // Une prestation sur étude ne reçoit jamais un zéro automatique : le validateur demandera un prix.
+    unitPriceCents: service.unitPriceCents ?? 0,
+    catalogPriceCents: null,
+    vatRateBps: defaultVatRateBps,
+    priceSource: "base",
+    requiresManualPrice: service.pricingMode === "manual_review",
+    referenceVersion: exactKey ? CURRENT_REFERENCE_VERSION : null,
+    referenceOperationKey: exactKey,
   };
 }
 
@@ -62,6 +100,8 @@ export function freeLine(defaultVatRateBps: number, key: string, label = ""): Qu
     unitPriceCents: 0,
     catalogPriceCents: null,
     vatRateBps: defaultVatRateBps,
+    priceSource: "manual",
+    requiresManualPrice: false,
   };
 }
 

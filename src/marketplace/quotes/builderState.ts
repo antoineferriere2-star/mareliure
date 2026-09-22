@@ -95,6 +95,8 @@ export type BuiltInput = { ok: true; input: QuoteInput } | { ok: false; problems
 
 export function toQuoteInput(state: BuilderState): BuiltInput {
   const problems: string[] = [];
+  if (state.lines.some((line) => line.requiresManualPrice && line.unitPriceCents <= 0))
+    problems.push("Définissez le prix pour chaque prestation sur étude.");
   const dim = (raw: string, label: string) => {
     if (raw.trim() === "") return null;
     const value = parseMillimetres(raw);
@@ -137,6 +139,7 @@ export function toQuoteInput(state: BuilderState): BuiltInput {
       unitPriceCents: l.unitPriceCents,
       catalogPriceCents: l.catalogPriceCents,
       vatRateBps: l.vatRateBps,
+      ...(l.referenceVersion && l.referenceOperationKey ? { referenceVersion: l.referenceVersion, referenceOperationKey: l.referenceOperationKey } : {}),
     })),
     discount: adjustment(state.discountType, state.discountValue) as never,
     deposit: adjustment(state.depositType, state.depositValue) as never,
@@ -214,12 +217,18 @@ export function stateFromDocument(doc: DocumentView): BuilderState {
       unitPriceCents: item.unitPriceCents,
       catalogPriceCents: item.catalogPriceCents,
       vatRateBps: item.vatRateBps,
+      priceSource: item.serviceId ? "catalog" : item.referenceOperationKey && item.description === "Tarif de base Ma Reliure" ? "base" : "manual",
+      requiresManualPrice: false,
+      referenceVersion: item.referenceVersion ?? null,
+      referenceOperationKey: item.referenceOperationKey ?? null,
     })),
     discountType,
     discountValue,
     depositType,
     depositValue,
-    validityDays: "",
+    validityDays: doc.validUntil && doc.issueDate
+      ? String(Math.round((Date.parse(`${doc.validUntil}T00:00:00Z`) - Date.parse(`${doc.issueDate}T00:00:00Z`)) / 86_400_000))
+      : "",
     notes: doc.notes ?? "",
   };
 }

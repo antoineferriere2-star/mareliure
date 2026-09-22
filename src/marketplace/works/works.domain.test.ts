@@ -118,7 +118,7 @@ describe("un devis qui part d'un ouvrage ne ressaisit rien", () => {
     expect(stateFromWork(work, null)).toMatchObject({ workId: work.id, clientId: null, clientName: "" });
   });
   it("le devis envoie l'ouvrage seulement s'il y en a un — un devis sans ouvrage est inchangé", () => {
-    const line = { key: "k", serviceId: null, label: "Plein cuir", description: "", unit: null, quantity: 1, unitPriceCents: 28000, catalogPriceCents: null, vatRateBps: 2000 };
+    const line = { key: "k", serviceId: null, label: "Plein cuir", description: "", unit: null, quantity: 1, unitPriceCents: 28000, catalogPriceCents: null, vatRateBps: 2000, priceSource: "manual" as const, requiresManualPrice: false };
     const withWork = toQuoteInput({ ...stateFromWork(work, contact), lines: [line] });
     expect(withWork.ok && withWork.input.workId).toBe(work.id);
     const without = toQuoteInput({ ...emptyBuilder(), clientName: "X", lines: [line] });

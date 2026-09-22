@@ -417,9 +417,23 @@ async function assertOwnServices(sb: Supa, binderId: string, input: QuoteInput):
  * catalogue ne modifie jamais un devis. Une ligne libre, ou d'une prestation personnelle, n'a aucune clé
  * de plus : ses clés restent exactement celles d'avant (`QUOTE_ITEM_ROW_KEYS`).
  */
-function withProvenance<T extends { service_id: string | null }>(items: T[], provenance: Map<string, Provenance>): (T | (T & Provenance))[] {
-  return items.map((item) => {
-    const p = item.service_id ? provenance.get(item.service_id) : undefined;
+async function referenceProvenance(input: QuoteInput): Promise<Map<number, Provenance>> {
+  const { findReferenceOperation, isImportable } = await import("@/marketplace/reference");
+  const result = new Map<number, Provenance>();
+  for (const [position, line] of input.lines.entries()) {
+    if (line.serviceId) continue; // La base est la seule source de provenance des prestations d'atelier.
+    if (!line.referenceVersion && !line.referenceOperationKey) continue;
+    if (!line.referenceVersion || !line.referenceOperationKey) throw new BinderQuotesError("invalid_input");
+    const found = await findReferenceOperation(line.referenceVersion, line.referenceOperationKey);
+    if (!found || !isImportable(found.operation)) throw new BinderQuotesError("invalid_input");
+    result.set(position, { reference_version: line.referenceVersion, reference_operation_key: line.referenceOperationKey });
+  }
+  return result;
+}
+
+function withProvenance<T extends { service_id: string | null }>(items: T[], provenance: Map<string, Provenance>, references: Map<number, Provenance>): (T | (T & Provenance))[] {
+  return items.map((item, index) => {
+    const p = item.service_id ? provenance.get(item.service_id) : references.get(index);
     return p ? { ...item, ...p } : item;
   });
 }
@@ -478,6 +492,7 @@ export async function listQuotes(sb: Supa, binderId: string): Promise<DocumentSu
 export async function createQuote(sb: Supa, binderId: string, input: QuoteInput, today: string): Promise<DocumentView> {
   const profile = await loadBillingProfile(sb, binderId);
   const provenance = await assertOwnServices(sb, binderId, input);
+  const references = await referenceProvenance(input);
   const workId = await assertOwnWork(sb, binderId, input.workId);
   // Le profil est contrôlé AVANT d'écrire quoi que ce soit (pas de fiche client créée pour rien).
   try {
@@ -493,7 +508,7 @@ export async function createQuote(sb: Supa, binderId: string, input: QuoteInput,
   const { data, error } = await sb.rpc("marketplace_binder_create_quote", {
     p_binder_id: binderId,
     p_quote: asJson(workId ? { ...quote, work_id: workId } : quote),
-    p_items: asJson(withProvenance(items, provenance)),
+    p_items: asJson(withProvenance(items, provenance, references)),
   });
   if (error || !data) throw new BinderQuotesError("failed");
   return getQuote(sb, binderId, data as string);
@@ -507,6 +522,7 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
 
   const profile = await loadBillingProfile(sb, binderId);
   const provenance = await assertOwnServices(sb, binderId, input);
+  const references = await referenceProvenance(input);
   const clientId = await resolveClientId(sb, binderId, input);
   let built;
   try {
@@ -519,7 +535,7 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
     p_binder_id: binderId,
     p_quote_id: quoteId,
     p_quote: asJson(built.quote),
-    p_items: asJson(withProvenance(built.items, provenance)),
+    p_items: asJson(withProvenance(built.items, provenance, references)),
   });
   if (error) {
     if (String(error.message).includes("quote_not_editable")) throw new BinderQuotesError("conflict");

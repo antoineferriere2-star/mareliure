@@ -2982,3 +2982,15 @@ que pour retirer le bouton d'import massif (« Ajouter mes premières prestation
 prix, favori, personnelle, isolation, provenance, snapshots), `binderReferenceLinksMigrationContract.test.ts`. Mutations : 38 mutants (serveur, recherche, formulaire, natures), **tous détectés sur une référence verte** ; 4 survivants initiaux
 (synonyme seul, mot-clé seul, sémantique ET, priorité du nom exact) ont donné des tests. QA navigateur (faux Auth, server functions simulées, **vrai référentiel chargé**, hors dépôt) : desktop 1280, tablette 820, mobile 390 — catalogue vide, recherche, ajout,
 favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizontal, aucune erreur console. Non exercé : le runtime réel contre Supabase (pas de clé de service locale).
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 22 septembre 2026, `feat/binder-quote-workbench`.
+
+- Workbench Devis : création rapide client/ouvrage, palette tarif atelier prioritaire sur la base Ma Reliure A2, favoris, récentes atelier, recherche métier `reliure-fr-v1`, saisie directe et duplication des lignes, prix manuel obligatoire pour « sur étude », sauvegarde et réouverture des snapshots avec provenance OPR. Aucun changement de schéma ni migration.
+- Liste : recherche, filtres, actions ouvrir/modifier/dupliquer/PDF. PDF : protection des colonnes client/ouvrage contre les longs libellés.
+- Recette réelle isolée sur un atelier QA temporaire en production Supabase avec application locale : création client + ouvrage + devis (570 € HT, puis 610 € HT après ajustement), réouverture, duplication, PDF A4 lisible, création depuis ouvrage avec client prérempli et référence OPR, recherche « dorure », validation « sur étude », responsive 375/390/430/1024/1280 sans débordement. Parcours depuis ouvrage prérempli mesuré à 3,7 s, six clics et zéro champ manuel dans le navigateur automatisé local.
+- Vérifications locales : `npm test` 2 867 tests verts ; tests ciblés, typecheck, lint (13 avertissements préexistants) et build verts après les derniers ajustements. Attendre la CI de PR avant tout merge/déploiement. L’atelier QA isolé, son compte, ses contacts, ouvrages et devis ont été supprimés après la recette.
+- L’authentification CLI Cloudflare est expirée sur cette machine ; vérifier un autre accès autorisé au déploiement avant la publication.

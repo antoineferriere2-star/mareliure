@@ -304,11 +304,14 @@ describe("la provenance sur les lignes de devis — recopiée, jamais réécrite
     for (const item of lastCreate().args.p_items as Row[]) expect(Object.keys(item).sort()).toEqual([...QUOTE_ITEM_ROW_KEYS].sort());
   });
 
-  it("le navigateur ne peut pas dire une provenance : la ligne de devis n'a aucun champ pour cela", () => {
+  it("une référence libre exige les deux clés vérifiées ; les colonnes SQL restent interdites en entrée", async () => {
     const line = quote([{ serviceId: null, label: "x", price: 1 }]).lines[0];
-    for (const extra of [{ referenceOperationKey: "OPR-0103" }, { reference_operation_key: "OPR-0103" }, { referenceVersion: "reliure-fr-v1" }]) {
-      expect(quoteLineInput.safeParse({ ...line, ...extra }).success, JSON.stringify(extra)).toBe(false);
-    }
+    expect(quoteLineInput.safeParse({ ...line, reference_operation_key: "OPR-0103" }).success).toBe(false);
+    expect(quoteLineInput.safeParse({ ...line, referenceVersion: "reliure-fr-v1", referenceOperationKey: "OPR-0103" }).success).toBe(true);
+    await expect(createQuote(world.sb, BINDER_A, {
+      ...quote([{ serviceId: null, label: "x", price: 1 }]),
+      lines: [{ ...line, referenceVersion: "reliure-fr-v1" }],
+    }, TODAY)).rejects.toMatchObject({ code: "invalid_input" });
   });
 
   it("le libellé, l'unité, la quantité et le prix restent des snapshots : renommer ou re-tarifer la prestation ensuite ne change pas le devis", async () => {
