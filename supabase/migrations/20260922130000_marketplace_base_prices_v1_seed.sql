@@ -60,7 +60,7 @@ INSERT INTO public.marketplace_reference_default_prices (
   ('projet_sur_mesure', 'mareliure-base-prices-v1', NULL, 'ouvrage', 'manual_review', 'draft', 'Hypothèses : Cadrage préalable du projet Exclusions : Toute réalisation sans devis personnalisé Justification : Le catalogue historique la place sur étude. Sur étude : Le périmètre n’est défini qu’après échange avec le client.', 'faible', true)
 ON CONFLICT (pricing_key, reference_version) WHERE status IN ('draft', 'published') DO NOTHING;
 
-DO $
+DO $$
 DECLARE
   total_count INTEGER;
   numeric_count INTEGER;

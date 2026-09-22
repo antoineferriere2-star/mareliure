@@ -28,6 +28,7 @@ describe("seed Tarif de base Ma Reliure V1", () => {
   });
 
   it("refuse de publier une grille partielle ou incohérente", () => {
+    expect(SQL).toContain("DO $$");
     expect(SQL).toContain("IF total_count <> 45 OR numeric_count <> 41 OR manual_count <> 4 THEN");
   });
 });
