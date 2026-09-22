@@ -3055,6 +3055,112 @@ export type Database = {
           },
         ]
       }
+      marketplace_reference_default_prices: {
+        Row: {
+          confidence: string
+          created_at: string
+          default_unit_price_cents: number | null
+          id: string
+          needs_human_validation: boolean
+          pricing_key: string
+          pricing_mode: string
+          published_at: string | null
+          reference_version: string
+          source_note: string | null
+          status: string
+          unit: string
+          updated_at: string
+          validated_at: string | null
+          validated_by: string | null
+          version: number
+        }
+        Insert: {
+          confidence?: string
+          created_at?: string
+          default_unit_price_cents?: number | null
+          id?: string
+          needs_human_validation?: boolean
+          pricing_key: string
+          pricing_mode: string
+          published_at?: string | null
+          reference_version: string
+          source_note?: string | null
+          status?: string
+          unit: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          version?: number
+        }
+        Update: {
+          confidence?: string
+          created_at?: string
+          default_unit_price_cents?: number | null
+          id?: string
+          needs_human_validation?: boolean
+          pricing_key?: string
+          pricing_mode?: string
+          published_at?: string | null
+          reference_version?: string
+          source_note?: string | null
+          status?: string
+          unit?: string
+          updated_at?: string
+          validated_at?: string | null
+          validated_by?: string | null
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_reference_default_prices_pricing_key_fkey"
+            columns: ["pricing_key"]
+            isOneToOne: false
+            referencedRelation: "marketplace_work_items"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      marketplace_reference_price_operation_links: {
+        Row: {
+          created_at: string
+          id: string
+          mapping_note: string | null
+          mapping_type: string
+          pricing_key: string
+          reference_operation_key: string | null
+          reference_version: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          mapping_note?: string | null
+          mapping_type: string
+          pricing_key: string
+          reference_operation_key?: string | null
+          reference_version: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          mapping_note?: string | null
+          mapping_type?: string
+          pricing_key?: string
+          reference_operation_key?: string | null
+          reference_version?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_reference_price_operation_links_pricing_key_fkey"
+            columns: ["pricing_key"]
+            isOneToOne: false
+            referencedRelation: "marketplace_work_items"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       marketplace_stripe_webhook_events: {
         Row: {
           attempts: number
