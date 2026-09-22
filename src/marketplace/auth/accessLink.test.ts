@@ -20,6 +20,20 @@ describe("requestAccessLink", () => {
     });
   });
 
+  it("preserves the atelier entrance in an e-mail sign-in link", async () => {
+    const signInWithOtp = vi.fn().mockResolvedValue({ error: null });
+    await requestAccessLink(
+      { signInWithOtp }, "relieur@example.test", "https://mareliure.fr", "atelier",
+    );
+    expect(signInWithOtp).toHaveBeenCalledWith({
+      email: "relieur@example.test",
+      options: {
+        emailRedirectTo: "https://mareliure.fr/auth?space=atelier",
+        shouldCreateUser: true,
+      },
+    });
+  });
+
   it("does not call Supabase for something that cannot be an address", async () => {
     const signInWithOtp = vi.fn();
     await expect(

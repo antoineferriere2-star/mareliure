@@ -53,8 +53,10 @@ import { loadAggregates, loadPricebook } from "./pricingRepository.server";
 import { assertPricingOpen } from "./pricingGuards.server";
 import {
   acceptBinderInvitation as acceptBinderInvitationForUser,
+  acceptVerifiedEmailBinderInvitation,
   createBinderInvitation,
   findActiveBinderMembership,
+  findPendingBinderInvitations,
   resolvePendingInvitationEmail,
 } from "./binderMembership.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
@@ -1067,6 +1069,46 @@ export const acceptBinderInvitation = createServerFn({ method: "POST" })
       rawToken: data.token,
       userId: context.userId,
       accountEmail,
+    });
+    if (!result.ok) fail(409, result.reason);
+    return { binderId: result.binderId };
+  });
+
+/**
+ * Existing accounts can finish an admin-issued invitation even when its
+ * e-mail link was not delivered. Unlike token acceptance, this path requires
+ * the current Auth user to have a confirmed e-mail address.
+ */
+async function confirmedEmailForUser(sb: Supa, userId: string): Promise<string | null> {
+  const { data, error } = await sb.auth.admin.getUserById(userId);
+  if (error) throw error;
+  return data.user?.email_confirmed_at && data.user.email
+    ? data.user.email.trim().toLowerCase()
+    : null;
+}
+
+export const getMyPendingBinderInvitations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = await admin();
+    const email = await confirmedEmailForUser(sb, context.userId);
+    if (!email) return [];
+    return findPendingBinderInvitations(sb, email);
+  });
+
+export const activateMyBinderInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ invitationId: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    const sb = await admin();
+    const email = await confirmedEmailForUser(sb, context.userId);
+    if (!email) fail(403, "Confirmez votre adresse e-mail avant d'activer l'atelier.");
+    const result = await acceptVerifiedEmailBinderInvitation(sb, {
+      invitationId: data.invitationId,
+      userId: context.userId,
+      verifiedEmail: email!,
     });
     if (!result.ok) fail(409, result.reason);
     return { binderId: result.binderId };

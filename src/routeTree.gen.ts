@@ -36,6 +36,7 @@ import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TermsOfSaleRouteImport } from './routes/terms-of-sale'
 import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
+import { Route as AuthenticatedActiverMonAtelierRouteImport } from './routes/_authenticated/activer-mon-atelier'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
 import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
@@ -259,6 +260,12 @@ const TermsOfUseRoute = TermsOfUseRouteImport.update({
   path: '/terms-of-use',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedActiverMonAtelierRoute =
+  AuthenticatedActiverMonAtelierRouteImport.update({
+    id: '/activer-mon-atelier',
+    path: '/activer-mon-atelier',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
@@ -798,6 +805,7 @@ export interface FileRoutesByFullPath {
   '/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
   '/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
@@ -907,6 +915,7 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
@@ -1023,6 +1032,7 @@ export interface FileRoutesById {
   '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
   '/_authenticated/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/_authenticated/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
@@ -1140,6 +1150,7 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/mes-livres'
     | '/portal'
+    | '/activer-mon-atelier'
     | '/a/$slug'
     | '/demo/deck-project'
     | '/invitation-atelier/$token'
@@ -1249,6 +1260,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-sale'
     | '/terms-of-use'
+    | '/activer-mon-atelier'
     | '/a/$slug'
     | '/demo/deck-project'
     | '/invitation-atelier/$token'
@@ -1364,6 +1376,7 @@ export interface FileRouteTypes {
     | '/_authenticated/marketplace'
     | '/_authenticated/mes-livres'
     | '/_authenticated/portal'
+    | '/_authenticated/activer-mon-atelier'
     | '/a/$slug'
     | '/demo/deck-project'
     | '/invitation-atelier/$token'
@@ -1688,6 +1701,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/terms-of-use'
       preLoaderRoute: typeof TermsOfUseRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/activer-mon-atelier': {
+      id: '/_authenticated/activer-mon-atelier'
+      path: '/activer-mon-atelier'
+      fullPath: '/activer-mon-atelier'
+      preLoaderRoute: typeof AuthenticatedActiverMonAtelierRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/admin': {
       id: '/_authenticated/admin'
@@ -2543,6 +2563,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedMarketplaceRouteRoute: typeof AuthenticatedMarketplaceRouteRouteWithChildren
   AuthenticatedMesLivresRouteRoute: typeof AuthenticatedMesLivresRouteRouteWithChildren
   AuthenticatedPortalRouteRoute: typeof AuthenticatedPortalRouteRouteWithChildren
+  AuthenticatedActiverMonAtelierRoute: typeof AuthenticatedActiverMonAtelierRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -2554,6 +2575,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMesLivresRouteRoute:
     AuthenticatedMesLivresRouteRouteWithChildren,
   AuthenticatedPortalRouteRoute: AuthenticatedPortalRouteRouteWithChildren,
+  AuthenticatedActiverMonAtelierRoute: AuthenticatedActiverMonAtelierRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

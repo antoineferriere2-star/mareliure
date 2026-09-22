@@ -197,14 +197,16 @@ const AUTH_COPY: Record<MarketplaceBrand, AuthCopy> = {
 
 export function MaReliureAuthPage({
   brand,
+  initialAudience,
   accessError,
   routing,
   onSignedIn,
 }: {
   brand: MarketplaceBrand;
+  initialAudience: Audience;
   accessError: string | null;
   routing: boolean;
-  onSignedIn: () => Promise<void>;
+  onSignedIn: (audience: Audience) => Promise<void>;
 }) {
   const t = AUTH_COPY[brand];
   const Header = brand === "FINE_BINDERY" ? FineBinderyHeader : LandingHeader;
@@ -216,7 +218,7 @@ export function MaReliureAuthPage({
       ? null
       : linkErrorFromUrl(window.location.hash, window.location.search),
   );
-  const [audience, setAudience] = useState<Audience>("customer");
+  const [audience, setAudience] = useState<Audience>(initialAudience);
   const [customerMethod, setCustomerMethod] = useState<CustomerMethod>("link");
   const [binderMethod, setBinderMethod] = useState<CustomerMethod>("password-signin");
   const alert = accessError ?? linkProblem;
@@ -277,7 +279,7 @@ export function MaReliureAuthPage({
           {audience === "customer" ? (
             customerMethod === "link" ? (
               <>
-                <LinkSignIn t={t} onSent={() => setLinkProblem(null)} onSignedIn={onSignedIn} />
+                <LinkSignIn t={t} onSent={() => setLinkProblem(null)} onSignedIn={() => onSignedIn("customer")} />
                 <p className="mt-8 border-t border-mr-rule pt-6">
                   <button
                     type="button"
@@ -290,7 +292,7 @@ export function MaReliureAuthPage({
               </>
             ) : (
               <>
-                <PasswordSignIn t={t} onSignedIn={onSignedIn} />
+                <PasswordSignIn t={t} onSignedIn={() => onSignedIn("customer")} />
                 <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 border-t border-mr-rule pt-6">
                   <button
                     type="button"
@@ -307,9 +309,9 @@ export function MaReliureAuthPage({
               <h2 className="mr-heading text-mr-ink">{t.binderSignInHeading}</h2>
               <div className="mt-4">
                 {binderMethod === "link" ? (
-                  <LinkSignIn t={t} onSent={() => setLinkProblem(null)} onSignedIn={onSignedIn} />
+                  <LinkSignIn t={t} space="atelier" onSent={() => setLinkProblem(null)} onSignedIn={() => onSignedIn("binder")} />
                 ) : (
-                  <PasswordSignIn t={t} onSignedIn={onSignedIn} />
+                  <PasswordSignIn t={t} onSignedIn={() => onSignedIn("binder")} />
                 )}
               </div>
               <p className="mt-6">
@@ -344,10 +346,12 @@ export function MaReliureAuthPage({
 
 function LinkSignIn({
   t,
+  space,
   onSent,
   onSignedIn,
 }: {
   t: AuthCopy;
+  space?: "atelier";
   onSent: () => void;
   onSignedIn: () => Promise<void>;
 }) {
@@ -366,7 +370,7 @@ function LinkSignIn({
   async function send(address: string) {
     setSending(true);
     setProblem(null);
-    const result = await requestAccessLink(supabase.auth, address, window.location.origin);
+    const result = await requestAccessLink(supabase.auth, address, window.location.origin, space);
     setSending(false);
     if (!result.ok) {
       setProblem(result.message);

@@ -18,17 +18,19 @@
  */
 
 export type MarketplacePostAuthDestination =
-  { to: "/marketplace/cases" } | { to: "/atelier" } | { to: "/mes-livres" };
+  { to: "/marketplace/cases" } | { to: "/atelier" } | { to: "/activer-mon-atelier" } | { to: "/mes-livres" };
 
 export interface MarketplacePostAuthDeps {
   /** Lève une erreur si le compte n'est pas administrateur. */
   checkAdmin(): Promise<unknown>;
   /** `null` si aucun atelier n'est rattaché à ce compte. */
   getBinderProfile(): Promise<unknown>;
+  /** Invitations addressed to this account's confirmed e-mail. */
+  getPendingBinderInvitations(): Promise<readonly unknown[]>;
 }
 
 /**
- * Trois rôles, trois portes, dans l'ordre du plus privilégié au plus commun.
+ * Les accès administrateur, relieur actif et relieur invité priment sur l'espace client.
  *
  * Le cas par défaut est « Mes livres » et non la page d'accueil : quelqu'un qui
  * se connecte cherche ses livres, et si la liste est vide cette page est
@@ -40,6 +42,7 @@ export interface MarketplacePostAuthDeps {
  */
 export async function resolveMarketplacePostAuthDestination(
   deps: MarketplacePostAuthDeps,
+  requestedSpace?: "atelier",
 ): Promise<MarketplacePostAuthDestination> {
   try {
     await deps.checkAdmin();
@@ -54,6 +57,18 @@ export async function resolveMarketplacePostAuthDestination(
     // profil de relieur illisible : on traite le compte comme un client plutôt
     // que de bloquer la connexion sur une erreur secondaire.
   }
+
+  try {
+    if ((await deps.getPendingBinderInvitations()).length > 0) {
+      return { to: "/activer-mon-atelier" };
+    }
+  } catch {
+    // une erreur secondaire ne doit pas empêcher la connexion
+  }
+
+  // Quelqu'un entré par « Atelier partenaire » doit recevoir une explication
+  // s'il n'a pas d'invitation, plutôt que d'atterrir silencieusement côté client.
+  if (requestedSpace === "atelier") return { to: "/activer-mon-atelier" };
 
   return { to: "/mes-livres" };
 }
