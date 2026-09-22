@@ -27,18 +27,13 @@ export const ensureMyCaseWork = createServerFn({ method: "POST" })
     const view = await buildCaseView(sb, caseContext, "assigned");
     const caseName = view.contact?.name?.trim() || caseContext.customerName?.trim() || `Client ${view.reference}`;
     const workTitle = view.title.trim() || view.reference;
-    // The generated Supabase types are refreshed from production after the migration is applied.
-    // This narrow RPC typing keeps the unreleased migration local to this call until then.
-    const typedSb = sb as unknown as { rpc: (
-      name: "marketplace_binder_import_case",
-      args: Record<string, string | null>,
-    ) => Promise<{ data: string | null; error: { message: string } | null }> };
-    const { data: workId, error } = await typedSb.rpc("marketplace_binder_import_case", {
+    const { data: workId, error } = await sb.rpc("marketplace_binder_import_case", {
       p_binder_id: binderId,
       p_case_id: data.caseId,
       p_contact_name: caseName,
-      p_contact_email: view.contact?.email ?? caseContext.customerEmail,
-      p_contact_phone: view.contact?.phone ?? null,
+      // Postgres accepts NULL; the generated CLI type models unannotated function arguments as string.
+      p_contact_email: (view.contact?.email ?? caseContext.customerEmail ?? null) as unknown as string,
+      p_contact_phone: (view.contact?.phone ?? null) as unknown as string,
       p_work_title: workTitle,
       p_work_description: view.summary,
     });

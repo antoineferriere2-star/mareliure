@@ -3288,6 +3288,18 @@ export type Database = {
         Args: { p_binder_id: string; p_work: Json }
         Returns: string
       }
+      marketplace_binder_import_case: {
+        Args: {
+          p_binder_id: string
+          p_case_id: string
+          p_contact_email: string
+          p_contact_name: string
+          p_contact_phone: string
+          p_work_description: string
+          p_work_title: string
+        }
+        Returns: string
+      }
       marketplace_binder_next_document_number: {
         Args: { p_binder_id: string; p_kind: string; p_year: number }
         Returns: string
