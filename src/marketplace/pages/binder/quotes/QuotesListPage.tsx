@@ -1,7 +1,7 @@
 /**
  * « Devis et factures » : une liste, deux onglets, un bouton principal.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -17,17 +17,25 @@ export function QuotesListPage() {
   const fetchQuotes = useServerFn(getMyQuotes);
   const fetchInvoices = useServerFn(getMyInvoices);
   const [tab, setTab] = useState<"quotes" | "invoices">("quotes");
+  const [query, setQuery] = useState("");
+  const [quoteFilter, setQuoteFilter] = useState<"all" | "draft" | "sent" | "accepted" | "invoiced">("all");
   const quotes = useQuery({ queryKey: QUOTES_KEY, queryFn: () => fetchQuotes() });
   const invoices = useQuery({ queryKey: INVOICES_KEY, queryFn: () => fetchInvoices() });
   const active = tab === "quotes" ? quotes : invoices;
-  const rows = (active.data ?? []) as DocumentSummary[];
+  const rows = useMemo(() => {
+    const needle = query.trim().toLocaleLowerCase("fr-FR");
+    return ((active.data ?? []) as DocumentSummary[]).filter((row) => {
+      const matchesSearch = !needle || `${row.number} ${row.clientName} ${row.bookTitle ?? ""}`.toLocaleLowerCase("fr-FR").includes(needle);
+      return matchesSearch && (tab !== "quotes" || quoteFilter === "all" || row.status === quoteFilter);
+    });
+  }, [active.data, query, quoteFilter, tab]);
 
   return (
     <div className="space-y-6">
       <header className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl">Devis et factures</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Le livre, les dimensions, les prestations : le prix se calcule tout seul.</p>
+          <h1 className="font-serif text-2xl">{tab === "quotes" ? "Devis" : "Factures"}</h1>
+          <p className="mt-1 text-sm text-muted-foreground">Le livre, les prestations et le chiffrage au même endroit.</p>
         </div>
         <Link to="/atelier/devis/nouveau" className={PRIMARY_BUTTON}>
           Nouveau devis
@@ -55,6 +63,15 @@ export function QuotesListPage() {
         ))}
       </div>
 
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <input aria-label="Rechercher un devis" className="min-h-11 rounded-md border border-input bg-background px-3 text-sm sm:w-80" placeholder="Client, ouvrage ou numéro…" value={query} onChange={(event) => setQuery(event.target.value)} />
+        {tab === "quotes" && <div className="flex flex-wrap gap-1" aria-label="Filtrer les devis">
+          {([['all', 'Tous'], ['draft', 'Brouillons'], ['sent', 'Envoyés'], ['accepted', 'Acceptés'], ['invoiced', 'À facturer']] as const).map(([value, label]) => (
+            <button key={value} type="button" onClick={() => setQuoteFilter(value)} className={`min-h-9 rounded-full px-3 text-xs font-medium ${quoteFilter === value ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>{label}</button>
+          ))}
+        </div>}
+      </div>
+
       {active.isPending ? (
         <div role="status" aria-busy="true" className="space-y-3">
           <span className="sr-only">Chargement…</span>
@@ -65,7 +82,7 @@ export function QuotesListPage() {
         <ErrorNote>Impossible de charger la liste. Rechargez la page.</ErrorNote>
       ) : rows.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center">
-          <p className="font-serif text-xl">{tab === "quotes" ? "Aucun devis pour le moment" : "Aucune facture pour le moment"}</p>
+          <p className="font-serif text-xl">{query || quoteFilter !== "all" ? "Aucun document ne correspond" : tab === "quotes" ? "Aucun devis pour le moment" : "Aucune facture pour le moment"}</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
             {tab === "quotes"
               ? "Prenez un livre, saisissez ses dimensions, cochez les prestations : votre premier devis est prêt en quelques minutes."
