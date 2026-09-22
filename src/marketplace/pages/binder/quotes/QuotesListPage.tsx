@@ -13,14 +13,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorNote, PAYMENT_LABELS, PRIMARY_BUTTON, QuoteStatusBadge } from "./quoteUi";
 import { INVOICES_KEY, QUOTES_KEY } from "./quoteQueryKeys";
 
-export function QuotesListPage() {
+export function QuotesListPage({ initialTab = "quotes" }: { initialTab?: "quotes" | "invoices" }) {
   const fetchQuotes = useServerFn(getMyQuotes);
   const fetchInvoices = useServerFn(getMyInvoices);
   const duplicate = useServerFn(duplicateMyQuote);
   const fetchPdf = useServerFn(getMyQuotePdf);
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const [tab, setTab] = useState<"quotes" | "invoices">("quotes");
+  const [tab, setTab] = useState<"quotes" | "invoices">(initialTab);
   const [query, setQuery] = useState("");
   const [quoteFilter, setQuoteFilter] = useState<"all" | "draft" | "sent" | "accepted" | "refused" | "invoiced">("all");
   const [actionError, setActionError] = useState(false);

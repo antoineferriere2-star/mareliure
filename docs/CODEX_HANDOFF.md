@@ -2994,3 +2994,13 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Recette réelle isolée sur un atelier QA temporaire en production Supabase avec application locale : création client + ouvrage + devis (570 € HT, puis 610 € HT après ajustement), réouverture, duplication, PDF A4 lisible, création depuis ouvrage avec client prérempli et référence OPR, recherche « dorure », validation « sur étude », responsive 375/390/430/1024/1280 sans débordement. Parcours depuis ouvrage prérempli mesuré à 3,7 s, six clics et zéro champ manuel dans le navigateur automatisé local.
 - Vérifications locales : `npm test` 2 867 tests verts ; tests ciblés, typecheck, lint (13 avertissements préexistants) et build verts après les derniers ajustements. Attendre la CI de PR avant tout merge/déploiement. L’atelier QA isolé, son compte, ses contacts, ouvrages et devis ont été supprimés après la recette.
 - L’authentification CLI Cloudflare est expirée sur cette machine ; vérifier un autre accès autorisé au déploiement avant la publication.
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 22 septembre 2026, `feat/binder-connected-workspace`.
+
+- Audit : `docs/binder-connected-workspace-audit.md`. Les dossiers, attributions, messages, lu/non lu, contacts, ouvrages, devis, factures et prestations existants sont consolidés ; aucun second modèle de dossier, de messagerie ou de devis.
+- Atelier : navigation Aujourd'hui · Leads · Devis · Ouvrages · Messages · Contacts · Factures · Prestations ; accueil opérationnel, filtres des dossiers, conversations contextualisées et compteur lu/non lu. Un dossier Ma Reliure sélectionné crée contact + ouvrage atomiquement puis ouvre le Quote Workbench prérempli.
+- Admin : `/admin` pour le pilotage, les ateliers, les dossiers et les messages Ma Reliure. La fiche atelier expose les données des projets Ma Reliure et uniquement des comptes agrégés pour les clients privés ; aucun mode support ni accès silencieux aux conversations privées n'est activé.
+- Migration additive : `20260922140000_marketplace_binder_case_work.sql`, une fonction service-role seulement, idempotente sous verrou, qui vérifie marque Ma Reliure + match selected + atelier actif. RLS des tables inchangée.
+- Vérifié avant PR : typecheck, lint (13 avertissements historiques), build et 2 876 tests verts. Restent : PR/CI, application migration production + régénération des types, E2E réels relieur/admin, fusion, déploiement et QA production.

@@ -48,6 +48,7 @@ export interface WorkView {
   internalNotes: string | null;
   status: WorkStatus;
   source: WorkSource;
+  caseId?: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -65,8 +66,10 @@ export interface WorkSummary {
   conditionNotes: string | null;
   status: WorkStatus;
   source: WorkSource;
+  caseId?: string | null;
   quoteCount: number;
   createdAt: string;
+  updatedAt?: string;
 }
 
 export interface WorkDetail {
