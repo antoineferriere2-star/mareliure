@@ -51,7 +51,8 @@ const inputClass =
   "mt-2 w-full rounded-[2px] border border-mr-rule-strong bg-white px-3.5 py-3 text-[1rem] text-mr-ink";
 const submitClass =
   "mt-6 inline-flex w-full items-center justify-center rounded-[2px] bg-mr-ink px-6 py-3.5 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-graphite disabled:opacity-60 sm:w-auto";
-const textButtonClass = "mr-link mr-small mr-tap text-left disabled:no-underline disabled:opacity-60";
+const textButtonClass =
+  "mr-link mr-small mr-tap text-left disabled:no-underline disabled:opacity-60";
 
 type Audience = "customer" | "binder";
 /**
@@ -119,7 +120,7 @@ const MA_RELIURE_COPY: AuthCopy = {
     "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien et un code de connexion : pas de compte à créer, pas de mot de passe à retenir.",
   leadPasswordSignin: "Connectez-vous avec le mot de passe de votre espace.",
   leadBinder:
-    "Connectez-vous avec le mot de passe de votre atelier, ou candidatez pour rejoindre le réseau si vous n'avez pas encore de compte.",
+    "Connectez-vous avec le mot de passe ou un lien envoyé à l'adresse de votre atelier. Si vous n'avez pas encore de compte, candidatez pour rejoindre le réseau.",
   routingStatus: "Ouverture de votre espace…",
   preferPassword: "Vous avez déjà un mot de passe ?",
   backToLink: "Revenir au lien de connexion par e-mail",
@@ -217,6 +218,7 @@ export function MaReliureAuthPage({
   );
   const [audience, setAudience] = useState<Audience>("customer");
   const [customerMethod, setCustomerMethod] = useState<CustomerMethod>("link");
+  const [binderMethod, setBinderMethod] = useState<CustomerMethod>("password-signin");
   const alert = accessError ?? linkProblem;
 
   return (
@@ -258,7 +260,10 @@ export function MaReliureAuthPage({
         </p>
 
         {alert && (
-          <p role="alert" className="mr-small mt-8 border-l-2 border-mr-bordeaux pl-4 text-mr-bordeaux">
+          <p
+            role="alert"
+            className="mr-small mt-8 border-l-2 border-mr-bordeaux pl-4 text-mr-bordeaux"
+          >
             {alert}
           </p>
         )}
@@ -301,8 +306,25 @@ export function MaReliureAuthPage({
             <>
               <h2 className="mr-heading text-mr-ink">{t.binderSignInHeading}</h2>
               <div className="mt-4">
-                <PasswordSignIn t={t} onSignedIn={onSignedIn} />
+                {binderMethod === "link" ? (
+                  <LinkSignIn t={t} onSent={() => setLinkProblem(null)} onSignedIn={onSignedIn} />
+                ) : (
+                  <PasswordSignIn t={t} onSignedIn={onSignedIn} />
+                )}
               </div>
+              <p className="mt-6">
+                <button
+                  type="button"
+                  className={textButtonClass}
+                  onClick={() =>
+                    setBinderMethod(binderMethod === "link" ? "password-signin" : "link")
+                  }
+                >
+                  {binderMethod === "link"
+                    ? "Se connecter avec un mot de passe"
+                    : "Recevoir un lien de connexion par e-mail"}
+                </button>
+              </p>
 
               <div className="mt-10 border-t border-mr-rule pt-6">
                 <h2 className="mr-heading text-mr-ink">{t.binderSignUpHeading}</h2>
@@ -635,4 +657,3 @@ function PasswordSignIn({ t, onSignedIn }: { t: AuthCopy; onSignedIn: () => Prom
     </form>
   );
 }
-
