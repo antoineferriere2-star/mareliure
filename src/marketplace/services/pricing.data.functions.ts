@@ -23,6 +23,14 @@ import { validateRate } from "@/marketplace/pricing/rateCard";
 import { detectDrift, customerPriceForMargin, marginOf } from "@/marketplace/pricing/pricebook";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
 import {
+  BASE_PRICE_CONFIDENCES,
+  BASE_PRICE_PRICING_MODES,
+  BASE_PRICE_REFERENCE_VERSION,
+  BASE_PRICE_STATUSES,
+  mappingForPricingKey,
+  validateBasePriceDraft,
+} from "@/marketplace/pricing/basePrices";
+import {
   aggregatesFrom,
   loadActiveRates,
   loadBinderRates,
@@ -32,6 +40,43 @@ import {
 const sizeClass = z.enum(SIZE_CLASSES);
 const complexityClass = z.enum(COMPLEXITY_CLASSES);
 const workItemKeys = new Set(WORK_ITEMS.map((item) => item.key));
+
+const basePricePricingMode = z.enum(BASE_PRICE_PRICING_MODES);
+const basePriceStatus = z.enum(BASE_PRICE_STATUSES);
+const basePriceConfidence = z.enum(BASE_PRICE_CONFIDENCES);
+
+const basePriceInput = z.object({
+  pricingKey: z.string().refine((key) => workItemKeys.has(key), "Prestation hors catalogue"),
+  referenceVersion: z.string().trim().min(1).max(100).default(BASE_PRICE_REFERENCE_VERSION),
+  defaultUnitPriceCents: z.number().int().min(0).nullable(),
+  unit: z.string().trim().min(1).max(50),
+  pricingMode: basePricePricingMode,
+  status: basePriceStatus.default("draft"),
+  sourceNote: z.string().trim().max(500).nullable().default(null),
+  confidence: basePriceConfidence.default("low"),
+  needsHumanValidation: z.boolean().default(true),
+});
+
+type BasePriceRow = {
+  id: string;
+  pricing_key: string;
+  reference_version: string;
+  default_unit_price_cents: number | null;
+  unit: string;
+  pricing_mode: "fixed" | "unit" | "starting_from" | "manual_review";
+  status: "draft" | "published" | "retired";
+  version: number;
+  source_note: string | null;
+  confidence: "low" | "medium" | "high";
+  needs_human_validation: boolean;
+  validated_at: string | null;
+  validated_by: string | null;
+  published_at: string | null;
+  updated_at: string;
+};
+
+const BASE_PRICE_COLUMNS =
+  "id, pricing_key, reference_version, default_unit_price_cents, unit, pricing_mode, status, version, source_note, confidence, needs_human_validation, validated_at, validated_by, published_at, updated_at";
 
 /** Le catalogue tel qu'il est offert à la saisie, familles comprises. */
 export const getWorkCatalogue = createServerFn({ method: "GET" })
@@ -47,6 +92,103 @@ export const getWorkCatalogue = createServerFn({ method: "GET" })
       complexityClasses: COMPLEXITY_CLASSES,
       sources: RATE_SOURCES,
     };
+  });
+
+/**
+ * Les tarifs de base sont une convention interne, donc lus par les admins
+ * uniquement. Les prestations sans ligne restent visibles : A1 prépare la
+ * grille sans semer les 45 valeurs, ce sera le rôle explicite de A2.
+ */
+export const getBasePriceReference = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    // La table est créée par la migration A1 mais les types Supabase ne seront
+    // régénérés depuis la production qu'après son application. Cet adaptateur
+    // est local à A1 ; il n'élargit aucun accès côté client.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = (await admin()) as any;
+    const { data, error } = await sb
+      .from("marketplace_reference_default_prices")
+      .select(BASE_PRICE_COLUMNS)
+      .eq("reference_version", BASE_PRICE_REFERENCE_VERSION)
+      .neq("status", "retired")
+      .order("pricing_key");
+    if (error) fail(500, error.message);
+    const entries = new Map((data as BasePriceRow[] | null ?? []).map((row) => [row.pricing_key, row]));
+    return {
+      referenceVersion: BASE_PRICE_REFERENCE_VERSION,
+      families: WORK_FAMILIES.map((family) => ({
+        ...family,
+        items: WORK_ITEMS.filter((item) => item.family === family.key).map((item) => ({
+          key: item.key,
+          label: item.label,
+          hint: item.hint ?? null,
+          mapping: mappingForPricingKey(item.key),
+          entry: entries.get(item.key) ?? null,
+        })),
+      })),
+    };
+  });
+
+/**
+ * Une modification retire l'état courant et écrit une nouvelle version. Les
+ * devis et les tarifs atelier ne lisent pas cette table en A1 ; ils ne peuvent
+ * donc pas être modifiés rétroactivement par cette opération.
+ */
+export const saveBasePrice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => basePriceInput.parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const errors = validateBasePriceDraft(data);
+    if (errors.length > 0) fail(422, errors.join(" "));
+    // Voir getBasePriceReference : les types générés suivent la migration au
+    // déploiement, tandis que cette fonction doit déjà compiler dans la PR.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const sb = (await admin()) as any;
+    const now = new Date().toISOString();
+    const { data: previous, error: previousError } = await sb
+      .from("marketplace_reference_default_prices")
+      .select("version")
+      .eq("pricing_key", data.pricingKey)
+      .eq("reference_version", data.referenceVersion)
+      .order("version", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (previousError) fail(500, previousError.message);
+
+    const { error: retireError } = await sb
+      .from("marketplace_reference_default_prices")
+      .update({ status: "retired", updated_at: now })
+      .eq("pricing_key", data.pricingKey)
+      .eq("reference_version", data.referenceVersion)
+      .in("status", ["draft", "published"]);
+    if (retireError) fail(500, retireError.message);
+
+    const published = data.status === "published";
+    const { data: row, error } = await sb
+      .from("marketplace_reference_default_prices")
+      .insert({
+        pricing_key: data.pricingKey,
+        reference_version: data.referenceVersion,
+        default_unit_price_cents: data.defaultUnitPriceCents,
+        unit: data.unit,
+        pricing_mode: data.pricingMode,
+        status: data.status,
+        version: ((previous as { version: number } | null)?.version ?? 0) + 1,
+        source_note: data.sourceNote,
+        confidence: data.confidence,
+        needs_human_validation: data.needsHumanValidation,
+        validated_at: published ? now : null,
+        validated_by: published ? context.userId : null,
+        published_at: published ? now : null,
+        updated_at: now,
+      })
+      .select("id, version")
+      .single();
+    if (error) fail(500, error.message);
+    return { id: row.id as string, version: row.version as number };
   });
 
 /**

@@ -788,6 +788,17 @@ Rappel de principe : **l'IA propose, elle ne décide jamais seule.**
 
 ## Latest handoff
 
+**Agent :** Codex (GPT-6)
+**Date :** 21 septembre 2026 — PR A1 tarif de base Ma Reliure, prête à relire sur `feat/mareliure-base-prices-a1`.
+
+- Ajoute la migration `20260921110000_marketplace_base_prices.sql` : tables distinctes `marketplace_reference_default_prices` et `marketplace_reference_price_operation_links`, RLS deny-all, versions de ligne et contraintes `fixed` / `unit` / `starting_from` / `manual_review`. Zéro est autorisé comme prix explicite ; `manual_review` impose `NULL`.
+- Ajoute le mapping intégral des 45 prestations commerciales vers `reliure-fr-v1`, avec les correspondances exactes, composites et les repères explicitement non équivalents.
+- Ajoute l’onglet admin « Tarifs de base Ma Reliure » : édition en ligne, versionnement, signaux internes, recherche et filtres. L’onglet « Observations ateliers » conserve l’écran et les tables existants sans modification.
+- **Aucune valeur de la grille 45/45 n’est injectée.** PR A2 chargera les 41 montants et les 4 états `manual_review` validés. Le catalogue atelier et les devis ne lisent pas ces nouvelles tables dans A1.
+- Tests ciblés : 12 tests verts (mapping, modes, zéro/null, migration, permissions, versionnement). Les dépendances du worktree sont liées au checkout de référence pour les contrôles locaux ; le dossier `node_modules-incomplete` non suivi provient d’une tentative d’installation interrompue et ne doit pas être commité.
+
+---
+
 **Agent :** Claude Code (Sonnet 5)
 
 **Date :** 20 septembre 2026 — dernier chantier : **Phase 0 (audit du 19 septembre, 8 P1)**, PR #5 fusionnée dans `main` (`158df5eb`), **5 migrations appliquées en production et Worker déployé** — voir « Phase 0 — publication » en fin de document ; avant : outil devis → facture du relieur (suite 11, PR #3, fusionnée, migration appliquée et déployé le 19/09) ; avant : UX des espaces clients (suite 10, fusionnée, PR #2). Le bloc de commits ci-dessous décrit la branche `fix/mareliure-customer-access`, fusionnée dans `main` (PR #1) : corrections P0 GTM de l'audit en navigation réelle — brand-aware email, locale serveur autoritaire, champ Country publié en production, CGV publiées, smoke test mobile — voir suite 9.
