@@ -65,7 +65,7 @@ const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
 
 const CASE_LIST_COLUMNS =
-  "id, dossier_id, reference, status, manual_review_required, heritage_flag, declared_value_band, triage_flags, admin_notes, customer_user_id, pricing_status, customer_price_cents, binder_payout_cents, created_at";
+  "id, dossier_id, reference, status, brand, manual_review_required, heritage_flag, declared_value_band, triage_flags, admin_notes, customer_user_id, pricing_status, customer_price_cents, binder_payout_cents, created_at";
 
 /** States that mean a workshop currently has something on its bench. */
 const BUSY_MATCH_STATES = ["offered", "accepted", "selected", "invited", "quoted"];
@@ -1107,21 +1107,24 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     if (!matches || matches.length === 0) return [];
 
     const caseIds = matches.map((m) => m.case_id);
-    const { data: cases } = await sb
+    const { data: cases, error: caseError } = await sb
       .from("marketplace_cases")
-      .select("id, reference, status, dossier_id, brand")
+      .select("id, reference, status, dossier_id, brand, created_at")
       .in("id", caseIds);
+    if (caseError) fail(500, caseError.message);
 
     // Titles again come from the Dossier the case points at, never from a copy.
     const titles = new Map<string, string>();
     const photoCount = new Map<string, number>();
     const summaries = new Map<string, string>();
+    const dossierIds = (cases ?? []).map((row) => row.dossier_id);
+    const { data: dossiers, error: dossierError } = dossierIds.length
+      ? await sb.from("build_dossiers").select("id, content, visitor_summary, visitor_name").in("id", dossierIds)
+      : { data: [], error: null };
+    if (dossierError) fail(500, dossierError.message);
+    const dossierById = new Map((dossiers ?? []).map((row) => [row.id, row] as const));
     for (const row of cases ?? []) {
-      const { data: dossier } = await sb
-        .from("build_dossiers")
-        .select("content, visitor_summary")
-        .eq("id", row.dossier_id)
-        .maybeSingle();
+      const dossier = dossierById.get(row.dossier_id);
       const content = dossier?.content as {
         missionName?: unknown;
         projectSummary?: unknown;
@@ -1130,10 +1133,10 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
       // Par la même règle que la fiche, et non par une lecture directe du
       // Dossier. La liste affichait le résumé brut, budget du client compris,
       // alors que la fiche le retirait : deux surfaces, une seule filtrée.
-      if (typeof content?.projectSummary === "string")
+      if (dossier && typeof content?.projectSummary === "string")
         summaries.set(
           row.id,
-          disclosedSummary(dossier!.content as unknown as ProjectBrief, "project_only"),
+          disclosedSummary(dossier.content as unknown as ProjectBrief, "project_only"),
         );
       const photos = (dossier?.visitor_summary as { photos?: unknown[] } | null)?.photos;
       photoCount.set(row.id, Array.isArray(photos) ? photos.length : 0);
@@ -1172,7 +1175,9 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
         currency: offer?.currency ?? match.currency,
         reference: row?.reference ?? "",
         caseStatus: row?.status ?? "",
+        createdAt: row?.created_at ?? match.invited_at,
         title: titles.get(match.case_id) ?? row?.reference ?? "",
+        clientName: match.state === "selected" && row ? dossierById.get(row.dossier_id)?.visitor_name ?? null : null,
         summary: summaries.get(match.case_id) ?? "",
         photoCount: photoCount.get(match.case_id) ?? 0,
         unreadCount: unread.get(match.case_id) ?? 0,

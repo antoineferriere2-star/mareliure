@@ -149,8 +149,11 @@ export function ConversationPanel({
   // Opening the panel counts as reading it — the same instant a person
   // would expect a "2 new messages" badge to clear.
   useEffect(() => {
-    void markRead({ data: { caseId } });
-  }, [caseId, markRead]);
+    void markRead({ data: { caseId } }).then(() => {
+      void queryClient.invalidateQueries({ queryKey: ["marketplace", "binder", "cases"] });
+      void queryClient.invalidateQueries({ queryKey: ["marketplace", "customer", "cases"] });
+    });
+  }, [caseId, markRead, queryClient]);
 
   useEffect(() => {
     if (customer) {

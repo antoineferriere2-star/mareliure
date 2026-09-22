@@ -70,6 +70,7 @@ export const workView = (row: Tables<"marketplace_binder_works">): WorkView => (
   internalNotes: row.internal_notes,
   status: row.status as WorkStatus,
   source: row.source as WorkSource,
+  caseId: row.case_id,
   createdAt: row.created_at,
   updatedAt: row.updated_at,
 });
@@ -91,8 +92,10 @@ const workSummary = (
   conditionNotes: row.condition_notes,
   status: row.status as WorkStatus,
   source: row.source as WorkSource,
+  caseId: row.case_id,
   quoteCount,
   createdAt: row.created_at,
+  updatedAt: row.updated_at,
 });
 
 const countBy = <T,>(rows: T[], key: (row: T) => string | null): Map<string, number> => {
@@ -107,6 +110,7 @@ const countBy = <T,>(rows: T[], key: (row: T) => string | null): Map<string, num
 const quoteSummary = (row: Tables<"marketplace_binder_quotes">): DocumentSummary => ({
   kind: "quote",
   id: row.id,
+  workId: row.work_id,
   number: row.quote_number,
   status: row.status,
   issueDate: row.issue_date,

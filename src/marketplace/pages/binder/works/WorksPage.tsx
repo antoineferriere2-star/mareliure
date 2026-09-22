@@ -101,8 +101,9 @@ export function WorksPage() {
                       </span>
                       <span className="mt-0.5 block text-xs text-muted-foreground">
                         {w.quoteCount} devis
-                        {w.source === "ma_reliure" ? " · Projet Ma Reliure" : ""}
+                        {w.source === "ma_reliure" ? " · Source : Ma Reliure" : " · Source : Mon client"}
                         {w.status === "archived" ? " · archivé" : ""}
+                        {` · Activité ${new Date(w.updatedAt ?? w.createdAt).toLocaleDateString("fr-FR")}`}
                       </span>
                     </Link>
                   </li>

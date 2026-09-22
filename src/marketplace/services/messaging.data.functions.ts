@@ -129,6 +129,40 @@ async function notifyCustomerOfNewMessage(
   }
 }
 
+/** Best-effort notification to active members of the selected workshop, with no message excerpt. */
+async function notifyWorkshopOfNewMessage(
+  sb: Supa,
+  caseId: string,
+  selectedBinderId: string | null,
+  senderRole: SenderRole,
+  audience: MessageAudience,
+): Promise<void> {
+  if (!selectedBinderId || senderRole === "binder") return;
+  try {
+    const { brand, brandName, directWorkshopMessaging, origin } = await loadCaseBrand(sb, caseId);
+    if (!readableAudiences("binder", directWorkshopMessaging).includes(audience)) return;
+    const { data: members } = await sb.from("marketplace_binder_members")
+      .select("user_id").eq("binder_id", selectedBinderId).eq("account_status", "active");
+    const users = await Promise.all((members ?? []).map((member) => sb.auth.admin.getUserById(member.user_id)));
+    const emails = [...new Set(users.map((result) => result.data.user?.email).filter((email): email is string => Boolean(email)))];
+    if (!emails.length) return;
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    await Promise.all(emails.map((email) => sendTemplateEmail("case-activity", email, {
+      templateData: {
+        brandName,
+        locale: "fr-FR",
+        heading: "Nouveau message concernant un ouvrage",
+        intro: `${brandName} ou le client vous a écrit au sujet d'un dossier confié à votre atelier.`,
+        ctaLabel: "Voir le message",
+        ctaUrl: `${origin}/atelier/messages/${caseId}`,
+      },
+      brand,
+    })));
+  } catch (err) {
+    logOperationalError("messaging.notify-workshop-failed", err, { caseId });
+  }
+}
+
 export const listCaseMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => listInput.parse(data))
@@ -240,6 +274,7 @@ export const sendCaseMessage = createServerFn({ method: "POST" })
     });
 
     await notifyCustomerOfNewMessage(sb, data.caseId, facts.customerUserId, role!, audience);
+    await notifyWorkshopOfNewMessage(sb, data.caseId, facts.selectedBinderId, role!, audience);
 
     return { id: inserted!.id, createdAt: inserted!.created_at };
   });

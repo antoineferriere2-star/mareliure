@@ -467,13 +467,14 @@ export async function getQuote(sb: Supa, binderId: string, quoteId: string): Pro
 export async function listQuotes(sb: Supa, binderId: string): Promise<DocumentSummary[]> {
   const { data, error } = await sb
     .from("marketplace_binder_quotes")
-    .select("id, quote_number, status, issue_date, valid_until, client_name, book_title, total_ttc_cents, currency")
+    .select("id, work_id, quote_number, status, issue_date, valid_until, client_name, book_title, total_ttc_cents, currency")
     .eq("binder_id", binderId)
     .order("created_at", { ascending: false });
   if (error) throw new BinderQuotesError("failed");
   return (data ?? []).map((row) => ({
     kind: "quote" as const,
     id: row.id,
+    workId: row.work_id,
     number: row.quote_number,
     status: row.status,
     issueDate: row.issue_date,

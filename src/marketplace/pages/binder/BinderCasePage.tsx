@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -9,6 +10,8 @@ import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { ConversationPanel } from "@/marketplace/pages/ConversationPanel";
 import { DecisionsPanel } from "@/marketplace/pages/DecisionsPanel";
 import { formatEuros } from "@/marketplace/pricing/money";
+import { ensureMyCaseWork } from "@/marketplace/services/binderCaseWorkspace.data.functions";
+import { getMyWork, getMyWorks } from "@/marketplace/services/binderWorks.data.functions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -26,6 +29,21 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   const fetchCase = useServerFn(getBinderCase);
   const respond = useServerFn(respondToBinderOffer);
   const queryClient = useQueryClient();
+  const navigate = useNavigate();
+  const fetchWorks = useServerFn(getMyWorks);
+  const fetchWork = useServerFn(getMyWork);
+  const ensureWork = useServerFn(ensureMyCaseWork);
+  const works = useQuery({ queryKey: ["binder", "works"], queryFn: () => fetchWorks({ data: {} }) });
+  const linked = works.data?.find((work) => work.caseId === caseId);
+  const linkedWork = useQuery({ queryKey: ["binder", "work", linked?.id], queryFn: () => fetchWork({ data: { id: linked!.id } }), enabled: Boolean(linked) });
+  const createFromCase = useMutation({
+    mutationFn: () => ensureWork({ data: { caseId } }),
+    onSuccess: ({ workId }) => {
+      void queryClient.invalidateQueries({ queryKey: ["binder", "works"] });
+      void navigate({ to: "/atelier/devis/nouveau", search: { workId } });
+    },
+    onError: (err: Error) => setProblem(err.message),
+  });
   const queryKey = ["marketplace", "binder", "case", caseId] as const;
   const [reasonCode, setReasonCode] = useState<(typeof DECLINE_REASONS)[number][0]>("no_capacity");
   const [reasonDetail, setReasonDetail] = useState("");
@@ -70,6 +88,19 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   const isSelected = offer?.state === "selected";
   return (
     <div className="space-y-8">
+    <header className="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <Link to="/atelier/leads" className="text-sm underline">← Leads</Link>
+        <h1 className="mt-2 font-serif text-2xl">{data.view.title}</h1>
+        <p className="text-sm text-muted-foreground">{data.view.contact?.name ?? "Projet Ma Reliure"} · {data.view.reference}</p>
+      </div>
+      {isSelected && <button type="button" className="min-h-11 rounded-md bg-foreground px-4 text-sm font-medium text-background disabled:opacity-50" disabled={createFromCase.isPending || works.isPending} onClick={() => createFromCase.mutate()}>{createFromCase.isPending ? "Ouverture du devis…" : "Créer un devis"}</button>}
+    </header>
+    <nav aria-label="Sections du dossier" className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
+      <a href="#apercu" className="underline">Aperçu</a>
+      {isSelected && <><a href="#ouvrage" className="underline">Ouvrage</a><a href="#devis" className="underline">Devis</a><a href="#messages" className="underline">Messages</a></>}
+    </nav>
+    <div id="apercu" className="scroll-mt-6">
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
       <CaseBriefPanel view={data.view} />
       <aside className="space-y-6">
@@ -170,8 +201,17 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
         )}
       </aside>
     </div>
+    </div>
     {isSelected && (
       <>
+        <section id="ouvrage" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
+          <h2 className="font-serif text-lg">Ouvrage</h2>
+          {linked ? <Link to="/atelier/ouvrages/$workId" params={{ workId: linked.id }} className="mt-2 inline-flex min-h-11 items-center underline">{linked.title} · {linked.reference}</Link> : <p className="mt-2 text-sm text-muted-foreground">La fiche ouvrage sera créée lors du premier devis.</p>}
+        </section>
+        <section id="devis" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
+          <h2 className="font-serif text-lg">Devis</h2>
+          {linkedWork.data?.quotes.length ? <ul className="mt-2 space-y-2">{linkedWork.data.quotes.map((quote) => <li key={quote.id}><Link to="/atelier/devis/$quoteId" params={{ quoteId: quote.id }} className="inline-flex min-h-11 items-center underline">{quote.number} · {quote.status}</Link></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">Aucun devis lié à ce dossier.</p>}
+        </section>
         <DecisionsPanel caseId={caseId} role="binder" />
         <ConversationPanel caseId={caseId} viewerRole="binder" />
       </>

@@ -162,7 +162,7 @@ describe("l'historique des migrations", () => {
   });
 
   it("aucune migration antérieure ne mentionne les objets créés ici (rien d'appliqué n'a été réécrit)", () => {
-    for (const file of readdirSync(DIR).filter((f) => f.endsWith(".sql") && f !== NAME)) {
+    for (const file of readdirSync(DIR).filter((f) => f.endsWith(".sql") && f < NAME)) {
       const text = readFileSync(resolve(DIR, file), "utf8");
       expect(text, file).not.toMatch(/marketplace_binder_works\b|marketplace_binder_work_photos|marketplace_binder_work_counters|binder_create_work/);
     }

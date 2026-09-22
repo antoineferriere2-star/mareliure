@@ -264,6 +264,7 @@ export function invoiceView(
 export interface DocumentSummary {
   kind: "quote" | "invoice";
   id: string;
+  workId?: string | null;
   number: string;
   status: string;
   issueDate: string;
@@ -278,6 +279,7 @@ export function summaryOf(view: DocumentView): DocumentSummary {
   return {
     kind: view.kind,
     id: view.id,
+    ...(view.workId ? { workId: view.workId } : {}),
     number: view.number,
     status: view.status,
     issueDate: view.issueDate,

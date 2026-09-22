@@ -36,6 +36,7 @@ import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TermsOfSaleRouteImport } from './routes/terms-of-sale'
 import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
+import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
 import { Route as AuthenticatedBuildRouteRouteImport } from './routes/_authenticated/build/route'
 import { Route as AuthenticatedMarketplaceRouteRouteImport } from './routes/_authenticated/marketplace/route'
@@ -46,6 +47,7 @@ import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
 import { Route as InvitationAtelierTokenRouteImport } from './routes/invitation-atelier.$token'
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as ProjectSummaryAccessTokenRouteImport } from './routes/project-summary.$accessToken'
+import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAtelierIndexRouteImport } from './routes/_authenticated/atelier/index'
 import { Route as AuthenticatedAtelierTarifsRouteImport } from './routes/_authenticated/atelier/tarifs'
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
@@ -75,12 +77,22 @@ import { Route as ApiPublicContactRouteImport } from './routes/api/public/contac
 import { Route as ApiPublicFaqAskRouteImport } from './routes/api/public/faq-ask'
 import { Route as ApiPublicProjectSummaryRouteImport } from './routes/api/public/project-summary'
 import { Route as ApiPublicTrackViewRouteImport } from './routes/api/public/track-view'
+import { Route as AuthenticatedAdminAteliersIndexRouteImport } from './routes/_authenticated/admin/ateliers.index'
+import { Route as AuthenticatedAdminAteliersBinderIdRouteImport } from './routes/_authenticated/admin/ateliers.$binderId'
+import { Route as AuthenticatedAdminLeadsIndexRouteImport } from './routes/_authenticated/admin/leads.index'
+import { Route as AuthenticatedAdminLeadsLeadIdRouteImport } from './routes/_authenticated/admin/leads.$leadId'
+import { Route as AuthenticatedAdminMessagesIndexRouteImport } from './routes/_authenticated/admin/messages.index'
 import { Route as AuthenticatedAtelierCasesCaseIdRouteImport } from './routes/_authenticated/atelier/cases.$caseId'
 import { Route as AuthenticatedAtelierContactsIndexRouteImport } from './routes/_authenticated/atelier/contacts.index'
 import { Route as AuthenticatedAtelierContactsContactIdRouteImport } from './routes/_authenticated/atelier/contacts.$contactId'
 import { Route as AuthenticatedAtelierDevisIndexRouteImport } from './routes/_authenticated/atelier/devis.index'
 import { Route as AuthenticatedAtelierDevisNouveauRouteImport } from './routes/_authenticated/atelier/devis.nouveau'
+import { Route as AuthenticatedAtelierFacturesIndexRouteImport } from './routes/_authenticated/atelier/factures.index'
 import { Route as AuthenticatedAtelierFacturesInvoiceIdRouteImport } from './routes/_authenticated/atelier/factures.$invoiceId'
+import { Route as AuthenticatedAtelierLeadsIndexRouteImport } from './routes/_authenticated/atelier/leads.index'
+import { Route as AuthenticatedAtelierLeadsLeadIdRouteImport } from './routes/_authenticated/atelier/leads.$leadId'
+import { Route as AuthenticatedAtelierMessagesIndexRouteImport } from './routes/_authenticated/atelier/messages.index'
+import { Route as AuthenticatedAtelierMessagesConversationIdRouteImport } from './routes/_authenticated/atelier/messages.$conversationId'
 import { Route as AuthenticatedAtelierOuvragesIndexRouteImport } from './routes/_authenticated/atelier/ouvrages.index'
 import { Route as AuthenticatedAtelierOuvragesNouveauRouteImport } from './routes/_authenticated/atelier/ouvrages.nouveau'
 import { Route as AuthenticatedBuildDossiersIndexRouteImport } from './routes/_authenticated/build/dossiers.index'
@@ -247,6 +259,11 @@ const TermsOfUseRoute = TermsOfUseRouteImport.update({
   path: '/terms-of-use',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminRouteRoute = AuthenticatedAdminRouteRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedAtelierRouteRoute =
   AuthenticatedAtelierRouteRouteImport.update({
     id: '/atelier',
@@ -302,6 +319,11 @@ const ProjectSummaryAccessTokenRoute =
     path: '/project-summary/$accessToken',
     getParentRoute: () => rootRouteImport,
   } as any)
+const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedAdminRouteRoute,
+} as any)
 const AuthenticatedAtelierIndexRoute =
   AuthenticatedAtelierIndexRouteImport.update({
     id: '/',
@@ -468,6 +490,36 @@ const ApiPublicTrackViewRoute = ApiPublicTrackViewRouteImport.update({
   path: '/api/public/track-view',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAdminAteliersIndexRoute =
+  AuthenticatedAdminAteliersIndexRouteImport.update({
+    id: '/ateliers/',
+    path: '/ateliers/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminAteliersBinderIdRoute =
+  AuthenticatedAdminAteliersBinderIdRouteImport.update({
+    id: '/ateliers/$binderId',
+    path: '/ateliers/$binderId',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminLeadsIndexRoute =
+  AuthenticatedAdminLeadsIndexRouteImport.update({
+    id: '/leads/',
+    path: '/leads/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminLeadsLeadIdRoute =
+  AuthenticatedAdminLeadsLeadIdRouteImport.update({
+    id: '/leads/$leadId',
+    path: '/leads/$leadId',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
+const AuthenticatedAdminMessagesIndexRoute =
+  AuthenticatedAdminMessagesIndexRouteImport.update({
+    id: '/messages/',
+    path: '/messages/',
+    getParentRoute: () => AuthenticatedAdminRouteRoute,
+  } as any)
 const AuthenticatedAtelierCasesCaseIdRoute =
   AuthenticatedAtelierCasesCaseIdRouteImport.update({
     id: '/cases/$caseId',
@@ -498,10 +550,40 @@ const AuthenticatedAtelierDevisNouveauRoute =
     path: '/devis/nouveau',
     getParentRoute: () => AuthenticatedAtelierRouteRoute,
   } as any)
+const AuthenticatedAtelierFacturesIndexRoute =
+  AuthenticatedAtelierFacturesIndexRouteImport.update({
+    id: '/factures/',
+    path: '/factures/',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
 const AuthenticatedAtelierFacturesInvoiceIdRoute =
   AuthenticatedAtelierFacturesInvoiceIdRouteImport.update({
     id: '/factures/$invoiceId',
     path: '/factures/$invoiceId',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedAtelierLeadsIndexRoute =
+  AuthenticatedAtelierLeadsIndexRouteImport.update({
+    id: '/leads/',
+    path: '/leads/',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedAtelierLeadsLeadIdRoute =
+  AuthenticatedAtelierLeadsLeadIdRouteImport.update({
+    id: '/leads/$leadId',
+    path: '/leads/$leadId',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedAtelierMessagesIndexRoute =
+  AuthenticatedAtelierMessagesIndexRouteImport.update({
+    id: '/messages/',
+    path: '/messages/',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedAtelierMessagesConversationIdRoute =
+  AuthenticatedAtelierMessagesConversationIdRouteImport.update({
+    id: '/messages/$conversationId',
+    path: '/messages/$conversationId',
     getParentRoute: () => AuthenticatedAtelierRouteRoute,
   } as any)
 const AuthenticatedAtelierOuvragesIndexRoute =
@@ -710,6 +792,7 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/build': typeof AuthenticatedBuildRouteRouteWithChildren
   '/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
@@ -744,15 +827,20 @@ export interface FileRoutesByFullPath {
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
   '/api/public/track-view': typeof ApiPublicTrackViewRoute
+  '/admin/': typeof AuthenticatedAdminIndexRoute
   '/atelier/': typeof AuthenticatedAtelierIndexRoute
   '/build/': typeof AuthenticatedBuildIndexRoute
   '/marketplace/': typeof AuthenticatedMarketplaceIndexRoute
   '/mes-livres/': typeof AuthenticatedMesLivresIndexRoute
   '/portal/': typeof AuthenticatedPortalIndexRoute
+  '/admin/ateliers/$binderId': typeof AuthenticatedAdminAteliersBinderIdRoute
+  '/admin/leads/$leadId': typeof AuthenticatedAdminLeadsLeadIdRoute
   '/atelier/cases/$caseId': typeof AuthenticatedAtelierCasesCaseIdRoute
   '/atelier/contacts/$contactId': typeof AuthenticatedAtelierContactsContactIdRoute
   '/atelier/devis/nouveau': typeof AuthenticatedAtelierDevisNouveauRoute
   '/atelier/factures/$invoiceId': typeof AuthenticatedAtelierFacturesInvoiceIdRoute
+  '/atelier/leads/$leadId': typeof AuthenticatedAtelierLeadsLeadIdRoute
+  '/atelier/messages/$conversationId': typeof AuthenticatedAtelierMessagesConversationIdRoute
   '/atelier/ouvrages/nouveau': typeof AuthenticatedAtelierOuvragesNouveauRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
@@ -770,8 +858,14 @@ export interface FileRoutesByFullPath {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/admin/ateliers/': typeof AuthenticatedAdminAteliersIndexRoute
+  '/admin/leads/': typeof AuthenticatedAdminLeadsIndexRoute
+  '/admin/messages/': typeof AuthenticatedAdminMessagesIndexRoute
   '/atelier/contacts/': typeof AuthenticatedAtelierContactsIndexRoute
   '/atelier/devis/': typeof AuthenticatedAtelierDevisIndexRoute
+  '/atelier/factures/': typeof AuthenticatedAtelierFacturesIndexRoute
+  '/atelier/leads/': typeof AuthenticatedAtelierLeadsIndexRoute
+  '/atelier/messages/': typeof AuthenticatedAtelierMessagesIndexRoute
   '/atelier/ouvrages/': typeof AuthenticatedAtelierOuvragesIndexRoute
   '/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
@@ -841,15 +935,20 @@ export interface FileRoutesByTo {
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
   '/api/public/track-view': typeof ApiPublicTrackViewRoute
+  '/admin': typeof AuthenticatedAdminIndexRoute
   '/atelier': typeof AuthenticatedAtelierIndexRoute
   '/build': typeof AuthenticatedBuildIndexRoute
   '/marketplace': typeof AuthenticatedMarketplaceIndexRoute
   '/mes-livres': typeof AuthenticatedMesLivresIndexRoute
   '/portal': typeof AuthenticatedPortalIndexRoute
+  '/admin/ateliers/$binderId': typeof AuthenticatedAdminAteliersBinderIdRoute
+  '/admin/leads/$leadId': typeof AuthenticatedAdminLeadsLeadIdRoute
   '/atelier/cases/$caseId': typeof AuthenticatedAtelierCasesCaseIdRoute
   '/atelier/contacts/$contactId': typeof AuthenticatedAtelierContactsContactIdRoute
   '/atelier/devis/nouveau': typeof AuthenticatedAtelierDevisNouveauRoute
   '/atelier/factures/$invoiceId': typeof AuthenticatedAtelierFacturesInvoiceIdRoute
+  '/atelier/leads/$leadId': typeof AuthenticatedAtelierLeadsLeadIdRoute
+  '/atelier/messages/$conversationId': typeof AuthenticatedAtelierMessagesConversationIdRoute
   '/atelier/ouvrages/nouveau': typeof AuthenticatedAtelierOuvragesNouveauRoute
   '/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
@@ -867,8 +966,14 @@ export interface FileRoutesByTo {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/admin/ateliers': typeof AuthenticatedAdminAteliersIndexRoute
+  '/admin/leads': typeof AuthenticatedAdminLeadsIndexRoute
+  '/admin/messages': typeof AuthenticatedAdminMessagesIndexRoute
   '/atelier/contacts': typeof AuthenticatedAtelierContactsIndexRoute
   '/atelier/devis': typeof AuthenticatedAtelierDevisIndexRoute
+  '/atelier/factures': typeof AuthenticatedAtelierFacturesIndexRoute
+  '/atelier/leads': typeof AuthenticatedAtelierLeadsIndexRoute
+  '/atelier/messages': typeof AuthenticatedAtelierMessagesIndexRoute
   '/atelier/ouvrages': typeof AuthenticatedAtelierOuvragesIndexRoute
   '/build/dossiers': typeof AuthenticatedBuildDossiersIndexRoute
   '/build/missions': typeof AuthenticatedBuildMissionsIndexRoute
@@ -912,6 +1017,7 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRouteRouteWithChildren
   '/_authenticated/atelier': typeof AuthenticatedAtelierRouteRouteWithChildren
   '/_authenticated/build': typeof AuthenticatedBuildRouteRouteWithChildren
   '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
@@ -946,15 +1052,20 @@ export interface FileRoutesById {
   '/api/public/faq-ask': typeof ApiPublicFaqAskRoute
   '/api/public/project-summary': typeof ApiPublicProjectSummaryRoute
   '/api/public/track-view': typeof ApiPublicTrackViewRoute
+  '/_authenticated/admin/': typeof AuthenticatedAdminIndexRoute
   '/_authenticated/atelier/': typeof AuthenticatedAtelierIndexRoute
   '/_authenticated/build/': typeof AuthenticatedBuildIndexRoute
   '/_authenticated/marketplace/': typeof AuthenticatedMarketplaceIndexRoute
   '/_authenticated/mes-livres/': typeof AuthenticatedMesLivresIndexRoute
   '/_authenticated/portal/': typeof AuthenticatedPortalIndexRoute
+  '/_authenticated/admin/ateliers/$binderId': typeof AuthenticatedAdminAteliersBinderIdRoute
+  '/_authenticated/admin/leads/$leadId': typeof AuthenticatedAdminLeadsLeadIdRoute
   '/_authenticated/atelier/cases/$caseId': typeof AuthenticatedAtelierCasesCaseIdRoute
   '/_authenticated/atelier/contacts/$contactId': typeof AuthenticatedAtelierContactsContactIdRoute
   '/_authenticated/atelier/devis/nouveau': typeof AuthenticatedAtelierDevisNouveauRoute
   '/_authenticated/atelier/factures/$invoiceId': typeof AuthenticatedAtelierFacturesInvoiceIdRoute
+  '/_authenticated/atelier/leads/$leadId': typeof AuthenticatedAtelierLeadsLeadIdRoute
+  '/_authenticated/atelier/messages/$conversationId': typeof AuthenticatedAtelierMessagesConversationIdRoute
   '/_authenticated/atelier/ouvrages/nouveau': typeof AuthenticatedAtelierOuvragesNouveauRoute
   '/_authenticated/build/dossiers/$id': typeof AuthenticatedBuildDossiersIdRoute
   '/_authenticated/build/missions/$id': typeof AuthenticatedBuildMissionsIdRoute
@@ -972,8 +1083,14 @@ export interface FileRoutesById {
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/transactional/preview': typeof LovableEmailTransactionalPreviewRoute
+  '/_authenticated/admin/ateliers/': typeof AuthenticatedAdminAteliersIndexRoute
+  '/_authenticated/admin/leads/': typeof AuthenticatedAdminLeadsIndexRoute
+  '/_authenticated/admin/messages/': typeof AuthenticatedAdminMessagesIndexRoute
   '/_authenticated/atelier/contacts/': typeof AuthenticatedAtelierContactsIndexRoute
   '/_authenticated/atelier/devis/': typeof AuthenticatedAtelierDevisIndexRoute
+  '/_authenticated/atelier/factures/': typeof AuthenticatedAtelierFacturesIndexRoute
+  '/_authenticated/atelier/leads/': typeof AuthenticatedAtelierLeadsIndexRoute
+  '/_authenticated/atelier/messages/': typeof AuthenticatedAtelierMessagesIndexRoute
   '/_authenticated/atelier/ouvrages/': typeof AuthenticatedAtelierOuvragesIndexRoute
   '/_authenticated/build/dossiers/': typeof AuthenticatedBuildDossiersIndexRoute
   '/_authenticated/build/missions/': typeof AuthenticatedBuildMissionsIndexRoute
@@ -1017,6 +1134,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-sale'
     | '/terms-of-use'
+    | '/admin'
     | '/atelier'
     | '/build'
     | '/marketplace'
@@ -1051,15 +1169,20 @@ export interface FileRouteTypes {
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
     | '/api/public/track-view'
+    | '/admin/'
     | '/atelier/'
     | '/build/'
     | '/marketplace/'
     | '/mes-livres/'
     | '/portal/'
+    | '/admin/ateliers/$binderId'
+    | '/admin/leads/$leadId'
     | '/atelier/cases/$caseId'
     | '/atelier/contacts/$contactId'
     | '/atelier/devis/nouveau'
     | '/atelier/factures/$invoiceId'
+    | '/atelier/leads/$leadId'
+    | '/atelier/messages/$conversationId'
     | '/atelier/ouvrages/nouveau'
     | '/build/dossiers/$id'
     | '/build/missions/$id'
@@ -1077,8 +1200,14 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/admin/ateliers/'
+    | '/admin/leads/'
+    | '/admin/messages/'
     | '/atelier/contacts/'
     | '/atelier/devis/'
+    | '/atelier/factures/'
+    | '/atelier/leads/'
+    | '/atelier/messages/'
     | '/atelier/ouvrages/'
     | '/build/dossiers/'
     | '/build/missions/'
@@ -1148,15 +1277,20 @@ export interface FileRouteTypes {
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
     | '/api/public/track-view'
+    | '/admin'
     | '/atelier'
     | '/build'
     | '/marketplace'
     | '/mes-livres'
     | '/portal'
+    | '/admin/ateliers/$binderId'
+    | '/admin/leads/$leadId'
     | '/atelier/cases/$caseId'
     | '/atelier/contacts/$contactId'
     | '/atelier/devis/nouveau'
     | '/atelier/factures/$invoiceId'
+    | '/atelier/leads/$leadId'
+    | '/atelier/messages/$conversationId'
     | '/atelier/ouvrages/nouveau'
     | '/build/dossiers/$id'
     | '/build/missions/$id'
@@ -1174,8 +1308,14 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/admin/ateliers'
+    | '/admin/leads'
+    | '/admin/messages'
     | '/atelier/contacts'
     | '/atelier/devis'
+    | '/atelier/factures'
+    | '/atelier/leads'
+    | '/atelier/messages'
     | '/atelier/ouvrages'
     | '/build/dossiers'
     | '/build/missions'
@@ -1218,6 +1358,7 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-sale'
     | '/terms-of-use'
+    | '/_authenticated/admin'
     | '/_authenticated/atelier'
     | '/_authenticated/build'
     | '/_authenticated/marketplace'
@@ -1252,15 +1393,20 @@ export interface FileRouteTypes {
     | '/api/public/faq-ask'
     | '/api/public/project-summary'
     | '/api/public/track-view'
+    | '/_authenticated/admin/'
     | '/_authenticated/atelier/'
     | '/_authenticated/build/'
     | '/_authenticated/marketplace/'
     | '/_authenticated/mes-livres/'
     | '/_authenticated/portal/'
+    | '/_authenticated/admin/ateliers/$binderId'
+    | '/_authenticated/admin/leads/$leadId'
     | '/_authenticated/atelier/cases/$caseId'
     | '/_authenticated/atelier/contacts/$contactId'
     | '/_authenticated/atelier/devis/nouveau'
     | '/_authenticated/atelier/factures/$invoiceId'
+    | '/_authenticated/atelier/leads/$leadId'
+    | '/_authenticated/atelier/messages/$conversationId'
     | '/_authenticated/atelier/ouvrages/nouveau'
     | '/_authenticated/build/dossiers/$id'
     | '/_authenticated/build/missions/$id'
@@ -1278,8 +1424,14 @@ export interface FileRouteTypes {
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/transactional/preview'
+    | '/_authenticated/admin/ateliers/'
+    | '/_authenticated/admin/leads/'
+    | '/_authenticated/admin/messages/'
     | '/_authenticated/atelier/contacts/'
     | '/_authenticated/atelier/devis/'
+    | '/_authenticated/atelier/factures/'
+    | '/_authenticated/atelier/leads/'
+    | '/_authenticated/atelier/messages/'
     | '/_authenticated/atelier/ouvrages/'
     | '/_authenticated/build/dossiers/'
     | '/_authenticated/build/missions/'
@@ -1537,6 +1689,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsOfUseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/atelier': {
       id: '/_authenticated/atelier'
       path: '/atelier'
@@ -1606,6 +1765,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/project-summary/$accessToken'
       preLoaderRoute: typeof ProjectSummaryAccessTokenRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/admin/': {
+      id: '/_authenticated/admin/'
+      path: '/'
+      fullPath: '/admin/'
+      preLoaderRoute: typeof AuthenticatedAdminIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
     }
     '/_authenticated/atelier/': {
       id: '/_authenticated/atelier/'
@@ -1810,6 +1976,41 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicTrackViewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/admin/ateliers/': {
+      id: '/_authenticated/admin/ateliers/'
+      path: '/ateliers'
+      fullPath: '/admin/ateliers/'
+      preLoaderRoute: typeof AuthenticatedAdminAteliersIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/ateliers/$binderId': {
+      id: '/_authenticated/admin/ateliers/$binderId'
+      path: '/ateliers/$binderId'
+      fullPath: '/admin/ateliers/$binderId'
+      preLoaderRoute: typeof AuthenticatedAdminAteliersBinderIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/leads/': {
+      id: '/_authenticated/admin/leads/'
+      path: '/leads'
+      fullPath: '/admin/leads/'
+      preLoaderRoute: typeof AuthenticatedAdminLeadsIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/leads/$leadId': {
+      id: '/_authenticated/admin/leads/$leadId'
+      path: '/leads/$leadId'
+      fullPath: '/admin/leads/$leadId'
+      preLoaderRoute: typeof AuthenticatedAdminLeadsLeadIdRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
+    '/_authenticated/admin/messages/': {
+      id: '/_authenticated/admin/messages/'
+      path: '/messages'
+      fullPath: '/admin/messages/'
+      preLoaderRoute: typeof AuthenticatedAdminMessagesIndexRouteImport
+      parentRoute: typeof AuthenticatedAdminRouteRoute
+    }
     '/_authenticated/atelier/cases/$caseId': {
       id: '/_authenticated/atelier/cases/$caseId'
       path: '/cases/$caseId'
@@ -1845,11 +2046,46 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAtelierDevisNouveauRouteImport
       parentRoute: typeof AuthenticatedAtelierRouteRoute
     }
+    '/_authenticated/atelier/factures/': {
+      id: '/_authenticated/atelier/factures/'
+      path: '/factures'
+      fullPath: '/atelier/factures/'
+      preLoaderRoute: typeof AuthenticatedAtelierFacturesIndexRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
     '/_authenticated/atelier/factures/$invoiceId': {
       id: '/_authenticated/atelier/factures/$invoiceId'
       path: '/factures/$invoiceId'
       fullPath: '/atelier/factures/$invoiceId'
       preLoaderRoute: typeof AuthenticatedAtelierFacturesInvoiceIdRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/atelier/leads/': {
+      id: '/_authenticated/atelier/leads/'
+      path: '/leads'
+      fullPath: '/atelier/leads/'
+      preLoaderRoute: typeof AuthenticatedAtelierLeadsIndexRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/atelier/leads/$leadId': {
+      id: '/_authenticated/atelier/leads/$leadId'
+      path: '/leads/$leadId'
+      fullPath: '/atelier/leads/$leadId'
+      preLoaderRoute: typeof AuthenticatedAtelierLeadsLeadIdRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/atelier/messages/': {
+      id: '/_authenticated/atelier/messages/'
+      path: '/messages'
+      fullPath: '/atelier/messages/'
+      preLoaderRoute: typeof AuthenticatedAtelierMessagesIndexRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/atelier/messages/$conversationId': {
+      id: '/_authenticated/atelier/messages/$conversationId'
+      path: '/messages/$conversationId'
+      fullPath: '/atelier/messages/$conversationId'
+      preLoaderRoute: typeof AuthenticatedAtelierMessagesConversationIdRouteImport
       parentRoute: typeof AuthenticatedAtelierRouteRoute
     }
     '/_authenticated/atelier/ouvrages/': {
@@ -2065,6 +2301,31 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedAdminRouteRouteChildren {
+  AuthenticatedAdminIndexRoute: typeof AuthenticatedAdminIndexRoute
+  AuthenticatedAdminAteliersBinderIdRoute: typeof AuthenticatedAdminAteliersBinderIdRoute
+  AuthenticatedAdminLeadsLeadIdRoute: typeof AuthenticatedAdminLeadsLeadIdRoute
+  AuthenticatedAdminAteliersIndexRoute: typeof AuthenticatedAdminAteliersIndexRoute
+  AuthenticatedAdminLeadsIndexRoute: typeof AuthenticatedAdminLeadsIndexRoute
+  AuthenticatedAdminMessagesIndexRoute: typeof AuthenticatedAdminMessagesIndexRoute
+}
+
+const AuthenticatedAdminRouteRouteChildren: AuthenticatedAdminRouteRouteChildren =
+  {
+    AuthenticatedAdminIndexRoute: AuthenticatedAdminIndexRoute,
+    AuthenticatedAdminAteliersBinderIdRoute:
+      AuthenticatedAdminAteliersBinderIdRoute,
+    AuthenticatedAdminLeadsLeadIdRoute: AuthenticatedAdminLeadsLeadIdRoute,
+    AuthenticatedAdminAteliersIndexRoute: AuthenticatedAdminAteliersIndexRoute,
+    AuthenticatedAdminLeadsIndexRoute: AuthenticatedAdminLeadsIndexRoute,
+    AuthenticatedAdminMessagesIndexRoute: AuthenticatedAdminMessagesIndexRoute,
+  }
+
+const AuthenticatedAdminRouteRouteWithChildren =
+  AuthenticatedAdminRouteRoute._addFileChildren(
+    AuthenticatedAdminRouteRouteChildren,
+  )
+
 interface AuthenticatedAtelierRouteRouteChildren {
   AuthenticatedAtelierTarifsRoute: typeof AuthenticatedAtelierTarifsRoute
   AuthenticatedAtelierIndexRoute: typeof AuthenticatedAtelierIndexRoute
@@ -2072,9 +2333,14 @@ interface AuthenticatedAtelierRouteRouteChildren {
   AuthenticatedAtelierContactsContactIdRoute: typeof AuthenticatedAtelierContactsContactIdRoute
   AuthenticatedAtelierDevisNouveauRoute: typeof AuthenticatedAtelierDevisNouveauRoute
   AuthenticatedAtelierFacturesInvoiceIdRoute: typeof AuthenticatedAtelierFacturesInvoiceIdRoute
+  AuthenticatedAtelierLeadsLeadIdRoute: typeof AuthenticatedAtelierLeadsLeadIdRoute
+  AuthenticatedAtelierMessagesConversationIdRoute: typeof AuthenticatedAtelierMessagesConversationIdRoute
   AuthenticatedAtelierOuvragesNouveauRoute: typeof AuthenticatedAtelierOuvragesNouveauRoute
   AuthenticatedAtelierContactsIndexRoute: typeof AuthenticatedAtelierContactsIndexRoute
   AuthenticatedAtelierDevisIndexRoute: typeof AuthenticatedAtelierDevisIndexRoute
+  AuthenticatedAtelierFacturesIndexRoute: typeof AuthenticatedAtelierFacturesIndexRoute
+  AuthenticatedAtelierLeadsIndexRoute: typeof AuthenticatedAtelierLeadsIndexRoute
+  AuthenticatedAtelierMessagesIndexRoute: typeof AuthenticatedAtelierMessagesIndexRoute
   AuthenticatedAtelierOuvragesIndexRoute: typeof AuthenticatedAtelierOuvragesIndexRoute
   AuthenticatedAtelierDevisQuoteIdModifierRoute: typeof AuthenticatedAtelierDevisQuoteIdModifierRoute
   AuthenticatedAtelierOuvragesWorkIdModifierRoute: typeof AuthenticatedAtelierOuvragesWorkIdModifierRoute
@@ -2093,11 +2359,19 @@ const AuthenticatedAtelierRouteRouteChildren: AuthenticatedAtelierRouteRouteChil
       AuthenticatedAtelierDevisNouveauRoute,
     AuthenticatedAtelierFacturesInvoiceIdRoute:
       AuthenticatedAtelierFacturesInvoiceIdRoute,
+    AuthenticatedAtelierLeadsLeadIdRoute: AuthenticatedAtelierLeadsLeadIdRoute,
+    AuthenticatedAtelierMessagesConversationIdRoute:
+      AuthenticatedAtelierMessagesConversationIdRoute,
     AuthenticatedAtelierOuvragesNouveauRoute:
       AuthenticatedAtelierOuvragesNouveauRoute,
     AuthenticatedAtelierContactsIndexRoute:
       AuthenticatedAtelierContactsIndexRoute,
     AuthenticatedAtelierDevisIndexRoute: AuthenticatedAtelierDevisIndexRoute,
+    AuthenticatedAtelierFacturesIndexRoute:
+      AuthenticatedAtelierFacturesIndexRoute,
+    AuthenticatedAtelierLeadsIndexRoute: AuthenticatedAtelierLeadsIndexRoute,
+    AuthenticatedAtelierMessagesIndexRoute:
+      AuthenticatedAtelierMessagesIndexRoute,
     AuthenticatedAtelierOuvragesIndexRoute:
       AuthenticatedAtelierOuvragesIndexRoute,
     AuthenticatedAtelierDevisQuoteIdModifierRoute:
@@ -2263,6 +2537,7 @@ const AuthenticatedPortalRouteRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRouteRoute: typeof AuthenticatedAdminRouteRouteWithChildren
   AuthenticatedAtelierRouteRoute: typeof AuthenticatedAtelierRouteRouteWithChildren
   AuthenticatedBuildRouteRoute: typeof AuthenticatedBuildRouteRouteWithChildren
   AuthenticatedMarketplaceRouteRoute: typeof AuthenticatedMarketplaceRouteRouteWithChildren
@@ -2271,6 +2546,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRouteRoute: AuthenticatedAdminRouteRouteWithChildren,
   AuthenticatedAtelierRouteRoute: AuthenticatedAtelierRouteRouteWithChildren,
   AuthenticatedBuildRouteRoute: AuthenticatedBuildRouteRouteWithChildren,
   AuthenticatedMarketplaceRouteRoute:

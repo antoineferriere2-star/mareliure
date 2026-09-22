@@ -37,11 +37,13 @@ describe("server functions des contacts et ouvrages", () => {
 describe("l'espace atelier", () => {
   const LAYOUT = read("src/routes/_authenticated/atelier/route.tsx");
 
-  it("garde ses liens historiques et gagne Ouvrages et Contacts", () => {
+  it("garde ses surfaces historiques dans la nouvelle navigation métier", () => {
     for (const to of ['to="/atelier"', 'to="/atelier/ouvrages"', 'to="/atelier/devis"', 'to="/atelier/contacts"', 'to="/atelier/tarifs"']) {
       expect(LAYOUT, to).toContain(to);
     }
-    expect(LAYOUT.indexOf("Ouvrages")).toBeLessThan(LAYOUT.indexOf("Devis et factures"));
+    expect(LAYOUT.indexOf("Devis")).toBeLessThan(LAYOUT.indexOf("Ouvrages"));
+    expect(LAYOUT).toContain("Messages");
+    expect(LAYOUT).toContain("Factures");
   });
 
   it("garde le bouton de déconnexion de la PR #8, et des cibles tactiles de 44 px", () => {
