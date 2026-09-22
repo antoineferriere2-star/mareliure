@@ -717,6 +717,24 @@ describe("devis accepté → facture", () => {
   });
 });
 
+describe("provenance des lignes du workbench", () => {
+  it("fige la référence officielle d'une ligne Ma Reliure sans service d'atelier", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput({ lines: [line("Plein cuir", 35000, {
+      referenceVersion: "reliure-fr-v1", referenceOperationKey: "OPR-0064",
+    })] }), TODAY);
+    expect(quote.items[0]).toMatchObject({ label: "Plein cuir", unitPriceCents: 35000, referenceVersion: "reliure-fr-v1", referenceOperationKey: "OPR-0064" });
+    await expect(getQuote(world.sb, BINDER_B, quote.id)).rejects.toMatchObject({ code: "not_found" });
+  });
+
+  it("refuse une référence inventée", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    await expect(createQuote(world.sb, BINDER_A, quoteInput({ lines: [line("X", 1000, {
+      referenceVersion: "reliure-fr-v1", referenceOperationKey: "OPR-9999",
+    })] }), TODAY)).rejects.toMatchObject({ code: "invalid_input" });
+  });
+});
+
 describe("PDF", () => {
   const decode = (base64: string) => Buffer.from(base64, "base64");
 
@@ -771,6 +789,20 @@ describe("PDF", () => {
     const pdf = await renderDocumentPdf(quote);
     expect(pdf.printed.join("\n")).toContain("12 345,67 €");
     expect(pdf.printed.join("\n")).toContain("Éloïse Œuvre & fils ?");
+  });
+
+  it("les noms longs client et ouvrage restent dans leurs colonnes PDF", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput({
+      client: { ...quoteInput().client, name: "Jean Baptiste Dupont et ses héritiers de la société des reliures patrimoniales" },
+      book: { ...quoteInput().book, title: "Les Misérables, édition complète et abondamment illustrée en plusieurs volumes" },
+    }), TODAY);
+    const pdf = await renderDocumentPdf(quote);
+    expect(pdf.pageCount).toBeGreaterThanOrEqual(1);
+    expect(pdf.printed.some((line) => line.includes("Jean Baptiste Dupont"))).toBe(true);
+    expect(pdf.printed.some((line) => line.includes("Les Misérables"))).toBe(true);
+    expect(pdf.printed).not.toContain(quote.client.name);
+    expect(pdf.printed).not.toContain(quote.book.title);
   });
 
   it("un long devis passe sur plusieurs pages, pied de page compris", async () => {

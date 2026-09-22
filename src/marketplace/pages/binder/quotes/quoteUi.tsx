@@ -65,6 +65,7 @@ export function MoneyInput({
   label,
   className = FIELD,
   invalid,
+  blankWhenZero = false,
   onCommit,
 }: {
   cents: number;
@@ -73,12 +74,14 @@ export function MoneyInput({
   label: string;
   className?: string;
   invalid?: boolean;
+  blankWhenZero?: boolean;
   /** Appelé quand le relieur QUITTE le champ (un prix saisi puis abandonné doit s'enregistrer). */
   onCommit?: () => void;
 }) {
-  const [text, setText] = useState(centsToEuroInput(cents));
+  const shown = (value: number) => blankWhenZero && value === 0 ? "" : centsToEuroInput(value);
+  const [text, setText] = useState(shown(cents));
   useEffect(() => {
-    if (parseEurosToCents(text) !== cents) setText(centsToEuroInput(cents));
+    if (parseEurosToCents(text) !== cents && !(blankWhenZero && cents === 0 && text === "")) setText(shown(cents));
     // Seul un changement extérieur de `cents` resynchronise le texte.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cents]);
@@ -96,7 +99,7 @@ export function MoneyInput({
         if (parsed !== null) onChange(parsed);
       }}
       onBlur={() => {
-        setText(centsToEuroInput(cents));
+        setText(shown(cents));
         onCommit?.();
       }}
     />

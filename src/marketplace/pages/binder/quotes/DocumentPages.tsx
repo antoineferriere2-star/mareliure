@@ -9,6 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   convertMyQuoteToInvoice,
+  duplicateMyQuote,
   getMyInvoice,
   getMyInvoicePdf,
   getMyQuote,
@@ -154,6 +155,7 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
   const fetchPdf = useServerFn(getMyQuotePdf);
   const setStatus = useServerFn(setMyQuoteStatus);
   const convert = useServerFn(convertMyQuoteToInvoice);
+  const duplicate = useServerFn(duplicateMyQuote);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [missing, setMissing] = useState<string[]>([]);
@@ -187,6 +189,11 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
       else setActionError(true);
     },
   });
+  const copy = useMutation({
+    mutationFn: () => duplicate({ data: { id: quoteId } }),
+    onSuccess: async (draft) => { await refresh(); void navigate({ to: "/atelier/devis/$quoteId/modifier", params: { quoteId: draft.id } }); },
+    onError: () => setActionError(true),
+  });
 
   if (quote.isPending) return <Loading />;
   if (quote.error || !quote.data) return <ErrorNote>Devis introuvable.</ErrorNote>;
@@ -216,6 +223,7 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
         {isEditable(current) && (
           <Link to="/atelier/devis/$quoteId/modifier" params={{ quoteId: doc.id }} className={SECONDARY_BUTTON}>Modifier</Link>
         )}
+        <button type="button" className={SECONDARY_BUTTON} disabled={copy.isPending} onClick={() => copy.mutate()}>Dupliquer</button>
         <PdfActions fetchPdf={fetchPdf} id={doc.id} />
       </div>
 

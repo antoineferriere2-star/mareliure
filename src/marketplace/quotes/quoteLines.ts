@@ -7,6 +7,8 @@
  * le catalogue plus tard ne touche jamais une ligne déjà créée.
  */
 import type { VatRegime } from "./quoteCalc";
+import { PRICEABLE_SERVICE_MAPPINGS } from "@/marketplace/pricing/basePrices";
+import { CURRENT_REFERENCE_VERSION } from "@/marketplace/reference";
 
 export interface CatalogService {
   id: string;
@@ -17,6 +19,8 @@ export interface CatalogService {
   /** `null` : le taux par défaut du profil. */
   vatRateBps: number | null;
   unit: string | null;
+  referenceVersion?: string | null;
+  referenceOperationKey?: string | null;
 }
 
 export interface QuoteLine {
@@ -34,6 +38,8 @@ export interface QuoteLine {
   /** Indication d'interface seulement : le devis enregistre toujours son snapshot. */
   priceSource: "catalog" | "base" | "manual";
   requiresManualPrice: boolean;
+  referenceVersion?: string | null;
+  referenceOperationKey?: string | null;
 }
 
 export function lineFromService(
@@ -53,6 +59,8 @@ export function lineFromService(
     vatRateBps: service.vatRateBps ?? defaultVatRateBps,
     priceSource: "catalog",
     requiresManualPrice: false,
+    referenceVersion: service.referenceVersion ?? null,
+    referenceOperationKey: service.referenceOperationKey ?? null,
   };
 }
 
@@ -61,6 +69,8 @@ export function lineFromBasePrice(
   defaultVatRateBps: number,
   key: string,
 ): QuoteLine {
+  const mapping = PRICEABLE_SERVICE_MAPPINGS.find((item) => item.pricingKey === service.pricingKey);
+  const exactKey = mapping?.mappingType === "exact" ? mapping.referenceOperationKeys[0] : null;
   return {
     key,
     serviceId: null,
@@ -74,6 +84,8 @@ export function lineFromBasePrice(
     vatRateBps: defaultVatRateBps,
     priceSource: "base",
     requiresManualPrice: service.pricingMode === "manual_review",
+    referenceVersion: exactKey ? CURRENT_REFERENCE_VERSION : null,
+    referenceOperationKey: exactKey,
   };
 }
 

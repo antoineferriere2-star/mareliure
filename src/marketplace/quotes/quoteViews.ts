@@ -20,6 +20,8 @@ export interface DocumentItemView {
   catalogPriceCents: number | null;
   vatRateBps: number;
   totalHtCents: number;
+  referenceVersion?: string | null;
+  referenceOperationKey?: string | null;
 }
 
 export interface DocumentView {
@@ -149,6 +151,8 @@ export interface ItemDbRow {
   catalog_price_cents?: number | null;
   vat_rate_bps: number;
   total_ht_cents: number;
+  reference_version?: string | null;
+  reference_operation_key?: string | null;
 }
 
 function common(row: CommonRow, items: ItemDbRow[]) {
@@ -184,6 +188,8 @@ function common(row: CommonRow, items: ItemDbRow[]) {
         catalogPriceCents: item.catalog_price_cents ?? null,
         vatRateBps: item.vat_rate_bps,
         totalHtCents: item.total_ht_cents,
+        referenceVersion: item.reference_version ?? null,
+        referenceOperationKey: item.reference_operation_key ?? null,
       })),
     currency: row.currency,
     issuer: row.issuer,

@@ -33,6 +33,8 @@ export const quoteLineInput = z
     unitPriceCents: z.number().int().min(0).max(100_000_000),
     catalogPriceCents: z.number().int().min(0).max(100_000_000).nullable(),
     vatRateBps: z.number().int().min(0).max(10_000),
+    referenceVersion: optionalText(60).optional(),
+    referenceOperationKey: optionalText(60).optional(),
   })
   .strict();
 

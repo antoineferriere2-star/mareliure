@@ -107,6 +107,16 @@ export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf>
     for (const paragraph of clean(t).split("\n")) {
       let current = "";
       for (const word of paragraph.split(" ")) {
+        if (width(font, size, word) > maxWidth) {
+          if (current) { lines.push(current); current = ""; }
+          let chunk = "";
+          for (const char of word) {
+            if (chunk && width(font, size, chunk + char) > maxWidth) { lines.push(chunk); chunk = char; }
+            else chunk += char;
+          }
+          current = chunk;
+          continue;
+        }
         const candidate = current ? `${current} ${word}` : word;
         if (width(font, size, candidate) <= maxWidth || !current) current = candidate;
         else {
@@ -177,8 +187,8 @@ export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf>
   const blockTop = y;
   draw("CLIENT", M, 8, bold, MUTED);
   y -= 13;
-  draw(doc.client.name, M, 11, bold);
-  y -= 14;
+  paragraph(doc.client.name, M, 11, colW, bold);
+  y -= 1;
   for (const line of [
     doc.client.addressLine1,
     [doc.client.postalCode, doc.client.city].filter(Boolean).join(" ") || null,
@@ -186,8 +196,7 @@ export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf>
     doc.client.email,
     doc.client.phone,
   ].filter((l): l is string => Boolean(l))) {
-    draw(line, M, 9.5);
-    y -= 12;
+    paragraph(line, M, 9.5, colW);
   }
   const clientBottom = y;
 
@@ -195,11 +204,10 @@ export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf>
   const x2 = M + colW + 24;
   draw("OUVRAGE", x2, 8, bold, MUTED);
   y -= 13;
-  draw(doc.book.title || "—", x2, 11, bold);
-  y -= 14;
+  paragraph(doc.book.title || "—", x2, 11, colW, bold);
+  y -= 1;
   if (doc.book.author) {
-    draw(doc.book.author, x2, 9.5);
-    y -= 12;
+    paragraph(doc.book.author, x2, 9.5, colW);
   }
   const dims = formatDimensions({
     heightMm: doc.book.heightMm,

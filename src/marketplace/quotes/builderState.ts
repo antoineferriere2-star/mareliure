@@ -139,6 +139,7 @@ export function toQuoteInput(state: BuilderState): BuiltInput {
       unitPriceCents: l.unitPriceCents,
       catalogPriceCents: l.catalogPriceCents,
       vatRateBps: l.vatRateBps,
+      ...(l.referenceVersion && l.referenceOperationKey ? { referenceVersion: l.referenceVersion, referenceOperationKey: l.referenceOperationKey } : {}),
     })),
     discount: adjustment(state.discountType, state.discountValue) as never,
     deposit: adjustment(state.depositType, state.depositValue) as never,
@@ -216,14 +217,18 @@ export function stateFromDocument(doc: DocumentView): BuilderState {
       unitPriceCents: item.unitPriceCents,
       catalogPriceCents: item.catalogPriceCents,
       vatRateBps: item.vatRateBps,
-      priceSource: item.serviceId ? "catalog" : "manual",
+      priceSource: item.serviceId ? "catalog" : item.referenceOperationKey && item.description === "Tarif de base Ma Reliure" ? "base" : "manual",
       requiresManualPrice: false,
+      referenceVersion: item.referenceVersion ?? null,
+      referenceOperationKey: item.referenceOperationKey ?? null,
     })),
     discountType,
     discountValue,
     depositType,
     depositValue,
-    validityDays: "",
+    validityDays: doc.validUntil && doc.issueDate
+      ? String(Math.round((Date.parse(`${doc.validUntil}T00:00:00Z`) - Date.parse(`${doc.issueDate}T00:00:00Z`)) / 86_400_000))
+      : "",
     notes: doc.notes ?? "",
   };
 }

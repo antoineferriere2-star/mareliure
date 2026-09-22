@@ -13,6 +13,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
+import { duplicateQuoteInput } from "@/marketplace/quotes/duplicateQuote";
 import {
   billingProfileInput,
   categoryInput,
@@ -157,6 +158,24 @@ export const getMyQuotes = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(({ context }) => run(context.userId, (binderId, sb) => listQuotes(sb, binderId)));
 
+/** Les dernières prestations réellement utilisées, limitées à l'atelier authentifié. */
+export const getMyRecentServiceIds = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => run(context.userId, async (binderId, sb) => {
+    const { data: quotes, error: quoteError } = await sb.from("marketplace_binder_quotes")
+      .select("id").eq("binder_id", binderId).order("created_at", { ascending: false }).limit(30);
+    if (quoteError) throw new BinderQuotesError("failed");
+    if (!quotes?.length) return [] as string[];
+    const { data: items, error: itemError } = await sb.from("marketplace_binder_quote_items")
+      .select("quote_id, service_id, position").eq("binder_id", binderId)
+      .in("quote_id", quotes.map((quote) => quote.id)).not("service_id", "is", null);
+    if (itemError) throw new BinderQuotesError("failed");
+    const order = new Map(quotes.map((quote, index) => [quote.id, index]));
+    return [...new Set((items ?? [])
+      .sort((a, b) => (order.get(a.quote_id) ?? 0) - (order.get(b.quote_id) ?? 0) || a.position - b.position)
+      .map((item) => item.service_id).filter((value): value is string => Boolean(value)))].slice(0, 8);
+  }));
+
 export const getMyQuote = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => id.parse(data))
@@ -175,6 +194,15 @@ export const updateMyQuote = createServerFn({ method: "POST" })
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => updateQuote(sb, binderId, data.id, data.quote)),
   );
+
+/** Nouveau brouillon issu du snapshot d'un devis de cet atelier. */
+export const duplicateMyQuote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => id.parse(data))
+  .handler(({ context, data }) => run(context.userId, async (binderId, sb) => {
+    const source = await getQuote(sb, binderId, data.id);
+    return createQuote(sb, binderId, duplicateQuoteInput(source), todayInParis());
+  }));
 
 export const setMyQuoteStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

@@ -111,5 +111,12 @@ describe("modifier un brouillon : le devis revient dans le constructeur à l'ide
     expect(totalsOf(back, "VAT_LIABLE").totalTtcCents).toBe(totals.totalTtcCents);
     const again = toQuoteInput(back);
     expect(again.ok).toBe(true);
+
+    const sourced = stateFromDocument({ ...view, items: [
+      { ...view.items[0], serviceId: null, description: "Tarif de base Ma Reliure", referenceVersion: "reliure-fr-v1", referenceOperationKey: "OPR-0064" },
+      { ...view.items[1], serviceId: null, description: "Référentiel reliure-fr-v1 · OPR-0113", referenceVersion: "reliure-fr-v1", referenceOperationKey: "OPR-0113" },
+    ] });
+    expect(sourced.lines.map((line) => line.priceSource)).toEqual(["base", "manual"]);
+    expect(sourced.lines.map((line) => line.referenceOperationKey)).toEqual(["OPR-0064", "OPR-0113"]);
   });
 });

@@ -2,11 +2,11 @@
  * « Devis et factures » : une liste, deux onglets, un bouton principal.
  */
 import { useMemo, useState } from "react";
-import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getMyInvoices, getMyQuotes } from "@/marketplace/services/binderQuotes.data.functions";
-import { euros, formatDateLong } from "@/marketplace/quotes/quoteFormat";
+import { duplicateMyQuote, getMyInvoices, getMyQuotePdf, getMyQuotes } from "@/marketplace/services/binderQuotes.data.functions";
+import { downloadPdf, euros, formatDateLong } from "@/marketplace/quotes/quoteFormat";
 import type { QuoteStatus } from "@/marketplace/quotes/quoteStatus";
 import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,12 +16,27 @@ import { INVOICES_KEY, QUOTES_KEY } from "./quoteQueryKeys";
 export function QuotesListPage() {
   const fetchQuotes = useServerFn(getMyQuotes);
   const fetchInvoices = useServerFn(getMyInvoices);
+  const duplicate = useServerFn(duplicateMyQuote);
+  const fetchPdf = useServerFn(getMyQuotePdf);
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<"quotes" | "invoices">("quotes");
   const [query, setQuery] = useState("");
-  const [quoteFilter, setQuoteFilter] = useState<"all" | "draft" | "sent" | "accepted" | "invoiced">("all");
+  const [quoteFilter, setQuoteFilter] = useState<"all" | "draft" | "sent" | "accepted" | "refused" | "invoiced">("all");
+  const [actionError, setActionError] = useState(false);
+  const copy = useMutation({
+    mutationFn: (id: string) => duplicate({ data: { id } }),
+    onSuccess: (quote) => { void queryClient.invalidateQueries({ queryKey: QUOTES_KEY }); void navigate({ to: "/atelier/devis/$quoteId/modifier", params: { quoteId: quote.id } }); },
+    onError: () => setActionError(true),
+  });
+  const pdf = useMutation({
+    mutationFn: async (id: string) => { const result = await fetchPdf({ data: { id } }); downloadPdf(result.filename, result.base64); },
+    onError: () => setActionError(true),
+  });
   const quotes = useQuery({ queryKey: QUOTES_KEY, queryFn: () => fetchQuotes() });
   const invoices = useQuery({ queryKey: INVOICES_KEY, queryFn: () => fetchInvoices() });
   const active = tab === "quotes" ? quotes : invoices;
+  const filtered = Boolean(query.trim()) || (tab === "quotes" && quoteFilter !== "all");
   const rows = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase("fr-FR");
     return ((active.data ?? []) as DocumentSummary[]).filter((row) => {
@@ -66,11 +81,12 @@ export function QuotesListPage() {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <input aria-label="Rechercher un devis" className="min-h-11 rounded-md border border-input bg-background px-3 text-sm sm:w-80" placeholder="Client, ouvrage ou numéro…" value={query} onChange={(event) => setQuery(event.target.value)} />
         {tab === "quotes" && <div className="flex flex-wrap gap-1" aria-label="Filtrer les devis">
-          {([['all', 'Tous'], ['draft', 'Brouillons'], ['sent', 'Envoyés'], ['accepted', 'Acceptés'], ['invoiced', 'À facturer']] as const).map(([value, label]) => (
+          {([['all', 'Tous'], ['draft', 'Brouillons'], ['sent', 'Envoyés'], ['accepted', 'Acceptés'], ['refused', 'Refusés'], ['invoiced', 'Facturés']] as const).map(([value, label]) => (
             <button key={value} type="button" onClick={() => setQuoteFilter(value)} className={`min-h-9 rounded-full px-3 text-xs font-medium ${quoteFilter === value ? 'bg-foreground text-background' : 'bg-muted text-muted-foreground hover:bg-accent'}`}>{label}</button>
           ))}
         </div>}
       </div>
+      {actionError && <ErrorNote>Cette action n'a pas abouti. Réessayez.</ErrorNote>}
 
       {active.isPending ? (
         <div role="status" aria-busy="true" className="space-y-3">
@@ -82,13 +98,11 @@ export function QuotesListPage() {
         <ErrorNote>Impossible de charger la liste. Rechargez la page.</ErrorNote>
       ) : rows.length === 0 ? (
         <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center">
-          <p className="font-serif text-xl">{query || quoteFilter !== "all" ? "Aucun document ne correspond" : tab === "quotes" ? "Aucun devis pour le moment" : "Aucune facture pour le moment"}</p>
-          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            {tab === "quotes"
-              ? "Prenez un livre, saisissez ses dimensions, cochez les prestations : votre premier devis est prêt en quelques minutes."
-              : "Une facture se crée en un clic depuis un devis accepté."}
-          </p>
-          {tab === "quotes" && (
+          <p className="font-serif text-xl">{filtered ? "Aucun document ne correspond" : tab === "quotes" ? "Aucun devis pour le moment" : "Aucune facture pour le moment"}</p>
+          {!filtered && <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            {tab === "quotes" ? "Prenez un livre, saisissez ses dimensions, cochez les prestations : votre premier devis est prêt en quelques minutes." : "Une facture se crée en un clic depuis un devis accepté."}
+          </p>}
+          {!filtered && tab === "quotes" && (
             <Link to="/atelier/devis/nouveau" className={`${PRIMARY_BUTTON} mt-5`}>
               Créer mon premier devis
             </Link>
@@ -99,9 +113,15 @@ export function QuotesListPage() {
           {rows.map((row) => (
             <li key={row.id}>
               {row.kind === "quote" ? (
-                <Link to="/atelier/devis/$quoteId" params={{ quoteId: row.id }} className="block px-4 py-3 hover:bg-accent focus-visible:bg-accent focus-visible:outline-none sm:px-5">
+                <div className="px-4 py-3 sm:px-5">
                   <RowBody row={row} />
-                </Link>
+                  <div className="mt-2 flex flex-wrap gap-x-4 gap-y-2 text-sm">
+                    <Link className="underline" to="/atelier/devis/$quoteId" params={{ quoteId: row.id }}>Ouvrir</Link>
+                    {row.status === "draft" && <Link className="underline" to="/atelier/devis/$quoteId/modifier" params={{ quoteId: row.id }}>Modifier</Link>}
+                    <button type="button" className="underline disabled:opacity-50" disabled={copy.isPending} onClick={() => copy.mutate(row.id)}>Dupliquer</button>
+                    <button type="button" className="underline disabled:opacity-50" disabled={pdf.isPending} onClick={() => pdf.mutate(row.id)}>PDF</button>
+                  </div>
+                </div>
               ) : (
                 <Link to="/atelier/factures/$invoiceId" params={{ invoiceId: row.id }} className="block px-4 py-3 hover:bg-accent focus-visible:bg-accent focus-visible:outline-none sm:px-5">
                   <RowBody row={row} />
