@@ -31,7 +31,7 @@ export const Route = createFileRoute("/invitation-atelier/$token")({
   component: InvitationPage,
 });
 
-type Step = "checking" | "signed-out" | "accepting" | "done" | "error";
+type Step = "checking" | "signed-out" | "wrong-account" | "accepting" | "done" | "error";
 
 function InvitationPage() {
   const { token } = Route.useParams();
@@ -44,6 +44,9 @@ function InvitationPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
+  const [accessLinkSent, setAccessLinkSent] = useState(false);
+  const [sendingAccessLink, setSendingAccessLink] = useState(false);
+  const [signedInEmail, setSignedInEmail] = useState<string | null>(null);
   // Verrouillé sur l'adresse réelle de l'invitation dès qu'elle est connue —
   // avant cela, ce formulaire ne doit jamais pouvoir créer ou mettre à jour
   // un compte pour une adresse différente de celle invitée (voir
@@ -67,16 +70,30 @@ function InvitationPage() {
 
   useEffect(() => {
     let cancelled = false;
-    void getInvitationEmail({ data: { token } }).then((result) => {
-      if (cancelled) return;
-      setInvitedEmail(result.email);
-      if (result.email) setEmail(result.email);
-    });
-    supabase.auth.getSession().then(({ data }) => {
-      if (cancelled) return;
-      if (data.session) void tryAccept();
-      else setStep("signed-out");
-    });
+    void Promise.all([getInvitationEmail({ data: { token } }), supabase.auth.getSession()])
+      .then(([invitation, session]) => {
+        if (cancelled) return;
+        setInvitedEmail(invitation.email);
+        if (!invitation.email) {
+          setStep("signed-out");
+          return;
+        }
+        setEmail(invitation.email);
+        const accountEmail = session.data.session?.user.email ?? null;
+        if (!session.data.session) {
+          setStep("signed-out");
+        } else if (accountEmail?.toLowerCase() === invitation.email.toLowerCase()) {
+          void tryAccept();
+        } else {
+          setSignedInEmail(accountEmail);
+          setStep("wrong-account");
+        }
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setError("Impossible de vérifier cette invitation. Réessayez dans un instant.");
+        setStep("error");
+      });
     return () => {
       cancelled = true;
     };
@@ -87,11 +104,19 @@ function InvitationPage() {
     event.preventDefault();
     setError(null);
     if (!canSubmitInvitationSignup(invitedEmail ?? null, email)) {
-      setError("Cette invitation n'est plus valable, ou l'adresse ne correspond pas à celle invitée.");
+      setError(
+        "Cette invitation n'est plus valable, ou l'adresse ne correspond pas à celle invitée.",
+      );
       return;
     }
     if (mode === "signup") {
-      const { data, error: signUpError } = await supabase.auth.signUp({ email, password });
+      const { data, error: signUpError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/invitation-atelier/${encodeURIComponent(token)}`,
+        },
+      });
       if (signUpError) {
         // Un domaine que Supabase rejette d'office (ex. example.com, non
         // routable) renvoie parfois un message vide ou non exploitable
@@ -102,6 +127,13 @@ function InvitationPage() {
             ? signUpError.message
             : "Vérifiez l'adresse indiquée et réessayez.";
         setError(`Impossible de créer ce compte. ${detail}`);
+        return;
+      }
+      if (data.user?.identities?.length === 0) {
+        setMode("signin");
+        setError(
+          "Cette adresse possède déjà un compte Ma Reliure. Connectez-vous ou demandez un lien de connexion ci-dessous.",
+        );
         return;
       }
       if (!data.session) {
@@ -121,6 +153,37 @@ function InvitationPage() {
     await tryAccept();
   }
 
+  async function sendAccessLink() {
+    if (!invitedEmail || sendingAccessLink) return;
+    setError(null);
+    setSendingAccessLink(true);
+    try {
+      const { error: linkError } = await supabase.auth.signInWithOtp({
+        email: invitedEmail,
+        options: {
+          emailRedirectTo: `${window.location.origin}/invitation-atelier/${encodeURIComponent(token)}`,
+          shouldCreateUser: false,
+        },
+      });
+      if (linkError) throw linkError;
+      setAccessLinkSent(true);
+    } catch {
+      setError("Le lien de connexion n'a pas pu être envoyé. Réessayez dans un instant.");
+    } finally {
+      setSendingAccessLink(false);
+    }
+  }
+
+  async function switchAccount() {
+    const { error: signOutError } = await supabase.auth.signOut({ scope: "local" });
+    if (signOutError) {
+      setError("Impossible de changer de compte. Réessayez dans un instant.");
+      return;
+    }
+    setSignedInEmail(null);
+    setStep("signed-out");
+  }
+
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <LandingHeader />
@@ -137,9 +200,33 @@ function InvitationPage() {
         )}
 
         {step === "error" && (
-          <p role="alert" className="mr-small mt-6 border-l-2 border-mr-bordeaux pl-4 text-mr-bordeaux">
+          <p
+            role="alert"
+            className="mr-small mt-6 border-l-2 border-mr-bordeaux pl-4 text-mr-bordeaux"
+          >
             {error}
           </p>
+        )}
+
+        {step === "wrong-account" && (
+          <div className="mt-6">
+            <p role="alert" className="mr-body">
+              Vous êtes connecté avec {signedInEmail ?? "un autre compte"}. Cette invitation est
+              adressée à {invitedEmail}. Utilisez le compte invité pour l'activer.
+            </p>
+            {error && (
+              <p role="alert" className="mr-small mt-3 text-mr-bordeaux">
+                {error}
+              </p>
+            )}
+            <button
+              type="button"
+              onClick={() => void switchAccount()}
+              className="mr-link mr-small mt-4"
+            >
+              Changer de compte
+            </button>
+          </div>
         )}
 
         {step === "signed-out" && invitedEmail === undefined && (
@@ -147,7 +234,10 @@ function InvitationPage() {
         )}
 
         {step === "signed-out" && invitedEmail === null && (
-          <p role="alert" className="mr-small mt-6 border-l-2 border-mr-bordeaux pl-4 text-mr-bordeaux">
+          <p
+            role="alert"
+            className="mr-small mt-6 border-l-2 border-mr-bordeaux pl-4 text-mr-bordeaux"
+          >
             Cette invitation n'est plus valable. Demandez-en une nouvelle à Ma Reliure.
           </p>
         )}
@@ -155,10 +245,22 @@ function InvitationPage() {
         {step === "signed-out" && invitedEmail && (
           <>
             {awaitingConfirmation ? (
-              <p role="status" className="mr-body mt-6">
-                Compte créé. Confirmez votre adresse e-mail, puis revenez sur ce même lien pour
-                terminer l'activation.
-              </p>
+              <div className="mt-6">
+                <p role="status" className="mr-body">
+                  Si cette adresse est nouvelle, confirmez-la avec l'e-mail reçu : son lien vous
+                  ramènera ici pour terminer l'activation.
+                </p>
+                <button
+                  type="button"
+                  className="mr-link mr-small mt-4"
+                  onClick={() => {
+                    setAwaitingConfirmation(false);
+                    setMode("signin");
+                  }}
+                >
+                  J'ai déjà un compte Ma Reliure
+                </button>
+              </div>
             ) : (
               <form onSubmit={handleSubmit} className="mt-8 space-y-5">
                 <p className="mr-body">
@@ -167,7 +269,10 @@ function InvitationPage() {
                     : "Connectez-vous avec le compte lié à cette invitation."}
                 </p>
                 <div>
-                  <label htmlFor="invite-email" className="mr-small block font-semibold text-mr-ink">
+                  <label
+                    htmlFor="invite-email"
+                    className="mr-small block font-semibold text-mr-ink"
+                  >
                     Adresse e-mail
                   </label>
                   <input
@@ -217,13 +322,36 @@ function InvitationPage() {
                   <button
                     type="button"
                     className="mr-link mr-small"
-                    onClick={() => setMode(mode === "signup" ? "signin" : "signup")}
+                    onClick={() => {
+                      setError(null);
+                      setMode(mode === "signup" ? "signin" : "signup");
+                    }}
                   >
                     {mode === "signup"
                       ? "J'ai déjà un compte Ma Reliure"
                       : "Je n'ai pas encore de compte"}
                   </button>
                 </p>
+                {mode === "signin" && (
+                  <p>
+                    {accessLinkSent ? (
+                      <span role="status" className="mr-small">
+                        Lien envoyé à {invitedEmail}. Ouvrez-le pour activer l'accès atelier.
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="mr-link mr-small"
+                        disabled={sendingAccessLink}
+                        onClick={() => void sendAccessLink()}
+                      >
+                        {sendingAccessLink
+                          ? "Envoi…"
+                          : "Recevoir un lien de connexion si je n'ai pas de mot de passe"}
+                      </button>
+                    )}
+                  </p>
+                )}
               </form>
             )}
           </>
