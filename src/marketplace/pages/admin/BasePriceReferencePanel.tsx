@@ -8,6 +8,7 @@ import {
   BASE_PRICE_PRICING_MODES,
   BASE_PRICE_STATUSES,
   matchesBasePriceFilter,
+  validateBasePriceDraft,
   type BasePriceConfidence,
   type BasePriceFilter,
   type BasePricePricingMode,
@@ -43,20 +44,21 @@ function BasePriceRow({ item, onSaved }: { item: ReferenceItem; onSaved: () => P
   const [problem, setProblem] = useState<string | null>(null);
   const amount = toCents(draft.amount);
   const isManual = draft.pricingMode === "manual_review";
+  const input = {
+    pricingKey: item.key,
+    defaultUnitPriceCents: isManual ? null : amount,
+    unit: draft.unit,
+    pricingMode: draft.pricingMode,
+    status: draft.status,
+    sourceNote: draft.sourceNote.trim() || null,
+    confidence: draft.confidence,
+    needsHumanValidation: draft.needsHumanValidation,
+  };
 
   const saving = useMutation({
     mutationFn: () =>
       save({
-        data: {
-          pricingKey: item.key,
-          defaultUnitPriceCents: isManual ? null : amount,
-          unit: draft.unit,
-          pricingMode: draft.pricingMode,
-          status: draft.status,
-          sourceNote: draft.sourceNote.trim() || null,
-          confidence: draft.confidence,
-          needsHumanValidation: draft.needsHumanValidation,
-        },
+        data: input,
       }),
     onSuccess: async () => {
       setProblem(null);
@@ -164,7 +166,18 @@ function BasePriceRow({ item, onSaved }: { item: ReferenceItem; onSaved: () => P
         {item.entry && <p className="mt-1 text-xs text-muted-foreground">v{item.entry.version} · modifié le {new Date(item.entry.updated_at).toLocaleDateString("fr-FR")}</p>}
       </td>
       <td className="w-28 py-2 text-right">
-        <Button disabled={saving.isPending} size="sm" onClick={() => saving.mutate()}>
+        <Button
+          disabled={saving.isPending}
+          size="sm"
+          onClick={() => {
+            const errors = validateBasePriceDraft(input);
+            if (errors.length > 0) {
+              setProblem(errors.join(" "));
+              return;
+            }
+            saving.mutate();
+          }}
+        >
           {item.entry ? "Versionner" : "Créer"}
         </Button>
         {problem && <p className="mt-1 text-xs text-destructive">{problem}</p>}
