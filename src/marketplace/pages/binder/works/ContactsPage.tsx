@@ -9,10 +9,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { Search } from "lucide-react";
 import { getMyContacts } from "@/marketplace/services/binderWorks.data.functions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CARD, ErrorNote, FIELD, PRIMARY_BUTTON } from "@/marketplace/pages/binder/quotes/quoteUi";
+import { ErrorNote, FIELD, PRIMARY_BUTTON } from "@/marketplace/pages/binder/quotes/quoteUi";
 import { ContactForm } from "./ContactForm";
 import { CONTACTS_KEY } from "./workKeys";
 import { matchesSearch } from "@/marketplace/works/workSearch";
+import { BinderEmptyState, BinderPageHeader } from "../BinderPageUi";
 
 export function ContactsPage() {
   const fetchContacts = useServerFn(getMyContacts);
@@ -31,14 +32,11 @@ export function ContactsPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="font-serif text-2xl">Contacts</h1>
-        {!creating && (
+      <BinderPageHeader eyebrow="Carnet d'atelier" title="Contacts" description="Retrouvez un client, ses ouvrages et ses documents sans ressaisie." action={!creating ? (
           <button type="button" className={PRIMARY_BUTTON} onClick={() => setCreating(true)}>
             Nouveau contact
           </button>
-        )}
-      </header>
+        ) : undefined} />
 
       {creating && (
         <ContactForm
@@ -79,16 +77,11 @@ export function ContactsPage() {
           )}
 
           {contacts.data.length === 0 ? (
-            <div className={`${CARD} text-center`}>
-              <p className="font-medium">Aucun contact pour le moment.</p>
-              <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-                Créez un contact pour retrouver ses ouvrages, ses devis et ses factures au même endroit.
-              </p>
-            </div>
+            <BinderEmptyState title="Aucun contact pour le moment" description="Créez un contact pour retrouver ses ouvrages, ses devis et ses factures au même endroit." />
           ) : rows.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucun contact ne correspond à « {search} ».</p>
           ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+            <ul className="divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8]">
               {rows.map((c) => (
                 <li key={c.id}>
                   <Link

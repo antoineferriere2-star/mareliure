@@ -10,10 +10,11 @@ import { useServerFn } from "@tanstack/react-start";
 import { Search } from "lucide-react";
 import { getMyWorks } from "@/marketplace/services/binderWorks.data.functions";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CARD, ErrorNote, FIELD, PRIMARY_BUTTON } from "@/marketplace/pages/binder/quotes/quoteUi";
+import { ErrorNote, FIELD, PRIMARY_BUTTON } from "@/marketplace/pages/binder/quotes/quoteUi";
 import { matchesSearch } from "@/marketplace/works/workSearch";
 import { formatWorkDimensions } from "@/marketplace/works/workViews";
 import { WORKS_KEY } from "./workKeys";
+import { BinderEmptyState, BinderPageHeader } from "../BinderPageUi";
 
 export function WorksPage() {
   const fetchWorks = useServerFn(getMyWorks);
@@ -29,12 +30,7 @@ export function WorksPage() {
 
   return (
     <div className="space-y-5">
-      <header className="flex flex-wrap items-baseline justify-between gap-3">
-        <h1 className="font-serif text-2xl">Ouvrages</h1>
-        <Link to="/atelier/ouvrages/nouveau" className={PRIMARY_BUTTON}>
-          Nouvel ouvrage
-        </Link>
-      </header>
+      <BinderPageHeader eyebrow="Bibliothèque de travail" title="Ouvrages" description="Chaque fiche rassemble le livre, son client et les documents associés." action={<Link to="/atelier/ouvrages/nouveau" className={PRIMARY_BUTTON}>Nouvel ouvrage</Link>} />
 
       {works.isPending && (
         <div role="status" aria-busy="true" className="space-y-3">
@@ -67,19 +63,11 @@ export function WorksPage() {
           )}
 
           {works.data.length === 0 ? (
-            <div className={`${CARD} text-center`}>
-              <p className="font-medium">Aucun ouvrage pour le moment.</p>
-              <p className="mx-auto mt-1 max-w-md text-sm text-muted-foreground">
-                Tout part d'un ouvrage : créez sa fiche, puis faites-en le devis sans rien ressaisir.
-              </p>
-              <Link to="/atelier/ouvrages/nouveau" className={`${PRIMARY_BUTTON} mt-4`}>
-                Créer mon premier ouvrage
-              </Link>
-            </div>
+            <BinderEmptyState title="Aucun ouvrage pour le moment" description="Tout part d'un ouvrage : créez sa fiche, puis faites-en le devis sans rien ressaisir." action={<Link to="/atelier/ouvrages/nouveau" className={PRIMARY_BUTTON}>Créer mon premier ouvrage</Link>} />
           ) : rows.length === 0 ? (
             <p className="text-sm text-muted-foreground">Aucun ouvrage ne correspond à « {search} ».</p>
           ) : (
-            <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+            <ul className="divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8]">
               {rows.map((w) => {
                 const dimensions = formatWorkDimensions(w);
                 return (
