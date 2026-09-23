@@ -24,16 +24,15 @@ export class ManualElectronicInvoiceProvider implements ElectronicInvoiceProvide
     return { invoiceId, providerInvoiceId: null, status: "not_sent" };
   }
 
-  async getInvoiceStatus(): Promise<ElectronicInvoiceStatus> {
+  async getInvoiceStatus(_reference: ElectronicInvoiceReference): Promise<ElectronicInvoiceStatus> {
     return "not_sent";
   }
 
-  async reportTransaction(): Promise<TransactionReportingStatus> {
+  async reportTransaction(_invoiceId: string): Promise<TransactionReportingStatus> {
     return "pending";
   }
 
-  async reportPayment(): Promise<TransactionReportingStatus> {
+  async reportPayment(_invoiceId: string, _amountCents: number, _paidAt: string): Promise<TransactionReportingStatus> {
     return "pending";
   }
 }
-
