@@ -16,7 +16,7 @@
  * son régime et ses taux ; ce module applique ce qu'on lui donne.
  */
 
-export type VatRegime = "FRANCHISE" | "VAT_LIABLE";
+export type VatRegime = "FRANCHISE" | "VAT_LIABLE" | "EXEMPT";
 
 export type DiscountInput =
   | { type: "NONE" }
@@ -120,7 +120,7 @@ export function computeQuote(input: {
   const totalHtCents = subtotalCents - discountCents;
 
   // HT par taux (en franchise : un seul groupe à 0 %).
-  const rateOf = (line: CalcLine) => (input.vatRegime === "FRANCHISE" ? 0 : line.vatRateBps);
+  const rateOf = (line: CalcLine) => (input.vatRegime === "VAT_LIABLE" ? line.vatRateBps : 0);
   const rates = [...new Set(input.lines.map(rateOf))].sort((a, b) => a - b);
   const groupSubtotals = rates.map((rate) =>
     input.lines.reduce((sum, line, i) => (rateOf(line) === rate ? sum + lineTotalsCents[i] : sum), 0),

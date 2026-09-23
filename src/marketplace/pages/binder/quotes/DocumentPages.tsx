@@ -1,7 +1,7 @@
 /**
  * Le détail d'un devis et d'une facture : ce qui a été enregistré, le PDF, et la
- * prochaine action évidente — « Marquer comme accepté », puis « Convertir en
- * facture ». Une facture est en lecture seule : elle ne se modifie pas.
+ * prochaine action évidente — « Marquer comme accepté », puis préparer et
+ * émettre une facture. Seule une facture émise est en lecture seule.
  */
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -9,19 +9,23 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   convertMyQuoteToInvoice,
+  createMyFullCreditNote,
   duplicateMyQuote,
   getMyInvoice,
   getMyInvoicePdf,
   getMyQuote,
   getMyQuotePdf,
+  issueMyInvoice,
   setMyQuoteStatus,
+  updateMyInvoiceDraft,
 } from "@/marketplace/services/binderQuotes.data.functions";
 import { allowedTransitions, canConvertToInvoice, isEditable, QUOTE_STATUS_LABELS, type QuoteStatus } from "@/marketplace/quotes/quoteStatus";
 import { formatDimensions } from "@/marketplace/quotes/quoteLines";
 import { downloadPdf, euros, formatDateLong, openPdf, parseServerError } from "@/marketplace/quotes/quoteFormat";
 import type { DocumentView } from "@/marketplace/quotes/quoteViews";
+import type { InvoiceDraftInput } from "@/marketplace/invoices/invoiceCompliance";
 import { Skeleton } from "@/components/ui/skeleton";
-import { CARD, ErrorNote, PAYMENT_LABELS, PRIMARY_BUTTON, QuoteStatusBadge, SECONDARY_BUTTON } from "./quoteUi";
+import { CARD, ErrorNote, FIELD, Field, PAYMENT_LABELS, PRIMARY_BUTTON, QuoteStatusBadge, SECONDARY_BUTTON } from "./quoteUi";
 import { INVOICES_KEY, QUOTES_KEY } from "./quoteQueryKeys";
 
 const TRANSITION_LABELS: Partial<Record<QuoteStatus, string>> = {
@@ -219,7 +223,7 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
       <div className="flex flex-wrap items-center gap-2">
         {canConvertToInvoice(current) && (
           <button type="button" className={PRIMARY_BUTTON} disabled={busy} onClick={() => toInvoice.mutate()}>
-            {toInvoice.isPending ? "Création de la facture…" : "Convertir en facture"}
+            {toInvoice.isPending ? "Préparation de la facture…" : "Préparer la facture"}
           </button>
         )}
         {isEditable(current) && (
@@ -269,10 +273,157 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
 // Facture
 // ---------------------------------------------------------------------------
 
+const valueOrNull = (value: string) => value.trim() || null;
+
+function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
+  const updateDraft = useServerFn(updateMyInvoiceDraft);
+  const issue = useServerFn(issueMyInvoice);
+  const queryClient = useQueryClient();
+  const compliance = doc.invoiceCompliance!;
+  const [draft, setDraft] = useState<InvoiceDraftInput>({
+    issueDate: doc.issueDate,
+    serviceDate: compliance.serviceDate,
+    dueDate: compliance.dueDate,
+    operationNature: compliance.operationNature,
+    clientType: compliance.clientType,
+    clientName: doc.client.name,
+    clientLegalName: compliance.clientLegalName,
+    clientEmail: doc.client.email,
+    clientPhone: doc.client.phone,
+    clientAddressLine1: doc.client.addressLine1,
+    clientPostalCode: doc.client.postalCode,
+    clientCity: doc.client.city,
+    clientCountry: doc.client.country,
+    clientBillingAddressLine1: compliance.billingAddressLine1,
+    clientBillingPostalCode: compliance.billingPostalCode,
+    clientBillingCity: compliance.billingCity,
+    clientBillingCountry: compliance.billingCountry,
+    clientSiren: compliance.clientSiren,
+    clientVatNumber: compliance.clientVatNumber,
+    clientPurchaseOrderNumber: compliance.purchaseOrderNumber,
+    clientPublicServiceCode: compliance.publicServiceCode,
+    clientPublicCommitmentNumber: compliance.publicCommitmentNumber,
+    deliveryAddressLine1: compliance.deliveryAddressLine1,
+    deliveryPostalCode: compliance.deliveryPostalCode,
+    deliveryCity: compliance.deliveryCity,
+    deliveryCountry: compliance.deliveryCountry,
+    paymentTerms: doc.paymentTerms,
+    earlyPaymentDiscountTerms: compliance.earlyPaymentDiscountTerms,
+    latePenaltyTerms: compliance.latePenaltyTerms,
+    notes: doc.notes,
+  });
+  const [saved, setSaved] = useState(false);
+  const [missing, setMissing] = useState<string[]>([]);
+  const [failed, setFailed] = useState(false);
+  const set = (patch: Partial<InvoiceDraftInput>) => setDraft((current) => ({ ...current, ...patch }));
+  const text = (key: keyof InvoiceDraftInput) => String(draft[key] ?? "");
+  const refresh = () => Promise.all([
+    queryClient.invalidateQueries({ queryKey: [...INVOICES_KEY, doc.id] }),
+    queryClient.invalidateQueries({ queryKey: INVOICES_KEY }),
+    queryClient.invalidateQueries({ queryKey: QUOTES_KEY }),
+  ]);
+
+  const save = useMutation({
+    mutationFn: () => updateDraft({ data: { id: doc.id, draft } }),
+    onMutate: () => { setSaved(false); setFailed(false); },
+    onSuccess: async () => { await refresh(); setSaved(true); },
+    onError: () => setFailed(true),
+  });
+  const emit = useMutation({
+    mutationFn: async () => {
+      await updateDraft({ data: { id: doc.id, draft } });
+      return issue({ data: { id: doc.id } });
+    },
+    onMutate: () => { setMissing([]); setFailed(false); },
+    onSuccess: refresh,
+    onError: (error) => {
+      const parsed = parseServerError(error);
+      if (parsed.code === "profile_incomplete") setMissing(parsed.missing);
+      else setFailed(true);
+    },
+  });
+  const field = (key: keyof InvoiceDraftInput, label: string, type = "text") => (
+    <Field label={label} htmlFor={`invoice-${String(key)}`}>
+      <input id={`invoice-${String(key)}`} type={type} className={FIELD} value={text(key)} onChange={(event) => set({ [key]: valueOrNull(event.target.value) } as Partial<InvoiceDraftInput>)} />
+    </Field>
+  );
+
+  return (
+    <form className={`${CARD} space-y-5`} onSubmit={(event) => { event.preventDefault(); save.mutate(); }}>
+      <div>
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#7a2230]">Brouillon</p>
+        <h2 className="mt-1 font-serif text-xl">Vérifier avant émission</h2>
+        <p className="mt-1 text-sm text-muted-foreground">Le numéro définitif sera attribué uniquement à l'émission. Les informations seront alors figées.</p>
+      </div>
+      <div className="grid gap-4 sm:grid-cols-3">
+        {field("issueDate", "Date d'émission", "date")}
+        {field("serviceDate", "Date de prestation", "date")}
+        {field("dueDate", "Date d'échéance", "date")}
+      </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Type de client" htmlFor="invoice-client-type">
+          <select id="invoice-client-type" className={FIELD} value={draft.clientType ?? ""} onChange={(event) => set({ clientType: (event.target.value || null) as InvoiceDraftInput["clientType"] })}>
+            <option value="">À renseigner</option>
+            <option value="individual">Particulier</option><option value="business">Entreprise</option><option value="public_entity">Entité publique</option>
+          </select>
+        </Field>
+        <Field label="Nature de l'opération" htmlFor="invoice-operation-nature">
+          <select id="invoice-operation-nature" className={FIELD} value={draft.operationNature ?? ""} onChange={(event) => set({ operationNature: (event.target.value || null) as InvoiceDraftInput["operationNature"] })}>
+            <option value="">À renseigner</option><option value="services">Services</option><option value="goods">Biens</option><option value="mixed">Mixte</option>
+          </select>
+        </Field>
+        {field("clientName", "Nom du client")}
+        {draft.clientType !== "individual" && field("clientLegalName", draft.clientType === "public_entity" ? "Nom de l'entité publique" : "Raison sociale")}
+        {draft.clientType !== "individual" && field("clientSiren", "SIREN client")}
+        {draft.clientType !== "individual" && field("clientVatNumber", "Numéro de TVA client")}
+        {draft.clientType !== "individual" && field("clientPurchaseOrderNumber", "Bon de commande (facultatif)")}
+        {draft.clientType === "public_entity" && field("clientPublicServiceCode", "Code service")}
+        {draft.clientType === "public_entity" && field("clientPublicCommitmentNumber", "Numéro d'engagement")}
+        {field("clientBillingAddressLine1", "Adresse de facturation")}
+        {field("clientBillingPostalCode", "Code postal de facturation")}
+        {field("clientBillingCity", "Ville de facturation")}
+        {field("clientBillingCountry", "Pays de facturation")}
+      </div>
+      <details>
+        <summary className="cursor-pointer text-sm font-semibold">Adresse de livraison différente</summary>
+        <div className="mt-3 grid gap-4 sm:grid-cols-2">
+          {field("deliveryAddressLine1", "Adresse de livraison")}{field("deliveryPostalCode", "Code postal")}{field("deliveryCity", "Ville")}{field("deliveryCountry", "Pays")}
+        </div>
+      </details>
+      <div className="grid gap-4 sm:grid-cols-2">
+        <Field label="Conditions de paiement" htmlFor="invoice-payment"><textarea id="invoice-payment" rows={2} className={`${FIELD} h-auto py-2`} value={text("paymentTerms")} onChange={(event) => set({ paymentTerms: valueOrNull(event.target.value) })} /></Field>
+        <Field label="Conditions d'escompte" htmlFor="invoice-discount"><textarea id="invoice-discount" rows={2} className={`${FIELD} h-auto py-2`} value={text("earlyPaymentDiscountTerms")} onChange={(event) => set({ earlyPaymentDiscountTerms: valueOrNull(event.target.value) })} /></Field>
+        <Field label="Pénalités de retard" htmlFor="invoice-penalties"><textarea id="invoice-penalties" rows={2} className={`${FIELD} h-auto py-2`} value={text("latePenaltyTerms")} onChange={(event) => set({ latePenaltyTerms: valueOrNull(event.target.value) })} /></Field>
+        <Field label="Notes visibles" htmlFor="invoice-notes"><textarea id="invoice-notes" rows={2} className={`${FIELD} h-auto py-2`} value={text("notes")} onChange={(event) => set({ notes: valueOrNull(event.target.value) })} /></Field>
+      </div>
+      {missing.length > 0 && <div role="alert" className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm"><p className="font-semibold">Impossible d'émettre la facture :</p><ul className="mt-2 list-disc pl-5">{missing.map((item) => <li key={item}>{item}</li>)}</ul>{missing.some((item) => item.includes("atelier")) && <Link to="/atelier/tarifs" className="mt-2 inline-block underline">Compléter le profil atelier</Link>}</div>}
+      {failed && <ErrorNote>L'action n'a pas pu aboutir. Rechargez la page et réessayez.</ErrorNote>}
+      <div className="flex flex-wrap items-center gap-3">
+        <button type="submit" className={SECONDARY_BUTTON} disabled={save.isPending || emit.isPending}>{save.isPending ? "Enregistrement…" : "Enregistrer le brouillon"}</button>
+        <button type="button" className={PRIMARY_BUTTON} disabled={save.isPending || emit.isPending} onClick={() => emit.mutate()}>{emit.isPending ? "Émission…" : "Émettre la facture"}</button>
+        {saved && <span role="status" className="text-sm text-emerald-700">Brouillon enregistré ✓</span>}
+      </div>
+    </form>
+  );
+}
+
 export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
   const fetchInvoice = useServerFn(getMyInvoice);
   const fetchPdf = useServerFn(getMyInvoicePdf);
+  const createCreditNote = useServerFn(createMyFullCreditNote);
+  const queryClient = useQueryClient();
+  const [creditReason, setCreditReason] = useState("");
+  const [creditError, setCreditError] = useState(false);
   const invoice = useQuery({ queryKey: [...INVOICES_KEY, invoiceId] as const, queryFn: () => fetchInvoice({ data: { id: invoiceId } }) });
+  const credit = useMutation({
+    mutationFn: () => createCreditNote({ data: { id: invoiceId, reason: creditReason } }),
+    onMutate: () => setCreditError(false),
+    onSuccess: () => Promise.all([
+      queryClient.invalidateQueries({ queryKey: [...INVOICES_KEY, invoiceId] }),
+      queryClient.invalidateQueries({ queryKey: INVOICES_KEY }),
+    ]),
+    onError: () => setCreditError(true),
+  });
 
   if (invoice.isPending) return <Loading />;
   if (invoice.error || !invoice.data) return <ErrorNote>Facture introuvable.</ErrorNote>;
@@ -283,7 +434,7 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
       <Link to="/atelier/devis" className="text-sm text-muted-foreground underline">← Devis et factures</Link>
       <header className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="font-serif text-2xl">Facture {doc.number}</h1>
+          <h1 className="font-serif text-2xl">{doc.status === "draft" ? "Facture en préparation" : `Facture ${doc.number}`}</h1>
           <p className="mt-1 text-sm text-muted-foreground">
             {formatDateLong(doc.issueDate)}
             {doc.linkedQuoteId && (
@@ -294,15 +445,26 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
             )}
           </p>
         </div>
-        {doc.payment && (
+        {doc.status !== "draft" && doc.payment && (
           <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold">{PAYMENT_LABELS[doc.payment.status]}</span>
         )}
       </header>
       <div className="flex flex-wrap items-center gap-2">
-        <PdfActions fetchPdf={fetchPdf} id={doc.id} />
+        {doc.status !== "draft" && <PdfActions fetchPdf={fetchPdf} id={doc.id} />}
       </div>
-      <p className="text-sm text-muted-foreground">Une facture émise ne se modifie pas.</p>
+      {doc.status === "draft" ? <InvoiceDraftEditor doc={doc} /> : <p className="text-sm text-muted-foreground">Cette facture est émise et ne peut plus être modifiée ni supprimée. Une correction passe par un avoir.</p>}
       <DocumentBody doc={doc} />
+      {doc.status !== "draft" && <section aria-labelledby="credit-note-title" className={CARD}>
+        <h2 id="credit-note-title" className="font-serif text-lg">Rectification</h2>
+        {doc.creditNote ? <p className="mt-2 text-sm">Avoir complet {doc.creditNote.number}, émis le {formatDateLong(doc.creditNote.issueDate)}. La facture d'origine reste inchangée.</p> : <>
+          <p className="mt-1 text-sm text-muted-foreground">Un avoir complet annule économiquement cette facture tout en conservant la pièce d'origine.</p>
+          <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
+            <Field label="Motif de l'avoir" htmlFor="credit-note-reason"><input id="credit-note-reason" className={FIELD} value={creditReason} onChange={(event) => setCreditReason(event.target.value)} /></Field>
+            <button type="button" className={SECONDARY_BUTTON} disabled={!creditReason.trim() || credit.isPending} onClick={() => credit.mutate()}>{credit.isPending ? "Création…" : "Créer l'avoir complet"}</button>
+          </div>
+          {creditError && <ErrorNote>L'avoir n'a pas pu être créé. Réessayez.</ErrorNote>}
+        </>}
+      </section>}
     </div>
   );
 }

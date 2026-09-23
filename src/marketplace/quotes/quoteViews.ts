@@ -7,6 +7,7 @@
  */
 import type { Issuer } from "./quoteBuild";
 import type { VatGroup, VatRegime } from "./quoteCalc";
+import type { InvoiceClientType, InvoiceOperationNature } from "@/marketplace/invoices/invoiceCompliance";
 
 export interface DocumentItemView {
   position: number;
@@ -106,6 +107,30 @@ export interface DocumentView {
   createdAt: string;
   /** Facture seulement : le suivi de paiement (aucun encaissement n'est fait ici). */
   payment: { status: "unpaid" | "deposit_paid" | "paid"; amountPaidCents: number; depositPaidCents: number } | null;
+  invoiceCompliance: {
+    serviceDate: string | null;
+    dueDate: string | null;
+    operationNature: InvoiceOperationNature | null;
+    clientType: InvoiceClientType | null;
+    clientLegalName: string | null;
+    billingAddressLine1: string | null;
+    billingPostalCode: string | null;
+    billingCity: string | null;
+    billingCountry: string | null;
+    clientSiren: string | null;
+    clientVatNumber: string | null;
+    purchaseOrderNumber: string | null;
+    publicServiceCode: string | null;
+    publicCommitmentNumber: string | null;
+    deliveryAddressLine1: string | null;
+    deliveryPostalCode: string | null;
+    deliveryCity: string | null;
+    deliveryCountry: string | null;
+    earlyPaymentDiscountTerms: string | null;
+    latePenaltyTerms: string | null;
+    legalMentions: string[];
+  } | null;
+  creditNote: { id: string; number: string; issueDate: string } | null;
 }
 
 /** Une ligne SQL de devis ou de facture — la partie commune. */
@@ -155,7 +180,29 @@ export interface QuoteDbRow extends CommonRow {
 
 export interface InvoiceDbRow extends CommonRow {
   quote_id: string;
-  invoice_number: string;
+  invoice_number: string | null;
+  status: "draft" | "issued" | "credited";
+  service_date: string | null;
+  due_date: string | null;
+  operation_nature: InvoiceOperationNature | null;
+  client_type: InvoiceClientType | null;
+  client_legal_name: string | null;
+  client_billing_address_line1: string | null;
+  client_billing_postal_code: string | null;
+  client_billing_city: string | null;
+  client_billing_country: string | null;
+  client_siren: string | null;
+  client_vat_number: string | null;
+  client_purchase_order_number: string | null;
+  client_public_service_code: string | null;
+  client_public_commitment_number: string | null;
+  delivery_address_line1: string | null;
+  delivery_postal_code: string | null;
+  delivery_city: string | null;
+  delivery_country: string | null;
+  early_payment_discount_terms: string | null;
+  late_penalty_terms: string | null;
+  legal_mentions: string[];
   payment_status: "unpaid" | "deposit_paid" | "paid";
   amount_paid_cents: number;
   deposit_paid_cents: number;
@@ -273,7 +320,7 @@ function common(row: CommonRow, items: ItemDbRow[], photos: PhotoDbRow[] = []) {
 export function quoteView(
   row: QuoteDbRow,
   items: ItemDbRow[],
-  invoice: { id: string; invoice_number: string } | null,
+  invoice: { id: string; invoice_number: string | null } | null,
   photos: PhotoDbRow[] = [],
 ): DocumentView {
   return {
@@ -290,6 +337,8 @@ export function quoteView(
     linkedInvoiceNumber: invoice?.invoice_number ?? null,
     ...(row.work_id ? { workId: row.work_id } : {}),
     payment: null,
+    invoiceCompliance: null,
+    creditNote: null,
   };
 }
 
@@ -298,12 +347,13 @@ export function invoiceView(
   items: ItemDbRow[],
   quote: { id: string; quote_number: string } | null,
   photos: PhotoDbRow[] = [],
+  creditNote: { id: string; credit_note_number: string; issue_date: string } | null = null,
 ): DocumentView {
   return {
     kind: "invoice",
     id: row.id,
-    number: row.invoice_number,
-    status: "issued",
+    number: row.invoice_number ?? "Brouillon",
+    status: row.status,
     issueDate: row.issue_date,
     validUntil: null,
     ...common(row, items, photos),
@@ -316,6 +366,30 @@ export function invoiceView(
       amountPaidCents: row.amount_paid_cents,
       depositPaidCents: row.deposit_paid_cents,
     },
+    invoiceCompliance: {
+      serviceDate: row.service_date,
+      dueDate: row.due_date,
+      operationNature: row.operation_nature,
+      clientType: row.client_type,
+      clientLegalName: row.client_legal_name,
+      billingAddressLine1: row.client_billing_address_line1,
+      billingPostalCode: row.client_billing_postal_code,
+      billingCity: row.client_billing_city,
+      billingCountry: row.client_billing_country,
+      clientSiren: row.client_siren,
+      clientVatNumber: row.client_vat_number,
+      purchaseOrderNumber: row.client_purchase_order_number,
+      publicServiceCode: row.client_public_service_code,
+      publicCommitmentNumber: row.client_public_commitment_number,
+      deliveryAddressLine1: row.delivery_address_line1,
+      deliveryPostalCode: row.delivery_postal_code,
+      deliveryCity: row.delivery_city,
+      deliveryCountry: row.delivery_country,
+      earlyPaymentDiscountTerms: row.early_payment_discount_terms,
+      latePenaltyTerms: row.late_penalty_terms,
+      legalMentions: row.legal_mentions ?? [],
+    },
+    creditNote: creditNote ? { id: creditNote.id, number: creditNote.credit_note_number, issueDate: creditNote.issue_date } : null,
   };
 }
 

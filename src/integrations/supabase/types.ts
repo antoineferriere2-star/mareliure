@@ -915,6 +915,7 @@ export type Database = {
           binder_id: string
           city: string | null
           country: string
+          credit_note_prefix: string
           created_at: string
           default_vat_rate_bps: number
           document_accent_color: string
@@ -922,19 +923,27 @@ export type Database = {
           email: string | null
           invoice_notes: string | null
           invoice_prefix: string
+          iban: string | null
+          early_payment_discount_terms: string | null
+          late_penalty_terms: string | null
+          legal_form: string | null
           legal_name: string | null
           legal_notes: string | null
           logo_storage_path: string | null
           payment_terms: string | null
+          payment_delay_days: number | null
           phone: string | null
           postal_code: string | null
           quote_notes: string | null
           quote_prefix: string
           quote_validity_days: number
           siret: string | null
+          siren: string | null
+          share_capital: string | null
           updated_at: string
           vat_mention: string | null
           vat_number: string | null
+          vat_on_debits: boolean
           vat_regime: string | null
           website: string | null
           workshop_name: string | null
@@ -946,6 +955,7 @@ export type Database = {
           binder_id: string
           city?: string | null
           country?: string
+          credit_note_prefix?: string
           created_at?: string
           default_vat_rate_bps?: number
           document_accent_color?: string
@@ -953,19 +963,27 @@ export type Database = {
           email?: string | null
           invoice_notes?: string | null
           invoice_prefix?: string
+          iban?: string | null
+          early_payment_discount_terms?: string | null
+          late_penalty_terms?: string | null
+          legal_form?: string | null
           legal_name?: string | null
           legal_notes?: string | null
           logo_storage_path?: string | null
           payment_terms?: string | null
+          payment_delay_days?: number | null
           phone?: string | null
           postal_code?: string | null
           quote_notes?: string | null
           quote_prefix?: string
           quote_validity_days?: number
           siret?: string | null
+          siren?: string | null
+          share_capital?: string | null
           updated_at?: string
           vat_mention?: string | null
           vat_number?: string | null
+          vat_on_debits?: boolean
           vat_regime?: string | null
           website?: string | null
           workshop_name?: string | null
@@ -977,6 +995,7 @@ export type Database = {
           binder_id?: string
           city?: string | null
           country?: string
+          credit_note_prefix?: string
           created_at?: string
           default_vat_rate_bps?: number
           document_accent_color?: string
@@ -984,19 +1003,27 @@ export type Database = {
           email?: string | null
           invoice_notes?: string | null
           invoice_prefix?: string
+          iban?: string | null
+          early_payment_discount_terms?: string | null
+          late_penalty_terms?: string | null
+          legal_form?: string | null
           legal_name?: string | null
           legal_notes?: string | null
           logo_storage_path?: string | null
           payment_terms?: string | null
+          payment_delay_days?: number | null
           phone?: string | null
           postal_code?: string | null
           quote_notes?: string | null
           quote_prefix?: string
           quote_validity_days?: number
           siret?: string | null
+          siren?: string | null
+          share_capital?: string | null
           updated_at?: string
           vat_mention?: string | null
           vat_number?: string | null
+          vat_on_debits?: boolean
           vat_regime?: string | null
           website?: string | null
           workshop_name?: string | null
@@ -1016,13 +1043,19 @@ export type Database = {
           address_line1: string | null
           archived_at: string | null
           binder_id: string
+          billing_address_line1: string | null
+          billing_city: string | null
+          billing_country: string | null
+          billing_postal_code: string | null
           city: string | null
+          client_type: string | null
           country: string | null
           created_at: string
           email: string | null
           first_name: string | null
           id: string
           last_name: string | null
+          legal_name: string | null
           name: string
           notes: string | null
           organization: string | null
@@ -1030,19 +1063,30 @@ export type Database = {
           origin_case_id: string | null
           phone: string | null
           postal_code: string | null
+          public_commitment_number: string | null
+          public_service_code: string | null
+          purchase_order_number: string | null
+          siren: string | null
           updated_at: string
+          vat_number: string | null
         }
         Insert: {
           address_line1?: string | null
           archived_at?: string | null
           binder_id: string
+          billing_address_line1?: string | null
+          billing_city?: string | null
+          billing_country?: string | null
+          billing_postal_code?: string | null
           city?: string | null
+          client_type?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          legal_name?: string | null
           name: string
           notes?: string | null
           organization?: string | null
@@ -1050,19 +1094,30 @@ export type Database = {
           origin_case_id?: string | null
           phone?: string | null
           postal_code?: string | null
+          public_commitment_number?: string | null
+          public_service_code?: string | null
+          purchase_order_number?: string | null
+          siren?: string | null
           updated_at?: string
+          vat_number?: string | null
         }
         Update: {
           address_line1?: string | null
           archived_at?: string | null
           binder_id?: string
+          billing_address_line1?: string | null
+          billing_city?: string | null
+          billing_country?: string | null
+          billing_postal_code?: string | null
           city?: string | null
+          client_type?: string | null
           country?: string | null
           created_at?: string
           email?: string | null
           first_name?: string | null
           id?: string
           last_name?: string | null
+          legal_name?: string | null
           name?: string
           notes?: string | null
           organization?: string | null
@@ -1070,7 +1125,12 @@ export type Database = {
           origin_case_id?: string | null
           phone?: string | null
           postal_code?: string | null
+          public_commitment_number?: string | null
+          public_service_code?: string | null
+          purchase_order_number?: string | null
+          siren?: string | null
           updated_at?: string
+          vat_number?: string | null
         }
         Relationships: [
           {
@@ -1085,6 +1145,135 @@ export type Database = {
             columns: ["origin_case_id"]
             isOneToOne: false
             referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_credit_note_items: {
+        Row: {
+          binder_id: string
+          credit_note_id: string
+          description: string | null
+          id: string
+          label: string
+          position: number
+          quantity: number
+          total_ht_cents: number
+          unit: string | null
+          unit_price_cents: number
+          vat_rate_bps: number
+        }
+        Insert: {
+          binder_id: string
+          credit_note_id: string
+          description?: string | null
+          id?: string
+          label: string
+          position: number
+          quantity: number
+          total_ht_cents: number
+          unit?: string | null
+          unit_price_cents: number
+          vat_rate_bps: number
+        }
+        Update: {
+          binder_id?: string
+          credit_note_id?: string
+          description?: string | null
+          id?: string
+          label?: string
+          position?: number
+          quantity?: number
+          total_ht_cents?: number
+          unit?: string | null
+          unit_price_cents?: number
+          vat_rate_bps?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_credit_note_items_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_credit_note_items_credit_note_id_fkey"
+            columns: ["credit_note_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_credit_notes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_credit_notes: {
+        Row: {
+          binder_id: string
+          client: Json
+          created_at: string
+          credit_note_number: string
+          currency: string
+          id: string
+          invoice_id: string
+          issue_date: string
+          issuer: Json
+          legal_mentions: Json
+          reason: string
+          retained_until: string
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          vat_breakdown: Json
+        }
+        Insert: {
+          binder_id: string
+          client: Json
+          created_at?: string
+          credit_note_number: string
+          currency?: string
+          id?: string
+          invoice_id: string
+          issue_date: string
+          issuer: Json
+          legal_mentions?: Json
+          reason: string
+          retained_until: string
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          vat_breakdown?: Json
+        }
+        Update: {
+          binder_id?: string
+          client?: Json
+          created_at?: string
+          credit_note_number?: string
+          currency?: string
+          id?: string
+          invoice_id?: string
+          issue_date?: string
+          issuer?: Json
+          legal_mentions?: Json
+          reason?: string
+          retained_until?: string
+          total_ht_cents?: number
+          total_ttc_cents?: number
+          total_vat_cents?: number
+          vat_breakdown?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_credit_notes_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_credit_notes_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_invoices"
             referencedColumns: ["id"]
           },
         ]
@@ -1308,13 +1497,24 @@ export type Database = {
           book_notes: string | null
           book_title: string | null
           client_address_line1: string | null
+          client_billing_address_line1: string | null
+          client_billing_city: string | null
+          client_billing_country: string | null
+          client_billing_postal_code: string | null
           client_city: string | null
           client_country: string | null
           client_email: string | null
           client_id: string | null
+          client_legal_name: string | null
           client_name: string
           client_phone: string | null
           client_postal_code: string | null
+          client_public_commitment_number: string | null
+          client_public_service_code: string | null
+          client_purchase_order_number: string | null
+          client_siren: string | null
+          client_type: string | null
+          client_vat_number: string | null
           created_at: string
           currency: string
           deposit_cents: number
@@ -1324,6 +1524,13 @@ export type Database = {
           discount_cents: number
           discount_type: string
           discount_value: number
+          delivery_address_line1: string | null
+          delivery_city: string | null
+          delivery_country: string | null
+          delivery_postal_code: string | null
+          due_date: string | null
+          early_payment_discount_terms: string | null
+          electronic_invoice_provider: string | null
           electronic_invoice_sent_at: string | null
           electronic_invoice_status: string | null
           external_invoice_id: string | null
@@ -1332,16 +1539,29 @@ export type Database = {
           external_status: string | null
           height_mm: number | null
           id: string
-          invoice_number: string
+          invoice_number: string | null
           issue_date: string
+          issued_at: string | null
           issuer: Json
           notes: string | null
+          legal_mentions: Json
+          late_penalty_terms: string | null
+          operation_nature: string | null
           paid_at: string | null
           payment_status: string
           payment_terms: string | null
+          provider_invoice_id: string | null
+          provider_sent_at: string | null
+          provider_status: string | null
           quote_id: string
+          recovery_fee_cents: number
           spine_mm: number | null
           subtotal_cents: number
+          reporting_status: string | null
+          retained_until: string | null
+          service_date: string | null
+          status: string
+          structured_invoice_format: string | null
           total_ht_cents: number
           total_ttc_cents: number
           total_vat_cents: number
@@ -1358,13 +1578,24 @@ export type Database = {
           book_notes?: string | null
           book_title?: string | null
           client_address_line1?: string | null
+          client_billing_address_line1?: string | null
+          client_billing_city?: string | null
+          client_billing_country?: string | null
+          client_billing_postal_code?: string | null
           client_city?: string | null
           client_country?: string | null
           client_email?: string | null
           client_id?: string | null
+          client_legal_name?: string | null
           client_name: string
           client_phone?: string | null
           client_postal_code?: string | null
+          client_public_commitment_number?: string | null
+          client_public_service_code?: string | null
+          client_purchase_order_number?: string | null
+          client_siren?: string | null
+          client_type?: string | null
+          client_vat_number?: string | null
           created_at?: string
           currency?: string
           deposit_cents?: number
@@ -1374,6 +1605,13 @@ export type Database = {
           discount_cents?: number
           discount_type?: string
           discount_value?: number
+          delivery_address_line1?: string | null
+          delivery_city?: string | null
+          delivery_country?: string | null
+          delivery_postal_code?: string | null
+          due_date?: string | null
+          early_payment_discount_terms?: string | null
+          electronic_invoice_provider?: string | null
           electronic_invoice_sent_at?: string | null
           electronic_invoice_status?: string | null
           external_invoice_id?: string | null
@@ -1382,16 +1620,29 @@ export type Database = {
           external_status?: string | null
           height_mm?: number | null
           id?: string
-          invoice_number: string
+          invoice_number?: string | null
           issue_date: string
+          issued_at?: string | null
           issuer?: Json
           notes?: string | null
+          legal_mentions?: Json
+          late_penalty_terms?: string | null
+          operation_nature?: string | null
           paid_at?: string | null
           payment_status?: string
           payment_terms?: string | null
+          provider_invoice_id?: string | null
+          provider_sent_at?: string | null
+          provider_status?: string | null
           quote_id: string
+          recovery_fee_cents?: number
           spine_mm?: number | null
           subtotal_cents: number
+          reporting_status?: string | null
+          retained_until?: string | null
+          service_date?: string | null
+          status?: string
+          structured_invoice_format?: string | null
           total_ht_cents: number
           total_ttc_cents: number
           total_vat_cents: number
@@ -1408,13 +1659,24 @@ export type Database = {
           book_notes?: string | null
           book_title?: string | null
           client_address_line1?: string | null
+          client_billing_address_line1?: string | null
+          client_billing_city?: string | null
+          client_billing_country?: string | null
+          client_billing_postal_code?: string | null
           client_city?: string | null
           client_country?: string | null
           client_email?: string | null
           client_id?: string | null
+          client_legal_name?: string | null
           client_name?: string
           client_phone?: string | null
           client_postal_code?: string | null
+          client_public_commitment_number?: string | null
+          client_public_service_code?: string | null
+          client_purchase_order_number?: string | null
+          client_siren?: string | null
+          client_type?: string | null
+          client_vat_number?: string | null
           created_at?: string
           currency?: string
           deposit_cents?: number
@@ -1424,6 +1686,13 @@ export type Database = {
           discount_cents?: number
           discount_type?: string
           discount_value?: number
+          delivery_address_line1?: string | null
+          delivery_city?: string | null
+          delivery_country?: string | null
+          delivery_postal_code?: string | null
+          due_date?: string | null
+          early_payment_discount_terms?: string | null
+          electronic_invoice_provider?: string | null
           electronic_invoice_sent_at?: string | null
           electronic_invoice_status?: string | null
           external_invoice_id?: string | null
@@ -1432,16 +1701,29 @@ export type Database = {
           external_status?: string | null
           height_mm?: number | null
           id?: string
-          invoice_number?: string
+          invoice_number?: string | null
           issue_date?: string
+          issued_at?: string | null
           issuer?: Json
           notes?: string | null
+          legal_mentions?: Json
+          late_penalty_terms?: string | null
+          operation_nature?: string | null
           paid_at?: string | null
           payment_status?: string
           payment_terms?: string | null
+          provider_invoice_id?: string | null
+          provider_sent_at?: string | null
+          provider_status?: string | null
           quote_id?: string
+          recovery_fee_cents?: number
           spine_mm?: number | null
           subtotal_cents?: number
+          reporting_status?: string | null
+          retained_until?: string | null
+          service_date?: string | null
+          status?: string
+          structured_invoice_format?: string | null
           total_ht_cents?: number
           total_ttc_cents?: number
           total_vat_cents?: number
@@ -3377,15 +3659,12 @@ export type Database = {
         }
         Returns: boolean
       }
-      marketplace_binder_convert_quote_to_invoice: {
-        Args: {
-          p_binder_id: string
-          p_invoice_notes: string
-          p_issue_date: string
-          p_issuer: Json
-          p_quote_id: string
-          p_vat_mention?: string
-        }
+      marketplace_binder_create_full_credit_note: {
+        Args: { p_binder_id: string; p_invoice_id: string; p_issue_date: string; p_reason: string }
+        Returns: string
+      }
+      marketplace_binder_create_invoice_draft: {
+        Args: { p_binder_id: string; p_draft: Json; p_quote_id: string }
         Returns: string
       }
       marketplace_binder_create_quote: {
@@ -3414,6 +3693,14 @@ export type Database = {
       }
       marketplace_binder_next_work_reference: {
         Args: { p_binder_id: string; p_year: number }
+        Returns: string
+      }
+      marketplace_binder_issue_invoice: {
+        Args: { p_binder_id: string; p_invoice_id: string; p_legal_mentions: Json }
+        Returns: string
+      }
+      marketplace_binder_update_invoice_draft: {
+        Args: { p_binder_id: string; p_draft: Json; p_invoice_id: string }
         Returns: string
       }
       marketplace_binder_update_quote: {

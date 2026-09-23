@@ -59,6 +59,11 @@ import {
   DOCUMENT_LOGOS_BUCKET,
   type DocumentLogoMime,
 } from "@/marketplace/quotes/documentBranding";
+import {
+  validateInvoiceForIssue,
+  type InvoiceDraftInput,
+  type InvoiceIssueCandidate,
+} from "@/marketplace/invoices/invoiceCompliance";
 
 // Frontières typées : ce que la base garantit par CHECK / par construction du serveur.
 const asQuoteRow = (row: Tables<"marketplace_binder_quotes">) => row as unknown as QuoteDbRow;
@@ -131,6 +136,9 @@ function profileFromRow(row: Tables<"marketplace_binder_billing_profiles">): Bil
     workshopName: row.workshop_name,
     binderName: row.binder_name,
     legalName: row.legal_name,
+    legalForm: row.legal_form,
+    shareCapital: row.share_capital,
+    siren: row.siren,
     addressLine1: row.address_line1,
     addressLine2: row.address_line2,
     postalCode: row.postal_code,
@@ -138,6 +146,7 @@ function profileFromRow(row: Tables<"marketplace_binder_billing_profiles">): Bil
     country: row.country,
     siret: row.siret,
     vatNumber: row.vat_number,
+    vatOnDebits: row.vat_on_debits,
     legalNotes: row.legal_notes,
     email: row.email,
     phone: row.phone,
@@ -153,6 +162,10 @@ function profileFromRow(row: Tables<"marketplace_binder_billing_profiles">): Bil
     invoicePrefix: row.invoice_prefix,
     quoteValidityDays: row.quote_validity_days,
     paymentTerms: row.payment_terms,
+    paymentDelayDays: row.payment_delay_days,
+    earlyPaymentDiscountTerms: row.early_payment_discount_terms,
+    latePenaltyTerms: row.late_penalty_terms,
+    iban: row.iban,
     quoteNotes: row.quote_notes,
     invoiceNotes: row.invoice_notes,
   };
@@ -196,6 +209,9 @@ export async function saveBillingProfile(sb: Supa, binderId: string, input: Bill
         workshop_name: input.workshopName,
         binder_name: input.binderName,
         legal_name: input.legalName,
+        legal_form: input.legalForm,
+        share_capital: input.shareCapital,
+        siren: input.siren,
         address_line1: input.addressLine1,
         address_line2: input.addressLine2,
         postal_code: input.postalCode,
@@ -203,6 +219,7 @@ export async function saveBillingProfile(sb: Supa, binderId: string, input: Bill
         country: input.country,
         siret: input.siret,
         vat_number: input.vatNumber,
+        vat_on_debits: input.vatOnDebits,
         legal_notes: input.legalNotes,
         email: input.email,
         phone: input.phone,
@@ -216,6 +233,10 @@ export async function saveBillingProfile(sb: Supa, binderId: string, input: Bill
         invoice_prefix: input.invoicePrefix,
         quote_validity_days: input.quoteValidityDays,
         payment_terms: input.paymentTerms,
+        payment_delay_days: input.paymentDelayDays,
+        early_payment_discount_terms: input.earlyPaymentDiscountTerms,
+        late_penalty_terms: input.latePenaltyTerms,
+        iban: input.iban,
         quote_notes: input.quoteNotes,
         invoice_notes: input.invoiceNotes,
       },
@@ -746,26 +767,137 @@ export async function convertQuoteToInvoice(sb: Supa, binderId: string, quoteId:
   // Le devis a pu naître en franchise SANS mention (profil complété depuis) : ce qui sera figé dans la
   // facture est la mention effective — celle du devis si elle existe, sinon celle du profil.
   const vatMention = effectiveVatMention(quote.vat_mention, profile.vatMention);
-  const readiness = profileReadiness({ ...profile, vatRegime: quote.vat_regime, vatMention }, "invoice");
-  if (!readiness.ready) throw new BinderQuotesError("profile_incomplete", readiness.missing);
-
-  const { data, error } = await sb.rpc("marketplace_binder_convert_quote_to_invoice", {
+  const due = new Date(`${today}T12:00:00Z`);
+  due.setUTCDate(due.getUTCDate() + (profile.paymentDelayDays ?? 0));
+  const { data, error } = await sb.rpc("marketplace_binder_create_invoice_draft", {
     p_binder_id: binderId,
     p_quote_id: quoteId,
-    p_issue_date: today,
-    // Nullable côté SQL (« pas de mentions ») ; le générateur type les arguments de fonction non-nullables.
-    p_invoice_notes: profile.invoiceNotes as unknown as string,
-    p_issuer: asJson(issuerOf(profile)),
-    p_vat_mention: vatMention as unknown as string,
+    p_draft: asJson({
+      issue_date: today,
+      service_date: null,
+      due_date: due.toISOString().slice(0, 10),
+      operation_nature: "services",
+      client_type: null,
+      issuer: issuerOf(profile),
+      vat_mention: vatMention,
+      payment_terms: profile.paymentTerms,
+      early_payment_discount_terms: profile.earlyPaymentDiscountTerms,
+      late_penalty_terms: profile.latePenaltyTerms,
+      notes: profile.invoiceNotes,
+    }),
   });
   if (error || !data) {
     const message = String(error?.message ?? "");
     if (message.includes("quote_not_found")) throw new BinderQuotesError("not_found");
-    if (message.includes("vat_mention_required")) throw new BinderQuotesError("profile_incomplete", ["Mention de TVA"]);
     if (message.includes("quote_not_accepted") || message.includes("quote_already_invoiced")) throw new BinderQuotesError("conflict");
     throw new BinderQuotesError("failed");
   }
   return getInvoice(sb, binderId, data as string);
+}
+
+const draftPayload = (input: InvoiceDraftInput, issuer: ReturnType<typeof issuerOf>, vatMention: string | null) => ({
+  issue_date: input.issueDate,
+  service_date: input.serviceDate,
+  due_date: input.dueDate,
+  operation_nature: input.operationNature,
+  client_type: input.clientType,
+  client_name: input.clientName,
+  client_legal_name: input.clientLegalName,
+  client_email: input.clientEmail,
+  client_phone: input.clientPhone,
+  client_address_line1: input.clientAddressLine1,
+  client_postal_code: input.clientPostalCode,
+  client_city: input.clientCity,
+  client_country: input.clientCountry,
+  client_billing_address_line1: input.clientBillingAddressLine1,
+  client_billing_postal_code: input.clientBillingPostalCode,
+  client_billing_city: input.clientBillingCity,
+  client_billing_country: input.clientBillingCountry,
+  client_siren: input.clientSiren,
+  client_vat_number: input.clientVatNumber,
+  client_purchase_order_number: input.clientPurchaseOrderNumber,
+  client_public_service_code: input.clientPublicServiceCode,
+  client_public_commitment_number: input.clientPublicCommitmentNumber,
+  delivery_address_line1: input.deliveryAddressLine1,
+  delivery_postal_code: input.deliveryPostalCode,
+  delivery_city: input.deliveryCity,
+  delivery_country: input.deliveryCountry,
+  issuer,
+  vat_mention: vatMention,
+  payment_terms: input.paymentTerms,
+  early_payment_discount_terms: input.earlyPaymentDiscountTerms,
+  late_penalty_terms: input.latePenaltyTerms,
+  notes: input.notes,
+});
+
+export async function updateInvoiceDraft(sb: Supa, binderId: string, invoiceId: string, input: InvoiceDraftInput): Promise<DocumentView> {
+  const current = await getInvoice(sb, binderId, invoiceId);
+  if (current.status !== "draft") throw new BinderQuotesError("conflict");
+  const profile = await loadBillingProfile(sb, binderId);
+  const vatMention = effectiveVatMention(current.vatMention, profile.vatMention);
+  const { error } = await sb.rpc("marketplace_binder_update_invoice_draft", {
+    p_binder_id: binderId,
+    p_invoice_id: invoiceId,
+    p_draft: asJson(draftPayload(input, issuerOf(profile), vatMention)),
+  });
+  if (error) {
+    if (String(error.message).includes("invoice_draft_not_found")) throw new BinderQuotesError("conflict");
+    throw new BinderQuotesError("failed");
+  }
+  return getInvoice(sb, binderId, invoiceId);
+}
+
+function issueCandidate(doc: DocumentView): InvoiceIssueCandidate {
+  const compliance = doc.invoiceCompliance;
+  if (!compliance) throw new BinderQuotesError("invalid_input");
+  return {
+    status: doc.status as InvoiceIssueCandidate["status"],
+    issueDate: doc.issueDate,
+    serviceDate: compliance.serviceDate,
+    dueDate: compliance.dueDate,
+    operationNature: compliance.operationNature,
+    issuer: doc.issuer,
+    buyer: {
+      type: compliance.clientType,
+      name: doc.client.name,
+      legalName: compliance.clientLegalName,
+      email: doc.client.email,
+      phone: doc.client.phone,
+      addressLine1: doc.client.addressLine1,
+      postalCode: doc.client.postalCode,
+      city: doc.client.city,
+      country: doc.client.country,
+      billingAddressLine1: compliance.billingAddressLine1,
+      billingPostalCode: compliance.billingPostalCode,
+      billingCity: compliance.billingCity,
+      billingCountry: compliance.billingCountry,
+      siren: compliance.clientSiren,
+      vatNumber: compliance.clientVatNumber,
+      purchaseOrderNumber: compliance.purchaseOrderNumber,
+      publicServiceCode: compliance.publicServiceCode,
+      publicCommitmentNumber: compliance.publicCommitmentNumber,
+    },
+    vatRegime: doc.vatRegime,
+    vatMention: doc.vatMention,
+    paymentTerms: doc.paymentTerms,
+    earlyPaymentDiscountTerms: compliance.earlyPaymentDiscountTerms,
+    latePenaltyTerms: compliance.latePenaltyTerms,
+    items: doc.items.map((item) => ({ label: item.label, quantity: item.quantity, unitPriceCents: item.unitPriceCents, vatRateBps: item.vatRateBps })),
+  };
+}
+
+export async function issueInvoice(sb: Supa, binderId: string, invoiceId: string): Promise<DocumentView> {
+  const current = await getInvoice(sb, binderId, invoiceId);
+  if (current.status !== "draft") return current;
+  const result = validateInvoiceForIssue(issueCandidate(current));
+  if (!result.valid) throw new BinderQuotesError("profile_incomplete", result.missing);
+  const { error } = await sb.rpc("marketplace_binder_issue_invoice", {
+    p_binder_id: binderId,
+    p_invoice_id: invoiceId,
+    p_legal_mentions: asJson(result.legalMentions),
+  });
+  if (error) throw new BinderQuotesError(String(error.message).includes("invoice_incomplete") ? "profile_incomplete" : "failed", result.missing);
+  return getInvoice(sb, binderId, invoiceId);
 }
 
 export async function getInvoice(sb: Supa, binderId: string, invoiceId: string): Promise<DocumentView> {
@@ -777,27 +909,48 @@ export async function getInvoice(sb: Supa, binderId: string, invoiceId: string):
     .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!row) throw new BinderQuotesError("not_found");
-  const [items, quote, photos] = await Promise.all([
+  const [items, quote, photos, creditNote] = await Promise.all([
     sb.from("marketplace_binder_invoice_items").select("*").eq("invoice_id", invoiceId).eq("binder_id", binderId).order("position"),
     sb.from("marketplace_binder_quotes").select("id, quote_number").eq("id", row.quote_id).eq("binder_id", binderId).maybeSingle(),
     loadQuotePhotos(sb, binderId, row.quote_id),
+    sb.from("marketplace_binder_credit_notes").select("id, credit_note_number, issue_date").eq("invoice_id", invoiceId).eq("binder_id", binderId).maybeSingle(),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
-  return signIssuerLogo(sb, invoiceView(asInvoiceRow(row), asItemRows(items.data ?? []), quote.data ?? null, photos));
+  if (creditNote.error) throw new BinderQuotesError("failed");
+  return signIssuerLogo(sb, invoiceView(asInvoiceRow(row), asItemRows(items.data ?? []), quote.data ?? null, photos, creditNote.data));
+}
+
+export async function createFullCreditNote(sb: Supa, binderId: string, invoiceId: string, today: string, reason: string) {
+  if (!reason.trim()) throw new BinderQuotesError("invalid_input");
+  const invoice = await getInvoice(sb, binderId, invoiceId);
+  if (invoice.status !== "issued") throw new BinderQuotesError("conflict");
+  const { data, error } = await sb.rpc("marketplace_binder_create_full_credit_note", {
+    p_binder_id: binderId,
+    p_invoice_id: invoiceId,
+    p_issue_date: today,
+    p_reason: reason.trim(),
+  });
+  if (error || !data) {
+    const message = String(error?.message ?? "");
+    if (message.includes("invoice_not_found")) throw new BinderQuotesError("not_found");
+    if (message.includes("invoice_not_issued")) throw new BinderQuotesError("conflict");
+    throw new BinderQuotesError("failed");
+  }
+  return getInvoice(sb, binderId, invoiceId);
 }
 
 export async function listInvoices(sb: Supa, binderId: string): Promise<DocumentSummary[]> {
   const { data, error } = await sb
     .from("marketplace_binder_invoices")
-    .select("id, invoice_number, issue_date, client_name, book_title, total_ttc_cents, currency, payment_status")
+    .select("id, invoice_number, status, issue_date, client_name, book_title, total_ttc_cents, currency, payment_status")
     .eq("binder_id", binderId)
     .order("created_at", { ascending: false });
   if (error) throw new BinderQuotesError("failed");
   return (data ?? []).map((row) => ({
     kind: "invoice" as const,
     id: row.id,
-    number: row.invoice_number,
-    status: row.payment_status,
+    number: row.invoice_number ?? "Brouillon",
+    status: row.status === "draft" ? "draft" : row.payment_status,
     issueDate: row.issue_date,
     validUntil: null,
     clientName: row.client_name,

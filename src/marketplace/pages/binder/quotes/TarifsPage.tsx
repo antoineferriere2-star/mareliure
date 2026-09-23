@@ -125,6 +125,9 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           {input("workshopName", "Nom de l'atelier")}
           {input("binderName", "Nom du relieur ou de la relieuse")}
           {input("legalName", "Raison sociale")}
+          {input("legalForm", "Forme juridique")}
+          {input("shareCapital", "Capital social (si applicable)")}
+          {input("siren", "SIREN")}
           {input("addressLine1", "Adresse", { autoComplete: "street-address" })}
           {input("addressLine2", "Complément d'adresse")}
           {input("postalCode", "Code postal", { autoComplete: "postal-code" })}
@@ -181,6 +184,7 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
             [
               ["VAT_LIABLE", "Je facture la TVA"],
               ["FRANCHISE", "Franchise en base de TVA (aucune TVA facturée)"],
+              ["EXEMPT", "Exonération ou autre régime sans TVA"],
             ] as const
           ).map(([value, label]) => (
             <label key={value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 text-sm">
@@ -202,6 +206,10 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
             <input id="profile-vatMention" className={FIELD} value={text("vatMention")} onChange={(e) => set({ vatMention: e.target.value || null })} />
           </Field>
         </div>
+        <label className="mt-4 flex min-h-11 items-center gap-3 text-sm">
+          <input type="checkbox" checked={p.vatOnDebits} onChange={(event) => set({ vatOnDebits: event.target.checked })} />
+          Option pour le paiement de la TVA d'après les débits
+        </label>
       </section>
 
       <section aria-labelledby="quotes-title" className={CARD}>
@@ -222,6 +230,16 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           <Field label="Conditions de paiement" htmlFor="profile-paymentTerms">
             <textarea id="profile-paymentTerms" rows={2} className={`${FIELD} h-auto py-2`} value={text("paymentTerms")} onChange={(e) => set({ paymentTerms: e.target.value || null })} />
           </Field>
+          <Field label="Délai de paiement (jours)" htmlFor="profile-paymentDelayDays">
+            <input id="profile-paymentDelayDays" inputMode="numeric" className={FIELD} value={p.paymentDelayDays ?? ""} onChange={(e) => set({ paymentDelayDays: e.target.value === "" ? null : Number(e.target.value) })} />
+          </Field>
+          <Field label="Conditions d'escompte" htmlFor="profile-earlyPaymentDiscountTerms" hint="Ex. Aucun escompte pour paiement anticipé.">
+            <textarea id="profile-earlyPaymentDiscountTerms" rows={2} className={`${FIELD} h-auto py-2`} value={text("earlyPaymentDiscountTerms")} onChange={(e) => set({ earlyPaymentDiscountTerms: e.target.value || null })} />
+          </Field>
+          <Field label="Pénalités de retard" htmlFor="profile-latePenaltyTerms">
+            <textarea id="profile-latePenaltyTerms" rows={2} className={`${FIELD} h-auto py-2`} value={text("latePenaltyTerms")} onChange={(e) => set({ latePenaltyTerms: e.target.value || null })} />
+          </Field>
+          {input("iban", "IBAN (facultatif)")}
           <Field label="Mention de bas de devis" htmlFor="profile-quoteNotes" hint="Conditions, délai ou information propre à votre atelier. Aucun texte juridique n'est ajouté automatiquement.">
             <textarea id="profile-quoteNotes" rows={2} className={`${FIELD} h-auto py-2`} value={text("quoteNotes")} onChange={(e) => set({ quoteNotes: e.target.value || null })} />
           </Field>
