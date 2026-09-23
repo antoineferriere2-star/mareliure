@@ -911,16 +911,20 @@ export type Database = {
         Row: {
           address_line1: string | null
           address_line2: string | null
+          binder_name: string | null
           binder_id: string
           city: string | null
           country: string
           created_at: string
           default_vat_rate_bps: number
+          document_accent_color: string
+          document_footer: string | null
           email: string | null
           invoice_notes: string | null
           invoice_prefix: string
           legal_name: string | null
           legal_notes: string | null
+          logo_storage_path: string | null
           payment_terms: string | null
           phone: string | null
           postal_code: string | null
@@ -932,21 +936,26 @@ export type Database = {
           vat_mention: string | null
           vat_number: string | null
           vat_regime: string | null
+          website: string | null
           workshop_name: string | null
         }
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
+          binder_name?: string | null
           binder_id: string
           city?: string | null
           country?: string
           created_at?: string
           default_vat_rate_bps?: number
+          document_accent_color?: string
+          document_footer?: string | null
           email?: string | null
           invoice_notes?: string | null
           invoice_prefix?: string
           legal_name?: string | null
           legal_notes?: string | null
+          logo_storage_path?: string | null
           payment_terms?: string | null
           phone?: string | null
           postal_code?: string | null
@@ -958,21 +967,26 @@ export type Database = {
           vat_mention?: string | null
           vat_number?: string | null
           vat_regime?: string | null
+          website?: string | null
           workshop_name?: string | null
         }
         Update: {
           address_line1?: string | null
           address_line2?: string | null
+          binder_name?: string | null
           binder_id?: string
           city?: string | null
           country?: string
           created_at?: string
           default_vat_rate_bps?: number
+          document_accent_color?: string
+          document_footer?: string | null
           email?: string | null
           invoice_notes?: string | null
           invoice_prefix?: string
           legal_name?: string | null
           legal_notes?: string | null
+          logo_storage_path?: string | null
           payment_terms?: string | null
           phone?: string | null
           postal_code?: string | null
@@ -984,6 +998,7 @@ export type Database = {
           vat_mention?: string | null
           vat_number?: string | null
           vat_regime?: string | null
+          website?: string | null
           workshop_name?: string | null
         }
         Relationships: [

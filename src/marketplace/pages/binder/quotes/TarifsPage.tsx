@@ -6,10 +6,10 @@
  * Le catalogue (favoris, prestations, ajout depuis le référentiel Ma Reliure) vit dans
  * `catalog/` ; cette page garde le profil : identité, TVA, devis et factures.
  */
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getBillingProfile, getMyCatalog, saveMyBillingProfile } from "@/marketplace/services/binderQuotes.data.functions";
+import { clearMyDocumentLogo, getBillingProfile, getMyCatalog, saveMyBillingProfile, uploadMyDocumentLogo } from "@/marketplace/services/binderQuotes.data.functions";
 import { FRANCHISE_MENTION_SUGGESTION, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
 import { bpsToPercentInput, parsePercentToBps } from "@/marketplace/quotes/quoteFormat";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -17,6 +17,7 @@ import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
 import { CatalogEditor } from "./catalog/CatalogEditor";
 import { CATALOG_KEY, PROFILE_QUERY_KEY, profileToInput } from "./quoteQueryKeys";
 import { BinderPageHeader } from "../BinderPageUi";
+import { DOCUMENT_ACCENT_COLORS, DOCUMENT_LOGO_MAX_BYTES, DOCUMENT_LOGO_MIME_TYPES, type DocumentLogoMime } from "@/marketplace/quotes/documentBranding";
 
 export function TarifsPage() {
   const fetchProfile = useServerFn(getBillingProfile);
@@ -55,6 +56,9 @@ export function TarifsPage() {
 function ProfileForm({ profile }: { profile: BillingProfile }) {
   const queryClient = useQueryClient();
   const save = useServerFn(saveMyBillingProfile);
+  const uploadLogo = useServerFn(uploadMyDocumentLogo);
+  const clearLogo = useServerFn(clearMyDocumentLogo);
+  const logoInput = useRef<HTMLInputElement>(null);
   const [p, setP] = useState({
     ...profile,
     defaultVat: bpsToPercentInput(profile.defaultVatRateBps),
@@ -63,6 +67,11 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
   const set = (patch: Partial<typeof p>) => setP((s) => ({ ...s, ...patch }));
   const text = (key: keyof BillingProfile) => (p[key] as string | null) ?? "";
   const [saved, setSaved] = useState(false);
+
+  const applySavedProfile = (next: BillingProfile) => {
+    setP({ ...next, defaultVat: bpsToPercentInput(next.defaultVatRateBps), validity: String(next.quoteValidityDays) });
+    queryClient.setQueryData(PROFILE_QUERY_KEY, next);
+  };
 
   const mutation = useMutation({
     mutationFn: () => {
@@ -78,6 +87,21 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
       setTimeout(() => setSaved(false), 2500);
     },
   });
+
+  const logoMutation = useMutation({
+    mutationFn: async (file: File) => {
+      if (!DOCUMENT_LOGO_MIME_TYPES.includes(file.type as DocumentLogoMime) || file.size > DOCUMENT_LOGO_MAX_BYTES) throw new Error("invalid");
+      const dataUrl = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result));
+        reader.onerror = () => reject(reader.error);
+        reader.readAsDataURL(file);
+      });
+      return uploadLogo({ data: { mimeType: file.type as DocumentLogoMime, imageBase64: dataUrl.split(",")[1] ?? "" } });
+    },
+    onSuccess: applySavedProfile,
+  });
+  const clearLogoMutation = useMutation({ mutationFn: () => clearLogo(), onSuccess: applySavedProfile });
 
   const input = (key: keyof BillingProfile, label: string, extra: { type?: string; autoComplete?: string } = {}) => (
     <Field label={label} htmlFor={`profile-${key}`}>
@@ -99,6 +123,7 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
         <p className="mt-1 text-sm text-muted-foreground">Imprimée sur vos devis et vos factures. Une facture exige l'adresse et le SIRET.</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {input("workshopName", "Nom de l'atelier")}
+          {input("binderName", "Nom du relieur ou de la relieuse")}
           {input("legalName", "Raison sociale")}
           {input("addressLine1", "Adresse", { autoComplete: "street-address" })}
           {input("addressLine2", "Complément d'adresse")}
@@ -108,6 +133,29 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           {input("vatNumber", "Numéro de TVA (si assujetti)")}
           {input("email", "E-mail", { type: "email" })}
           {input("phone", "Téléphone", { type: "tel" })}
+          {input("website", "Site internet", { type: "url" })}
+        </div>
+        <div className="mt-5 grid gap-5 border-t border-[#d8d0c4] pt-5 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.35fr)]">
+          <div>
+            <p className="text-sm font-semibold text-[#30261d]">Logo de l'atelier</p>
+            <p className="mt-1 text-xs leading-5 text-muted-foreground">PNG ou JPEG, 2 Mo maximum. Il reste privé et apparaît uniquement sur vos documents.</p>
+            <input ref={logoInput} className="sr-only" type="file" accept="image/png,image/jpeg" onChange={(event) => {
+              const file = event.target.files?.[0];
+              if (file) logoMutation.mutate(file);
+              event.currentTarget.value = "";
+            }} />
+            <div className="mt-3 flex flex-wrap gap-2">
+              <button type="button" className="min-h-11 border border-[#b9ad9d] bg-white px-4 text-sm font-semibold" onClick={() => logoInput.current?.click()} disabled={logoMutation.isPending}>{p.logoUrl ? "Remplacer le logo" : "Ajouter un logo"}</button>
+              {p.logoStoragePath && <button type="button" className="min-h-11 px-3 text-sm font-semibold text-[#7a2230]" onClick={() => clearLogoMutation.mutate()} disabled={clearLogoMutation.isPending}>Retirer</button>}
+            </div>
+            {(logoMutation.isError || clearLogoMutation.isError) && <p role="alert" className="mt-2 text-xs text-red-700">Le logo n'a pas pu être enregistré. Vérifiez le format et la taille.</p>}
+          </div>
+          <div>
+            <p className="text-sm font-semibold text-[#30261d]">Couleur des documents</p>
+            <div className="mt-3 flex flex-wrap gap-3" role="radiogroup" aria-label="Couleur des documents">
+              {DOCUMENT_ACCENT_COLORS.map((color) => <label key={color} className="cursor-pointer"><input className="sr-only" type="radio" name="document-accent" checked={p.documentAccentColor === color} onChange={() => set({ documentAccentColor: color })} /><span className={`block h-11 w-11 rounded-full border-4 ${p.documentAccentColor === color ? "border-[#c39a59]" : "border-white"} shadow-[0_0_0_1px_#b9ad9d]`} style={{ backgroundColor: color }}><span className="sr-only">{color}</span></span></label>)}
+            </div>
+          </div>
         </div>
         <div className="mt-4">
           <Field label="Mentions légales (forme juridique, capital, RCS…)" htmlFor="profile-legalNotes">
@@ -116,9 +164,9 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
         </div>
         <div className="mt-6 border-t border-[#d8d0c4] pt-5">
           <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#74695d]">Aperçu en direct</p>
-          <div className="mt-3 grid max-w-2xl gap-5 border border-[#cfc5b6] bg-white p-5 sm:grid-cols-[5rem_minmax(0,1fr)]">
-            <div className="flex h-16 w-16 items-center justify-center border border-[#cfc5b6] bg-[#f4efe6] font-editorial text-2xl text-[#7a2230]">{(p.workshopName || p.legalName || "A").slice(0, 1).toUpperCase()}</div>
-            <div><strong className="font-editorial text-xl font-normal">{p.workshopName || "Nom de l'atelier"}</strong>{p.legalName && p.legalName !== p.workshopName && <p className="mt-1 text-xs text-[#74695d]">{p.legalName}</p>}<p className="mt-2 whitespace-pre-line text-xs leading-5 text-[#685d51]">{[p.addressLine1, [p.postalCode, p.city].filter(Boolean).join(" "), p.phone, p.email].filter(Boolean).join("\n") || "Adresse et coordonnées de l'atelier"}</p></div>
+          <div className="mt-3 grid max-w-2xl gap-5 border border-[#cfc5b6] bg-white p-5 sm:grid-cols-[5rem_minmax(0,1fr)]" style={{ borderTopColor: p.documentAccentColor, borderTopWidth: 4 }}>
+            {p.logoUrl ? <img src={p.logoUrl} alt="Logo de l'atelier" className="h-16 w-16 object-contain" /> : <div className="flex h-16 w-16 items-center justify-center border border-[#cfc5b6] bg-[#f4efe6] font-editorial text-2xl" style={{ color: p.documentAccentColor }}>{(p.workshopName || p.legalName || "A").slice(0, 1).toUpperCase()}</div>}
+            <div><strong className="font-editorial text-xl font-normal">{p.workshopName || "Nom de l'atelier"}</strong>{p.binderName && <p className="mt-1 text-sm text-[#4a4036]">{p.binderName}</p>}{p.legalName && p.legalName !== p.workshopName && <p className="mt-1 text-xs text-[#74695d]">{p.legalName}</p>}<p className="mt-2 whitespace-pre-line text-xs leading-5 text-[#685d51]">{[p.addressLine1, [p.postalCode, p.city].filter(Boolean).join(" "), p.phone, p.email, p.website].filter(Boolean).join("\n") || "Adresse et coordonnées de l'atelier"}</p></div>
           </div>
         </div>
       </section>
@@ -179,6 +227,9 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           </Field>
           <Field label="Mentions des factures (pénalités de retard, indemnité de recouvrement…)" htmlFor="profile-invoiceNotes">
             <textarea id="profile-invoiceNotes" rows={2} className={`${FIELD} h-auto py-2`} value={text("invoiceNotes")} onChange={(e) => set({ invoiceNotes: e.target.value || null })} />
+          </Field>
+          <Field label="Texte de pied de page commun" htmlFor="profile-documentFooter" hint="Une courte signature d'atelier ou une information pratique, sur devis et facture.">
+            <textarea id="profile-documentFooter" rows={2} className={`${FIELD} h-auto py-2`} value={text("documentFooter")} onChange={(e) => set({ documentFooter: e.target.value || null })} />
           </Field>
         </div>
       </section>

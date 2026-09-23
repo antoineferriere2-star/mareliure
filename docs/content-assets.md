@@ -126,3 +126,9 @@ bucket `marketplace-quote-operation-photos` et ne sont utilisées que dans le
 devis ou la facture de cet atelier, lorsque celui-ci coche leur inclusion au
 PDF. L'atelier qui les téléverse confirme ainsi leur usage pour ce document ;
 Ma Reliure ne les publie pas dans une galerie ni dans le site public.
+
+Les **logos ajoutés par un atelier à ses documents** suivent la même règle. Ils
+restent privés dans le bucket `marketplace-binder-document-logos`, sont servis
+par URL signée et ne sont utilisés que dans les devis et factures de cet
+atelier. Un fichier remplacé ou retiré reste conservé tant qu'un ancien
+snapshot de document peut encore le référencer.

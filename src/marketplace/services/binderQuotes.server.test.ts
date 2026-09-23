@@ -11,6 +11,7 @@ import { describe, expect, it, beforeEach } from "vitest";
 import {
   archiveService,
   BinderQuotesError,
+  clearDocumentLogo,
   convertQuoteToInvoice,
   createQuote,
   getInvoice,
@@ -28,6 +29,7 @@ import {
   saveService,
   setQuoteStatus,
   updateQuote,
+  uploadDocumentLogo,
 } from "./binderQuotes.server";
 import { QUOTE_ITEM_ROW_KEYS, QUOTE_ROW_KEYS } from "@/marketplace/quotes/quoteBuild";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
@@ -42,6 +44,7 @@ function makeDb() {
   const tables: Record<string, Row[]> = {};
   const counters = new Map<string, number>();
   const rpcCalls: { name: string; args: Row }[] = [];
+  const storageFiles = new Map<string, Uint8Array>();
   let seq = 0;
   const uid = () => `00000000-0000-4000-8000-${String(++seq).padStart(12, "0")}`;
   const rows = (t: string) => (tables[t] ??= []);
@@ -162,7 +165,23 @@ function makeDb() {
     throw new Error(`unexpected rpc ${name}`);
   }
 
-  return { sb: { from, rpc } as any, tables, rpcCalls };
+  const storage = {
+    from: (bucket: string) => ({
+      upload: async (path: string, bytes: Uint8Array) => {
+        const key = `${bucket}/${path}`;
+        if (storageFiles.has(key)) return { error: { message: "exists" } };
+        storageFiles.set(key, bytes);
+        return { error: null };
+      },
+      remove: async (paths: string[]) => {
+        paths.forEach((path) => storageFiles.delete(`${bucket}/${path}`));
+        return { error: null };
+      },
+      createSignedUrl: async (path: string) => ({ data: { signedUrl: `https://storage.example/${bucket}/${path}` }, error: null }),
+    }),
+  };
+
+  return { sb: { from, rpc, storage } as any, tables, rpcCalls, storageFiles };
 }
 
 // ---------------------------------------------------------------------------
@@ -176,6 +195,7 @@ const TODAY = "2026-09-19";
 
 const profileInput = (over: Partial<BillingProfileInput> = {}): BillingProfileInput => ({
   workshopName: "Atelier Dorure",
+  binderName: null,
   legalName: "Atelier Dorure SARL",
   addressLine1: "12 rue des Relieurs",
   addressLine2: null,
@@ -187,6 +207,9 @@ const profileInput = (over: Partial<BillingProfileInput> = {}): BillingProfileIn
   legalNotes: "SARL au capital de 5 000 €",
   email: "atelier@example.test",
   phone: "02 00 00 00 00",
+  website: null,
+  documentAccentColor: "#7A2230",
+  documentFooter: null,
   vatRegime: "VAT_LIABLE",
   defaultVatRateBps: 2000,
   vatMention: null,
@@ -297,6 +320,33 @@ describe("profil de facturation", () => {
     expect((await loadBillingProfile(world.sb, BINDER_A)).siret).toBe("111");
     expect((await loadBillingProfile(world.sb, BINDER_B)).vatRegime).toBe("FRANCHISE");
     expect((await loadBillingProfile(world.sb, BINDER_A)).vatRegime).toBe("VAT_LIABLE");
+  });
+
+  it("ajoute, remplace et retire le logo sans casser le snapshot d'un devis existant", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const first = await uploadDocumentLogo(world.sb, BINDER_A, { mimeType: "image/png", imageBase64: Buffer.from("logo-a").toString("base64") });
+    expect(first.logoStoragePath).toMatch(new RegExp(`^${BINDER_A}/.+\\.png$`));
+    expect(first.logoUrl).toContain("marketplace-binder-document-logos");
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+
+    const second = await uploadDocumentLogo(world.sb, BINDER_A, { mimeType: "image/jpeg", imageBase64: Buffer.from("logo-b").toString("base64") });
+    expect(second.logoStoragePath).not.toBe(first.logoStoragePath);
+    expect(world.storageFiles.size).toBe(2);
+    const cleared = await clearDocumentLogo(world.sb, BINDER_A);
+    expect(cleared.logoStoragePath).toBeNull();
+    expect(cleared.logoUrl).toBeNull();
+    expect(world.storageFiles.size).toBe(2);
+
+    const historical = await getQuote(world.sb, BINDER_A, quote.id);
+    expect(historical.issuer.logoStoragePath).toBe(first.logoStoragePath);
+    expect(historical.issuer.logoUrl).toContain(first.logoStoragePath);
+  });
+
+  it("refuse un logo hors format ou au-delà de 2 Mo avant tout stockage", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    await expect(uploadDocumentLogo(world.sb, BINDER_A, { mimeType: "image/gif" as "image/png", imageBase64: Buffer.from("gif").toString("base64") })).rejects.toMatchObject({ code: "invalid_input" });
+    await expect(uploadDocumentLogo(world.sb, BINDER_A, { mimeType: "image/png", imageBase64: Buffer.alloc(2 * 1024 * 1024 + 1).toString("base64") })).rejects.toMatchObject({ code: "invalid_input" });
+    expect(world.storageFiles.size).toBe(0);
   });
 });
 

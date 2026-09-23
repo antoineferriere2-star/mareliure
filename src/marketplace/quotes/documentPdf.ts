@@ -1,397 +1,375 @@
 /**
- * Le PDF d'un devis ou d'une facture de relieur — généré côté serveur avec
- * `pdf-lib` (JavaScript pur : aucun DOM, aucun navigateur, il tourne sur
- * Cloudflare Workers).
- *
- * Il ne calcule aucun montant : il imprime exactement ce que le document a
- * enregistré (`DocumentView`). Une seule mise en page pour le devis et la
- * facture ; seuls le titre, la validité, le lien « facture issue du devis » et le
- * bloc d'accord changent.
- *
- * Polices standard (Helvetica) : aucun fichier de police à embarquer. Elles
- * n'encodent que WinAnsi ; le texte est donc assaini (`toPrintable`) — les espaces
- * insécables de la typographie française et tout caractère hors jeu deviennent
- * un espace ou un « ? » au lieu de faire échouer la génération.
- *
- * Ce n'est PAS une facture électronique réglementaire (Factur-X, plateforme
- * agréée) : c'est un document imprimable ; voir docs/CODEX_HANDOFF.md.
+ * Moteur PDF commun aux devis et factures. Il imprime uniquement le snapshot
+ * du document : identité, lignes et montants ne sont jamais recalculés ici.
  */
-import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, type PDFImage, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
 import { formatDimensions } from "./quoteLines";
-import type { DocumentView } from "./quoteViews";
+import type { DocumentItemView, DocumentView } from "./quoteViews";
 
-export interface RenderedPdf {
-  base64: string;
-  pageCount: number;
-  /** Tout le texte imprimé, dans l'ordre — la source des tests de contenu. */
-  printed: string[];
-}
+export interface RenderedPdf { base64: string; pageCount: number; printed: string[] }
 
-// ---------------------------------------------------------------------------
-// Formats
-// ---------------------------------------------------------------------------
-
-/** « 1 234,56 € » avec des espaces ordinaires (les insécables ne sont pas imprimables en WinAnsi). */
 export function formatMoneyPdf(cents: number): string {
   const sign = cents < 0 ? "-" : "";
   const abs = Math.abs(cents);
-  const euros = Math.floor(abs / 100)
-    .toString()
-    .replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+  const euros = Math.floor(abs / 100).toString().replace(/\B(?=(\d{3})+(?!\d))/g, " ");
   return `${sign}${euros},${String(abs % 100).padStart(2, "0")} €`;
 }
 
 export function formatDateFr(iso: string): string {
-  const [y, m, d] = iso.split("-");
-  return `${d}/${m}/${y}`;
+  const [year, month, day] = iso.split("-");
+  return `${day}/${month}/${year}`;
 }
 
 const rateLabel = (bps: number) => `${(bps / 100).toString().replace(".", ",")} %`;
-const quantityLabel = (q: number) => String(q).replace(".", ",");
+const quantityLabel = (quantity: number) => String(quantity).replace(".", ",");
 
-/** Texte imprimable en WinAnsi. */
 export function toPrintable(text: string, allowed: ReadonlySet<number>): string {
-  let out = "";
-  for (const char of text.replace(/[\u00A0\u202F\u2009\u2007]/g, " ").replace(/[\r\t]/g, " ")) {
-    const code = char.codePointAt(0)!;
-    out += code === 10 || allowed.has(code) ? char : "?";
+  let result = "";
+  for (const character of text.replace(/[\u00A0\u202F\u2009\u2007]/g, " ").replace(/[\r\t]/g, " ")) {
+    const code = character.codePointAt(0)!;
+    result += code === 10 || allowed.has(code) ? character : "?";
   }
-  return out;
+  return result;
 }
-
-// ---------------------------------------------------------------------------
-// Rendu
-// ---------------------------------------------------------------------------
 
 const PAGE_W = 595.28;
 const PAGE_H = 841.89;
-const M = 48;
-const INK = rgb(0.14, 0.1, 0.07);
-const MUTED = rgb(0.42, 0.36, 0.3);
-const RULE = rgb(0.8, 0.76, 0.7);
+const MARGIN = 46;
+const CONTENT_W = PAGE_W - 2 * MARGIN;
+const INK = rgb(0.13, 0.1, 0.08);
+const MUTED = rgb(0.39, 0.35, 0.31);
+const RULE = rgb(0.78, 0.74, 0.68);
+const IVORY = rgb(0.975, 0.958, 0.925);
+const PALE = rgb(0.94, 0.92, 0.88);
 
-export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf> {
+function colorFromHex(value: string | null | undefined): RGB {
+  const match = /^#([0-9a-f]{6})$/i.exec(value ?? "");
+  if (!match) return rgb(0.478, 0.133, 0.188);
+  const number = Number.parseInt(match[1], 16);
+  return rgb(((number >> 16) & 255) / 255, ((number >> 8) & 255) / 255, (number & 255) / 255);
+}
+
+async function fetchImage(pdf: PDFDocument, url: string | null | undefined): Promise<PDFImage | null> {
+  if (!url) return null;
+  try {
+    const response = await fetch(url);
+    if (!response.ok) return null;
+    const bytes = new Uint8Array(await response.arrayBuffer());
+    const mime = response.headers.get("content-type") ?? "";
+    if (mime.includes("png") || url.toLowerCase().includes(".png")) return pdf.embedPng(bytes);
+    return pdf.embedJpg(bytes);
+  } catch {
+    return null;
+  }
+}
+
+export async function renderDocumentPdf(document: DocumentView): Promise<RenderedPdf> {
   const pdf = await PDFDocument.create();
-  const regular = await pdf.embedFont(StandardFonts.Helvetica);
-  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
-  const allowed = new Set<number>(regular.getCharacterSet());
+  const serif = await pdf.embedFont(StandardFonts.TimesRoman);
+  const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
+  const sans = await pdf.embedFont(StandardFonts.Helvetica);
+  const sansBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const allowed = new Set<number>(sans.getCharacterSet());
+  const accent = colorFromHex(document.issuer.documentAccentColor);
   const printed: string[] = [];
-  const isQuote = doc.kind === "quote";
+  const isQuote = document.kind === "quote";
+  const logo = await fetchImage(pdf, document.issuer.logoUrl);
+  const imageCache = new Map<string, PDFImage | null>();
+  let page: PDFPage;
+  let y = 0;
 
-  let page: PDFPage = pdf.addPage([PAGE_W, PAGE_H]);
-  let y = PAGE_H - M;
-
-  const clean = (t: string) => toPrintable(t, allowed);
-  const newPage = () => {
-    page = pdf.addPage([PAGE_W, PAGE_H]);
-    y = PAGE_H - M;
+  const clean = (text: string) => toPrintable(text, allowed);
+  const measure = (font: PDFFont, size: number, text: string) => font.widthOfTextAtSize(clean(text), size);
+  const draw = (text: string, x: number, size: number, font: PDFFont = sans, color: RGB = INK) => {
+    const value = clean(text);
+    if (!value) return;
+    printed.push(value);
+    page.drawText(value, { x, y, size, font, color });
   };
-  const ensure = (height: number) => {
-    if (y - height < M + 30) newPage();
+  const drawRight = (text: string, right: number, size: number, font: PDFFont = sans, color: RGB = INK) => {
+    const value = clean(text);
+    draw(value, right - measure(font, size, value), size, font, color);
   };
-  const width = (font: PDFFont, size: number, t: string) => font.widthOfTextAtSize(t, size);
-
-  const draw = (t: string, x: number, size: number, font: PDFFont = regular, color = INK) => {
-    const text = clean(t);
-    if (!text) return;
-    printed.push(text);
-    page.drawText(text, { x, y, size, font, color });
-  };
-  const drawRight = (t: string, xRight: number, size: number, font: PDFFont = regular, color = INK) => {
-    const text = clean(t);
-    if (!text) return;
-    draw(text, xRight - width(font, size, text), size, font, color);
-  };
-  const wrap = (t: string, font: PDFFont, size: number, maxWidth: number): string[] => {
+  const wrap = (text: string, font: PDFFont, size: number, maxWidth: number): string[] => {
     const lines: string[] = [];
-    for (const paragraph of clean(t).split("\n")) {
+    for (const source of clean(text).split("\n")) {
       let current = "";
-      for (const word of paragraph.split(" ")) {
-        if (width(font, size, word) > maxWidth) {
-          if (current) { lines.push(current); current = ""; }
-          let chunk = "";
-          for (const char of word) {
-            if (chunk && width(font, size, chunk + char) > maxWidth) { lines.push(chunk); chunk = char; }
-            else chunk += char;
-          }
-          current = chunk;
-          continue;
-        }
+      for (const word of source.split(" ")) {
         const candidate = current ? `${current} ${word}` : word;
-        if (width(font, size, candidate) <= maxWidth || !current) current = candidate;
-        else {
-          lines.push(current);
-          current = word;
+        if (current && measure(font, size, candidate) > maxWidth) { lines.push(current); current = word; }
+        else current = candidate;
+        while (measure(font, size, current) > maxWidth && current.length > 1) {
+          let cut = current.length - 1;
+          while (cut > 1 && measure(font, size, current.slice(0, cut)) > maxWidth) cut -= 1;
+          lines.push(current.slice(0, cut));
+          current = current.slice(cut);
         }
       }
-      lines.push(current);
+      if (current) lines.push(current);
     }
     return lines;
   };
-  /** Un paragraphe qui peut passer sur plusieurs pages. */
-  const paragraph = (t: string, x: number, size: number, maxWidth: number, font: PDFFont = regular, color = INK) => {
-    const lead = size + 3;
-    for (const line of wrap(t, font, size, maxWidth)) {
-      ensure(lead);
+  const horizontalRule = (fromX = MARGIN, toX = PAGE_W - MARGIN, color: RGB = RULE, thickness = 0.55) => {
+    page.drawLine({ start: { x: fromX, y }, end: { x: toX, y }, color, thickness });
+  };
+  const drawContinuationHeader = () => {
+    page.drawRectangle({ x: 0, y: PAGE_H - 54, width: PAGE_W, height: 54, color: IVORY });
+    page.drawRectangle({ x: 0, y: PAGE_H - 4, width: PAGE_W, height: 4, color: accent });
+    y = PAGE_H - 36;
+    draw(document.issuer.workshopName || document.issuer.legalName || "Atelier", MARGIN, 10, serifBold);
+    drawRight(`${isQuote ? "DEVIS" : "FACTURE"} ${document.number}`, PAGE_W - MARGIN, 8.5, sansBold, accent);
+    y = PAGE_H - 76;
+  };
+  const newPage = (continuation = true) => {
+    page = pdf.addPage([PAGE_W, PAGE_H]);
+    y = PAGE_H - MARGIN;
+    if (continuation) drawContinuationHeader();
+  };
+  function pageBreakIfNeeded(height: number) { if (y - height < 58) newPage(); }
+  const paragraph = (text: string, x: number, size: number, maxWidth: number, font: PDFFont = sans, color: RGB = INK) => {
+    const leading = size + 3;
+    for (const line of wrap(text, font, size, maxWidth)) {
+      pageBreakIfNeeded(leading);
       draw(line, x, size, font, color);
-      y -= lead;
+      y -= leading;
     }
   };
-  const rule = (color = RULE) => {
-    page.drawLine({ start: { x: M, y }, end: { x: PAGE_W - M, y }, thickness: 0.6, color });
+  const drawImage = async (url: string, maxWidth: number, maxHeight: number, x: number) => {
+    let embedded = imageCache.get(url);
+    if (embedded === undefined) { embedded = await fetchImage(pdf, url); imageCache.set(url, embedded); }
+    if (!embedded) return 0;
+    const scale = Math.min(maxWidth / embedded.width, maxHeight / embedded.height, 1);
+    const width = embedded.width * scale;
+    const height = embedded.height * scale;
+    pageBreakIfNeeded(height + 12);
+    page.drawImage(embedded, { x, y: y - height, width, height });
+    y -= height;
+    return width;
   };
 
-  // --- En-tête : l'émetteur à gauche, le document à droite ------------------
-  const issuer = doc.issuer;
-  const headerTop = y;
-  const nameLine = issuer.workshopName || issuer.legalName || "";
-  draw(nameLine, M, 15, bold);
-  y -= 18;
-  const issuerLines = [
-    issuer.legalName && issuer.legalName !== nameLine ? issuer.legalName : null,
-    issuer.addressLine1,
-    issuer.addressLine2,
-    [issuer.postalCode, issuer.city].filter(Boolean).join(" ") || null,
-    issuer.siret ? `SIRET ${issuer.siret}` : null,
-    issuer.vatNumber ? `TVA ${issuer.vatNumber}` : null,
-    issuer.email,
-    issuer.phone,
-  ].filter((l): l is string => Boolean(l));
-  for (const line of issuerLines) {
-    draw(line, M, 9, regular, MUTED);
-    y -= 12;
-  }
-  const leftBottom = y;
-
-  y = headerTop;
-  drawRight(isQuote ? "DEVIS" : "FACTURE", PAGE_W - M, 20, bold);
-  y -= 20;
-  drawRight(`N° ${doc.number}`, PAGE_W - M, 11, bold);
-  y -= 15;
-  drawRight(`Date : ${formatDateFr(doc.issueDate)}`, PAGE_W - M, 9.5);
-  y -= 13;
-  if (isQuote && doc.validUntil) {
-    drawRight(`Valable jusqu'au ${formatDateFr(doc.validUntil)}`, PAGE_W - M, 9.5);
-    y -= 13;
-  }
-  if (!isQuote && doc.linkedQuoteNumber) {
-    drawRight(`Facture issue du devis ${doc.linkedQuoteNumber}`, PAGE_W - M, 9.5, regular, MUTED);
-    y -= 13;
-  }
-  y = Math.min(y, leftBottom) - 16;
-  rule();
-  y -= 20;
-
-  // --- Client et ouvrage ------------------------------------------------------
-  const colW = (PAGE_W - 2 * M - 24) / 2;
-  const blockTop = y;
-  draw("CLIENT", M, 8, bold, MUTED);
-  y -= 13;
-  paragraph(doc.client.name, M, 11, colW, bold);
-  y -= 1;
-  for (const line of [
-    doc.client.addressLine1,
-    [doc.client.postalCode, doc.client.city].filter(Boolean).join(" ") || null,
-    doc.client.country,
-    doc.client.email,
-    doc.client.phone,
-  ].filter((l): l is string => Boolean(l))) {
-    paragraph(line, M, 9.5, colW);
-  }
-  const clientBottom = y;
-
-  y = blockTop;
-  const x2 = M + colW + 24;
-  draw("OUVRAGE", x2, 8, bold, MUTED);
-  y -= 13;
-  paragraph(doc.book.title || "—", x2, 11, colW, bold);
-  y -= 1;
-  if (doc.book.author) {
-    paragraph(doc.book.author, x2, 9.5, colW);
-  }
-  const dims = formatDimensions({
-    heightMm: doc.book.heightMm,
-    widthMm: doc.book.widthMm,
-    spineMm: doc.book.spineMm,
-  });
-  if (dims) {
-    draw(dims, x2, 9.5);
-    y -= 12;
-  }
-  if (doc.book.notes) {
-    for (const line of wrap(doc.book.notes, regular, 9, colW).slice(0, 4)) {
-      draw(line, x2, 9, regular, MUTED);
-      y -= 11;
+  const drawHeader = () => {
+    page.drawRectangle({ x: 0, y: PAGE_H - 190, width: PAGE_W, height: 190, color: IVORY });
+    page.drawRectangle({ x: 0, y: PAGE_H - 5, width: PAGE_W, height: 5, color: accent });
+    const issuer = document.issuer;
+    const name = issuer.workshopName || issuer.legalName || "Atelier";
+    let leftX = MARGIN;
+    if (logo) {
+      const scale = Math.min(74 / logo.width, 58 / logo.height, 1);
+      const width = logo.width * scale;
+      const height = logo.height * scale;
+      page.drawImage(logo, { x: MARGIN, y: PAGE_H - 48 - height, width, height });
+      leftX += width + 18;
     }
-  }
-  y = Math.min(y, clientBottom) - 14;
-
-  // --- Lignes -------------------------------------------------------------------
-  const colQty = M + 285;
-  const colUnit = M + 355;
-  const colVat = M + 415;
-  const right = PAGE_W - M;
-  const labelW = colQty - M - 20;
-  const showVat = doc.vatRegime === "VAT_LIABLE";
-  const showLineVat = showVat && new Set(doc.items.map((item) => item.vatRateBps)).size > 1;
-
-  const tableHead = () => {
-    ensure(24);
-    draw("Désignation", M, 8.5, bold, MUTED);
-    drawRight("Qté", colQty + 30, 8.5, bold, MUTED);
-    drawRight("Prix HT", colUnit + 45, 8.5, bold, MUTED);
-    if (showLineVat) drawRight("TVA", colVat + 30, 8.5, bold, MUTED);
-    drawRight("Total HT", right, 8.5, bold, MUTED);
-    y -= 6;
-    rule();
+    y = PAGE_H - 55;
+    draw(name, leftX, 18, serifBold);
+    y -= 19;
+    if (issuer.binderName) { draw(issuer.binderName, leftX, 9, sans, accent); y -= 13; }
+    const identity = [issuer.legalName && issuer.legalName !== name ? issuer.legalName : null, issuer.addressLine1, issuer.addressLine2, [issuer.postalCode, issuer.city].filter(Boolean).join(" ") || null, issuer.siret ? `SIRET ${issuer.siret}` : null, issuer.vatNumber ? `TVA ${issuer.vatNumber}` : null, issuer.phone, issuer.email, issuer.website].filter((value): value is string => Boolean(value));
+    for (const line of identity.slice(0, 9)) { draw(line, leftX, 8.2, sans, MUTED); y -= 11; }
+    y = PAGE_H - 54;
+    drawRight(isQuote ? "DEVIS" : "FACTURE", PAGE_W - MARGIN, 25, serif, accent);
+    y -= 28;
+    drawRight(`N° ${document.number}`, PAGE_W - MARGIN, 10.5, sansBold);
+    y -= 18;
+    drawRight(`Date : ${formatDateFr(document.issueDate)}`, PAGE_W - MARGIN, 9);
     y -= 14;
+    if (isQuote && document.validUntil) { drawRight(`Valable jusqu'au ${formatDateFr(document.validUntil)}`, PAGE_W - MARGIN, 9); y -= 14; }
+    if (!isQuote && document.linkedQuoteNumber) drawRight(`Facture issue du devis ${document.linkedQuoteNumber}`, PAGE_W - MARGIN, 8.5, sans, MUTED);
+    y = PAGE_H - 208;
   };
-  tableHead();
-  let currentBlockKey: string | null = null;
-  for (const item of doc.items) {
-    const block = doc.blocks.find((candidate) => candidate.key === item.blockKey);
-    if (block && block.key !== currentBlockKey) {
-      currentBlockKey = block.key;
-      ensure(34);
-      const dimensions = formatDimensions(block);
-      draw(block.label, M, 11, bold);
-      drawRight(`${block.bookCount} livre${block.bookCount > 1 ? "s" : ""}`, right, 9.5, bold, MUTED);
-      y -= 13;
-      if (dimensions) {
-        draw(dimensions, M, 8.5, regular, MUTED);
-        y -= 11;
-      }
-      const blockTotal = doc.items.filter((candidate) => candidate.blockKey === block.key)
-        .reduce((sum, candidate) => sum + candidate.totalHtCents, 0);
-      drawRight(`Sous-total ${formatMoneyPdf(blockTotal)}`, right, 8.5, regular, MUTED);
-      y -= 8;
-      rule();
-      y -= 10;
-    }
-    const labelLines = wrap(item.label, bold, 10, labelW);
-    // Les clés du référentiel et la provenance tarifaire servent au Workbench,
-    // jamais au client. Les anciens devis peuvent encore porter cette mention
-    // dans `description`; le PDF la filtre sans modifier leur snapshot.
-    const customerDescription = item.description && !/^(Référentiel\s+\S+\s+·\s+\S+|Tarif de base Ma Reliure)$/i.test(item.description.trim())
-      ? item.description
-      : null;
-    const descLines = customerDescription ? wrap(customerDescription, regular, 8.5, labelW) : [];
-    const rowH = labelLines.length * 12 + descLines.length * 10.5 + 8;
-    if (y - rowH < M + 30) {
-      newPage();
-      tableHead();
-    }
-    const rowTop = y;
-    for (const line of labelLines) {
-      draw(line, M, 10, bold);
-      y -= 12;
-    }
-    for (const line of descLines) {
-      draw(line, M, 8.5, regular, MUTED);
-      y -= 10.5;
-    }
-    const rowBottom = y;
-    y = rowTop;
-    const blockCount = block?.bookCount ?? 1;
-    drawRight(`${quantityLabel(item.quantity * blockCount)}${item.unit ? ` ${item.unit}` : ""}`, colQty + 30, 9.5);
-    drawRight(formatMoneyPdf(item.unitPriceCents), colUnit + 45, 9.5);
-    if (showLineVat) drawRight(rateLabel(item.vatRateBps), colVat + 30, 9.5);
-    drawRight(formatMoneyPdf(item.totalHtCents), right, 9.5);
-    y = rowBottom - 6;
 
-    for (const photo of item.photos.filter((candidate) => candidate.includeInPdf)) {
-      try {
-        const response = await fetch(photo.url);
-        if (!response.ok) continue;
-        const bytes = new Uint8Array(await response.arrayBuffer());
-        const type = response.headers.get("content-type") ?? "";
-        const embedded = type.includes("png") ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
-        const maxW = 190;
-        const maxH = 125;
-        const scale = Math.min(maxW / embedded.width, maxH / embedded.height, 1);
-        const imageW = embedded.width * scale;
-        const imageH = embedded.height * scale;
-        ensure(imageH + (photo.caption ? 24 : 12));
-        page.drawImage(embedded, { x: M + 12, y: y - imageH, width: imageW, height: imageH });
-        y -= imageH + 5;
-        if (photo.caption) {
-          paragraph(photo.caption, M + 12, 8, Math.max(imageW, 190), regular, MUTED);
+  const drawPartyBlock = () => {
+    const gap = 24;
+    const width = (CONTENT_W - gap) / 2;
+    const top = y;
+    const blocks = [
+      { x: MARGIN, title: "DESTINATAIRE", lines: [document.client.name, document.client.addressLine1, [document.client.postalCode, document.client.city].filter(Boolean).join(" ") || null, document.client.country, document.client.email, document.client.phone] },
+      { x: MARGIN + width + gap, title: "OUVRAGE", lines: [document.book.title || "-", document.book.author, formatDimensions(document.book), document.book.notes] },
+    ];
+    let lowest = top;
+    for (const block of blocks) {
+      y = top;
+      draw(block.title, block.x, 7.5, sansBold, accent);
+      y -= 17;
+      block.lines.filter((value): value is string => Boolean(value)).forEach((line, index) => {
+        const font = index === 0 ? serifBold : sans;
+        const size = index === 0 ? 11.5 : 8.7;
+        for (const wrapped of wrap(line, font, size, width).slice(0, index === block.lines.length - 1 ? 4 : 3)) {
+          draw(wrapped, block.x, size, font, index === 0 ? INK : MUTED);
+          y -= index === 0 ? 14 : 11;
         }
-        y -= 7;
-      } catch {
-        // Un fichier supprimé ou momentanément indisponible ne doit pas bloquer
-        // l'édition du document ; le texte et les montants restent imprimables.
+      });
+      lowest = Math.min(lowest, y);
+    }
+    y = lowest - 18;
+    horizontalRule();
+    y -= 18;
+  };
+
+  const columns = { quantity: MARGIN + 304, unit: MARGIN + 376, vat: MARGIN + 430, right: PAGE_W - MARGIN };
+  const showVat = document.vatRegime === "VAT_LIABLE";
+  const showLineVat = showVat && new Set(document.items.map((item) => item.vatRateBps)).size > 1;
+  const drawItemsTableHeader = () => {
+    pageBreakIfNeeded(26);
+    draw("PRESTATION", MARGIN, 7.5, sansBold, accent);
+    drawRight("QTÉ", columns.quantity + 28, 7.5, sansBold, accent);
+    drawRight("PRIX HT", columns.unit + 43, 7.5, sansBold, accent);
+    if (showLineVat) drawRight("TVA", columns.vat + 25, 7.5, sansBold, accent);
+    drawRight("TOTAL HT", columns.right, 7.5, sansBold, accent);
+    y -= 8;
+    horizontalRule(MARGIN, PAGE_W - MARGIN, accent, 0.8);
+    y -= 13;
+  };
+  const visibleDescription = (item: DocumentItemView) => item.description && !/^(Référentiel\s+\S+\s+·\s+\S+|Tarif de base Ma Reliure)$/i.test(item.description.trim()) ? item.description : null;
+  const drawBookBlock = (key: string) => {
+    const block = document.blocks.find((candidate) => candidate.key === key);
+    if (!block) return;
+    pageBreakIfNeeded(40);
+    page.drawRectangle({ x: MARGIN, y: y - 24, width: CONTENT_W, height: 31, color: PALE });
+    draw(block.label, MARGIN + 10, 10.5, serifBold);
+    drawRight(`${block.bookCount} livre${block.bookCount > 1 ? "s" : ""}`, PAGE_W - MARGIN - 10, 8.5, sansBold, accent);
+    y -= 14;
+    const dimensions = formatDimensions(block);
+    if (dimensions) draw(dimensions, MARGIN + 10, 7.8, sans, MUTED);
+    const subtotal = document.items.filter((item) => item.blockKey === key).reduce((sum, item) => sum + item.totalHtCents, 0);
+    drawRight(`Sous-total ${formatMoneyPdf(subtotal)}`, PAGE_W - MARGIN - 10, 7.8, sans, MUTED);
+    y -= 24;
+  };
+  const drawItemsTable = async () => {
+    drawItemsTableHeader();
+    let currentBlock: string | null = null;
+    for (const item of document.items) {
+      if (item.blockKey !== currentBlock) { currentBlock = item.blockKey; drawBookBlock(item.blockKey); }
+      const labels = wrap(item.label, sansBold, 9.3, 268);
+      const description = visibleDescription(item);
+      const descriptions = description ? wrap(description, sans, 8, 268) : [];
+      const height = labels.length * 11 + descriptions.length * 10 + 12;
+      if (y - height < 58) { newPage(); drawItemsTableHeader(); drawBookBlock(item.blockKey); }
+      const top = y;
+      labels.forEach((line) => { draw(line, MARGIN, 9.3, sansBold); y -= 11; });
+      descriptions.forEach((line) => { draw(line, MARGIN, 8, sans, MUTED); y -= 10; });
+      const bottom = y;
+      y = top;
+      const block = document.blocks.find((candidate) => candidate.key === item.blockKey);
+      drawRight(`${quantityLabel(item.quantity * (block?.bookCount ?? 1))}${item.unit ? ` ${item.unit}` : ""}`, columns.quantity + 28, 9);
+      drawRight(formatMoneyPdf(item.unitPriceCents), columns.unit + 43, 9);
+      if (showLineVat) drawRight(rateLabel(item.vatRateBps), columns.vat + 25, 9);
+      drawRight(formatMoneyPdf(item.totalHtCents), columns.right, 9, sansBold);
+      y = bottom - 6;
+      horizontalRule(MARGIN, PAGE_W - MARGIN, RULE, 0.35);
+      y -= 8;
+      for (const photo of item.photos.filter((candidate) => candidate.includeInPdf)) {
+        const width = await drawImage(photo.url, 196, 128, MARGIN + 12);
+        if (width > 0) {
+          y -= 5;
+          if (photo.caption) paragraph(photo.caption, MARGIN + 12, 7.8, Math.max(width, 196), sans, MUTED);
+          y -= 9;
+        }
       }
     }
-  }
-  rule();
-  y -= 18;
-
-  // --- Totaux -----------------------------------------------------------------------
-  const totalsX = PAGE_W - M - 210;
-  const totalRow = (label: string, value: string, strong = false) => {
-    ensure(18);
-    draw(label, totalsX, strong ? 11 : 9.5, strong ? bold : regular);
-    drawRight(value, right, strong ? 11 : 9.5, strong ? bold : regular);
-    y -= strong ? 18 : 14;
   };
-  if (doc.discountCents > 0) {
-    totalRow("Sous-total HT", formatMoneyPdf(doc.subtotalCents));
-    const label = doc.discountType === "PERCENT" ? `Remise (${rateLabel(doc.discountValue)})` : "Remise";
-    totalRow(label, `- ${formatMoneyPdf(doc.discountCents)}`);
-  }
-  totalRow("Total HT", formatMoneyPdf(doc.totalHtCents));
-  if (showVat) {
-    for (const group of doc.vatBreakdown) {
-      if (group.baseHtCents === 0 && group.vatCents === 0) continue;
-      totalRow(`TVA ${rateLabel(group.vatRateBps)}`, formatMoneyPdf(group.vatCents));
+
+  const drawTotals = () => {
+    pageBreakIfNeeded(150);
+    const left = PAGE_W - MARGIN - 218;
+    const right = PAGE_W - MARGIN;
+    y -= 9;
+    const row = (label: string, value: string, strong = false) => {
+      pageBreakIfNeeded(strong ? 28 : 18);
+      if (strong) page.drawRectangle({ x: left - 12, y: y - 9, width: right - left + 12, height: 27, color: accent });
+      draw(label, left, strong ? 11 : 9, strong ? sansBold : sans, strong ? rgb(1, 1, 1) : MUTED);
+      drawRight(value, right - (strong ? 8 : 0), strong ? 11 : 9, strong ? sansBold : sans, strong ? rgb(1, 1, 1) : INK);
+      y -= strong ? 34 : 17;
+    };
+    if (document.discountCents > 0) {
+      row("Sous-total HT", formatMoneyPdf(document.subtotalCents));
+      row(document.discountType === "PERCENT" ? `Remise (${rateLabel(document.discountValue)})` : "Remise", `- ${formatMoneyPdf(document.discountCents)}`);
     }
-  }
-  totalRow(showVat ? "Total TTC" : "Total à payer", formatMoneyPdf(doc.totalTtcCents), true);
-  if (doc.depositCents > 0) {
-    y -= 2;
-    const label =
-      doc.depositType === "PERCENT" ? `Acompte demandé (${rateLabel(doc.depositValue)})` : "Acompte demandé";
-    totalRow(label, formatMoneyPdf(doc.depositCents));
-    totalRow("Solde restant", formatMoneyPdf(doc.balanceCents));
-  }
-  y -= 8;
+    row("Total HT", formatMoneyPdf(document.totalHtCents));
+    if (showVat) document.vatBreakdown.filter((group) => group.baseHtCents !== 0 || group.vatCents !== 0).forEach((group) => row(`TVA ${rateLabel(group.vatRateBps)}`, formatMoneyPdf(group.vatCents)));
+    row(showVat ? "Total TTC" : "Total à payer", formatMoneyPdf(document.totalTtcCents), true);
+    if (document.depositCents > 0) {
+      row(document.depositType === "PERCENT" ? `Acompte demandé (${rateLabel(document.depositValue)})` : "Acompte demandé", formatMoneyPdf(document.depositCents));
+      row("Solde restant", formatMoneyPdf(document.balanceCents));
+    }
+  };
 
-  // --- Mentions ------------------------------------------------------------------------
-  const textW = PAGE_W - 2 * M;
-  if (doc.vatMention) paragraph(doc.vatMention, M, 9, textW, regular, INK);
-  if (doc.paymentTerms) {
-    y -= 4;
-    draw("Conditions de paiement", M, 8.5, bold, MUTED);
-    y -= 12;
-    paragraph(doc.paymentTerms, M, 9, textW);
-  }
-  if (doc.notes) {
-    y -= 4;
-    draw(isQuote ? "Conditions" : "Mentions", M, 8.5, bold, MUTED);
-    y -= 12;
-    paragraph(doc.notes, M, 9, textW);
-  }
-  if (isQuote) {
-    y -= 10;
-    ensure(60);
-    draw("Bon pour accord — date et signature du client :", M, 9, regular, MUTED);
-    y -= 44;
-    page.drawRectangle({ x: M, y, width: 220, height: 40, borderColor: RULE, borderWidth: 0.6 });
-    y -= 12;
-  }
-  if (issuer.legalNotes) {
-    y -= 8;
-    paragraph(issuer.legalNotes, M, 8, textW, regular, MUTED);
-  }
+  const drawClosingBlocks = () => {
+    const section = (title: string, text: string) => {
+      y -= 5;
+      pageBreakIfNeeded(40);
+      draw(title, MARGIN, 7.5, sansBold, accent);
+      y -= 14;
+      paragraph(text, MARGIN, 8.5, CONTENT_W);
+    };
+    if (document.vatMention) {
+      y -= 5;
+      pageBreakIfNeeded(24);
+      paragraph(document.vatMention, MARGIN, 8.5, CONTENT_W);
+    }
+    if (document.paymentTerms) section("CONDITIONS DE PAIEMENT", document.paymentTerms);
+    if (document.notes) section(isQuote ? "CONDITIONS" : "MENTIONS", document.notes);
+    if (isQuote) {
+      y -= 6;
+      pageBreakIfNeeded(76);
+      draw("Bon pour accord", MARGIN, 7.5, sansBold, accent);
+      y -= 16;
+      draw("Date :                                      Nom :", MARGIN, 8.5, sans, MUTED);
+      y -= 15;
+      draw("Mention : Bon pour accord", MARGIN, 8.5, sans, MUTED);
+      page.drawRectangle({ x: MARGIN + 275, y: y - 34, width: 228, height: 46, borderColor: RULE, borderWidth: 0.6 });
+      draw("Signature", MARGIN + 285, 7.5, sans, MUTED);
+      y -= 47;
+    }
+  };
+  const drawFooter = () => {
+    const pages = pdf.getPages();
+    const name = document.issuer.workshopName || document.issuer.legalName || "Atelier";
+    const truncate = (value: string, maxWidth: number) => {
+      let result = clean(value);
+      while (result.length > 1 && sans.widthOfTextAtSize(result, 6.7) > maxWidth) result = result.slice(0, -1);
+      return result.length < clean(value).length ? `${result.slice(0, -3)}...` : result;
+    };
+    pages.forEach((target, index) => {
+      target.drawLine({ start: { x: MARGIN, y: 43 }, end: { x: PAGE_W - MARGIN, y: 43 }, thickness: 0.4, color: RULE });
+      const legalNotes = document.issuer.legalNotes ?? "";
+      const legal = [
+        document.issuer.legalName,
+        legalNotes || null,
+        document.issuer.siret && !legalNotes.includes(document.issuer.siret) ? `SIRET ${document.issuer.siret}` : null,
+        document.issuer.vatNumber && !legalNotes.includes(document.issuer.vatNumber) ? `TVA ${document.issuer.vatNumber}` : null,
+      ].filter(Boolean).join(" · ");
+      if (legal) {
+        const value = truncate(legal, 398);
+        printed.push(value);
+        target.drawText(value, { x: MARGIN, y: 29, size: 6.7, font: sans, color: MUTED });
+      }
+      const contact = [
+        [document.issuer.addressLine1, document.issuer.postalCode, document.issuer.city].filter(Boolean).join(" "),
+        document.issuer.phone,
+        document.issuer.email,
+        document.issuer.website,
+        document.issuer.documentFooter,
+      ].filter(Boolean).join(" · ");
+      if (contact) {
+        const value = truncate(contact, 398);
+        printed.push(value);
+        target.drawText(value, { x: MARGIN, y: 17, size: 6.7, font: sans, color: MUTED });
+      }
+      const footer = clean(`${name} - ${document.number} - page ${index + 1}/${pages.length}`);
+      printed.push(footer);
+      const pageLabel = `Page ${index + 1} / ${pages.length}`;
+      target.drawText(pageLabel, { x: PAGE_W - MARGIN - sans.widthOfTextAtSize(pageLabel, 7.2), y: 28, size: 7.2, font: sansBold, color: accent });
+    });
+  };
 
-  // --- Pied de page sur chaque page --------------------------------------------------------
+  newPage(false);
+  drawHeader();
+  drawPartyBlock();
+  await drawItemsTable();
+  drawTotals();
+  drawClosingBlocks();
+  drawFooter();
   const pages = pdf.getPages();
-  pages.forEach((p, index) => {
-    const footer = clean(`${nameLine} — ${doc.number} — page ${index + 1}/${pages.length}`);
-    printed.push(footer);
-    p.drawText(footer, { x: M, y: 24, size: 8, font: regular, color: MUTED });
-  });
-
   return { base64: await pdf.saveAsBase64(), pageCount: pages.length, printed };
 }

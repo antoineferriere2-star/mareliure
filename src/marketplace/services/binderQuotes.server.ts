@@ -53,6 +53,12 @@ import {
   QUOTE_OPERATION_PHOTOS_BUCKET,
   type QuoteOperationPhotoMime,
 } from "@/marketplace/quotes/quotePhotos";
+import {
+  DOCUMENT_LOGO_MAX_BYTES,
+  DOCUMENT_LOGO_MIME_TYPES,
+  DOCUMENT_LOGOS_BUCKET,
+  type DocumentLogoMime,
+} from "@/marketplace/quotes/documentBranding";
 
 // Frontières typées : ce que la base garantit par CHECK / par construction du serveur.
 const asQuoteRow = (row: Tables<"marketplace_binder_quotes">) => row as unknown as QuoteDbRow;
@@ -123,6 +129,7 @@ const fromQuoteError = (error: unknown): never => {
 function profileFromRow(row: Tables<"marketplace_binder_billing_profiles">): BillingProfile {
   return {
     workshopName: row.workshop_name,
+    binderName: row.binder_name,
     legalName: row.legal_name,
     addressLine1: row.address_line1,
     addressLine2: row.address_line2,
@@ -134,6 +141,11 @@ function profileFromRow(row: Tables<"marketplace_binder_billing_profiles">): Bil
     legalNotes: row.legal_notes,
     email: row.email,
     phone: row.phone,
+    website: row.website,
+    logoStoragePath: row.logo_storage_path,
+    logoUrl: null,
+    documentAccentColor: row.document_accent_color,
+    documentFooter: row.document_footer,
     vatRegime: row.vat_regime as BillingProfile["vatRegime"],
     defaultVatRateBps: row.default_vat_rate_bps,
     vatMention: row.vat_mention,
@@ -153,7 +165,14 @@ export async function loadBillingProfile(sb: Supa, binderId: string): Promise<Bi
     .eq("binder_id", binderId)
     .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
-  if (data) return profileFromRow(data);
+  if (data) {
+    const profile = profileFromRow(data);
+    if (profile.logoStoragePath) {
+      const { data: signed } = await sb.storage.from(DOCUMENT_LOGOS_BUCKET).createSignedUrl(profile.logoStoragePath, 3600);
+      profile.logoUrl = signed?.signedUrl ?? null;
+    }
+    return profile;
+  }
   // Aucun profil encore : le nom de l'atelier (déjà connu de Ma Reliure) sert de départ, jamais un régime de TVA.
   const { data: binder } = await sb
     .from("marketplace_binders")
@@ -175,6 +194,7 @@ export async function saveBillingProfile(sb: Supa, binderId: string, input: Bill
       {
         binder_id: binderId,
         workshop_name: input.workshopName,
+        binder_name: input.binderName,
         legal_name: input.legalName,
         address_line1: input.addressLine1,
         address_line2: input.addressLine2,
@@ -186,6 +206,9 @@ export async function saveBillingProfile(sb: Supa, binderId: string, input: Bill
         legal_notes: input.legalNotes,
         email: input.email,
         phone: input.phone,
+        website: input.website,
+        document_accent_color: input.documentAccentColor,
+        document_footer: input.documentFooter,
         vat_regime: input.vatRegime,
         default_vat_rate_bps: input.defaultVatRateBps,
         vat_mention: input.vatMention,
@@ -201,7 +224,33 @@ export async function saveBillingProfile(sb: Supa, binderId: string, input: Bill
     .select("*")
     .single();
   if (error || !data) throw new BinderQuotesError("failed");
-  return profileFromRow(data);
+  return loadBillingProfile(sb, binderId);
+}
+
+export async function uploadDocumentLogo(sb: Supa, binderId: string, input: { mimeType: DocumentLogoMime; imageBase64: string }) {
+  if (!DOCUMENT_LOGO_MIME_TYPES.includes(input.mimeType)) throw new BinderQuotesError("invalid_input");
+  const bytes = Buffer.from(input.imageBase64, "base64");
+  if (bytes.length === 0 || bytes.length > DOCUMENT_LOGO_MAX_BYTES) throw new BinderQuotesError("invalid_input");
+  const extension = input.mimeType === "image/png" ? "png" : "jpg";
+  const path = `${binderId}/${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await sb.storage.from(DOCUMENT_LOGOS_BUCKET).upload(path, bytes, { contentType: input.mimeType, upsert: false });
+  if (uploadError) throw new BinderQuotesError("failed");
+  const { error } = await sb.from("marketplace_binder_billing_profiles")
+    .upsert({ binder_id: binderId, logo_storage_path: path }, { onConflict: "binder_id" });
+  if (error) {
+    await sb.storage.from(DOCUMENT_LOGOS_BUCKET).remove([path]);
+    throw new BinderQuotesError("failed");
+  }
+  return loadBillingProfile(sb, binderId);
+}
+
+export async function clearDocumentLogo(sb: Supa, binderId: string): Promise<BillingProfile> {
+  const { error } = await sb.from("marketplace_binder_billing_profiles")
+    .update({ logo_storage_path: null }).eq("binder_id", binderId);
+  if (error) throw new BinderQuotesError("failed");
+  // Le fichier reste privé : un ancien devis peut encore le référencer dans
+  // son snapshot d'émetteur. Il n'est donc pas supprimé du bucket ici.
+  return loadBillingProfile(sb, binderId);
 }
 
 // ---------------------------------------------------------------------------
@@ -493,7 +542,17 @@ export async function getQuote(sb: Supa, binderId: string, quoteId: string): Pro
     loadQuotePhotos(sb, binderId, quoteId),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
-  return quoteView(row, asItemRows(items.data ?? []), invoice.data ?? null, photos);
+  return signIssuerLogo(sb, quoteView(row, asItemRows(items.data ?? []), invoice.data ?? null, photos));
+}
+
+async function signIssuerLogo(sb: Supa, document: DocumentView): Promise<DocumentView> {
+  if (!document.issuer.logoStoragePath) return document;
+  const { data } = await sb.storage.from(DOCUMENT_LOGOS_BUCKET)
+    .createSignedUrl(document.issuer.logoStoragePath, 3600);
+  return {
+    ...document,
+    issuer: { ...document.issuer, logoUrl: data?.signedUrl ?? null },
+  };
 }
 
 export async function uploadQuoteItemPhoto(sb: Supa, binderId: string, input: {
@@ -724,7 +783,7 @@ export async function getInvoice(sb: Supa, binderId: string, invoiceId: string):
     loadQuotePhotos(sb, binderId, row.quote_id),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
-  return invoiceView(asInvoiceRow(row), asItemRows(items.data ?? []), quote.data ?? null, photos);
+  return signIssuerLogo(sb, invoiceView(asInvoiceRow(row), asItemRows(items.data ?? []), quote.data ?? null, photos));
 }
 
 export async function listInvoices(sb: Supa, binderId: string): Promise<DocumentSummary[]> {
