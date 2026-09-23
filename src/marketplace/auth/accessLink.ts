@@ -95,6 +95,7 @@ export async function requestAccessLink(
   auth: OtpAuth,
   email: string,
   origin: string,
+  space?: "atelier",
 ): Promise<AccessLinkResult> {
   const address = email.trim();
   if (!EMAIL_SHAPE.test(address)) return { ok: false, message: ACCESS_LINK_MESSAGES.invalid };
@@ -102,7 +103,7 @@ export async function requestAccessLink(
     const { error } = await auth.signInWithOtp({
       email: address,
       options: {
-        emailRedirectTo: `${origin.replace(/\/+$/, "")}/auth`,
+        emailRedirectTo: `${origin.replace(/\/+$/, "")}/auth${space === "atelier" ? "?space=atelier" : ""}`,
         shouldCreateUser: true,
       },
     });

@@ -21,6 +21,7 @@ import {
   listQuotes,
   loadBillingProfile,
   requireBinderId,
+  requireLeadApprovedBinderId,
   saveBillingProfile,
   saveCategory,
   saveClient,
@@ -230,8 +231,8 @@ beforeEach(() => {
     { binder_id: BINDER_B, user_id: BOB, role: "OWNER", account_status: "active", created_at: "2026-01-01" },
   ];
   world.tables.marketplace_binders = [
-    { id: BINDER_A, workshop_name: "Atelier A", display_name: "A", city: "Orléans", postal_code: "45000" },
-    { id: BINDER_B, workshop_name: "Atelier B", display_name: "B", city: "Lyon", postal_code: "69000" },
+    { id: BINDER_A, workshop_name: "Atelier A", display_name: "A", city: "Orléans", postal_code: "45000", status: "approved" },
+    { id: BINDER_B, workshop_name: "Atelier B", display_name: "B", city: "Lyon", postal_code: "69000", status: "approved" },
   ];
 });
 
@@ -264,6 +265,18 @@ describe("qui est l'atelier de cette session", () => {
   it("un simple membre (pas seulement le propriétaire) peut utiliser l'outil", async () => {
     world.tables.marketplace_binder_members.push({ binder_id: BINDER_A, user_id: "dddddddd-dddd-4ddd-8ddd-dddddddddddd", role: "MEMBER", account_status: "active", created_at: "2026-02-01" });
     expect(await requireBinderId(world.sb, "dddddddd-dddd-4ddd-8ddd-dddddddddddd")).toBe(BINDER_A);
+  });
+});
+
+describe("autorisation admin pour les leads", () => {
+  it("un atelier en attente garde ses outils privés mais n'accède pas aux leads", async () => {
+    world.tables.marketplace_binders[0].status = "pending_review";
+    expect(await requireBinderId(world.sb, ALICE)).toBe(BINDER_A);
+    expect(await codeOf(requireLeadApprovedBinderId(world.sb, ALICE))).toBe("no_binder");
+    world.tables.marketplace_binders[0].status = "approved";
+    expect(await requireLeadApprovedBinderId(world.sb, ALICE)).toBe(BINDER_A);
+    world.tables.marketplace_binders[0].status = "suspended";
+    expect(await codeOf(requireLeadApprovedBinderId(world.sb, ALICE))).toBe("no_binder");
   });
 });
 

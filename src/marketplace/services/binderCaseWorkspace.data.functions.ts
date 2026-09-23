@@ -4,7 +4,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
-import { requireBinderId } from "./binderQuotes.server";
+import { requireLeadApprovedBinderId } from "./binderQuotes.server";
 import { buildCaseView, loadCaseContext } from "./caseRepository.server";
 
 const input = z.object({ caseId: z.string().uuid() }).strict();
@@ -19,7 +19,7 @@ export const ensureMyCaseWork = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => input.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
-    const binderId = await requireBinderId(sb, context.userId);
+    const binderId = await requireLeadApprovedBinderId(sb, context.userId);
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext || caseContext.row.brand !== "MA_RELIURE" || caseContext.selectedBinderId !== binderId) {
       fail(404, "Dossier introuvable.");

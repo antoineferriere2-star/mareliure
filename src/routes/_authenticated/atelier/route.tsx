@@ -8,7 +8,7 @@ import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
 import { SignOutButton } from "@/marketplace/pages/SignOutButton";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { listMyBinderCases } from "@/marketplace/services/marketplace.data.functions";
+import { getMyBinderProfile, listMyBinderCases } from "@/marketplace/services/marketplace.data.functions";
 
 export const Route = createFileRoute("/_authenticated/atelier")({
   ssr: false,
@@ -21,7 +21,9 @@ const NAV_ACTIVE = { className: "text-foreground font-medium underline underline
 
 function AtelierLayout() {
   const fetchCases = useServerFn(listMyBinderCases);
+  const fetchProfile = useServerFn(getMyBinderProfile);
   const cases = useQuery({ queryKey: ["marketplace", "binder", "cases"], queryFn: () => fetchCases(), retry: false });
+  const profile = useQuery({ queryKey: ["marketplace", "binder", "profile"], queryFn: () => fetchProfile(), retry: false });
   const newCount = (cases.data ?? []).filter((row) => row.state === "offered" || row.state === "invited").length;
   const unreadCount = (cases.data ?? []).reduce((total, row) => total + row.unreadCount, 0);
   return (
@@ -53,6 +55,15 @@ function AtelierLayout() {
         </div>
       </header>
       <main className="mx-auto max-w-6xl px-5 py-8">
+        {profile.data && profile.data.status !== "approved" && (
+          <div role="status" className="mb-6 rounded-md border border-amber-300 bg-amber-50 p-4 text-sm text-amber-950">
+            <strong className="block">Accès aux leads non autorisé</strong>
+            <p className="mt-1">
+              Votre espace est ouvert : vous pouvez préparer vos prestations, contacts et devis.
+              Ma Reliure gère l'autorisation des leads depuis l'administration.
+            </p>
+          </div>
+        )}
         <Outlet />
       </main>
     </div>

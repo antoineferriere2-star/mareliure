@@ -9,6 +9,7 @@ describe("où atterrit un compte Ma Reliure après connexion", () => {
     const dest = await resolveMarketplacePostAuthDestination({
       checkAdmin: admin,
       getBinderProfile: () => Promise.resolve(null),
+      getPendingBinderInvitations: () => Promise.resolve([]),
     });
     expect(dest).toEqual({ to: "/marketplace/cases" });
   });
@@ -17,6 +18,7 @@ describe("où atterrit un compte Ma Reliure après connexion", () => {
     const dest = await resolveMarketplacePostAuthDestination({
       checkAdmin: notAdmin,
       getBinderProfile: () => Promise.resolve({ id: "b1" }),
+      getPendingBinderInvitations: () => Promise.resolve([]),
     });
     expect(dest).toEqual({ to: "/atelier" });
   });
@@ -25,8 +27,27 @@ describe("où atterrit un compte Ma Reliure après connexion", () => {
     const dest = await resolveMarketplacePostAuthDestination({
       checkAdmin: notAdmin,
       getBinderProfile: () => Promise.resolve(null),
+      getPendingBinderInvitations: () => Promise.resolve([]),
     });
     expect(dest).toEqual({ to: "/mes-livres" });
+  });
+
+  it("envoie un compte invité mais non activé à l'activation de son atelier", async () => {
+    const dest = await resolveMarketplacePostAuthDestination({
+      checkAdmin: notAdmin,
+      getBinderProfile: () => Promise.resolve(null),
+      getPendingBinderInvitations: () => Promise.resolve([{ id: "invitation" }]),
+    });
+    expect(dest).toEqual({ to: "/activer-mon-atelier" });
+  });
+
+  it("explique l'absence d'invitation à quelqu'un entré par Atelier partenaire", async () => {
+    const dest = await resolveMarketplacePostAuthDestination({
+      checkAdmin: notAdmin,
+      getBinderProfile: () => Promise.resolve(null),
+      getPendingBinderInvitations: () => Promise.resolve([]),
+    }, "atelier");
+    expect(dest).toEqual({ to: "/activer-mon-atelier" });
   });
 
   /**
@@ -39,6 +60,7 @@ describe("où atterrit un compte Ma Reliure après connexion", () => {
     const dest = await resolveMarketplacePostAuthDestination({
       checkAdmin: admin,
       getBinderProfile,
+      getPendingBinderInvitations: () => Promise.resolve([]),
     });
     expect(dest).toEqual({ to: "/marketplace/cases" });
     expect(getBinderProfile).not.toHaveBeenCalled();
@@ -52,6 +74,7 @@ describe("où atterrit un compte Ma Reliure après connexion", () => {
     const dest = await resolveMarketplacePostAuthDestination({
       checkAdmin: notAdmin,
       getBinderProfile: () => Promise.reject(new Error("500")),
+      getPendingBinderInvitations: () => Promise.resolve([]),
     });
     expect(dest).toEqual({ to: "/mes-livres" });
   });
@@ -65,7 +88,8 @@ describe("où atterrit un compte Ma Reliure après connexion", () => {
     const deps: Record<string, unknown> = {
       checkAdmin: admin,
       getBinderProfile: () => Promise.resolve(null),
+      getPendingBinderInvitations: () => Promise.resolve([]),
     };
-    expect(Object.keys(deps)).toEqual(["checkAdmin", "getBinderProfile"]);
+    expect(Object.keys(deps)).toEqual(["checkAdmin", "getBinderProfile", "getPendingBinderInvitations"]);
   });
 });

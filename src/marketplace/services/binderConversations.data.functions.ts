@@ -3,7 +3,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
-import { requireBinderId } from "./binderQuotes.server";
+import { requireLeadApprovedBinderId } from "./binderQuotes.server";
 import { isMessageAudience, readableAudiences } from "@/marketplace/messaging/audience";
 import { isMarketplaceBrand, marketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 
@@ -11,7 +11,7 @@ export const listMyConversationPreviews = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     const sb = await admin();
-    const binderId = await requireBinderId(sb, context.userId);
+    const binderId = await requireLeadApprovedBinderId(sb, context.userId);
     const { data: matches, error: matchError } = await sb.from("marketplace_case_matches")
       .select("case_id").eq("binder_id", binderId).eq("state", "selected");
     if (matchError) fail(500, matchError.message);

@@ -41,9 +41,6 @@ const uuid = z.object({ caseId: z.string().uuid() });
  */
 const listInput = z.object({ caseId: z.string().uuid(), audience: z.enum(MESSAGE_AUDIENCES).optional() });
 
-/** A workshop the platform has suspended or rejected is out of every conversation, even if its match still says `selected`. */
-const BINDER_STATUSES_OUT_OF_CONVERSATIONS: readonly string[] = ["suspended", "rejected"];
-
 async function loadConversationFacts(sb: Supa, caseId: string): Promise<ConversationAccessFacts> {
   const [{ data: matches }, { data: row }] = await Promise.all([
     sb.from("marketplace_case_matches").select("binder_id, state").eq("case_id", caseId),
@@ -55,8 +52,8 @@ async function loadConversationFacts(sb: Supa, caseId: string): Promise<Conversa
   let selectedBinderId: string | null = null;
   if (selected) {
     const { data: binder } = await sb.from("marketplace_binders").select("status").eq("id", selected).maybeSingle();
-    // Fail closed: an unknown workshop, or one that is suspended / rejected, is not admitted.
-    if (binder && !BINDER_STATUSES_OUT_OF_CONVERSATIONS.includes(binder.status)) selectedBinderId = selected;
+    // Admin approval is the lead-access gate, including for an old selected match.
+    if (binder?.status === "approved") selectedBinderId = selected;
   }
   return { selectedBinderId, customerUserId: row?.customer_user_id ?? null };
 }

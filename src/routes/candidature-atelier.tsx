@@ -1,9 +1,8 @@
 /**
- * Candidature atelier partenaire (§7) — remplace le mailto: qui ne laissait
- * aucune trace structurée. Publique, sans authentification : c'est le seul
- * point d'entrée d'un atelier qui n'a encore aucun compte.
+ * Candidature sans compte, conservée pour les ateliers qui souhaitent d'abord
+ * être recontactés. La création directe de l'espace atelier passe par /auth.
  *
- * Ne crée jamais de compte ni d'atelier — seulement une ligne
+ * Ce formulaire ne crée pas de compte ni d'atelier — seulement une ligne
  * `marketplace_binder_applications` que l'admin lit et traite à la main
  * (`/marketplace/binders`). La création réelle de l'atelier et son
  * invitation restent un acte humain distinct (Phase A).
@@ -96,18 +95,25 @@ function CandidatureAtelierPage() {
       <LandingHeader />
       <main className="mx-auto w-full max-w-[36rem] flex-1 px-5 py-14 sm:px-8 sm:py-20">
         <p className="mr-eyebrow">Ateliers partenaires</p>
-        <h1 className="mr-title mt-4 text-mr-ink">Devenir atelier partenaire</h1>
+        <h1 className="mr-title mt-4 text-mr-ink">Créer mon espace atelier</h1>
+        <p className="mr-lead mt-5">
+          Créez votre compte avec votre adresse e-mail, puis renseignez le nom de votre atelier.
+          Votre espace ouvre immédiatement ; Ma Reliure décide ensuite quels ateliers peuvent recevoir des leads.
+        </p>
+        <a href="/auth?space=atelier" className={submitClass}>Créer mon espace atelier</a>
+        <h2 className="mr-heading mt-12 border-t border-mr-rule pt-8 text-mr-ink">
+          Ou présenter mon atelier sans créer de compte
+        </h2>
 
         {sent ? (
           <p role="status" className="mr-body mt-8">
-            Candidature envoyée. Nous la lisons et revenons vers vous — aucun compte n'est créé
-            avant que Ma Reliure ne vous contacte.
+            Candidature envoyée. Nous la lisons et revenons vers vous.
           </p>
         ) : (
           <>
-            <p className="mr-lead mt-5">
-              Présentez votre atelier. Ma Reliure lit chaque candidature et vous recontacte — aucun
-              compte n'est créé immédiatement.
+            <p className="mr-body mt-5">
+              Ce formulaire envoie une candidature à Ma Reliure sans ouvrir d'espace connecté.
+              Si vous souhaitez utiliser les outils atelier dès maintenant, choisissez « Créer mon espace atelier » ci-dessus.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-10 space-y-6">

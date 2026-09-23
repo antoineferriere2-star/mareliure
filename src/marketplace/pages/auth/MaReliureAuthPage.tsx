@@ -16,10 +16,9 @@
  *   passe reste possible en repli, replié sous « Vous préférez un mot de
  *   passe ? » — jamais la méthode par défaut, mais jamais bloqué non plus
  *   pour qui ne veut plus repasser par sa boîte mail à chaque connexion ;
- * - **Atelier partenaire** : un mot de passe pour se connecter, et candidater
- *   pour rejoindre le réseau si aucun compte n'existe encore — un atelier ne
- *   s'auto-déclare jamais partenaire actif, l'admin invite après avoir
- *   approuvé (`src/marketplace/services/binderMembership.server.ts`).
+ * - **Atelier partenaire** : un lien et un code de connexion créent aussi le
+ *   compte à la première utilisation. L'atelier est créé en attente de
+ *   validation ; seul l'admin l'autorise ensuite à recevoir des leads.
  *
  * Fine Bindery n'a qu'un seul public ici : un atelier Fine Bindery reste un
  * atelier Ma Reliure côté compte (§43 du brief international — "l'artisan
@@ -87,9 +86,6 @@ interface AuthCopy {
   preferPassword: string;
   backToLink: string;
   binderSignInHeading: string;
-  binderSignUpHeading: string;
-  binderSignUpBody: string;
-  binderSignUpCta: string;
   emailLabel: string;
   requestButton: (sending: boolean) => string;
   emailSentHeading: string;
@@ -120,15 +116,11 @@ const MA_RELIURE_COPY: AuthCopy = {
     "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien et un code de connexion : pas de compte à créer, pas de mot de passe à retenir.",
   leadPasswordSignin: "Connectez-vous avec le mot de passe de votre espace.",
   leadBinder:
-    "Connectez-vous avec le mot de passe ou un lien envoyé à l'adresse de votre atelier. Si vous n'avez pas encore de compte, candidatez pour rejoindre le réseau.",
+    "Indiquez votre adresse e-mail pour créer votre espace atelier ou vous reconnecter. Le lien et le code reçus vérifient cette adresse. Vous créez ensuite votre atelier ; l'accès aux leads reste soumis à la validation de Ma Reliure.",
   routingStatus: "Ouverture de votre espace…",
   preferPassword: "Vous avez déjà un mot de passe ?",
   backToLink: "Revenir au lien de connexion par e-mail",
-  binderSignInHeading: "Se connecter",
-  binderSignUpHeading: "S'inscrire",
-  binderSignUpBody:
-    "Un atelier ne devient partenaire qu'après validation par Ma Reliure — nous ne créons pas de compte immédiatement. Présentez votre atelier, nous revenons vers vous.",
-  binderSignUpCta: "Candidater pour devenir atelier partenaire",
+  binderSignInHeading: "Créer mon espace atelier ou me connecter",
   emailLabel: "Adresse e-mail",
   requestButton: (sending) => (sending ? "Envoi…" : "Recevoir mon lien et mon code de connexion"),
   emailSentHeading: "E-mail envoyé",
@@ -166,9 +158,6 @@ const FINE_BINDERY_COPY: AuthCopy = {
   preferPassword: "Already have a password?",
   backToLink: "Back to the email sign-in link",
   binderSignInHeading: "",
-  binderSignUpHeading: "",
-  binderSignUpBody: "",
-  binderSignUpCta: "",
   emailLabel: "Email address",
   requestButton: (sending) => (sending ? "Sending…" : "Send my sign-in link and code"),
   emailSentHeading: "Email sent",
@@ -197,14 +186,16 @@ const AUTH_COPY: Record<MarketplaceBrand, AuthCopy> = {
 
 export function MaReliureAuthPage({
   brand,
+  initialAudience,
   accessError,
   routing,
   onSignedIn,
 }: {
   brand: MarketplaceBrand;
+  initialAudience: Audience;
   accessError: string | null;
   routing: boolean;
-  onSignedIn: () => Promise<void>;
+  onSignedIn: (audience: Audience) => Promise<void>;
 }) {
   const t = AUTH_COPY[brand];
   const Header = brand === "FINE_BINDERY" ? FineBinderyHeader : LandingHeader;
@@ -216,9 +207,9 @@ export function MaReliureAuthPage({
       ? null
       : linkErrorFromUrl(window.location.hash, window.location.search),
   );
-  const [audience, setAudience] = useState<Audience>("customer");
+  const [audience, setAudience] = useState<Audience>(initialAudience);
   const [customerMethod, setCustomerMethod] = useState<CustomerMethod>("link");
-  const [binderMethod, setBinderMethod] = useState<CustomerMethod>("password-signin");
+  const [binderMethod, setBinderMethod] = useState<CustomerMethod>("link");
   const alert = accessError ?? linkProblem;
 
   return (
@@ -277,7 +268,7 @@ export function MaReliureAuthPage({
           {audience === "customer" ? (
             customerMethod === "link" ? (
               <>
-                <LinkSignIn t={t} onSent={() => setLinkProblem(null)} onSignedIn={onSignedIn} />
+                <LinkSignIn t={t} onSent={() => setLinkProblem(null)} onSignedIn={() => onSignedIn("customer")} />
                 <p className="mt-8 border-t border-mr-rule pt-6">
                   <button
                     type="button"
@@ -290,7 +281,7 @@ export function MaReliureAuthPage({
               </>
             ) : (
               <>
-                <PasswordSignIn t={t} onSignedIn={onSignedIn} />
+                <PasswordSignIn t={t} onSignedIn={() => onSignedIn("customer")} />
                 <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2 border-t border-mr-rule pt-6">
                   <button
                     type="button"
@@ -307,9 +298,9 @@ export function MaReliureAuthPage({
               <h2 className="mr-heading text-mr-ink">{t.binderSignInHeading}</h2>
               <div className="mt-4">
                 {binderMethod === "link" ? (
-                  <LinkSignIn t={t} onSent={() => setLinkProblem(null)} onSignedIn={onSignedIn} />
+                  <LinkSignIn t={t} space="atelier" onSent={() => setLinkProblem(null)} onSignedIn={() => onSignedIn("binder")} />
                 ) : (
-                  <PasswordSignIn t={t} onSignedIn={onSignedIn} />
+                  <PasswordSignIn t={t} onSignedIn={() => onSignedIn("binder")} />
                 )}
               </div>
               <p className="mt-6">
@@ -326,13 +317,10 @@ export function MaReliureAuthPage({
                 </button>
               </p>
 
-              <div className="mt-10 border-t border-mr-rule pt-6">
-                <h2 className="mr-heading text-mr-ink">{t.binderSignUpHeading}</h2>
-                <p className="mr-body mt-3">{t.binderSignUpBody}</p>
-                <a href="/candidature-atelier" className={`mt-4 ${submitClass}`}>
-                  {t.binderSignUpCta}
-                </a>
-              </div>
+              <p className="mr-small mt-10 border-t border-mr-rule pt-6 text-mr-muted">
+                Votre espace atelier est disponible dès la création du compte.
+                Ma Reliure valide séparément l'accès aux nouveaux projets.
+              </p>
             </>
           )}
         </div>
@@ -344,10 +332,12 @@ export function MaReliureAuthPage({
 
 function LinkSignIn({
   t,
+  space,
   onSent,
   onSignedIn,
 }: {
   t: AuthCopy;
+  space?: "atelier";
   onSent: () => void;
   onSignedIn: () => Promise<void>;
 }) {
@@ -366,7 +356,7 @@ function LinkSignIn({
   async function send(address: string) {
     setSending(true);
     setProblem(null);
-    const result = await requestAccessLink(supabase.auth, address, window.location.origin);
+    const result = await requestAccessLink(supabase.auth, address, window.location.origin, space);
     setSending(false);
     if (!result.ok) {
       setProblem(result.message);

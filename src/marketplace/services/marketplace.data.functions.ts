@@ -53,10 +53,13 @@ import { loadAggregates, loadPricebook } from "./pricingRepository.server";
 import { assertPricingOpen } from "./pricingGuards.server";
 import {
   acceptBinderInvitation as acceptBinderInvitationForUser,
+  acceptVerifiedEmailBinderInvitation,
   createBinderInvitation,
   findActiveBinderMembership,
+  findPendingBinderInvitations,
   resolvePendingInvitationEmail,
 } from "./binderMembership.server";
+import { createPendingBinderWorkspace } from "./binderSelfRegistration.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
 import { unreadCountsByCase } from "./messaging.data.functions";
 import { MESSAGE_AUDIENCES, readableAudiences } from "@/marketplace/messaging/audience";
@@ -127,7 +130,7 @@ async function isAdmin(supabase: Supa, userId: string): Promise<boolean> {
 export async function resolveViewer(supabase: Supa, sb: Supa, userId: string): Promise<Viewer> {
   if (await isAdmin(supabase, userId)) return { role: "admin" };
   const binder = await findBinderForUser(sb, userId);
-  if (binder) return { role: "binder", binderId: binder.id };
+  if (binder?.status === "approved") return { role: "binder", binderId: binder.id };
   return { role: "customer", userId };
 }
 
@@ -1072,6 +1075,65 @@ export const acceptBinderInvitation = createServerFn({ method: "POST" })
     return { binderId: result.binderId };
   });
 
+/**
+ * Existing accounts can finish an admin-issued invitation even when its
+ * e-mail link was not delivered. Unlike token acceptance, this path requires
+ * the current Auth user to have a confirmed e-mail address.
+ */
+async function confirmedEmailForUser(sb: Supa, userId: string): Promise<string | null> {
+  const { data, error } = await sb.auth.admin.getUserById(userId);
+  if (error) throw error;
+  return data.user?.email_confirmed_at && data.user.email
+    ? data.user.email.trim().toLowerCase()
+    : null;
+}
+
+export const getMyPendingBinderInvitations = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const sb = await admin();
+    const email = await confirmedEmailForUser(sb, context.userId);
+    if (!email) return [];
+    return findPendingBinderInvitations(sb, email);
+  });
+
+export const activateMyBinderInvitation = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z.object({ invitationId: z.string().uuid() }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    const sb = await admin();
+    const email = await confirmedEmailForUser(sb, context.userId);
+    if (!email) fail(403, "Confirmez votre adresse e-mail avant d'activer l'atelier.");
+    const result = await acceptVerifiedEmailBinderInvitation(sb, {
+      invitationId: data.invitationId,
+      userId: context.userId,
+      verifiedEmail: email!,
+    });
+    if (!result.ok) fail(409, result.reason);
+    return { binderId: result.binderId };
+  });
+
+/** Open a personal workshop workspace; admin approval is still required for leads. */
+export const createMyBinderWorkspace = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({
+    displayName: z.string().trim().min(2).max(200),
+    workshopName: z.string().trim().min(2).max(200),
+    city: z.string().trim().max(100).optional(),
+  }).strict().parse(data))
+  .handler(async ({ context, data }) => {
+    const sb = await admin();
+    const email = await confirmedEmailForUser(sb, context.userId);
+    if (!email) fail(403, "Confirmez votre adresse e-mail avant de créer votre atelier.");
+    const pendingInvitations = await findPendingBinderInvitations(sb, email!);
+    if (pendingInvitations.length > 0) {
+      fail(409, "Une invitation à un atelier vous attend déjà. Activez-la d'abord.");
+    }
+    return createPendingBinderWorkspace(sb, context.userId, data);
+  });
+
 // ---------------------------------------------------------------------------
 // Relieur — their own dashboard
 // ---------------------------------------------------------------------------
@@ -1097,6 +1159,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     const sb = await admin();
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
+    if (binder!.status !== "approved") return [];
 
     const { data: matches, error } = await sb
       .from("marketplace_case_matches")
@@ -1192,6 +1255,7 @@ export const getBinderCase = createServerFn({ method: "GET" })
     const sb = await admin();
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
+    if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux leads.");
 
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable");
@@ -1253,6 +1317,7 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
     const sb = await admin();
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
+    if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux leads.");
     const { data: result, error } = await sb.rpc("marketplace_respond_to_offer", {
       p_case_id: data.caseId,
       p_binder_id: binder!.id,
