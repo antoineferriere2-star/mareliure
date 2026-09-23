@@ -911,35 +911,35 @@ export type Database = {
         Row: {
           address_line1: string | null
           address_line2: string | null
-          binder_name: string | null
           binder_id: string
+          binder_name: string | null
           city: string | null
           country: string
-          credit_note_prefix: string
           created_at: string
+          credit_note_prefix: string
           default_vat_rate_bps: number
           document_accent_color: string
           document_footer: string | null
+          early_payment_discount_terms: string | null
           email: string | null
+          iban: string | null
           invoice_notes: string | null
           invoice_prefix: string
-          iban: string | null
-          early_payment_discount_terms: string | null
           late_penalty_terms: string | null
           legal_form: string | null
           legal_name: string | null
           legal_notes: string | null
           logo_storage_path: string | null
-          payment_terms: string | null
           payment_delay_days: number | null
+          payment_terms: string | null
           phone: string | null
           postal_code: string | null
           quote_notes: string | null
           quote_prefix: string
           quote_validity_days: number
-          siret: string | null
-          siren: string | null
           share_capital: string | null
+          siren: string | null
+          siret: string | null
           updated_at: string
           vat_mention: string | null
           vat_number: string | null
@@ -951,35 +951,35 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           address_line2?: string | null
-          binder_name?: string | null
           binder_id: string
+          binder_name?: string | null
           city?: string | null
           country?: string
-          credit_note_prefix?: string
           created_at?: string
+          credit_note_prefix?: string
           default_vat_rate_bps?: number
           document_accent_color?: string
           document_footer?: string | null
+          early_payment_discount_terms?: string | null
           email?: string | null
+          iban?: string | null
           invoice_notes?: string | null
           invoice_prefix?: string
-          iban?: string | null
-          early_payment_discount_terms?: string | null
           late_penalty_terms?: string | null
           legal_form?: string | null
           legal_name?: string | null
           legal_notes?: string | null
           logo_storage_path?: string | null
-          payment_terms?: string | null
           payment_delay_days?: number | null
+          payment_terms?: string | null
           phone?: string | null
           postal_code?: string | null
           quote_notes?: string | null
           quote_prefix?: string
           quote_validity_days?: number
-          siret?: string | null
-          siren?: string | null
           share_capital?: string | null
+          siren?: string | null
+          siret?: string | null
           updated_at?: string
           vat_mention?: string | null
           vat_number?: string | null
@@ -991,35 +991,35 @@ export type Database = {
         Update: {
           address_line1?: string | null
           address_line2?: string | null
-          binder_name?: string | null
           binder_id?: string
+          binder_name?: string | null
           city?: string | null
           country?: string
-          credit_note_prefix?: string
           created_at?: string
+          credit_note_prefix?: string
           default_vat_rate_bps?: number
           document_accent_color?: string
           document_footer?: string | null
+          early_payment_discount_terms?: string | null
           email?: string | null
+          iban?: string | null
           invoice_notes?: string | null
           invoice_prefix?: string
-          iban?: string | null
-          early_payment_discount_terms?: string | null
           late_penalty_terms?: string | null
           legal_form?: string | null
           legal_name?: string | null
           legal_notes?: string | null
           logo_storage_path?: string | null
-          payment_terms?: string | null
           payment_delay_days?: number | null
+          payment_terms?: string | null
           phone?: string | null
           postal_code?: string | null
           quote_notes?: string | null
           quote_prefix?: string
           quote_validity_days?: number
-          siret?: string | null
-          siren?: string | null
           share_capital?: string | null
+          siren?: string | null
+          siret?: string | null
           updated_at?: string
           vat_mention?: string | null
           vat_number?: string | null
@@ -1042,11 +1042,11 @@ export type Database = {
         Row: {
           address_line1: string | null
           archived_at: string | null
-          binder_id: string
           billing_address_line1: string | null
           billing_city: string | null
           billing_country: string | null
           billing_postal_code: string | null
+          binder_id: string
           city: string | null
           client_type: string | null
           country: string | null
@@ -1073,11 +1073,11 @@ export type Database = {
         Insert: {
           address_line1?: string | null
           archived_at?: string | null
-          binder_id: string
           billing_address_line1?: string | null
           billing_city?: string | null
           billing_country?: string | null
           billing_postal_code?: string | null
+          binder_id: string
           city?: string | null
           client_type?: string | null
           country?: string | null
@@ -1104,11 +1104,11 @@ export type Database = {
         Update: {
           address_line1?: string | null
           archived_at?: string | null
-          binder_id?: string
           billing_address_line1?: string | null
           billing_city?: string | null
           billing_country?: string | null
           billing_postal_code?: string | null
+          binder_id?: string
           city?: string | null
           client_type?: string | null
           country?: string | null
@@ -1145,6 +1145,50 @@ export type Database = {
             columns: ["origin_case_id"]
             isOneToOne: false
             referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_commercial_terms: {
+        Row: {
+          binder_id: string
+          created_at: string
+          created_by: string | null
+          effective_from: string
+          effective_to: string | null
+          family_key: string
+          id: string
+          manual_payout_required: boolean
+          payout_multiplier_bps: number
+        }
+        Insert: {
+          binder_id: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          family_key: string
+          id?: string
+          manual_payout_required?: boolean
+          payout_multiplier_bps?: number
+        }
+        Update: {
+          binder_id?: string
+          created_at?: string
+          created_by?: string | null
+          effective_from?: string
+          effective_to?: string | null
+          family_key?: string
+          id?: string
+          manual_payout_required?: boolean
+          payout_multiplier_bps?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_commercial_terms_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
             referencedColumns: ["id"]
           },
         ]
@@ -1274,50 +1318,6 @@ export type Database = {
             columns: ["invoice_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binder_invoices"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      marketplace_binder_commercial_terms: {
-        Row: {
-          binder_id: string
-          created_at: string
-          created_by: string | null
-          effective_from: string
-          effective_to: string | null
-          family_key: string
-          id: string
-          manual_payout_required: boolean
-          payout_multiplier_bps: number
-        }
-        Insert: {
-          binder_id: string
-          created_at?: string
-          created_by?: string | null
-          effective_from?: string
-          effective_to?: string | null
-          family_key: string
-          id?: string
-          manual_payout_required?: boolean
-          payout_multiplier_bps?: number
-        }
-        Update: {
-          binder_id?: string
-          created_at?: string
-          created_by?: string | null
-          effective_from?: string
-          effective_to?: string | null
-          family_key?: string
-          id?: string
-          manual_payout_required?: boolean
-          payout_multiplier_bps?: number
-        }
-        Relationships: [
-          {
-            foreignKeyName: "marketplace_binder_commercial_terms_binder_id_fkey"
-            columns: ["binder_id"]
-            isOneToOne: false
-            referencedRelation: "marketplace_binders"
             referencedColumns: ["id"]
           },
         ]
@@ -1517,6 +1517,10 @@ export type Database = {
           client_vat_number: string | null
           created_at: string
           currency: string
+          delivery_address_line1: string | null
+          delivery_city: string | null
+          delivery_country: string | null
+          delivery_postal_code: string | null
           deposit_cents: number
           deposit_paid_cents: number
           deposit_type: string
@@ -1524,10 +1528,6 @@ export type Database = {
           discount_cents: number
           discount_type: string
           discount_value: number
-          delivery_address_line1: string | null
-          delivery_city: string | null
-          delivery_country: string | null
-          delivery_postal_code: string | null
           due_date: string | null
           early_payment_discount_terms: string | null
           electronic_invoice_provider: string | null
@@ -1543,9 +1543,9 @@ export type Database = {
           issue_date: string
           issued_at: string | null
           issuer: Json
-          notes: string | null
-          legal_mentions: Json
           late_penalty_terms: string | null
+          legal_mentions: Json
+          notes: string | null
           operation_nature: string | null
           paid_at: string | null
           payment_status: string
@@ -1555,13 +1555,13 @@ export type Database = {
           provider_status: string | null
           quote_id: string
           recovery_fee_cents: number
-          spine_mm: number | null
-          subtotal_cents: number
           reporting_status: string | null
           retained_until: string | null
           service_date: string | null
+          spine_mm: number | null
           status: string
           structured_invoice_format: string | null
+          subtotal_cents: number
           total_ht_cents: number
           total_ttc_cents: number
           total_vat_cents: number
@@ -1598,6 +1598,10 @@ export type Database = {
           client_vat_number?: string | null
           created_at?: string
           currency?: string
+          delivery_address_line1?: string | null
+          delivery_city?: string | null
+          delivery_country?: string | null
+          delivery_postal_code?: string | null
           deposit_cents?: number
           deposit_paid_cents?: number
           deposit_type?: string
@@ -1605,10 +1609,6 @@ export type Database = {
           discount_cents?: number
           discount_type?: string
           discount_value?: number
-          delivery_address_line1?: string | null
-          delivery_city?: string | null
-          delivery_country?: string | null
-          delivery_postal_code?: string | null
           due_date?: string | null
           early_payment_discount_terms?: string | null
           electronic_invoice_provider?: string | null
@@ -1624,9 +1624,9 @@ export type Database = {
           issue_date: string
           issued_at?: string | null
           issuer?: Json
-          notes?: string | null
-          legal_mentions?: Json
           late_penalty_terms?: string | null
+          legal_mentions?: Json
+          notes?: string | null
           operation_nature?: string | null
           paid_at?: string | null
           payment_status?: string
@@ -1636,13 +1636,13 @@ export type Database = {
           provider_status?: string | null
           quote_id: string
           recovery_fee_cents?: number
-          spine_mm?: number | null
-          subtotal_cents: number
           reporting_status?: string | null
           retained_until?: string | null
           service_date?: string | null
+          spine_mm?: number | null
           status?: string
           structured_invoice_format?: string | null
+          subtotal_cents: number
           total_ht_cents: number
           total_ttc_cents: number
           total_vat_cents: number
@@ -1679,6 +1679,10 @@ export type Database = {
           client_vat_number?: string | null
           created_at?: string
           currency?: string
+          delivery_address_line1?: string | null
+          delivery_city?: string | null
+          delivery_country?: string | null
+          delivery_postal_code?: string | null
           deposit_cents?: number
           deposit_paid_cents?: number
           deposit_type?: string
@@ -1686,10 +1690,6 @@ export type Database = {
           discount_cents?: number
           discount_type?: string
           discount_value?: number
-          delivery_address_line1?: string | null
-          delivery_city?: string | null
-          delivery_country?: string | null
-          delivery_postal_code?: string | null
           due_date?: string | null
           early_payment_discount_terms?: string | null
           electronic_invoice_provider?: string | null
@@ -1705,9 +1705,9 @@ export type Database = {
           issue_date?: string
           issued_at?: string | null
           issuer?: Json
-          notes?: string | null
-          legal_mentions?: Json
           late_penalty_terms?: string | null
+          legal_mentions?: Json
+          notes?: string | null
           operation_nature?: string | null
           paid_at?: string | null
           payment_status?: string
@@ -1717,13 +1717,13 @@ export type Database = {
           provider_status?: string | null
           quote_id?: string
           recovery_fee_cents?: number
-          spine_mm?: number | null
-          subtotal_cents?: number
           reporting_status?: string | null
           retained_until?: string | null
           service_date?: string | null
+          spine_mm?: number | null
           status?: string
           structured_invoice_format?: string | null
+          subtotal_cents?: number
           total_ht_cents?: number
           total_ttc_cents?: number
           total_vat_cents?: number
@@ -1845,6 +1845,112 @@ export type Database = {
           },
         ]
       }
+      marketplace_binder_price_preferences: {
+        Row: {
+          binder_id: string
+          created_at: string
+          custom_pricing_mode: string | null
+          custom_unit_price_cents: number | null
+          id: string
+          is_favorite: boolean
+          pricing_key: string
+          updated_at: string
+        }
+        Insert: {
+          binder_id: string
+          created_at?: string
+          custom_pricing_mode?: string | null
+          custom_unit_price_cents?: number | null
+          id?: string
+          is_favorite?: boolean
+          pricing_key: string
+          updated_at?: string
+        }
+        Update: {
+          binder_id?: string
+          created_at?: string
+          custom_pricing_mode?: string | null
+          custom_unit_price_cents?: number | null
+          id?: string
+          is_favorite?: boolean
+          pricing_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_price_preferences_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_price_preferences_pricing_key_fkey"
+            columns: ["pricing_key"]
+            isOneToOne: false
+            referencedRelation: "marketplace_work_items"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
+      marketplace_binder_quote_item_photos: {
+        Row: {
+          binder_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          include_in_pdf: boolean
+          line_key: string
+          position: number
+          quote_id: string
+          storage_path: string
+        }
+        Insert: {
+          binder_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          include_in_pdf?: boolean
+          line_key: string
+          position?: number
+          quote_id: string
+          storage_path: string
+        }
+        Update: {
+          binder_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          include_in_pdf?: boolean
+          line_key?: string
+          position?: number
+          quote_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_quote_item_photos_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_quote_item_photos_line_fkey"
+            columns: ["quote_id", "line_key"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_quote_items"
+            referencedColumns: ["quote_id", "line_key"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_quote_item_photos_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_binder_quote_items: {
         Row: {
           binder_id: string
@@ -1938,57 +2044,6 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binder_services"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      marketplace_binder_quote_item_photos: {
-        Row: {
-          binder_id: string
-          caption: string | null
-          created_at: string
-          id: string
-          include_in_pdf: boolean
-          line_key: string
-          position: number
-          quote_id: string
-          storage_path: string
-        }
-        Insert: {
-          binder_id: string
-          caption?: string | null
-          created_at?: string
-          id?: string
-          include_in_pdf?: boolean
-          line_key: string
-          position?: number
-          quote_id: string
-          storage_path: string
-        }
-        Update: {
-          binder_id?: string
-          caption?: string | null
-          created_at?: string
-          id?: string
-          include_in_pdf?: boolean
-          line_key?: string
-          position?: number
-          quote_id?: string
-          storage_path?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "marketplace_binder_quote_item_photos_binder_id_fkey"
-            columns: ["binder_id"]
-            isOneToOne: false
-            referencedRelation: "marketplace_binders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "marketplace_binder_quote_item_photos_quote_id_fkey"
-            columns: ["quote_id"]
-            isOneToOne: false
-            referencedRelation: "marketplace_binder_quotes"
             referencedColumns: ["id"]
           },
         ]
@@ -2254,54 +2309,6 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "marketplace_binders"
             referencedColumns: ["id"]
-          },
-        ]
-      }
-      marketplace_binder_price_preferences: {
-        Row: {
-          binder_id: string
-          created_at: string
-          custom_pricing_mode: string | null
-          custom_unit_price_cents: number | null
-          id: string
-          is_favorite: boolean
-          pricing_key: string
-          updated_at: string
-        }
-        Insert: {
-          binder_id: string
-          created_at?: string
-          custom_pricing_mode?: string | null
-          custom_unit_price_cents?: number | null
-          id?: string
-          is_favorite?: boolean
-          pricing_key: string
-          updated_at?: string
-        }
-        Update: {
-          binder_id?: string
-          created_at?: string
-          custom_pricing_mode?: string | null
-          custom_unit_price_cents?: number | null
-          id?: string
-          is_favorite?: boolean
-          pricing_key?: string
-          updated_at?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "marketplace_binder_price_preferences_binder_id_fkey"
-            columns: ["binder_id"]
-            isOneToOne: false
-            referencedRelation: "marketplace_binders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "marketplace_binder_price_preferences_pricing_key_fkey"
-            columns: ["pricing_key"]
-            isOneToOne: false
-            referencedRelation: "marketplace_work_items"
-            referencedColumns: ["key"]
           },
         ]
       }
@@ -3708,7 +3715,12 @@ export type Database = {
         Returns: boolean
       }
       marketplace_binder_create_full_credit_note: {
-        Args: { p_binder_id: string; p_invoice_id: string; p_issue_date: string; p_reason: string }
+        Args: {
+          p_binder_id: string
+          p_invoice_id: string
+          p_issue_date: string
+          p_reason: string
+        }
         Returns: string
       }
       marketplace_binder_create_invoice_draft: {
@@ -3735,16 +3747,20 @@ export type Database = {
         }
         Returns: string
       }
+      marketplace_binder_issue_invoice: {
+        Args: {
+          p_binder_id: string
+          p_invoice_id: string
+          p_legal_mentions: Json
+        }
+        Returns: string
+      }
       marketplace_binder_next_document_number: {
         Args: { p_binder_id: string; p_kind: string; p_year: number }
         Returns: string
       }
       marketplace_binder_next_work_reference: {
         Args: { p_binder_id: string; p_year: number }
-        Returns: string
-      }
-      marketplace_binder_issue_invoice: {
-        Args: { p_binder_id: string; p_invoice_id: string; p_legal_mentions: Json }
         Returns: string
       }
       marketplace_binder_update_invoice_draft: {

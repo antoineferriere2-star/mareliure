@@ -3130,3 +3130,12 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - PR #23 fusionnée par merge commit `9f2c97f8162bd12e6ab972edf420b4d2a19f61f8`, branche conservée, CI verte. Les migrations `20260923100000` et `20260923110000` sont maintenant appliquées en production.
 - `20260923120000` a été annulée avant enregistrement à cause du littéral PostgreSQL invalide `interval '10 years 1 year - 1 day'`; `20260923130000` reste en attente. Le correctif emploie `interval '11 years - 1 day'` aux trois endroits, ce qui représente le 31 décembre de la dixième année suivant l'année d'émission. Le contrat ciblé passe 7/7 et le typecheck est vert.
 - Reste : publier/fusionner ce correctif après CI, appliquer `20260923120000` et `20260923130000`, régénérer les types, comparer les comptes agrégés, déployer depuis `main`, puis smoke test et QA production.
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 23 septembre 2026, `chore/regenerate-supabase-types-20260923`.
+
+- PR #24 fusionnée par merge commit `544913f9940a3530f74e0ea4214a5346328fd134`, branche conservée, CI verte. Les quatre migrations `20260923100000` à `20260923130000` sont désormais appliquées et alignées entre dépôt et production `hljxohondjvrkzqicexl`.
+- Comptes agrégés avant/après inchangés : 1 profil documentaire, 2 contacts, 2 devis, 12 lignes de devis, 2 factures, 12 lignes de facture et 2 compteurs. Les quatre nouvelles tables contiennent zéro ligne. Les seuls changements sur les pièces historiques sont les métadonnées techniques prévues par les migrations : clés/blocs de ligne et classement réglementaire des factures existantes.
+- `src/integrations/supabase/types.ts` a été régénéré par la CLI Supabase depuis les schémas `public,graphql_public` de production. Le diff est uniquement le reflet du schéma distant et le typecheck reste vert.
+- Reste : publier/fusionner cette régénération après CI, déployer une seule fois le Worker depuis `main`, relever sa version, puis exécuter le smoke test et la QA production de l'atelier.
