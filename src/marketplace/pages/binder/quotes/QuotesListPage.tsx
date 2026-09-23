@@ -134,7 +134,7 @@ function RowBody({ row }: { row: DocumentSummary }) {
         <QuoteStatusBadge status={row.status as QuoteStatus} validUntil={row.validUntil} />
       ) : (
         <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold">
-          {PAYMENT_LABELS[row.status as keyof typeof PAYMENT_LABELS] ?? "Émise"}
+          {row.status === "draft" ? "Brouillon" : PAYMENT_LABELS[row.status as keyof typeof PAYMENT_LABELS] ?? "Émise"}
         </span>
       )}
       <p className="w-28 text-right font-serif text-lg tabular-nums">{euros(row.totalTtcCents)}</p>

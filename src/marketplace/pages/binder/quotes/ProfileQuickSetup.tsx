@@ -20,7 +20,7 @@ export function ProfileQuickSetup({ profile, missing }: { profile: BillingProfil
   const save = useServerFn(saveMyBillingProfile);
   const queryClient = useQueryClient();
   const [name, setName] = useState(profile.workshopName ?? profile.legalName ?? "");
-  const [regime, setRegime] = useState<"FRANCHISE" | "VAT_LIABLE" | null>(profile.vatRegime);
+  const [regime, setRegime] = useState<"FRANCHISE" | "VAT_LIABLE" | "EXEMPT" | null>(profile.vatRegime);
   const [mention, setMention] = useState(profile.vatMention ?? "");
 
   const mutation = useMutation({
@@ -62,6 +62,7 @@ export function ProfileQuickSetup({ profile, missing }: { profile: BillingProfil
               [
                 ["VAT_LIABLE", "Je facture la TVA"],
                 ["FRANCHISE", "Franchise en base de TVA (aucune TVA facturée)"],
+                ["EXEMPT", "Exonération ou autre régime sans TVA"],
               ] as const
             ).map(([value, label]) => (
               <label key={value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 text-sm">

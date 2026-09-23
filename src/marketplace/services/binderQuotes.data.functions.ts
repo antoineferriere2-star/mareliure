@@ -28,10 +28,12 @@ import {
   archiveService,
   BinderQuotesError,
   convertQuoteToInvoice,
+  createFullCreditNote,
   createQuote,
   deleteQuoteItemPhoto,
   getInvoice,
   getQuote,
+  issueInvoice,
   listCatalog,
   listClients,
   listInvoices,
@@ -44,6 +46,7 @@ import {
   saveClient,
   saveService,
   setQuoteStatus,
+  updateInvoiceDraft,
   updateQuote,
   uploadDocumentLogo,
   uploadQuoteItemPhoto,
@@ -51,6 +54,7 @@ import {
 } from "./binderQuotes.server";
 import { QUOTE_OPERATION_PHOTO_MIME_TYPES } from "@/marketplace/quotes/quotePhotos";
 import { DOCUMENT_LOGO_MIME_TYPES } from "@/marketplace/quotes/documentBranding";
+import { invoiceDraftInput } from "@/marketplace/invoices/invoiceCompliance";
 
 const MESSAGES: Record<BinderQuotesErrorCode, string> = {
   no_binder: "Aucun atelier n'est associé à ce compte.",
@@ -272,6 +276,21 @@ export const getMyInvoice = createServerFn({ method: "GET" })
   .inputValidator((data: unknown) => id.parse(data))
   .handler(({ context, data }) => run(context.userId, (binderId, sb) => getInvoice(sb, binderId, data.id)));
 
+export const updateMyInvoiceDraft = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), draft: invoiceDraftInput }).strict().parse(data))
+  .handler(({ context, data }) => run(context.userId, (binderId, sb) => updateInvoiceDraft(sb, binderId, data.id, data.draft)));
+
+export const issueMyInvoice = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => id.parse(data))
+  .handler(({ context, data }) => run(context.userId, (binderId, sb) => issueInvoice(sb, binderId, data.id)));
+
+export const createMyFullCreditNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(1000) }).strict().parse(data))
+  .handler(({ context, data }) => run(context.userId, (binderId, sb) => createFullCreditNote(sb, binderId, data.id, todayInParis(), data.reason)));
+
 // --- PDF ----------------------------------------------------------------------------------------
 
 const safeFileName = (number: string) => number.replace(/[^A-Za-z0-9._-]/g, "_");
@@ -293,6 +312,7 @@ export const getMyInvoicePdf = createServerFn({ method: "GET" })
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       const invoice = await getInvoice(sb, binderId, data.id);
+      if (invoice.status === "draft") throw new BinderQuotesError("conflict");
       const { base64 } = await renderDocumentPdf(invoice);
       return { filename: `facture-${safeFileName(invoice.number)}.pdf`, base64 };
     }),
