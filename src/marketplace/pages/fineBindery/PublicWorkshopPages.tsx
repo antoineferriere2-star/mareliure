@@ -24,9 +24,9 @@ type DirectoryProfile = {
 type PublicProfile = Awaited<ReturnType<typeof import("@/marketplace/services/fineBinderyProfile.data.functions").getPublicFineBinderyProfile>>;
 
 const SHELL = "mx-auto w-full max-w-[78rem] px-5 sm:px-8 lg:px-12";
-const languageLabel = new Map(PUBLIC_LANGUAGES.map((item) => [item.code, item.label]));
-const techniqueLabel = new Map(PUBLIC_TECHNIQUES.map((item) => [item.key, item.label]));
-const materialLabel = new Map(PUBLIC_MATERIALS.map((item) => [item.key, item.label]));
+const languageLabel = new Map<string, string>(PUBLIC_LANGUAGES.map((item) => [item.code, item.label]));
+const techniqueLabel = new Map<string, string>(PUBLIC_TECHNIQUES.map((item) => [item.key, item.label]));
+const materialLabel = new Map<string, string>(PUBLIC_MATERIALS.map((item) => [item.key, item.label]));
 
 function PublicHeader() {
   return (
