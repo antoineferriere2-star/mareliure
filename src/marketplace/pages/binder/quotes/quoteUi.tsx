@@ -13,12 +13,12 @@ import {
 import { centsToEuroInput, parseEurosToCents, parseQuantity } from "@/marketplace/quotes/quoteFormat";
 
 export const FIELD =
-  "h-11 w-full rounded-md border border-input bg-background px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring";
-export const CARD = "rounded-lg border border-border bg-card p-4 sm:p-5";
+  "h-11 w-full rounded-sm border border-[#cfc5b6] bg-[#fffdf8] px-3 text-sm text-[#241a12] placeholder:text-[#8b8175] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7a2230]/45";
+export const CARD = "rounded-sm border border-[#d8d0c4] bg-[#fffdf8] p-4 sm:p-5";
 export const PRIMARY_BUTTON =
-  "inline-flex h-11 items-center justify-center rounded-md bg-foreground px-5 text-sm font-medium text-background transition hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-11 items-center justify-center rounded-sm bg-[#241a12] px-5 text-sm font-semibold text-[#fffdf8] transition hover:bg-[#4b3829] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7a2230]/50 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 export const SECONDARY_BUTTON =
-  "inline-flex h-11 items-center justify-center rounded-md border border-input bg-background px-4 text-sm font-medium transition hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50";
+  "inline-flex h-11 items-center justify-center rounded-sm border border-[#bdb1a1] bg-transparent px-4 text-sm font-semibold text-[#34281f] transition hover:border-[#796b5d] hover:bg-[#f3eee5] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7a2230]/45 disabled:cursor-not-allowed disabled:opacity-50";
 
 const TONES: Record<QuoteStatus, string> = {
   draft: "border-border bg-muted text-foreground",

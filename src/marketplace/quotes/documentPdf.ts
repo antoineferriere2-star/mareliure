@@ -233,13 +233,14 @@ export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf>
   const right = PAGE_W - M;
   const labelW = colQty - M - 20;
   const showVat = doc.vatRegime === "VAT_LIABLE";
+  const showLineVat = showVat && new Set(doc.items.map((item) => item.vatRateBps)).size > 1;
 
   const tableHead = () => {
     ensure(24);
     draw("Désignation", M, 8.5, bold, MUTED);
     drawRight("Qté", colQty + 30, 8.5, bold, MUTED);
     drawRight("Prix HT", colUnit + 45, 8.5, bold, MUTED);
-    if (showVat) drawRight("TVA", colVat + 30, 8.5, bold, MUTED);
+    if (showLineVat) drawRight("TVA", colVat + 30, 8.5, bold, MUTED);
     drawRight("Total HT", right, 8.5, bold, MUTED);
     y -= 6;
     rule();
@@ -248,7 +249,13 @@ export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf>
   tableHead();
   for (const item of doc.items) {
     const labelLines = wrap(item.label, bold, 10, labelW);
-    const descLines = item.description ? wrap(item.description, regular, 8.5, labelW) : [];
+    // Les clés du référentiel et la provenance tarifaire servent au Workbench,
+    // jamais au client. Les anciens devis peuvent encore porter cette mention
+    // dans `description`; le PDF la filtre sans modifier leur snapshot.
+    const customerDescription = item.description && !/^(Référentiel\s+\S+\s+·\s+\S+|Tarif de base Ma Reliure)$/i.test(item.description.trim())
+      ? item.description
+      : null;
+    const descLines = customerDescription ? wrap(customerDescription, regular, 8.5, labelW) : [];
     const rowH = labelLines.length * 12 + descLines.length * 10.5 + 8;
     if (y - rowH < M + 30) {
       newPage();
@@ -267,7 +274,7 @@ export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf>
     y = rowTop;
     drawRight(`${quantityLabel(item.quantity)}${item.unit ? ` ${item.unit}` : ""}`, colQty + 30, 9.5);
     drawRight(formatMoneyPdf(item.unitPriceCents), colUnit + 45, 9.5);
-    if (showVat) drawRight(rateLabel(item.vatRateBps), colVat + 30, 9.5);
+    if (showLineVat) drawRight(rateLabel(item.vatRateBps), colVat + 30, 9.5);
     drawRight(formatMoneyPdf(item.totalHtCents), right, 9.5);
     y = rowBottom - 6;
   }
