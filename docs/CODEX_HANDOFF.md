@@ -3167,3 +3167,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Vérifications locales vertes après les derniers ajustements : typecheck, lint, suite Vitest complète et build Vite. PR #27 ouverte et publication autorisée par le propriétaire le 23 septembre 2026.
 - Migration `20260923140000` appliquée en production après liaison explicite à `hljxohondjvrkzqicexl` et dry-run ne listant qu'elle. L'historique distant est aligné jusqu'à cette version. Les 3 ateliers existants restent en brouillon avec France/français par défaut ; aucun portfolio n'est publié et aucun dossier ne porte la provenance FineBindery. L'accès anonyme aux ateliers retourne zéro ligne. Les comptes métier documentés restent à 2 clients, 2 devis/12 lignes et 2 factures/12 lignes.
 - Types Supabase régénérés depuis la production : le seul diff avec l'édition préparée est l'ordre de `workshop_name` et `workshop_photo_path`. La CI finale doit être verte au nouveau SHA avant fusion, puis le Worker doit être déployé une fois depuis `main` et contrôlé en production.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 23 septembre 2026, publication FineBindery Network Phase 1.
+
+- PR #27 fusionnée par merge commit normal `249af446f2b800b4668cc414fbddd26c890964cb`, branche conservée. CI finale verte sur `fcaf12ee4a6ddee9be4997ffb53e3eb3dbbce9bf` : installation, typecheck, lint, tests et build.
+- Migration additive `20260923140000_finebindery_public_profiles.sql` appliquée sur la production `hljxohondjvrkzqicexl` après dry-run ne listant qu'elle. L'historique distant est aligné. Les types ont été régénérés depuis la production ; seul l'ordre de trois propriétés différait de la version préparée.
+- Déploiement unique depuis `main` au merge commit ci-dessus : Worker `mareliure`, version `db49f1e9-1716-46f7-bb51-ab597eeb5e7c`, active à 100 %. Les routes Ma Reliure et FineBindery testées répondent 200 sans erreur serveur. Le sitemap FineBindery contient `/professionnels` ; le sitemap Ma Reliure reste propre à sa marque.
+- Recette réelle en production avec `Atelier Martin QA temporaire` : annuaire, filtres Dorure/anglais puis état vide allemand, page `/fr/atelier-martin-qa-20260923`, trois spécialités, deux réalisations avant/après, cinq images signées chargées, canonical, données structurées, `index, follow` et CTA portant `source=finebindery_profile` avec le bon slug. Largeurs 375, 390 et 430 px sans débordement, CTA visible dans le premier écran, aucune erreur console.
+- Nettoyage terminé : atelier, rattachement, spécialités, deux réalisations et quatre objets de stockage supprimés. Comptes finaux revenus à 3 ateliers, 0 réalisation, 8 dossiers, 2 clients, 2 devis/12 lignes et 2 factures/12 lignes. Le profil QA rend désormais l'état introuvable avec `noindex` et l'annuaire retrouve son état vide. Aucun dossier commercial de recette n'a été créé ; le transport de provenance a été vérifié jusqu'au CTA et reste couvert par les tests serveur.
