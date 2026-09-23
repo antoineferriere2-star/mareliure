@@ -43,8 +43,16 @@ import {
   type DocumentView,
   type InvoiceDbRow,
   type ItemDbRow,
+  type PhotoDbRow,
   type QuoteDbRow,
 } from "@/marketplace/quotes/quoteViews";
+import {
+  QUOTE_OPERATION_PHOTO_MAX_BYTES,
+  QUOTE_OPERATION_PHOTO_MAX_PER_LINE,
+  QUOTE_OPERATION_PHOTO_MIME_TYPES,
+  QUOTE_OPERATION_PHOTOS_BUCKET,
+  type QuoteOperationPhotoMime,
+} from "@/marketplace/quotes/quotePhotos";
 
 // Frontières typées : ce que la base garantit par CHECK / par construction du serveur.
 const asQuoteRow = (row: Tables<"marketplace_binder_quotes">) => row as unknown as QuoteDbRow;
@@ -463,15 +471,89 @@ async function loadQuoteRow(sb: Supa, binderId: string, quoteId: string): Promis
   return data ? asQuoteRow(data) : null;
 }
 
+async function loadQuotePhotos(sb: Supa, binderId: string, quoteId: string): Promise<PhotoDbRow[]> {
+  const { data, error } = await sb.from("marketplace_binder_quote_item_photos")
+    .select("id, line_key, storage_path, caption, include_in_pdf, position")
+    .eq("quote_id", quoteId).eq("binder_id", binderId).order("position");
+  if (error) throw new BinderQuotesError("failed");
+  return Promise.all((data ?? []).map(async (photo) => {
+    const { data: signed, error: signError } = await sb.storage
+      .from(QUOTE_OPERATION_PHOTOS_BUCKET).createSignedUrl(photo.storage_path, 3600);
+    if (signError || !signed?.signedUrl) throw new BinderQuotesError("failed");
+    return { ...photo, url: signed.signedUrl } as PhotoDbRow;
+  }));
+}
+
 export async function getQuote(sb: Supa, binderId: string, quoteId: string): Promise<DocumentView> {
   const row = await loadQuoteRow(sb, binderId, quoteId);
   if (!row) throw new BinderQuotesError("not_found");
-  const [items, invoice] = await Promise.all([
+  const [items, invoice, photos] = await Promise.all([
     sb.from("marketplace_binder_quote_items").select("*").eq("quote_id", quoteId).eq("binder_id", binderId).order("position"),
     sb.from("marketplace_binder_invoices").select("id, invoice_number").eq("quote_id", quoteId).eq("binder_id", binderId).maybeSingle(),
+    loadQuotePhotos(sb, binderId, quoteId),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
-  return quoteView(row, asItemRows(items.data ?? []), invoice.data ?? null);
+  return quoteView(row, asItemRows(items.data ?? []), invoice.data ?? null, photos);
+}
+
+export async function uploadQuoteItemPhoto(sb: Supa, binderId: string, input: {
+  quoteId: string;
+  lineKey: string;
+  filename: string;
+  mimeType: QuoteOperationPhotoMime;
+  imageBase64: string;
+  caption: string | null;
+  includeInPdf: boolean;
+}) {
+  const quote = await loadQuoteRow(sb, binderId, input.quoteId);
+  if (!quote) throw new BinderQuotesError("not_found");
+  if (quote.status !== "draft") throw new BinderQuotesError("conflict");
+  if (!QUOTE_OPERATION_PHOTO_MIME_TYPES.includes(input.mimeType)) throw new BinderQuotesError("invalid_input");
+  const [{ data: item, error: itemError }, { data: existing, error: countError }] = await Promise.all([
+    sb.from("marketplace_binder_quote_items").select("id").eq("quote_id", input.quoteId)
+      .eq("binder_id", binderId).eq("line_key", input.lineKey).maybeSingle(),
+    sb.from("marketplace_binder_quote_item_photos").select("id").eq("quote_id", input.quoteId)
+      .eq("binder_id", binderId).eq("line_key", input.lineKey),
+  ]);
+  if (itemError || countError) throw new BinderQuotesError("failed");
+  if (!item) throw new BinderQuotesError("not_found");
+  if ((existing ?? []).length >= QUOTE_OPERATION_PHOTO_MAX_PER_LINE) throw new BinderQuotesError("invalid_input");
+  const bytes = Buffer.from(input.imageBase64, "base64");
+  if (bytes.length === 0 || bytes.length > QUOTE_OPERATION_PHOTO_MAX_BYTES) throw new BinderQuotesError("invalid_input");
+  const extension = input.mimeType === "image/png" ? "png" : "jpg";
+  const storagePath = `${binderId}/${input.quoteId}/${crypto.randomUUID()}.${extension}`;
+  const { error: uploadError } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET)
+    .upload(storagePath, bytes, { contentType: input.mimeType, upsert: false });
+  if (uploadError) throw new BinderQuotesError("failed");
+  const { data, error } = await sb.from("marketplace_binder_quote_item_photos").insert({
+    binder_id: binderId,
+    quote_id: input.quoteId,
+    line_key: input.lineKey,
+    storage_path: storagePath,
+    caption: input.caption,
+    include_in_pdf: input.includeInPdf,
+    position: (existing ?? []).length + 1,
+  }).select("id").single();
+  if (error || !data) {
+    await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove([storagePath]);
+    throw new BinderQuotesError("failed");
+  }
+  return { id: data.id };
+}
+
+export async function deleteQuoteItemPhoto(sb: Supa, binderId: string, photoId: string): Promise<void> {
+  const { data: photo, error } = await sb.from("marketplace_binder_quote_item_photos")
+    .select("id, quote_id, storage_path").eq("id", photoId).eq("binder_id", binderId).maybeSingle();
+  if (error) throw new BinderQuotesError("failed");
+  if (!photo) throw new BinderQuotesError("not_found");
+  const quote = await loadQuoteRow(sb, binderId, photo.quote_id);
+  if (!quote) throw new BinderQuotesError("not_found");
+  if (quote.status !== "draft") throw new BinderQuotesError("conflict");
+  const { error: removeError } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove([photo.storage_path]);
+  if (removeError) throw new BinderQuotesError("failed");
+  const { error: deleteError } = await sb.from("marketplace_binder_quote_item_photos")
+    .delete().eq("id", photoId).eq("binder_id", binderId);
+  if (deleteError) throw new BinderQuotesError("failed");
 }
 
 export async function listQuotes(sb: Supa, binderId: string): Promise<DocumentSummary[]> {
@@ -535,6 +617,11 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
   const provenance = await assertOwnServices(sb, binderId, input);
   const references = await referenceProvenance(input);
   const clientId = await resolveClientId(sb, binderId, input);
+  const { data: currentPhotos, error: photoError } = await sb.from("marketplace_binder_quote_item_photos")
+    .select("line_key, storage_path").eq("quote_id", quoteId).eq("binder_id", binderId);
+  if (photoError) throw new BinderQuotesError("failed");
+  const retainedLineKeys = new Set(input.lines.map((line) => line.lineKey));
+  const removedPhotoPaths = (currentPhotos ?? []).filter((photo) => !retainedLineKeys.has(photo.line_key)).map((photo) => photo.storage_path);
   let built;
   try {
     // La date d'émission reste celle du devis ; la validité repart d'elle.
@@ -552,6 +639,12 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
     if (String(error.message).includes("quote_not_editable")) throw new BinderQuotesError("conflict");
     if (String(error.message).includes("quote_not_found")) throw new BinderQuotesError("not_found");
     throw new BinderQuotesError("failed");
+  }
+  if (removedPhotoPaths.length > 0) {
+    // La transaction a déjà retiré les métadonnées devenues orphelines. Le
+    // nettoyage du bucket est sans effet sur le document si Storage est
+    // momentanément indisponible ; une reprise d'entretien pourra le rejouer.
+    await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove(removedPhotoPaths);
   }
   return getQuote(sb, binderId, quoteId);
 }
@@ -625,12 +718,13 @@ export async function getInvoice(sb: Supa, binderId: string, invoiceId: string):
     .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!row) throw new BinderQuotesError("not_found");
-  const [items, quote] = await Promise.all([
+  const [items, quote, photos] = await Promise.all([
     sb.from("marketplace_binder_invoice_items").select("*").eq("invoice_id", invoiceId).eq("binder_id", binderId).order("position"),
     sb.from("marketplace_binder_quotes").select("id, quote_number").eq("id", row.quote_id).eq("binder_id", binderId).maybeSingle(),
+    loadQuotePhotos(sb, binderId, row.quote_id),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
-  return invoiceView(asInvoiceRow(row), asItemRows(items.data ?? []), quote.data ?? null);
+  return invoiceView(asInvoiceRow(row), asItemRows(items.data ?? []), quote.data ?? null, photos);
 }
 
 export async function listInvoices(sb: Supa, binderId: string): Promise<DocumentSummary[]> {

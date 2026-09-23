@@ -124,7 +124,8 @@ const quote = (lines: { serviceId: string | null; label: string; unit?: string |
   clientId: null,
   client: { name: "Mme Martin", email: null, phone: null, addressLine1: null, postalCode: null, city: null, country: null },
   book: { title: "Les Misérables", author: null, heightMm: 220, widthMm: 145, spineMm: 32, notes: null },
-  lines: lines.map((l) => ({ serviceId: l.serviceId, label: l.label, description: null, unit: l.unit ?? null, quantity: 1, unitPriceCents: l.price, catalogPriceCents: null, vatRateBps: 2000 })),
+  blocks: [{ key: "format-principal", label: "Format principal", bookCount: 1, heightMm: 220, widthMm: 145, spineMm: 32 }],
+  lines: lines.map((l, index) => ({ lineKey: `ligne-${index + 1}`, blockKey: "format-principal", serviceId: l.serviceId, label: l.label, description: null, unit: l.unit ?? null, quantity: 1, unitPriceCents: l.price, catalogPriceCents: null, vatRateBps: 2000 })),
   discount: { type: "NONE" }, deposit: { type: "NONE" }, validityDays: null, notes: null,
 });
 

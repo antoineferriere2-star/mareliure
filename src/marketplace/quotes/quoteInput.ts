@@ -21,6 +21,8 @@ const mm = z.number().int().min(1).max(2000).nullable();
 
 export const quoteLineInput = z
   .object({
+    lineKey: text(100).min(1),
+    blockKey: text(100).min(1),
     serviceId: uuid.nullable(),
     label: text(200).min(1, "Libellé requis"),
     description: optionalText(1000),
@@ -35,6 +37,17 @@ export const quoteLineInput = z
     vatRateBps: z.number().int().min(0).max(10_000),
     referenceVersion: optionalText(60).optional(),
     referenceOperationKey: optionalText(60).optional(),
+  })
+  .strict();
+
+export const quoteBlockInput = z
+  .object({
+    key: text(100).min(1),
+    label: text(120).min(1, "Nom du format requis"),
+    bookCount: z.number().int().min(1).max(10_000),
+    heightMm: mm,
+    widthMm: mm,
+    spineMm: mm,
   })
   .strict();
 
@@ -75,6 +88,7 @@ export const quoteInput = z
         notes: optionalText(2000),
       })
       .strict(),
+    blocks: z.array(quoteBlockInput).min(1, "Ajoutez au moins un format").max(20),
     lines: z.array(quoteLineInput).min(1, "Ajoutez au moins une prestation").max(100),
     discount: discountInput,
     deposit: discountInput,
@@ -82,10 +96,26 @@ export const quoteInput = z
     validityDays: z.number().int().min(1).max(365).nullable(),
     notes: optionalText(4000),
   })
-  .strict();
+  .strict()
+  .superRefine((value, context) => {
+    const blockKeys = new Set(value.blocks.map((block) => block.key));
+    if (blockKeys.size !== value.blocks.length) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["blocks"], message: "Chaque format doit être unique" });
+    }
+    const lineKeys = new Set(value.lines.map((line) => line.lineKey));
+    if (lineKeys.size !== value.lines.length) {
+      context.addIssue({ code: z.ZodIssueCode.custom, path: ["lines"], message: "Chaque ligne doit être unique" });
+    }
+    value.lines.forEach((line, index) => {
+      if (!blockKeys.has(line.blockKey)) {
+        context.addIssue({ code: z.ZodIssueCode.custom, path: ["lines", index, "blockKey"], message: "Format introuvable" });
+      }
+    });
+  });
 
 export type QuoteInput = z.infer<typeof quoteInput>;
 export type QuoteLineInput = z.infer<typeof quoteLineInput>;
+export type QuoteBlockInput = z.infer<typeof quoteBlockInput>;
 
 // ---------------------------------------------------------------------------
 // Profil de facturation

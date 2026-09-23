@@ -258,8 +258,11 @@ describe("ce que le navigateur peut envoyer", () => {
     clientId: null,
     client: { name: "Mme Durand" },
     book: { title: "Les Fleurs du Mal", heightMm: 220, widthMm: 145, spineMm: 32 },
+    blocks: [{ key: "format-principal", label: "Format principal", bookCount: 1, heightMm: 220, widthMm: 145, spineMm: 32 }],
     lines: [
       {
+        lineKey: "ligne-1",
+        blockKey: "format-principal",
         serviceId: null,
         label: "Plein cuir",
         quantity: 1,

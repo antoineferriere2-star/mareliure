@@ -195,6 +195,13 @@ export interface QuoteRow {
 }
 
 export interface QuoteItemRow {
+  line_key: string;
+  block_key: string;
+  block_label: string;
+  block_book_count: number;
+  block_height_mm: number | null;
+  block_width_mm: number | null;
+  block_spine_mm: number | null;
   service_id: string | null;
   label: string;
   description: string | null;
@@ -218,6 +225,7 @@ export const QUOTE_ROW_KEYS: readonly (keyof QuoteRow)[] = [
 ];
 
 export const QUOTE_ITEM_ROW_KEYS: readonly (keyof QuoteItemRow)[] = [
+  "line_key", "block_key", "block_label", "block_book_count", "block_height_mm", "block_width_mm", "block_spine_mm",
   "service_id", "label", "description", "unit", "quantity", "unit_price_cents",
   "catalog_price_cents", "vat_rate_bps", "total_ht_cents",
 ];
@@ -236,15 +244,34 @@ export function buildQuoteRows(args: {
   const readiness = profileReadiness(profile, "quote");
   if (!readiness.ready || profile.vatRegime === null) throw new QuoteError("profile_incomplete", readiness.missing);
   const regime = profile.vatRegime;
+  // Compatibilité des appels internes et des documents créés avant les blocs :
+  // ils deviennent un bloc unique qui reprend les dimensions de l'ouvrage.
+  const inputBlocks = input.blocks?.length ? input.blocks : [{
+    key: "format-principal",
+    label: "Format principal",
+    bookCount: 1,
+    heightMm: input.book.heightMm,
+    widthMm: input.book.widthMm,
+    spineMm: input.book.spineMm,
+  }];
+  const blocks = new Map(inputBlocks.map((block) => [block.key, block]));
+  const blockOf = (line: QuoteInput["lines"][number]) => blocks.get(line.blockKey ?? "format-principal") ?? inputBlocks[0];
 
   const totals = computeQuote({
-    lines: input.lines.map((l) => ({ quantity: l.quantity, unitPriceCents: l.unitPriceCents, vatRateBps: l.vatRateBps })),
+    lines: input.lines.map((l) => ({ quantity: l.quantity * blockOf(l).bookCount, unitPriceCents: l.unitPriceCents, vatRateBps: l.vatRateBps })),
     vatRegime: regime,
     discount: input.discount,
     deposit: input.deposit,
   });
 
   const items: QuoteItemRow[] = input.lines.map((l, i) => ({
+    line_key: l.lineKey ?? `position-${i + 1}`,
+    block_key: l.blockKey ?? "format-principal",
+    block_label: blockOf(l).label,
+    block_book_count: blockOf(l).bookCount,
+    block_height_mm: blockOf(l).heightMm,
+    block_width_mm: blockOf(l).widthMm,
+    block_spine_mm: blockOf(l).spineMm,
     service_id: l.serviceId,
     label: l.label,
     description: l.description,

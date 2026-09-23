@@ -1200,10 +1200,17 @@ export type Database = {
       marketplace_binder_invoice_items: {
         Row: {
           binder_id: string
+          block_book_count: number
+          block_height_mm: number | null
+          block_key: string
+          block_label: string
+          block_spine_mm: number | null
+          block_width_mm: number | null
           description: string | null
           id: string
           invoice_id: string
           label: string
+          line_key: string
           position: number
           quantity: number
           service_id: string | null
@@ -1214,10 +1221,17 @@ export type Database = {
         }
         Insert: {
           binder_id: string
+          block_book_count?: number
+          block_height_mm?: number | null
+          block_key?: string
+          block_label?: string
+          block_spine_mm?: number | null
+          block_width_mm?: number | null
           description?: string | null
           id?: string
           invoice_id: string
           label: string
+          line_key: string
           position: number
           quantity?: number
           service_id?: string | null
@@ -1228,10 +1242,17 @@ export type Database = {
         }
         Update: {
           binder_id?: string
+          block_book_count?: number
+          block_height_mm?: number | null
+          block_key?: string
+          block_label?: string
+          block_spine_mm?: number | null
+          block_width_mm?: number | null
           description?: string | null
           id?: string
           invoice_id?: string
           label?: string
+          line_key?: string
           position?: number
           quantity?: number
           service_id?: string | null
@@ -1530,10 +1551,17 @@ export type Database = {
       marketplace_binder_quote_items: {
         Row: {
           binder_id: string
+          block_book_count: number
+          block_height_mm: number | null
+          block_key: string
+          block_label: string
+          block_spine_mm: number | null
+          block_width_mm: number | null
           catalog_price_cents: number | null
           description: string | null
           id: string
           label: string
+          line_key: string
           position: number
           quantity: number
           quote_id: string
@@ -1547,10 +1575,17 @@ export type Database = {
         }
         Insert: {
           binder_id: string
+          block_book_count?: number
+          block_height_mm?: number | null
+          block_key?: string
+          block_label?: string
+          block_spine_mm?: number | null
+          block_width_mm?: number | null
           catalog_price_cents?: number | null
           description?: string | null
           id?: string
           label: string
+          line_key: string
           position: number
           quantity?: number
           quote_id: string
@@ -1564,10 +1599,17 @@ export type Database = {
         }
         Update: {
           binder_id?: string
+          block_book_count?: number
+          block_height_mm?: number | null
+          block_key?: string
+          block_label?: string
+          block_spine_mm?: number | null
+          block_width_mm?: number | null
           catalog_price_cents?: number | null
           description?: string | null
           id?: string
           label?: string
+          line_key?: string
           position?: number
           quantity?: number
           quote_id?: string
@@ -1599,6 +1641,57 @@ export type Database = {
             columns: ["service_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binder_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_binder_quote_item_photos: {
+        Row: {
+          binder_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          include_in_pdf: boolean
+          line_key: string
+          position: number
+          quote_id: string
+          storage_path: string
+        }
+        Insert: {
+          binder_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          include_in_pdf?: boolean
+          line_key: string
+          position?: number
+          quote_id: string
+          storage_path: string
+        }
+        Update: {
+          binder_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          include_in_pdf?: boolean
+          line_key?: string
+          position?: number
+          quote_id?: string
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_quote_item_photos_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_quote_item_photos_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_quotes"
             referencedColumns: ["id"]
           },
         ]

@@ -119,3 +119,10 @@ vivent dans le bucket `project-photos` de Supabase, appartiennent au client, et
 ne sont jamais publiées. Leur usage est interne au dossier : qualification,
 mise en relation avec l'atelier, constat d'état. Les republier demanderait une
 autorisation qui n'a jamais été demandée à personne.
+
+Les photographies **ajoutées par un atelier à une prestation de devis** ne
+sont pas des ressources éditoriales du dépôt. Elles restent privées dans le
+bucket `marketplace-quote-operation-photos` et ne sont utilisées que dans le
+devis ou la facture de cet atelier, lorsque celui-ci coche leur inclusion au
+PDF. L'atelier qui les téléverse confirme ainsi leur usage pour ce document ;
+Ma Reliure ne les publie pas dans une galerie ni dans le site public.

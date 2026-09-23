@@ -12,6 +12,10 @@ const RAW = readFileSync(
   "utf8",
 ).replace(/\r\n/g, "\n");
 const SQL = RAW.replace(/^\s*--.*$/gm, "").replace(/--.*$/gm, "");
+const BLOCKS_SQL = readFileSync(
+  resolve(process.cwd(), "supabase/migrations/20260923100000_marketplace_quote_size_blocks_photos.sql"),
+  "utf8",
+).replace(/^\s*--.*$/gm, "").replace(/--.*$/gm, "");
 
 const TABLES = [
   "marketplace_binder_billing_profiles",
@@ -180,7 +184,9 @@ describe("le serveur envoie exactement ce que la base attend", () => {
 
   it("de même pour les lignes de devis", () => {
     const cols = columns("marketplace_binder_quote_items");
-    for (const key of QUOTE_ITEM_ROW_KEYS) expect(cols.has(key), key).toBe(true);
+    for (const key of QUOTE_ITEM_ROW_KEYS) {
+      expect(cols.has(key) || BLOCKS_SQL.includes(`ADD COLUMN IF NOT EXISTS ${key} `), key).toBe(true);
+    }
     const setByFunction = new Set(["id", "quote_id", "binder_id", "position"]);
     for (const [name, meta] of cols) {
       if (meta.notNull) expect(QUOTE_ITEM_ROW_KEYS.includes(name as never) || setByFunction.has(name), name).toBe(true);
