@@ -22,8 +22,7 @@ import {
   serviceInput,
 } from "@/marketplace/quotes/quoteInput";
 import { todayInParis } from "@/marketplace/quotes/quoteStatus";
-import { BASE_PRICE_REFERENCE_VERSION } from "@/marketplace/pricing/basePrices";
-import { WORK_ITEMS } from "@/marketplace/pricing/catalog";
+import { listBinderPricingCatalog } from "./binderPricingCatalog.server";
 import {
   archiveService,
   BinderQuotesError,
@@ -119,28 +118,14 @@ export const getMyCatalog = createServerFn({ method: "GET" })
 export const getMyBasePriceServices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(({ context }) =>
-    run(context.userId, async (_binderId, sb) => {
-      const { data, error } = await sb
-        .from("marketplace_reference_default_prices")
-        .select("pricing_key, default_unit_price_cents, unit, pricing_mode")
-        .eq("reference_version", BASE_PRICE_REFERENCE_VERSION)
-        .in("status", ["draft", "published"])
-        .order("pricing_key");
-      if (error) throw new BinderQuotesError("failed");
-      const labels = new Map(WORK_ITEMS.map((item) => [item.key, item.label]));
-      return (data ?? []).flatMap((row) => {
-        const label = labels.get(row.pricing_key);
-        return label
-          ? [{
-              pricingKey: row.pricing_key,
-              label,
-              unit: row.unit,
-              unitPriceCents: row.default_unit_price_cents,
-              pricingMode: row.pricing_mode,
-            }]
-          : [];
-      });
-    }),
+    run(context.userId, async (binderId, sb) => (await listBinderPricingCatalog(sb, binderId)).map((row) => ({
+      pricingKey: row.pricingKey,
+      label: row.label,
+      unit: row.unit,
+      unitPriceCents: row.effectivePriceCents,
+      pricingMode: row.effectivePricingMode,
+      isFavorite: row.isFavorite,
+    }))),
   );
 
 export const saveMyCategory = createServerFn({ method: "POST" })

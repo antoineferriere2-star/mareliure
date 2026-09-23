@@ -7,6 +7,7 @@ export interface BaseService {
   unit: string;
   unitPriceCents: number | null;
   pricingMode: string;
+  isFavorite?: boolean;
 }
 
 export interface WorkshopService {

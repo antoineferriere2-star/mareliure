@@ -1,32 +1,31 @@
 /**
- * « Devis et tarifs » — configurer UNE fois ce que le relieur retrouvera à chaque
- * devis : ses prestations et ses prix (à lui seul : Ma Reliure n'en impose aucun),
- * son régime de TVA, son identité, ses mentions.
- *
- * Le catalogue (favoris, prestations, ajout depuis le référentiel Ma Reliure) vit dans
- * `catalog/` ; cette page garde le profil : identité, TVA, devis et factures.
+ * Paramètres documentaires et grille tarifaire de l'atelier. La grille Ma Reliure
+ * est disponible immédiatement ; les overrides ne valent que pour les futurs ajouts.
  */
 import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { clearMyDocumentLogo, getBillingProfile, getMyCatalog, saveMyBillingProfile, uploadMyDocumentLogo } from "@/marketplace/services/binderQuotes.data.functions";
+import { getMyPricingCatalog } from "@/marketplace/services/binderPricingCatalog.data.functions";
 import { FRANCHISE_MENTION_SUGGESTION, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
 import { bpsToPercentInput, parsePercentToBps } from "@/marketplace/quotes/quoteFormat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
-import { CatalogEditor } from "./catalog/CatalogEditor";
-import { CATALOG_KEY, PROFILE_QUERY_KEY, profileToInput } from "./quoteQueryKeys";
+import { PricingCatalogEditor } from "./catalog/PricingCatalogEditor";
+import { CATALOG_KEY, PRICING_CATALOG_KEY, PROFILE_QUERY_KEY, profileToInput } from "./quoteQueryKeys";
 import { BinderPageHeader } from "../BinderPageUi";
 import { DOCUMENT_ACCENT_COLORS, DOCUMENT_LOGO_MAX_BYTES, DOCUMENT_LOGO_MIME_TYPES, type DocumentLogoMime } from "@/marketplace/quotes/documentBranding";
 
 export function TarifsPage() {
   const fetchProfile = useServerFn(getBillingProfile);
   const fetchCatalog = useServerFn(getMyCatalog);
+  const fetchPricingCatalog = useServerFn(getMyPricingCatalog);
   const profile = useQuery({ queryKey: PROFILE_QUERY_KEY, queryFn: () => fetchProfile() });
   const catalog = useQuery({ queryKey: CATALOG_KEY, queryFn: () => fetchCatalog({ data: {} }) });
+  const pricingCatalog = useQuery({ queryKey: PRICING_CATALOG_KEY, queryFn: () => fetchPricingCatalog() });
   const [section, setSection] = useState<"documents" | "services">("documents");
 
-  if (profile.isPending || catalog.isPending) {
+  if (profile.isPending || catalog.isPending || pricingCatalog.isPending) {
     return (
       <div role="status" aria-busy="true" className="space-y-4">
         <span className="sr-only">Chargement…</span>
@@ -35,16 +34,16 @@ export function TarifsPage() {
       </div>
     );
   }
-  if (profile.error || catalog.error || !profile.data || !catalog.data) return <ErrorNote>Impossible de charger vos tarifs. Rechargez la page.</ErrorNote>;
+  if (profile.error || catalog.error || pricingCatalog.error || !profile.data || !catalog.data || !pricingCatalog.data) return <ErrorNote>Impossible de charger vos tarifs. Rechargez la page.</ErrorNote>;
 
   return (
     <div className="space-y-8">
-      <BinderPageHeader eyebrow="Paramètres atelier" title="Devis & documents" description="Configurez ce que vos clients verront, puis organisez vos prestations. Les devis déjà créés conservent toujours leur snapshot." />
+      <BinderPageHeader eyebrow="Paramètres atelier" title={section === "documents" ? "Devis & documents" : "Mes prestations et mes prix"} description={section === "documents" ? "Configurez ce que vos clients verront. Les devis déjà créés conservent toujours leur snapshot." : "Adaptez la grille Ma Reliure à votre atelier. Vos documents existants restent inchangés."} />
       <div role="tablist" aria-label="Paramètres de l'atelier" className="flex gap-6 border-b border-[#cfc5b6]">
         <button role="tab" aria-selected={section === "documents"} type="button" onClick={() => setSection("documents")} className={`-mb-px min-h-12 border-b-2 text-sm font-semibold ${section === "documents" ? "border-[#7a2230] text-[#241a12]" : "border-transparent text-[#74695d]"}`}>Devis & documents</button>
         <button role="tab" aria-selected={section === "services"} type="button" onClick={() => setSection("services")} className={`-mb-px min-h-12 border-b-2 text-sm font-semibold ${section === "services" ? "border-[#7a2230] text-[#241a12]" : "border-transparent text-[#74695d]"}`}>Prestations & tarifs</button>
       </div>
-      {section === "documents" ? <ProfileForm profile={profile.data} /> : <CatalogEditor categories={catalog.data.categories} services={catalog.data.services} />}
+      {section === "documents" ? <ProfileForm profile={profile.data} /> : <PricingCatalogEditor items={pricingCatalog.data} services={catalog.data.services} />}
     </div>
   );
 }
