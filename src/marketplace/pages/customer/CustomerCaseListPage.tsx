@@ -103,18 +103,19 @@ function ProjectCard({
   const created = formatCustomerDate(row.createdAt, locale);
   const meta = [row.projectType, created ? copy.createdOn(created) : null].filter(Boolean).join(" · ");
   const urgent = row.actionRequired || row.paymentEligible || row.proposalAcceptable;
+  const fineBindery = locale === "en-US";
 
   return (
     <Link
       to="/mes-livres/$caseId"
       params={{ caseId: row.id }}
-      className={`flex h-full gap-3 rounded-2xl border bg-[#fdfaf3] p-4 transition sm:gap-4 sm:p-5 hover:border-[#3b2a1d]/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b2a1d]/60 focus-visible:ring-offset-2 ${
-        urgent ? "border-[#8a2e1f]/40" : "border-[#3b2a1d]/15"
+      className={`flex h-full gap-3 border p-4 transition sm:gap-4 sm:p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${fineBindery ? "rounded-none bg-white hover:border-[#14201d]/55 focus-visible:ring-[#8b6329]" : "rounded-2xl bg-[#fdfaf3] hover:border-[#3b2a1d]/50 focus-visible:ring-[#3b2a1d]/60"} ${
+        urgent ? fineBindery ? "border-[#8b6329]/55" : "border-[#8a2e1f]/40" : fineBindery ? "border-[#14201d]/15" : "border-[#3b2a1d]/15"
       }`}
     >
       <Thumbnail url={row.thumbnailUrl} alt="" />
       <div className="min-w-0 flex-1">
-        <h2 className="font-serif text-lg leading-snug text-[#241a12] break-words">{row.title}</h2>
+        <h2 className={`${fineBindery ? "font-editorial text-[#14201d]" : "font-serif text-[#241a12]"} text-lg leading-snug break-words`}>{row.title}</h2>
         {meta && <p className="mt-1 text-xs text-[#6b5847]">{meta}</p>}
         <div className="mt-3 flex flex-wrap items-center gap-2">
           <StatusBadge status={status} />
@@ -240,7 +241,7 @@ export function CustomerCaseListPage({ brand }: { brand: MarketplaceBrand | null
       {rows.length === 0 ? (
         <PortalEmpty copy={copy} />
       ) : (
-        <ul className="grid gap-4 sm:grid-cols-2">
+        <ul className={`grid gap-4 ${locale === "en-US" ? "lg:grid-cols-2" : "sm:grid-cols-2"}`}>
           {rows.map((row) => (
             <li key={row.id}>
               <ProjectCard row={row} locale={locale} copy={copy} />
