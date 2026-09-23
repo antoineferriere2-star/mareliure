@@ -3122,3 +3122,11 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Le dry-run Supabase production `hljxohondjvrkzqicexl` ne listait que les quatre migrations `20260923100000` à `20260923130000`. La première tentative a été annulée avant enregistrement : le trigger historique `marketplace_binder_invoice_items_immutable` a bloqué le backfill de `line_key` et des dimensions de bloc. Les quatre migrations restent en attente.
 - Le correctif encadre uniquement ce backfill par `DISABLE TRIGGER` / `ENABLE TRIGGER` dans la même transaction. Toute erreur restaure donc le verrou, et aucune modification métier supplémentaire n'est autorisée. Le contrat vérifie l'ordre désactivation → backfill → réactivation ; les 10 tests ciblés et le typecheck sont verts.
 - Reste : publier la PR corrective, attendre sa CI, fusionner, vérifier à nouveau l'historique distant, appliquer les quatre migrations, comparer les comptes agrégés, régénérer les types depuis la production, déployer une seule fois depuis `main`, puis faire le smoke test et la QA production.
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 23 septembre 2026, `fix/invoice-retention-interval`.
+
+- PR #23 fusionnée par merge commit `9f2c97f8162bd12e6ab972edf420b4d2a19f61f8`, branche conservée, CI verte. Les migrations `20260923100000` et `20260923110000` sont maintenant appliquées en production.
+- `20260923120000` a été annulée avant enregistrement à cause du littéral PostgreSQL invalide `interval '10 years 1 year - 1 day'`; `20260923130000` reste en attente. Le correctif emploie `interval '11 years - 1 day'` aux trois endroits, ce qui représente le 31 décembre de la dixième année suivant l'année d'émission. Le contrat ciblé passe 7/7 et le typecheck est vert.
+- Reste : publier/fusionner ce correctif après CI, appliquer `20260923120000` et `20260923130000`, régénérer les types, comparer les comptes agrégés, déployer depuis `main`, puis smoke test et QA production.
