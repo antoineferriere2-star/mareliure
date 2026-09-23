@@ -2625,8 +2625,8 @@ export type Database = {
           updated_at: string
           user_id: string | null
           website_url: string | null
-          workshop_photo_path: string | null
           workshop_name: string | null
+          workshop_photo_path: string | null
           years_experience: number | null
         }
         Insert: {
@@ -2665,8 +2665,8 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           website_url?: string | null
-          workshop_photo_path?: string | null
           workshop_name?: string | null
+          workshop_photo_path?: string | null
           years_experience?: number | null
         }
         Update: {
@@ -2705,8 +2705,8 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
           website_url?: string | null
-          workshop_photo_path?: string | null
           workshop_name?: string | null
+          workshop_photo_path?: string | null
           years_experience?: number | null
         }
         Relationships: []
