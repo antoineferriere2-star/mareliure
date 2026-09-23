@@ -27,20 +27,21 @@ export function CustomerPortalShell({
   account?: ReactNode;
 }) {
   const copy = customerCopy(customerLocaleForBrand(brand));
+  const fineBindery = brand === "FINE_BINDERY";
   return (
-    <div className="min-h-screen bg-[#f7f2e8] text-[#241a12]">
+    <div className={`${fineBindery ? "fb-site bg-[#f8f6f0] text-[#14201d]" : "bg-[#f7f2e8] text-[#241a12]"} mr-site min-h-screen`}>
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-50 focus:rounded-md focus:bg-[#241a12] focus:px-3 focus:py-2 focus:text-sm focus:text-[#fdfaf3]"
       >
         {copy.skipToContent}
       </a>
-      <header className="border-b border-[#3b2a1d]/10">
-        <div className="mx-auto flex max-w-4xl items-center justify-between gap-4 px-5 py-3">
+      <header className={`border-b ${fineBindery ? "border-[#14201d]/15 bg-[#f8f6f0]" : "border-[#3b2a1d]/10"}`}>
+        <div className={`mx-auto flex items-center justify-between gap-4 px-5 ${fineBindery ? "max-w-5xl py-5" : "max-w-4xl py-3"}`}>
           <a
             href="/"
             aria-label={`${copy.brandHome} — ${copy.home}`}
-            className="min-h-11 rounded-md py-2 font-serif text-lg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3b2a1d]/60 focus-visible:ring-offset-2"
+            className={`min-h-11 py-2 font-editorial focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${fineBindery ? "text-xl tracking-[-0.01em] focus-visible:ring-[#8b6329]" : "rounded-md text-lg focus-visible:ring-[#3b2a1d]/60"}`}
           >
             {copy.brandHome}
           </a>
@@ -58,7 +59,8 @@ export function CustomerPortalShell({
           </div>
         </div>
       </header>
-      <main id="main" className="mx-auto max-w-4xl px-5 py-6 sm:py-8">
+      <main id="main" className={`mx-auto px-5 ${fineBindery ? "max-w-5xl py-10 sm:py-14" : "max-w-4xl py-6 sm:py-8"}`}>
+        {fineBindery && <div className="mb-10 border-y border-[#14201d]/15 py-4 text-sm leading-6 text-[#4f5b57]"><strong className="mr-2 font-semibold text-[#14201d]">Your Fine Bindery concierge</strong> coordinates the workshop, decisions and next step for every book in this space.</div>}
         {children}
       </main>
     </div>

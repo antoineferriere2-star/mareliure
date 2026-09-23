@@ -38,8 +38,8 @@ describe("l'espace atelier", () => {
   const LAYOUT = read("src/routes/_authenticated/atelier/route.tsx");
 
   it("garde ses surfaces historiques dans la nouvelle navigation métier", () => {
-    for (const to of ['to="/atelier"', 'to="/atelier/ouvrages"', 'to="/atelier/devis"', 'to="/atelier/contacts"', 'to="/atelier/tarifs"']) {
-      expect(LAYOUT, to).toContain(to);
+    for (const route of ["/atelier", "/atelier/ouvrages", "/atelier/devis", "/atelier/contacts", "/atelier/tarifs"]) {
+      expect(LAYOUT, route).toMatch(new RegExp(`to(?:=|:)\\s*["']${route.replaceAll("/", "\\/")}["']`));
     }
     expect(LAYOUT.indexOf("Devis")).toBeLessThan(LAYOUT.indexOf("Ouvrages"));
     expect(LAYOUT).toContain("Messages");

@@ -12,6 +12,7 @@ import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorNote, PAYMENT_LABELS, PRIMARY_BUTTON, QuoteStatusBadge } from "./quoteUi";
 import { INVOICES_KEY, QUOTES_KEY } from "./quoteQueryKeys";
+import { BinderEmptyState, BinderPageHeader } from "../BinderPageUi";
 
 export function QuotesListPage({ initialTab = "quotes" }: { initialTab?: "quotes" | "invoices" }) {
   const fetchQuotes = useServerFn(getMyQuotes);
@@ -47,15 +48,7 @@ export function QuotesListPage({ initialTab = "quotes" }: { initialTab?: "quotes
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="font-serif text-2xl">{tab === "quotes" ? "Devis" : "Factures"}</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Le livre, les prestations et le chiffrage au même endroit.</p>
-        </div>
-        <Link to="/atelier/devis/nouveau" className={PRIMARY_BUTTON}>
-          Nouveau devis
-        </Link>
-      </header>
+      <BinderPageHeader eyebrow="Documents" title={tab === "quotes" ? "Devis" : "Factures"} description="Le livre, les prestations et le chiffrage au même endroit." action={<Link to="/atelier/devis/nouveau" className={PRIMARY_BUTTON}>Nouveau devis</Link>} />
 
       <div role="tablist" aria-label="Type de document" className="flex gap-2 border-b border-border">
         {(
@@ -97,19 +90,9 @@ export function QuotesListPage({ initialTab = "quotes" }: { initialTab?: "quotes
       ) : active.error ? (
         <ErrorNote>Impossible de charger la liste. Rechargez la page.</ErrorNote>
       ) : rows.length === 0 ? (
-        <div className="rounded-lg border border-dashed border-border px-6 py-12 text-center">
-          <p className="font-serif text-xl">{filtered ? "Aucun document ne correspond" : tab === "quotes" ? "Aucun devis pour le moment" : "Aucune facture pour le moment"}</p>
-          {!filtered && <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
-            {tab === "quotes" ? "Prenez un livre, saisissez ses dimensions, cochez les prestations : votre premier devis est prêt en quelques minutes." : "Une facture se crée en un clic depuis un devis accepté."}
-          </p>}
-          {!filtered && tab === "quotes" && (
-            <Link to="/atelier/devis/nouveau" className={`${PRIMARY_BUTTON} mt-5`}>
-              Créer mon premier devis
-            </Link>
-          )}
-        </div>
+        <BinderEmptyState title={filtered ? "Aucun document ne correspond" : tab === "quotes" ? "Aucun devis pour le moment" : "Aucune facture pour le moment"} description={filtered ? "Modifiez la recherche ou les filtres." : tab === "quotes" ? "Choisissez le client, le livre et les prestations : le total se construit immédiatement." : "Une facture se crée depuis un devis accepté."} action={!filtered && tab === "quotes" ? <Link to="/atelier/devis/nouveau" className={PRIMARY_BUTTON}>Créer mon premier devis</Link> : undefined} />
       ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border bg-card">
+        <ul className="divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8]">
           {rows.map((row) => (
             <li key={row.id}>
               {row.kind === "quote" ? (

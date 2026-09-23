@@ -13,7 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Plus, Search, X } from "lucide-react";
+import { ChevronDown, Plus, Search, X } from "lucide-react";
 import {
   createMyQuote,
   getBillingProfile,
@@ -36,7 +36,7 @@ import { PRICEABLE_SERVICE_MAPPINGS } from "@/marketplace/pricing/basePrices";
 import type { WorkSummary } from "@/marketplace/works/workViews";
 import { WORK_KEY, WORKS_KEY } from "@/marketplace/pages/binder/works/workKeys";
 import { formatDimensions, freeLine, isPriceAdjusted, lineFromBasePrice, lineFromService, parseMillimetres, type CatalogService, type QuoteLine } from "@/marketplace/quotes/quoteLines";
-import { euros, parseServerError } from "@/marketplace/quotes/quoteFormat";
+import { euros, parsePercentToBps, parseServerError } from "@/marketplace/quotes/quoteFormat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, MoneyInput, PRIMARY_BUTTON, QuantityInput, SECONDARY_BUTTON } from "./quoteUi";
 import { ProfileQuickSetup } from "./ProfileQuickSetup";
@@ -44,6 +44,22 @@ import { CATALOG_KEY, CLIENTS_KEY, PROFILE_QUERY_KEY, QUOTES_KEY } from "./quote
 
 let lineCounter = 0;
 const nextKey = () => `line-${Date.now().toString(36)}-${++lineCounter}`;
+const COMMON_VAT_RATES = [0, 550, 1000, 2000] as const;
+
+const BASE_FAMILIES = [
+  ["Réparation", /repar|consolid|reprise|recoll|renfort|coin|coiffe|mors|dos/i],
+  ["Reliure toile", /toile|embo.tage/i],
+  ["Reliure cuir", /cuir|peau|maroquin|chagrin|veau/i],
+  ["Dorure", /dorure|titrage|titre|or |palette/i],
+  ["Finitions", /garde|tranche|nerf|signet|papier|finition/i],
+  ["Protection", /etui|étui|bo.te|boîte|coffret|chemise/i],
+  ["Restauration", /restaur|patrimon/i],
+  ["Création", /creation|création|sur mesure/i],
+] as const;
+
+function baseFamily(label: string) {
+  return BASE_FAMILIES.find(([, pattern]) => pattern.test(label))?.[0] ?? "Autres";
+}
 
 export function QuoteBuilderPage({ quoteId, workId }: { quoteId?: string; workId?: string }) {
   const fetchProfile = useServerFn(getBillingProfile);
@@ -152,6 +168,7 @@ function BuilderForm({
 
   const [state, setState] = useState<BuilderState>(initial);
   const [search, setSearch] = useState("");
+  const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [showClientCreate, setShowClientCreate] = useState(false);
   const [showWorkCreate, setShowWorkCreate] = useState(false);
   const [mobilePaletteOpen, setMobilePaletteOpen] = useState(false);
@@ -180,6 +197,11 @@ function BuilderForm({
 
   const readiness = profileReadiness(profile, "quote");
   const regime = profile.vatRegime;
+  const [quoteVatRate, setQuoteVatRate] = useState<number | "mixed">(() => {
+    const rates = [...new Set(initial.lines.map((line) => line.vatRateBps))];
+    return rates.length > 1 ? "mixed" : rates[0] ?? profile.defaultVatRateBps;
+  });
+  const activeVatRate = quoteVatRate === "mixed" ? profile.defaultVatRateBps : quoteVatRate;
   const totals = useMemo(() => totalsOf(state, regime), [state, regime]);
   const dims = formatDimensions({ heightMm: parseMillimetres(state.height), widthMm: parseMillimetres(state.width), spineMm: parseMillimetres(state.spine) });
   const showVat = regime !== "FRANCHISE";
@@ -196,17 +218,21 @@ function BuilderForm({
     setState((s) =>
       s.lines.some((l) => l.serviceId === service.id)
         ? { ...s, lines: s.lines.filter((l) => l.serviceId !== service.id) }
-        : { ...s, lines: [...s.lines, lineFromService(service, profile.defaultVatRateBps, nextKey())] },
+        : { ...s, lines: [...s.lines, lineFromService(service, activeVatRate, nextKey())] },
     );
     setMobilePaletteOpen(false);
   };
   const addBasePrice = (service: (typeof basePrices)[number]) => {
-    setState((s) => ({ ...s, lines: [...s.lines, lineFromBasePrice(service, profile.defaultVatRateBps, nextKey())] }));
+    setState((s) => ({ ...s, lines: [...s.lines, lineFromBasePrice(service, activeVatRate, nextKey())] }));
     setMobilePaletteOpen(false);
   };
   const addFreeLine = (label = "") => {
-    setState((s) => ({ ...s, lines: [...s.lines, freeLine(profile.defaultVatRateBps, nextKey(), label)] }));
+    setState((s) => ({ ...s, lines: [...s.lines, freeLine(activeVatRate, nextKey(), label)] }));
     setMobilePaletteOpen(false);
+  };
+  const applyVatRate = (rate: number) => {
+    setQuoteVatRate(rate);
+    setState((current) => ({ ...current, lines: current.lines.map((line) => ({ ...line, vatRateBps: rate })) }));
   };
 
   const needle = normalizeSearch(search);
@@ -223,12 +249,18 @@ function BuilderForm({
       .catch(() => { if (active) setReferenceError(true); });
     return () => { active = false; };
   }, [needle, referenceOperations, referenceError]);
-  const groups = [
+  const allGroups = [
     ...categories.map((c) => ({ id: c.id, name: c.name, items: catalogServices.filter((s) => s.categoryId === c.id) })),
     { id: "none", name: "Autres", items: catalogServices.filter((s) => s.categoryId === null || !categories.some((c) => c.id === s.categoryId)) },
-  ]
+  ].filter((g) => g.items.length > 0);
+  const groups = allGroups
     .map((g) => ({ ...g, items: matchingServices ? g.items.filter((s) => matchingServices.has(s.id)) : g.items }))
     .filter((g) => g.items.length > 0);
+  const baseGroups = [...new Set(palette.base.map((service) => baseFamily(service.label)))].map((name) => ({
+    id: `base-${name}`,
+    name,
+    items: palette.base.filter((service) => baseFamily(service.label) === name),
+  }));
 
   /** « Enregistrer cette ligne dans mon catalogue » : la ligne libre devient une prestation. */
   const saveLineToCatalog = useMutation({
@@ -307,8 +339,8 @@ function BuilderForm({
     });
     if (base) { addBasePrice(base); return; }
     setState((current) => ({ ...current, lines: [...current.lines, {
-      ...freeLine(profile.defaultVatRateBps, nextKey(), operation.customerName || operation.canonicalName),
-      unit: operation.unitCandidates[0] ?? null, description: `Référentiel ${operation.version} · ${operation.key}`,
+      ...freeLine(activeVatRate, nextKey(), operation.customerName || operation.canonicalName),
+      unit: operation.unitCandidates[0] ?? null, description: "",
       requiresManualPrice: true,
       referenceVersion: operation.version, referenceOperationKey: operation.key,
     }] }));
@@ -458,12 +490,6 @@ function BuilderForm({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 id="catalog-title" className="font-serif text-lg">Prestations</h2>
             <button type="button" className="min-h-11 rounded-md border px-3 lg:hidden" onClick={() => setMobilePaletteOpen(false)}>Fermer</button>
-            {(
-              <div className="relative w-full sm:w-56">
-                <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                <input aria-label="Chercher une prestation" placeholder="Chercher…" className={`${FIELD} pl-9`} value={search} onChange={(e) => setSearch(e.target.value)} />
-              </div>
-            )}
           </div>
 
           {catalogServices.length === 0 && baseMatches.length === 0 && referenceHits.length === 0 ? (
@@ -480,79 +506,52 @@ function BuilderForm({
               <p className="mt-3 text-xs text-muted-foreground">En attendant, ajoutez une ligne libre dans le résumé.</p>
             </div>
           ) : (
-            <div className="mt-4 space-y-5">
+            <div className="mt-5 space-y-6">
               {favoriteServices.length > 0 && !needle && (
                 <div>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">★ Favoris</h3>
+                  <h3 className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#7a2230]">★ Favoris</h3>
                   <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
                     {favoriteServices.map((service) => <ServiceChoice key={service.id} service={service} selected={selectedServiceIds.has(service.id)} onClick={() => toggleService(service)} />)}
                   </ul>
                 </div>
               )}
               {recentlyUsed.length > 0 && !needle && <div>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">↻ Récentes</h3>
-                <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">{recentlyUsed.map((service) => <ServiceChoice key={service.id} service={service} selected={selectedServiceIds.has(service.id)} onClick={() => toggleService(service)} />)}</ul>
+                <h3 className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#74695d]">↻ Récentes</h3>
+                <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">{recentlyUsed.slice(0, 8).map((service) => <ServiceChoice key={service.id} service={service} selected={selectedServiceIds.has(service.id)} onClick={() => toggleService(service)} />)}</ul>
               </div>}
               {quickBase.length > 0 && <div>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tarifs Ma Reliure · accès rapide</h3>
-                <ul className="grid gap-2">{quickBase.map((service) => <li key={service.pricingKey}><button type="button" className="flex min-h-11 w-full items-center justify-between gap-2 rounded-md border border-input px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => addBasePrice(service)}><span>+ {service.label}</span><span className="tabular-nums text-muted-foreground">{service.pricingMode === "manual_review" ? "Sur étude" : euros(service.unitPriceCents ?? 0)}</span></button></li>)}</ul>
+                <h3 className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#74695d]">Prestations fréquentes</h3>
+                <ul className="grid gap-2">{quickBase.map((service) => <li key={service.pricingKey}><button type="button" className="flex min-h-11 w-full items-center justify-between gap-2 rounded-sm border border-[#cfc5b6] bg-[#fffdf8] px-3 py-2 text-left text-sm hover:border-[#7a2230]/45 hover:bg-[#f5f0e8]" onClick={() => addBasePrice(service)}><span>+ {service.label}</span><span className="tabular-nums text-[#74695d]">{service.pricingMode === "manual_review" ? "Sur étude" : euros(service.unitPriceCents ?? 0)}</span></button></li>)}</ul>
               </div>}
-              {needle && referenceHits.length > 0 && <div>
-                <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Référentiel reliure-fr-v1</h3>
-                <ul className="grid gap-2">{referenceHits.map(({ operation }) => <li key={operation.key}><button type="button" className="min-h-11 w-full rounded-md border border-input px-3 py-2 text-left text-sm hover:bg-accent" onClick={() => addReference(operation)}>+ {operation.customerName || operation.canonicalName} · {operation.key}</button></li>)}</ul>
-              </div>}
-              {referenceError && needle && <p className="text-xs text-destructive">Le référentiel ne peut pas être chargé.</p>}
-              {groups.length === 0 && baseMatches.length === 0 && referenceHits.length === 0 && <p className="text-sm text-muted-foreground">Aucune prestation ne correspond à « {search} ».</p>}
-              {groups.length > 0 && !needle && <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Mes prestations</h3>}
-              {groups.map((group) => (
-                <div key={group.id}>
-                  <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.name}</h3>
-                  <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                    {group.items.map((service) => {
-                      const selected = selectedServiceIds.has(service.id);
-                      return (
-                        <li key={service.id}>
-                          <button
-                            type="button"
-                            aria-pressed={selected}
-                            onClick={() => toggleService(service)}
-                            className={`flex min-h-11 w-full items-center gap-3 rounded-md border px-3 py-2 text-left text-sm transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${
-                              selected ? "border-foreground bg-foreground/5" : "border-input bg-background hover:bg-accent"
-                            }`}
-                          >
-                            <span aria-hidden="true" className={`flex h-5 w-5 shrink-0 items-center justify-center rounded border text-xs ${selected ? "border-foreground bg-foreground text-background" : "border-input"}`}>
-                              {selected ? "✓" : ""}
-                            </span>
-                            <span className="min-w-0 flex-1 break-words leading-snug">{service.name}</span>
-                            <span className="shrink-0 tabular-nums text-muted-foreground">{euros(service.unitPriceCents)}</span>
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
+
+              {!needle && (allGroups.length > 0 || baseGroups.length > 0) && <div>
+                <h3 className="mb-3 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#74695d]">Catégories</h3>
+                <div className="flex flex-wrap gap-2">
+                  {[...allGroups.map((group) => ({ id: group.id, name: group.name, count: group.items.length })), ...baseGroups.map((group) => ({ id: group.id, name: group.name, count: group.items.length }))].map((group) => (
+                    <button key={group.id} type="button" aria-pressed={openCategory === group.id} onClick={() => setOpenCategory((current) => current === group.id ? null : group.id)} className={`min-h-10 rounded-full border px-3 text-xs font-semibold ${openCategory === group.id ? "border-[#241a12] bg-[#241a12] text-white" : "border-[#cfc5b6] bg-[#fffdf8] text-[#5d5146] hover:border-[#796b5d]"}`}>{group.name} <span className="opacity-60">{group.count}</span></button>
+                  ))}
                 </div>
-              ))}
-              {baseMatches.length > 0 && (
-                <details open={Boolean(needle)}>
-                  <summary className="mb-2 min-h-11 cursor-pointer text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tarifs de base Ma Reliure ({baseMatches.length})</summary>
-                  <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
-                    {baseMatches.map((service) => (
-                      <li key={service.pricingKey}>
-                        <button type="button" onClick={() => addBasePrice(service)} className="flex min-h-11 w-full items-center gap-3 rounded-md border border-input bg-background px-3 py-2 text-left text-sm hover:bg-accent focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-                          <span aria-hidden="true" className="text-muted-foreground">+</span>
-                          <span className="min-w-0 flex-1 break-words leading-snug">{service.label}</span>
-                          <span className="shrink-0 tabular-nums text-muted-foreground">{service.pricingMode === "manual_review" ? "Sur étude" : euros(service.unitPriceCents ?? 0)}</span>
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                </details>
-              )}
+                {allGroups.filter((group) => group.id === openCategory).map((group) => <ul key={group.id} className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">{group.items.map((service) => <ServiceChoice key={service.id} service={service} selected={selectedServiceIds.has(service.id)} onClick={() => toggleService(service)} />)}</ul>)}
+                {baseGroups.filter((group) => group.id === openCategory).map((group) => <ul key={group.id} className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-1">{group.items.map((service) => <li key={service.pricingKey}><button type="button" onClick={() => addBasePrice(service)} className="flex min-h-11 w-full items-center gap-3 rounded-sm border border-[#cfc5b6] bg-[#fffdf8] px-3 py-2 text-left text-sm hover:border-[#7a2230]/45 hover:bg-[#f5f0e8]"><span aria-hidden="true" className="text-[#7a2230]">+</span><span className="min-w-0 flex-1 break-words leading-snug">{service.label}</span><span className="shrink-0 tabular-nums text-[#74695d]">{service.pricingMode === "manual_review" ? "Sur étude" : euros(service.unitPriceCents ?? 0)}</span></button></li>)}</ul>)}
+              </div>}
+
+              <div className="border-t border-[#d8d0c4] pt-5">
+                <h3 className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#74695d]">Recherche</h3>
+                <div className="relative w-full">
+                  <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#74695d]" />
+                  <input aria-label="Rechercher une prestation" placeholder="Rechercher une prestation…" className={`${FIELD} pl-9`} value={search} onChange={(e) => setSearch(e.target.value)} />
+                </div>
+              </div>
+              {needle && groups.map((group) => <div key={group.id}><h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.name}</h3><ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">{group.items.map((service) => <ServiceChoice key={service.id} service={service} selected={selectedServiceIds.has(service.id)} onClick={() => toggleService(service)} />)}</ul></div>)}
+              {needle && baseMatches.length > 0 && <div><h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Tarifs disponibles</h3><ul className="grid gap-2">{baseMatches.map((service) => <li key={service.pricingKey}><button type="button" onClick={() => addBasePrice(service)} className="flex min-h-11 w-full items-center gap-3 rounded-sm border border-[#cfc5b6] bg-[#fffdf8] px-3 py-2 text-left text-sm hover:bg-[#f5f0e8]"><span aria-hidden="true">+</span><span className="min-w-0 flex-1">{service.label}</span><span className="text-[#74695d]">{service.pricingMode === "manual_review" ? "Sur étude" : euros(service.unitPriceCents ?? 0)}</span></button></li>)}</ul></div>}
+              {needle && referenceHits.length > 0 && <div><h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">Autres prestations</h3><ul className="grid gap-2">{referenceHits.map(({ operation }) => <li key={operation.key}><button type="button" className="min-h-11 w-full rounded-sm border border-[#cfc5b6] px-3 py-2 text-left text-sm hover:bg-[#f5f0e8]" onClick={() => addReference(operation)}>+ {operation.customerName || operation.canonicalName}</button></li>)}</ul></div>}
+              {referenceError && needle && <p className="text-xs text-destructive">La recherche étendue ne peut pas être chargée.</p>}
+              {needle && groups.length === 0 && baseMatches.length === 0 && referenceHits.length === 0 && <p className="text-sm text-muted-foreground">Aucune prestation ne correspond à « {search} ».</p>}
               <p className="text-xs text-muted-foreground">
                 Un prix manque ou doit changer ?{" "}
                 <Link to="/atelier/tarifs" className="underline">Modifier mon catalogue</Link>.
               </p>
-              <button type="button" className={SECONDARY_BUTTON} onClick={() => addFreeLine()}>+ Ligne libre</button>
+              <button type="button" className={`${SECONDARY_BUTTON} w-full`} onClick={() => addFreeLine()}>+ Ligne libre</button>
             </div>
           )}
         </section>
@@ -567,50 +566,64 @@ function BuilderForm({
               {[state.title.trim() || null, dims].filter(Boolean).join(" · ") || "Ouvrage à renseigner"}
             </p>
 
+            {showVat && (
+              <div className="mt-4 flex flex-wrap items-end gap-3 border-y border-[#d8d0c4] bg-[#f8f4ed] px-3 py-3">
+                <Field label="TVA du devis" htmlFor="quote-vat-rate">
+                  <select id="quote-vat-rate" className={`${FIELD} min-w-40`} value={quoteVatRate} onChange={(event) => {
+                    if (event.target.value === "mixed") return;
+                    applyVatRate(Number(event.target.value));
+                  }}>
+                    {quoteVatRate === "mixed" && <option value="mixed">Taux mixtes (ancien devis)</option>}
+                    {COMMON_VAT_RATES.map((rate) => <option key={rate} value={rate}>{String(rate / 100).replace(".", ",")} %</option>)}
+                    {typeof quoteVatRate === "number" && !COMMON_VAT_RATES.includes(quoteVatRate as typeof COMMON_VAT_RATES[number]) && <option value={quoteVatRate}>{String(quoteVatRate / 100).replace(".", ",")} %</option>}
+                  </select>
+                </Field>
+                <details className="relative">
+                  <summary className="flex min-h-11 cursor-pointer items-center text-xs font-semibold text-[#5f1b27] underline underline-offset-4">Autre taux…</summary>
+                  <div className="absolute right-0 top-full z-10 mt-1 w-52 border border-[#cfc5b6] bg-[#fffdf8] p-3 shadow-lg">
+                    <label htmlFor="custom-vat" className="text-xs font-medium text-[#685d51]">Taux en %</label>
+                    <input id="custom-vat" inputMode="decimal" className={`${FIELD} mt-1`} placeholder="ex. 8,5" onBlur={(event) => { const rate = parsePercentToBps(event.target.value); if (rate !== null) applyVatRate(rate); }} />
+                    <p className="mt-1 text-[0.68rem] text-[#74695d]">Appliqué à toutes les lignes.</p>
+                  </div>
+                </details>
+              </div>
+            )}
+
             {state.lines.length === 0 ? (
               <p className="mt-4 rounded-md bg-muted px-3 py-4 text-sm text-muted-foreground">
                 Cochez les prestations à réaliser : le prix s'ajoute ici, immédiatement.
               </p>
             ) : (
-              <ul className="mt-4 space-y-3">
+              <ul className="mt-4 divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8]">
                 {state.lines.map((line) => {
                   const total = line.quantity > 0 ? lineTotalCents(line) : 0;
                   const adjusted = isPriceAdjusted(line);
                   return (
-                    <li key={line.key} className="rounded-md border border-border p-3">
-                      <div className="flex items-start gap-2">
-                        <input aria-label="Libellé de la ligne" placeholder="Libellé (ex. Réparation du premier cahier)" className={`${FIELD} flex-1 font-medium`} value={line.label} onChange={(e) => setLine(line.key, { label: e.target.value })} />
-                        <button type="button" aria-label={`Dupliquer ${line.label || "cette ligne"}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent" onClick={() => setState((s) => ({ ...s, lines: s.lines.flatMap((item) => item.key === line.key ? [item, { ...item, key: nextKey() }] : [item]) }))}>×2</button>
-                        <button type="button" aria-label={`Retirer ${line.label || "cette ligne"}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-accent" onClick={() => setState((s) => ({ ...s, lines: s.lines.filter((l) => l.key !== line.key) }))}>
-                          <X aria-hidden="true" className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <div className="mt-2 grid grid-cols-[64px_1fr_auto] items-center gap-2">
-                        <QuantityInput id={`qty-${line.key}`} label={`Quantité — ${line.label || "ligne"}`} value={line.quantity} onChange={(quantity) => setLine(line.key, { quantity })} />
-                        <MoneyInput id={`price-${line.key}`} label={`Prix HT — ${line.label || "ligne"}`} cents={line.unitPriceCents} onChange={(unitPriceCents) => setLine(line.key, { unitPriceCents })} invalid={line.requiresManualPrice && line.unitPriceCents === 0} blankWhenZero={line.requiresManualPrice} />
-                        <span className="w-20 text-right text-sm font-medium tabular-nums">{line.requiresManualPrice && line.unitPriceCents === 0 ? "—" : euros(total)}</span>
-                      </div>
-                      <div className="mt-2 grid grid-cols-2 gap-2">
-                        <input aria-label={`Unité — ${line.label || "ligne"}`} placeholder="Unité" className={FIELD} value={line.unit ?? ""} onChange={(e) => setLine(line.key, { unit: e.target.value || null })} />
-                        <select aria-label={`TVA — ${line.label || "ligne"}`} className={FIELD} value={line.vatRateBps} onChange={(e) => setLine(line.key, { vatRateBps: Number(e.target.value) })}>
-                          <option value={0}>TVA 0 %</option>
-                          <option value={550}>TVA 5,5 %</option>
-                          <option value={1000}>TVA 10 %</option>
-                          <option value={2000}>TVA 20 %</option>
-                        </select>
-                      </div>
-                      {line.priceSource === "base" && <p className="mt-1 text-xs text-muted-foreground">Tarif de base Ma Reliure</p>}
-                      {line.requiresManualPrice && line.unitPriceCents <= 0 && <p className="mt-1 text-xs text-amber-800">Définissez le prix pour ce devis.</p>}
-                      {adjusted && (
-                        <p className="mt-1 text-xs text-amber-800">
-                          Prix ajusté pour ce devis (catalogue : {euros(line.catalogPriceCents ?? 0)}).{" "}
-                          <button type="button" className="underline" onClick={() => setLine(line.key, { unitPriceCents: line.catalogPriceCents ?? 0 })}>Rétablir</button>
-                        </p>
-                      )}
-                      {line.priceSource === "manual" && !line.referenceOperationKey && line.label.trim() !== "" && line.unitPriceCents > 0 && <label className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
-                        <input type="checkbox" checked={line.serviceId !== null} disabled={line.serviceId !== null || saveLineToCatalog.isPending} onChange={(event) => { if (event.target.checked) saveLineToCatalog.mutate(line); }} />
-                        Ajouter à mes prestations
-                      </label>}
+                    <li key={line.key}>
+                      <details className="group">
+                        <summary className="grid min-h-20 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-3 py-3 [&::-webkit-details-marker]:hidden">
+                          <span className="min-w-0"><strong className="block truncate text-sm font-semibold">{line.label || "Prestation sans libellé"}</strong><span className="mt-1 block text-xs text-[#74695d]">{String(line.quantity).replace(".", ",")} × {line.unit || "unité"} · {euros(line.unitPriceCents)} HT</span></span>
+                          <strong className="text-sm tabular-nums">{line.requiresManualPrice && line.unitPriceCents === 0 ? "À chiffrer" : euros(total)}</strong>
+                          <ChevronDown aria-hidden="true" className="h-4 w-4 text-[#74695d] transition group-open:rotate-180" />
+                        </summary>
+                        <div className="border-t border-[#e2dbd0] bg-[#faf7f1] px-3 py-4">
+                          <div className="flex items-start gap-2">
+                            <input aria-label="Libellé de la ligne" placeholder="Libellé (ex. Réparation du premier cahier)" className={`${FIELD} flex-1 font-medium`} value={line.label} onChange={(e) => setLine(line.key, { label: e.target.value })} />
+                            <button type="button" aria-label={`Dupliquer ${line.label || "cette ligne"}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-sm font-semibold text-[#685d51] hover:bg-[#eee7dc]" onClick={() => setState((s) => ({ ...s, lines: s.lines.flatMap((item) => item.key === line.key ? [item, { ...item, key: nextKey() }] : [item]) }))}>×2</button>
+                            <button type="button" aria-label={`Retirer ${line.label || "cette ligne"}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-[#685d51] hover:bg-[#eee7dc]" onClick={() => setState((s) => ({ ...s, lines: s.lines.filter((l) => l.key !== line.key) }))}><X aria-hidden="true" className="h-4 w-4" /></button>
+                          </div>
+                          <div className="mt-3 grid grid-cols-[64px_minmax(0,1fr)] gap-2 sm:grid-cols-[64px_minmax(0,1fr)_minmax(0,1fr)]">
+                            <QuantityInput id={`qty-${line.key}`} label={`Quantité — ${line.label || "ligne"}`} value={line.quantity} onChange={(quantity) => setLine(line.key, { quantity })} />
+                            <MoneyInput id={`price-${line.key}`} label={`Prix HT — ${line.label || "ligne"}`} cents={line.unitPriceCents} onChange={(unitPriceCents) => setLine(line.key, { unitPriceCents })} invalid={line.requiresManualPrice && line.unitPriceCents === 0} blankWhenZero={line.requiresManualPrice} />
+                            <input aria-label={`Unité — ${line.label || "ligne"}`} placeholder="Unité" className={`${FIELD} col-span-2 sm:col-span-1`} value={line.unit ?? ""} onChange={(e) => setLine(line.key, { unit: e.target.value || null })} />
+                          </div>
+                          <textarea aria-label={`Description client — ${line.label || "ligne"}`} rows={2} className={`${FIELD} mt-3 h-auto py-2`} placeholder="Description client (facultative)" value={line.description} onChange={(event) => setLine(line.key, { description: event.target.value })} />
+                          {line.priceSource === "base" && <p className="mt-2 text-xs text-[#74695d]">Source interne : tarif de base Ma Reliure. Cette mention ne figure pas sur le PDF client.</p>}
+                          {line.requiresManualPrice && line.unitPriceCents <= 0 && <p className="mt-2 text-xs text-amber-800">Définissez le prix pour ce devis.</p>}
+                          {adjusted && <p className="mt-2 text-xs text-amber-800">Prix ajusté pour ce devis (catalogue : {euros(line.catalogPriceCents ?? 0)}). <button type="button" className="underline" onClick={() => setLine(line.key, { unitPriceCents: line.catalogPriceCents ?? 0 })}>Rétablir</button></p>}
+                          {line.priceSource === "manual" && !line.referenceOperationKey && line.label.trim() !== "" && line.unitPriceCents > 0 && <label className="mt-3 flex items-center gap-2 text-xs text-muted-foreground"><input type="checkbox" checked={line.serviceId !== null} disabled={line.serviceId !== null || saveLineToCatalog.isPending} onChange={(event) => { if (event.target.checked) saveLineToCatalog.mutate(line); }} />Ajouter à mes prestations</label>}
+                        </div>
+                      </details>
                     </li>
                   );
                 })}

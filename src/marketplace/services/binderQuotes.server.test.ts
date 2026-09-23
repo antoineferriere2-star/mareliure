@@ -768,6 +768,22 @@ describe("PDF", () => {
     }
   });
 
+  it("le PDF client masque la provenance interne et ne répète pas une TVA uniforme par ligne", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput({
+      lines: [
+        line("Demi-cuir", 13500, { description: "Tarif de base Ma Reliure" }),
+        line("Titrage", 2000, { description: "Référentiel reliure-fr-v1 · OPR-0065" }),
+      ],
+    }), TODAY);
+    const printed = (await renderDocumentPdf(quote)).printed;
+    const text = printed.join("\n");
+    expect(text).not.toContain("Tarif de base Ma Reliure");
+    expect(text).not.toContain("OPR-0065");
+    expect(text).not.toContain("reliure-fr-v1");
+    expect(printed.filter((value) => value === "TVA 20 %")).toHaveLength(1);
+  });
+
   it("une facture PDF porte son numéro et le lien vers son devis", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput());
     const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);

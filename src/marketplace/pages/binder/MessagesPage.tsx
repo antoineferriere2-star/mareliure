@@ -4,7 +4,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { listMyBinderCases, getBinderCase } from "@/marketplace/services/marketplace.data.functions";
 import { listMyConversationPreviews } from "@/marketplace/services/binderConversations.data.functions";
 import { ConversationPanel } from "@/marketplace/pages/ConversationPanel";
-import { CARD } from "@/marketplace/pages/binder/quotes/quoteUi";
+import { BinderEmptyState, BinderPageHeader } from "./BinderPageUi";
 
 export function MessagesPage() {
   const fetchCases = useServerFn(listMyBinderCases);
@@ -13,18 +13,18 @@ export function MessagesPage() {
   const previews = useQuery({ queryKey: ["marketplace", "binder", "conversation-previews"], queryFn: () => fetchPreviews() });
   const previewByCase = new Map((previews.data ?? []).map((row) => [row.caseId, row.latest] as const));
   const rows = (cases.data ?? []).filter((row) => row.state === "selected");
-  return <div className="space-y-5">
-    <header><h1 className="font-serif text-2xl">Messages</h1><p className="mt-1 text-sm text-muted-foreground">Vos échanges liés aux dossiers Ma Reliure.</p></header>
+  return <div className="space-y-7">
+    <BinderPageHeader eyebrow="Conversations" title="Messages" description="Un fil par projet, avec le livre et la prochaine action toujours visibles." />
     {(cases.isPending || previews.isPending) && <p role="status">Chargement des conversations…</p>}
     {(cases.isError || previews.isError) && <p role="alert">Les conversations n'ont pas pu être chargées.</p>}
-    {cases.data && rows.length === 0 && <div className={CARD}>Aucune conversation pour le moment. Les messages s'ouvrent quand votre atelier est retenu sur un dossier.</div>}
-    <ul className="space-y-3">{rows.map((row) => {
+    {cases.data && rows.length === 0 && <BinderEmptyState title="Aucune conversation pour le moment" description="Les messages s'ouvrent quand votre atelier est retenu sur un dossier." />}
+    <ul className="divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8]">{rows.map((row) => {
       const latest = previewByCase.get(row.caseId);
-      return <li key={row.caseId}><Link to="/atelier/messages/$conversationId" params={{ conversationId: row.caseId }} className={`${CARD} block hover:border-foreground/40`}>
-        <span className="flex flex-wrap items-start justify-between gap-2"><span className="font-serif text-lg">{row.title}</span>{row.unreadCount > 0 && <span className="rounded-full bg-foreground px-2 py-0.5 text-xs text-background">{row.unreadCount} non lu(s)</span>}</span>
-        <span className="mt-1 block text-xs text-muted-foreground">{row.clientName || "Client du dossier"} · {row.reference}</span>
-        <span className="mt-2 block line-clamp-2 text-sm">{latest?.body ?? "Aucun message pour le moment."}</span>
-        {latest && <time dateTime={latest.createdAt} className="mt-1 block text-xs text-muted-foreground">{new Date(latest.createdAt).toLocaleString("fr-FR")}</time>}
+      const client = row.clientName || "Client du dossier";
+      return <li key={row.caseId}><Link to="/atelier/messages/$conversationId" params={{ conversationId: row.caseId }} className="grid min-h-24 gap-3 px-4 py-4 transition hover:bg-[#f5f0e8] sm:grid-cols-[2.5rem_minmax(0,1fr)_auto] sm:items-center sm:px-5">
+        <span className="hidden h-10 w-10 items-center justify-center rounded-full bg-[#e9e0d3] text-xs font-bold text-[#5f1b27] sm:flex">{client.slice(0, 2).toUpperCase()}</span>
+        <span className="min-w-0"><span className="flex flex-wrap items-center gap-2"><strong className="font-editorial text-lg font-normal">{row.title}</strong>{row.unreadCount > 0 && <span className="h-2 w-2 rounded-full bg-[#7a2230]" aria-label={`${row.unreadCount} message(s) non lu(s)`} />}</span><span className="mt-0.5 block text-xs text-[#74695d]">{client} · {row.reference}</span><span className={`mt-2 block truncate text-sm ${row.unreadCount > 0 ? "font-semibold text-[#34281f]" : "text-[#685d51]"}`}>{latest?.body ?? "Aucun message pour le moment."}</span></span>
+        {latest && <time dateTime={latest.createdAt} className="text-xs tabular-nums text-[#74695d]">{new Date(latest.createdAt).toLocaleDateString("fr-FR")}</time>}
       </Link></li>;
     })}</ul>
   </div>;

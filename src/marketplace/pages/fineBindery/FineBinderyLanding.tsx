@@ -37,7 +37,7 @@ import {
 export function FineBinderyLandingPage() {
   usePageViewTracking("en-US");
   return (
-    <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
+    <div className="mr-site fb-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <FineBinderyHeader />
       <main id="top">
         <Hero />
@@ -60,13 +60,13 @@ function Hero() {
     <section className={`${SHELL} pt-14 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-28`}>
       <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-14">
         <div className="lg:col-span-7">
-          <p className="mr-eyebrow">Exceptional French bookbinding</p>
+          <p className="mr-eyebrow">French craftsmanship, personally managed</p>
           <h1 className="mr-display mt-6 text-mr-ink">
-            Exceptional books deserve exceptional craftsmanship.
+            We take responsibility for the entire journey of your book.
           </h1>
           <p className="mr-lead mt-7 max-w-[34rem]">
-            Entrust a book you value to selected independent bookbinders in France. Fine Bindery
-            manages every step — from the first photographs to its safe return home.
+            From the first conversation to its safe return, one Fine Bindery concierge coordinates
+            the right independent French workshop, the decisions and the international journey.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
             <FineBinderyIntakeCta />
@@ -75,8 +75,8 @@ function Hero() {
             </a>
           </div>
           <p className="mr-small mt-8 max-w-[34rem]">
-            Selected French workshops <span aria-hidden="true">·</span> Worldwide service{" "}
-            <span aria-hidden="true">·</span> Personal concierge
+            One accountable concierge <span aria-hidden="true">·</span> Selected French workshops{" "}
+            <span aria-hidden="true">·</span> Worldwide coordination
           </p>
         </div>
         <div className="lg:col-span-5">

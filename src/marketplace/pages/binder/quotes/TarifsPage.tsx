@@ -16,12 +16,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
 import { CatalogEditor } from "./catalog/CatalogEditor";
 import { CATALOG_KEY, PROFILE_QUERY_KEY, profileToInput } from "./quoteQueryKeys";
+import { BinderPageHeader } from "../BinderPageUi";
 
 export function TarifsPage() {
   const fetchProfile = useServerFn(getBillingProfile);
   const fetchCatalog = useServerFn(getMyCatalog);
   const profile = useQuery({ queryKey: PROFILE_QUERY_KEY, queryFn: () => fetchProfile() });
   const catalog = useQuery({ queryKey: CATALOG_KEY, queryFn: () => fetchCatalog({ data: {} }) });
+  const [section, setSection] = useState<"documents" | "services">("documents");
 
   if (profile.isPending || catalog.isPending) {
     return (
@@ -36,14 +38,12 @@ export function TarifsPage() {
 
   return (
     <div className="space-y-8">
-      <header>
-        <h1 className="font-serif text-2xl">Devis et tarifs</h1>
-        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Vos prestations, vos prix, votre TVA. Vous les configurez une fois ; ils sont proposés à chaque devis, et changer un prix ici ne modifie jamais un devis déjà fait.
-        </p>
-      </header>
-      <CatalogEditor categories={catalog.data.categories} services={catalog.data.services} />
-      <ProfileForm profile={profile.data} />
+      <BinderPageHeader eyebrow="Paramètres atelier" title="Devis & documents" description="Configurez ce que vos clients verront, puis organisez vos prestations. Les devis déjà créés conservent toujours leur snapshot." />
+      <div role="tablist" aria-label="Paramètres de l'atelier" className="flex gap-6 border-b border-[#cfc5b6]">
+        <button role="tab" aria-selected={section === "documents"} type="button" onClick={() => setSection("documents")} className={`-mb-px min-h-12 border-b-2 text-sm font-semibold ${section === "documents" ? "border-[#7a2230] text-[#241a12]" : "border-transparent text-[#74695d]"}`}>Devis & documents</button>
+        <button role="tab" aria-selected={section === "services"} type="button" onClick={() => setSection("services")} className={`-mb-px min-h-12 border-b-2 text-sm font-semibold ${section === "services" ? "border-[#7a2230] text-[#241a12]" : "border-transparent text-[#74695d]"}`}>Prestations & tarifs</button>
+      </div>
+      {section === "documents" ? <ProfileForm profile={profile.data} /> : <CatalogEditor categories={catalog.data.categories} services={catalog.data.services} />}
     </div>
   );
 }
@@ -94,7 +94,8 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
       }}
     >
       <section aria-labelledby="identity-title" className={CARD}>
-        <h2 id="identity-title" className="font-serif text-xl">Identité de l'atelier</h2>
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#7a2230]">Identité</p>
+        <h2 id="identity-title" className="mt-1 font-serif text-xl">En-tête de vos documents</h2>
         <p className="mt-1 text-sm text-muted-foreground">Imprimée sur vos devis et vos factures. Une facture exige l'adresse et le SIRET.</p>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
           {input("workshopName", "Nom de l'atelier")}
@@ -113,10 +114,18 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
             <textarea id="profile-legalNotes" rows={2} className={`${FIELD} h-auto py-2`} value={text("legalNotes")} onChange={(e) => set({ legalNotes: e.target.value || null })} />
           </Field>
         </div>
+        <div className="mt-6 border-t border-[#d8d0c4] pt-5">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#74695d]">Aperçu en direct</p>
+          <div className="mt-3 grid max-w-2xl gap-5 border border-[#cfc5b6] bg-white p-5 sm:grid-cols-[5rem_minmax(0,1fr)]">
+            <div className="flex h-16 w-16 items-center justify-center border border-[#cfc5b6] bg-[#f4efe6] font-editorial text-2xl text-[#7a2230]">{(p.workshopName || p.legalName || "A").slice(0, 1).toUpperCase()}</div>
+            <div><strong className="font-editorial text-xl font-normal">{p.workshopName || "Nom de l'atelier"}</strong>{p.legalName && p.legalName !== p.workshopName && <p className="mt-1 text-xs text-[#74695d]">{p.legalName}</p>}<p className="mt-2 whitespace-pre-line text-xs leading-5 text-[#685d51]">{[p.addressLine1, [p.postalCode, p.city].filter(Boolean).join(" "), p.phone, p.email].filter(Boolean).join("\n") || "Adresse et coordonnées de l'atelier"}</p></div>
+          </div>
+        </div>
       </section>
 
       <section aria-labelledby="vat-title" className={CARD}>
-        <h2 id="vat-title" className="font-serif text-xl">TVA</h2>
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#7a2230]">Devis</p>
+        <h2 id="vat-title" className="mt-1 font-serif text-xl">TVA par défaut</h2>
         <p className="mt-1 text-sm text-muted-foreground">Ma Reliure ne choisit pas votre régime : c'est à vous (ou à votre comptable) de le déclarer.</p>
         <fieldset className="mt-4 grid gap-2 sm:grid-cols-2">
           <legend className="sr-only">Régime de TVA</legend>
@@ -138,7 +147,7 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           ))}
         </fieldset>
         <div className="mt-4 grid gap-4 sm:grid-cols-2">
-          <Field label="Taux de TVA par défaut (%)" htmlFor="profile-default-vat" hint="Proposé aux prestations qui n'ont pas de taux propre. Ignoré en franchise.">
+          <Field label="TVA appliquée aux nouveaux devis (%)" htmlFor="profile-default-vat" hint="Chaque nouveau devis reprend ce taux. Il reste modifiable dans le Workbench.">
             <input id="profile-default-vat" inputMode="decimal" className={FIELD} value={p.defaultVat} onChange={(e) => set({ defaultVat: e.target.value })} />
           </Field>
           <Field label="Mention de TVA imprimée" htmlFor="profile-vatMention" hint={p.vatRegime === "FRANCHISE" ? "Obligatoire sur une facture en franchise." : undefined}>
@@ -148,7 +157,8 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
       </section>
 
       <section aria-labelledby="quotes-title" className={CARD}>
-        <h2 id="quotes-title" className="font-serif text-xl">Devis et factures</h2>
+        <p className="text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#7a2230]">Document</p>
+        <h2 id="quotes-title" className="mt-1 font-serif text-xl">Numérotation et pied de page</h2>
         <div className="mt-4 grid gap-4 sm:grid-cols-3">
           <Field label="Préfixe des devis" htmlFor="profile-quotePrefix" hint="ex. D → D-2026-0001">
             <input id="profile-quotePrefix" className={FIELD} value={p.quotePrefix} onChange={(e) => set({ quotePrefix: e.target.value })} />
@@ -164,7 +174,7 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           <Field label="Conditions de paiement" htmlFor="profile-paymentTerms">
             <textarea id="profile-paymentTerms" rows={2} className={`${FIELD} h-auto py-2`} value={text("paymentTerms")} onChange={(e) => set({ paymentTerms: e.target.value || null })} />
           </Field>
-          <Field label="Mentions par défaut des devis" htmlFor="profile-quoteNotes">
+          <Field label="Mention de bas de devis" htmlFor="profile-quoteNotes" hint="Conditions, délai ou information propre à votre atelier. Aucun texte juridique n'est ajouté automatiquement.">
             <textarea id="profile-quoteNotes" rows={2} className={`${FIELD} h-auto py-2`} value={text("quoteNotes")} onChange={(e) => set({ quoteNotes: e.target.value || null })} />
           </Field>
           <Field label="Mentions des factures (pénalités de retard, indemnité de recouvrement…)" htmlFor="profile-invoiceNotes">
