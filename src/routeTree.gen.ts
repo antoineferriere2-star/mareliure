@@ -29,6 +29,7 @@ import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
+import { Route as ProfessionnelsRouteImport } from './routes/professionnels'
 import { Route as ReliureRouteImport } from './routes/reliure'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
@@ -45,11 +46,13 @@ import { Route as AuthenticatedMesLivresRouteRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as ASlugRouteImport } from './routes/a.$slug'
 import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
+import { Route as FrSlugRouteImport } from './routes/fr.$slug'
 import { Route as InvitationAtelierTokenRouteImport } from './routes/invitation-atelier.$token'
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as ProjectSummaryAccessTokenRouteImport } from './routes/project-summary.$accessToken'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAtelierIndexRouteImport } from './routes/_authenticated/atelier/index'
+import { Route as AuthenticatedAtelierProfilPublicRouteImport } from './routes/_authenticated/atelier/profil-public'
 import { Route as AuthenticatedAtelierTarifsRouteImport } from './routes/_authenticated/atelier/tarifs'
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
 import { Route as AuthenticatedBuildActivityRouteImport } from './routes/_authenticated/build/activity'
@@ -225,6 +228,11 @@ const PrivateBetaRoute = PrivateBetaRouteImport.update({
   path: '/private-beta',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ProfessionnelsRoute = ProfessionnelsRouteImport.update({
+  id: '/professionnels',
+  path: '/professionnels',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ReliureRoute = ReliureRouteImport.update({
   id: '/reliure',
   path: '/reliure',
@@ -310,6 +318,11 @@ const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
   path: '/demo/deck-project',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FrSlugRoute = FrSlugRouteImport.update({
+  id: '/fr/$slug',
+  path: '/fr/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const InvitationAtelierTokenRoute = InvitationAtelierTokenRouteImport.update({
   id: '/invitation-atelier/$token',
   path: '/invitation-atelier/$token',
@@ -335,6 +348,12 @@ const AuthenticatedAtelierIndexRoute =
   AuthenticatedAtelierIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedAtelierProfilPublicRoute =
+  AuthenticatedAtelierProfilPublicRouteImport.update({
+    id: '/profil-public',
+    path: '/profil-public',
     getParentRoute: () => AuthenticatedAtelierRouteRoute,
   } as any)
 const AuthenticatedAtelierTarifsRoute =
@@ -792,6 +811,7 @@ export interface FileRoutesByFullPath {
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
+  '/professionnels': typeof ProfessionnelsRoute
   '/reliure': typeof ReliureRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -808,9 +828,11 @@ export interface FileRoutesByFullPath {
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/fr/$slug': typeof FrSlugRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/atelier/profil-public': typeof AuthenticatedAtelierProfilPublicRoute
   '/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
   '/build/dashboard': typeof AuthenticatedBuildDashboardRoute
@@ -908,6 +930,7 @@ export interface FileRoutesByTo {
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
+  '/professionnels': typeof ProfessionnelsRoute
   '/reliure': typeof ReliureRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -918,9 +941,11 @@ export interface FileRoutesByTo {
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/fr/$slug': typeof FrSlugRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/atelier/profil-public': typeof AuthenticatedAtelierProfilPublicRoute
   '/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
   '/build/dashboard': typeof AuthenticatedBuildDashboardRoute
@@ -1019,6 +1044,7 @@ export interface FileRoutesById {
   '/privacy': typeof PrivacyRoute
   '/privacy-policy': typeof PrivacyPolicyRoute
   '/private-beta': typeof PrivateBetaRoute
+  '/professionnels': typeof ProfessionnelsRoute
   '/reliure': typeof ReliureRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -1035,9 +1061,11 @@ export interface FileRoutesById {
   '/_authenticated/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
+  '/fr/$slug': typeof FrSlugRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/_authenticated/atelier/profil-public': typeof AuthenticatedAtelierProfilPublicRoute
   '/_authenticated/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/_authenticated/build/activity': typeof AuthenticatedBuildActivityRoute
   '/_authenticated/build/dashboard': typeof AuthenticatedBuildDashboardRoute
@@ -1137,6 +1165,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privacy-policy'
     | '/private-beta'
+    | '/professionnels'
     | '/reliure'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -1153,9 +1182,11 @@ export interface FileRouteTypes {
     | '/activer-mon-atelier'
     | '/a/$slug'
     | '/demo/deck-project'
+    | '/fr/$slug'
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/atelier/profil-public'
     | '/atelier/tarifs'
     | '/build/activity'
     | '/build/dashboard'
@@ -1253,6 +1284,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privacy-policy'
     | '/private-beta'
+    | '/professionnels'
     | '/reliure'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -1263,9 +1295,11 @@ export interface FileRouteTypes {
     | '/activer-mon-atelier'
     | '/a/$slug'
     | '/demo/deck-project'
+    | '/fr/$slug'
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/atelier/profil-public'
     | '/atelier/tarifs'
     | '/build/activity'
     | '/build/dashboard'
@@ -1363,6 +1397,7 @@ export interface FileRouteTypes {
     | '/privacy'
     | '/privacy-policy'
     | '/private-beta'
+    | '/professionnels'
     | '/reliure'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -1379,9 +1414,11 @@ export interface FileRouteTypes {
     | '/_authenticated/activer-mon-atelier'
     | '/a/$slug'
     | '/demo/deck-project'
+    | '/fr/$slug'
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/_authenticated/atelier/profil-public'
     | '/_authenticated/atelier/tarifs'
     | '/_authenticated/build/activity'
     | '/_authenticated/build/dashboard'
@@ -1481,6 +1518,7 @@ export interface RootRouteChildren {
   PrivacyRoute: typeof PrivacyRoute
   PrivacyPolicyRoute: typeof PrivacyPolicyRoute
   PrivateBetaRoute: typeof PrivateBetaRoute
+  ProfessionnelsRoute: typeof ProfessionnelsRoute
   ReliureRoute: typeof ReliureRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -1490,6 +1528,7 @@ export interface RootRouteChildren {
   TermsOfUseRoute: typeof TermsOfUseRoute
   ASlugRoute: typeof ASlugRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
+  FrSlugRoute: typeof FrSlugRoute
   InvitationAtelierTokenRoute: typeof InvitationAtelierTokenRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
   ProjectSummaryAccessTokenRoute: typeof ProjectSummaryAccessTokenRoute
@@ -1653,6 +1692,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivateBetaRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/professionnels': {
+      id: '/professionnels'
+      path: '/professionnels'
+      fullPath: '/professionnels'
+      preLoaderRoute: typeof ProfessionnelsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/reliure': {
       id: '/reliure'
       path: '/reliure'
@@ -1765,6 +1811,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoDeckProjectRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/fr/$slug': {
+      id: '/fr/$slug'
+      path: '/fr/$slug'
+      fullPath: '/fr/$slug'
+      preLoaderRoute: typeof FrSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/invitation-atelier/$token': {
       id: '/invitation-atelier/$token'
       path: '/invitation-atelier/$token'
@@ -1798,6 +1851,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/atelier/'
       preLoaderRoute: typeof AuthenticatedAtelierIndexRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/atelier/profil-public': {
+      id: '/_authenticated/atelier/profil-public'
+      path: '/profil-public'
+      fullPath: '/atelier/profil-public'
+      preLoaderRoute: typeof AuthenticatedAtelierProfilPublicRouteImport
       parentRoute: typeof AuthenticatedAtelierRouteRoute
     }
     '/_authenticated/atelier/tarifs': {
@@ -2347,6 +2407,7 @@ const AuthenticatedAdminRouteRouteWithChildren =
   )
 
 interface AuthenticatedAtelierRouteRouteChildren {
+  AuthenticatedAtelierProfilPublicRoute: typeof AuthenticatedAtelierProfilPublicRoute
   AuthenticatedAtelierTarifsRoute: typeof AuthenticatedAtelierTarifsRoute
   AuthenticatedAtelierIndexRoute: typeof AuthenticatedAtelierIndexRoute
   AuthenticatedAtelierCasesCaseIdRoute: typeof AuthenticatedAtelierCasesCaseIdRoute
@@ -2370,6 +2431,8 @@ interface AuthenticatedAtelierRouteRouteChildren {
 
 const AuthenticatedAtelierRouteRouteChildren: AuthenticatedAtelierRouteRouteChildren =
   {
+    AuthenticatedAtelierProfilPublicRoute:
+      AuthenticatedAtelierProfilPublicRoute,
     AuthenticatedAtelierTarifsRoute: AuthenticatedAtelierTarifsRoute,
     AuthenticatedAtelierIndexRoute: AuthenticatedAtelierIndexRoute,
     AuthenticatedAtelierCasesCaseIdRoute: AuthenticatedAtelierCasesCaseIdRoute,
@@ -2617,6 +2680,7 @@ const rootRouteChildren: RootRouteChildren = {
   PrivacyRoute: PrivacyRoute,
   PrivacyPolicyRoute: PrivacyPolicyRoute,
   PrivateBetaRoute: PrivateBetaRoute,
+  ProfessionnelsRoute: ProfessionnelsRoute,
   ReliureRoute: ReliureRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
@@ -2626,6 +2690,7 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfUseRoute: TermsOfUseRoute,
   ASlugRoute: ASlugRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
+  FrSlugRoute: FrSlugRoute,
   InvitationAtelierTokenRoute: InvitationAtelierTokenRoute,
   MPublicTokenRoute: MPublicTokenRoute,
   ProjectSummaryAccessTokenRoute: ProjectSummaryAccessTokenRoute,

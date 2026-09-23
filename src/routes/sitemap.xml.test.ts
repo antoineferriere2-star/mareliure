@@ -46,6 +46,7 @@ describe("sitemapFor", () => {
     expect(baseUrl).toBe("https://finebindery.com");
     expect(entries.map((e) => e.path)).toEqual([
       "/",
+      "/professionnels",
       "/legal-notice",
       "/privacy-policy",
       "/terms-of-use",

@@ -56,10 +56,10 @@ function Wordmark() {
 }
 
 const NAV = [
-  { href: "#how-it-works", label: "How it works" },
-  { href: "#offers", label: "What we do" },
-  { href: "#workshops", label: "Our workshops" },
-  { href: "#faq", label: "FAQ" },
+  { href: "/#how-it-works", label: "How it works" },
+  { href: "/#offers", label: "What we do" },
+  { href: "/professionnels", label: "Our workshops" },
+  { href: "/#faq", label: "FAQ" },
 ] as const;
 
 export function FineBinderyHeader() {

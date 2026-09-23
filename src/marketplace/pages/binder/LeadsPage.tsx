@@ -10,6 +10,7 @@ import { FIELD } from "@/marketplace/pages/binder/quotes/quoteUi";
 import { matchesSearch } from "@/marketplace/works/workSearch";
 import { Search } from "lucide-react";
 import { BinderEmptyState, BinderPageHeader } from "./BinderPageUi";
+import { sourceLabel } from "@/marketplace/binders/fineBinderyProfile";
 
 const GROUPS: { key: CaseGroup | "all"; label: string }[] = [
   { key: "all", label: "Tous" }, { key: "new", label: "Nouveaux" },
@@ -54,7 +55,7 @@ export function LeadsPage() {
           const hasDraft = (quotes.data ?? []).some((quote) => quote.workId === work?.id && quote.status === "draft");
           const group = caseGroup(row, hasDraft, false);
           return <li key={row.caseId}><Link to="/atelier/leads/$leadId" params={{ leadId: row.caseId }} className="group grid gap-3 px-4 py-5 transition hover:bg-[#f5f0e8] sm:grid-cols-[minmax(0,1fr)_14rem] sm:items-center sm:px-5">
-            <span className="min-w-0"><span className="flex flex-wrap items-center gap-2"><span className="text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-[#7a2230]">{GROUPS.find((item) => item.key === group)?.label ?? "Projet"}</span>{row.unreadCount > 0 && <span className="rounded-full bg-[#7a2230] px-2 py-0.5 text-[0.64rem] font-bold text-white">{row.unreadCount} nouveau</span>}</span><strong className="mt-1 block font-editorial text-xl font-normal leading-tight">{row.title}</strong><span className="mt-1 block text-xs text-[#74695d]">{row.clientName || "Projet Ma Reliure"} · {row.reference} · {new Date(row.createdAt).toLocaleDateString("fr-FR")}</span><span className="mt-2 block line-clamp-2 text-sm leading-6 text-[#685d51]">{row.summary}</span></span>
+            <span className="min-w-0"><span className="flex flex-wrap items-center gap-2"><span className="text-[0.66rem] font-semibold uppercase tracking-[0.14em] text-[#7a2230]">{GROUPS.find((item) => item.key === group)?.label ?? "Projet"}</span><span className="border border-[#cfc5b6] px-2 py-0.5 text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-[#59635b]">{sourceLabel(row.acquisitionOrigin)}</span>{row.unreadCount > 0 && <span className="rounded-full bg-[#7a2230] px-2 py-0.5 text-[0.64rem] font-bold text-white">{row.unreadCount} nouveau</span>}</span><strong className="mt-1 block font-editorial text-xl font-normal leading-tight">{row.title}</strong><span className="mt-1 block text-xs text-[#74695d]">{row.clientName || "Projet"} · {row.reference} · {new Date(row.createdAt).toLocaleDateString("fr-FR")}</span><span className="mt-2 block line-clamp-2 text-sm leading-6 text-[#685d51]">{row.summary}</span></span>
             <span className="border-l-0 border-[#d8d0c4] sm:border-l sm:pl-5"><span className="block text-[0.65rem] font-semibold uppercase tracking-[0.12em] text-[#8b8175]">Prochaine action</span><span className="mt-1 block text-sm font-semibold text-[#34281f]">{nextCaseAction(row, Boolean(work), hasDraft)}</span><span className="mt-3 inline-block text-sm font-semibold text-[#5f1b27] underline decoration-[#7a2230]/30 underline-offset-4 group-hover:decoration-current">Ouvrir le dossier</span></span>
           </Link></li>;
         })}

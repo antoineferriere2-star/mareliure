@@ -10,14 +10,16 @@ export const listAdminWorkshopSummaries = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
-    const [binders, matches, works, quotes, invoices] = await Promise.all([
-      sb.from("marketplace_binders").select("id, display_name, workshop_name, city, status, updated_at").order("display_name"),
+    const [binders, matches, works, quotes, invoices, skills, portfolio] = await Promise.all([
+      sb.from("marketplace_binders").select("id, display_name, workshop_name, city, country_code, status, public_profile_status, personal_referral_slug, updated_at").order("display_name"),
       sb.from("marketplace_case_matches").select("binder_id, case_id, state, invited_at"),
       sb.from("marketplace_binder_works").select("binder_id, source, updated_at"),
       sb.from("marketplace_binder_quotes").select("binder_id, status, updated_at"),
       sb.from("marketplace_binder_invoices").select("binder_id, created_at"),
+      sb.from("marketplace_binder_skills").select("binder_id, skill_slug"),
+      sb.from("marketplace_binder_portfolio").select("binder_id, is_published"),
     ]);
-    if (binders.error || matches.error || works.error || quotes.error || invoices.error) fail(500, "Le suivi des ateliers n'a pas pu être chargé.");
+    if (binders.error || matches.error || works.error || quotes.error || invoices.error || skills.error || portfolio.error) fail(500, "Le suivi des ateliers n'a pas pu être chargé.");
     return (binders.data ?? []).map((binder) => {
       const bm = (matches.data ?? []).filter((m) => m.binder_id === binder.id);
       const bw = (works.data ?? []).filter((w) => w.binder_id === binder.id);
@@ -28,7 +30,12 @@ export const listAdminWorkshopSummaries = createServerFn({ method: "GET" })
         name: binder.workshop_name || binder.display_name,
         relieur: binder.display_name,
         city: binder.city,
+        countryCode: binder.country_code,
         status: binder.status,
+        publicProfileStatus: binder.public_profile_status,
+        publicSlug: binder.personal_referral_slug,
+        specialties: (skills.data ?? []).filter((row) => row.binder_id === binder.id).map((row) => row.skill_slug),
+        portfolioCount: (portfolio.data ?? []).filter((row) => row.binder_id === binder.id && row.is_published).length,
         leadCount: bm.filter((m) => m.state !== "declined" && m.state !== "cancelled").length,
         quoteCount: bq.length,
         workCount: bw.length,
@@ -48,17 +55,19 @@ export const getAdminWorkshopDetail = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const { data: binder, error: binderError } = await sb.from("marketplace_binders")
-      .select("id, display_name, workshop_name, city, status, updated_at").eq("id", data.binderId).maybeSingle();
+      .select("id, display_name, workshop_name, city, country_code, status, public_profile_status, personal_referral_slug, updated_at").eq("id", data.binderId).maybeSingle();
     if (binderError || !binder) fail(404, "Atelier introuvable.");
-    const [matches, works, quotes, invoices, services, events] = await Promise.all([
+    const [matches, works, quotes, invoices, services, events, skills, portfolio] = await Promise.all([
       sb.from("marketplace_case_matches").select("case_id, state, invited_at").eq("binder_id", data.binderId),
       sb.from("marketplace_binder_works").select("id, case_id, source, title, reference, updated_at").eq("binder_id", data.binderId),
       sb.from("marketplace_binder_quotes").select("id, work_id, quote_number, status, total_ttc_cents, created_at").eq("binder_id", data.binderId),
       sb.from("marketplace_binder_invoices").select("id, quote_id, invoice_number, payment_status, created_at").eq("binder_id", data.binderId),
       sb.from("marketplace_binder_services").select("id").eq("binder_id", data.binderId),
       sb.from("marketplace_events").select("id, case_id, event_type, created_at").eq("binder_id", data.binderId).order("created_at", { ascending: false }).limit(30),
+      sb.from("marketplace_binder_skills").select("skill_slug").eq("binder_id", data.binderId),
+      sb.from("marketplace_binder_portfolio").select("id, is_published").eq("binder_id", data.binderId),
     ]);
-    if (matches.error || works.error || quotes.error || invoices.error || services.error || events.error) fail(500, "La fiche atelier n'a pas pu être chargée.");
+    if (matches.error || works.error || quotes.error || invoices.error || services.error || events.error || skills.error || portfolio.error) fail(500, "La fiche atelier n'a pas pu être chargée.");
     const caseIds = (matches.data ?? []).map((match) => match.case_id);
     const { data: cases, error: caseError } = caseIds.length
       ? await sb.from("marketplace_cases").select("id, reference, status, brand").in("id", caseIds)
@@ -70,7 +79,7 @@ export const getAdminWorkshopDetail = createServerFn({ method: "GET" })
     const platformQuotes = (quotes.data ?? []).filter((quote) => quote.work_id && platformWorkIds.has(quote.work_id));
     const platformQuoteIds = new Set(platformQuotes.map((quote) => quote.id));
     return {
-      binder: { id: binder.id, name: binder.workshop_name || binder.display_name, relieur: binder.display_name, city: binder.city, status: binder.status, updatedAt: binder.updated_at },
+      binder: { id: binder.id, name: binder.workshop_name || binder.display_name, relieur: binder.display_name, city: binder.city, countryCode: binder.country_code, status: binder.status, publicProfileStatus: binder.public_profile_status, publicSlug: binder.personal_referral_slug, specialties: (skills.data ?? []).map((row) => row.skill_slug), portfolioCount: (portfolio.data ?? []).filter((row) => row.is_published).length, updatedAt: binder.updated_at },
       leads: (matches.data ?? []).filter((m) => marketplaceCaseIds.has(m.case_id)).map((match) => ({ ...match, reference: (cases ?? []).find((row) => row.id === match.case_id)?.reference ?? "", caseStatus: (cases ?? []).find((row) => row.id === match.case_id)?.status ?? "" })),
       works: platformWorks.map((work) => ({ id: work.id, caseId: work.case_id, title: work.title, reference: work.reference, updatedAt: work.updated_at })),
       quotes: platformQuotes.map((quote) => ({ id: quote.id, workId: quote.work_id, number: quote.quote_number, status: quote.status, totalTtcCents: quote.total_ttc_cents, createdAt: quote.created_at })),

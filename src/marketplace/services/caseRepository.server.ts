@@ -23,6 +23,7 @@ import { buildCaseProfile, type CaseProfile } from "@/marketplace/cases/caseProf
 import { normalizeEmail } from "@/marketplace/cases/ownership";
 import { triageCase } from "@/marketplace/cases/triage";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
+import { PROFILE_REQUEST_SOURCE, PROFILE_SOURCE_ANSWER_KEY } from "@/marketplace/binders/fineBinderyProfile";
 import {
   projectCase,
   type CaseLocale,
@@ -296,6 +297,22 @@ export async function resolveApprovedBinderBySlug(
   return { binderId: data.id, displayName: data.workshop_name ?? data.display_name };
 }
 
+/** A FineBindery page can attribute a request only while it is still public. */
+export async function resolvePublishedFineBinderyBinderBySlug(
+  sb: Supa,
+  slug: string,
+): Promise<{ binderId: string; displayName: string } | null> {
+  const { data } = await sb
+    .from("marketplace_binders")
+    .select("id, display_name, workshop_name")
+    .eq("personal_referral_slug", slug)
+    .eq("status", "approved")
+    .eq("public_profile_status", "published")
+    .maybeSingle();
+  if (!data) return null;
+  return { binderId: data.id, displayName: data.workshop_name ?? data.display_name };
+}
+
 /**
  * Signed URLs for the visitor's photos, from whichever bucket each one came
  * from. Storage paths are never handed to a browser — the URL expires, the
@@ -391,10 +408,15 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
     // visitor to fabricate an attribution the way a trusted `?binder_id=`
     // would (§55).
     const referralSlug = answers[REFERRAL_ANSWER_KEY];
+    const requestedFineBinderyProfile =
+      answers[PROFILE_SOURCE_ANSWER_KEY] === PROFILE_REQUEST_SOURCE;
     const referral =
       typeof referralSlug === "string" && referralSlug.trim()
-        ? await resolveApprovedBinderBySlug(sb, referralSlug.trim())
+        ? requestedFineBinderyProfile
+          ? await resolvePublishedFineBinderyBinderBySlug(sb, referralSlug.trim())
+          : await resolveApprovedBinderBySlug(sb, referralSlug.trim())
         : null;
+    const fromFineBinderyProfile = Boolean(referral && requestedFineBinderyProfile);
 
     const { error: updateError } = await sb
       .from("marketplace_cases")
@@ -408,7 +430,10 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
         triage_flags: triage.flags,
         triaged_at: new Date().toISOString(),
         ...(referral
-          ? { acquisition_origin: "BINDER_REFERRED", referred_binder_id: referral.binderId }
+          ? {
+              acquisition_origin: fromFineBinderyProfile ? "FINEBINDERY_PROFILE" : "BINDER_REFERRED",
+              referred_binder_id: referral.binderId,
+            }
           : {}),
       })
       .eq("id", row.id)
@@ -417,11 +442,20 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
     triaged += 1;
 
     if (referral) {
+      if (fromFineBinderyProfile) {
+        const { error: matchError } = await sb.from("marketplace_case_matches").upsert({
+          case_id: row.id,
+          binder_id: referral.binderId,
+          state: "invited",
+          invited_at: new Date().toISOString(),
+        }, { onConflict: "case_id,binder_id", ignoreDuplicates: true });
+        if (matchError) throw matchError;
+      }
       await sb.from("marketplace_events").insert({
         case_id: row.id,
         binder_id: referral.binderId,
-        event_type: "binder_referral_attributed",
-        metadata: {},
+        event_type: fromFineBinderyProfile ? "finebindery_profile_request_attributed" : "binder_referral_attributed",
+        metadata: fromFineBinderyProfile ? { source: PROFILE_REQUEST_SOURCE } : {},
       });
     }
   }

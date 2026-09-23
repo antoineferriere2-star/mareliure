@@ -50,6 +50,7 @@ const MARELIURE_ENTRIES: SitemapEntry[] = [
 
 const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
+  { path: "/professionnels", changefreq: "weekly", priority: "0.9" },
   { path: "/legal-notice", changefreq: "yearly", priority: "0.3" },
   { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },
   { path: "/terms-of-use", changefreq: "yearly", priority: "0.3" },

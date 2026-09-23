@@ -90,7 +90,9 @@ export function canSendCaseToBinders(input: {
   referredBinderId: string | null;
   requestedBinderIds: readonly string[];
 }): { allowed: boolean; reason?: string } {
-  if (input.acquisitionOrigin !== "BINDER_REFERRED") return { allowed: true };
+  if (!["BINDER_REFERRED", "FINEBINDERY_PROFILE"].includes(input.acquisitionOrigin)) {
+    return { allowed: true };
+  }
   const isExactlyTheReferredBinder =
     input.requestedBinderIds.length === 1 &&
     input.requestedBinderIds[0] === input.referredBinderId;
