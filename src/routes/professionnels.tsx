@@ -7,11 +7,11 @@ const DESCRIPTION = "Découvrez les ateliers de reliure, restauration, conservat
 
 export const Route = createFileRoute("/professionnels")({
   loader: () => listPublicFineBinderyProfiles(),
-  head: ({ loaderData }) => ({
+  head: () => ({
     meta: [
       { title: TITLE },
       { name: "description", content: DESCRIPTION },
-      { name: "robots", content: loaderData?.length ? "index, follow" : "noindex, follow" },
+      { name: "robots", content: "index, follow" },
       { property: "og:title", content: TITLE },
       { property: "og:description", content: DESCRIPTION },
       { property: "og:type", content: "website" },
