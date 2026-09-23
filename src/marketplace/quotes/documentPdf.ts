@@ -247,7 +247,27 @@ export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf>
     y -= 14;
   };
   tableHead();
+  let currentBlockKey: string | null = null;
   for (const item of doc.items) {
+    const block = doc.blocks.find((candidate) => candidate.key === item.blockKey);
+    if (block && block.key !== currentBlockKey) {
+      currentBlockKey = block.key;
+      ensure(34);
+      const dimensions = formatDimensions(block);
+      draw(block.label, M, 11, bold);
+      drawRight(`${block.bookCount} livre${block.bookCount > 1 ? "s" : ""}`, right, 9.5, bold, MUTED);
+      y -= 13;
+      if (dimensions) {
+        draw(dimensions, M, 8.5, regular, MUTED);
+        y -= 11;
+      }
+      const blockTotal = doc.items.filter((candidate) => candidate.blockKey === block.key)
+        .reduce((sum, candidate) => sum + candidate.totalHtCents, 0);
+      drawRight(`Sous-total ${formatMoneyPdf(blockTotal)}`, right, 8.5, regular, MUTED);
+      y -= 8;
+      rule();
+      y -= 10;
+    }
     const labelLines = wrap(item.label, bold, 10, labelW);
     // Les clés du référentiel et la provenance tarifaire servent au Workbench,
     // jamais au client. Les anciens devis peuvent encore porter cette mention
@@ -272,11 +292,37 @@ export async function renderDocumentPdf(doc: DocumentView): Promise<RenderedPdf>
     }
     const rowBottom = y;
     y = rowTop;
-    drawRight(`${quantityLabel(item.quantity)}${item.unit ? ` ${item.unit}` : ""}`, colQty + 30, 9.5);
+    const blockCount = block?.bookCount ?? 1;
+    drawRight(`${quantityLabel(item.quantity * blockCount)}${item.unit ? ` ${item.unit}` : ""}`, colQty + 30, 9.5);
     drawRight(formatMoneyPdf(item.unitPriceCents), colUnit + 45, 9.5);
     if (showLineVat) drawRight(rateLabel(item.vatRateBps), colVat + 30, 9.5);
     drawRight(formatMoneyPdf(item.totalHtCents), right, 9.5);
     y = rowBottom - 6;
+
+    for (const photo of item.photos.filter((candidate) => candidate.includeInPdf)) {
+      try {
+        const response = await fetch(photo.url);
+        if (!response.ok) continue;
+        const bytes = new Uint8Array(await response.arrayBuffer());
+        const type = response.headers.get("content-type") ?? "";
+        const embedded = type.includes("png") ? await pdf.embedPng(bytes) : await pdf.embedJpg(bytes);
+        const maxW = 190;
+        const maxH = 125;
+        const scale = Math.min(maxW / embedded.width, maxH / embedded.height, 1);
+        const imageW = embedded.width * scale;
+        const imageH = embedded.height * scale;
+        ensure(imageH + (photo.caption ? 24 : 12));
+        page.drawImage(embedded, { x: M + 12, y: y - imageH, width: imageW, height: imageH });
+        y -= imageH + 5;
+        if (photo.caption) {
+          paragraph(photo.caption, M + 12, 8, Math.max(imageW, 190), regular, MUTED);
+        }
+        y -= 7;
+      } catch {
+        // Un fichier supprimé ou momentanément indisponible ne doit pas bloquer
+        // l'édition du document ; le texte et les montants restent imprimables.
+      }
+    }
   }
   rule();
   y -= 18;

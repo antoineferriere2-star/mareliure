@@ -18,7 +18,13 @@ export function duplicateQuoteInput(source: DocumentView): QuoteInput {
       city: source.client.city, country: source.client.country,
     },
     book: source.book,
+    blocks: (source.blocks?.length ? source.blocks : [{
+      key: "format-principal", label: "Format principal", bookCount: 1,
+      heightMm: source.book.heightMm, widthMm: source.book.widthMm, spineMm: source.book.spineMm,
+    }]).map((block) => ({ ...block })),
     lines: source.items.map((item) => ({
+      lineKey: `copy-${item.lineKey ?? item.position}`,
+      blockKey: item.blockKey ?? "format-principal",
       serviceId: null, label: item.label, description: item.description, unit: item.unit,
       quantity: item.quantity, unitPriceCents: item.unitPriceCents,
       catalogPriceCents: item.catalogPriceCents, vatRateBps: item.vatRateBps,

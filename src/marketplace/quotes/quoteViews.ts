@@ -10,6 +10,8 @@ import type { VatGroup, VatRegime } from "./quoteCalc";
 
 export interface DocumentItemView {
   position: number;
+  lineKey: string;
+  blockKey: string;
   serviceId: string | null;
   label: string;
   description: string | null;
@@ -22,6 +24,25 @@ export interface DocumentItemView {
   totalHtCents: number;
   referenceVersion?: string | null;
   referenceOperationKey?: string | null;
+  photos: DocumentPhotoView[];
+}
+
+export interface DocumentPhotoView {
+  id: string;
+  lineKey: string;
+  url: string;
+  caption: string | null;
+  includeInPdf: boolean;
+  position: number;
+}
+
+export interface DocumentBlockView {
+  key: string;
+  label: string;
+  bookCount: number;
+  heightMm: number | null;
+  widthMm: number | null;
+  spineMm: number | null;
 }
 
 export interface DocumentView {
@@ -51,6 +72,7 @@ export interface DocumentView {
     spineMm: number | null;
     notes: string | null;
   };
+  blocks: DocumentBlockView[];
   items: DocumentItemView[];
   currency: string;
   issuer: Issuer;
@@ -140,6 +162,13 @@ export interface InvoiceDbRow extends CommonRow {
 }
 
 export interface ItemDbRow {
+  line_key?: string;
+  block_key?: string;
+  block_label?: string;
+  block_book_count?: number;
+  block_height_mm?: number | null;
+  block_width_mm?: number | null;
+  block_spine_mm?: number | null;
   position: number;
   service_id: string | null;
   label: string;
@@ -155,7 +184,29 @@ export interface ItemDbRow {
   reference_operation_key?: string | null;
 }
 
-function common(row: CommonRow, items: ItemDbRow[]) {
+export interface PhotoDbRow {
+  id: string;
+  line_key: string;
+  caption: string | null;
+  include_in_pdf: boolean;
+  position: number;
+  url: string;
+}
+
+function common(row: CommonRow, items: ItemDbRow[], photos: PhotoDbRow[] = []) {
+  const sorted = [...items].sort((a, b) => a.position - b.position);
+  const blocks = new Map<string, DocumentBlockView>();
+  for (const item of sorted) {
+    const key = item.block_key ?? "format-principal";
+    if (!blocks.has(key)) blocks.set(key, {
+      key,
+      label: item.block_label ?? "Format principal",
+      bookCount: item.block_book_count ?? 1,
+      heightMm: item.block_height_mm ?? row.height_mm,
+      widthMm: item.block_width_mm ?? row.width_mm,
+      spineMm: item.block_spine_mm ?? row.spine_mm,
+    });
+  }
   return {
     client: {
       id: row.client_id,
@@ -175,10 +226,12 @@ function common(row: CommonRow, items: ItemDbRow[]) {
       spineMm: row.spine_mm,
       notes: row.book_notes,
     },
-    items: [...items]
-      .sort((a, b) => a.position - b.position)
+    blocks: [...blocks.values()],
+    items: sorted
       .map<DocumentItemView>((item) => ({
         position: item.position,
+        lineKey: item.line_key ?? `position-${item.position}`,
+        blockKey: item.block_key ?? "format-principal",
         serviceId: item.service_id,
         label: item.label,
         description: item.description,
@@ -190,6 +243,10 @@ function common(row: CommonRow, items: ItemDbRow[]) {
         totalHtCents: item.total_ht_cents,
         referenceVersion: item.reference_version ?? null,
         referenceOperationKey: item.reference_operation_key ?? null,
+        photos: photos
+          .filter((photo) => photo.line_key === (item.line_key ?? `position-${item.position}`))
+          .sort((a, b) => a.position - b.position)
+          .map((photo) => ({ id: photo.id, lineKey: photo.line_key, url: photo.url, caption: photo.caption, includeInPdf: photo.include_in_pdf, position: photo.position })),
       })),
     currency: row.currency,
     issuer: row.issuer,
@@ -217,6 +274,7 @@ export function quoteView(
   row: QuoteDbRow,
   items: ItemDbRow[],
   invoice: { id: string; invoice_number: string } | null,
+  photos: PhotoDbRow[] = [],
 ): DocumentView {
   return {
     kind: "quote",
@@ -225,7 +283,7 @@ export function quoteView(
     status: row.status,
     issueDate: row.issue_date,
     validUntil: row.valid_until,
-    ...common(row, items),
+    ...common(row, items, photos),
     linkedQuoteId: null,
     linkedQuoteNumber: null,
     linkedInvoiceId: invoice?.id ?? null,
@@ -239,6 +297,7 @@ export function invoiceView(
   row: InvoiceDbRow,
   items: ItemDbRow[],
   quote: { id: string; quote_number: string } | null,
+  photos: PhotoDbRow[] = [],
 ): DocumentView {
   return {
     kind: "invoice",
@@ -247,7 +306,7 @@ export function invoiceView(
     status: "issued",
     issueDate: row.issue_date,
     validUntil: null,
-    ...common(row, items),
+    ...common(row, items, photos),
     linkedQuoteId: quote?.id ?? row.quote_id,
     linkedQuoteNumber: quote?.quote_number ?? null,
     linkedInvoiceId: null,

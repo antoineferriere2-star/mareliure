@@ -16,6 +16,26 @@ import type { ContactView, WorkView } from "@/marketplace/works/workViews";
 
 export type AdjustmentType = "NONE" | "PERCENT" | "AMOUNT";
 
+export interface QuoteSizeBlock {
+  key: string;
+  label: string;
+  bookCount: number;
+  height: string;
+  width: string;
+  spine: string;
+}
+
+export const DEFAULT_BLOCK_KEY = "format-principal";
+
+export const emptySizeBlock = (key = DEFAULT_BLOCK_KEY, label = "Format principal"): QuoteSizeBlock => ({
+  key,
+  label,
+  bookCount: 1,
+  height: "",
+  width: "",
+  spine: "",
+});
+
 export interface BuilderState {
   /** L'ouvrage d'où vient ce devis (« Créer un devis » depuis sa fiche), ou `null`. */
   workId: string | null;
@@ -33,6 +53,7 @@ export interface BuilderState {
   height: string;
   width: string;
   spine: string;
+  blocks: QuoteSizeBlock[];
   lines: QuoteLine[];
   discountType: AdjustmentType;
   discountValue: string;
@@ -58,6 +79,7 @@ export const emptyBuilder = (): BuilderState => ({
   height: "",
   width: "",
   spine: "",
+  blocks: [emptySizeBlock()],
   lines: [],
   discountType: "NONE",
   discountValue: "",
@@ -81,8 +103,9 @@ const countable = (lines: QuoteLine[]) => lines.filter((l) => l.label.trim() !==
  * applique les taux des lignes (c'est une aperçu — le devis, lui, exige le régime).
  */
 export function totalsOf(state: BuilderState, regime: VatRegime | null): QuoteTotals {
+  const counts = new Map(state.blocks.map((block) => [block.key, block.bookCount]));
   return computeQuote({
-    lines: countable(state.lines).map((l) => ({ quantity: l.quantity, unitPriceCents: l.unitPriceCents, vatRateBps: l.vatRateBps })),
+    lines: countable(state.lines).map((l) => ({ quantity: l.quantity * (counts.get(l.blockKey ?? DEFAULT_BLOCK_KEY) ?? 1), unitPriceCents: l.unitPriceCents, vatRateBps: l.vatRateBps })),
     vatRegime: regime ?? "VAT_LIABLE",
     discount: adjustment(state.discountType, state.discountValue),
     deposit: adjustment(state.depositType, state.depositValue),
@@ -95,6 +118,11 @@ export type BuiltInput = { ok: true; input: QuoteInput } | { ok: false; problems
 
 export function toQuoteInput(state: BuilderState): BuiltInput {
   const problems: string[] = [];
+  for (const block of state.blocks) {
+    if (!state.lines.some((line) => (line.blockKey ?? DEFAULT_BLOCK_KEY) === block.key)) {
+      problems.push(`Ajoutez au moins une prestation dans « ${block.label.trim() || "ce format"} ».`);
+    }
+  }
   if (state.lines.some((line) => line.requiresManualPrice && line.unitPriceCents <= 0))
     problems.push("Définissez le prix pour chaque prestation sur étude.");
   const dim = (raw: string, label: string) => {
@@ -106,6 +134,14 @@ export function toQuoteInput(state: BuilderState): BuiltInput {
   const heightMm = dim(state.height, "Hauteur");
   const widthMm = dim(state.width, "Largeur");
   const spineMm = dim(state.spine, "Dos");
+  const blocks = state.blocks.map((block, index) => ({
+    key: block.key,
+    label: block.label.trim(),
+    bookCount: block.bookCount,
+    heightMm: dim(block.height, `Format ${index + 1} — hauteur`),
+    widthMm: dim(block.width, `Format ${index + 1} — largeur`),
+    spineMm: dim(block.spine, `Format ${index + 1} — dos`),
+  }));
 
   if (state.discountType !== "NONE" && (state.discountType === "PERCENT" ? parsePercentToBps(state.discountValue) : parseEurosToCents(state.discountValue)) === null) {
     problems.push("Remise : valeur invalide.");
@@ -130,7 +166,10 @@ export function toQuoteInput(state: BuilderState): BuiltInput {
       country: null,
     },
     book: { title: blank(state.title), author: blank(state.author), heightMm, widthMm, spineMm, notes: blank(state.bookNotes) },
+    blocks,
     lines: state.lines.map((l) => ({
+      lineKey: l.key,
+      blockKey: l.blockKey ?? DEFAULT_BLOCK_KEY,
       serviceId: l.serviceId,
       label: l.label,
       description: blank(l.description),
@@ -153,6 +192,7 @@ export function toQuoteInput(state: BuilderState): BuiltInput {
       else if (issue.path[0] === "lines" && issue.path.length === 1) problems.push("Ajoutez au moins une prestation.");
       else if (issue.path[0] === "lines" && issue.path[2] === "label") problems.push("Une ligne n'a pas de libellé.");
       else if (issue.path[0] === "lines") problems.push("Une ligne a une quantité ou un prix invalide.");
+      else if (issue.path[0] === "blocks") problems.push("Vérifiez les formats et leurs quantités.");
     }
   }
   const unique = [...new Set(problems)];
@@ -166,7 +206,7 @@ export function toQuoteInput(state: BuilderState): BuiltInput {
  */
 export function stateFromWork(work: WorkView, contact: ContactView | null): BuilderState {
   const mm = (v: number | null) => (v === null ? "" : String(v));
-  return {
+  const state = {
     ...emptyBuilder(),
     workId: work.id,
     clientId: contact?.id ?? null,
@@ -183,6 +223,7 @@ export function stateFromWork(work: WorkView, contact: ContactView | null): Buil
     width: mm(work.widthMm),
     spine: mm(work.thicknessMm),
   };
+  return { ...state, blocks: [{ ...state.blocks[0], height: state.height, width: state.width, spine: state.spine }] };
 }
 
 /** Un devis existant, remis dans le constructeur pour être modifié. */
@@ -207,8 +248,17 @@ export function stateFromDocument(doc: DocumentView): BuilderState {
     height: mm(doc.book.heightMm),
     width: mm(doc.book.widthMm),
     spine: mm(doc.book.spineMm),
+    blocks: (doc.blocks?.length ? doc.blocks : [{ key: DEFAULT_BLOCK_KEY, label: "Format principal", bookCount: 1, heightMm: doc.book.heightMm, widthMm: doc.book.widthMm, spineMm: doc.book.spineMm }]).map((block) => ({
+      key: block.key,
+      label: block.label,
+      bookCount: block.bookCount,
+      height: mm(block.heightMm),
+      width: mm(block.widthMm),
+      spine: mm(block.spineMm),
+    })),
     lines: doc.items.map((item) => ({
-      key: `doc-${item.position}`,
+      key: item.lineKey ?? `doc-${item.position}`,
+      blockKey: item.blockKey ?? DEFAULT_BLOCK_KEY,
       serviceId: item.serviceId,
       label: item.label,
       description: item.description ?? "",

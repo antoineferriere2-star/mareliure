@@ -29,6 +29,7 @@ import {
   BinderQuotesError,
   convertQuoteToInvoice,
   createQuote,
+  deleteQuoteItemPhoto,
   getInvoice,
   getQuote,
   listCatalog,
@@ -43,8 +44,10 @@ import {
   saveService,
   setQuoteStatus,
   updateQuote,
+  uploadQuoteItemPhoto,
   type BinderQuotesErrorCode,
 } from "./binderQuotes.server";
+import { QUOTE_OPERATION_PHOTO_MIME_TYPES } from "@/marketplace/quotes/quotePhotos";
 
 const MESSAGES: Record<BinderQuotesErrorCode, string> = {
   no_binder: "Aucun atelier n'est associé à ce compte.",
@@ -194,6 +197,29 @@ export const updateMyQuote = createServerFn({ method: "POST" })
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => updateQuote(sb, binderId, data.id, data.quote)),
   );
+
+const quotePhotoInput = z.object({
+  quoteId: z.string().uuid(),
+  lineKey: z.string().trim().min(1).max(100),
+  filename: z.string().trim().min(1).max(200),
+  mimeType: z.enum(QUOTE_OPERATION_PHOTO_MIME_TYPES),
+  imageBase64: z.string().min(1).max(12_000_000),
+  caption: z.string().trim().max(300).nullable(),
+  includeInPdf: z.boolean(),
+}).strict();
+
+export const uploadMyQuoteItemPhoto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => quotePhotoInput.parse(data))
+  .handler(({ context, data }) => run(context.userId, (binderId, sb) => uploadQuoteItemPhoto(sb, binderId, data)));
+
+export const deleteMyQuoteItemPhoto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => id.parse(data))
+  .handler(({ context, data }) => run(context.userId, async (binderId, sb) => {
+    await deleteQuoteItemPhoto(sb, binderId, data.id);
+    return { ok: true as const };
+  }));
 
 /** Nouveau brouillon issu du snapshot d'un devis de cet atelier. */
 export const duplicateMyQuote = createServerFn({ method: "POST" })

@@ -26,6 +26,8 @@ export interface CatalogService {
 export interface QuoteLine {
   /** Clé locale stable (l'interface n'utilise jamais l'index comme identité). */
   key: string;
+  /** Format auquel la prestation appartient. Absent seulement avant son ajout au constructeur. */
+  blockKey?: string;
   serviceId: string | null;
   label: string;
   description: string;

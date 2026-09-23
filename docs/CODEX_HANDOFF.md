@@ -3065,3 +3065,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Aucun schéma, tarif, droit ou comportement d'autorisation modifié. Les photos par ligne de devis n'ont pas été simulées : le schéma actuel ne relie aucun média aux lignes et la mission interdit une migration. Cette capacité demande une évolution additive dédiée avec stockage, politiques et snapshot PDF.
 - Recette navigateur réelle sur un atelier QA isolé : création et réouverture d'un devis, favoris, récentes, catégorie Dorure, description client, TVA globale 5,5 % puis 20 %, sauvegarde à 552 € TTC, paramètres documentaires, palette mobile et total collant. Responsive contrôlé sans débordement à 375, 390, 430, 768, 1024, 1280 et 1440 px ; Fine Bindery contrôlé en mobile et bureau. Atelier, compte et données QA supprimés après la recette.
 - Vérifications : typecheck et lint verts ; suite complète 202 fichiers / 2 886 tests verte ; build Ma Reliure vert ; contrat `pdf-lib` du Worker vert sur l'artefact construit. Ouvrir la PR et attendre sa CI ; ne pas fusionner sans nouvelle autorisation.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 23 septembre 2026, `feat/quote-size-blocks-photos`.
+
+- Le Quote Workbench accepte plusieurs blocs de format. Chaque bloc possède un nom, des dimensions et un nombre de livres ; ses prestations gardent une quantité par livre et les totaux serveur multiplient cette quantité par le nombre de livres. Les anciens devis sont relus comme un unique « Format principal » sans réécrire leurs snapshots.
+- Chaque prestation peut recevoir jusqu'à six photos JPEG/PNG de 8 Mo, avec légende et choix d'inclusion au PDF. Les fichiers sont enregistrés après le brouillon dans un bucket privé, servis par URL signée, visibles dans le détail du document et repris dans la facture liée. Une reprise après échec d'upload réutilise le même brouillon.
+- Migration additive `20260923100000_marketplace_quote_size_blocks_photos.sql` : clés stables de ligne, snapshots de blocs sur lignes devis/facture, table de métadonnées photo, bucket privé et fonctions transactionnelles adaptées. Elle n'est appliquée dans aucun environnement.
+- Vérifications locales : typecheck, lint et build Ma Reliure verts ; 2 889 tests sur 2 890 verts lors de la suite complète, avec le seul échec dû au timeout historique de 5 s de `secretsContract.test.ts`, puis ce test vert isolément. QA navigateur fonctionnelle en attente d'un environnement où la migration peut être appliquée.
+- Ne pas fusionner ni déployer sans revue. Les briefs suivants demandent des PR séparées/empilées pour la refonte PDF premium, la conformité facture et la page « Mes prestations et mes prix ».

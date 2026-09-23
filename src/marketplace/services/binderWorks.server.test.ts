@@ -129,13 +129,16 @@ const profile = (): BillingProfileInput => ({
   phone: "02 00 00 00 00", vatRegime: "VAT_LIABLE", defaultVatRateBps: 2000, vatMention: null, quotePrefix: "D", invoicePrefix: "F",
   quoteValidityDays: 30, paymentTerms: null, quoteNotes: null, invoiceNotes: null,
 });
+let testLineSequence = 0;
 const line = (label: string, unit: number) => ({
+  lineKey: `work-line-${++testLineSequence}`, blockKey: "format-principal",
   serviceId: null, label, description: null, unit: null, quantity: 1, unitPriceCents: unit, catalogPriceCents: null, vatRateBps: 2000,
 });
 const quote = (over: Partial<QuoteInput> = {}): QuoteInput => ({
   clientId: null,
   client: { name: "Nom saisi dans le devis", email: null, phone: null, addressLine1: null, postalCode: null, city: null, country: null },
   book: { title: "Titre saisi dans le devis", author: null, heightMm: 220, widthMm: 145, spineMm: 32, notes: null },
+  blocks: [{ key: "format-principal", label: "Format principal", bookCount: 1, heightMm: 220, widthMm: 145, spineMm: 32 }],
   lines: [line("Plein cuir", 28000), line("Nerfs", 3000), line("Dorure titre", 4500), line("Étui", 7500)],
   discount: { type: "NONE" }, deposit: { type: "NONE" }, validityDays: null, notes: null, ...over,
 });

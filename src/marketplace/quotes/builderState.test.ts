@@ -53,6 +53,29 @@ describe("le total en direct du constructeur", () => {
     const s = { ...scenario(), lines: [...scenario().lines, freeLine(2000, "x", "")], discountType: "PERCENT" as const, discountValue: "abc" };
     expect(totalsOf(s, "FRANCHISE").totalHtCents).toBe(43000);
   });
+
+  it("additionne plusieurs formats et multiplie chaque prestation par le nombre de livres du bloc", () => {
+    const state: BuilderState = {
+      ...emptyBuilder(),
+      clientName: "Bibliothèque municipale",
+      blocks: [
+        { key: "petit", label: "Petit format", bookCount: 3, height: "180", width: "110", spine: "20" },
+        { key: "grand", label: "Grand format", bookCount: 2, height: "310", width: "220", spine: "45" },
+      ],
+      lines: [
+        { ...freeLine(2000, "a", "Réfection du dos"), blockKey: "petit", unitPriceCents: 5000 },
+        { ...freeLine(2000, "b", "Étui"), blockKey: "grand", unitPriceCents: 12000 },
+      ],
+    };
+    expect(totalsOf(state, "FRANCHISE").totalHtCents).toBe(3 * 5000 + 2 * 12000);
+    const built = toQuoteInput(state);
+    expect(built.ok).toBe(true);
+    if (!built.ok) return;
+    expect(built.input.blocks).toEqual([
+      { key: "petit", label: "Petit format", bookCount: 3, heightMm: 180, widthMm: 110, spineMm: 20 },
+      { key: "grand", label: "Grand format", bookCount: 2, heightMm: 310, widthMm: 220, spineMm: 45 },
+    ]);
+  });
 });
 
 describe("la saisie envoyée au serveur", () => {

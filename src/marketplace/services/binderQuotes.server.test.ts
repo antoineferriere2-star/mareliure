@@ -199,7 +199,10 @@ const profileInput = (over: Partial<BillingProfileInput> = {}): BillingProfileIn
   ...over,
 });
 
+let testLineSequence = 0;
 const line = (label: string, unit: number, over: Record<string, unknown> = {}) => ({
+  lineKey: `test-line-${++testLineSequence}`,
+  blockKey: "format-principal",
   serviceId: null,
   label,
   description: null,
@@ -215,6 +218,7 @@ const quoteInput = (over: Partial<QuoteInput> = {}): QuoteInput => ({
   clientId: null,
   client: { name: "Mme Durand", email: "durand@example.test", phone: null, addressLine1: "1 rue X", postalCode: "75001", city: "Paris", country: "FR" },
   book: { title: "Les Fleurs du Mal", author: "Baudelaire", heightMm: 220, widthMm: 145, spineMm: 32, notes: null },
+  blocks: [{ key: "format-principal", label: "Format principal", bookCount: 1, heightMm: 220, widthMm: 145, spineMm: 32 }],
   lines: [line("Plein cuir", 28000), line("Nerfs", 3000), line("Dorure titre", 4500), line("Étui", 7500, { catalogPriceCents: null })],
   discount: { type: "NONE" },
   deposit: { type: "PERCENT", bps: 3000 },

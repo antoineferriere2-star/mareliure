@@ -79,20 +79,22 @@ function DocumentBody({ doc }: { doc: DocumentView }) {
                 <th className="py-2 text-right font-medium">Total HT</th>
               </tr>
             </thead>
-            <tbody>
-              {doc.items.map((item) => (
+            {doc.blocks.map((block) => <tbody key={block.key}>
+              <tr className="border-b border-[#cfc5b6] bg-[#f8f4ed]"><th colSpan={showVat ? 5 : 4} className="px-2 py-2 text-left"><span className="font-serif text-base">{block.label}</span><span className="ml-2 text-xs font-normal text-muted-foreground">{block.bookCount} livre{block.bookCount > 1 ? "s" : ""}{formatDimensions(block) ? ` · ${formatDimensions(block)}` : ""}</span></th></tr>
+              {doc.items.filter((item) => item.blockKey === block.key).map((item) => (
                 <tr key={item.position} className="border-b border-border/60 align-top">
                   <td className="py-2 pr-3">
                     <span className="font-medium">{item.label}</span>
-                    {item.description && <span className="block text-xs text-muted-foreground">{item.description}</span>}
+                    {item.description && !/^(Référentiel\s+\S+\s+·\s+\S+|Tarif de base Ma Reliure)$/i.test(item.description.trim()) && <span className="block text-xs text-muted-foreground">{item.description}</span>}
+                    {item.photos.length > 0 && <div className="mt-2 flex flex-wrap gap-2">{item.photos.map((photo) => <figure key={photo.id} className="w-28 overflow-hidden rounded border bg-white"><img src={photo.url} alt={photo.caption || `Exemple pour ${item.label}`} className="aspect-[4/3] w-full object-cover" />{photo.caption && <figcaption className="p-1 text-[0.65rem] text-muted-foreground">{photo.caption}</figcaption>}</figure>)}</div>}
                   </td>
-                  <td className="py-2 text-right tabular-nums">{String(item.quantity).replace(".", ",")}{item.unit ? ` ${item.unit}` : ""}</td>
+                  <td className="py-2 text-right tabular-nums">{String(item.quantity * block.bookCount).replace(".", ",")}{item.unit ? ` ${item.unit}` : ""}</td>
                   <td className="py-2 text-right tabular-nums">{euros(item.unitPriceCents)}</td>
                   {showVat && <td className="py-2 text-right tabular-nums">{String(item.vatRateBps / 100).replace(".", ",")} %</td>}
                   <td className="py-2 text-right tabular-nums">{euros(item.totalHtCents)}</td>
                 </tr>
               ))}
-            </tbody>
+            </tbody>)}
           </table>
         </div>
 

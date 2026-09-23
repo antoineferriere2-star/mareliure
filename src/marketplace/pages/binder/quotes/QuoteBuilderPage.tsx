@@ -13,9 +13,10 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { ChevronDown, Plus, Search, X } from "lucide-react";
+import { Camera, ChevronDown, Plus, Search, Trash2, X } from "lucide-react";
 import {
   createMyQuote,
+  deleteMyQuoteItemPhoto,
   getBillingProfile,
   getMyCatalog,
   getMyBasePriceServices,
@@ -24,10 +25,11 @@ import {
   getMyRecentServiceIds,
   saveMyService,
   updateMyQuote,
+  uploadMyQuoteItemPhoto,
 } from "@/marketplace/services/binderQuotes.data.functions";
 import { profileReadiness, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
 import { lineTotalCents } from "@/marketplace/quotes/quoteCalc";
-import { emptyBuilder, stateFromDocument, stateFromWork, toQuoteInput, totalsOf, type AdjustmentType, type BuilderState } from "@/marketplace/quotes/builderState";
+import { DEFAULT_BLOCK_KEY, emptyBuilder, emptySizeBlock, stateFromDocument, stateFromWork, toQuoteInput, totalsOf, type AdjustmentType, type BuilderState, type QuoteSizeBlock } from "@/marketplace/quotes/builderState";
 import { getMyWork, getMyWorks, saveMyContact, saveMyWork } from "@/marketplace/services/binderWorks.data.functions";
 import { resolvePricePalette, recentServices } from "@/marketplace/quotes/workbenchPalette";
 import { buildSearchIndex, normalizeSearch, searchReference, searchServices } from "@/marketplace/reference/search";
@@ -41,9 +43,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, MoneyInput, PRIMARY_BUTTON, QuantityInput, SECONDARY_BUTTON } from "./quoteUi";
 import { ProfileQuickSetup } from "./ProfileQuickSetup";
 import { CATALOG_KEY, CLIENTS_KEY, PROFILE_QUERY_KEY, QUOTES_KEY } from "./quoteQueryKeys";
+import { fileToBase64, QUOTE_OPERATION_PHOTO_MAX_BYTES, QUOTE_OPERATION_PHOTO_MAX_PER_LINE, QUOTE_OPERATION_PHOTO_MIME_TYPES } from "@/marketplace/quotes/quotePhotos";
+import type { DocumentPhotoView } from "@/marketplace/quotes/quoteViews";
 
 let lineCounter = 0;
 const nextKey = () => `line-${Date.now().toString(36)}-${++lineCounter}`;
+const nextBlockKey = () => `format-${Date.now().toString(36)}-${++lineCounter}`;
 const COMMON_VAT_RATES = [0, 550, 1000, 2000] as const;
 
 const BASE_FAMILIES = [
@@ -128,6 +133,7 @@ export function QuoteBuilderPage({ quoteId, workId }: { quoteId?: string; workId
             ? stateFromWork(fromWork.data.work, fromWork.data.contact)
             : emptyBuilder()
       }
+      initialPhotos={existing.data?.items.flatMap((item) => item.photos) ?? []}
       fromWork={fromWork.data ? { reference: fromWork.data.work.reference, title: fromWork.data.work.title } : null}
     />
   );
@@ -143,6 +149,7 @@ function BuilderForm({
   works,
   recentIds,
   initial,
+  initialPhotos,
   fromWork,
 }: {
   quoteId?: string;
@@ -154,6 +161,7 @@ function BuilderForm({
   works: WorkSummary[];
   recentIds: string[];
   initial: BuilderState;
+  initialPhotos: DocumentPhotoView[];
   /** L'ouvrage d'où l'on vient, pour le dire en haut de page. */
   fromWork?: { reference: string; title: string } | null;
 }) {
@@ -165,8 +173,14 @@ function BuilderForm({
   const fetchWork = useServerFn(getMyWork);
   const createContact = useServerFn(saveMyContact);
   const createWork = useServerFn(saveMyWork);
+  const uploadPhoto = useServerFn(uploadMyQuoteItemPhoto);
+  const deletePhoto = useServerFn(deleteMyQuoteItemPhoto);
 
   const [state, setState] = useState<BuilderState>(initial);
+  const [activeBlockKey, setActiveBlockKey] = useState(initial.blocks[0]?.key ?? DEFAULT_BLOCK_KEY);
+  const [pendingPhotos, setPendingPhotos] = useState<Record<string, { key: string; file: File; caption: string; includeInPdf: boolean; previewUrl: string }[]>>({});
+  const [photoIdsToDelete, setPhotoIdsToDelete] = useState<string[]>([]);
+  const [savedDraftId, setSavedDraftId] = useState<string | null>(quoteId ?? null);
   const [search, setSearch] = useState("");
   const [openCategory, setOpenCategory] = useState<string | null>(null);
   const [showClientCreate, setShowClientCreate] = useState(false);
@@ -179,7 +193,7 @@ function BuilderForm({
   useEffect(() => { setProblems([]); setMissingFromServer([]); }, [state]);
   const summaryRef = useRef<HTMLElement>(null);
   const savedRef = useRef(false);
-  const dirty = JSON.stringify(state) !== JSON.stringify(initial);
+  const dirty = JSON.stringify(state) !== JSON.stringify(initial) || Object.values(pendingPhotos).some((photos) => photos.length > 0) || photoIdsToDelete.length > 0;
   useEffect(() => {
     if (!dirty) return;
     const warn = (event: BeforeUnloadEvent) => {
@@ -194,6 +208,38 @@ function BuilderForm({
   const set = <K extends keyof BuilderState>(key: K, value: BuilderState[K]) => setState((s) => ({ ...s, [key]: value }));
   const setLine = (key: string, patch: Partial<QuoteLine>) =>
     setState((s) => ({ ...s, lines: s.lines.map((l) => (l.key === key ? { ...l, ...patch } : l)) }));
+  const setBlock = (key: string, patch: Partial<QuoteSizeBlock>) =>
+    setState((s) => ({ ...s, blocks: s.blocks.map((block) => block.key === key ? { ...block, ...patch } : block) }));
+  const activeBlock = state.blocks.find((block) => block.key === activeBlockKey) ?? state.blocks[0];
+  const existingPhotos = initialPhotos.filter((photo) => !photoIdsToDelete.includes(photo.id));
+  const queuePhotoDeletion = (photoId: string) => setPhotoIdsToDelete((ids) => ids.includes(photoId) ? ids : [...ids, photoId]);
+  const removeLine = (lineKey: string) => {
+    existingPhotos.filter((photo) => photo.lineKey === lineKey).forEach((photo) => queuePhotoDeletion(photo.id));
+    setPendingPhotos((photos) => ({ ...photos, [lineKey]: [] }));
+    setState((s) => ({ ...s, lines: s.lines.filter((line) => line.key !== lineKey) }));
+  };
+  const removeBlock = (blockKey: string) => {
+    if (state.blocks.length <= 1) return;
+    state.lines.filter((line) => (line.blockKey ?? DEFAULT_BLOCK_KEY) === blockKey).forEach((line) => {
+      existingPhotos.filter((photo) => photo.lineKey === line.key).forEach((photo) => queuePhotoDeletion(photo.id));
+    });
+    setState((s) => ({ ...s, blocks: s.blocks.filter((block) => block.key !== blockKey), lines: s.lines.filter((line) => (line.blockKey ?? DEFAULT_BLOCK_KEY) !== blockKey) }));
+    const next = state.blocks.find((block) => block.key !== blockKey);
+    if (next) setActiveBlockKey(next.key);
+  };
+  const addBlock = () => {
+    const key = nextBlockKey();
+    setState((s) => ({ ...s, blocks: [...s.blocks, emptySizeBlock(key, `Format ${s.blocks.length + 1}`)] }));
+    setActiveBlockKey(key);
+  };
+  const addPhotos = (lineKey: string, files: FileList | null) => {
+    if (!files) return;
+    const currentCount = existingPhotos.filter((photo) => photo.lineKey === lineKey).length + (pendingPhotos[lineKey]?.length ?? 0);
+    const accepted = [...files].filter((file) => QUOTE_OPERATION_PHOTO_MIME_TYPES.includes(file.type as never) && file.size <= QUOTE_OPERATION_PHOTO_MAX_BYTES)
+      .slice(0, Math.max(0, QUOTE_OPERATION_PHOTO_MAX_PER_LINE - currentCount));
+    if (accepted.length !== files.length) setProblems([`Maximum ${QUOTE_OPERATION_PHOTO_MAX_PER_LINE} photos JPEG ou PNG de 8 Mo par prestation.`]);
+    setPendingPhotos((photos) => ({ ...photos, [lineKey]: [...(photos[lineKey] ?? []), ...accepted.map((file) => ({ key: `${lineKey}-${nextKey()}`, file, caption: "", includeInPdf: true, previewUrl: URL.createObjectURL(file) }))] }));
+  };
 
   const readiness = profileReadiness(profile, "quote");
   const regime = profile.vatRegime;
@@ -205,6 +251,9 @@ function BuilderForm({
   const totals = useMemo(() => totalsOf(state, regime), [state, regime]);
   const dims = formatDimensions({ heightMm: parseMillimetres(state.height), widthMm: parseMillimetres(state.width), spineMm: parseMillimetres(state.spine) });
   const showVat = regime !== "FRANCHISE";
+  const activeLines = state.lines.filter((line) => (line.blockKey ?? DEFAULT_BLOCK_KEY) === activeBlockKey);
+  const activeBlockTotal = activeLines.reduce((sum, line) => sum + lineTotalCents(line) * (activeBlock?.bookCount ?? 1), 0);
+  const activeDimensions = activeBlock ? formatDimensions({ heightMm: parseMillimetres(activeBlock.height), widthMm: parseMillimetres(activeBlock.width), spineMm: parseMillimetres(activeBlock.spine) }) : null;
 
   const palette = resolvePricePalette(services, basePrices);
   const catalogServices: CatalogService[] = palette.workshop
@@ -213,21 +262,19 @@ function BuilderForm({
   const recentlyUsed = recentServices(catalogServices, recentIds);
 
   // --- Catalogue ----------------------------------------------------------------
-  const selectedServiceIds = new Set(state.lines.map((l) => l.serviceId).filter(Boolean));
+  const selectedServiceIds = new Set(state.lines.filter((line) => (line.blockKey ?? DEFAULT_BLOCK_KEY) === activeBlockKey).map((l) => l.serviceId).filter(Boolean));
   const toggleService = (service: CatalogService) => {
-    setState((s) =>
-      s.lines.some((l) => l.serviceId === service.id)
-        ? { ...s, lines: s.lines.filter((l) => l.serviceId !== service.id) }
-        : { ...s, lines: [...s.lines, lineFromService(service, activeVatRate, nextKey())] },
-    );
+    const selected = state.lines.find((line) => line.serviceId === service.id && (line.blockKey ?? DEFAULT_BLOCK_KEY) === activeBlockKey);
+    if (selected) removeLine(selected.key);
+    else setState((s) => ({ ...s, lines: [...s.lines, { ...lineFromService(service, activeVatRate, nextKey()), blockKey: activeBlockKey }] }));
     setMobilePaletteOpen(false);
   };
   const addBasePrice = (service: (typeof basePrices)[number]) => {
-    setState((s) => ({ ...s, lines: [...s.lines, lineFromBasePrice(service, activeVatRate, nextKey())] }));
+    setState((s) => ({ ...s, lines: [...s.lines, { ...lineFromBasePrice(service, activeVatRate, nextKey()), blockKey: activeBlockKey }] }));
     setMobilePaletteOpen(false);
   };
   const addFreeLine = (label = "") => {
-    setState((s) => ({ ...s, lines: [...s.lines, freeLine(activeVatRate, nextKey(), label)] }));
+    setState((s) => ({ ...s, lines: [...s.lines, { ...freeLine(activeVatRate, nextKey(), label), blockKey: activeBlockKey }] }));
     setMobilePaletteOpen(false);
   };
   const applyVatRate = (rate: number) => {
@@ -339,7 +386,7 @@ function BuilderForm({
     });
     if (base) { addBasePrice(base); return; }
     setState((current) => ({ ...current, lines: [...current.lines, {
-      ...freeLine(activeVatRate, nextKey(), operation.customerName || operation.canonicalName),
+      ...freeLine(activeVatRate, nextKey(), operation.customerName || operation.canonicalName), blockKey: activeBlockKey,
       unit: operation.unitCandidates[0] ?? null, description: "",
       requiresManualPrice: true,
       referenceVersion: operation.version, referenceOperationKey: operation.key,
@@ -352,7 +399,27 @@ function BuilderForm({
     mutationFn: async () => {
       const built = toQuoteInput(state);
       if (!built.ok) throw Object.assign(new Error("invalid"), { problems: built.problems });
-      return quoteId ? update({ data: { id: quoteId, quote: built.input } }) : create({ data: built.input });
+      for (const photoId of photoIdsToDelete) {
+        await deletePhoto({ data: { id: photoId } });
+        setPhotoIdsToDelete((ids) => ids.filter((id) => id !== photoId));
+      }
+      const quote = savedDraftId ? await update({ data: { id: savedDraftId, quote: built.input } }) : await create({ data: built.input });
+      setSavedDraftId(quote.id);
+      try {
+        for (const [lineKey, photos] of Object.entries(pendingPhotos)) {
+          for (const photo of photos) {
+            await uploadPhoto({ data: {
+              quoteId: quote.id, lineKey, filename: photo.file.name, mimeType: photo.file.type as "image/jpeg" | "image/png",
+              imageBase64: await fileToBase64(photo.file), caption: photo.caption.trim() || null, includeInPdf: photo.includeInPdf,
+            } });
+            URL.revokeObjectURL(photo.previewUrl);
+            setPendingPhotos((all) => ({ ...all, [lineKey]: (all[lineKey] ?? []).filter((candidate) => candidate.key !== photo.key) }));
+          }
+        }
+      } catch (error) {
+        throw Object.assign(error instanceof Error ? error : new Error("photo_upload_failed"), { photoUploadFailed: true });
+      }
+      return quote;
     },
     onSuccess: (quote) => {
       savedRef.current = true;
@@ -366,6 +433,10 @@ function BuilderForm({
       const local = (error as { problems?: string[] }).problems;
       if (local) {
         setProblems(local);
+        return;
+      }
+      if ((error as { photoUploadFailed?: boolean }).photoUploadFailed) {
+        setProblems(["Le devis est conservé en brouillon. Certaines photos n'ont pas été ajoutées ; réessayez."]);
         return;
       }
       const parsed = parseServerError(error);
@@ -561,10 +632,41 @@ function BuilderForm({
           {/* Sur ordinateur, seules les lignes défilent : le total et « Générer le devis » restent à l'écran. */}
           <div className={`${CARD} lg:contents`}>
             <div className="min-w-0 lg:rounded-lg lg:border lg:border-border lg:bg-card lg:p-5">
-            <h2 id="summary-title" className="font-serif text-lg">Lignes du devis</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {[state.title.trim() || null, dims].filter(Boolean).join(" · ") || "Ouvrage à renseigner"}
-            </p>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <div>
+                <h2 id="summary-title" className="font-serif text-lg">Formats et prestations</h2>
+                <p className="mt-1 text-sm text-muted-foreground">Un bloc peut représenter une taille et plusieurs livres identiques.</p>
+              </div>
+              <button type="button" className={SECONDARY_BUTTON} onClick={addBlock}><Plus aria-hidden="true" className="mr-1 h-4 w-4" /> Ajouter un format</button>
+            </div>
+
+            <div className="mt-4 flex gap-2 overflow-x-auto pb-1" role="tablist" aria-label="Formats du devis">
+              {state.blocks.map((block) => {
+                const count = state.lines.filter((line) => (line.blockKey ?? DEFAULT_BLOCK_KEY) === block.key).length;
+                return <button key={block.key} type="button" role="tab" aria-selected={block.key === activeBlockKey} onClick={() => setActiveBlockKey(block.key)} className={`min-h-11 shrink-0 rounded-md border px-3 py-2 text-left text-sm ${block.key === activeBlockKey ? "border-[#7a2230] bg-[#f7eff0] text-[#5f1b27]" : "border-[#cfc5b6] bg-[#fffdf8]"}`}>
+                  <strong className="block">{block.label || "Format sans nom"}</strong>
+                  <span className="text-xs text-muted-foreground">{block.bookCount} livre{block.bookCount > 1 ? "s" : ""} · {count} prestation{count > 1 ? "s" : ""}</span>
+                </button>;
+              })}
+            </div>
+
+            {activeBlock && <div className="mt-3 rounded-md border border-[#d8d0c4] bg-[#f8f4ed] p-3">
+              <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_110px_auto] sm:items-end">
+                <Field label="Nom du format" htmlFor={`block-label-${activeBlock.key}`}><input id={`block-label-${activeBlock.key}`} className={FIELD} value={activeBlock.label} onChange={(event) => setBlock(activeBlock.key, { label: event.target.value })} placeholder="Ex. Petit format" /></Field>
+                <Field label="Nombre de livres" htmlFor={`block-count-${activeBlock.key}`}><input id={`block-count-${activeBlock.key}`} type="number" min={1} max={10000} className={`${FIELD} text-center`} value={activeBlock.bookCount} onChange={(event) => setBlock(activeBlock.key, { bookCount: Math.max(1, Math.min(10000, Number(event.target.value) || 1)) })} /></Field>
+                {state.blocks.length > 1 && <button type="button" className="flex min-h-11 items-center justify-center rounded-md px-3 text-sm text-destructive hover:bg-destructive/10" onClick={() => removeBlock(activeBlock.key)}><Trash2 aria-hidden="true" className="mr-1 h-4 w-4" /> Retirer</button>}
+              </div>
+              <Field label="Dimensions en mm (hauteur × largeur × dos)" htmlFor={`block-height-${activeBlock.key}`}>
+                <div className="grid grid-cols-[1fr_auto_1fr_auto_1fr] items-center gap-2">
+                  <input id={`block-height-${activeBlock.key}`} aria-label={`Hauteur — ${activeBlock.label}`} inputMode="decimal" placeholder="220" className={`${FIELD} text-center`} value={activeBlock.height} onChange={(event) => setBlock(activeBlock.key, { height: event.target.value })} />
+                  <span aria-hidden="true">×</span>
+                  <input aria-label={`Largeur — ${activeBlock.label}`} inputMode="decimal" placeholder="145" className={`${FIELD} text-center`} value={activeBlock.width} onChange={(event) => setBlock(activeBlock.key, { width: event.target.value })} />
+                  <span aria-hidden="true">×</span>
+                  <input aria-label={`Dos — ${activeBlock.label}`} inputMode="decimal" placeholder="32" className={`${FIELD} text-center`} value={activeBlock.spine} onChange={(event) => setBlock(activeBlock.key, { spine: event.target.value })} />
+                </div>
+              </Field>
+              <p className="mt-2 text-xs text-muted-foreground">{activeDimensions ?? "Dimensions facultatives"} · Sous-total du bloc : <strong className="text-foreground">{euros(activeBlockTotal)}</strong></p>
+            </div>}
 
             {showVat && (
               <div className="mt-4 flex flex-wrap items-end gap-3 border-y border-[#d8d0c4] bg-[#f8f4ed] px-3 py-3">
@@ -589,14 +691,14 @@ function BuilderForm({
               </div>
             )}
 
-            {state.lines.length === 0 ? (
+            {activeLines.length === 0 ? (
               <p className="mt-4 rounded-md bg-muted px-3 py-4 text-sm text-muted-foreground">
                 Cochez les prestations à réaliser : le prix s'ajoute ici, immédiatement.
               </p>
             ) : (
               <ul className="mt-4 divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8]">
-                {state.lines.map((line) => {
-                  const total = line.quantity > 0 ? lineTotalCents(line) : 0;
+                {activeLines.map((line) => {
+                  const total = line.quantity > 0 ? lineTotalCents(line) * (activeBlock?.bookCount ?? 1) : 0;
                   const adjusted = isPriceAdjusted(line);
                   return (
                     <li key={line.key}>
@@ -610,7 +712,7 @@ function BuilderForm({
                           <div className="flex items-start gap-2">
                             <input aria-label="Libellé de la ligne" placeholder="Libellé (ex. Réparation du premier cahier)" className={`${FIELD} flex-1 font-medium`} value={line.label} onChange={(e) => setLine(line.key, { label: e.target.value })} />
                             <button type="button" aria-label={`Dupliquer ${line.label || "cette ligne"}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-sm font-semibold text-[#685d51] hover:bg-[#eee7dc]" onClick={() => setState((s) => ({ ...s, lines: s.lines.flatMap((item) => item.key === line.key ? [item, { ...item, key: nextKey() }] : [item]) }))}>×2</button>
-                            <button type="button" aria-label={`Retirer ${line.label || "cette ligne"}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-[#685d51] hover:bg-[#eee7dc]" onClick={() => setState((s) => ({ ...s, lines: s.lines.filter((l) => l.key !== line.key) }))}><X aria-hidden="true" className="h-4 w-4" /></button>
+                            <button type="button" aria-label={`Retirer ${line.label || "cette ligne"}`} className="flex h-11 w-11 shrink-0 items-center justify-center rounded-sm text-[#685d51] hover:bg-[#eee7dc]" onClick={() => removeLine(line.key)}><X aria-hidden="true" className="h-4 w-4" /></button>
                           </div>
                           <div className="mt-3 grid grid-cols-[64px_minmax(0,1fr)] gap-2 sm:grid-cols-[64px_minmax(0,1fr)_minmax(0,1fr)]">
                             <QuantityInput id={`qty-${line.key}`} label={`Quantité — ${line.label || "ligne"}`} value={line.quantity} onChange={(quantity) => setLine(line.key, { quantity })} />
@@ -618,6 +720,17 @@ function BuilderForm({
                             <input aria-label={`Unité — ${line.label || "ligne"}`} placeholder="Unité" className={`${FIELD} col-span-2 sm:col-span-1`} value={line.unit ?? ""} onChange={(e) => setLine(line.key, { unit: e.target.value || null })} />
                           </div>
                           <textarea aria-label={`Description client — ${line.label || "ligne"}`} rows={2} className={`${FIELD} mt-3 h-auto py-2`} placeholder="Description client (facultative)" value={line.description} onChange={(event) => setLine(line.key, { description: event.target.value })} />
+                          <div className="mt-3 border-t border-[#e2dbd0] pt-3">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                              <p className="text-xs font-semibold uppercase tracking-wide text-[#685d51]">Photos d’exemple</p>
+                              <label className="inline-flex min-h-10 cursor-pointer items-center rounded-md border border-[#cfc5b6] bg-white px-3 text-xs font-semibold hover:bg-[#f5f0e8]"><Camera aria-hidden="true" className="mr-1 h-4 w-4" /> Ajouter<input type="file" accept="image/jpeg,image/png" multiple className="sr-only" onChange={(event) => { addPhotos(line.key, event.target.files); event.currentTarget.value = ""; }} /></label>
+                            </div>
+                            {(existingPhotos.some((photo) => photo.lineKey === line.key) || (pendingPhotos[line.key]?.length ?? 0) > 0) && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                              {existingPhotos.filter((photo) => photo.lineKey === line.key).map((photo) => <figure key={photo.id} className="relative overflow-hidden rounded-md border bg-white"><img src={photo.url} alt={photo.caption || `Exemple pour ${line.label}`} className="aspect-[4/3] w-full object-cover" /><figcaption className="p-2 text-[0.68rem] text-muted-foreground">{photo.caption || "Photo incluse au PDF"}</figcaption><button type="button" aria-label="Retirer cette photo" className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-destructive shadow" onClick={() => queuePhotoDeletion(photo.id)}><X aria-hidden="true" className="h-4 w-4" /></button></figure>)}
+                              {(pendingPhotos[line.key] ?? []).map((photo) => <figure key={photo.key} className="relative overflow-hidden rounded-md border bg-white"><img src={photo.previewUrl} alt={`Nouvel exemple pour ${line.label}`} className="aspect-[4/3] w-full object-cover" /><div className="space-y-1 p-2"><input aria-label="Légende de la photo" className={`${FIELD} h-9 text-xs`} placeholder="Légende (facultative)" value={photo.caption} onChange={(event) => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).map((candidate) => candidate.key === photo.key ? { ...candidate, caption: event.target.value } : candidate) }))} /><label className="flex items-center gap-1 text-[0.68rem] text-muted-foreground"><input type="checkbox" checked={photo.includeInPdf} onChange={(event) => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).map((candidate) => candidate.key === photo.key ? { ...candidate, includeInPdf: event.target.checked } : candidate) }))} /> Inclure au PDF</label></div><button type="button" aria-label="Retirer cette nouvelle photo" className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-destructive shadow" onClick={() => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).filter((candidate) => candidate.key !== photo.key) }))}><X aria-hidden="true" className="h-4 w-4" /></button></figure>)}
+                            </div>}
+                            <p className="mt-2 text-[0.68rem] text-muted-foreground">Jusqu’à {QUOTE_OPERATION_PHOTO_MAX_PER_LINE} photos JPEG ou PNG. Elles restent privées.</p>
+                          </div>
                           {line.priceSource === "base" && <p className="mt-2 text-xs text-[#74695d]">Source interne : tarif de base Ma Reliure. Cette mention ne figure pas sur le PDF client.</p>}
                           {line.requiresManualPrice && line.unitPriceCents <= 0 && <p className="mt-2 text-xs text-amber-800">Définissez le prix pour ce devis.</p>}
                           {adjusted && <p className="mt-2 text-xs text-amber-800">Prix ajusté pour ce devis (catalogue : {euros(line.catalogPriceCents ?? 0)}). <button type="button" className="underline" onClick={() => setLine(line.key, { unitPriceCents: line.catalogPriceCents ?? 0 })}>Rétablir</button></p>}
