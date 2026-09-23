@@ -2,7 +2,7 @@
 import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { BookOpen, FileText, House, Inbox, LibraryBig, Menu, MessageSquare, ReceiptText, Users } from "lucide-react";
+import { BookOpen, FileText, Globe2, House, Inbox, LibraryBig, Menu, MessageSquare, ReceiptText, Users } from "lucide-react";
 import { SignOutButton } from "@/marketplace/pages/SignOutButton";
 import { getMyBinderProfile, listMyBinderCases } from "@/marketplace/services/marketplace.data.functions";
 
@@ -19,6 +19,7 @@ const SECONDARY_NAV = [
   { to: "/atelier/contacts", label: "Contacts", icon: Users },
   { to: "/atelier/factures", label: "Factures", icon: ReceiptText },
   { to: "/atelier/tarifs", label: "Paramètres", icon: LibraryBig },
+  { to: "/atelier/profil-public", label: "Profil public", icon: Globe2 },
 ] as const;
 
 function Count({ value }: { value: number }) {

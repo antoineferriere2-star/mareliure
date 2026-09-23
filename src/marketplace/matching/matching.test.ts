@@ -231,6 +231,19 @@ describe("canSendCaseToBinders — a BINDER_REFERRED case never enters general m
     expect(result.allowed).toBe(false);
   });
 
+  it("keeps a FineBindery page request exclusive to its published workshop", () => {
+    expect(canSendCaseToBinders({
+      acquisitionOrigin: "FINEBINDERY_PROFILE",
+      referredBinderId: "atelier-du-livre",
+      requestedBinderIds: ["atelier-du-livre"],
+    }).allowed).toBe(true);
+    expect(canSendCaseToBinders({
+      acquisitionOrigin: "FINEBINDERY_PROFILE",
+      referredBinderId: "atelier-du-livre",
+      requestedBinderIds: ["another-workshop"],
+    }).allowed).toBe(false);
+  });
+
   it("cannot be satisfied by fabricating a matching referredBinderId — the row, not the request, decides", () => {
     // canSendCaseToBinders only ever sees referredBinderId as loaded from
     // marketplace_cases by the server (caseRepository.server.ts) — never as

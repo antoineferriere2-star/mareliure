@@ -9,11 +9,9 @@
  * system (SHELL, SectionHead, the mr- tokens), same honesty rule: no
  * invented number, no fabricated workshop, no fake testimonial (§59).
  *
- * Sections intentionally written in the future tense, because the features
- * they describe are not live yet: the 80/20 payout split (Stripe Connect is
- * not connected — see docs/transactional-platform-audit.md) and workshop
- * showcase pages (/workshops/:slug, never built). Saying so plainly is the
- * whole point of the rule, not a hedge to work around it.
+ * Sections intentionally written in the future tense where the underlying
+ * service is not live yet, including the 80/20 payout split (Stripe Connect
+ * is not connected — see docs/transactional-platform-audit.md).
  */
 import { SectionHead, SHELL } from "@/marketplace/pages/landing/LandingChrome";
 import { Photograph } from "@/marketplace/pages/landing/Photograph";
@@ -211,11 +209,11 @@ function Workshops() {
             </>
           )}
           <p className="mr-small mt-8 text-mr-muted">Selected by Fine Bindery for this network.</p>
+          <a href="/professionnels" className="mr-link mr-tap mt-8 inline-flex text-[1.0625rem]">
+            Discover the published workshops
+          </a>
         </div>
       </div>
-      {/* Per-workshop public pages (/workshops/:slug) don't exist yet — this
-          page will link there once Phase E of the marketplace build reaches
-          them, rather than pointing at a page that would 404 today. */}
     </section>
   );
 }

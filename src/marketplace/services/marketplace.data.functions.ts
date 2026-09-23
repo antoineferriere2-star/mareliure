@@ -1172,7 +1172,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     const caseIds = matches.map((m) => m.case_id);
     const { data: cases, error: caseError } = await sb
       .from("marketplace_cases")
-      .select("id, reference, status, dossier_id, brand, created_at")
+      .select("id, reference, status, dossier_id, brand, acquisition_origin, created_at")
       .in("id", caseIds);
     if (caseError) fail(500, caseError.message);
 
@@ -1238,6 +1238,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
         currency: offer?.currency ?? match.currency,
         reference: row?.reference ?? "",
         caseStatus: row?.status ?? "",
+        acquisitionOrigin: row?.acquisition_origin ?? "MA_RELIURE_ACQUIRED",
         createdAt: row?.created_at ?? match.invited_at,
         title: titles.get(match.case_id) ?? row?.reference ?? "",
         clientName: match.state === "selected" && row ? dossierById.get(row.dossier_id)?.visitor_name ?? null : null,
@@ -1256,6 +1257,11 @@ export const getBinderCase = createServerFn({ method: "GET" })
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
     if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux leads.");
+
+    // Une demande issue d'une page FineBindery devient visible dès que
+    // l'atelier ouvre son espace, même si l'administration n'a pas encore
+    // consulté sa propre liste depuis la soumission.
+    await reconcileCaseTriage(sb);
 
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable");
@@ -1285,6 +1291,7 @@ export const getBinderCase = createServerFn({ method: "GET" })
       view,
       offer: offer ?? null,
       caseStatus: caseContext.row.status,
+      acquisitionOrigin: caseContext.row.acquisition_origin,
       canRespond: offer?.state === "offered",
     };
   });

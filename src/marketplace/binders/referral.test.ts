@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isValidReferralSlug, REFERRAL_ANSWER_KEY, slugify } from "./referral";
+import { ACQUISITION_ORIGINS, isValidReferralSlug, REFERRAL_ANSWER_KEY, slugify } from "./referral";
 
 describe("isValidReferralSlug", () => {
   it("accepts lowercase words joined by single hyphens", () => {
@@ -44,5 +44,11 @@ describe("REFERRAL_ANSWER_KEY", () => {
     // named the same way by coincidence would be an unmistakable collision to
     // spot in review, not a silent one.
     expect(REFERRAL_ANSWER_KEY.startsWith("_")).toBe(true);
+  });
+});
+
+describe("acquisition origins", () => {
+  it("includes the distinct FineBindery profile source", () => {
+    expect(ACQUISITION_ORIGINS).toContain("FINEBINDERY_PROFILE");
   });
 });

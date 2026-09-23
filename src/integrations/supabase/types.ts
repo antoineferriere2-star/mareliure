@@ -1803,10 +1803,14 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_published: boolean
           materials: string[]
           position: number
+          publication_consent_at: string | null
+          source_work_id: string | null
           techniques: string[]
           title: string
+          updated_at: string
           year: number | null
         }
         Insert: {
@@ -1816,10 +1820,14 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_published?: boolean
           materials?: string[]
           position?: number
+          publication_consent_at?: string | null
+          source_work_id?: string | null
           techniques?: string[]
           title: string
+          updated_at?: string
           year?: number | null
         }
         Update: {
@@ -1829,10 +1837,14 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_published?: boolean
           materials?: string[]
           position?: number
+          publication_consent_at?: string | null
+          source_work_id?: string | null
           techniques?: string[]
           title?: string
+          updated_at?: string
           year?: number | null
         }
         Relationships: [
@@ -1841,6 +1853,13 @@ export type Database = {
             columns: ["binder_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_portfolio_source_work_id_fkey"
+            columns: ["source_work_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_works"
             referencedColumns: ["id"]
           },
         ]
@@ -2576,14 +2595,24 @@ export type Database = {
           bio: string | null
           capacity_slots: number
           city: string | null
+          country_code: string
           created_at: string
           display_name: string
           id: string
+          instagram_url: string | null
           is_demo: boolean
           max_project_cents: number | null
           min_project_cents: number | null
           personal_referral_slug: string | null
           postal_code: string | null
+          professional_email: string | null
+          professional_phone: string | null
+          public_languages: string[]
+          public_material_keys: string[]
+          public_philosophy: string | null
+          public_profile_published_at: string | null
+          public_profile_status: string
+          public_technique_keys: string[]
           rating_avg: number | null
           rating_count: number
           response_rate: number | null
@@ -2595,7 +2624,9 @@ export type Database = {
           training: string | null
           updated_at: string
           user_id: string | null
+          website_url: string | null
           workshop_name: string | null
+          workshop_photo_path: string | null
           years_experience: number | null
         }
         Insert: {
@@ -2604,14 +2635,24 @@ export type Database = {
           bio?: string | null
           capacity_slots?: number
           city?: string | null
+          country_code?: string
           created_at?: string
           display_name: string
           id?: string
+          instagram_url?: string | null
           is_demo?: boolean
           max_project_cents?: number | null
           min_project_cents?: number | null
           personal_referral_slug?: string | null
           postal_code?: string | null
+          professional_email?: string | null
+          professional_phone?: string | null
+          public_languages?: string[]
+          public_material_keys?: string[]
+          public_philosophy?: string | null
+          public_profile_published_at?: string | null
+          public_profile_status?: string
+          public_technique_keys?: string[]
           rating_avg?: number | null
           rating_count?: number
           response_rate?: number | null
@@ -2623,7 +2664,9 @@ export type Database = {
           training?: string | null
           updated_at?: string
           user_id?: string | null
+          website_url?: string | null
           workshop_name?: string | null
+          workshop_photo_path?: string | null
           years_experience?: number | null
         }
         Update: {
@@ -2632,14 +2675,24 @@ export type Database = {
           bio?: string | null
           capacity_slots?: number
           city?: string | null
+          country_code?: string
           created_at?: string
           display_name?: string
           id?: string
+          instagram_url?: string | null
           is_demo?: boolean
           max_project_cents?: number | null
           min_project_cents?: number | null
           personal_referral_slug?: string | null
           postal_code?: string | null
+          professional_email?: string | null
+          professional_phone?: string | null
+          public_languages?: string[]
+          public_material_keys?: string[]
+          public_philosophy?: string | null
+          public_profile_published_at?: string | null
+          public_profile_status?: string
+          public_technique_keys?: string[]
           rating_avg?: number | null
           rating_count?: number
           response_rate?: number | null
@@ -2651,7 +2704,9 @@ export type Database = {
           training?: string | null
           updated_at?: string
           user_id?: string | null
+          website_url?: string | null
           workshop_name?: string | null
+          workshop_photo_path?: string | null
           years_experience?: number | null
         }
         Relationships: []

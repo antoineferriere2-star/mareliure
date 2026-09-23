@@ -12,7 +12,11 @@
  * Pure and framework-free, like ownership.ts and membership.ts.
  */
 
-export const ACQUISITION_ORIGINS = ["MA_RELIURE_ACQUIRED", "BINDER_REFERRED"] as const;
+export const ACQUISITION_ORIGINS = [
+  "MA_RELIURE_ACQUIRED",
+  "BINDER_REFERRED",
+  "FINEBINDERY_PROFILE",
+] as const;
 export type AcquisitionOrigin = (typeof ACQUISITION_ORIGINS)[number];
 
 /** Matches the CHECK constraint in the schema: lowercase, digits, single hyphens. */

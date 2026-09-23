@@ -13,6 +13,10 @@ import {
   RELIURE_PHOTO_SHOTS,
 } from "@/marketplace/pages/customer/reliureIntakeGuidance";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
+import {
+  PROFILE_REQUEST_SOURCE,
+  PROFILE_SOURCE_ANSWER_KEY,
+} from "@/marketplace/binders/fineBinderyProfile";
 import { isMaReliure } from "@/brand";
 import { BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
 
@@ -42,8 +46,10 @@ export const Route = createFileRoute("/m/$publicToken")({
   // set only by the server-side redirect at /a/:slug, never trusted as an
   // attribution on its own. The runtime forwards it as an opaque answer;
   // reconcileCaseTriage is what actually resolves it, once, server-side.
-  validateSearch: (search: Record<string, unknown>): { ref?: string } =>
-    typeof search.ref === "string" && search.ref.length <= 64 ? { ref: search.ref } : {},
+  validateSearch: (search: Record<string, unknown>): { ref?: string; source?: typeof PROFILE_REQUEST_SOURCE } => ({
+    ...(typeof search.ref === "string" && search.ref.length <= 64 ? { ref: search.ref } : {}),
+    ...(search.source === PROFILE_REQUEST_SOURCE ? { source: PROFILE_REQUEST_SOURCE } : {}),
+  }),
   head: ({ params }) => ({
     meta: [{ title: titleFor(params.publicToken) }, { name: "robots", content: "noindex, nofollow" }],
   }),
@@ -65,12 +71,17 @@ const RELIURE_GUIDANCE: IntakeGuidance = {
 
 function RuntimePage() {
   const { publicToken } = Route.useParams();
-  const { ref } = Route.useSearch();
+  const { ref, source } = Route.useSearch();
   const seedAnswers = useMemo(
-    () => (ref ? { [REFERRAL_ANSWER_KEY]: ref } : undefined),
-    [ref],
+    () => (ref ? {
+      [REFERRAL_ANSWER_KEY]: ref,
+      ...(source === PROFILE_REQUEST_SOURCE ? { [PROFILE_SOURCE_ANSWER_KEY]: source } : {}),
+    } : undefined),
+    [ref, source],
   );
   const isReliureIntake = isMaReliure && publicToken === BOOKBINDING_PUBLIC_TOKEN;
+  const isFrenchFineBinderyProfileIntake =
+    isMaReliure && publicToken === FINE_BINDERY_PUBLIC_TOKEN && source === PROFILE_REQUEST_SOURCE;
   // Sur Ma Reliure et Fine Bindery, la proposition de suivre son livre —
   // CustomerSpaceOffer choisit sa langue depuis le même publicToken que
   // celui qui a déjà décidé le titre de l'onglet ci-dessus. Le runtime, lui,
@@ -90,7 +101,7 @@ function RuntimePage() {
       renderAfterSubmission={afterSubmission}
       seedAnswers={seedAnswers}
       guidance={isReliureIntake ? RELIURE_GUIDANCE : undefined}
-      initialLocale={isReliureIntake ? "fr-FR" : undefined}
+      initialLocale={isReliureIntake || isFrenchFineBinderyProfileIntake ? "fr-FR" : undefined}
     />
   );
 }
