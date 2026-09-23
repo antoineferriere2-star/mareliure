@@ -31,6 +31,7 @@ describe("la facture en franchise exige la mention effective", () => {
     addressLine1: "1 rue X",
     postalCode: "45000",
     city: "Orléans",
+    siren: "123456789",
     siret: "123",
     vatRegime: "FRANCHISE" as const,
   };

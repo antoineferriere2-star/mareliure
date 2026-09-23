@@ -124,8 +124,8 @@ const quoteSummary = (row: Tables<"marketplace_binder_quotes">): DocumentSummary
 const invoiceSummary = (row: Tables<"marketplace_binder_invoices">): DocumentSummary => ({
   kind: "invoice",
   id: row.id,
-  number: row.invoice_number,
-  status: row.payment_status,
+  number: row.invoice_number ?? "Brouillon",
+  status: row.status === "draft" ? "draft" : row.payment_status,
   issueDate: row.issue_date,
   validUntil: null,
   clientName: row.client_name,

@@ -16,6 +16,9 @@ export interface BillingProfile {
   workshopName: string | null;
   binderName: string | null;
   legalName: string | null;
+  legalForm: string | null;
+  shareCapital: string | null;
+  siren: string | null;
   addressLine1: string | null;
   addressLine2: string | null;
   postalCode: string | null;
@@ -23,6 +26,7 @@ export interface BillingProfile {
   country: string;
   siret: string | null;
   vatNumber: string | null;
+  vatOnDebits: boolean;
   legalNotes: string | null;
   email: string | null;
   phone: string | null;
@@ -39,6 +43,10 @@ export interface BillingProfile {
   invoicePrefix: string;
   quoteValidityDays: number;
   paymentTerms: string | null;
+  paymentDelayDays: number | null;
+  earlyPaymentDiscountTerms: string | null;
+  latePenaltyTerms: string | null;
+  iban: string | null;
   quoteNotes: string | null;
   invoiceNotes: string | null;
 }
@@ -47,6 +55,9 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
   workshopName: null,
   binderName: null,
   legalName: null,
+  legalForm: null,
+  shareCapital: null,
+  siren: null,
   addressLine1: null,
   addressLine2: null,
   postalCode: null,
@@ -54,6 +65,7 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
   country: "FR",
   siret: null,
   vatNumber: null,
+  vatOnDebits: false,
   legalNotes: null,
   email: null,
   phone: null,
@@ -69,6 +81,10 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
   invoicePrefix: "F",
   quoteValidityDays: 30,
   paymentTerms: null,
+  paymentDelayDays: 30,
+  earlyPaymentDiscountTerms: null,
+  latePenaltyTerms: null,
+  iban: null,
   quoteNotes: null,
   invoiceNotes: null,
 };
@@ -86,6 +102,9 @@ export interface Issuer {
   workshopName: string | null;
   binderName: string | null;
   legalName: string | null;
+  legalForm: string | null;
+  shareCapital: string | null;
+  siren: string | null;
   addressLine1: string | null;
   addressLine2: string | null;
   postalCode: string | null;
@@ -93,6 +112,7 @@ export interface Issuer {
   country: string;
   siret: string | null;
   vatNumber: string | null;
+  vatOnDebits: boolean;
   legalNotes: string | null;
   email: string | null;
   phone: string | null;
@@ -101,6 +121,7 @@ export interface Issuer {
   logoUrl?: string | null;
   documentAccentColor: string;
   documentFooter: string | null;
+  iban: string | null;
 }
 
 export function issuerOf(profile: BillingProfile): Issuer {
@@ -108,6 +129,9 @@ export function issuerOf(profile: BillingProfile): Issuer {
     workshopName: profile.workshopName,
     binderName: profile.binderName,
     legalName: profile.legalName,
+    legalForm: profile.legalForm,
+    shareCapital: profile.shareCapital,
+    siren: profile.siren,
     addressLine1: profile.addressLine1,
     addressLine2: profile.addressLine2,
     postalCode: profile.postalCode,
@@ -115,6 +139,7 @@ export function issuerOf(profile: BillingProfile): Issuer {
     country: profile.country,
     siret: profile.siret,
     vatNumber: profile.vatNumber,
+    vatOnDebits: profile.vatOnDebits,
     legalNotes: profile.legalNotes,
     email: profile.email,
     phone: profile.phone,
@@ -122,6 +147,7 @@ export function issuerOf(profile: BillingProfile): Issuer {
     logoStoragePath: profile.logoStoragePath,
     documentAccentColor: profile.documentAccentColor,
     documentFooter: profile.documentFooter,
+    iban: profile.iban,
   };
 }
 
@@ -170,6 +196,7 @@ export function profileReadiness(
   if (profile.vatRegime === null) missing.push("Régime de TVA");
   if (kind === "invoice") {
     if (!filled(profile.addressLine1) || !filled(profile.postalCode) || !filled(profile.city)) missing.push("Adresse");
+    if (!filled(profile.siren)) missing.push("SIREN");
     if (!filled(profile.siret)) missing.push("SIRET");
     if (profile.vatRegime === "VAT_LIABLE" && !filled(profile.vatNumber)) missing.push("Numéro de TVA");
     if (profile.vatRegime === "FRANCHISE" && !filled(profile.vatMention)) missing.push("Mention de TVA");

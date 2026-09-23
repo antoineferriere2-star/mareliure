@@ -164,7 +164,7 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
     draw(name, leftX, 18, serifBold);
     y -= 19;
     if (issuer.binderName) { draw(issuer.binderName, leftX, 9, sans, accent); y -= 13; }
-    const identity = [issuer.legalName && issuer.legalName !== name ? issuer.legalName : null, issuer.addressLine1, issuer.addressLine2, [issuer.postalCode, issuer.city].filter(Boolean).join(" ") || null, issuer.siret ? `SIRET ${issuer.siret}` : null, issuer.vatNumber ? `TVA ${issuer.vatNumber}` : null, issuer.phone, issuer.email, issuer.website].filter((value): value is string => Boolean(value));
+    const identity = [issuer.legalName && issuer.legalName !== name ? issuer.legalName : null, issuer.legalForm, issuer.shareCapital ? `Capital ${issuer.shareCapital}` : null, issuer.addressLine1, issuer.addressLine2, [issuer.postalCode, issuer.city].filter(Boolean).join(" ") || null, issuer.siren ? `SIREN ${issuer.siren}` : null, issuer.siret ? `SIRET ${issuer.siret}` : null, issuer.vatNumber ? `TVA ${issuer.vatNumber}` : null, issuer.phone, issuer.email, issuer.website].filter((value): value is string => Boolean(value));
     for (const line of identity.slice(0, 9)) { draw(line, leftX, 8.2, sans, MUTED); y -= 11; }
     y = PAGE_H - 54;
     drawRight(isQuote ? "DEVIS" : "FACTURE", PAGE_W - MARGIN, 25, serif, accent);
@@ -174,6 +174,8 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
     drawRight(`Date : ${formatDateFr(document.issueDate)}`, PAGE_W - MARGIN, 9);
     y -= 14;
     if (isQuote && document.validUntil) { drawRight(`Valable jusqu'au ${formatDateFr(document.validUntil)}`, PAGE_W - MARGIN, 9); y -= 14; }
+    if (!isQuote && document.invoiceCompliance?.serviceDate) { drawRight(`Prestation : ${formatDateFr(document.invoiceCompliance.serviceDate)}`, PAGE_W - MARGIN, 8.5, sans, MUTED); y -= 13; }
+    if (!isQuote && document.invoiceCompliance?.dueDate) { drawRight(`Échéance : ${formatDateFr(document.invoiceCompliance.dueDate)}`, PAGE_W - MARGIN, 8.5, sans, MUTED); y -= 13; }
     if (!isQuote && document.linkedQuoteNumber) drawRight(`Facture issue du devis ${document.linkedQuoteNumber}`, PAGE_W - MARGIN, 8.5, sans, MUTED);
     y = PAGE_H - 208;
   };
@@ -183,7 +185,7 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
     const width = (CONTENT_W - gap) / 2;
     const top = y;
     const blocks = [
-      { x: MARGIN, title: "DESTINATAIRE", lines: [document.client.name, document.client.addressLine1, [document.client.postalCode, document.client.city].filter(Boolean).join(" ") || null, document.client.country, document.client.email, document.client.phone] },
+      { x: MARGIN, title: "DESTINATAIRE", lines: [document.invoiceCompliance?.clientLegalName || document.client.name, document.invoiceCompliance?.billingAddressLine1 || document.client.addressLine1, [document.invoiceCompliance?.billingPostalCode || document.client.postalCode, document.invoiceCompliance?.billingCity || document.client.city].filter(Boolean).join(" ") || null, document.invoiceCompliance?.billingCountry || document.client.country, document.invoiceCompliance?.clientSiren ? `SIREN ${document.invoiceCompliance.clientSiren}` : null, document.invoiceCompliance?.clientVatNumber ? `TVA ${document.invoiceCompliance.clientVatNumber}` : null, document.invoiceCompliance?.purchaseOrderNumber ? `Bon de commande ${document.invoiceCompliance.purchaseOrderNumber}` : null, document.client.email, document.client.phone] },
       { x: MARGIN + width + gap, title: "OUVRAGE", lines: [document.book.title || "-", document.book.author, formatDimensions(document.book), document.book.notes] },
     ];
     let lowest = top;
@@ -308,6 +310,8 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
       paragraph(document.vatMention, MARGIN, 8.5, CONTENT_W);
     }
     if (document.paymentTerms) section("CONDITIONS DE PAIEMENT", document.paymentTerms);
+    if (!isQuote && document.invoiceCompliance?.legalMentions.length) section("MENTIONS RÉGLEMENTAIRES", document.invoiceCompliance.legalMentions.filter((mention) => mention !== document.vatMention).join("\n"));
+    if (!isQuote && document.issuer.iban) section("RÈGLEMENT", `IBAN ${document.issuer.iban}`);
     if (document.notes) section(isQuote ? "CONDITIONS" : "MENTIONS", document.notes);
     if (isQuote) {
       y -= 6;
@@ -335,7 +339,10 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
       const legalNotes = document.issuer.legalNotes ?? "";
       const legal = [
         document.issuer.legalName,
+        document.issuer.legalForm,
+        document.issuer.shareCapital ? `Capital ${document.issuer.shareCapital}` : null,
         legalNotes || null,
+        document.issuer.siren && !legalNotes.includes(document.issuer.siren) ? `SIREN ${document.issuer.siren}` : null,
         document.issuer.siret && !legalNotes.includes(document.issuer.siret) ? `SIRET ${document.issuer.siret}` : null,
         document.issuer.vatNumber && !legalNotes.includes(document.issuer.vatNumber) ? `TVA ${document.issuer.vatNumber}` : null,
       ].filter(Boolean).join(" · ");

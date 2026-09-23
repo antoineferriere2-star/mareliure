@@ -108,10 +108,10 @@ const BINDER_B = "b0000000-0000-4000-8000-00000000000b";
 const TODAY = "2026-09-21";
 
 const profile = (): BillingProfileInput => ({
-  workshopName: "Atelier A", binderName: null, legalName: "Atelier A SARL", addressLine1: "12 rue des Relieurs", addressLine2: null, postalCode: "45000",
-  city: "Orléans", country: "FR", siret: "123 456 789 00012", vatNumber: "FR12345678901", legalNotes: null, email: "a@example.test",
+  workshopName: "Atelier A", binderName: null, legalName: "Atelier A SARL", legalForm: "SARL", shareCapital: null, siren: "123 456 789", addressLine1: "12 rue des Relieurs", addressLine2: null, postalCode: "45000",
+  city: "Orléans", country: "FR", siret: "123 456 789 00012", vatNumber: "FR12345678901", vatOnDebits: false, legalNotes: null, email: "a@example.test",
   phone: "02 00 00 00 00", website: null, documentAccentColor: "#7A2230", documentFooter: null, vatRegime: "VAT_LIABLE", defaultVatRateBps: 2000, vatMention: null, quotePrefix: "D", invoicePrefix: "F",
-  quoteValidityDays: 30, paymentTerms: null, quoteNotes: null, invoiceNotes: null,
+  quoteValidityDays: 30, paymentTerms: null, paymentDelayDays: 30, earlyPaymentDiscountTerms: null, latePenaltyTerms: null, iban: null, quoteNotes: null, invoiceNotes: null,
 });
 const importInput = (over: Partial<Parameters<typeof addReferenceService>[2]> = {}) => ({
   referenceVersion: "reliure-fr-v1", referenceOperationKey: "OPR-0103", name: "Dorure titre", description: null, unit: "par titre" as string | null,

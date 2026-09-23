@@ -16,6 +16,7 @@ import {
   createQuote,
   getInvoice,
   getQuote,
+  issueInvoice,
   listCatalog,
   listClients,
   listInvoices,
@@ -29,6 +30,7 @@ import {
   saveService,
   setQuoteStatus,
   updateQuote,
+  updateInvoiceDraft,
   uploadDocumentLogo,
 } from "./binderQuotes.server";
 import { QUOTE_ITEM_ROW_KEYS, QUOTE_ROW_KEYS } from "@/marketplace/quotes/quoteBuild";
@@ -138,29 +140,42 @@ function makeDb() {
       );
       return { data: q.id, error: null };
     }
-    if (name === "marketplace_binder_convert_quote_to_invoice") {
+    if (name === "marketplace_binder_create_invoice_draft") {
       const q = rows("marketplace_binder_quotes").find((r) => r.id === args.p_quote_id && r.binder_id === args.p_binder_id);
       if (!q) return { data: null, error: { message: "quote_not_found" } };
-      if (q.status === "invoiced") return { data: null, error: { message: "quote_already_invoiced" } };
       if (q.status !== "accepted") return { data: null, error: { message: "quote_not_accepted" } };
-      // Modèle de la fonction SQL : en franchise, la mention effective (celle du devis si elle est
-      // renseignée, sinon celle transmise par le serveur) est obligatoire, et c'est elle qui est figée.
-      const frozenMention = String(q.vat_mention ?? "").trim() || String(args.p_vat_mention ?? "").trim() || null;
-      if (q.vat_regime === "FRANCHISE" && !frozenMention) return { data: null, error: { message: "vat_mention_required" } };
+      const existing = rows("marketplace_binder_invoices").find((r) => r.quote_id === q.id && r.binder_id === q.binder_id);
+      if (existing) return { data: existing.id, error: null };
       const id = uid();
       const { id: _i, quote_number: _n, status: _s, valid_until: _v, ...copy } = q;
       rows("marketplace_binder_invoices").push({
-        ...copy, vat_mention: q.vat_regime === "FRANCHISE" ? frozenMention : q.vat_mention,
-        id, quote_id: q.id, binder_id: q.binder_id, issue_date: args.p_issue_date,
-        invoice_number: number(q.binder_id, "invoice", Number(String(args.p_issue_date).slice(0, 4))),
-        notes: args.p_invoice_notes, issuer: args.p_issuer ?? q.issuer,
+        ...copy, ...args.p_draft,
+        id, quote_id: q.id, binder_id: q.binder_id, invoice_number: null, status: "draft", issued_at: null,
         payment_status: "unpaid", amount_paid_cents: 0, deposit_paid_cents: 0,
+        legal_mentions: [],
       });
       rows("marketplace_binder_quote_items")
         .filter((i) => i.quote_id === q.id)
         .forEach((i) => rows("marketplace_binder_invoice_items").push({ ...i, id: uid(), invoice_id: id }));
-      q.status = "invoiced";
       return { data: id, error: null };
+    }
+    if (name === "marketplace_binder_update_invoice_draft") {
+      const invoice = rows("marketplace_binder_invoices").find((r) => r.id === args.p_invoice_id && r.binder_id === args.p_binder_id && r.status === "draft");
+      if (!invoice) return { data: null, error: { message: "invoice_draft_not_found" } };
+      Object.assign(invoice, args.p_draft);
+      return { data: invoice.id, error: null };
+    }
+    if (name === "marketplace_binder_issue_invoice") {
+      const invoice = rows("marketplace_binder_invoices").find((r) => r.id === args.p_invoice_id && r.binder_id === args.p_binder_id);
+      if (!invoice) return { data: null, error: { message: "invoice_not_found" } };
+      if (invoice.status === "issued") return { data: invoice.id, error: null };
+      invoice.invoice_number = number(invoice.binder_id, "invoice", Number(String(invoice.issue_date).slice(0, 4)));
+      invoice.status = "issued";
+      invoice.issued_at = "2026-09-19T10:00:00Z";
+      invoice.legal_mentions = args.p_legal_mentions;
+      const quote = rows("marketplace_binder_quotes").find((r) => r.id === invoice.quote_id);
+      if (quote) quote.status = "invoiced";
+      return { data: invoice.id, error: null };
     }
     throw new Error(`unexpected rpc ${name}`);
   }
@@ -197,6 +212,9 @@ const profileInput = (over: Partial<BillingProfileInput> = {}): BillingProfileIn
   workshopName: "Atelier Dorure",
   binderName: null,
   legalName: "Atelier Dorure SARL",
+  legalForm: "SARL",
+  shareCapital: "5 000 €",
+  siren: "123 456 789",
   addressLine1: "12 rue des Relieurs",
   addressLine2: null,
   postalCode: "45000",
@@ -204,6 +222,7 @@ const profileInput = (over: Partial<BillingProfileInput> = {}): BillingProfileIn
   country: "FR",
   siret: "123 456 789 00012",
   vatNumber: "FR12345678901",
+  vatOnDebits: false,
   legalNotes: "SARL au capital de 5 000 €",
   email: "atelier@example.test",
   phone: "02 00 00 00 00",
@@ -217,6 +236,10 @@ const profileInput = (over: Partial<BillingProfileInput> = {}): BillingProfileIn
   invoicePrefix: "F",
   quoteValidityDays: 30,
   paymentTerms: "Paiement à réception",
+  paymentDelayDays: 30,
+  earlyPaymentDiscountTerms: "Pas d'escompte pour paiement anticipé.",
+  latePenaltyTerms: "Pénalités de retard : 3 fois le taux légal.",
+  iban: null,
   quoteNotes: "Devis valable sous réserve d'examen du livre.",
   invoiceNotes: "Pénalités de retard : 3 fois le taux légal.",
   ...over,
@@ -617,6 +640,43 @@ describe("devis accepté → facture", () => {
     return quote;
   }
 
+  async function issuedInvoice(quoteId: string, date = TODAY) {
+    const draft = await convertQuoteToInvoice(world.sb, BINDER_A, quoteId, date);
+    await updateInvoiceDraft(world.sb, BINDER_A, draft.id, {
+      issueDate: date,
+      serviceDate: date,
+      dueDate: "2026-10-19",
+      operationNature: "services",
+      clientType: "business",
+      clientName: draft.client.name,
+      clientLegalName: draft.client.name,
+      clientEmail: draft.client.email,
+      clientPhone: draft.client.phone,
+      clientAddressLine1: draft.client.addressLine1,
+      clientPostalCode: draft.client.postalCode,
+      clientCity: draft.client.city,
+      clientCountry: draft.client.country,
+      clientBillingAddressLine1: draft.client.addressLine1,
+      clientBillingPostalCode: draft.client.postalCode,
+      clientBillingCity: draft.client.city,
+      clientBillingCountry: draft.client.country,
+      clientSiren: null,
+      clientVatNumber: null,
+      clientPurchaseOrderNumber: null,
+      clientPublicServiceCode: null,
+      clientPublicCommitmentNumber: null,
+      deliveryAddressLine1: null,
+      deliveryPostalCode: null,
+      deliveryCity: null,
+      deliveryCountry: null,
+      paymentTerms: "Paiement à réception",
+      earlyPaymentDiscountTerms: "Pas d'escompte pour paiement anticipé.",
+      latePenaltyTerms: "Pénalités de retard : 3 fois le taux légal.",
+      notes: draft.notes,
+    });
+    return issueInvoice(world.sb, BINDER_A, draft.id);
+  }
+
   it("un devis non accepté est refusé AVANT de parler d'identité : le relieur lit la vraie raison", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput({ siret: null, addressLine1: null }));
     const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
@@ -644,7 +704,10 @@ describe("devis accepté → facture", () => {
 
   it("la facture reprend client, ouvrage, dimensions, lignes, prix, TVA, total et acompte — sans ressaisie", async () => {
     const quote = await acceptedQuote();
-    const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, "2026-09-25");
+    const draft = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, "2026-09-25");
+    expect(draft.status).toBe("draft");
+    expect(draft.number).toBe("Brouillon");
+    const invoice = await issuedInvoice(quote.id, "2026-09-25");
     expect(invoice.kind).toBe("invoice");
     expect(invoice.client).toMatchObject({ name: "Mme Durand", city: "Paris" });
     expect(invoice.book).toMatchObject({ title: "Les Fleurs du Mal", heightMm: 220, widthMm: 145, spineMm: 32 });
@@ -661,7 +724,7 @@ describe("devis accepté → facture", () => {
 
   it("un numéro de facture distinct, et le lien « facture issue du devis X » dans les deux sens", async () => {
     const quote = await acceptedQuote();
-    const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+    const invoice = await issuedInvoice(quote.id);
     expect(invoice.number).toBe("F-2026-0001");
     expect(invoice.number).not.toBe(quote.number);
     expect(invoice.linkedQuoteId).toBe(quote.id);
@@ -675,8 +738,9 @@ describe("devis accepté → facture", () => {
 
   it("un devis n'est facturé qu'une fois", async () => {
     const quote = await acceptedQuote();
-    await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
-    expect(await codeOf(convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY))).toBe("conflict");
+    const first = await issuedInvoice(quote.id);
+    const second = await issueInvoice(world.sb, BINDER_A, first.id);
+    expect(second.number).toBe(first.number);
     expect(await listInvoices(world.sb, BINDER_A)).toHaveLength(1);
   });
 
@@ -686,21 +750,23 @@ describe("devis accepté → facture", () => {
     await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
     let error: BinderQuotesError | null = null;
     try {
-      await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+      const draft = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+      await issueInvoice(world.sb, BINDER_A, draft.id);
     } catch (e) {
       error = e as BinderQuotesError;
     }
     expect(error?.code).toBe("profile_incomplete");
-    expect(error?.missing).toEqual(["Adresse", "SIRET", "Numéro de TVA"]);
+    expect(error?.missing).toEqual(expect.arrayContaining(["SIRET atelier manquant", "Adresse atelier manquante", "Numéro de TVA atelier manquant"]));
     expect((await getQuote(world.sb, BINDER_A, quote.id)).status).toBe("accepted");
-    expect(await listInvoices(world.sb, BINDER_A)).toHaveLength(0);
+    expect(await listInvoices(world.sb, BINDER_A)).toHaveLength(1);
   });
 
   it("en franchise, la facture exige la mention (et pas de numéro de TVA)", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: null }));
     const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
     await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
-    await expect(convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY)).rejects.toMatchObject({ code: "profile_incomplete", missing: ["Mention de TVA"] });
+    const draft = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+    await expect(issueInvoice(world.sb, BINDER_A, draft.id)).rejects.toMatchObject({ code: "profile_incomplete", missing: expect.arrayContaining(["Mention de TVA manquante"]) });
   });
 
   describe("P1-8 — la mention de franchise est figée dans la facture", () => {
@@ -717,7 +783,7 @@ describe("devis accepté → facture", () => {
       const quote = await franchiseQuoteWithoutMention();
       await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: MENTION }));
 
-      const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+      const invoice = await issuedInvoice(quote.id);
 
       expect(invoice.vatRegime).toBe("FRANCHISE");
       expect(invoice.vatMention).toBe(MENTION);
@@ -730,7 +796,7 @@ describe("devis accepté → facture", () => {
     it("la mention figée ne bouge plus quand le profil change ensuite", async () => {
       const quote = await franchiseQuoteWithoutMention();
       await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: MENTION }));
-      const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+      const invoice = await issuedInvoice(quote.id);
       await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: "Autre texte" }));
       expect((await getInvoice(world.sb, BINDER_A, invoice.id)).vatMention).toBe(MENTION);
     });
@@ -740,36 +806,36 @@ describe("devis accepté → facture", () => {
       const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
       await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
       await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: "Mention du profil" }));
-      expect((await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY)).vatMention).toBe("Mention du devis");
+      expect((await issuedInvoice(quote.id)).vatMention).toBe("Mention du devis");
     });
 
     it("une mention de devis blanche est traitée comme absente", async () => {
       const quote = await franchiseQuoteWithoutMention();
       world.tables.marketplace_binder_quotes.find((r) => r.id === quote.id)!.vat_mention = "   ";
       await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: MENTION }));
-      expect((await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY)).vatMention).toBe(MENTION);
+      expect((await issuedInvoice(quote.id)).vatMention).toBe(MENTION);
     });
 
     it("sans mention nulle part : refus, aucune facture, aucun numéro consommé", async () => {
       const quote = await franchiseQuoteWithoutMention();
-      await expect(convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY)).rejects.toMatchObject({ code: "profile_incomplete", missing: ["Mention de TVA"] });
-      expect(await listInvoices(world.sb, BINDER_A)).toHaveLength(0);
+      await expect(issuedInvoice(quote.id)).rejects.toMatchObject({ code: "profile_incomplete", missing: expect.arrayContaining(["Mention de TVA manquante"]) });
+      expect(await listInvoices(world.sb, BINDER_A)).toHaveLength(1);
       expect((await getQuote(world.sb, BINDER_A, quote.id)).status).toBe("accepted");
     });
 
     it("le serveur transmet la mention effective à la fonction SQL", async () => {
       const quote = await franchiseQuoteWithoutMention();
       await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatRegime: "FRANCHISE", vatNumber: null, vatMention: MENTION }));
-      await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
-      const call = world.rpcCalls.find((c) => c.name === "marketplace_binder_convert_quote_to_invoice");
-      expect(call?.args.p_vat_mention).toBe(MENTION);
+      await issuedInvoice(quote.id);
+      const call = world.rpcCalls.find((c) => c.name === "marketplace_binder_create_invoice_draft");
+      expect(call?.args.p_draft.vat_mention).toBe(MENTION);
     });
 
     it("un devis assujetti à la TVA n'est pas touché : pas de mention inventée", async () => {
       await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatMention: "Texte du profil" }));
       const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
       await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
-      const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+      const invoice = await issuedInvoice(quote.id);
       expect(invoice.vatRegime).toBe("VAT_LIABLE");
       expect(invoice.vatMention).toBe(quote.vatMention);
     });
@@ -778,7 +844,7 @@ describe("devis accepté → facture", () => {
   it("l'identité de l'émetteur sur la facture est celle du jour de la facture", async () => {
     const quote = await acceptedQuote();
     await saveBillingProfile(world.sb, BINDER_A, profileInput({ addressLine1: "3 place Neuve" }));
-    const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+    const invoice = await issuedInvoice(quote.id);
     expect(invoice.issuer.addressLine1).toBe("3 place Neuve");
     expect(invoice.notes).toBe("Pénalités de retard : 3 fois le taux légal.");
   });
@@ -842,7 +908,19 @@ describe("PDF", () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput());
     const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
     await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
-    const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+    const draft = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+    await updateInvoiceDraft(world.sb, BINDER_A, draft.id, {
+      issueDate: TODAY, serviceDate: TODAY, dueDate: "2026-10-19", operationNature: "services", clientType: "individual",
+      clientName: draft.client.name, clientLegalName: null, clientEmail: draft.client.email, clientPhone: draft.client.phone,
+      clientAddressLine1: draft.client.addressLine1, clientPostalCode: draft.client.postalCode, clientCity: draft.client.city,
+      clientCountry: draft.client.country, clientBillingAddressLine1: draft.client.addressLine1,
+      clientBillingPostalCode: draft.client.postalCode, clientBillingCity: draft.client.city, clientBillingCountry: draft.client.country,
+      clientSiren: null, clientVatNumber: null, clientPurchaseOrderNumber: null, clientPublicServiceCode: null,
+      clientPublicCommitmentNumber: null, deliveryAddressLine1: null, deliveryPostalCode: null, deliveryCity: null,
+      deliveryCountry: null, paymentTerms: draft.paymentTerms, earlyPaymentDiscountTerms: null,
+      latePenaltyTerms: null, notes: draft.notes,
+    });
+    const invoice = await issueInvoice(world.sb, BINDER_A, draft.id);
     const text = (await renderDocumentPdf(invoice)).printed.join("\n");
     expect(text).toContain("FACTURE");
     expect(text).toContain("N° F-2026-0001");
