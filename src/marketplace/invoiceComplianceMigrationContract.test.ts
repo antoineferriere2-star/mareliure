@@ -5,6 +5,12 @@ import { describe, expect, it } from "vitest";
 const SQL = readFileSync(fileURLToPath(new URL("../../supabase/migrations/20260923120000_marketplace_invoice_compliance.sql", import.meta.url)), "utf8");
 
 describe("migration de conformité des factures", () => {
+  it("conserve les pièces jusqu'à la fin de la dixième année", () => {
+    expect(SQL.match(/date_trunc\('year', issue_date\) \+ interval '11 years - 1 day'/g)).toHaveLength(2);
+    expect(SQL).toContain("date_trunc('year', p_issue_date) + interval '11 years - 1 day'");
+    expect(SQL).not.toContain("interval '10 years 1 year - 1 day'");
+  });
+
   it("préserve l'historique et ajoute un brouillon sans numéro", () => {
     expect(SQL).toContain("ALTER COLUMN invoice_number DROP NOT NULL");
     expect(SQL).toContain("status TEXT NOT NULL DEFAULT 'issued'");
@@ -53,4 +59,3 @@ describe("migration de conformité des factures", () => {
     expect(SQL).toContain("TO service_role");
   });
 });
-

@@ -104,7 +104,7 @@ SET issued_at = COALESCE(issued_at, created_at),
     service_date = COALESCE(service_date, issue_date),
     due_date = COALESCE(due_date, issue_date),
     operation_nature = COALESCE(operation_nature, 'services'),
-    retained_until = COALESCE(retained_until, (date_trunc('year', issue_date) + interval '10 years 1 year - 1 day')::date)
+    retained_until = COALESCE(retained_until, (date_trunc('year', issue_date) + interval '11 years - 1 day')::date)
 WHERE status = 'issued';
 
 ALTER TABLE public.marketplace_binder_invoices
@@ -325,7 +325,7 @@ BEGIN
   UPDATE public.marketplace_binder_invoices SET
     invoice_number = v_number, status = 'issued', issued_at = now(),
     legal_mentions = COALESCE(p_legal_mentions, '[]'::jsonb),
-    retained_until = (date_trunc('year', issue_date) + interval '10 years 1 year - 1 day')::date,
+    retained_until = (date_trunc('year', issue_date) + interval '11 years - 1 day')::date,
     updated_at = now()
   WHERE id = p_invoice_id;
   UPDATE public.marketplace_binder_quotes SET status = 'invoiced' WHERE id = v_invoice.quote_id;
@@ -417,7 +417,7 @@ BEGIN
       'vatNumber', v_invoice.client_vat_number),
     v_invoice.currency, v_invoice.total_ht_cents, v_invoice.total_vat_cents, v_invoice.total_ttc_cents,
     v_invoice.vat_breakdown, v_invoice.legal_mentions,
-    (date_trunc('year', p_issue_date) + interval '10 years 1 year - 1 day')::date
+    (date_trunc('year', p_issue_date) + interval '11 years - 1 day')::date
   );
   INSERT INTO public.marketplace_binder_credit_note_items (
     credit_note_id, binder_id, position, label, description, unit, quantity,
