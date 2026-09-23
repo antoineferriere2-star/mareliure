@@ -155,7 +155,7 @@ function BuilderForm({
   quoteId?: string;
   profile: BillingProfile;
   services: { id: string; categoryId: string | null; name: string; description: string | null; unitPriceCents: number; vatRateBps: number | null; unit: string | null; isActive: boolean; isFavorite: boolean; referenceVersion: string | null; referenceOperationKey: string | null }[];
-  basePrices: { pricingKey: string; label: string; unit: string; unitPriceCents: number | null; pricingMode: string }[];
+  basePrices: { pricingKey: string; label: string; unit: string; unitPriceCents: number | null; pricingMode: string; isFavorite?: boolean }[];
   categories: { id: string; name: string }[];
   clients: { id: string; name: string; email: string | null; phone: string | null; addressLine1: string | null; postalCode: string | null; city: string | null }[];
   works: WorkSummary[];
@@ -259,6 +259,7 @@ function BuilderForm({
   const catalogServices: CatalogService[] = palette.workshop
     .map((s) => ({ id: s.id, categoryId: s.categoryId, name: s.name, description: s.description, unitPriceCents: s.unitPriceCents, vatRateBps: s.vatRateBps, unit: s.unit, referenceVersion: s.referenceVersion, referenceOperationKey: s.referenceOperationKey }));
   const favoriteServices = palette.workshop.filter((service) => service.isFavorite).map((service) => catalogServices.find((item) => item.id === service.id)!);
+  const favoriteBaseServices = palette.base.filter((service) => service.isFavorite);
   const recentlyUsed = recentServices(catalogServices, recentIds);
 
   // --- Catalogue ----------------------------------------------------------------
@@ -578,11 +579,12 @@ function BuilderForm({
             </div>
           ) : (
             <div className="mt-5 space-y-6">
-              {favoriteServices.length > 0 && !needle && (
+              {(favoriteServices.length > 0 || favoriteBaseServices.length > 0) && !needle && (
                 <div>
                   <h3 className="mb-2 text-[0.68rem] font-semibold uppercase tracking-[0.16em] text-[#7a2230]">★ Favoris</h3>
                   <ul className="grid gap-2 sm:grid-cols-2 lg:grid-cols-1">
                     {favoriteServices.map((service) => <ServiceChoice key={service.id} service={service} selected={selectedServiceIds.has(service.id)} onClick={() => toggleService(service)} />)}
+                    {favoriteBaseServices.map((service) => <li key={service.pricingKey}><button type="button" onClick={() => addBasePrice(service)} className="flex min-h-11 w-full items-center gap-3 rounded-sm border border-[#cfc5b6] bg-[#fffdf8] px-3 py-2 text-left text-sm hover:bg-[#f5f0e8]"><span aria-hidden="true" className="text-amber-500">★</span><span className="min-w-0 flex-1">{service.label}</span><span className="text-[#74695d]">{service.pricingMode === "manual_review" ? "Sur étude" : euros(service.unitPriceCents ?? 0)}</span></button></li>)}
                   </ul>
                 </div>
               )}

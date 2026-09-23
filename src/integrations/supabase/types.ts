@@ -2257,6 +2257,54 @@ export type Database = {
           },
         ]
       }
+      marketplace_binder_price_preferences: {
+        Row: {
+          binder_id: string
+          created_at: string
+          custom_pricing_mode: string | null
+          custom_unit_price_cents: number | null
+          id: string
+          is_favorite: boolean
+          pricing_key: string
+          updated_at: string
+        }
+        Insert: {
+          binder_id: string
+          created_at?: string
+          custom_pricing_mode?: string | null
+          custom_unit_price_cents?: number | null
+          id?: string
+          is_favorite?: boolean
+          pricing_key: string
+          updated_at?: string
+        }
+        Update: {
+          binder_id?: string
+          created_at?: string
+          custom_pricing_mode?: string | null
+          custom_unit_price_cents?: number | null
+          id?: string
+          is_favorite?: boolean
+          pricing_key?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_price_preferences_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_price_preferences_pricing_key_fkey"
+            columns: ["pricing_key"]
+            isOneToOne: false
+            referencedRelation: "marketplace_work_items"
+            referencedColumns: ["key"]
+          },
+        ]
+      }
       marketplace_binder_services: {
         Row: {
           archived_at: string | null

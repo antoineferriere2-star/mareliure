@@ -3094,6 +3094,17 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 
 ## Latest handoff
 
+**Agent :** Codex (GPT-6) — 23 septembre 2026, `feat/binder-pricing-catalog`.
+
+- La page Prestations & tarifs devient « Mes prestations et mes prix » : les 45 prestations Ma Reliure sont visibles immédiatement, regroupées en huit catégories, avec 41 tarifs numériques et quatre lignes « Sur étude ». Recherche, filtres, favoris, prix personnalisés, mode `starting_from`, édition par montant ou pourcentage et retour explicite à la base sont intégrés.
+- Les opérations de masse couvrent toutes les prestations, une catégorie ou une sélection. L'atelier choisit base Ma Reliure ou prix actuels, consulte tous les montants avant/après dans une liste, puis confirme. Les quatre tarifs sur étude sont exclus des pourcentages. Les calculs et arrondis restent en centimes entiers.
+- Migration additive `20260923130000_marketplace_binder_pricing_catalog.sql`, non appliquée : table d'overrides et de favoris par atelier et clé tarifaire, RLS fermée au navigateur, contraintes montant/mode et unicité atelier + prestation. Supprimer un override remet réellement la ligne sous le tarif Ma Reliure courant. Aucun devis ni facture existants n'est réécrit.
+- Le Quote Workbench lit le prix effectif et les favoris de la grille pour les futurs ajouts. Une ligne ajoutée conserve son montant dans le snapshot ; une modification ultérieure du catalogue ne touche donc aucun document existant. Les prestations propres à l'atelier restent dans une section séparée.
+- QA navigateur locale sur le composant final : bureau et viewport 390 px sans débordement horizontal, 45 lignes/cartes, bulk 41 lignes, −5 % sur Reliure cuir, choix base/prix actuel, tarif sur étude laissé tel quel ou défini « À partir de 500 € ». La route de recette temporaire a été supprimée et aucune donnée Supabase n'a été modifiée.
+- Vérifications vertes : typecheck, lint avec 13 avertissements historiques, build Ma Reliure, 208 fichiers / 2 910 tests. Un premier passage parallèle au build avait un timeout du scan historique `workerPdfLibContract`; il est passé seul en 428 ms, puis la suite complète est passée avec un timeout de 30 s. Ne pas appliquer la migration, fusionner ou déployer sans nouvelle autorisation et sans E2E authentifié sur un environnement portant la migration.
+
+## Latest handoff
+
 **Agent :** Codex (GPT-6) — 23 septembre 2026, `feat/invoice-compliance`.
 
 - Audit réglementaire documenté dans `docs/invoice-compliance-audit.md`. La facture suit désormais un cycle brouillon sans numéro → émission atomique numérotée et immuable. Le contrôle avant émission exige les données adaptées au vendeur, au client particulier/professionnel/public, aux dates, à la nature de l'opération, à la TVA et aux conditions B2B ; aucune donnée juridique absente n'est inventée.
