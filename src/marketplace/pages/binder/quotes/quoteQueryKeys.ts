@@ -9,5 +9,6 @@ export const INVOICES_KEY = ["marketplace", "binder", "invoices"] as const;
 
 /** Le profil tel que le serveur l'attend en écriture. */
 export function profileToInput(profile: BillingProfile) {
-  return { ...profile };
+  const { logoStoragePath: _path, logoUrl: _url, ...input } = profile;
+  return input;
 }

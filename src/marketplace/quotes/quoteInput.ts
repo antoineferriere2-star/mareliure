@@ -124,6 +124,7 @@ export type QuoteBlockInput = z.infer<typeof quoteBlockInput>;
 export const billingProfileInput = z
   .object({
     workshopName: optionalText(200),
+    binderName: optionalText(200),
     legalName: optionalText(200),
     addressLine1: optionalText(300),
     addressLine2: optionalText(300),
@@ -135,6 +136,9 @@ export const billingProfileInput = z
     legalNotes: optionalText(1000),
     email: optionalText(200),
     phone: optionalText(40),
+    website: optionalText(300),
+    documentAccentColor: z.enum(["#7A2230", "#24483D", "#263A57", "#3B342E"]).default("#7A2230"),
+    documentFooter: optionalText(1000),
     vatRegime: z.enum(["FRANCHISE", "VAT_LIABLE"]).nullable(),
     defaultVatRateBps: z.number().int().min(0).max(10_000),
     vatMention: optionalText(500),

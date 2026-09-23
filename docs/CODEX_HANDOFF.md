@@ -3077,3 +3077,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Migration additive `20260923100000_marketplace_quote_size_blocks_photos.sql` : clés stables de ligne, snapshots de blocs sur lignes devis/facture, table de métadonnées photo, bucket privé et fonctions transactionnelles adaptées. Elle n'est appliquée dans aucun environnement.
 - Vérifications locales : typecheck, lint et build Ma Reliure verts ; 2 889 tests sur 2 890 verts lors de la suite complète, avec le seul échec dû au timeout historique de 5 s de `secretsContract.test.ts`, puis ce test vert isolément. QA navigateur fonctionnelle en attente d'un environnement où la migration peut être appliquée.
 - Ne pas fusionner ni déployer sans revue. Les briefs suivants demandent des PR séparées/empilées pour la refonte PDF premium, la conformité facture et la page « Mes prestations et mes prix ».
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 23 septembre 2026, `feat/pdf-document-design`.
+
+- Refonte partagée devis/facture dans `documentPdf.ts` : A4 ivoire, titres serif, informations et tableaux sans serif, en-têtes de continuation, blocs destinataire/ouvrage, groupes de formats, descriptions, photos, totaux, accord devis et pied légal paginé. Aucun calcul, statut, numéro ni snapshot historique n'est recalculé.
+- Paramètres « Devis & documents » : nom du relieur, site, logo PNG/JPEG privé de 2 Mo, quatre accents contrôlés, pied commun et aperçu. Les logos sont stockés dans le bucket privé `marketplace-binder-document-logos`; le chemin est figé dans l'émetteur du document et l'URL signée à la lecture. Retirer/remplacer le logo ne casse donc pas les anciens documents.
+- Migration additive `20260923110000_marketplace_document_branding.sql`, non appliquée : cinq colonnes sur le profil documentaire, contrainte de palette et bucket privé. Aucun devis, facture, calcul ou donnée métier existante n'est modifié.
+- QA PDF locale : devis simple sans logo (1 page), devis avec logo et photo autorisée (2 pages), facture simple (1 page), facture aux noms longs et 42 prestations (5 pages). A4, texte extractible, accents/euro, deux images embarquées, aucune provenance interne, lignes non coupées, en-têtes et pieds répétés, totaux groupés. Captures avant/après générées sous `output/pdf/`.
+- Vérifications vertes : typecheck, lint strict, 56 tests ciblés, suite complète 204 fichiers / 2 895 tests et build Ma Reliure (client, Worker et contrat `pdf-lib`). Les quatre PDF A4 ont été rouverts avec `pypdf`, leurs tailles/pages/textes contrôlés, puis toutes les pages rendues avec Poppler et inspectées visuellement. Restent : commit/push, PR empilée sur `feat/quote-size-blocks-photos` et CI. Ne pas fusionner ni appliquer la migration avant la revue utilisateur des PDF.

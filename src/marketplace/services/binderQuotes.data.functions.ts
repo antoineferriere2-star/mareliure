@@ -38,16 +38,19 @@ import {
   listQuotes,
   loadBillingProfile,
   requireBinderId,
+  clearDocumentLogo,
   saveBillingProfile,
   saveCategory,
   saveClient,
   saveService,
   setQuoteStatus,
   updateQuote,
+  uploadDocumentLogo,
   uploadQuoteItemPhoto,
   type BinderQuotesErrorCode,
 } from "./binderQuotes.server";
 import { QUOTE_OPERATION_PHOTO_MIME_TYPES } from "@/marketplace/quotes/quotePhotos";
+import { DOCUMENT_LOGO_MIME_TYPES } from "@/marketplace/quotes/documentBranding";
 
 const MESSAGES: Record<BinderQuotesErrorCode, string> = {
   no_binder: "Aucun atelier n'est associé à ce compte.",
@@ -86,6 +89,20 @@ export const saveMyBillingProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => billingProfileInput.parse(data))
   .handler(({ context, data }) => run(context.userId, (binderId, sb) => saveBillingProfile(sb, binderId, data)));
+
+const documentLogoInput = z.object({
+  mimeType: z.enum(DOCUMENT_LOGO_MIME_TYPES),
+  imageBase64: z.string().min(1).max(3_000_000),
+}).strict();
+
+export const uploadMyDocumentLogo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => documentLogoInput.parse(data))
+  .handler(({ context, data }) => run(context.userId, (binderId, sb) => uploadDocumentLogo(sb, binderId, data)));
+
+export const clearMyDocumentLogo = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => run(context.userId, (binderId, sb) => clearDocumentLogo(sb, binderId)));
 
 export const getMyCatalog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

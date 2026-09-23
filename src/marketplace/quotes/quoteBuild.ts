@@ -14,6 +14,7 @@ import { addDays } from "./quoteStatus";
 
 export interface BillingProfile {
   workshopName: string | null;
+  binderName: string | null;
   legalName: string | null;
   addressLine1: string | null;
   addressLine2: string | null;
@@ -25,6 +26,11 @@ export interface BillingProfile {
   legalNotes: string | null;
   email: string | null;
   phone: string | null;
+  website: string | null;
+  logoStoragePath: string | null;
+  logoUrl: string | null;
+  documentAccentColor: string;
+  documentFooter: string | null;
   /** `null` tant que l'atelier n'a pas choisi : aucun régime n'est présumé. */
   vatRegime: VatRegime | null;
   defaultVatRateBps: number;
@@ -39,6 +45,7 @@ export interface BillingProfile {
 
 export const EMPTY_BILLING_PROFILE: BillingProfile = {
   workshopName: null,
+  binderName: null,
   legalName: null,
   addressLine1: null,
   addressLine2: null,
@@ -50,6 +57,11 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
   legalNotes: null,
   email: null,
   phone: null,
+  website: null,
+  logoStoragePath: null,
+  logoUrl: null,
+  documentAccentColor: "#7A2230",
+  documentFooter: null,
   vatRegime: null,
   defaultVatRateBps: 2000,
   vatMention: null,
@@ -72,6 +84,7 @@ export const FRANCHISE_MENTION_SUGGESTION = "TVA non applicable, art. 293 B du C
 /** L'émetteur tel qu'il est imprimé et figé dans le document. */
 export interface Issuer {
   workshopName: string | null;
+  binderName: string | null;
   legalName: string | null;
   addressLine1: string | null;
   addressLine2: string | null;
@@ -83,11 +96,17 @@ export interface Issuer {
   legalNotes: string | null;
   email: string | null;
   phone: string | null;
+  website: string | null;
+  logoStoragePath: string | null;
+  logoUrl?: string | null;
+  documentAccentColor: string;
+  documentFooter: string | null;
 }
 
 export function issuerOf(profile: BillingProfile): Issuer {
   return {
     workshopName: profile.workshopName,
+    binderName: profile.binderName,
     legalName: profile.legalName,
     addressLine1: profile.addressLine1,
     addressLine2: profile.addressLine2,
@@ -99,6 +118,10 @@ export function issuerOf(profile: BillingProfile): Issuer {
     legalNotes: profile.legalNotes,
     email: profile.email,
     phone: profile.phone,
+    website: profile.website,
+    logoStoragePath: profile.logoStoragePath,
+    documentAccentColor: profile.documentAccentColor,
+    documentFooter: profile.documentFooter,
   };
 }
 
