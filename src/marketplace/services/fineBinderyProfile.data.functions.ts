@@ -22,13 +22,7 @@ const IMAGE_MIME_TYPES = ["image/jpeg", "image/png"] as const;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const SIGNED_URL_TTL_SECONDS = 3600;
 
-const publicProfileColumns = [
-  "id", "display_name", "workshop_name", "city", "postal_code", "bio", "training",
-  "avatar_path", "status", "personal_referral_slug", "country_code", "professional_email",
-  "professional_phone", "website_url", "instagram_url", "workshop_photo_path",
-  "public_philosophy", "public_languages", "public_technique_keys", "public_material_keys",
-  "public_profile_status", "public_profile_published_at",
-].join(", ");
+const publicProfileColumns = "id, display_name, workshop_name, city, postal_code, bio, training, avatar_path, status, personal_referral_slug, country_code, professional_email, professional_phone, website_url, instagram_url, workshop_photo_path, public_philosophy, public_languages, public_technique_keys, public_material_keys, public_profile_status, public_profile_published_at" as const;
 
 const optionalText = (length: number) => z.string().trim().max(length).nullable();
 const profileInput = z.object({
@@ -264,9 +258,9 @@ export const uploadMyFineBinderyProfileImage = createServerFn({ method: "POST" }
     const path = `${binder.id}/public-profile/${data.target}-${crypto.randomUUID()}.${extension}`;
     const { error: uploadError } = await sb.storage.from(PHOTO_BUCKET).upload(path, bytes, { contentType: data.mimeType, upsert: false });
     if (uploadError) fail(500, uploadError.message);
-    const column = data.target === "logo" ? "avatar_path" : "workshop_photo_path";
     const previous = data.target === "logo" ? binder.avatar_path : binder.workshop_photo_path;
-    const { error } = await sb.from("marketplace_binders").update({ [column]: path }).eq("id", binder.id);
+    const imageUpdate = data.target === "logo" ? { avatar_path: path } : { workshop_photo_path: path };
+    const { error } = await sb.from("marketplace_binders").update(imageUpdate).eq("id", binder.id);
     if (error) {
       await sb.storage.from(PHOTO_BUCKET).remove([path]);
       fail(500, error.message);
@@ -348,9 +342,11 @@ export const uploadMyFineBinderyPortfolioPhoto = createServerFn({ method: "POST"
     const path = `${binder.id}/portfolio/${data.id}/${data.side}-${crypto.randomUUID()}.${extension}`;
     const { error: uploadError } = await sb.storage.from(PHOTO_BUCKET).upload(path, bytes, { contentType: data.mimeType, upsert: false });
     if (uploadError) fail(500, uploadError.message);
-    const column = data.side === "before" ? "before_photo_path" : "after_photo_path";
     const previous = data.side === "before" ? item!.before_photo_path : item!.after_photo_path;
-    const { error } = await sb.from("marketplace_binder_portfolio").update({ [column]: path, is_published: false, publication_consent_at: null })
+    const photoUpdate = data.side === "before"
+      ? { before_photo_path: path, is_published: false, publication_consent_at: null }
+      : { after_photo_path: path, is_published: false, publication_consent_at: null };
+    const { error } = await sb.from("marketplace_binder_portfolio").update(photoUpdate)
       .eq("id", data.id).eq("binder_id", binder.id);
     if (error) {
       await sb.storage.from(PHOTO_BUCKET).remove([path]);
