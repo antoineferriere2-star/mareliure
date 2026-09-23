@@ -46,6 +46,13 @@ ALTER TABLE public.marketplace_binder_invoice_items
   ADD COLUMN IF NOT EXISTS block_width_mm INTEGER,
   ADD COLUMN IF NOT EXISTS block_spine_mm INTEGER;
 
+-- Les lignes de facture sont immuables en exploitation. Le backfill ajoute
+-- uniquement les clés et dimensions de bloc à leurs snapshots existants.
+-- La désactivation est locale à la transaction de migration : toute erreur
+-- annule aussi ce changement, et le trigger est réactivé avant la suite.
+ALTER TABLE public.marketplace_binder_invoice_items
+  DISABLE TRIGGER marketplace_binder_invoice_items_immutable;
+
 UPDATE public.marketplace_binder_invoice_items i SET
   line_key = COALESCE(i.line_key, i.id::TEXT),
   block_height_mm = COALESCE(i.block_height_mm, q.height_mm),
@@ -53,6 +60,9 @@ UPDATE public.marketplace_binder_invoice_items i SET
   block_spine_mm = COALESCE(i.block_spine_mm, q.spine_mm)
 FROM public.marketplace_binder_invoices q
 WHERE q.id = i.invoice_id AND i.line_key IS NULL;
+
+ALTER TABLE public.marketplace_binder_invoice_items
+  ENABLE TRIGGER marketplace_binder_invoice_items_immutable;
 
 ALTER TABLE public.marketplace_binder_invoice_items ALTER COLUMN line_key SET NOT NULL;
 CREATE UNIQUE INDEX IF NOT EXISTS marketplace_binder_invoice_items_line_key_uidx

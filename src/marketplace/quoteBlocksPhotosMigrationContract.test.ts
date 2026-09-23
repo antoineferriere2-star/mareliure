@@ -13,6 +13,16 @@ describe("blocs de formats et photos des devis", () => {
     expect(SQL).toContain("line_key, block_key, block_label, block_book_count");
   });
 
+  it("encadre le backfill historique par le verrou d'immutabilité", () => {
+    const disable = SQL.indexOf("DISABLE TRIGGER marketplace_binder_invoice_items_immutable");
+    const backfill = SQL.indexOf("UPDATE public.marketplace_binder_invoice_items i SET");
+    const enable = SQL.indexOf("ENABLE TRIGGER marketplace_binder_invoice_items_immutable");
+
+    expect(disable).toBeGreaterThan(-1);
+    expect(backfill).toBeGreaterThan(disable);
+    expect(enable).toBeGreaterThan(backfill);
+  });
+
   it("garde les photos privées derrière les fonctions serveur", () => {
     expect(SQL).toContain(`'${QUOTE_OPERATION_PHOTOS_BUCKET}'`);
     expect(SQL).toContain("FALSE, 8388608");

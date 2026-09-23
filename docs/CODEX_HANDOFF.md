@@ -3113,3 +3113,12 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Préparation 2027 : abstraction `ElectronicInvoiceProvider`, provider manuel sans transmission, champs fournisseur réservés et rapport `docs/factur-x-feasibility.md`. Factur-X n'est pas généré à moitié : la recommandation est un service Java isolé avec validation Mustangproject + veraPDF, après choix d'une plateforme agréée.
 - Vérifications vertes : typecheck ; lint sans erreur (13 avertissements historiques) ; suite complète 207 fichiers / 2 910 tests ; build Ma Reliure complet et contrat Worker `pdf-lib` vert. Restent : commit/push, PR empilée sur `feat/pdf-document-design`, puis CI. Ne pas fusionner, appliquer la migration ou déployer avant la revue finale.
 - Le complément « Mes prestations et mes prix » doit partir dans une PR dédiée `feat/binder-pricing-catalog` après cette PR, car son catalogue complet, ses ajustements de masse et sa QA responsive constituent un chantier distinct.
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 23 septembre 2026, `fix/invoice-item-migration-backfill`.
+
+- Les PR #19, #20, #21 et #22 ont été fusionnées par merge commits, branches conservées, puis `main` a été avancée jusqu'à `a0626f685ad88d06cfd4f6e82d006171f42154b5`. La CI finale de #22 est verte sur `c8ed612e27823580bcfd82cd7ae31202f3ed8a63` ; l'intégration locale passe 211 fichiers / 2 925 tests, typecheck, lint sans erreur et build Ma Reliure.
+- Le dry-run Supabase production `hljxohondjvrkzqicexl` ne listait que les quatre migrations `20260923100000` à `20260923130000`. La première tentative a été annulée avant enregistrement : le trigger historique `marketplace_binder_invoice_items_immutable` a bloqué le backfill de `line_key` et des dimensions de bloc. Les quatre migrations restent en attente.
+- Le correctif encadre uniquement ce backfill par `DISABLE TRIGGER` / `ENABLE TRIGGER` dans la même transaction. Toute erreur restaure donc le verrou, et aucune modification métier supplémentaire n'est autorisée. Le contrat vérifie l'ordre désactivation → backfill → réactivation ; les 10 tests ciblés et le typecheck sont verts.
+- Reste : publier la PR corrective, attendre sa CI, fusionner, vérifier à nouveau l'historique distant, appliquer les quatre migrations, comparer les comptes agrégés, régénérer les types depuis la production, déployer une seule fois depuis `main`, puis faire le smoke test et la QA production.
