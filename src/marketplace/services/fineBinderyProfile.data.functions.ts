@@ -22,7 +22,7 @@ const IMAGE_MIME_TYPES = ["image/jpeg", "image/png"] as const;
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const SIGNED_URL_TTL_SECONDS = 3600;
 
-const publicProfileColumns = "id, display_name, workshop_name, city, postal_code, bio, training, avatar_path, status, personal_referral_slug, country_code, professional_email, professional_phone, website_url, instagram_url, workshop_photo_path, public_philosophy, public_languages, public_technique_keys, public_material_keys, public_profile_status, public_profile_published_at" as const;
+const publicProfileColumns = "id, display_name, workshop_name, city, postal_code, bio, training, avatar_path, status, personal_referral_slug, country_code, professional_email, professional_phone, website_url, instagram_url, workshop_photo_path, public_philosophy, spoken_languages, public_technique_keys, public_material_keys, public_profile_status, public_profile_published_at" as const;
 
 const optionalText = (length: number) => z.string().trim().max(length).nullable();
 const profileInput = z.object({
@@ -144,7 +144,7 @@ async function projectProfile(sb: Supa, binder: Awaited<ReturnType<typeof myBind
     bio: binder.bio ?? "",
     training: binder.training,
     philosophy: binder.public_philosophy,
-    languages: binder.public_languages,
+    languages: binder.spoken_languages,
     skills,
     techniqueKeys: binder.public_technique_keys,
     materialKeys: binder.public_material_keys,
@@ -188,7 +188,7 @@ export const saveMyFineBinderyProfile = createServerFn({ method: "POST" })
       bio: data.bio,
       training: data.training,
       public_philosophy: data.philosophy,
-      public_languages: [...new Set(data.languages)],
+      spoken_languages: [...new Set(data.languages)],
       public_technique_keys: [...new Set(data.techniqueKeys)],
       public_material_keys: [...new Set(data.materialKeys)],
       personal_referral_slug: slug,
@@ -394,7 +394,7 @@ export const listPublicFineBinderyProfiles = createServerFn({ method: "GET" })
         city: binder.city!,
         countryCode: binder.country_code,
         bio: binder.bio!,
-        languages: binder.public_languages,
+        languages: binder.spoken_languages,
         skills: skills.map((slug) => ({ slug, label: binderSkillLabel(slug), labelEn: binderSkillLabelEn(slug) })),
         imageUrl: await signedUrl(sb, binder.workshop_photo_path || binder.avatar_path),
       };
@@ -428,7 +428,7 @@ export const getPublicFineBinderyProfile = createServerFn({ method: "GET" })
       bio: binder.bio!,
       training: binder.training,
       philosophy: binder.public_philosophy,
-      languages: binder.public_languages,
+      languages: binder.spoken_languages,
       skills: skills.map((slug) => ({ slug, label: binderSkillLabel(slug), labelEn: binderSkillLabelEn(slug) })),
       techniqueKeys: binder.public_technique_keys,
       materialKeys: binder.public_material_keys,

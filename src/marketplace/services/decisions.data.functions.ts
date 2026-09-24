@@ -37,7 +37,7 @@ async function loadCaseParties(
 
 /** Same rule as messaging.data.functions.ts's own helper — kept local rather than shared, both are a few lines. */
 async function loadCaseBrand(sb: Supa, caseId: string) {
-  const { data } = await sb.from("marketplace_cases").select("brand").eq("id", caseId).maybeSingle();
+  const { data } = await sb.from("marketplace_cases").select("brand, preferred_language").eq("id", caseId).maybeSingle();
   const { isMarketplaceBrand, marketplaceBrandConfig, canonicalHome } = await import(
     "@/marketplace/brand/brandConfig"
   );
@@ -47,7 +47,7 @@ async function loadCaseBrand(sb: Supa, caseId: string) {
   return {
     brand,
     brandName: config.displayName,
-    locale: config.defaultLocale,
+    locale: data?.preferred_language === "de" ? "de-DE" : data?.preferred_language === "it" ? "it-IT" : data?.preferred_language === "es" ? "es-ES" : data?.preferred_language === "fr" ? "fr-FR" : config.defaultLocale,
     origin: canonicalHome(brand).replace(/\/+$/, ""),
   };
 }
@@ -64,16 +64,21 @@ async function notifyCustomerOfDecisionRequest(
     if (!email) return;
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
     const { brand, brandName, locale, origin } = await loadCaseBrand(sb, caseId);
-    const isEn = locale === "en-US";
+    const activity = {
+      "en-US": { heading: "A confirmation is needed from you", intro: "Your workshop needs one more detail to move forward on your book.", cta: "Reply" },
+      "fr-FR": { heading: "Une confirmation vous est demandée", intro: "Votre atelier a besoin d’une précision pour avancer sur votre livre.", cta: "Répondre" },
+      "de-DE": { heading: "Ihre Bestätigung wird benötigt", intro: "Ihre Werkstatt benötigt noch eine Angabe, um mit Ihrem Buch fortzufahren.", cta: "Antworten" },
+      "it-IT": { heading: "È necessaria una tua conferma", intro: "Il laboratorio ha bisogno di un dettaglio per proseguire con il libro.", cta: "Rispondi" },
+      "es-ES": { heading: "Necesitamos tu confirmación", intro: "El taller necesita un dato más para continuar con el libro.", cta: "Responder" },
+      "es-US": { heading: "Necesitamos tu confirmación", intro: "El taller necesita un dato más para continuar con el libro.", cta: "Responder" },
+    }[locale] ?? { heading: "A confirmation is needed from you", intro: "Your workshop needs one more detail to move forward on your book.", cta: "Reply" };
     await sendTemplateEmail("case-activity", email, {
       templateData: {
         brandName,
         locale,
-        heading: isEn ? "A confirmation is needed from you" : "Une confirmation vous est demandée",
-        intro: isEn
-          ? "Your workshop needs one more detail to move forward on your book."
-          : "Votre atelier a besoin d'une précision pour avancer sur votre livre.",
-        ctaLabel: isEn ? "Reply" : "Répondre",
+        heading: activity.heading,
+        intro: activity.intro,
+        ctaLabel: activity.cta,
         ctaUrl: `${origin}/mes-livres/${caseId}`,
       },
       brand,

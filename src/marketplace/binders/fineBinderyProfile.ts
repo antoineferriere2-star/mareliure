@@ -5,6 +5,8 @@ export type PublicProfileStatus = (typeof PUBLIC_PROFILE_STATUSES)[number];
 
 export const PROFILE_REQUEST_SOURCE = "finebindery_profile" as const;
 export const PROFILE_SOURCE_ANSWER_KEY = "_request_source";
+export const FINE_BINDERY_SUBMISSION_LOCALE_KEY = "_submission_locale";
+export const FINE_BINDERY_PREFERRED_LANGUAGE_KEY = "_preferred_language";
 
 export const PUBLIC_LANGUAGES = [
   { code: "fr", label: "Français" },
@@ -59,7 +61,7 @@ export function canPublishPublicProfile(input: PublicProfileReadinessInput): boo
 }
 
 export function fineBinderyProfilePath(slug: string): string {
-  return `/fr/${slug}`;
+  return `/en/${slug}`;
 }
 
 export function sourceLabel(origin: string): string {

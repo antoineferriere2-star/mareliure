@@ -240,6 +240,7 @@ export function MissionRuntime({
   seedAnswers,
   guidance,
   initialLocale,
+  routeLocaleWins = false,
 }: {
   publicToken: string;
   renderAfterSubmission?: RenderAfterSubmission;
@@ -258,6 +259,8 @@ export function MissionRuntime({
    * still wins once it arrives.
    */
   initialLocale?: SupportedLocale;
+  /** A localized public route can deliberately override a legacy Mission locale. */
+  routeLocaleWins?: boolean;
   /**
    * Answers to merge in when a fresh session starts (never on resume) — the
    * generic half of carrying an opaque tag through the tunnel. The runtime
@@ -285,7 +288,7 @@ export function MissionRuntime({
       showFaqLauncher={false}
       chrome="embedded"
       businessName={businessName}
-      lockedLocale={missionLocale ?? initialLocale ?? null}
+      lockedLocale={routeLocaleWins ? (initialLocale ?? missionLocale) : (missionLocale ?? initialLocale ?? null)}
     >
       <MissionRuntimeContent
         publicToken={publicToken}
@@ -431,8 +434,8 @@ function MissionRuntimeContent({
         clearStoredAuth(publicToken);
         try {
           await startFresh();
-        } catch (err) {
-          if (!cancelled) setError(err instanceof Error ? err.message : "Unable to load mission");
+        } catch {
+          if (!cancelled) setError(copy("Unable to load mission"));
         }
       } finally {
         if (!cancelled) setLoading(false);
@@ -577,8 +580,8 @@ function MissionRuntimeContent({
         session_secret: sessionAuth.secret,
         answers: next,
       });
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to save answers");
+    } catch {
+      setError(copy("Unable to save answers"));
     }
   }
 
@@ -668,7 +671,7 @@ function MissionRuntimeContent({
     fieldKey: string,
     image: { base64: string; mediaType: string },
   ): Promise<InspirationPhotoAnalysis> {
-    if (!sessionAuth) throw new Error("Session not ready.");
+    if (!sessionAuth) throw new Error(copy("Session not ready."));
     return callRuntime<InspirationPhotoAnalysis>({
       action: "analyze_inspiration_photo",
       session_id: sessionAuth.sessionId,
@@ -683,7 +686,7 @@ function MissionRuntimeContent({
     fieldKey: string,
     file: { base64: string; mediaType: string; filename: string },
   ) {
-    if (!sessionAuth) throw new Error("Session not ready.");
+    if (!sessionAuth) throw new Error(copy("Session not ready."));
     return callRuntime<{
       storagePath: string;
       filename: string;
@@ -719,8 +722,8 @@ function MissionRuntimeContent({
         locale,
       });
       setDossier(data.dossier);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to submit");
+    } catch {
+      setError(copy("Unable to submit"));
     } finally {
       setSaving(false);
     }

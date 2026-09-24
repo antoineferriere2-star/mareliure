@@ -9,7 +9,7 @@ import {
 } from "./index";
 
 describe("i18n infrastructure", () => {
-  it("supports en-US, es-US and fr-FR, and defaults to en-US", () => {
+  it("supports the Métré locales and the FineBindery European locales, and defaults to en-US", () => {
     // fr-FR was added for Missions authored in French (see
     // MissionProposal.defaultLocale). The default is unchanged: nothing
     // switches language on its own, a surface has to declare it.
@@ -17,12 +17,15 @@ describe("i18n infrastructure", () => {
     expect(isSupportedLocale("en-US")).toBe(true);
     expect(isSupportedLocale("es-US")).toBe(true);
     expect(isSupportedLocale("fr-FR")).toBe(true);
+    expect(isSupportedLocale("de-DE")).toBe(true);
+    expect(isSupportedLocale("it-IT")).toBe(true);
+    expect(isSupportedLocale("es-ES")).toBe(true);
     expect(resolveSupportedLocale("fr-FR")).toBe("fr-FR");
   });
 
   it("still rejects a locale the engine does not know", () => {
-    expect(isSupportedLocale("de-DE")).toBe(false);
-    expect(resolveSupportedLocale("de-DE")).toBe("en-US");
+    expect(isSupportedLocale("nl-NL")).toBe(false);
+    expect(resolveSupportedLocale("nl-NL")).toBe("en-US");
     expect(resolveSupportedLocale(undefined)).toBe("en-US");
   });
 
@@ -43,7 +46,7 @@ describe("i18n infrastructure", () => {
     expect(() => validateEnabledLocales([])).toThrow("at least one locale");
     expect(() => validateEnabledLocales(["en-US", "en-US"])).toThrow("Duplicate locale");
     expect(validateEnabledLocales(["en-US", "fr-FR"])).toEqual(["en-US", "fr-FR"]);
-    expect(() => validateEnabledLocales(["en-US", "de-DE"])).toThrow("Unsupported locale");
+    expect(validateEnabledLocales(["en-US", "de-DE", "it-IT", "es-ES"])).toEqual(["en-US", "de-DE", "it-IT", "es-ES"]);
   });
 
   it("resolves legacy strings and localized text objects", () => {

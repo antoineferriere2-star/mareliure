@@ -1,162 +1,34 @@
-/**
- * Fine Bindery's own header, footer and CTA — never LandingChrome.tsx's:
- * that file's nav, wordmark and footer are French and read "Ma Reliure",
- * which would be exactly the confusion a second brand exists to avoid.
- * SHELL and SectionHead (LandingChrome.tsx) are reused as-is — they are
- * brand-neutral layout primitives, and building a second copy of them was
- * exactly the duplication the multi-brand audit (12 September 2026) ruled
- * out.
- */
-import { Link } from "@tanstack/react-router";
-import { FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
 import { MARKETPLACE_BRAND_CONFIGS } from "@/marketplace/brand/brandConfig";
+import { FineBinderyLanguageSwitch } from "@/marketplace/i18n/FineBinderyLanguageSwitch";
+import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
+import { fineBinderyDirectoryPath, fineBinderyHomePath, fineBinderyProjectPath, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 
 const BRAND = MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY;
 
-const INTAKE_PARAMS = { publicToken: FINE_BINDERY_PUBLIC_TOKEN } as const;
-export const INTAKE_LABEL = "Start your project";
-
-export function FineBinderyIntakeCta({
-  variant = "solid",
-  size = "default",
-}: {
-  variant?: "solid" | "outline";
-  size?: "default" | "compact";
-}) {
-  const base =
-    "inline-flex items-center justify-center rounded-[2px] font-semibold tracking-[0.01em] transition-colors duration-200";
-  const sizes = {
-    default: "px-7 py-4 text-[0.9375rem]",
-    compact: "px-4 py-2.5 text-[0.8125rem] sm:px-5 sm:py-3",
-  } as const;
-  const skins = {
-    solid: "bg-mr-ink text-mr-paper hover:bg-mr-walnut",
-    outline: "border border-mr-ink/25 text-mr-ink hover:border-mr-ink hover:bg-mr-ink/[0.04]",
-  } as const;
-  return (
-    <Link
-      to="/m/$publicToken"
-      params={INTAKE_PARAMS}
-      className={`${base} ${sizes[size]} ${skins[variant]}`}
-    >
-      {INTAKE_LABEL}
-    </Link>
-  );
+export function FineBinderyIntakeCta({ locale, slug, variant = "solid", size = "default" }: { locale: FineBinderyLocale; slug?: string; variant?: "solid" | "outline"; size?: "default" | "compact" }) {
+  const copy = fineBinderyCopy(locale);
+  const base = "inline-flex min-h-11 items-center justify-center rounded-[2px] text-center font-semibold tracking-[0.01em] transition-colors duration-200";
+  const sizes = { default: "px-7 py-3.5 text-[0.9375rem]", compact: "px-4 py-2.5 text-[0.8125rem] sm:px-5" } as const;
+  const skins = { solid: "bg-mr-ink text-mr-paper hover:bg-mr-walnut", outline: "border border-mr-ink/25 text-mr-ink hover:border-mr-ink hover:bg-mr-ink/[0.04]" } as const;
+  return <a href={fineBinderyProjectPath(locale, slug)} className={`${base} ${sizes[size]} ${skins[variant]}`}>{copy.common.start}</a>;
 }
 
-function Wordmark() {
-  return (
-    <span className="inline-flex flex-col leading-none">
-      <span className="mr-title text-[1.35rem] text-mr-ink sm:text-[1.5rem]">
-        {BRAND.displayName}
-      </span>
-      <span aria-hidden="true" className="mt-1.5 h-px w-8 bg-mr-brass" />
-    </span>
-  );
+function Wordmark({ locale }: { locale: FineBinderyLocale }) {
+  return <a href={fineBinderyHomePath(locale)} className="inline-flex shrink-0 flex-col leading-none" aria-label={`${BRAND.displayName} — home`}><span className="mr-title text-[1.35rem] text-mr-ink sm:text-[1.5rem]">{BRAND.displayName}</span><span aria-hidden="true" className="mt-1.5 h-px w-8 bg-mr-brass" /></a>;
 }
 
-const NAV = [
-  { href: "/#how-it-works", label: "How it works" },
-  { href: "/#offers", label: "What we do" },
-  { href: "/professionnels", label: "Our workshops" },
-  { href: "/#faq", label: "FAQ" },
-] as const;
-
-export function FineBinderyHeader() {
-  return (
-    <header className="sticky top-0 z-40 border-b border-mr-rule/70 bg-mr-paper">
-      <div className="mx-auto flex max-w-[78rem] items-center justify-between gap-6 px-5 py-4 sm:px-8 sm:py-5">
-        <a href="#top" className="shrink-0" aria-label={`${BRAND.displayName} — home`}>
-          <Wordmark />
-        </a>
-
-        <nav aria-label="Main navigation" className="hidden lg:block">
-          <ul className="flex items-center gap-9">
-            {NAV.map((item) => (
-              <li key={item.href}>
-                <a
-                  href={item.href}
-                  className="mr-tap mr-small text-mr-graphite underline-offset-[6px] transition-colors hover:text-mr-ink hover:underline"
-                >
-                  {item.label}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="flex items-center gap-4 sm:gap-5">
-          <a
-            href="/auth"
-            className="mr-tap mr-small shrink-0 text-mr-graphite underline-offset-[6px] transition-colors hover:text-mr-ink hover:underline"
-          >
-            Sign in
-          </a>
-          <FineBinderyIntakeCta variant="outline" size="compact" />
-        </div>
-      </div>
-    </header>
-  );
+function navigation(locale: FineBinderyLocale) {
+  const copy = fineBinderyCopy(locale); const home = fineBinderyHomePath(locale);
+  return [{ href: `${home}#how-it-works`, label: copy.nav.how }, { href: `${home}#offers`, label: copy.nav.services }, { href: fineBinderyDirectoryPath(locale), label: copy.nav.workshops }, { href: `${home}#faq`, label: copy.nav.faq }];
 }
 
-const LEGAL_LINKS = [
-  { href: "/legal-notice", label: "Legal notice" },
-  { href: "/privacy-policy", label: "Privacy policy" },
-  { href: "/terms-of-use", label: "Terms of use" },
-  { href: "/terms-of-sale", label: "Terms of sale" },
-] as const;
+export function FineBinderyHeader({ locale }: { locale: FineBinderyLocale }) {
+  const copy = fineBinderyCopy(locale); const nav = navigation(locale);
+  return <header className="sticky top-0 z-40 border-b border-mr-rule/70 bg-mr-paper/95 backdrop-blur"><div className="mx-auto flex max-w-[78rem] flex-wrap items-center justify-between gap-x-5 gap-y-3 px-5 py-3 sm:px-8 lg:flex-nowrap lg:py-4"><Wordmark locale={locale} /><nav aria-label="Fine Bindery" className="order-3 w-full overflow-x-auto lg:order-none lg:w-auto"><ul className="flex min-w-max items-center gap-6 pb-1 lg:gap-8 lg:pb-0">{nav.map((item) => <li key={item.href}><a href={item.href} className="mr-tap mr-small text-mr-graphite underline-offset-[6px] hover:text-mr-ink hover:underline">{item.label}</a></li>)}</ul></nav><div className="flex items-center gap-2 sm:gap-3"><FineBinderyLanguageSwitch locale={locale} label={copy.nav.language} /><a href={`/auth?locale=${locale}`} className="mr-tap mr-small hidden shrink-0 text-mr-graphite underline-offset-[6px] hover:text-mr-ink hover:underline sm:inline-flex">{copy.nav.signIn}</a><span className="hidden xl:inline-flex"><FineBinderyIntakeCta locale={locale} variant="outline" size="compact" /></span></div></div></header>;
+}
 
-export function FineBinderyFooter() {
-  return (
-    <footer className="border-t border-mr-rule bg-mr-paper-warm">
-      <div className="mx-auto max-w-[80rem] px-5 py-16 sm:px-8 sm:py-20">
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
-          <div>
-            <Wordmark />
-            <p className="mr-small mt-6 max-w-[22rem] text-mr-graphite">
-              The international concierge for exceptional French bookbinding. Bookbinding,
-              restoration and bespoke creation, entrusted to independent workshops in France.
-            </p>
-          </div>
-
-          <nav aria-label="Fine Bindery">
-            <p className="mr-eyebrow text-mr-graphite">Fine Bindery</p>
-            <ul className="mr-small mt-5 space-y-3">
-              {NAV.map((item) => (
-                <li key={item.href}>
-                  <a
-                    href={item.href}
-                    className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline"
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
-
-          <div>
-            <p className="mr-eyebrow text-mr-graphite">Information</p>
-            <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
-              {LEGAL_LINKS.map((item) => (
-                <li key={item.href}>
-                  <a
-                    href={item.href}
-                    className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline"
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
-        </div>
-
-        <p className="mr-small mt-14 border-t border-mr-rule pt-8 text-mr-graphite">
-          {BRAND.displayName} — French bookbinding, restoration and craftsmanship, by independent
-          artisans.
-        </p>
-      </div>
-    </footer>
-  );
+export function FineBinderyFooter({ locale }: { locale: FineBinderyLocale }) {
+  const copy = fineBinderyCopy(locale); const nav = navigation(locale);
+  const legal = [{ href: "/legal-notice", label: copy.footer.legal }, { href: "/privacy-policy", label: copy.footer.privacy }, { href: "/terms-of-use", label: copy.footer.terms }, { href: "/terms-of-sale", label: copy.footer.sales }];
+  return <footer className="border-t border-mr-rule bg-mr-paper-warm"><div className="mx-auto max-w-[80rem] px-5 py-14 sm:px-8 sm:py-20"><div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]"><div><Wordmark locale={locale} /><p className="mr-small mt-6 max-w-[22rem] text-mr-graphite">{copy.footer.summary}</p></div><nav aria-label="Fine Bindery"><p className="mr-eyebrow text-mr-graphite">Fine Bindery</p><ul className="mr-small mt-5 space-y-3">{nav.map((item) => <li key={item.href}><a href={item.href} className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline">{item.label}</a></li>)}</ul></nav><div><p className="mr-eyebrow text-mr-graphite">{copy.footer.information}</p><ul className="mr-small mt-5 space-y-3">{legal.map((item) => <li key={item.href}><a href={item.href} className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline">{item.label}</a></li>)}</ul></div></div><p className="mr-small mt-12 border-t border-mr-rule pt-8 text-mr-graphite">{BRAND.displayName} — {copy.footer.closing}</p></div></footer>;
 }

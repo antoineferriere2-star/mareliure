@@ -16,6 +16,9 @@ import { PUBLIC_LANGUAGES, PUBLIC_MATERIALS, PUBLIC_TECHNIQUES } from "@/marketp
 import { BinderLoading, BinderPageHeader, BinderSectionTitle } from "./BinderPageUi";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quotes/quoteUi";
 import { getMyWorks } from "@/marketplace/services/binderWorks.data.functions";
+import { useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspaceContext";
+import { fineBinderyProfilePath } from "@/marketplace/i18n/fineBinderyLocale";
+import { languageName, specialtyName, techniqueName } from "@/marketplace/i18n/fineBinderyGlossary";
 
 const PROFILE_KEY = ["marketplace", "binder", "public-profile"] as const;
 type Profile = Awaited<ReturnType<typeof getMyFineBinderyProfile>>;
@@ -33,14 +36,15 @@ async function imageBase64(file: File): Promise<string> {
 }
 
 export function PublicProfilePage() {
+  const { locale } = useFineBinderyWorkspace();
   const load = useServerFn(getMyFineBinderyProfile);
   const query = useQuery({ queryKey: PROFILE_KEY, queryFn: () => load() });
   if (query.isPending) return <BinderLoading label="Préparation de votre profil FineBindery…" />;
   if (query.isError || !query.data) return <ErrorNote>Votre profil public n’a pas pu être chargé.</ErrorNote>;
-  return <PublicProfileEditor key={`${query.data.id}-${query.data.publishedAt ?? "draft"}`} profile={query.data} />;
+  return <PublicProfileEditor key={`${query.data.id}-${query.data.publishedAt ?? "draft"}`} profile={query.data} locale={locale} />;
 }
 
-function PublicProfileEditor({ profile }: { profile: Profile }) {
+function PublicProfileEditor({ profile, locale }: { profile: Profile; locale: "en" | "fr" | "de" | "it" | "es" }) {
   const queryClient = useQueryClient();
   const saveProfile = useServerFn(saveMyFineBinderyProfile);
   const publishProfile = useServerFn(setMyFineBinderyProfilePublication);
@@ -99,12 +103,12 @@ function PublicProfileEditor({ profile }: { profile: Profile }) {
   });
 
   return <div className="space-y-9">
-    <BinderPageHeader eyebrow="FineBindery Network" title="Profil public" description="Votre page professionnelle partage votre savoir-faire. Rien provenant d’un ouvrage privé n’y paraît sans votre action explicite." action={draft.publicPath && draft.profileStatus === "published" ? <a href={draft.publicPath} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center border border-[#7a2230] px-4 text-sm font-semibold text-[#5f1b27]">Voir ma page publique</a> : undefined} />
+    <BinderPageHeader eyebrow="FineBindery Network" title="Profil public" description="Votre page professionnelle partage votre savoir-faire. Rien provenant d’un ouvrage privé n’y paraît sans votre action explicite." action={draft.slug && draft.profileStatus === "published" ? <a href={fineBinderyProfilePath(locale, draft.slug)} target="_blank" rel="noreferrer" className="inline-flex min-h-11 items-center border border-[#7a2230] px-4 text-sm font-semibold text-[#5f1b27]">Voir ma page publique</a> : undefined} />
 
     <div className={`border-l-4 px-5 py-4 text-sm ${draft.profileStatus === "published" ? "border-emerald-700 bg-emerald-50 text-emerald-950" : "border-amber-700 bg-amber-50 text-amber-950"}`}>
       <strong className="block">{draft.profileStatus === "published" ? "Profil publié" : "Profil incomplet ou non publié"}</strong>
       <p className="mt-1">{draft.missing.length ? `À compléter : ${draft.missing.join(", ")}.` : draft.approvalStatus !== "approved" ? "Le profil est prêt. L’atelier doit encore être approuvé avant publication." : "Le profil peut être publié sur FineBindery."}</p>
-      {draft.slug && <p className="mt-2 font-mono text-xs">finebindery.com/fr/{draft.slug}</p>}
+      {draft.slug && <p className="mt-2 font-mono text-xs">finebindery.com/{locale}/{draft.slug} · EN · FR · DE · IT · ES</p>}
     </div>
 
     <section className={CARD}>
@@ -137,10 +141,10 @@ function PublicProfileEditor({ profile }: { profile: Profile }) {
 
     <section className={CARD}>
       <BinderSectionTitle title="Expertise structurée" detail="Ces choix préparent la recherche du réseau sans créer une taxonomie parallèle." />
-      <ChoiceGroup title="Spécialités" values={draft.skills} options={BINDER_SKILLS.map((item) => ({ key: item.slug, label: item.label }))} onToggle={(value) => toggle("skills", value)} />
-      <ChoiceGroup title="Langues" values={draft.languages} options={PUBLIC_LANGUAGES.map((item) => ({ key: item.code, label: item.label }))} onToggle={(value) => toggle("languages", value)} />
-      <ChoiceGroup title="Techniques principales" values={draft.techniqueKeys} options={PUBLIC_TECHNIQUES} onToggle={(value) => toggle("techniqueKeys", value)} />
-      <ChoiceGroup title="Matières principales" values={draft.materialKeys} options={PUBLIC_MATERIALS} onToggle={(value) => toggle("materialKeys", value)} />
+      <ChoiceGroup title="Spécialités" values={draft.skills} options={BINDER_SKILLS.map((item) => ({ key: item.slug, label: specialtyName(item.slug, locale) }))} onToggle={(value) => toggle("skills", value)} />
+      <ChoiceGroup title="Langues" values={draft.languages} options={PUBLIC_LANGUAGES.map((item) => ({ key: item.code, label: languageName(item.code, locale) }))} onToggle={(value) => toggle("languages", value)} />
+      <ChoiceGroup title="Techniques principales" values={draft.techniqueKeys} options={PUBLIC_TECHNIQUES.map((item) => ({ key: item.key, label: techniqueName(item.key, locale) }))} onToggle={(value) => toggle("techniqueKeys", value)} />
+      <ChoiceGroup title="Matières principales" values={draft.materialKeys} options={PUBLIC_MATERIALS.map((item) => ({ key: item.key, label: techniqueName(item.key, locale) }))} onToggle={(value) => toggle("materialKeys", value)} />
     </section>
 
     <section className="space-y-5">

@@ -21,7 +21,7 @@ import {
 import type { TemplateEntry } from "./registry";
 
 type SummaryItem = { label: string; value: string };
-type EmailLocale = "en-US" | "es-US" | "fr-FR";
+type EmailLocale = "en-US" | "es-US" | "fr-FR" | "de-DE" | "it-IT" | "es-ES";
 
 interface VisitorSummaryEmailProps {
   locale?: EmailLocale;
@@ -89,6 +89,18 @@ const COPY = {
     trackButton: "Suivre mon projet",
     disclaimer:
       "Ce récapitulatif reprend les informations que vous avez fournies. Ce n'est ni un devis définitif, ni une évaluation technique, ni l'acceptation du projet.",
+  },
+  "de-DE": {
+    subject: (businessName: string) => `Ihre Projektübersicht — ${businessName}`,
+    preview: "Ihre Projektübersicht ist bereit.", heading: "Wir haben Ihr Projekt erhalten", intro: (businessName: string) => `Ihre Angaben wurden an ${businessName} übermittelt.`, projectSummary: "Projektübersicht", stillToConfirm: "Noch zu klären", whatsNext: "Wie es weitergeht", viewSummary: "Projektübersicht ansehen", trackHeading: "Projekt verfolgen", trackIntro: "Ihr Projekt und sein Fortschritt stehen in Ihrem Kundenbereich bereit. Verwenden Sie zum Anmelden diese E-Mail-Adresse; wir senden Ihnen einen Anmeldelink.", trackButton: "Projekt verfolgen", disclaimer: "Diese Übersicht gibt Ihre Angaben wieder. Sie ist weder ein endgültiges Angebot noch eine technische Beurteilung oder Projektfreigabe.",
+  },
+  "it-IT": {
+    subject: (businessName: string) => `Riepilogo del tuo progetto — ${businessName}`,
+    preview: "Il riepilogo del progetto è pronto.", heading: "Abbiamo ricevuto il tuo progetto", intro: (businessName: string) => `Le informazioni sono state inviate a ${businessName}.`, projectSummary: "Riepilogo del progetto", stillToConfirm: "Da confermare", whatsNext: "Prossimi passi", viewSummary: "Visualizza il riepilogo", trackHeading: "Segui il progetto", trackIntro: "Il progetto e i suoi progressi sono disponibili nell’area cliente. Inserisci questo indirizzo e-mail per ricevere un link di accesso.", trackButton: "Segui il progetto", disclaimer: "Questo riepilogo riflette le informazioni fornite. Non è un preventivo definitivo, una valutazione tecnica o un’approvazione del progetto.",
+  },
+  "es-ES": {
+    subject: (businessName: string) => `Resumen de tu proyecto — ${businessName}`,
+    preview: "El resumen de tu proyecto está listo.", heading: "Hemos recibido tu proyecto", intro: (businessName: string) => `La información se ha enviado a ${businessName}.`, projectSummary: "Resumen del proyecto", stillToConfirm: "Por confirmar", whatsNext: "Qué ocurre ahora", viewSummary: "Ver el resumen", trackHeading: "Sigue tu proyecto", trackIntro: "Tu proyecto y su avance están disponibles en el espacio de cliente. Introduce este correo electrónico y recibirás un enlace de acceso.", trackButton: "Seguir mi proyecto", disclaimer: "Este resumen refleja la información facilitada. No es un presupuesto definitivo, una evaluación técnica ni una aprobación del proyecto.",
   },
 } as const;
 

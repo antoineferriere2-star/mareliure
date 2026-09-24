@@ -44,6 +44,7 @@ import {
   FineBinderyHeader,
 } from "@/marketplace/pages/fineBindery/FineBinderyChrome";
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import type { FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 
 const labelClass = "mr-small block font-semibold text-mr-ink";
 const inputClass =
@@ -144,20 +145,21 @@ const MA_RELIURE_COPY: AuthCopy = {
 };
 
 /** Pas d'onglet atelier (§43 : un atelier Fine Bindery se connecte sur mareliure.fr, jamais ici). */
-const FINE_BINDERY_COPY: AuthCopy = {
+const FINE_BINDERY_COPY_EN: AuthCopy = {
   eyebrow: "Your space",
   heading: "Access your Fine Bindery space",
-  showBinderTab: false,
+  showBinderTab: true,
   tabClient: "Client",
-  tabBinder: "",
+  tabBinder: "Workshop",
   leadLink:
     "Enter the email address you used to present your book. We'll send you a sign-in link and code — no account to create, no password to remember.",
   leadPasswordSignin: "Sign in with your space's password.",
-  leadBinder: "",
+  leadBinder:
+    "Enter your email address to create or reopen your workshop space. Fine Bindery verifies the address first; access to new projects is approved separately.",
   routingStatus: "Opening your space…",
   preferPassword: "Already have a password?",
   backToLink: "Back to the email sign-in link",
-  binderSignInHeading: "",
+  binderSignInHeading: "Create or access my workshop space",
   emailLabel: "Email address",
   requestButton: (sending) => (sending ? "Sending…" : "Send my sign-in link and code"),
   emailSentHeading: "Email sent",
@@ -179,27 +181,103 @@ const FINE_BINDERY_COPY: AuthCopy = {
   passwordSetError: "The password could not be saved. Please try again in a moment.",
 };
 
-const AUTH_COPY: Record<MarketplaceBrand, AuthCopy> = {
-  MA_RELIURE: MA_RELIURE_COPY,
-  FINE_BINDERY: FINE_BINDERY_COPY,
+const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
+  en: FINE_BINDERY_COPY_EN,
+  fr: {
+    ...FINE_BINDERY_COPY_EN,
+    eyebrow: "Votre espace",
+    heading: "Accéder à votre espace Fine Bindery",
+    tabClient: "Client",
+    tabBinder: "Atelier",
+    leadLink: "Indiquez l’adresse e-mail utilisée pour présenter votre livre. Nous vous envoyons un lien et un code de connexion.",
+    leadPasswordSignin: "Connectez-vous avec le mot de passe de votre espace.",
+    leadBinder: "Indiquez votre adresse e-mail pour créer ou retrouver votre espace atelier. Fine Bindery vérifie d’abord l’adresse ; l’accès aux nouveaux projets est autorisé séparément.",
+    routingStatus: "Ouverture de votre espace…",
+    preferPassword: "Vous avez déjà un mot de passe ?",
+    backToLink: "Revenir au lien de connexion par e-mail",
+    binderSignInHeading: "Créer ou retrouver mon espace atelier",
+    emailLabel: "Adresse e-mail",
+    requestButton: (sending) => (sending ? "Envoi…" : "Recevoir mon lien et mon code"),
+    emailSentHeading: "E-mail envoyé",
+    emailSentBody: (email) => `Un lien et un code ont été envoyés à ${email}. Ils restent valables une heure. Pensez à vérifier les courriers indésirables.`,
+    resendButton: (sending, wait) => wait > 0 ? `Renvoyer (dans ${wait} s)` : sending ? "Envoi…" : "Renvoyer l’e-mail",
+    useAnotherAddress: "Utiliser une autre adresse",
+    codeLabel: "Ou saisissez le code reçu par e-mail",
+    validateCodeButton: (verifying) => (verifying ? "Vérification…" : "Valider le code"),
+    passwordEmailLabel: "Adresse e-mail",
+    passwordLabel: "Mot de passe",
+    signInButton: (loading) => (loading ? "Connexion…" : "Se connecter"),
+    wrongCredentials: "Adresse e-mail ou mot de passe incorrect.",
+    offerPasswordHeading: "Créer un mot de passe pour la prochaine fois ?",
+    offerPasswordBody: "Facultatif : vous pourrez ensuite vous connecter sans ouvrir votre boîte mail.",
+    createPasswordAfterVerifyButton: (loading) => (loading ? "Création…" : "Créer mon mot de passe"),
+    skipPasswordButton: "Continuer sans mot de passe",
+    passwordSetError: "Le mot de passe n’a pas pu être enregistré. Réessayez dans un instant.",
+  },
+  de: {
+    ...FINE_BINDERY_COPY_EN,
+    eyebrow: "Ihr Bereich", heading: "Fine-Bindery-Bereich öffnen", tabClient: "Kundschaft", tabBinder: "Werkstatt",
+    leadLink: "Geben Sie die E-Mail-Adresse an, mit der Sie Ihr Buch vorgestellt haben. Wir senden Ihnen einen Anmeldelink und einen Code.",
+    leadPasswordSignin: "Melden Sie sich mit dem Passwort Ihres Bereichs an.",
+    leadBinder: "Geben Sie Ihre E-Mail-Adresse ein, um Ihren Werkstattbereich anzulegen oder erneut zu öffnen. Fine Bindery prüft zuerst die Adresse; der Zugang zu neuen Projekten wird separat freigegeben.",
+    routingStatus: "Ihr Bereich wird geöffnet…", preferPassword: "Sie haben bereits ein Passwort?", backToLink: "Zurück zum Anmeldelink per E-Mail",
+    binderSignInHeading: "Werkstattbereich anlegen oder öffnen", emailLabel: "E-Mail-Adresse",
+    requestButton: (sending) => sending ? "Wird gesendet…" : "Anmeldelink und Code senden", emailSentHeading: "E-Mail gesendet",
+    emailSentBody: (email) => `Ein Anmeldelink und ein Code wurden an ${email} gesendet. Beide sind eine Stunde gültig. Prüfen Sie auch den Spam-Ordner.`,
+    resendButton: (sending, wait) => wait > 0 ? `Erneut senden (in ${wait} s)` : sending ? "Wird gesendet…" : "E-Mail erneut senden",
+    useAnotherAddress: "Andere Adresse verwenden", codeLabel: "Oder den Code aus der E-Mail eingeben",
+    validateCodeButton: (verifying) => verifying ? "Wird geprüft…" : "Code bestätigen", passwordEmailLabel: "E-Mail-Adresse", passwordLabel: "Passwort",
+    signInButton: (loading) => loading ? "Anmeldung…" : "Anmelden", wrongCredentials: "E-Mail-Adresse oder Passwort ist falsch.",
+    offerPasswordHeading: "Passwort für die nächste Anmeldung erstellen?", offerPasswordBody: "Optional: Danach müssen Sie zum Anmelden nicht mehr Ihr Postfach öffnen.",
+    createPasswordAfterVerifyButton: (loading) => loading ? "Wird erstellt…" : "Passwort erstellen", skipPasswordButton: "Ohne Passwort fortfahren",
+    passwordSetError: "Das Passwort konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+  },
+  it: {
+    ...FINE_BINDERY_COPY_EN,
+    eyebrow: "Il tuo spazio", heading: "Accedi al tuo spazio Fine Bindery", tabClient: "Cliente", tabBinder: "Laboratorio",
+    leadLink: "Inserisci l’indirizzo e-mail usato per presentare il libro. Ti invieremo un link e un codice di accesso.", leadPasswordSignin: "Accedi con la password del tuo spazio.",
+    leadBinder: "Inserisci l’indirizzo e-mail per creare o riaprire lo spazio del laboratorio. Fine Bindery verifica prima l’indirizzo; l’accesso ai nuovi progetti viene approvato separatamente.",
+    routingStatus: "Apertura dello spazio…", preferPassword: "Hai già una password?", backToLink: "Torna al link di accesso via e-mail", binderSignInHeading: "Crea o apri lo spazio del laboratorio",
+    emailLabel: "Indirizzo e-mail", requestButton: (sending) => sending ? "Invio…" : "Invia link e codice", emailSentHeading: "E-mail inviata",
+    emailSentBody: (email) => `Un link e un codice sono stati inviati a ${email}. Sono validi per un’ora. Controlla anche la cartella spam.`,
+    resendButton: (sending, wait) => wait > 0 ? `Reinvia (tra ${wait} s)` : sending ? "Invio…" : "Reinvia l’e-mail", useAnotherAddress: "Usa un altro indirizzo",
+    codeLabel: "Oppure inserisci il codice ricevuto", validateCodeButton: (verifying) => verifying ? "Verifica…" : "Conferma il codice", passwordEmailLabel: "Indirizzo e-mail", passwordLabel: "Password",
+    signInButton: (loading) => loading ? "Accesso…" : "Accedi", wrongCredentials: "E-mail o password errata.", offerPasswordHeading: "Creare una password per il prossimo accesso?",
+    offerPasswordBody: "Facoltativo: non dovrai più aprire la posta per accedere.", createPasswordAfterVerifyButton: (loading) => loading ? "Creazione…" : "Crea la password",
+    skipPasswordButton: "Continua senza password", passwordSetError: "Impossibile salvare la password. Riprova tra poco.",
+  },
+  es: {
+    ...FINE_BINDERY_COPY_EN,
+    eyebrow: "Tu espacio", heading: "Accede a tu espacio Fine Bindery", tabClient: "Cliente", tabBinder: "Taller",
+    leadLink: "Introduce el correo utilizado para presentar tu libro. Te enviaremos un enlace y un código de acceso.", leadPasswordSignin: "Accede con la contraseña de tu espacio.",
+    leadBinder: "Introduce tu correo para crear o volver a abrir el espacio del taller. Fine Bindery verifica primero la dirección; el acceso a nuevos proyectos se aprueba por separado.",
+    routingStatus: "Abriendo tu espacio…", preferPassword: "¿Ya tienes contraseña?", backToLink: "Volver al enlace por correo", binderSignInHeading: "Crear o abrir mi espacio de taller",
+    emailLabel: "Correo electrónico", requestButton: (sending) => sending ? "Enviando…" : "Enviar enlace y código", emailSentHeading: "Correo enviado",
+    emailSentBody: (email) => `Se han enviado un enlace y un código a ${email}. Son válidos durante una hora. Revisa también la carpeta de spam.`,
+    resendButton: (sending, wait) => wait > 0 ? `Reenviar (en ${wait} s)` : sending ? "Enviando…" : "Reenviar correo", useAnotherAddress: "Usar otra dirección",
+    codeLabel: "O introduce el código recibido", validateCodeButton: (verifying) => verifying ? "Verificando…" : "Confirmar código", passwordEmailLabel: "Correo electrónico", passwordLabel: "Contraseña",
+    signInButton: (loading) => loading ? "Accediendo…" : "Acceder", wrongCredentials: "Correo o contraseña incorrectos.", offerPasswordHeading: "¿Crear una contraseña para la próxima vez?",
+    offerPasswordBody: "Opcional: después no tendrás que abrir el correo para acceder.", createPasswordAfterVerifyButton: (loading) => loading ? "Creando…" : "Crear contraseña",
+    skipPasswordButton: "Continuar sin contraseña", passwordSetError: "No se pudo guardar la contraseña. Inténtalo de nuevo.",
+  },
 };
 
 export function MaReliureAuthPage({
   brand,
+  fineBinderyLocale = "en",
   initialAudience,
   accessError,
   routing,
   onSignedIn,
 }: {
   brand: MarketplaceBrand;
+  fineBinderyLocale?: FineBinderyLocale;
   initialAudience: Audience;
   accessError: string | null;
   routing: boolean;
   onSignedIn: (audience: Audience) => Promise<void>;
 }) {
-  const t = AUTH_COPY[brand];
-  const Header = brand === "FINE_BINDERY" ? FineBinderyHeader : LandingHeader;
-  const Footer = brand === "FINE_BINDERY" ? FineBinderyFooter : LandingFooter;
+  const t = brand === "FINE_BINDERY" ? FINE_BINDERY_COPY[fineBinderyLocale] : MA_RELIURE_COPY;
 
   // Lu une fois, avant que le client Supabase ne nettoie l'adresse.
   const [linkProblem, setLinkProblem] = useState<string | null>(() =>
@@ -214,7 +292,7 @@ export function MaReliureAuthPage({
 
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
-      <Header />
+      {brand === "FINE_BINDERY" ? <FineBinderyHeader locale={fineBinderyLocale} /> : <LandingHeader />}
       <main className="mx-auto w-full max-w-[36rem] flex-1 px-5 py-14 sm:px-8 sm:py-20">
         <p className="mr-eyebrow">{t.eyebrow}</p>
         <h1 className="mr-title mt-4 text-mr-ink">{t.heading}</h1>
@@ -325,7 +403,7 @@ export function MaReliureAuthPage({
           )}
         </div>
       </main>
-      <Footer />
+      {brand === "FINE_BINDERY" ? <FineBinderyFooter locale={fineBinderyLocale} /> : <LandingFooter />}
     </div>
   );
 }

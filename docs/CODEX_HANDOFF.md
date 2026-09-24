@@ -3203,3 +3203,16 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Un seul déploiement effectif depuis ce merge : Worker `mareliure`, version `bf501721-4da5-4282-a2c7-fc125a274840`, active à 100 %. La première commande de publication s'était arrêtée après le build sans créer de version Cloudflare ; le bundle validé a ensuite été publié directement une fois.
 - Smoke production : Ma Reliure `/`, `/auth`, `/admin/ateliers`, `/atelier`, FineBindery `/` et `/professionnels` répondent 200.
 - Recette authentifiée production : la liste des trois ateliers charge et affiche « Autorisé » ; une fiche expose « Autorisation de l'atelier » et « Suspendre l'accès ». L'ouverture de la confirmation affiche l'effet attendu, puis son annulation ne modifie aucune donnée. Aucune erreur navigateur observée.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 24 septembre 2026, `feat/finebindery-i18n`.
+
+- FineBindery dispose désormais d'une architecture linguistique propre avec cinq langues publiques : anglais, français, allemand, italien et espagnol. Les routes canoniques sont `/:locale`, `/:locale/professionals`, `/:locale/:slug` et `/:locale/project`; le sélecteur conserve la page courante, mémorise le choix et le document expose la langue active.
+- Le site public, l'annuaire, les profils, l'authentification, la navigation atelier, les états et filtres des projets ainsi que le catalogue des 45 prestations emploient les dictionnaires FineBindery. Les textes libres des ateliers restent dans leur langue d'origine. Les prix et dates passent par `Intl` avec l'euro comme devise.
+- Le SEO génère canonical, `hreflang` pour les cinq langues, `x-default`, OpenGraph localisé et sitemap multilingue. La QA Playwright couvre les cinq accueils, le changement de langue et l'allemand à 375, 390 et 430 px sans débordement.
+- Migration additive `20260924120000_finebindery_i18n.sql`, non appliquée : `spoken_languages` remplace `public_languages`; les projets reçoivent `submission_locale` et `preferred_language` avec contraintes et index. Aucun `UPDATE` ou `DELETE` n'est exécuté. Une intégration serveur vérifie qu'un projet allemand destiné à Atelier Martin conserve `de`, l'attribution au profil et l'affectation unique.
+- Vérifications locales vertes : typecheck, lint sans erreur, 217 fichiers Vitest / 2 954 tests, 9 scénarios Playwright et build Vite/Nitro. Les captures bureau EN/FR/DE/IT/ES et mobile DE sont conservées hors commit dans `output/finebindery-i18n-qa`.
+- Reste : commit, publication de la branche, ouverture de la PR et attente de sa CI. Ne pas fusionner, appliquer la migration ou déployer sans nouvelle autorisation.

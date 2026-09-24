@@ -93,14 +93,12 @@ function LegalLayout({
   sections: LegalSection[];
   brand?: "MA_RELIURE" | "FINE_BINDERY";
 }) {
-  const Header: ComponentType = brand === "FINE_BINDERY" ? FineBinderyHeader : LandingHeader;
-  const Footer: ComponentType = brand === "FINE_BINDERY" ? FineBinderyFooter : LandingFooter;
   const siblings = (brand === "FINE_BINDERY" ? LEGAL_PAGES_EN : LEGAL_PAGES_FR).filter(
     (page) => page.href !== path,
   );
   return (
     <div className="mr-site min-h-screen bg-mr-paper text-mr-graphite">
-      <Header />
+      {brand === "FINE_BINDERY" ? <FineBinderyHeader locale="en" /> : <LandingHeader />}
       <main className={`${SHELL} py-14 sm:py-20`}>
         <p className="mr-eyebrow">{eyebrow}</p>
         <h1 className="mr-title mt-4 text-mr-ink">{title}</h1>
@@ -133,7 +131,7 @@ function LegalLayout({
           ))}
         </nav>
       </main>
-      <Footer />
+      {brand === "FINE_BINDERY" ? <FineBinderyFooter locale="en" /> : <LandingFooter />}
     </div>
   );
 }

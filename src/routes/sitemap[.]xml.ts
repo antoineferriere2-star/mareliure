@@ -50,7 +50,10 @@ const MARELIURE_ENTRIES: SitemapEntry[] = [
 
 const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
-  { path: "/professionnels", changefreq: "weekly", priority: "0.9" },
+  ...(["en", "fr", "de", "it", "es"] as const).flatMap((locale) => [
+    { path: `/${locale}`, changefreq: "weekly" as const, priority: locale === "en" ? "1.0" : "0.9" },
+    { path: `/${locale}/professionals`, changefreq: "weekly" as const, priority: "0.9" },
+  ]),
   { path: "/legal-notice", changefreq: "yearly", priority: "0.3" },
   { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },
   { path: "/terms-of-use", changefreq: "yearly", priority: "0.3" },
@@ -82,7 +85,20 @@ export const Route = createFileRoute("/sitemap.xml")({
     handlers: {
       GET: async ({ request }) => {
         const { baseUrl, entries } = sitemapFor(request.headers.get("host"));
-        const urls = entries.map((e) =>
+        let resolvedEntries = entries;
+        if (baseUrl === MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY.seo.canonicalOrigin) {
+          try {
+            const { listPublicFineBinderyProfiles } = await import("@/marketplace/services/fineBinderyProfile.data.functions");
+            const profiles = await listPublicFineBinderyProfiles();
+            const profileEntries = profiles.flatMap((profile) => ["en", "fr", "de", "it", "es"].map((locale) => ({ path: `/${locale}/${profile.slug}`, changefreq: "weekly" as const, priority: "0.8" })));
+            resolvedEntries = [...entries, ...profileEntries];
+          } catch {
+            // The static multilingual pages remain valid if the public
+            // directory is temporarily unavailable. The sitemap never emits
+            // a guessed workshop URL.
+          }
+        }
+        const urls = resolvedEntries.map((e) =>
           [
             `  <url>`,
             `    <loc>${baseUrl}${e.path}</loc>`,

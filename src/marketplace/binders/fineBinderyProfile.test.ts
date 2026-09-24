@@ -32,7 +32,7 @@ describe("FineBindery public profile", () => {
   it("uses reserved provenance data and stable public paths", () => {
     expect(PROFILE_REQUEST_SOURCE).toBe("finebindery_profile");
     expect(PROFILE_SOURCE_ANSWER_KEY.startsWith("_")).toBe(true);
-    expect(fineBinderyProfilePath("atelier-du-livre")).toBe("/fr/atelier-du-livre");
+    expect(fineBinderyProfilePath("atelier-du-livre")).toBe("/en/atelier-du-livre");
     expect(sourceLabel("FINEBINDERY_PROFILE")).toBe("Page FineBindery");
   });
 });

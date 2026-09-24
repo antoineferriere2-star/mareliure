@@ -26,13 +26,21 @@ import { CARD, ErrorNote, FIELD, MoneyInput, PRIMARY_BUTTON, SECONDARY_BUTTON } 
 import { CATALOG_KEY, PRICING_CATALOG_KEY } from "../quoteQueryKeys";
 import { ServiceForm } from "./ServiceForm";
 import type { Service } from "./catalogTypes";
+import { useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspaceContext";
+import { serviceFamilyName, serviceName } from "@/marketplace/i18n/fineBinderyGlossary";
+import { formatFineBinderyMoney, formatFineBinderyPrice } from "@/marketplace/i18n/fineBinderyFormat";
+import type { FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 
 type Filter = "all" | "favorites" | "custom" | "manual";
 type BulkMode = "adjust" | "reset";
 type Scope = "all" | "category" | "selected";
 
-const formatPrice = (cents: number | null, mode: string) =>
-  cents === null ? "Sur étude" : `${mode === "starting_from" ? "À partir de " : ""}${euros(cents)}`;
+const formatPrice = (cents: number | null, mode: string, locale?: FineBinderyLocale) =>
+  locale
+    ? formatFineBinderyPrice(cents, mode, locale)
+    : cents === null
+      ? "Sur étude"
+      : `${mode === "starting_from" ? "À partir de " : ""}${euros(cents)}`;
 
 const formatDifference = (bps: number | null) =>
   bps === null || bps === 0 ? "—" : `${bps > 0 ? "+" : ""}${String(bps / 100).replace(".", ",")} %`;
@@ -44,6 +52,8 @@ export function PricingCatalogEditor({
   items: BinderPricingCatalogItem[];
   services: Service[];
 }) {
+  const { isFineBindery, locale } = useFineBinderyWorkspace();
+  const localizedItems = useMemo(() => items.map((item) => isFineBindery ? { ...item, label: serviceName(item.pricingKey, locale), familyLabel: serviceFamilyName(item.family, locale) } : item), [items, isFineBindery, locale]);
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
   const [filter, setFilter] = useState<Filter>("all");
@@ -59,7 +69,7 @@ export function PricingCatalogEditor({
     ]);
   };
   const needle = normalizeSearch(search);
-  const visible = items.filter((item) => {
+  const visible = localizedItems.filter((item) => {
     if (
       needle &&
       !normalizeSearch(`${item.label} ${item.familyLabel} ${item.hint ?? ""}`).includes(needle)
@@ -72,10 +82,11 @@ export function PricingCatalogEditor({
   });
   const groups = WORK_FAMILIES.map((family) => ({
     ...family,
+    label: isFineBindery ? serviceFamilyName(family.key, locale) : family.label,
     items: visible.filter((item) => item.family === family.key),
   })).filter((group) => group.items.length);
-  const customCount = items.filter((item) => item.hasOverride).length;
-  const favoriteCount = items.filter((item) => item.isFavorite).length;
+  const customCount = localizedItems.filter((item) => item.hasOverride).length;
+  const favoriteCount = localizedItems.filter((item) => item.isFavorite).length;
 
   return (
     <section aria-labelledby="pricing-catalog-title" className="space-y-6">
@@ -154,7 +165,7 @@ export function PricingCatalogEditor({
       {bulkMode && (
         <BulkPanel
           mode={bulkMode}
-          items={items}
+          items={localizedItems}
           selected={selected}
           onClose={() => setBulkMode(null)}
           onSaved={refresh}
@@ -275,6 +286,8 @@ function PricingRow({
   onCheck: (value: boolean) => void;
   onSaved: (next?: BinderPricingCatalogItem[]) => Promise<void>;
 }) {
+  const { isFineBindery, locale } = useFineBinderyWorkspace();
+  const priceLocale = isFineBindery ? locale : undefined;
   const savePrice = useServerFn(saveMyPriceOverride);
   const setFavorite = useServerFn(setMyBasePriceFavorite);
   const reset = useServerFn(resetMyPrices);
@@ -343,10 +356,10 @@ function PricingRow({
           <span className="font-medium">{item.label}</span>
         </div>
         <span className="text-sm tabular-nums text-muted-foreground">
-          {formatPrice(item.basePriceCents, item.basePricingMode)}
+          {formatPrice(item.basePriceCents, item.basePricingMode, priceLocale)}
         </span>
         <span className="text-sm font-semibold tabular-nums">
-          {formatPrice(item.effectivePriceCents, item.effectivePricingMode)}
+          {formatPrice(item.effectivePriceCents, item.effectivePricingMode, priceLocale)}
         </span>
         <span className="text-sm tabular-nums text-muted-foreground">
           {formatDifference(difference)}
@@ -390,11 +403,11 @@ function PricingRow({
         <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
           <div>
             <span className="block text-xs text-muted-foreground">Base Ma Reliure</span>
-            {formatPrice(item.basePriceCents, item.basePricingMode)}
+            {formatPrice(item.basePriceCents, item.basePricingMode, priceLocale)}
           </div>
           <div>
             <span className="block text-xs text-muted-foreground">Mon tarif</span>
-            <strong>{formatPrice(item.effectivePriceCents, item.effectivePricingMode)}</strong>
+            <strong>{formatPrice(item.effectivePriceCents, item.effectivePricingMode, priceLocale)}</strong>
           </div>
         </div>
         <div className="mt-3 flex items-center justify-between">
@@ -469,7 +482,7 @@ function PricingRow({
               <strong>
                 {nextCents === null
                   ? "Saisie invalide"
-                  : formatPrice(nextCents, baseManual ? "starting_from" : item.basePricingMode)}
+                  : formatPrice(nextCents, baseManual ? "starting_from" : item.basePricingMode, priceLocale)}
               </strong>
             </div>}
             <button
@@ -539,6 +552,7 @@ function BulkPanel({
   onClose: () => void;
   onSaved: (next?: BinderPricingCatalogItem[]) => Promise<void>;
 }) {
+  const { isFineBindery, locale } = useFineBinderyWorkspace();
   const adjust = useServerFn(bulkAdjustMyPrices);
   const reset = useServerFn(resetMyPrices);
   const [scope, setScope] = useState<Scope>("all");
@@ -664,8 +678,10 @@ function BulkPanel({
             >
               <span>{item.label}</span>
               <span className="shrink-0 tabular-nums">
-                {euros(item.currentPriceCents)} →{" "}
-                {item.newPriceCents === null ? "Sur étude" : euros(item.newPriceCents)}
+                {isFineBindery ? formatFineBinderyMoney(item.currentPriceCents, locale) : euros(item.currentPriceCents)} →{" "}
+                {item.newPriceCents === null
+                  ? (isFineBindery ? formatFineBinderyPrice(null, "manual_review", locale) : "Sur étude")
+                  : (isFineBindery ? formatFineBinderyMoney(item.newPriceCents, locale) : euros(item.newPriceCents))}
               </span>
             </li>
           ))}

@@ -2607,7 +2607,6 @@ export type Database = {
           postal_code: string | null
           professional_email: string | null
           professional_phone: string | null
-          public_languages: string[]
           public_material_keys: string[]
           public_philosophy: string | null
           public_profile_published_at: string | null
@@ -2616,6 +2615,7 @@ export type Database = {
           rating_avg: number | null
           rating_count: number
           response_rate: number | null
+          spoken_languages: string[]
           status: string
           stripe_account_id: string | null
           stripe_connect_charges_enabled: boolean
@@ -2647,7 +2647,6 @@ export type Database = {
           postal_code?: string | null
           professional_email?: string | null
           professional_phone?: string | null
-          public_languages?: string[]
           public_material_keys?: string[]
           public_philosophy?: string | null
           public_profile_published_at?: string | null
@@ -2656,6 +2655,7 @@ export type Database = {
           rating_avg?: number | null
           rating_count?: number
           response_rate?: number | null
+          spoken_languages?: string[]
           status?: string
           stripe_account_id?: string | null
           stripe_connect_charges_enabled?: boolean
@@ -2687,7 +2687,6 @@ export type Database = {
           postal_code?: string | null
           professional_email?: string | null
           professional_phone?: string | null
-          public_languages?: string[]
           public_material_keys?: string[]
           public_philosophy?: string | null
           public_profile_published_at?: string | null
@@ -2696,6 +2695,7 @@ export type Database = {
           rating_avg?: number | null
           rating_count?: number
           response_rate?: number | null
+          spoken_languages?: string[]
           status?: string
           stripe_account_id?: string | null
           stripe_connect_charges_enabled?: boolean
@@ -2809,6 +2809,7 @@ export type Database = {
           id: string
           manual_review_required: boolean
           mission_id: string | null
+          preferred_language: string | null
           price_includes: string[]
           pricing_components: Json
           pricing_confidence: string | null
@@ -2829,6 +2830,7 @@ export type Database = {
           referred_binder_id: string | null
           service_price_cents: number | null
           status: string
+          submission_locale: string | null
           suggested_binder_payout_cents: number | null
           suggested_customer_price_cents: number | null
           tax_status: string
@@ -2855,6 +2857,7 @@ export type Database = {
           id?: string
           manual_review_required?: boolean
           mission_id?: string | null
+          preferred_language?: string | null
           price_includes?: string[]
           pricing_components?: Json
           pricing_confidence?: string | null
@@ -2875,6 +2878,7 @@ export type Database = {
           referred_binder_id?: string | null
           service_price_cents?: number | null
           status?: string
+          submission_locale?: string | null
           suggested_binder_payout_cents?: number | null
           suggested_customer_price_cents?: number | null
           tax_status?: string
@@ -2901,6 +2905,7 @@ export type Database = {
           id?: string
           manual_review_required?: boolean
           mission_id?: string | null
+          preferred_language?: string | null
           price_includes?: string[]
           pricing_components?: Json
           pricing_confidence?: string | null
@@ -2921,6 +2926,7 @@ export type Database = {
           referred_binder_id?: string | null
           service_price_cents?: number | null
           status?: string
+          submission_locale?: string | null
           suggested_binder_payout_cents?: number | null
           suggested_customer_price_cents?: number | null
           tax_status?: string
@@ -3968,6 +3974,7 @@ export type Database = {
           id: string
           manual_review_required: boolean
           mission_id: string | null
+          preferred_language: string | null
           price_includes: string[]
           pricing_components: Json
           pricing_confidence: string | null
@@ -3988,6 +3995,7 @@ export type Database = {
           referred_binder_id: string | null
           service_price_cents: number | null
           status: string
+          submission_locale: string | null
           suggested_binder_payout_cents: number | null
           suggested_customer_price_cents: number | null
           tax_status: string

@@ -9,6 +9,8 @@ import {
   type PublicLocaleContextValue,
 } from "@/build/pages/public/publicLocaleContext";
 
+const PROJECT_NARRATIVE_LOCALES = new Set<SupportedLocale>(["en-US", "fr-FR"]);
+
 /**
  * `lockedLocale` lets a surface declare the language it is written in — today,
  * a Mission whose Playbook is authored in one language (see
@@ -49,6 +51,7 @@ export function PublicLocaleProvider({
     () => ({
       locale,
       setLocale: (nextLocale) => setLocaleState(resolveSupportedLocale(nextLocale)),
+      supportsAuthoredProjectNarrative: PROJECT_NARRATIVE_LOCALES.has(locale),
       locked,
     }),
     [locale, locked],

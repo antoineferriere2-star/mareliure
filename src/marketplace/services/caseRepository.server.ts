@@ -23,7 +23,7 @@ import { buildCaseProfile, type CaseProfile } from "@/marketplace/cases/caseProf
 import { normalizeEmail } from "@/marketplace/cases/ownership";
 import { triageCase } from "@/marketplace/cases/triage";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
-import { PROFILE_REQUEST_SOURCE, PROFILE_SOURCE_ANSWER_KEY } from "@/marketplace/binders/fineBinderyProfile";
+import { FINE_BINDERY_PREFERRED_LANGUAGE_KEY, FINE_BINDERY_SUBMISSION_LOCALE_KEY, PROFILE_REQUEST_SOURCE, PROFILE_SOURCE_ANSWER_KEY } from "@/marketplace/binders/fineBinderyProfile";
 import {
   projectCase,
   type CaseLocale,
@@ -43,6 +43,8 @@ export interface CaseRow {
   status: string;
   brand: string;
   acquisition_origin: string;
+  preferred_language: string | null;
+  submission_locale: string | null;
   referred_binder_id: string | null;
   manual_review_required: boolean;
   heritage_flag: boolean;
@@ -133,7 +135,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
   const { data: row, error } = await sb
     .from("marketplace_cases")
     .select(
-      "id, dossier_id, reference, status, brand, acquisition_origin, referred_binder_id, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, pricing_pricebook_reference_cents, pricing_price_bound_by, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at, pricing_mode, deposit_cents, base_service_price_cents, brand_multiplier_bps, service_price_cents, tax_status",
+      "id, dossier_id, reference, status, brand, acquisition_origin, preferred_language, submission_locale, referred_binder_id, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, pricing_pricebook_reference_cents, pricing_price_bound_by, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at, pricing_mode, deposit_cents, base_service_price_cents, brand_multiplier_bps, service_price_cents, tax_status",
     )
     .eq("id", caseId)
     .maybeSingle();
@@ -417,6 +419,11 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
           : await resolveApprovedBinderBySlug(sb, referralSlug.trim())
         : null;
     const fromFineBinderyProfile = Boolean(referral && requestedFineBinderyProfile);
+    const supportedLanguages = new Set(["en", "fr", "de", "it", "es"]);
+    const rawSubmissionLocale = answers[FINE_BINDERY_SUBMISSION_LOCALE_KEY];
+    const rawPreferredLanguage = answers[FINE_BINDERY_PREFERRED_LANGUAGE_KEY];
+    const submissionLocale = typeof rawSubmissionLocale === "string" && supportedLanguages.has(rawSubmissionLocale) ? rawSubmissionLocale : null;
+    const preferredLanguage = typeof rawPreferredLanguage === "string" && supportedLanguages.has(rawPreferredLanguage) ? rawPreferredLanguage : submissionLocale;
 
     const { error: updateError } = await sb
       .from("marketplace_cases")
@@ -429,6 +436,7 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
         // back-office split it back apart on newlines — prose used as an API.
         triage_flags: triage.flags,
         triaged_at: new Date().toISOString(),
+        ...(requestedFineBinderyProfile ? { submission_locale: submissionLocale, preferred_language: preferredLanguage } : {}),
         ...(referral
           ? {
               acquisition_origin: fromFineBinderyProfile ? "FINEBINDERY_PROFILE" : "BINDER_REFERRED",
