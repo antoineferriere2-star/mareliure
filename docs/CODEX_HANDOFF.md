@@ -3242,3 +3242,27 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - La page précise qu'une photographie peut montrer l'état reçu, le geste ou le résultat. Les images servent de repères visuels et ne sont pas attribuées à Ma Reliure ni à un autre atelier. La photothèque privée de chaque relieur reste réservée à ses propres réalisations.
 - QA locale : galerie et accueils contrôlés sur bureau et mobile, aucun débordement horizontal, crédits lisibles. Les quatre images FineBindery ont été vérifiées en anglais, français, allemand, italien et espagnol. Vérifications vertes : 220 fichiers Vitest / 2 992 tests, typecheck, lint sans erreur et build Vite/Nitro.
 - Aucun atelier Ferrière identifiable n'existe parmi les trois ateliers actuellement approuvés en production. Aucune image n'a donc été injectée dans une photothèque privée et aucune donnée de production n'a été modifiée. PR #36 ouverte, fusionnable et CI `quality` verte, sans migration ; attendre une autorisation explicite avant fusion et déploiement.
+
+---
+
+## Latest handoff
+
+**Agent :** Claude Code — 24 septembre 2026 au soir. **Ce bloc remplace les deux précédents**, dont certains faits sont périmés : la PR #32 y est dite « ni fusionnée ni déployée », la PR #36 « en attente d'autorisation » et le Worker actif `d3a59185…`. Les trois points sont faux depuis.
+
+État de référence, vérifié par `git fetch` et `npx wrangler deployments list --name mareliure` :
+
+- **Production = `origin/main` = `9b235381ee9916109f949f60daff14f8f40b115a`** (merge de la PR #36). Worker `mareliure` actif à 100 % : `0b0df8c9-c393-42e5-a6f5-4f7df8e9b73c`.
+- **PR #34 « Photos d'exemple par opération »** : fusionnée (`5bfd2dd9`), migration `20260924160000` appliquée sur `hljxohondjvrkzqicexl`, en production.
+- **PR #35** (passation de la PR #34) : fusionnée (`c99a8304`).
+- **PR #32 « Tableau de bord relieur Aujourd'hui »** : `main` intégré dans la branche par commit de fusion, contrôles relancés, CI verte, puis fusion (`4d4dc0f760930bcb7fb0e4dfeb84d6965db5cb7d`). Déployée (Worker `ffcda22b…`, remplacé depuis par le déploiement de la #36). Aucune migration. La branche `feat/binder-dashboard-optimization` est terminée : ne pas la reprendre.
+- **PR #36 « Illustrations Ferrière »** : fusionnée (`9b235381`) et déployée. Elle ajoute 45 photographies sur `/tarifs`, 6 sur l'accueil Ma Reliure et 4 sur l'accueil FineBindery dans les cinq langues, avec provenance et autorisation dans `docs/content-assets.md`. Aucune migration.
+- **PR #37 « Front public »** : ouverte, non fusionnée.
+
+Règles pour la suite :
+
+- Les photographies Ferrière ne doivent **jamais** être importées automatiquement dans la bibliothèque privée de photos d'opérations des relieurs (`marketplace_binder_operation_photos`). Cette bibliothèque reste réservée aux réalisations de chaque atelier.
+- Ne modifier qu'en cas de nécessité : `public/photos/services/ferriere/`, `src/marketplace/pages/pricing/ferriereServiceIllustrations.ts`, `docs/content-assets.md`.
+- Tout nouveau travail part d'un worktree et d'une branche neufs depuis `origin/main`. Jamais de rebase ni de force-push sur une branche publiée : pour poursuivre une ancienne branche, y fusionner `origin/main`.
+- Suite du tableau de bord : branche `feat/binder-dashboard-followup` (worktree `D:\CodexProjects\mareliure-binder-dashboard-followup`), créée depuis `9b235381`. Premier chantier : traduction du tableau de bord pour FineBindery.
+- Aucune fusion, migration ni déploiement sans accord explicite du propriétaire.
+- Point de maintenance toujours ouvert : sous charge, les tests qui parcourent tout `src/` ou `.output` (`noPublicPrices.contract`, `secretsContract`, `workerPdfLibContract`) peuvent dépasser le délai de 5 s de Vitest. Relancés seuls, ils passent. À stabiliser dans une PR dédiée, sans affaiblir les assertions.
