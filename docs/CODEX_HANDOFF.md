@@ -3191,3 +3191,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Le service existant `setBinderStatus` reste la seule écriture : il impose une session authentifiée, vérifie le rôle administrateur et limite les états acceptés. Aucune migration ni modification de données n'est nécessaire.
 - Vérifications locales vertes : typecheck, lint ciblé, 214 fichiers Vitest / 2 944 tests et build Ma Reliure. Le premier passage de la suite avait dépassé le délai sur le scan du bundle ; le test isolé puis la suite complète ont repassé sans erreur.
 - PR #29 ouverte depuis `feat/admin-workshop-activation`; la CI du commit fonctionnel `32fc1ef7de1764438493c127b01f270378dc71cb` est verte. Aucun merge, aucune migration et aucun déploiement réalisés dans ce lot.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 24 septembre 2026, publication du contrôle d'accès atelier.
+
+- PR #29 fusionnée par merge commit normal `21cc1ec654657dd44e75b9a8ec9414ad09291e31`, branche conservée. La CI finale est verte au SHA `f5756575fded0f5bd3180ab28c627013a9a6ad70`.
+- Aucune migration ni modification de données requise. `main` a été mise à jour par avance rapide avant le déploiement.
+- Un seul déploiement effectif depuis ce merge : Worker `mareliure`, version `bf501721-4da5-4282-a2c7-fc125a274840`, active à 100 %. La première commande de publication s'était arrêtée après le build sans créer de version Cloudflare ; le bundle validé a ensuite été publié directement une fois.
+- Smoke production : Ma Reliure `/`, `/auth`, `/admin/ateliers`, `/atelier`, FineBindery `/` et `/professionnels` répondent 200.
+- Recette authentifiée production : la liste des trois ateliers charge et affiche « Autorisé » ; une fiche expose « Autorisation de l'atelier » et « Suspendre l'accès ». L'ouverture de la confirmation affiche l'effet attendu, puis son annulation ne modifie aucune donnée. Aucune erreur navigateur observée.
