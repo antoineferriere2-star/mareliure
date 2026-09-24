@@ -2,7 +2,7 @@
  * Candidature sans compte, conservée pour les ateliers qui souhaitent d'abord
  * être recontactés. La création directe de l'espace atelier passe par /auth.
  *
- * Ce formulaire ne crée pas de compte ni d'atelier — seulement une ligne
+ * Cette candidature ne crée pas de compte ni d'atelier — seulement une ligne
  * `marketplace_binder_applications` que l'admin lit et traite à la main
  * (`/marketplace/binders`). La création réelle de l'atelier et son
  * invitation restent un acte humain distinct (Phase A).
@@ -20,17 +20,28 @@ import {
   type RevenueBand,
 } from "@/marketplace/binders/application";
 import { LandingFooter, LandingHeader } from "@/marketplace/pages/landing/LandingChrome";
+import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
+import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 
+const TITLE = "Candidature atelier partenaire — Ma Reliure";
+const DESCRIPTION =
+  "Présentez votre atelier à Ma Reliure : prénom, nom, e-mail, type d'entreprise. Nous lisons chaque candidature et vous recontactons.";
+
+// Rendue côté serveur : la page figure au plan du site, et un moteur qui ne
+// lisait qu'un document vide ne pouvait rien en indexer.
 export const Route = createFileRoute("/candidature-atelier")({
-  ssr: false,
   head: () => ({
     meta: [
-      { title: "Candidature atelier partenaire — Ma Reliure" },
-      {
-        name: "description",
-        content:
-          "Présentez votre atelier à Ma Reliure : prénom, nom, e-mail, type d'entreprise. Nous lisons chaque candidature et vous recontactons.",
-      },
+      { title: TITLE },
+      { name: "description", content: DESCRIPTION },
+      { name: "robots", content: "index, follow" },
+      { property: "og:title", content: TITLE },
+      { property: "og:description", content: DESCRIPTION },
+      { property: "og:url", content: `${MARELIURE_CANONICAL_HOME}candidature-atelier` },
+    ],
+    links: [
+      { rel: "canonical", href: `${MARELIURE_CANONICAL_HOME}candidature-atelier` },
+      EDITORIAL_FONT_PRELOAD,
     ],
   }),
   component: CandidatureAtelierPage,
@@ -98,7 +109,7 @@ function CandidatureAtelierPage() {
         <h1 className="mr-title mt-4 text-mr-ink">Créer mon espace atelier</h1>
         <p className="mr-lead mt-5">
           Créez votre compte avec votre adresse e-mail, puis renseignez le nom de votre atelier.
-          Votre espace ouvre immédiatement ; Ma Reliure décide ensuite quels ateliers peuvent recevoir des leads.
+          Votre espace ouvre immédiatement ; Ma Reliure décide ensuite quels ateliers reçoivent des projets.
         </p>
         <a href="/auth?space=atelier" className={submitClass}>Créer mon espace atelier</a>
         <h2 className="mr-heading mt-12 border-t border-mr-rule pt-8 text-mr-ink">
@@ -112,7 +123,7 @@ function CandidatureAtelierPage() {
         ) : (
           <>
             <p className="mr-body mt-5">
-              Ce formulaire envoie une candidature à Ma Reliure sans ouvrir d'espace connecté.
+              Cette candidature parvient à Ma Reliure sans ouvrir d'espace connecté.
               Si vous souhaitez utiliser les outils atelier dès maintenant, choisissez « Créer mon espace atelier » ci-dessus.
             </p>
 

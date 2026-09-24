@@ -1,3 +1,4 @@
+import { metreOnly } from "@/lib/metreOnlyRoute";
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildFreeInquiryAuditPage } from "@/build/pages/public/BuildFreeInquiryAuditPage";
 import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
@@ -7,6 +8,7 @@ const description =
   "Paste your website address and see what your current contact form misses. Business type, services and gaps detected in seconds. No account, no email.";
 
 export const Route = createFileRoute("/free-inquiry-audit")({
+  beforeLoad: metreOnly,
   head: () => ({
     meta: [
       { title },

@@ -1259,7 +1259,7 @@ export const getBinderCase = createServerFn({ method: "GET" })
     const sb = await admin();
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
-    if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux leads.");
+    if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux projets.");
 
     // Une demande issue d'une page FineBindery devient visible dès que
     // l'atelier ouvre son espace, même si l'administration n'a pas encore
@@ -1329,7 +1329,7 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
     const sb = await admin();
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
-    if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux leads.");
+    if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux projets.");
     const { data: result, error } = await sb.rpc("marketplace_respond_to_offer", {
       p_case_id: data.caseId,
       p_binder_id: binder!.id,

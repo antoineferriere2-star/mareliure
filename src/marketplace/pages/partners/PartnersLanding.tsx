@@ -394,7 +394,9 @@ function OfferSummary() {
   return (
     <section className={`${SHELL} py-section-sm sm:py-section`}>
       <SectionHead eyebrow="En résumé" title="Ce que propose Ma Reliure à un atelier partenaire." />
-      <div className="mt-10 overflow-x-auto lg:mt-14">
+      {/* Sur un écran étroit, le tableau défile : la zone doit pouvoir prendre le
+          focus pour qu'on la fasse défiler au clavier (WCAG 2.1.1). */}
+      <div tabIndex={0} role="region" aria-label="Ce que propose Ma Reliure à un atelier partenaire" className="mt-10 overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mr-ink lg:mt-14">
         <table className="w-full min-w-[28rem] border-collapse text-left">
           <tbody>
             {OFFER_ROWS.map((row) => (
@@ -530,7 +532,7 @@ function ApplicationForm() {
         <SectionHead
           eyebrow="Sans compte"
           title="Vous préférez d'abord nous présenter votre atelier ?"
-          lead="Ce formulaire reste possible si vous souhaitez être recontacté avant de créer votre espace. L'accès aux leads exige toujours une validation par Ma Reliure."
+          lead="Cette candidature reste possible si vous souhaitez être recontacté avant de créer votre espace. L'accès aux projets exige toujours une validation par Ma Reliure."
         />
         <a href="/auth?space=atelier" className="mr-link mr-small mt-6 inline-block">
           Créer mon espace atelier dès maintenant

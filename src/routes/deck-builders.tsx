@@ -1,3 +1,4 @@
+import { metreOnly } from "@/lib/metreOnlyRoute";
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildDeckBuildersPage } from "@/build/pages/public/BuildMarketingPages";
 import { breadcrumbSchema, faqPageSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
@@ -8,6 +9,7 @@ const description =
   "Stop quoting blind. Deck builders get scope, dimensions, height, access, material and budget before the first call — with every answer sourced. Try the demo.";
 
 export const Route = createFileRoute("/deck-builders")({
+  beforeLoad: metreOnly,
   head: () => ({
     meta: [
       { title },
