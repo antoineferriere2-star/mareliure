@@ -3216,3 +3216,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Migration additive `20260924120000_finebindery_i18n.sql`, non appliquée : `spoken_languages` remplace `public_languages`; les projets reçoivent `submission_locale` et `preferred_language` avec contraintes et index. Aucun `UPDATE` ou `DELETE` n'est exécuté. Une intégration serveur vérifie qu'un projet allemand destiné à Atelier Martin conserve `de`, l'attribution au profil et l'affectation unique.
 - Vérifications locales vertes : typecheck, lint sans erreur, 217 fichiers Vitest / 2 954 tests, 9 scénarios Playwright et build Vite/Nitro. Les captures bureau EN/FR/DE/IT/ES et mobile DE sont conservées hors commit dans `output/finebindery-i18n-qa`.
 - Reste : commit, publication de la branche, ouverture de la PR et attente de sa CI. Ne pas fusionner, appliquer la migration ou déployer sans nouvelle autorisation.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 24 septembre 2026, `feat/ferriere-service-illustrations`.
+
+- Les 45 prestations du catalogue Ma Reliure disposent chacune d'une photographie réelle sélectionnée sur `reliure-ferriere.fr`, avec l'autorisation communiquée par le titulaire des droits. La page publique `/tarifs` les présente par famille, dans huit sections repliables, avec le crédit « Atelier Reliure Dorure Ferrière, Orléans » et un lien vers chaque photographie source numérotée.
+- Les images sont livrées sous forme de 90 dérivés WebP, en 320 et 640 pixels, rotation EXIF appliquée, qualité 78 et sans agrandissement. Le poids total est de 1,38 Mo. Le registre `docs/content-assets.md` consigne la provenance, l'autorisation, le traitement et la correspondance exacte des 45 sources.
+- La page précise qu'une photographie peut montrer l'état reçu, le geste ou le résultat. Les images servent de repères visuels et ne sont pas attribuées à Ma Reliure ni à un autre atelier. La photothèque privée de chaque relieur reste réservée à ses propres réalisations.
+- QA locale : galerie contrôlée sur bureau et Pixel 5, une colonne sur mobile, trois sur grand écran, aucun débordement horizontal et crédit lisible. Vérifications vertes : 219 fichiers Vitest / 2 973 tests, typecheck, lint sans erreur et build Vite/Nitro.
+- Aucun atelier Ferrière identifiable n'existe parmi les trois ateliers actuellement approuvés en production. Aucune image n'a donc été injectée dans une photothèque privée et aucune donnée de production n'a été modifiée. Reste : publier la branche, ouvrir la PR et attendre la CI. Ne pas fusionner ou déployer sans nouvelle autorisation.
