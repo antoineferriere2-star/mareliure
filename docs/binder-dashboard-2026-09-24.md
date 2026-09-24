@@ -32,13 +32,11 @@ payée » et aurait gonflé les paiements attendus. Elle porte désormais le sta
   `setQuoteStatus`). Non implémenté ici.
 - **Offres Ma Reliure qui expirent** : `marketplace_quotes.expires_at` existe
   mais `listMyBinderCases` ne l'expose pas. L'ajouter au select suffirait (pas
-  de migration) ; laissé hors périmètre car `marketplace.data.functions.ts` est
-  modifié par PR #31.
-- **Langue** : l'écran reste en français. La navigation de l'espace atelier
-  passe en i18n avec PR #31 (FineBinderyWorkspaceContext) ; le tableau de bord
-  pourra suivre une fois PR #31 fusionnée.
-- **Libellé « Leads »** de la navigation : conservé, `route.tsx` étant réécrit
-  par PR #31 (clé `projects`).
+  de migration) ; laissé hors périmètre pour ne pas toucher à
+  `marketplace.data.functions.ts`, modifié par PR #31 pendant ce chantier.
+- **Langue** : l'écran reste en français. Depuis PR #31, la navigation de
+  l'espace atelier est traduite (`FineBinderyWorkspaceContext`) ; le tableau de
+  bord peut suivre dans une PR dédiée, avec les dictionnaires DE/IT/ES/EN.
 - **Clés de cache** : `LeadsPage` et `BinderCasePage` lisent encore devis et
   ouvrages sous `["binder", …]` au lieu de `QUOTES_KEY` / `WORKS_KEY` ; à aligner
-  après PR #31, qui modifie ces deux fichiers.
+  dans une PR séparée (fichiers touchés par PR #31, laissés intacts ici).
