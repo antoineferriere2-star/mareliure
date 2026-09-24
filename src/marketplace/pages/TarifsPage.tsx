@@ -17,8 +17,18 @@
  * se passe réellement.
  */
 import { IntakeCta, LandingFooter, LandingHeader } from "./landing/LandingChrome";
+import { WORK_FAMILIES, workItemsByFamily } from "@/marketplace/pricing/catalog";
+import {
+  FERRIERE_SERVICE_PHOTO_CREDIT,
+  FERRIERE_SERVICE_PHOTO_NUMBERS,
+  FERRIERE_SERVICE_PHOTO_SOURCE,
+  ferriereServicePhoto,
+  ferriereSourcePhotoUrl,
+  type IllustratedServiceKey,
+} from "./pricing/ferriereServiceIllustrations";
 
 const SHELL = "mx-auto w-full max-w-[52rem] px-5 sm:px-8";
+const WIDE_SHELL = "mx-auto w-full max-w-[78rem] px-5 sm:px-8";
 
 interface Factor {
   title: string;
@@ -110,6 +120,77 @@ export function TarifsPage() {
                 </div>
               ))}
             </dl>
+          </div>
+        </section>
+
+        <section className="border-t border-mr-ink/10 bg-white/45 py-16 sm:py-20" aria-labelledby="service-gallery-title">
+          <div className={WIDE_SHELL}>
+            <div className="max-w-[48rem]">
+              <p className="font-sans text-[0.75rem] uppercase tracking-[0.18em] text-mr-ink/45">
+                Les prestations en images
+              </p>
+              <h2 id="service-gallery-title" className="mt-3 font-serif text-[1.75rem] leading-[1.2] sm:text-[2.125rem]">
+                Un repère visuel pour chacun des 45 savoir-faire
+              </h2>
+              <p className="mt-5 text-[1rem] leading-[1.75] text-mr-ink/70">
+                Certaines photographies montrent l’état reçu, d’autres le geste ou le résultat.
+                Elles aident à nommer le travail ; l’intervention exacte reste déterminée après
+                examen du livre.
+              </p>
+              <p className="mt-3 text-sm leading-6 text-mr-ink/60">
+                Réalisations et photographies :{" "}
+                <a className="underline decoration-mr-brass/70 underline-offset-4" href={FERRIERE_SERVICE_PHOTO_SOURCE}>
+                  {FERRIERE_SERVICE_PHOTO_CREDIT}
+                </a>
+                , reproduites avec son autorisation.
+              </p>
+            </div>
+
+            <div className="mt-10 space-y-4">
+              {WORK_FAMILIES.map((family, familyIndex) => {
+                const items = workItemsByFamily(family.key);
+                return (
+                  <details key={family.key} open={familyIndex === 0} className="group border border-mr-ink/12 bg-mr-paper">
+                    <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 font-serif text-[1.2rem] marker:content-none sm:px-6">
+                      <span>{family.label}</span>
+                      <span aria-hidden="true" className="font-sans text-sm text-mr-ink/45 transition-transform group-open:rotate-45">+</span>
+                    </summary>
+                    <ul className="grid gap-px border-t border-mr-ink/10 bg-mr-ink/10 sm:grid-cols-2 lg:grid-cols-3">
+                      {items.map((item) => {
+                        const key = item.key as IllustratedServiceKey;
+                        const photo = ferriereServicePhoto(key);
+                        const photoNumber = FERRIERE_SERVICE_PHOTO_NUMBERS[key];
+                        return (
+                          <li key={item.key} className="bg-mr-paper">
+                            <figure>
+                              <img
+                                src={photo.src}
+                                srcSet={photo.srcSet}
+                                sizes="(min-width: 1024px) 390px, (min-width: 640px) 50vw, 100vw"
+                                alt=""
+                                loading="lazy"
+                                decoding="async"
+                                className="aspect-[4/3] w-full bg-mr-ink/5 object-cover"
+                              />
+                              <figcaption className="px-4 py-4 sm:px-5">
+                                <h3 className="font-serif text-[1.08rem] leading-snug">{item.label}</h3>
+                                {item.hint && <p className="mt-1.5 text-sm leading-6 text-mr-ink/65">{item.hint}</p>}
+                                <a
+                                  href={ferriereSourcePhotoUrl(key)}
+                                  className="mt-3 inline-block text-[0.68rem] uppercase tracking-[0.11em] text-mr-ink/45 underline decoration-mr-brass/60 underline-offset-4"
+                                >
+                                  {FERRIERE_SERVICE_PHOTO_CREDIT} · photo n°{photoNumber}
+                                </a>
+                              </figcaption>
+                            </figure>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </details>
+                );
+              })}
+            </div>
           </div>
         </section>
 
