@@ -171,6 +171,13 @@ describe("la page « Aujourd'hui »", () => {
     expect(PAGE).not.toMatch(/queryKey: \["binder",/);
   });
 
+  it.each(["LeadsPage", "BinderCasePage"])("%s lit devis et ouvrages sous les mêmes clés que le tableau de bord", (page) => {
+    const source = readFileSync(resolve(process.cwd(), `src/marketplace/pages/binder/${page}.tsx`), "utf8");
+    // Une clé à part (["binder", "works"]…) n'est jamais invalidée par les écrans devis et ouvrages.
+    expect(source).not.toMatch(/queryKey: \["binder", "(works|work|quotes|invoices)"/);
+    expect(source).toContain("queryKey: WORKS_KEY");
+  });
+
   it("relie chaque section à un titre qui existe", () => {
     for (const [, id] of PAGE.matchAll(/aria-labelledby="([\w-]+)"/g)) expect(PAGE, id).toMatch(new RegExp(`id="${id}"`));
   });

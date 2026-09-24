@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BinderPageHeader } from "./BinderPageUi";
+import { WORK_KEY, WORKS_KEY } from "./works/workKeys";
 import { sourceLabel } from "@/marketplace/binders/fineBinderyProfile";
 
 const DECLINE_REASONS = [
@@ -35,13 +36,13 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   const fetchWorks = useServerFn(getMyWorks);
   const fetchWork = useServerFn(getMyWork);
   const ensureWork = useServerFn(ensureMyCaseWork);
-  const works = useQuery({ queryKey: ["binder", "works"], queryFn: () => fetchWorks({ data: {} }) });
+  const works = useQuery({ queryKey: WORKS_KEY, queryFn: () => fetchWorks({ data: {} }) });
   const linked = works.data?.find((work) => work.caseId === caseId);
-  const linkedWork = useQuery({ queryKey: ["binder", "work", linked?.id], queryFn: () => fetchWork({ data: { id: linked!.id } }), enabled: Boolean(linked) });
+  const linkedWork = useQuery({ queryKey: [...WORK_KEY, linked?.id] as const, queryFn: () => fetchWork({ data: { id: linked!.id } }), enabled: Boolean(linked) });
   const createFromCase = useMutation({
     mutationFn: () => ensureWork({ data: { caseId } }),
     onSuccess: ({ workId }) => {
-      void queryClient.invalidateQueries({ queryKey: ["binder", "works"] });
+      void queryClient.invalidateQueries({ queryKey: WORKS_KEY });
       void navigate({ to: "/atelier/devis/nouveau", search: { workId } });
     },
     onError: (err: Error) => setProblem(err.message),

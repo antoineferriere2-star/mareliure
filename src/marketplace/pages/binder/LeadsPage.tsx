@@ -7,6 +7,8 @@ import { getMyQuotes } from "@/marketplace/services/binderQuotes.data.functions"
 import { getMyWorks } from "@/marketplace/services/binderWorks.data.functions";
 import { caseGroup, nextCaseAction, type CaseGroup } from "@/marketplace/cases/workspace";
 import { FIELD } from "@/marketplace/pages/binder/quotes/quoteUi";
+import { QUOTES_KEY } from "@/marketplace/pages/binder/quotes/quoteQueryKeys";
+import { WORKS_KEY } from "@/marketplace/pages/binder/works/workKeys";
 import { matchesSearch } from "@/marketplace/works/workSearch";
 import { Search } from "lucide-react";
 import { BinderEmptyState, BinderPageHeader } from "./BinderPageUi";
@@ -39,8 +41,8 @@ export function LeadsPage() {
   const fetchWorks = useServerFn(getMyWorks);
   const fetchQuotes = useServerFn(getMyQuotes);
   const cases = useQuery({ queryKey: ["marketplace", "binder", "cases"], queryFn: () => fetchCases() });
-  const works = useQuery({ queryKey: ["binder", "works"], queryFn: () => fetchWorks({ data: {} }) });
-  const quotes = useQuery({ queryKey: ["binder", "quotes"], queryFn: () => fetchQuotes() });
+  const works = useQuery({ queryKey: WORKS_KEY, queryFn: () => fetchWorks({ data: {} }) });
+  const quotes = useQuery({ queryKey: QUOTES_KEY, queryFn: () => fetchQuotes() });
   const [filter, setFilter] = useState<CaseGroup | "all">("all");
   const [search, setSearch] = useState("");
 

@@ -37,6 +37,9 @@ payée » et aurait gonflé les paiements attendus. Elle porte désormais le sta
 - **Langue** : l'écran reste en français. Depuis PR #31, la navigation de
   l'espace atelier est traduite (`FineBinderyWorkspaceContext`) ; le tableau de
   bord peut suivre dans une PR dédiée, avec les dictionnaires DE/IT/ES/EN.
-- **Clés de cache** : `LeadsPage` et `BinderCasePage` lisent encore devis et
-  ouvrages sous `["binder", …]` au lieu de `QUOTES_KEY` / `WORKS_KEY` ; à aligner
-  dans une PR séparée (fichiers touchés par PR #31, laissés intacts ici).
+- **Clés de cache** : `LeadsPage` et `BinderCasePage` lisent désormais devis,
+  ouvrages et fiche ouvrage sous `QUOTES_KEY`, `WORKS_KEY` et
+  `[...WORK_KEY, id]`, comme le tableau de bord et les écrans détaillés. Reste
+  à part : la liste d'ouvrages de `PublicProfilePage`
+  (`["binder", "works", "public-profile"]`), qui ne sert qu'à choisir la source
+  d'une pièce de portfolio.
