@@ -576,6 +576,43 @@ async function signIssuerLogo(sb: Supa, document: DocumentView): Promise<Documen
   };
 }
 
+/** Une ligne de brouillon de CET atelier peut-elle recevoir une photo de plus ? Renvoie sa position. */
+async function nextQuotePhotoPosition(sb: Supa, binderId: string, quoteId: string, lineKey: string): Promise<number> {
+  const quote = await loadQuoteRow(sb, binderId, quoteId);
+  if (!quote) throw new BinderQuotesError("not_found");
+  if (quote.status !== "draft") throw new BinderQuotesError("conflict");
+  const [{ data: item, error: itemError }, { data: existing, error: countError }] = await Promise.all([
+    sb.from("marketplace_binder_quote_items").select("id").eq("quote_id", quoteId)
+      .eq("binder_id", binderId).eq("line_key", lineKey).maybeSingle(),
+    sb.from("marketplace_binder_quote_item_photos").select("id").eq("quote_id", quoteId)
+      .eq("binder_id", binderId).eq("line_key", lineKey),
+  ]);
+  if (itemError || countError) throw new BinderQuotesError("failed");
+  if (!item) throw new BinderQuotesError("not_found");
+  if ((existing ?? []).length >= QUOTE_OPERATION_PHOTO_MAX_PER_LINE) throw new BinderQuotesError("invalid_input");
+  return (existing ?? []).length + 1;
+}
+
+/** Le fichier est déjà dans le bucket : on l'inscrit sur la ligne, ou on le retire si l'inscription échoue. */
+async function insertQuoteItemPhoto(sb: Supa, binderId: string, row: {
+  quoteId: string; lineKey: string; storagePath: string; caption: string | null; includeInPdf: boolean; position: number;
+}) {
+  const { data, error } = await sb.from("marketplace_binder_quote_item_photos").insert({
+    binder_id: binderId,
+    quote_id: row.quoteId,
+    line_key: row.lineKey,
+    storage_path: row.storagePath,
+    caption: row.caption,
+    include_in_pdf: row.includeInPdf,
+    position: row.position,
+  }).select("id").single();
+  if (error || !data) {
+    await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove([row.storagePath]);
+    throw new BinderQuotesError("failed");
+  }
+  return { id: data.id };
+}
+
 export async function uploadQuoteItemPhoto(sb: Supa, binderId: string, input: {
   quoteId: string;
   lineKey: string;
@@ -585,19 +622,8 @@ export async function uploadQuoteItemPhoto(sb: Supa, binderId: string, input: {
   caption: string | null;
   includeInPdf: boolean;
 }) {
-  const quote = await loadQuoteRow(sb, binderId, input.quoteId);
-  if (!quote) throw new BinderQuotesError("not_found");
-  if (quote.status !== "draft") throw new BinderQuotesError("conflict");
+  const position = await nextQuotePhotoPosition(sb, binderId, input.quoteId, input.lineKey);
   if (!QUOTE_OPERATION_PHOTO_MIME_TYPES.includes(input.mimeType)) throw new BinderQuotesError("invalid_input");
-  const [{ data: item, error: itemError }, { data: existing, error: countError }] = await Promise.all([
-    sb.from("marketplace_binder_quote_items").select("id").eq("quote_id", input.quoteId)
-      .eq("binder_id", binderId).eq("line_key", input.lineKey).maybeSingle(),
-    sb.from("marketplace_binder_quote_item_photos").select("id").eq("quote_id", input.quoteId)
-      .eq("binder_id", binderId).eq("line_key", input.lineKey),
-  ]);
-  if (itemError || countError) throw new BinderQuotesError("failed");
-  if (!item) throw new BinderQuotesError("not_found");
-  if ((existing ?? []).length >= QUOTE_OPERATION_PHOTO_MAX_PER_LINE) throw new BinderQuotesError("invalid_input");
   const bytes = Buffer.from(input.imageBase64, "base64");
   if (bytes.length === 0 || bytes.length > QUOTE_OPERATION_PHOTO_MAX_BYTES) throw new BinderQuotesError("invalid_input");
   const extension = input.mimeType === "image/png" ? "png" : "jpg";
@@ -605,20 +631,30 @@ export async function uploadQuoteItemPhoto(sb: Supa, binderId: string, input: {
   const { error: uploadError } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET)
     .upload(storagePath, bytes, { contentType: input.mimeType, upsert: false });
   if (uploadError) throw new BinderQuotesError("failed");
-  const { data, error } = await sb.from("marketplace_binder_quote_item_photos").insert({
-    binder_id: binderId,
-    quote_id: input.quoteId,
-    line_key: input.lineKey,
-    storage_path: storagePath,
-    caption: input.caption,
-    include_in_pdf: input.includeInPdf,
-    position: (existing ?? []).length + 1,
-  }).select("id").single();
-  if (error || !data) {
-    await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove([storagePath]);
-    throw new BinderQuotesError("failed");
-  }
-  return { id: data.id };
+  return insertQuoteItemPhoto(sb, binderId, { ...input, storagePath, position });
+}
+
+/**
+ * Reprend un exemple de la bibliothèque sur une ligne de devis. Le fichier est COPIÉ :
+ * le devis garde sa photo même si l'atelier retire ensuite l'exemple de sa bibliothèque.
+ */
+export async function attachOperationPhotoToQuoteItem(sb: Supa, binderId: string, input: {
+  quoteId: string;
+  lineKey: string;
+  photoId: string;
+  caption: string | null;
+  includeInPdf: boolean;
+}) {
+  const position = await nextQuotePhotoPosition(sb, binderId, input.quoteId, input.lineKey);
+  const { data: source, error } = await sb.from("marketplace_binder_operation_photos")
+    .select("id, storage_path").eq("id", input.photoId).eq("binder_id", binderId).maybeSingle();
+  if (error) throw new BinderQuotesError("failed");
+  if (!source) throw new BinderQuotesError("not_found");
+  const extension = source.storage_path.endsWith(".png") ? "png" : "jpg";
+  const storagePath = `${binderId}/${input.quoteId}/${crypto.randomUUID()}.${extension}`;
+  const { error: copyError } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).copy(source.storage_path, storagePath);
+  if (copyError) throw new BinderQuotesError("failed");
+  return insertQuoteItemPhoto(sb, binderId, { ...input, storagePath, position });
 }
 
 export async function deleteQuoteItemPhoto(sb: Supa, binderId: string, photoId: string): Promise<void> {

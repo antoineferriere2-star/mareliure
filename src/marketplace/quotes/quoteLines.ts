@@ -42,6 +42,11 @@ export interface QuoteLine {
   requiresManualPrice: boolean;
   referenceVersion?: string | null;
   referenceOperationKey?: string | null;
+  /**
+   * Tarif de base Ma Reliure d'où vient la ligne, pour retrouver ses photos d'exemple.
+   * Aide d'interface seulement : il n'est pas enregistré avec le devis.
+   */
+  pricingKey?: string | null;
 }
 
 export function lineFromService(
@@ -88,6 +93,7 @@ export function lineFromBasePrice(
     requiresManualPrice: service.pricingMode === "manual_review",
     referenceVersion: exactKey ? CURRENT_REFERENCE_VERSION : null,
     referenceOperationKey: exactKey,
+    pricingKey: service.pricingKey,
   };
 }
 

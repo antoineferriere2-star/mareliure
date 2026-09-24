@@ -13,10 +13,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { Camera, ChevronDown, Plus, Search, Trash2, X } from "lucide-react";
+import { Camera, ChevronDown, Images, Plus, Search, Trash2, X } from "lucide-react";
 import {
+  attachMyOperationPhoto,
   createMyQuote,
   deleteMyQuoteItemPhoto,
+  getMyOperationPhotos,
+  uploadMyOperationPhoto,
   getBillingProfile,
   getMyCatalog,
   getMyBasePriceServices,
@@ -42,8 +45,8 @@ import { euros, parsePercentToBps, parseServerError } from "@/marketplace/quotes
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, MoneyInput, PRIMARY_BUTTON, QuantityInput, SECONDARY_BUTTON } from "./quoteUi";
 import { ProfileQuickSetup } from "./ProfileQuickSetup";
-import { CATALOG_KEY, CLIENTS_KEY, PROFILE_QUERY_KEY, QUOTES_KEY } from "./quoteQueryKeys";
-import { fileToBase64, QUOTE_OPERATION_PHOTO_MAX_BYTES, QUOTE_OPERATION_PHOTO_MAX_PER_LINE, QUOTE_OPERATION_PHOTO_MIME_TYPES } from "@/marketplace/quotes/quotePhotos";
+import { CATALOG_KEY, CLIENTS_KEY, OPERATION_PHOTOS_KEY, PROFILE_QUERY_KEY, QUOTES_KEY } from "./quoteQueryKeys";
+import { examplesFor, fileToBase64, photoTargetOfLine, QUOTE_OPERATION_PHOTO_MAX_BYTES, QUOTE_OPERATION_PHOTO_MAX_PER_LINE, QUOTE_OPERATION_PHOTO_MIME_TYPES } from "@/marketplace/quotes/quotePhotos";
 import type { DocumentPhotoView } from "@/marketplace/quotes/quoteViews";
 
 let lineCounter = 0;
@@ -175,10 +178,17 @@ function BuilderForm({
   const createWork = useServerFn(saveMyWork);
   const uploadPhoto = useServerFn(uploadMyQuoteItemPhoto);
   const deletePhoto = useServerFn(deleteMyQuoteItemPhoto);
+  const attachExample = useServerFn(attachMyOperationPhoto);
+  const saveExample = useServerFn(uploadMyOperationPhoto);
+  const fetchExamples = useServerFn(getMyOperationPhotos);
+  // La bibliothèque n'est qu'une aide : si elle ne charge pas, le devis se construit sans elle.
+  const examples = useQuery({ queryKey: OPERATION_PHOTOS_KEY, queryFn: () => fetchExamples(), retry: false });
 
   const [state, setState] = useState<BuilderState>(initial);
   const [activeBlockKey, setActiveBlockKey] = useState(initial.blocks[0]?.key ?? DEFAULT_BLOCK_KEY);
-  const [pendingPhotos, setPendingPhotos] = useState<Record<string, { key: string; file: File; caption: string; includeInPdf: boolean; previewUrl: string }[]>>({});
+  const [pendingPhotos, setPendingPhotos] = useState<Record<string, { key: string; file: File; caption: string; includeInPdf: boolean; previewUrl: string; keepAsExample: boolean }[]>>({});
+  /** Les exemples de la bibliothèque retenus pour une ligne : copiés sur le devis à l'enregistrement. */
+  const [examplePicks, setExamplePicks] = useState<Record<string, { key: string; photoId: string; url: string; caption: string; includeInPdf: boolean }[]>>({});
   const [photoIdsToDelete, setPhotoIdsToDelete] = useState<string[]>([]);
   const [savedDraftId, setSavedDraftId] = useState<string | null>(quoteId ?? null);
   const [search, setSearch] = useState("");
@@ -193,7 +203,7 @@ function BuilderForm({
   useEffect(() => { setProblems([]); setMissingFromServer([]); }, [state]);
   const summaryRef = useRef<HTMLElement>(null);
   const savedRef = useRef(false);
-  const dirty = JSON.stringify(state) !== JSON.stringify(initial) || Object.values(pendingPhotos).some((photos) => photos.length > 0) || photoIdsToDelete.length > 0;
+  const dirty = JSON.stringify(state) !== JSON.stringify(initial) || Object.values(pendingPhotos).some((photos) => photos.length > 0) || Object.values(examplePicks).some((picks) => picks.length > 0) || photoIdsToDelete.length > 0;
   useEffect(() => {
     if (!dirty) return;
     const warn = (event: BeforeUnloadEvent) => {
@@ -213,16 +223,36 @@ function BuilderForm({
   const activeBlock = state.blocks.find((block) => block.key === activeBlockKey) ?? state.blocks[0];
   const existingPhotos = initialPhotos.filter((photo) => !photoIdsToDelete.includes(photo.id));
   const queuePhotoDeletion = (photoId: string) => setPhotoIdsToDelete((ids) => ids.includes(photoId) ? ids : [...ids, photoId]);
-  const removeLine = (lineKey: string) => {
+  const photoCount = (lineKey: string) =>
+    existingPhotos.filter((photo) => photo.lineKey === lineKey).length + (pendingPhotos[lineKey]?.length ?? 0) + (examplePicks[lineKey]?.length ?? 0);
+  /** Les exemples de l'opération que la ligne n'a pas encore, dans la limite de ses places libres. */
+  const availableExamples = (line: QuoteLine) => {
+    const picked = new Set((examplePicks[line.key] ?? []).map((pick) => pick.photoId));
+    return examplesFor(photoTargetOfLine(line), examples.data ?? [])
+      .filter((photo) => !picked.has(photo.id))
+      .slice(0, Math.max(0, QUOTE_OPERATION_PHOTO_MAX_PER_LINE - photoCount(line.key)));
+  };
+  const pickExamples = (line: QuoteLine) => {
+    const photos = availableExamples(line);
+    if (photos.length === 0) return;
+    setExamplePicks((all) => ({ ...all, [line.key]: [...(all[line.key] ?? []), ...photos.map((photo) => ({ key: `${line.key}-${photo.id}`, photoId: photo.id, url: photo.url, caption: photo.caption ?? "", includeInPdf: true }))] }));
+  };
+  const addLine = (line: QuoteLine) => {
+    setState((s) => ({ ...s, lines: [...s.lines, line] }));
+    pickExamples(line);
+  };
+  const forgetLinePhotos = (lineKey: string) => {
     existingPhotos.filter((photo) => photo.lineKey === lineKey).forEach((photo) => queuePhotoDeletion(photo.id));
     setPendingPhotos((photos) => ({ ...photos, [lineKey]: [] }));
+    setExamplePicks((picks) => ({ ...picks, [lineKey]: [] }));
+  };
+  const removeLine = (lineKey: string) => {
+    forgetLinePhotos(lineKey);
     setState((s) => ({ ...s, lines: s.lines.filter((line) => line.key !== lineKey) }));
   };
   const removeBlock = (blockKey: string) => {
     if (state.blocks.length <= 1) return;
-    state.lines.filter((line) => (line.blockKey ?? DEFAULT_BLOCK_KEY) === blockKey).forEach((line) => {
-      existingPhotos.filter((photo) => photo.lineKey === line.key).forEach((photo) => queuePhotoDeletion(photo.id));
-    });
+    state.lines.filter((line) => (line.blockKey ?? DEFAULT_BLOCK_KEY) === blockKey).forEach((line) => forgetLinePhotos(line.key));
     setState((s) => ({ ...s, blocks: s.blocks.filter((block) => block.key !== blockKey), lines: s.lines.filter((line) => (line.blockKey ?? DEFAULT_BLOCK_KEY) !== blockKey) }));
     const next = state.blocks.find((block) => block.key !== blockKey);
     if (next) setActiveBlockKey(next.key);
@@ -234,11 +264,11 @@ function BuilderForm({
   };
   const addPhotos = (lineKey: string, files: FileList | null) => {
     if (!files) return;
-    const currentCount = existingPhotos.filter((photo) => photo.lineKey === lineKey).length + (pendingPhotos[lineKey]?.length ?? 0);
+    const currentCount = photoCount(lineKey);
     const accepted = [...files].filter((file) => QUOTE_OPERATION_PHOTO_MIME_TYPES.includes(file.type as never) && file.size <= QUOTE_OPERATION_PHOTO_MAX_BYTES)
       .slice(0, Math.max(0, QUOTE_OPERATION_PHOTO_MAX_PER_LINE - currentCount));
     if (accepted.length !== files.length) setProblems([`Maximum ${QUOTE_OPERATION_PHOTO_MAX_PER_LINE} photos JPEG ou PNG de 8 Mo par prestation.`]);
-    setPendingPhotos((photos) => ({ ...photos, [lineKey]: [...(photos[lineKey] ?? []), ...accepted.map((file) => ({ key: `${lineKey}-${nextKey()}`, file, caption: "", includeInPdf: true, previewUrl: URL.createObjectURL(file) }))] }));
+    setPendingPhotos((photos) => ({ ...photos, [lineKey]: [...(photos[lineKey] ?? []), ...accepted.map((file) => ({ key: `${lineKey}-${nextKey()}`, file, caption: "", includeInPdf: true, previewUrl: URL.createObjectURL(file), keepAsExample: false }))] }));
   };
 
   const readiness = profileReadiness(profile, "quote");
@@ -267,11 +297,11 @@ function BuilderForm({
   const toggleService = (service: CatalogService) => {
     const selected = state.lines.find((line) => line.serviceId === service.id && (line.blockKey ?? DEFAULT_BLOCK_KEY) === activeBlockKey);
     if (selected) removeLine(selected.key);
-    else setState((s) => ({ ...s, lines: [...s.lines, { ...lineFromService(service, activeVatRate, nextKey()), blockKey: activeBlockKey }] }));
+    else addLine({ ...lineFromService(service, activeVatRate, nextKey()), blockKey: activeBlockKey });
     setMobilePaletteOpen(false);
   };
   const addBasePrice = (service: (typeof basePrices)[number]) => {
-    setState((s) => ({ ...s, lines: [...s.lines, { ...lineFromBasePrice(service, activeVatRate, nextKey()), blockKey: activeBlockKey }] }));
+    addLine({ ...lineFromBasePrice(service, activeVatRate, nextKey()), blockKey: activeBlockKey });
     setMobilePaletteOpen(false);
   };
   const addFreeLine = (label = "") => {
@@ -408,13 +438,25 @@ function BuilderForm({
       setSavedDraftId(quote.id);
       try {
         for (const [lineKey, photos] of Object.entries(pendingPhotos)) {
+          const target = photoTargetOfLine(state.lines.find((candidate) => candidate.key === lineKey) ?? { serviceId: null });
           for (const photo of photos) {
-            await uploadPhoto({ data: {
-              quoteId: quote.id, lineKey, filename: photo.file.name, mimeType: photo.file.type as "image/jpeg" | "image/png",
-              imageBase64: await fileToBase64(photo.file), caption: photo.caption.trim() || null, includeInPdf: photo.includeInPdf,
-            } });
+            const mimeType = photo.file.type as "image/jpeg" | "image/png";
+            const imageBase64 = await fileToBase64(photo.file);
+            const caption = photo.caption.trim() || null;
+            // La bibliothèque d'abord : si le devis échoue ensuite, un nouvel essai ne l'enregistre pas deux fois.
+            if (photo.keepAsExample && target) {
+              await saveExample({ data: { target, mimeType, imageBase64, caption } });
+              setPendingPhotos((all) => ({ ...all, [lineKey]: (all[lineKey] ?? []).map((candidate) => candidate.key === photo.key ? { ...candidate, keepAsExample: false } : candidate) }));
+            }
+            await uploadPhoto({ data: { quoteId: quote.id, lineKey, filename: photo.file.name, mimeType, imageBase64, caption, includeInPdf: photo.includeInPdf } });
             URL.revokeObjectURL(photo.previewUrl);
             setPendingPhotos((all) => ({ ...all, [lineKey]: (all[lineKey] ?? []).filter((candidate) => candidate.key !== photo.key) }));
+          }
+        }
+        for (const [lineKey, picks] of Object.entries(examplePicks)) {
+          for (const pick of picks) {
+            await attachExample({ data: { quoteId: quote.id, lineKey, photoId: pick.photoId, caption: pick.caption.trim() || null, includeInPdf: pick.includeInPdf } });
+            setExamplePicks((all) => ({ ...all, [lineKey]: (all[lineKey] ?? []).filter((candidate) => candidate.key !== pick.key) }));
           }
         }
       } catch (error) {
@@ -428,6 +470,7 @@ function BuilderForm({
       void queryClient.invalidateQueries({ queryKey: CLIENTS_KEY });
       void queryClient.invalidateQueries({ queryKey: WORK_KEY });
       void queryClient.invalidateQueries({ queryKey: WORKS_KEY });
+      void queryClient.invalidateQueries({ queryKey: OPERATION_PHOTOS_KEY });
       void navigate({ to: "/atelier/devis/$quoteId", params: { quoteId: quote.id } });
     },
     onError: (error) => {
@@ -706,7 +749,7 @@ function BuilderForm({
                     <li key={line.key}>
                       <details className="group">
                         <summary className="grid min-h-20 cursor-pointer list-none grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-3 px-3 py-3 [&::-webkit-details-marker]:hidden">
-                          <span className="min-w-0"><strong className="block truncate text-sm font-semibold">{line.label || "Prestation sans libellé"}</strong><span className="mt-1 block text-xs text-[#74695d]">{String(line.quantity).replace(".", ",")} × {line.unit || "unité"} · {euros(line.unitPriceCents)} HT</span></span>
+                          <span className="min-w-0"><strong className="block truncate text-sm font-semibold">{line.label || "Prestation sans libellé"}</strong><span className="mt-1 block text-xs text-[#74695d]">{String(line.quantity).replace(".", ",")} × {line.unit || "unité"} · {euros(line.unitPriceCents)} HT{photoCount(line.key) > 0 && ` · ${photoCount(line.key)} photo${photoCount(line.key) > 1 ? "s" : ""}`}</span></span>
                           <strong className="text-sm tabular-nums">{line.requiresManualPrice && line.unitPriceCents === 0 ? "À chiffrer" : euros(total)}</strong>
                           <ChevronDown aria-hidden="true" className="h-4 w-4 text-[#74695d] transition group-open:rotate-180" />
                         </summary>
@@ -725,11 +768,15 @@ function BuilderForm({
                           <div className="mt-3 border-t border-[#e2dbd0] pt-3">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <p className="text-xs font-semibold uppercase tracking-wide text-[#685d51]">Photos d’exemple</p>
-                              <label className="inline-flex min-h-10 cursor-pointer items-center rounded-md border border-[#cfc5b6] bg-white px-3 text-xs font-semibold hover:bg-[#f5f0e8]"><Camera aria-hidden="true" className="mr-1 h-4 w-4" /> Ajouter<input type="file" accept="image/jpeg,image/png" multiple className="sr-only" onChange={(event) => { addPhotos(line.key, event.target.files); event.currentTarget.value = ""; }} /></label>
+                              <div className="flex flex-wrap gap-2">
+                                {availableExamples(line).length > 0 && <button type="button" className="inline-flex min-h-11 items-center rounded-md border border-[#cfc5b6] bg-white px-3 text-xs font-semibold hover:bg-[#f5f0e8] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7a2230]/45" onClick={() => pickExamples(line)}><Images aria-hidden="true" className="mr-1 h-4 w-4" /> Mes exemples ({availableExamples(line).length})</button>}
+                                <label className="inline-flex min-h-11 cursor-pointer items-center rounded-md border border-[#cfc5b6] bg-white px-3 text-xs font-semibold hover:bg-[#f5f0e8] focus-within:ring-2 focus-within:ring-[#7a2230]/45"><Camera aria-hidden="true" className="mr-1 h-4 w-4" /> Ajouter<input type="file" accept="image/jpeg,image/png" multiple className="sr-only" onChange={(event) => { addPhotos(line.key, event.target.files); event.currentTarget.value = ""; }} /></label>
+                              </div>
                             </div>
-                            {(existingPhotos.some((photo) => photo.lineKey === line.key) || (pendingPhotos[line.key]?.length ?? 0) > 0) && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                            {photoCount(line.key) > 0 && <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-3">
+                              {(examplePicks[line.key] ?? []).map((pick) => <figure key={pick.key} className="relative overflow-hidden rounded-md border bg-white"><img src={pick.url} alt={pick.caption || `Exemple de l’atelier pour ${line.label}`} className="aspect-[4/3] w-full object-cover" /><span className="absolute left-1 top-1 rounded-sm bg-[#241a12]/85 px-1.5 py-0.5 text-[0.62rem] font-semibold text-white">Mon exemple</span><div className="space-y-1 p-2"><input aria-label="Légende de la photo" className={`${FIELD} h-9 text-xs`} placeholder="Légende (facultative)" value={pick.caption} onChange={(event) => setExamplePicks((all) => ({ ...all, [line.key]: (all[line.key] ?? []).map((candidate) => candidate.key === pick.key ? { ...candidate, caption: event.target.value } : candidate) }))} /><label className="flex min-h-8 items-center gap-1 text-[0.68rem] text-muted-foreground"><input type="checkbox" checked={pick.includeInPdf} onChange={(event) => setExamplePicks((all) => ({ ...all, [line.key]: (all[line.key] ?? []).map((candidate) => candidate.key === pick.key ? { ...candidate, includeInPdf: event.target.checked } : candidate) }))} /> Inclure au PDF</label></div><button type="button" aria-label="Ne pas reprendre cet exemple" className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-destructive shadow" onClick={() => setExamplePicks((all) => ({ ...all, [line.key]: (all[line.key] ?? []).filter((candidate) => candidate.key !== pick.key) }))}><X aria-hidden="true" className="h-4 w-4" /></button></figure>)}
                               {existingPhotos.filter((photo) => photo.lineKey === line.key).map((photo) => <figure key={photo.id} className="relative overflow-hidden rounded-md border bg-white"><img src={photo.url} alt={photo.caption || `Exemple pour ${line.label}`} className="aspect-[4/3] w-full object-cover" /><figcaption className="p-2 text-[0.68rem] text-muted-foreground">{photo.caption || "Photo incluse au PDF"}</figcaption><button type="button" aria-label="Retirer cette photo" className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-destructive shadow" onClick={() => queuePhotoDeletion(photo.id)}><X aria-hidden="true" className="h-4 w-4" /></button></figure>)}
-                              {(pendingPhotos[line.key] ?? []).map((photo) => <figure key={photo.key} className="relative overflow-hidden rounded-md border bg-white"><img src={photo.previewUrl} alt={`Nouvel exemple pour ${line.label}`} className="aspect-[4/3] w-full object-cover" /><div className="space-y-1 p-2"><input aria-label="Légende de la photo" className={`${FIELD} h-9 text-xs`} placeholder="Légende (facultative)" value={photo.caption} onChange={(event) => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).map((candidate) => candidate.key === photo.key ? { ...candidate, caption: event.target.value } : candidate) }))} /><label className="flex items-center gap-1 text-[0.68rem] text-muted-foreground"><input type="checkbox" checked={photo.includeInPdf} onChange={(event) => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).map((candidate) => candidate.key === photo.key ? { ...candidate, includeInPdf: event.target.checked } : candidate) }))} /> Inclure au PDF</label></div><button type="button" aria-label="Retirer cette nouvelle photo" className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-destructive shadow" onClick={() => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).filter((candidate) => candidate.key !== photo.key) }))}><X aria-hidden="true" className="h-4 w-4" /></button></figure>)}
+                              {(pendingPhotos[line.key] ?? []).map((photo) => <figure key={photo.key} className="relative overflow-hidden rounded-md border bg-white"><img src={photo.previewUrl} alt={`Nouvel exemple pour ${line.label}`} className="aspect-[4/3] w-full object-cover" /><div className="space-y-1 p-2"><input aria-label="Légende de la photo" className={`${FIELD} h-9 text-xs`} placeholder="Légende (facultative)" value={photo.caption} onChange={(event) => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).map((candidate) => candidate.key === photo.key ? { ...candidate, caption: event.target.value } : candidate) }))} /><label className="flex items-center gap-1 text-[0.68rem] text-muted-foreground"><input type="checkbox" checked={photo.includeInPdf} onChange={(event) => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).map((candidate) => candidate.key === photo.key ? { ...candidate, includeInPdf: event.target.checked } : candidate) }))} /> Inclure au PDF</label>{photoTargetOfLine(line) && <label className="flex min-h-8 items-center gap-1 text-[0.68rem] text-muted-foreground"><input type="checkbox" checked={photo.keepAsExample} onChange={(event) => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).map((candidate) => candidate.key === photo.key ? { ...candidate, keepAsExample: event.target.checked } : candidate) }))} /> Garder dans mes exemples</label>}</div><button type="button" aria-label="Retirer cette nouvelle photo" className="absolute right-1 top-1 flex h-8 w-8 items-center justify-center rounded-full bg-white/95 text-destructive shadow" onClick={() => setPendingPhotos((all) => ({ ...all, [line.key]: (all[line.key] ?? []).filter((candidate) => candidate.key !== photo.key) }))}><X aria-hidden="true" className="h-4 w-4" /></button></figure>)}
                             </div>}
                             <p className="mt-2 text-[0.68rem] text-muted-foreground">Jusqu’à {QUOTE_OPERATION_PHOTO_MAX_PER_LINE} photos JPEG ou PNG. Elles restent privées.</p>
                           </div>
