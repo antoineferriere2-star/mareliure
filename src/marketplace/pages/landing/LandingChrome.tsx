@@ -129,9 +129,9 @@ const NAV = [
 ] as const;
 
 /**
- * Le nom, en serif, avec le filet laiton qui sert de signature à la marque.
- * C'est la seule dorure de l'entête : l'accent doit rester rare pour rester
- * un accent.
+ * Le nom, en serif, avec le filet bordeaux qui sert de signature à la marque.
+ * Le laiton a été retiré de la palette (un seul accent) : le filet porte donc
+ * l'accent unique, et reste le seul de l'entête pour rester un accent.
  */
 function Wordmark({ tone = "ink" }: { tone?: "ink" | "paper" }) {
   return (
@@ -143,7 +143,7 @@ function Wordmark({ tone = "ink" }: { tone?: "ink" | "paper" }) {
       >
         {MARELIURE_BRAND}
       </span>
-      <span aria-hidden="true" className="mt-1.5 h-px w-8 bg-mr-brass" />
+      <span aria-hidden="true" className="mt-1.5 h-px w-8 bg-mr-bordeaux" />
     </span>
   );
 }
@@ -153,15 +153,20 @@ function Wordmark({ tone = "ink" }: { tone?: "ink" | "paper" }) {
  * atteignable, sans se transformer en barre translucide. Fond plein, un filet
  * en dessous, rien d'autre.
  *
- * Sur mobile la navigation disparaît au profit du seul bouton. Un menu
- * hamburger pour trois ancres coûterait un panneau à ouvrir là où le pied de
- * page les propose déjà, et volerait la place de ce que la personne est venue
- * faire.
+ * Sur mobile, pas de menu hamburger : un panneau à ouvrir pour quelques
+ * liens volerait la place de ce que la personne est venue faire. Mais le prix
+ * est la première question avant de confier un livre, et sur téléphone
+ * « Tarifs » n'était atteignable qu'au bas d'une page de onze mille pixels.
+ * D'où, sous `lg`, une seconde rangée fine : Tarifs à gauche, l'accès au
+ * compte à droite — le bouton garde la première rangée pour lui seul.
  */
+const HEADER_LINK =
+  "mr-tap mr-small shrink-0 text-mr-graphite underline-offset-[6px] transition-colors hover:text-mr-ink hover:underline";
+
 export function LandingHeader() {
   return (
     <header className="sticky top-0 z-40 border-b border-mr-rule/70 bg-mr-paper">
-      <div className="mx-auto flex max-w-[78rem] items-center justify-between gap-6 px-5 py-4 sm:px-8 sm:py-5">
+      <div className="mx-auto flex max-w-[78rem] items-center justify-between gap-6 px-5 py-3 sm:px-8 lg:py-5">
         {/* Absolu pour la même raison que les ancres : depuis /tarifs, `#top`
             ne ramènerait pas à l'accueil, il ne ferait rien. */}
         <a
@@ -195,15 +200,25 @@ export function LandingHeader() {
               secondaire de ce fichier (NAV, SERVICE_LINKS) : landingHonesty.test.ts
               garde `/m/$publicToken` comme seule porte *typée* de la landing —
               une page d'accès au compte n'est pas une seconde Mission. */}
-          <a
-            href="/auth"
-            className="mr-tap mr-small shrink-0 text-mr-graphite underline-offset-[6px] transition-colors hover:text-mr-ink hover:underline"
-          >
-            Se connecter
-          </a>
+          {/* Masqué par son conteneur : `.mr-tap` impose `display` et l'emporterait sur `hidden`. */}
+          <span className="hidden lg:inline">
+            <a href="/auth" className={HEADER_LINK}>
+              Se connecter
+            </a>
+          </span>
           <IntakeCta variant="outline" size="compact" />
         </div>
       </div>
+      <nav aria-label="Navigation mobile" className="border-t border-mr-rule/70 lg:hidden">
+        <div className="mx-auto flex max-w-[78rem] items-center justify-between gap-6 px-5 py-1 sm:px-8">
+          <a href="/tarifs" className={HEADER_LINK}>
+            Tarifs
+          </a>
+          <a href="/auth" className={HEADER_LINK}>
+            Se connecter
+          </a>
+        </div>
+      </nav>
     </header>
   );
 }

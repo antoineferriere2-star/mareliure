@@ -99,7 +99,7 @@ export function TarifsPage() {
 
         <section className="py-16 sm:py-20">
           <div className={SHELL}>
-            <p className="font-sans text-[0.75rem] uppercase tracking-[0.18em] text-mr-ink/45">
+            <p className="font-sans text-[0.75rem] uppercase tracking-[0.18em] text-mr-muted">
               Ce qui fait le prix
             </p>
             <h2 className="mt-3 font-serif text-[1.75rem] leading-[1.2] sm:text-[2.125rem]">
@@ -109,7 +109,7 @@ export function TarifsPage() {
               {FACTORS.map((factor, index) => (
                 <div key={factor.title} className="border-t border-mr-ink/10 pt-6">
                   <dt className="flex items-baseline gap-4">
-                    <span className="font-sans text-[0.75rem] tabular-nums text-mr-ink/35">
+                    <span className="font-sans text-[0.75rem] tabular-nums text-mr-muted">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     <span className="font-serif text-[1.3125rem]">{factor.title}</span>
@@ -126,7 +126,7 @@ export function TarifsPage() {
         <section className="border-t border-mr-ink/10 bg-white/45 py-16 sm:py-20" aria-labelledby="service-gallery-title">
           <div className={WIDE_SHELL}>
             <div className="max-w-[48rem]">
-              <p className="font-sans text-[0.75rem] uppercase tracking-[0.18em] text-mr-ink/45">
+              <p className="font-sans text-[0.75rem] uppercase tracking-[0.18em] text-mr-muted">
                 Les prestations en images
               </p>
               <h2 id="service-gallery-title" className="mt-3 font-serif text-[1.75rem] leading-[1.2] sm:text-[2.125rem]">
@@ -139,7 +139,7 @@ export function TarifsPage() {
               </p>
               <p className="mt-3 text-sm leading-6 text-mr-ink/60">
                 Réalisations et photographies :{" "}
-                <a className="underline decoration-mr-brass/70 underline-offset-4" href={FERRIERE_SERVICE_PHOTO_SOURCE}>
+                <a className="underline decoration-mr-bordeaux/70 underline-offset-4" href={FERRIERE_SERVICE_PHOTO_SOURCE}>
                   {FERRIERE_SERVICE_PHOTO_CREDIT}
                 </a>
                 , reproduites avec son autorisation.
@@ -153,7 +153,7 @@ export function TarifsPage() {
                   <details key={family.key} open={familyIndex === 0} className="group border border-mr-ink/12 bg-mr-paper">
                     <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 px-5 py-3 font-serif text-[1.2rem] marker:content-none sm:px-6">
                       <span>{family.label}</span>
-                      <span aria-hidden="true" className="font-sans text-sm text-mr-ink/45 transition-transform group-open:rotate-45">+</span>
+                      <span aria-hidden="true" className="font-sans text-sm text-mr-muted transition-transform group-open:rotate-45">+</span>
                     </summary>
                     <ul className="grid gap-px border-t border-mr-ink/10 bg-mr-ink/10 sm:grid-cols-2 lg:grid-cols-3">
                       {items.map((item) => {
@@ -177,7 +177,7 @@ export function TarifsPage() {
                                 {item.hint && <p className="mt-1.5 text-sm leading-6 text-mr-ink/65">{item.hint}</p>}
                                 <a
                                   href={ferriereSourcePhotoUrl(key)}
-                                  className="mt-3 inline-block text-[0.68rem] uppercase tracking-[0.11em] text-mr-ink/45 underline decoration-mr-brass/60 underline-offset-4"
+                                  className="mt-3 inline-block text-[0.68rem] uppercase tracking-[0.11em] text-mr-muted underline decoration-mr-bordeaux/60 underline-offset-4"
                                 >
                                   {FERRIERE_SERVICE_PHOTO_CREDIT} · photo n°{photoNumber}
                                 </a>
@@ -204,16 +204,16 @@ export function TarifsPage() {
               Ce que comprend le prix que nous annonçons
             </h2>
             <ul className="mt-8 space-y-5 text-[1rem] leading-[1.75] text-mr-ink/75">
-              <li className="border-l border-mr-brass/60 pl-5">
+              <li className="border-l border-mr-bordeaux/60 pl-5">
                 Le travail de l’atelier, en entier. Un seul prix, arrêté avant que le livre parte.
               </li>
-              <li className="border-l border-mr-brass/60 pl-5">
+              <li className="border-l border-mr-bordeaux/60 pl-5">
                 Le choix de l’artisan dont le savoir-faire correspond à votre ouvrage.
               </li>
-              <li className="border-l border-mr-brass/60 pl-5">
+              <li className="border-l border-mr-bordeaux/60 pl-5">
                 Un interlocuteur unique du début à la fin : vous ne négociez pas avec l’atelier.
               </li>
-              <li className="border-l border-mr-brass/60 pl-5">
+              <li className="border-l border-mr-bordeaux/60 pl-5">
                 Un prix ferme. S’il devait évoluer parce que le livre révèle autre chose une fois
                 ouvert, nous vous le disons avant d’engager quoi que ce soit.
               </li>
