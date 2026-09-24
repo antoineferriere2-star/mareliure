@@ -101,8 +101,10 @@ contraire.
 Le titulaire des droits a confirmé dans le fil de développement du 24
 septembre 2026 que Ma Reliure pouvait utiliser les photographies publiées sur
 `reliure-ferriere.fr` pour illustrer les prestations. Cette extension couvre la
-page publique `/tarifs`. Chaque carte porte le crédit « Atelier Reliure Dorure
-Ferrière, Orléans » et renvoie vers la photographie source numérotée.
+page publique `/tarifs`, les six savoir-faire de l'accueil Ma Reliure et les
+quatre familles d'intervention de l'accueil FineBindery dans ses cinq langues.
+Les pages portent le crédit « Atelier Reliure Dorure Ferrière, Orléans » ; la
+grille complète renvoie aussi vers chaque photographie source numérotée.
 
 Les variantes `-320.webp` et `-640.webp` de chaque ligne sont des dérivés WebP
 du même original, qualité 78, rotation EXIF appliquée, sans agrandissement. Les

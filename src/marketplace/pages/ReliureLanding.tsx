@@ -40,6 +40,12 @@ import {
   STEPS,
 } from "./landing/content";
 import { PHOTOS, PHOTO_SIZES } from "./landing/photos";
+import {
+  FERRIERE_EDITORIAL_CRAFT_KEYS,
+  FERRIERE_SERVICE_PHOTO_CREDIT,
+  FERRIERE_SERVICE_PHOTO_SOURCE,
+  ferriereServicePhoto,
+} from "./pricing/ferriereServiceIllustrations";
 
 /**
  * Le premier écran.
@@ -133,15 +139,9 @@ function HowItWorks() {
 /**
  * Les six besoins.
  *
- * Sans photographie. Quatre des six étaient illustrés par des images générées ;
- * les retirer aurait laissé une grille à deux images et quatre trous, et
- * remplir ces trous aurait été exactement la faute qu'on vient de corriger.
- *
- * La liste éditoriale fait mieux que la grille de photos qu'elle remplace : un
- * visiteur qui cherche « on peut réparer mon livre ? » balaye six titres et
- * trouve sa réponse, là où six images l'obligeaient à interpréter. Le
- * `detail` nomme les travaux réels — c'est le vocabulaire du catalogue, donc
- * celui qu'il retrouvera dans le tunnel.
+ * Six photographies réelles de l'atelier Ferrière accompagnent désormais les
+ * six besoins. Elles servent de repères concrets ; les mots restent la source
+ * de vérité sur ce que couvre chaque intervention.
  */
 function Crafts() {
   return (
@@ -151,18 +151,37 @@ function Crafts() {
         title="Que voulez-vous faire de votre livre ?"
         lead="Six façons d’intervenir. La bonne dépend de son état, de son histoire et de ce que vous en attendez — et c’est la première question que nous vous poserons."
       />
-      <dl className="mt-12 grid gap-x-14 gap-y-0 sm:grid-cols-2 lg:mt-16">
-        {CRAFTS.map((craft) => (
-          <div key={craft.title} className="border-t border-mr-rule py-7">
-            <dt className="font-editorial text-[1.5rem] leading-tight text-mr-ink">
-              {craft.title}
-            </dt>
-            <dd>
-              <p className="mr-body mt-2">{craft.body}</p>
-              <p className="mr-meta mt-3">{craft.detail}</p>
-            </dd>
-          </div>
-        ))}
+      <p className="mr-meta mt-5">
+        Photographies :{" "}
+        <a className="mr-link" href={FERRIERE_SERVICE_PHOTO_SOURCE}>
+          {FERRIERE_SERVICE_PHOTO_CREDIT}
+        </a>
+        , reproduites avec son autorisation.
+      </p>
+      <dl className="mt-12 grid gap-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3">
+        {CRAFTS.map((craft, index) => {
+          const photo = ferriereServicePhoto(FERRIERE_EDITORIAL_CRAFT_KEYS[index]);
+          return (
+            <div key={craft.title} className="border-t border-mr-rule pt-5">
+              <img
+                src={photo.src}
+                srcSet={photo.srcSet}
+                sizes="(min-width: 1024px) 390px, (min-width: 640px) 50vw, 100vw"
+                alt=""
+                loading="lazy"
+                decoding="async"
+                className="aspect-[4/3] w-full bg-mr-ink/5 object-cover"
+              />
+              <dt className="mt-5 font-editorial text-[1.5rem] leading-tight text-mr-ink">
+                {craft.title}
+              </dt>
+              <dd>
+                <p className="mr-body mt-2">{craft.body}</p>
+                <p className="mr-meta mt-3">{craft.detail}</p>
+              </dd>
+            </div>
+          );
+        })}
       </dl>
     </section>
   );

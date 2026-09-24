@@ -58,6 +58,24 @@ export const FERRIERE_SERVICE_PHOTO_NUMBERS = {
 
 export type IllustratedServiceKey = keyof typeof FERRIERE_SERVICE_PHOTO_NUMBERS;
 
+/** Les six repères visuels de la page d'accueil Ma Reliure, dans l'ordre de CRAFTS. */
+export const FERRIERE_EDITORIAL_CRAFT_KEYS = [
+  "reparation_dos",
+  "restauration_cuir",
+  "demi_cuir_a_coins",
+  "dorure_decor",
+  "rebind_collector",
+  "boite",
+] as const satisfies readonly IllustratedServiceKey[];
+
+/** Les quatre repères de la page d'accueil FineBindery, dans l'ordre de home.offers. */
+export const FERRIERE_FINE_BINDERY_OFFER_KEYS = [
+  "reliure_de_creation",
+  "restauration_patrimoniale",
+  "rebind_collector",
+  "projet_sur_mesure",
+] as const satisfies readonly IllustratedServiceKey[];
+
 export function ferriereServicePhoto(key: IllustratedServiceKey): PhotoSources {
   return {
     src: `/photos/services/ferriere/${key}-640.webp`,

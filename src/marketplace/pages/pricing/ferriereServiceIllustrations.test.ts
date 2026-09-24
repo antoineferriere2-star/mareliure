@@ -5,6 +5,8 @@ import { WORK_ITEMS } from "@/marketplace/pricing/catalog";
 import {
   FERRIERE_SERVICE_PHOTO_CREDIT,
   FERRIERE_SERVICE_PHOTO_NUMBERS,
+  FERRIERE_EDITORIAL_CRAFT_KEYS,
+  FERRIERE_FINE_BINDERY_OFFER_KEYS,
   ferriereServicePhoto,
 } from "./ferriereServiceIllustrations";
 
@@ -18,6 +20,13 @@ describe("les illustrations des prestations Ferrière", () => {
 
   it("utilisent une photographie source distincte pour chaque prestation", () => {
     expect(new Set(Object.values(FERRIERE_SERVICE_PHOTO_NUMBERS)).size).toBe(45);
+  });
+
+  it("fournissent des séries éditoriales complètes pour les deux accueils", () => {
+    expect(FERRIERE_EDITORIAL_CRAFT_KEYS).toHaveLength(6);
+    expect(FERRIERE_FINE_BINDERY_OFFER_KEYS).toHaveLength(4);
+    expect(new Set(FERRIERE_EDITORIAL_CRAFT_KEYS).size).toBe(6);
+    expect(new Set(FERRIERE_FINE_BINDERY_OFFER_KEYS).size).toBe(4);
   });
 
   it("livrent les deux variantes WebP de chaque photographie", () => {

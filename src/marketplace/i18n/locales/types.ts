@@ -10,7 +10,7 @@ export interface FineBinderyPublicCopy {
     eyebrow: string; title: string; lead: string; discover: string; proof: string;
     benefitsEyebrow: string; benefitsTitle: string; benefitsLead: string;
     benefits: Array<{ title: string; body: string }>;
-    offersEyebrow: string; offersTitle: string; offers: Array<{ title: string; body: string }>;
+    offersEyebrow: string; offersTitle: string; photoCredit: string; offers: Array<{ title: string; body: string }>;
     howEyebrow: string; howTitle: string; steps: string[];
     workshopsEyebrow: string; workshopsTitle: string; workshopsLead: string; selected: string; discoverWorkshops: string;
     trustEyebrow: string; trustTitle: string; trust: string[];
