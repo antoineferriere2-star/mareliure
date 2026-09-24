@@ -7,6 +7,7 @@ export const PRICING_CATALOG_KEY = ["marketplace", "binder", "pricing-catalog"] 
 export const CLIENTS_KEY = ["marketplace", "binder", "clients"] as const;
 export const QUOTES_KEY = ["marketplace", "binder", "quotes"] as const;
 export const INVOICES_KEY = ["marketplace", "binder", "invoices"] as const;
+export const OPERATION_PHOTOS_KEY = ["marketplace", "binder", "operation-photos"] as const;
 
 /** Le profil tel que le serveur l'attend en écriture. */
 export function profileToInput(profile: BillingProfile) {
