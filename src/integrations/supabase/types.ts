@@ -1795,6 +1795,61 @@ export type Database = {
           },
         ]
       }
+      marketplace_binder_operation_photos: {
+        Row: {
+          binder_id: string
+          caption: string | null
+          created_at: string
+          id: string
+          position: number
+          pricing_key: string | null
+          service_id: string | null
+          storage_path: string
+        }
+        Insert: {
+          binder_id: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          pricing_key?: string | null
+          service_id?: string | null
+          storage_path: string
+        }
+        Update: {
+          binder_id?: string
+          caption?: string | null
+          created_at?: string
+          id?: string
+          position?: number
+          pricing_key?: string | null
+          service_id?: string | null
+          storage_path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_binder_operation_photos_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_operation_photos_pricing_key_fkey"
+            columns: ["pricing_key"]
+            isOneToOne: false
+            referencedRelation: "marketplace_work_items"
+            referencedColumns: ["key"]
+          },
+          {
+            foreignKeyName: "marketplace_binder_operation_photos_service_id_fkey"
+            columns: ["service_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_services"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_binder_portfolio: {
         Row: {
           after_photo_path: string | null
@@ -1860,61 +1915,6 @@ export type Database = {
             columns: ["source_work_id"]
             isOneToOne: false
             referencedRelation: "marketplace_binder_works"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      marketplace_binder_operation_photos: {
-        Row: {
-          binder_id: string
-          caption: string | null
-          created_at: string
-          id: string
-          position: number
-          pricing_key: string | null
-          service_id: string | null
-          storage_path: string
-        }
-        Insert: {
-          binder_id: string
-          caption?: string | null
-          created_at?: string
-          id?: string
-          position?: number
-          pricing_key?: string | null
-          service_id?: string | null
-          storage_path: string
-        }
-        Update: {
-          binder_id?: string
-          caption?: string | null
-          created_at?: string
-          id?: string
-          position?: number
-          pricing_key?: string | null
-          service_id?: string | null
-          storage_path?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "marketplace_binder_operation_photos_binder_id_fkey"
-            columns: ["binder_id"]
-            isOneToOne: false
-            referencedRelation: "marketplace_binders"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "marketplace_binder_operation_photos_pricing_key_fkey"
-            columns: ["pricing_key"]
-            isOneToOne: false
-            referencedRelation: "marketplace_work_items"
-            referencedColumns: ["key"]
-          },
-          {
-            foreignKeyName: "marketplace_binder_operation_photos_service_id_fkey"
-            columns: ["service_id"]
-            isOneToOne: false
-            referencedRelation: "marketplace_binder_services"
             referencedColumns: ["id"]
           },
         ]
