@@ -3179,3 +3179,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Déploiement unique depuis `main` au merge commit ci-dessus : Worker `mareliure`, version `db49f1e9-1716-46f7-bb51-ab597eeb5e7c`, active à 100 %. Les routes Ma Reliure et FineBindery testées répondent 200 sans erreur serveur. Le sitemap FineBindery contient `/professionnels` ; le sitemap Ma Reliure reste propre à sa marque.
 - Recette réelle en production avec `Atelier Martin QA temporaire` : annuaire, filtres Dorure/anglais puis état vide allemand, page `/fr/atelier-martin-qa-20260923`, trois spécialités, deux réalisations avant/après, cinq images signées chargées, canonical, données structurées, `index, follow` et CTA portant `source=finebindery_profile` avec le bon slug. Largeurs 375, 390 et 430 px sans débordement, CTA visible dans le premier écran, aucune erreur console.
 - Nettoyage terminé : atelier, rattachement, spécialités, deux réalisations et quatre objets de stockage supprimés. Comptes finaux revenus à 3 ateliers, 0 réalisation, 8 dossiers, 2 clients, 2 devis/12 lignes et 2 factures/12 lignes. Le profil QA rend désormais l'état introuvable avec `noindex` et l'annuaire retrouve son état vide. Aucun dossier commercial de recette n'a été créé ; le transport de provenance a été vérifié jusqu'au CTA et reste couvert par les tests serveur.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 24 septembre 2026, `feat/admin-workshop-activation`.
+
+- Le contrôle d'accès des ateliers est désormais disponible dans la fiche moderne `/admin/ateliers/:binderId`. L'administrateur peut autoriser un atelier en attente ou réactiver un atelier suspendu, puis suspendre un atelier autorisé sans passer par l'ancien back-office.
+- Chaque changement demande une confirmation qui explique son effet. La suspension conserve l'espace et les données, mais retire immédiatement l'accès métier selon les gardes serveur déjà en place. La liste `/admin/ateliers` affiche un libellé d'état lisible et signale le nombre d'ateliers en attente.
+- Le service existant `setBinderStatus` reste la seule écriture : il impose une session authentifiée, vérifie le rôle administrateur et limite les états acceptés. Aucune migration ni modification de données n'est nécessaire.
+- Vérifications locales vertes : typecheck, lint ciblé, 214 fichiers Vitest / 2 944 tests et build Ma Reliure. Le premier passage de la suite avait dépassé le délai sur le scan du bundle ; le test isolé puis la suite complète ont repassé sans erreur.
+- Branche prête à pousser et à ouvrir en PR. Aucun merge, aucune migration et aucun déploiement réalisés dans ce lot.
