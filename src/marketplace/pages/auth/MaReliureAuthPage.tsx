@@ -18,7 +18,7 @@
  *   pour qui ne veut plus repasser par sa boîte mail à chaque connexion ;
  * - **Atelier partenaire** : un lien et un code de connexion créent aussi le
  *   compte à la première utilisation. L'atelier est créé en attente de
- *   validation ; seul l'admin l'autorise ensuite à recevoir des leads.
+ *   validation ; seul l'admin l'autorise ensuite à recevoir des projets.
  *
  * Fine Bindery n'a qu'un seul public ici : un atelier Fine Bindery reste un
  * atelier Ma Reliure côté compte (§43 du brief international — "l'artisan
@@ -117,7 +117,7 @@ const MA_RELIURE_COPY: AuthCopy = {
     "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien et un code de connexion : pas de compte à créer, pas de mot de passe à retenir.",
   leadPasswordSignin: "Connectez-vous avec le mot de passe de votre espace.",
   leadBinder:
-    "Indiquez votre adresse e-mail pour créer votre espace atelier ou vous reconnecter. Le lien et le code reçus vérifient cette adresse. Vous créez ensuite votre atelier ; l'accès aux leads reste soumis à la validation de Ma Reliure.",
+    "Indiquez votre adresse e-mail pour créer votre espace atelier ou vous reconnecter. Le lien et le code reçus vérifient cette adresse. Vous créez ensuite votre atelier ; l'accès aux projets reste soumis à la validation de Ma Reliure.",
   routingStatus: "Ouverture de votre espace…",
   preferPassword: "Vous avez déjà un mot de passe ?",
   backToLink: "Revenir au lien de connexion par e-mail",

@@ -1,3 +1,4 @@
+import { metreOnly } from "@/lib/metreOnlyRoute";
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildExampleProjectBriefPage } from "@/build/pages/public/BuildMarketingPages";
 import {
@@ -13,6 +14,7 @@ const description =
   "A fictional Project Brief showing visitor answers, derived values, missing information and the next commercial action. Real structure, demo data.";
 
 export const Route = createFileRoute("/example-project-brief")({
+  beforeLoad: metreOnly,
   head: () => ({
     meta: [
       { title },

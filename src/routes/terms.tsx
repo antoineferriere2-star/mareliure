@@ -4,6 +4,7 @@
 // lawyer. The governing-law placeholder is phrased as "to be confirmed"
 // rather than invented. Do not replace it with a plausible-sounding
 // jurisdiction without verifying it first.
+import { metreOnly } from "@/lib/metreOnlyRoute";
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildLegalPage, type LegalSection } from "@/build/pages/public/BuildMarketingPages";
 import {
@@ -117,6 +118,7 @@ const TERMS_SECTIONS: LegalSection[] = [
 ];
 
 export const Route = createFileRoute("/terms")({
+  beforeLoad: metreOnly,
   head: () => ({
     meta: [
       { title },

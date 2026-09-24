@@ -1,3 +1,4 @@
+import { metreOnly } from "@/lib/metreOnlyRoute";
 import { createFileRoute } from "@tanstack/react-router";
 import { DECK_DEMO_PUBLIC_TOKEN } from "@/build/constants";
 import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
@@ -8,6 +9,7 @@ const description =
   "Try a guided Deck Project Mission and generate an example Project Brief.";
 
 export const Route = createFileRoute("/demo/deck-project")({
+  beforeLoad: metreOnly,
   ssr: false,
   head: () => ({
     meta: [

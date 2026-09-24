@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
@@ -25,6 +26,8 @@ import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBr
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { getRequestFineBinderyLocale } from "@/marketplace/i18n/resolveFineBinderyLocale.server";
 import { HTML_LOCALE, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
+import { MaReliureError, MaReliureNotFound } from "@/marketplace/pages/landing/MaReliureFallbackPages";
+import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 
 /**
  * Les valeurs par défaut du document, par marque.
@@ -67,6 +70,8 @@ const MARELIURE_BRAND = {
   schemas: [mareliureOrganizationSchema, mareliureWebsiteSchema],
 };
 
+const MARELIURE_OG_IMAGE = `${MARELIURE_CANONICAL_HOME}og/mareliure-1200x630.png`;
+
 const FINE_BINDERY_BRAND = {
   lang: "en",
   title: "Fine Bindery — Exceptional French Bookbinding",
@@ -85,7 +90,19 @@ function rootBrand(marketplaceBrand: MarketplaceBrand | null, fineBinderyLocale:
   return marketplaceBrand === "FINE_BINDERY" ? { ...FINE_BINDERY_BRAND, lang: fineBinderyLocale ? HTML_LOCALE[fineBinderyLocale] : FINE_BINDERY_BRAND.lang } : MARELIURE_BRAND;
 }
 
+/**
+ * La marque de la requête, lue dans les données de la racine. Une page
+ * introuvable ou en erreur est rendue sous la racine, dont le loader a déjà
+ * tranché ; en son absence (erreur très précoce), la marque de compilation.
+ */
+function useFallbackBrand(): "MARELIURE" | "OTHER" {
+  const loaderData = useRouterState({ select: (state) => state.matches[0]?.loaderData as { marketplaceBrand?: MarketplaceBrand | null } | undefined });
+  return isMaReliure && loaderData?.marketplaceBrand !== "FINE_BINDERY" ? "MARELIURE" : "OTHER";
+}
+
 function NotFoundComponent() {
+  const brand = useFallbackBrand();
+  if (brand === "MARELIURE") return <MaReliureNotFound />;
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
       <div className="max-w-md text-center">
@@ -113,6 +130,12 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
   }, [error]);
+  const brand = useFallbackBrand();
+  const retry = () => {
+    router.invalidate();
+    reset();
+  };
+  if (brand === "MARELIURE") return <MaReliureError onRetry={retry} />;
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background px-4">
@@ -125,10 +148,7 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
         </p>
         <div className="mt-6 flex flex-wrap justify-center gap-2">
           <button
-            onClick={() => {
-              router.invalidate();
-              reset();
-            }}
+            onClick={retry}
             className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Try again
@@ -163,6 +183,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         { property: "og:description", content: BRAND.description },
         { property: "og:type", content: "website" },
         { name: "twitter:card", content: "summary_large_image" },
+        // Aucune page Ma Reliure n'avait d'image de partage : un lien envoyé par
+        // message s'affichait sans visuel. Carte typographique, sans photographie
+        // (docs/content-assets.md), donc sans droit de tiers à citer.
+        ...(BRAND === MARELIURE_BRAND
+          ? [
+              { property: "og:site_name", content: "Ma Reliure" },
+              { property: "og:locale", content: "fr_FR" },
+              { property: "og:image", content: MARELIURE_OG_IMAGE },
+              { property: "og:image:width", content: "1200" },
+              { property: "og:image:height", content: "630" },
+              { property: "og:image:alt", content: "Ma Reliure — reliure, restauration et création de livres par des artisans indépendants" },
+              { name: "twitter:image", content: MARELIURE_OG_IMAGE },
+            ]
+          : []),
         // La vérification Search Console appartient à metre-pro.com. La servir
         // sur mareliure.fr ne vérifie rien et expose le jeton d'un autre domaine.
         ...(isMaReliure

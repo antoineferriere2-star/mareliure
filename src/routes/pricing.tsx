@@ -1,3 +1,4 @@
+import { metreOnly } from "@/lib/metreOnlyRoute";
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildPricingPage } from "@/build/pages/public/BuildMarketingPages";
 import { breadcrumbSchema, faqPageSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
@@ -8,6 +9,7 @@ const description =
   "Plans from $19.99/mo by active Project Intakes and monthly Project Briefs. Every plan includes guided intake, AI-drafted briefs and the client portal.";
 
 export const Route = createFileRoute("/pricing")({
+  beforeLoad: metreOnly,
   head: () => ({
     meta: [
       { title },

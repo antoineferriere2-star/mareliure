@@ -1,3 +1,4 @@
+import { metreOnly } from "@/lib/metreOnlyRoute";
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildContactPage } from "@/build/pages/public/BuildPublicFormPages";
 import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
@@ -7,6 +8,7 @@ const description =
   "Send a direct message to the Métré Build team about guided project intake, setup or support.";
 
 export const Route = createFileRoute("/contact")({
+  beforeLoad: metreOnly,
   head: () => ({
     meta: [
       { title },

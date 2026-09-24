@@ -5,6 +5,7 @@
 // registered address, DPO, governing law, contractual retention periods)
 // are phrased as "to be confirmed" rather than invented. Do not replace
 // them with plausible-sounding values without verifying them first.
+import { metreOnly } from "@/lib/metreOnlyRoute";
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildLegalPage, type LegalSection } from "@/build/pages/public/BuildMarketingPages";
 import {
@@ -146,6 +147,7 @@ const PRIVACY_SECTIONS: LegalSection[] = [
 ];
 
 export const Route = createFileRoute("/privacy")({
+  beforeLoad: metreOnly,
   head: () => ({
     meta: [
       { title },

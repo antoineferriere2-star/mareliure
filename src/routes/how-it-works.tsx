@@ -1,3 +1,4 @@
+import { metreOnly } from "@/lib/metreOnlyRoute";
 import { createFileRoute } from "@tanstack/react-router";
 import { BuildHowItWorksPage } from "@/build/pages/public/BuildMarketingPages";
 import { breadcrumbSchema, jsonLdScript, SITE_URL } from "@/lib/structured-data";
@@ -7,6 +8,7 @@ const description =
   "See how Métré turns what a visitor knows, approximates and still needs to clarify into a Project Canvas and structured Project Brief.";
 
 export const Route = createFileRoute("/how-it-works")({
+  beforeLoad: metreOnly,
   head: () => ({
     meta: [
       { title },

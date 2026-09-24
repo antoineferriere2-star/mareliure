@@ -103,47 +103,48 @@ export function ProjectCanvas({
                 {group.items.map((item) => {
                   const meta = STATUS_META[item.status];
                   return (
+                    // Une <dl> n'accepte, dans chaque groupe <div>, que des <dt> et des <dd> :
+                    // le statut est donc une seconde description, placée par la grille.
                     <div
                       key={item.id}
                       className={cn(
-                        "project-canvas-item grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-t border-stone-200 first:border-t-0",
+                        "project-canvas-item grid grid-cols-[minmax(0,1fr)_auto] gap-x-3 border-t border-stone-200 first:border-t-0",
                         isLarge ? "py-3.5" : "py-2.5",
                       )}
                     >
-                      <div className="min-w-0">
-                        <dt
-                          className={cn(
-                            "font-medium text-stone-500",
-                            isLarge ? "text-[13px]" : "text-[12px]",
-                          )}
-                        >
-                          {item.label}
-                        </dt>
-                        <dd
-                          className={cn(
-                            "mt-0.5 break-words text-stone-950",
-                            density === "standard" && "text-[15px] leading-6",
-                            density === "marketing" && "text-[17px] leading-7",
-                            density === "hero" && "text-[18px] leading-7 sm:text-xl",
-                          )}
-                        >
-                          {item.value}
-                        </dd>
-                      </div>
-                      <span
+                      <dt
                         className={cn(
-                          "mt-1 inline-flex shrink-0 items-center justify-center border border-current font-semibold",
-                          isLarge
-                            ? "h-8 rounded-full px-2.5 text-xs"
-                            : "h-6 w-6 rounded-full text-sm",
-                          meta.className,
+                          "col-start-1 min-w-0 font-medium text-stone-500",
+                          isLarge ? "text-[13px]" : "text-[12px]",
                         )}
-                        title={meta.label}
-                        aria-label={meta.label}
                       >
-                        <span aria-hidden="true">{meta.mark}</span>
-                        {isLarge && <span className="ml-1.5">{meta.label}</span>}
-                      </span>
+                        {item.label}
+                      </dt>
+                      <dd
+                        className={cn(
+                          "col-start-1 mt-0.5 min-w-0 break-words text-stone-950",
+                          density === "standard" && "text-[15px] leading-6",
+                          density === "marketing" && "text-[17px] leading-7",
+                          density === "hero" && "text-[18px] leading-7 sm:text-xl",
+                        )}
+                      >
+                        {item.value}
+                      </dd>
+                      <dd className="col-start-2 row-span-2 row-start-1 self-start">
+                        <span
+                          className={cn(
+                            "mt-1 inline-flex shrink-0 items-center justify-center border border-current font-semibold",
+                            isLarge
+                              ? "h-8 rounded-full px-2.5 text-xs"
+                              : "h-6 w-6 rounded-full text-sm",
+                            meta.className,
+                          )}
+                          title={meta.label}
+                        >
+                          <span aria-hidden="true">{meta.mark}</span>
+                          {isLarge ? <span className="ml-1.5">{meta.label}</span> : <span className="sr-only">{meta.label}</span>}
+                        </span>
+                      </dd>
                     </div>
                   );
                 })}

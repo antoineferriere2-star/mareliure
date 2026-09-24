@@ -302,10 +302,6 @@ export function LandingFooter() {
                   </a>
                 </li>
               ))}
-              <li>
-                Conditions générales de vente{" "}
-                <span className="text-mr-muted">— publiées avant l'ouverture du paiement</span>
-              </li>
             </ul>
           </div>
         </div>

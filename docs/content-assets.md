@@ -160,6 +160,20 @@ explicitement et ne présente pas ces ouvrages comme des projets Ma Reliure.
 | `reliure_de_creation` | `reliure_de_creation-{320,640}.webp` | photo n°998 | `REAL_PORTFOLIO` |
 | `projet_sur_mesure` | `projet_sur_mesure-{320,640}.webp` | photo n°320 | `REAL_PORTFOLIO` |
 
+### Graphismes de marque — sans photographie
+
+Ni photographie ni illustration d'ouvrage : du texte composé dans la police et
+les couleurs du site. Ils ne représentent aucun livre, aucun atelier, aucune
+personne ; aucune autorisation de tiers n'est donc en jeu.
+
+| Fichier                            | Nature              | Contenu                                                                     | Où                                                          | Crédité    |
+| ---------------------------------- | ------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------- | ---------- |
+| `public/og/mareliure-1200x630.png` | Graphisme de marque | « Ma Reliure », filet bordeaux, promesse de l'accueil — Fraunces sur papier | Image de partage (Open Graph) de toutes les pages Ma Reliure | Sans objet |
+
+Composée le 24 septembre 2026 à partir de `public/fonts/fraunces-latin-var.woff2`
+et des tokens `mr-paper`, `mr-ink`, `mr-graphite` et `mr-bordeaux` de
+`styles.css`, puis examinée visuellement avant d'être ajoutée.
+
 ---
 
 ## Ce qu'il faut faire avant d'ajouter une image
