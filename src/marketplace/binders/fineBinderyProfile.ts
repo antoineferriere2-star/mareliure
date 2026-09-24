@@ -1,12 +1,14 @@
 import { BINDER_SKILLS } from "./skills";
 
+export {
+  FINE_BINDERY_PREFERRED_LANGUAGE_KEY,
+  FINE_BINDERY_SUBMISSION_LOCALE_KEY,
+  PROFILE_REQUEST_SOURCE,
+  PROFILE_SOURCE_ANSWER_KEY,
+} from "@/build/runtime/sessionMetadata";
+
 export const PUBLIC_PROFILE_STATUSES = ["draft", "published"] as const;
 export type PublicProfileStatus = (typeof PUBLIC_PROFILE_STATUSES)[number];
-
-export const PROFILE_REQUEST_SOURCE = "finebindery_profile" as const;
-export const PROFILE_SOURCE_ANSWER_KEY = "_request_source";
-export const FINE_BINDERY_SUBMISSION_LOCALE_KEY = "_submission_locale";
-export const FINE_BINDERY_PREFERRED_LANGUAGE_KEY = "_preferred_language";
 
 export const PUBLIC_LANGUAGES = [
   { code: "fr", label: "Français" },

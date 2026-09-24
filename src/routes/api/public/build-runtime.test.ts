@@ -368,6 +368,46 @@ describe("possession de session (session_id + session_secret)", () => {
     });
     expect(res.status).toBe(400);
   });
+
+  it("conserve les métadonnées FineBindery valides pendant la sauvegarde", async () => {
+    const { mission, versionRow } = seedActiveMission();
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
+    const { session, session_secret } = await started.json();
+    const answers = {
+      note: "hello",
+      _submission_locale: "de",
+      _preferred_language: "de",
+      _referral_slug: "atelier-qa",
+      _request_source: "finebindery_profile",
+    };
+
+    const saved = await handleSaveSession(client, session.id, session_secret, answers);
+    expect(saved.status).toBe(200);
+    const body = await saved.json();
+    expect(body.session.answers).toEqual(answers);
+  });
+
+  it("refuse une valeur de métadonnée FineBindery invalide", async () => {
+    const { mission, versionRow } = seedActiveMission();
+    const { client } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
+
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
+    const { session, session_secret } = await started.json();
+    const saved = await handleSaveSession(client, session.id, session_secret, {
+      note: "hello",
+      _submission_locale: "xx",
+    });
+
+    expect(saved.status).toBe(400);
+  });
 });
 
 describe("reprise de session (resume_session)", () => {
