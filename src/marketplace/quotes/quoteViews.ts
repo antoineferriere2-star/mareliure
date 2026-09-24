@@ -402,6 +402,8 @@ export interface DocumentSummary {
   status: string;
   issueDate: string;
   validUntil: string | null;
+  /** Factures seulement : l'échéance de paiement, quand elle est renseignée. */
+  dueDate?: string | null;
   clientName: string;
   bookTitle: string | null;
   totalTtcCents: number;

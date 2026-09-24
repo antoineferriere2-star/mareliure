@@ -3221,6 +3221,20 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 
 ## Latest handoff
 
+**Agent :** Claude Code — 24 septembre 2026, production au merge `5bfd2dd96ab0b4dbac8fd0b6bed12612af7c8fad`.
+
+- PR #34 « Photos d'exemple par opération » fusionnée par merge commit normal `5bfd2dd96ab0b4dbac8fd0b6bed12612af7c8fad`, branche `feat/service-example-photos` conservée et CI `quality` verte. La bibliothèque personnelle de réalisations est disponible dans Paramètres et dans le constructeur de devis ; joindre une image à une ligne crée une copie indépendante pour préserver les devis, PDF et factures.
+- Migration `20260924160000_marketplace_binder_operation_photos.sql` appliquée en production sur `hljxohondjvrkzqicexl` après un contrôle à blanc ne listant qu'elle. Elle ajoute une table, deux index et une RLS sans accès direct, réutilise le bucket privé existant et ne modifie aucune donnée préexistante. Les types Supabase ont été régénérés depuis la production ; leur seul ajout est cette table.
+- Worker `mareliure` version `d3a59185-6a22-4ec9-99e1-d5a23d7006a3`, confirmé comme dernier déploiement actif. Les routes `/`, `/atelier`, `/atelier/tarifs` et `/atelier/devis/nouveau` répondent 200 ; les fonctions serveur testées ne répondent jamais 500 ; la RLS anonyme de la nouvelle table est effective.
+- Limites documentées : le lien `pricingKey` d'une ligne issue du tarif de base n'est pas persisté lors de la réouverture d'un brouillon ; supprimer une prestation peut laisser son fichier de bibliothèque dans le bucket ; l'écran de bibliothèque reste en français.
+- PR #32 « Tableau de bord relieur Aujourd'hui » ouverte sur `feat/binder-dashboard-optimization`, SHA `6192798eac26aca67b7520ca9d7cfde45db48188`, fusionnable et CI `quality` verte. Elle n'ajoute aucune migration et n'est ni fusionnée ni déployée. Ne pas la modifier, la fusionner ou la déployer sans accord explicite du propriétaire.
+- Point de maintenance séparé : `src/marketplace/reference/noPublicPrices.contract.test.ts` peut dépasser cinq secondes dans la suite complète alors qu'il passe seul en environ 1,3 seconde. Le stabiliser dans une PR dédiée par lecture partagée et/ou délai explicite, sans réduire les assertions.
+- Ne pas appliquer d'autre migration. Si un déploiement ultérieur part de `main`, la fonctionnalité de la PR #34 y est déjà incluse et ne demande aucune action supplémentaire côté base.
+
+---
+
+## Latest handoff
+
 **Agent :** Codex (GPT-6) — 24 septembre 2026, `feat/ferriere-service-illustrations`.
 
 - Les 45 prestations du catalogue Ma Reliure disposent chacune d'une photographie réelle sélectionnée sur `reliure-ferriere.fr`, avec l'autorisation communiquée par le titulaire des droits. La page publique `/tarifs` les présente par famille, dans huit sections repliables, avec le crédit « Atelier Reliure Dorure Ferrière, Orléans » et un lien vers chaque photographie source numérotée.
