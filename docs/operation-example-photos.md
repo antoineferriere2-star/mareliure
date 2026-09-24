@@ -37,21 +37,31 @@ Une ligne libre n'a pas d'opération, donc pas de bibliothèque.
   le devis. Conséquence : en rouvrant un brouillon, une ligne issue d'un tarif de
   base ne propose plus « Mes exemples » (une ligne de prestation, si).
 
-## Mise en production (non faite dans la PR)
+## Mise en production — réalisée le 24 septembre 2026
 
-1. Appliquer `supabase/migrations/20260924160000_marketplace_binder_operation_photos.sql`.
-   Elle ne crée qu'une table, deux index et sa politique RLS ; elle ne modifie
-   aucune donnée et réutilise le bucket existant.
-2. Régénérer `src/integrations/supabase/types.ts` depuis la production. Le bloc
-   `marketplace_binder_operation_photos` y a été écrit à la main au format
-   généré ; la régénération doit le reproduire à l'identique.
-3. Déployer le Worker, puis vérifier dans l'espace atelier : ajouter une photo
-   dans Paramètres, créer un devis avec cette opération, contrôler le PDF.
-
-Avant l'étape 1, l'onglet affiche « Vos photos d'exemple n'ont pas pu être
-chargées » et le constructeur de devis fonctionne comme aujourd'hui (la
-bibliothèque y est facultative) : déployer le code avant la migration ne casse
-pas les devis.
+- La migration
+  `supabase/migrations/20260924160000_marketplace_binder_operation_photos.sql`
+  a été appliquée sur la production `hljxohondjvrkzqicexl`. Le contrôle à blanc
+  ne listait qu'elle ; l'historique local/distant a ensuite été aligné jusqu'à
+  `20260924160000`.
+- La migration a ajouté uniquement la table
+  `marketplace_binder_operation_photos`, deux index et sa politique RLS sans
+  accès direct. Aucune donnée existante n'a été modifiée et le bucket privé
+  `marketplace-quote-operation-photos` est réutilisé sous
+  `<binder_id>/library/`.
+- `src/integrations/supabase/types.ts` a été régénéré depuis la production. Son
+  seul ajout est la nouvelle table, identique au bloc préparé dans la PR.
+- La PR #34 a été fusionnée par merge commit
+  `5bfd2dd96ab0b4dbac8fd0b6bed12612af7c8fad`, puis le Worker `mareliure` a été
+  publié dans la version `d3a59185-6a22-4ec9-99e1-d5a23d7006a3`. La première
+  commande de publication a échoué sur `fetch failed` après l'envoi des assets,
+  sans activer de version ; `npx wrangler deploy --name mareliure` a publié le
+  même build avec succès.
+- Contrôle production : les nouvelles fonctions serveur et leurs dépendances
+  répondent `Unauthorized` sans session et aucune ne répond 500. `/`,
+  `/atelier`, `/atelier/tarifs` et `/atelier/devis/nouveau` répondent 200.
+  L'accès REST anonyme à la nouvelle table retourne une liste vide en lecture
+  et 401 en écriture, conformément à la RLS.
 
 ## Limites
 
