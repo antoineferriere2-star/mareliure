@@ -5,6 +5,9 @@
  * échoue indépendamment : une panne des factures ne masque pas un message
  * client. Aucun chiffre n'est affiché sans venir d'une donnée lue — une source
  * indisponible s'affiche « — », jamais 0.
+ *
+ * Ma Reliure reste en français ; un atelier FineBindery lit la page dans sa langue
+ * (`dashboardCopy.ts`), comme la navigation de l'espace atelier.
  */
 import { useState, type ComponentType } from "react";
 import { Link } from "@tanstack/react-router";
@@ -28,11 +31,14 @@ import { getMyFineBinderyProfile } from "@/marketplace/services/fineBinderyProfi
 import { profileReadiness } from "@/marketplace/quotes/quoteBuild";
 import { todayInParis } from "@/marketplace/quotes/quoteStatus";
 import { buildAgenda, summarize, type AgendaItem, type AgendaKind } from "@/marketplace/binders/todayAgenda";
+import { useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspaceContext";
+import type { FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 import { INVOICES_KEY, PROFILE_QUERY_KEY, QUOTES_KEY } from "@/marketplace/pages/binder/quotes/quoteQueryKeys";
 import { PRIMARY_BUTTON, SECONDARY_BUTTON } from "@/marketplace/pages/binder/quotes/quoteUi";
 import { WORKS_KEY } from "@/marketplace/pages/binder/works/workKeys";
 import { Skeleton } from "@/components/ui/skeleton";
 import { BinderEmptyState, BinderPageHeader, BinderRetryNote, BinderSectionTitle } from "./BinderPageUi";
+import { agendaTexts, dashboardCopy, longDate, translateMissing, type DashboardCopy } from "./dashboardCopy";
 
 /** Les mêmes clés que la navigation et les écrans détaillés : une écriture ailleurs rafraîchit aussi cette page. */
 const CASES_KEY = ["marketplace", "binder", "cases"] as const;
@@ -58,9 +64,15 @@ const KIND_ICONS: Record<AgendaKind, ComponentType<{ className?: string; "aria-h
   invoice_draft: ReceiptText,
 };
 
-const SOURCE_NAMES = { cases: "demandes et messages", quotes: "devis", invoices: "factures", works: "ouvrages" } as const;
+/** La langue de la page : celle de l'atelier FineBindery, sinon le français de Ma Reliure. */
+function useDashboardLanguage() {
+  const { isFineBindery, locale } = useFineBinderyWorkspace();
+  const language: FineBinderyLocale = isFineBindery ? locale : "fr";
+  return { locale: language, t: dashboardCopy(language), brand: isFineBindery ? "FineBindery" : "Ma Reliure" };
+}
 
 export function BinderDashboardPage() {
+  const { locale, t } = useDashboardLanguage();
   const fetchCases = useServerFn(listMyBinderCases);
   const fetchQuotes = useServerFn(getMyQuotes);
   const fetchInvoices = useServerFn(getMyInvoices);
@@ -92,29 +104,30 @@ export function BinderDashboardPage() {
   const visible = expanded ? agenda : agenda.slice(0, AGENDA_PREVIEW);
   const hidden = agenda.length - visible.length;
   const lateCount = agenda.filter((item) => item.late).length;
+  const tiles = t.tiles;
 
   return (
     <div className="space-y-9 sm:space-y-10">
       <BinderPageHeader
-        eyebrow={longDate(new Date())}
-        title="Aujourd'hui"
-        description="Ce qui attend une réponse, une décision ou un document, dans l'ordre où le traiter."
+        eyebrow={longDate(new Date(), locale)}
+        title={t.title}
+        description={t.description}
         action={
           <div className="flex flex-wrap gap-2">
-            <Link to="/atelier/devis/nouveau" className={PRIMARY_BUTTON}>Nouveau devis</Link>
-            <Link to="/atelier/ouvrages/nouveau" className={SECONDARY_BUTTON}>Nouvel ouvrage</Link>
+            <Link to="/atelier/devis/nouveau" className={PRIMARY_BUTTON}>{t.newQuote}</Link>
+            <Link to="/atelier/ouvrages/nouveau" className={SECONDARY_BUTTON}>{t.newWork}</Link>
           </div>
         }
       />
 
       <section aria-labelledby="overview-heading">
-        <h2 id="overview-heading" className="sr-only">Vue d'ensemble</h2>
+        <h2 id="overview-heading" className="sr-only">{t.overview}</h2>
         <ul className="grid grid-cols-2 gap-px overflow-hidden border border-[#cfc5b6] bg-[#cfc5b6] lg:grid-cols-5 [&>li:last-child]:col-span-2 lg:[&>li:last-child]:col-span-1">
-          <SummaryTile to="/atelier/leads" query={cases} value={summary.newRequests} label={plural(summary.newRequests, "nouvelle demande", "nouvelles demandes")} hint={summary.newRequests ? "à examiner" : "aucune en attente"} urgent={Boolean(summary.newRequests)} />
-          <SummaryTile to="/atelier/messages" query={cases} value={summary.unreadMessages} label={plural(summary.unreadMessages, "message non lu", "messages non lus")} hint={summary.unreadMessages ? "réponse attendue" : "vous êtes à jour"} urgent={Boolean(summary.unreadMessages)} />
-          <SummaryTile to="/atelier/devis" query={quotes} value={summary.sentQuotes} label={plural(summary.sentQuotes, "devis envoyé", "devis envoyés")} hint={summary.quotesToFollowUp ? `${summary.quotesToFollowUp} à relancer` : "aucune relance nécessaire"} urgent={Boolean(summary.quotesToFollowUp)} />
-          <SummaryTile to="/atelier/ouvrages" query={works} value={summary.activeWorks} label={plural(summary.activeWorks, "ouvrage en cours", "ouvrages en cours")} hint="fiches actives à l'atelier" urgent={false} />
-          <SummaryTile to="/atelier/factures" query={invoices} value={summary.awaitingPayment} label={plural(summary.awaitingPayment, "paiement attendu", "paiements attendus")} hint={summary.overduePayments ? `dont ${summary.overduePayments} en retard` : "aucun retard"} urgent={Boolean(summary.overduePayments)} />
+          <SummaryTile t={t} to="/atelier/leads" query={cases} value={summary.newRequests} label={tiles.requests(summary.newRequests)} hint={tiles.requestsHint(summary.newRequests ?? 0)} urgent={Boolean(summary.newRequests)} />
+          <SummaryTile t={t} to="/atelier/messages" query={cases} value={summary.unreadMessages} label={tiles.messages(summary.unreadMessages)} hint={tiles.messagesHint(summary.unreadMessages ?? 0)} urgent={Boolean(summary.unreadMessages)} />
+          <SummaryTile t={t} to="/atelier/devis" query={quotes} value={summary.sentQuotes} label={tiles.sent(summary.sentQuotes)} hint={tiles.sentHint(summary.quotesToFollowUp ?? 0)} urgent={Boolean(summary.quotesToFollowUp)} />
+          <SummaryTile t={t} to="/atelier/ouvrages" query={works} value={summary.activeWorks} label={tiles.works(summary.activeWorks)} hint={tiles.worksHint} urgent={false} />
+          <SummaryTile t={t} to="/atelier/factures" query={invoices} value={summary.awaitingPayment} label={tiles.payments(summary.awaitingPayment)} hint={tiles.paymentsHint(summary.overduePayments ?? 0)} urgent={Boolean(summary.overduePayments)} />
         </ul>
       </section>
 
@@ -122,38 +135,32 @@ export function BinderDashboardPage() {
         <section aria-labelledby="now-heading" aria-busy={loading} className="min-w-0 space-y-4">
           <BinderSectionTitle
             id="now-heading"
-            title="À traiter maintenant"
-            detail={
-              loading
-                ? "Chargement de vos priorités…"
-                : agenda.length === 0
-                  ? undefined
-                  : `${agenda.length} action${agenda.length > 1 ? "s" : ""}${lateCount ? `, dont ${lateCount} en retard` : ""} — les clients qui attendent une réponse d'abord.`
-            }
+            title={t.now.title}
+            detail={loading ? t.now.loading : agenda.length === 0 ? undefined : t.now.summary(agenda.length, lateCount)}
           />
           {failed.length > 0 && (
-            <BinderRetryNote onRetry={retryFailed} retrying={retrying}>
-              Impossible de charger : {failed.map((key) => SOURCE_NAMES[key]).join(", ")}. La liste peut être incomplète.
+            <BinderRetryNote onRetry={retryFailed} retrying={retrying} labels={{ retry: t.now.retry, retrying: t.now.retrying }}>
+              {t.now.failed(failed.map((key) => t.now.sources[key]).join(", "))}
             </BinderRetryNote>
           )}
           {loading ? (
-            <AgendaSkeleton />
+            <AgendaSkeleton label={t.now.loading} />
           ) : agenda.length === 0 ? (
             failed.length > 0 ? null : (
               <BinderEmptyState
-                title="Rien ne vous attend"
-                description="Aucune demande nouvelle, aucun message non lu, aucun devis à relancer ni facture à émettre."
-                action={<Link to="/atelier/ouvrages" className={`inline-flex min-h-11 items-center text-sm font-semibold text-[#5f1b27] underline underline-offset-4 ${FOCUS}`}>Voir les ouvrages en cours</Link>}
+                title={t.now.emptyTitle}
+                description={t.now.emptyBody}
+                action={<Link to="/atelier/ouvrages" className={`inline-flex min-h-11 items-center text-sm font-semibold text-[#5f1b27] underline underline-offset-4 ${FOCUS}`}>{t.now.emptyLink}</Link>}
               />
             )
           ) : (
             <>
               <ol id="today-agenda" className="divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8]">
-                {visible.map((item) => <AgendaRow key={item.key} item={item} />)}
+                {visible.map((item) => <AgendaRow key={item.key} item={item} locale={locale} lateLabel={t.now.late} />)}
               </ol>
               {agenda.length > AGENDA_PREVIEW && (
                 <button type="button" aria-expanded={expanded} aria-controls="today-agenda" onClick={() => setExpanded((value) => !value)} className={`inline-flex min-h-11 items-center rounded-sm text-sm font-semibold text-[#5f1b27] underline underline-offset-4 ${FOCUS}`}>
-                  {expanded ? "Afficher moins" : `Afficher ${hidden > 1 ? `les ${hidden} autres actions` : "l'action suivante"}`}
+                  {expanded ? t.now.less : t.now.more(hidden)}
                 </button>
               )}
             </>
@@ -167,6 +174,7 @@ export function BinderDashboardPage() {
 }
 
 function SummaryTile({
+  t,
   to,
   query,
   value,
@@ -174,6 +182,7 @@ function SummaryTile({
   hint,
   urgent,
 }: {
+  t: DashboardCopy;
   to: "/atelier/leads" | "/atelier/messages" | "/atelier/devis" | "/atelier/ouvrages" | "/atelier/factures";
   query: UseQueryResult<unknown>;
   value: number | null;
@@ -186,7 +195,7 @@ function SummaryTile({
       <Link to={to} className={`group flex h-full min-h-28 flex-col justify-between gap-3 px-4 py-4 transition hover:bg-[#f5f0e8] sm:px-5 ${urgent ? "shadow-[inset_0_3px_0_#7a2230]" : ""} ${FOCUS} focus-visible:ring-inset`}>
         {query.isPending ? (
           <>
-            <span className="sr-only">Chargement…</span>
+            <span className="sr-only">{t.tiles.loading}</span>
             <Skeleton className="h-8 w-10" />
             <Skeleton className="h-4 w-28" />
           </>
@@ -195,7 +204,7 @@ function SummaryTile({
             <strong aria-hidden="true" className="font-editorial text-3xl font-normal leading-none text-[#74695d]">—</strong>
             <span className="text-sm leading-5 text-[#3f3228]">
               {label}
-              <span className="mt-0.5 block text-xs text-[#74695d]">donnée indisponible</span>
+              <span className="mt-0.5 block text-xs text-[#74695d]">{t.tiles.unavailable}</span>
             </span>
           </>
         ) : (
@@ -212,8 +221,9 @@ function SummaryTile({
   );
 }
 
-function AgendaRow({ item }: { item: AgendaItem }) {
+function AgendaRow({ item, locale, lateLabel }: { item: AgendaItem; locale: FineBinderyLocale; lateLabel: string }) {
   const Icon = KIND_ICONS[item.kind];
+  const text = agendaTexts(item, locale);
   return (
     <li>
       <Link
@@ -225,24 +235,24 @@ function AgendaRow({ item }: { item: AgendaItem }) {
         </span>
         <span className="min-w-0">
           <span className={`flex flex-wrap items-center gap-2 text-[0.68rem] font-semibold uppercase tracking-[0.14em] ${item.late ? "text-[#9a3412]" : "text-[#7a2230]"}`}>
-            {item.label}
-            {item.late && <span className="rounded-sm border border-current px-1.5 py-px text-[0.6rem] tracking-[0.1em]">En retard</span>}
+            {text.label}
+            {item.late && <span className="rounded-sm border border-current px-1.5 py-px text-[0.6rem] tracking-[0.1em]">{lateLabel}</span>}
           </span>
-          <strong className="mt-1 block truncate font-editorial text-lg font-normal leading-snug text-[#241a12]">{item.title}</strong>
-          <span className="mt-0.5 block truncate text-xs text-[#685d51]">{item.detail}</span>
+          <strong className="mt-1 block truncate font-editorial text-lg font-normal leading-snug text-[#241a12]">{text.title}</strong>
+          <span className="mt-0.5 block truncate text-xs text-[#685d51]">{text.detail}</span>
         </span>
         <span className="col-start-2 inline-flex min-h-11 items-center text-sm font-semibold text-[#5f1b27] underline decoration-[#7a2230]/35 underline-offset-4 group-hover:decoration-current sm:col-start-3 sm:min-h-0">
-          {item.action}
+          {text.action}
         </span>
       </Link>
     </li>
   );
 }
 
-function AgendaSkeleton() {
+function AgendaSkeleton({ label }: { label: string }) {
   return (
     <div role="status" className="divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8]">
-      <span className="sr-only">Chargement de vos priorités…</span>
+      <span className="sr-only">{label}</span>
       {[0, 1, 2].map((index) => (
         <div key={index} className="grid grid-cols-[2.25rem_minmax(0,1fr)] gap-3 px-4 py-4 sm:px-5">
           <Skeleton className="h-9 w-9 rounded-full" />
@@ -261,6 +271,8 @@ type SetupState = "ready" | "todo" | "waiting";
 
 /** L'état de l'atelier : ce qui conditionne l'accès aux demandes, la facturation et la page publique. */
 function WorkshopSetup() {
+  const { t: copy, brand } = useDashboardLanguage();
+  const t = copy.setup;
   const fetchBinder = useServerFn(getMyBinderProfile);
   const fetchBilling = useServerFn(getBillingProfile);
   const fetchPublic = useServerFn(getMyFineBinderyProfile);
@@ -276,40 +288,43 @@ function WorkshopSetup() {
 
   return (
     <section aria-labelledby="setup-heading" className="space-y-4">
-      <BinderSectionTitle id="setup-heading" title="Votre atelier" />
+      <BinderSectionTitle id="setup-heading" title={t.title} />
       <ul className="divide-y divide-[#d8d0c4] border border-[#cfc5b6] bg-[#fffdf8]">
         <SetupRow
-          title="Accès aux demandes"
+          t={t}
+          title={t.access}
           query={binder}
           state={approved ? "ready" : "waiting"}
-          status={approved ? "Actif" : "En attente"}
-          detail={approved ? "Ma Reliure peut vous confier des projets." : "Ma Reliure active l'accès depuis l'administration. Devis, ouvrages et contacts restent disponibles."}
+          status={approved ? t.active : t.waiting}
+          detail={approved ? t.accessOn(brand) : t.accessOff(brand)}
           onRetry={() => void binder.refetch()}
         />
         <SetupRow
-          title="Devis et factures"
+          t={t}
+          title={t.billing}
           query={billing}
           state={invoiceReadiness?.ready ? "ready" : "todo"}
-          status={invoiceReadiness?.ready ? "Prêt" : quoteReadiness?.ready ? "Factures bloquées" : "À compléter"}
-          detail={invoiceReadiness?.ready ? "Vos informations légales permettent d'émettre devis et factures." : `Manquant : ${(invoiceReadiness?.missing ?? []).join(", ")}.`}
-          link={invoiceReadiness?.ready ? undefined : { to: "/atelier/tarifs", label: "Compléter mes informations" }}
+          status={invoiceReadiness?.ready ? t.ready : quoteReadiness?.ready ? t.invoicesBlocked : t.toComplete}
+          detail={invoiceReadiness?.ready ? t.billingReady : t.missing(translateMissing(invoiceReadiness?.missing ?? [], copy))}
+          link={invoiceReadiness?.ready ? undefined : { to: "/atelier/tarifs", label: t.completeLink }}
           onRetry={() => void billing.refetch()}
         />
         <SetupRow
-          title="Profil public"
+          t={t}
+          title={t.publicProfile}
           query={publicProfile}
           state={published ? "ready" : "todo"}
-          status={published ? "Publié" : publicMissing.length ? "À compléter" : "Non publié"}
+          status={published ? t.published : publicMissing.length ? t.toComplete : t.notPublished}
           detail={
             published
-              ? "Votre page présente votre savoir-faire."
+              ? t.publishedBody
               : publicMissing.length
-                ? `Manquant : ${publicMissing.join(", ")}.`
+                ? t.missing(translateMissing(publicMissing, copy))
                 : approved
-                  ? "Votre profil est prêt : il ne reste qu'à le publier."
-                  : "Votre profil est prêt ; il pourra être publié une fois l'atelier approuvé."
+                  ? t.readyToPublish
+                  : t.readyAfterApproval
           }
-          link={{ to: "/atelier/profil-public", label: published ? "Modifier mon profil" : "Terminer mon profil" }}
+          link={{ to: "/atelier/profil-public", label: published ? t.editProfile : t.finishProfile }}
           onRetry={() => void publicProfile.refetch()}
         />
       </ul>
@@ -318,6 +333,7 @@ function WorkshopSetup() {
 }
 
 function SetupRow({
+  t,
   title,
   query,
   state,
@@ -326,6 +342,7 @@ function SetupRow({
   link,
   onRetry,
 }: {
+  t: DashboardCopy["setup"];
   title: string;
   query: UseQueryResult<unknown>;
   state: SetupState;
@@ -350,8 +367,8 @@ function SetupRow({
         <Skeleton className="mt-2 h-4 w-3/4" />
       ) : query.isError ? (
         <p className="mt-1 text-xs leading-5 text-[#5a1f0c]">
-          Information indisponible.{" "}
-          <button type="button" onClick={onRetry} className={`inline-flex min-h-11 items-center font-semibold underline underline-offset-4 ${FOCUS}`}>Réessayer</button>
+          {t.unavailable}{" "}
+          <button type="button" onClick={onRetry} className={`inline-flex min-h-11 items-center font-semibold underline underline-offset-4 ${FOCUS}`}>{t.retry}</button>
         </p>
       ) : (
         <>
@@ -365,13 +382,4 @@ function SetupRow({
       )}
     </li>
   );
-}
-
-function plural(value: number | null, one: string, many: string): string {
-  return value !== null && value > 1 ? many : one;
-}
-
-function longDate(now: Date): string {
-  const text = new Intl.DateTimeFormat("fr-FR", { weekday: "long", day: "numeric", month: "long", timeZone: "Europe/Paris" }).format(now);
-  return text.charAt(0).toUpperCase() + text.slice(1);
 }
