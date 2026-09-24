@@ -15,6 +15,7 @@ import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 import { ARTISANS, BEFORE_AFTER, CRAFTS, COMMITMENTS, PROOFS, STEPS } from "./content";
 import { PHOTOS } from "./photos";
+import { FERRIERE_EDITORIAL_CRAFT_KEYS } from "../pricing/ferriereServiceIllustrations";
 
 const DIR = resolve(process.cwd(), "src/marketplace/pages");
 const FILES = [
@@ -103,23 +104,18 @@ describe("la landing Ma Reliure ne fabrique rien", () => {
   });
 });
 
-describe("les emplacements de photographie s'annoncent comme provisoires", () => {
+describe("les photographies publiques restent traçables", () => {
   it("porte une mention explicite plutôt qu'un cadre vide", () => {
     const photograph = readFileSync(resolve(DIR, "landing/Photograph.tsx"), "utf8");
     expect(photograph).toContain("Photographie à fournir");
   });
 
-  /**
-   * Les six besoins n'ont plus de photographie, et c'est le résultat d'une
-   * faute : quatre des six étaient illustrés par des images générées. Les
-   * remplacer par d'autres images aurait reproduit exactement l'erreur, alors
-   * que le titre et la phrase suffisent à faire choisir.
-   */
-  it("décrit chaque savoir-faire par des mots, pas par une image", () => {
+  it("décrit chaque savoir-faire et lui associe une photographie réelle", () => {
+    expect(FERRIERE_EDITORIAL_CRAFT_KEYS).toHaveLength(CRAFTS.length);
+    expect(new Set(FERRIERE_EDITORIAL_CRAFT_KEYS).size).toBe(CRAFTS.length);
     for (const craft of CRAFTS) {
       expect(craft.body.length).toBeGreaterThan(20);
       expect(craft.detail.length).toBeGreaterThan(20);
-      expect(craft).not.toHaveProperty("photo");
     }
   });
 });

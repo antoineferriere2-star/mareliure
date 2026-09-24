@@ -3230,3 +3230,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - PR #32 « Tableau de bord relieur Aujourd'hui » ouverte sur `feat/binder-dashboard-optimization`, SHA `6192798eac26aca67b7520ca9d7cfde45db48188`, fusionnable et CI `quality` verte. Elle n'ajoute aucune migration et n'est ni fusionnée ni déployée. Ne pas la modifier, la fusionner ou la déployer sans accord explicite du propriétaire.
 - Point de maintenance séparé : `src/marketplace/reference/noPublicPrices.contract.test.ts` peut dépasser cinq secondes dans la suite complète alors qu'il passe seul en environ 1,3 seconde. Le stabiliser dans une PR dédiée par lecture partagée et/ou délai explicite, sans réduire les assertions.
 - Ne pas appliquer d'autre migration. Si un déploiement ultérieur part de `main`, la fonctionnalité de la PR #34 y est déjà incluse et ne demande aucune action supplémentaire côté base.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 24 septembre 2026, `feat/ferriere-service-illustrations`.
+
+- Les 45 prestations du catalogue Ma Reliure disposent chacune d'une photographie réelle sélectionnée sur `reliure-ferriere.fr`, avec l'autorisation communiquée par le titulaire des droits. La page publique `/tarifs` les présente par famille, dans huit sections repliables, avec le crédit « Atelier Reliure Dorure Ferrière, Orléans » et un lien vers chaque photographie source numérotée. Les six savoir-faire de l'accueil Ma Reliure et les quatre familles d'intervention de l'accueil FineBindery emploient aussi cette collection.
+- Les images sont livrées sous forme de 90 dérivés WebP, en 320 et 640 pixels, rotation EXIF appliquée, qualité 78 et sans agrandissement. Le poids total est de 1,38 Mo. Le registre `docs/content-assets.md` consigne la provenance, l'autorisation, le traitement et la correspondance exacte des 45 sources.
+- La page précise qu'une photographie peut montrer l'état reçu, le geste ou le résultat. Les images servent de repères visuels et ne sont pas attribuées à Ma Reliure ni à un autre atelier. La photothèque privée de chaque relieur reste réservée à ses propres réalisations.
+- QA locale : galerie et accueils contrôlés sur bureau et mobile, aucun débordement horizontal, crédits lisibles. Les quatre images FineBindery ont été vérifiées en anglais, français, allemand, italien et espagnol. Vérifications vertes : 220 fichiers Vitest / 2 992 tests, typecheck, lint sans erreur et build Vite/Nitro.
+- Aucun atelier Ferrière identifiable n'existe parmi les trois ateliers actuellement approuvés en production. Aucune image n'a donc été injectée dans une photothèque privée et aucune donnée de production n'a été modifiée. PR #36 ouverte, fusionnable et CI `quality` verte, sans migration ; attendre une autorisation explicite avant fusion et déploiement.

@@ -23,7 +23,7 @@ export const en: FineBinderyPublicCopy = {
       { title: "The right French hands", body: "Your project goes to the workshop whose skills match it." },
       { title: "One point of contact", body: "Fine Bindery follows the project from the first photograph to its return home." },
     ],
-    offersEyebrow: "What we do", offersTitle: "Four ways to entrust your book.", offers: [
+    offersEyebrow: "What we do", offersTitle: "Four ways to entrust your book.", photoCredit: "Photographs", offers: [
       { title: "Fine binding", body: "Traditional and contemporary bindings in leather, cloth and fine materials." },
       { title: "Book restoration", body: "Careful restoration and conservation of old, valuable and meaningful books." },
       { title: "Collector rebinding", body: "Transform a favourite or collectible edition into a unique object." },
