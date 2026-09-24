@@ -14,7 +14,7 @@ export function FineBinderyIntakeCta({ locale, slug, variant = "solid", size = "
 }
 
 function Wordmark({ locale }: { locale: FineBinderyLocale }) {
-  return <a href={fineBinderyHomePath(locale)} className="inline-flex shrink-0 flex-col leading-none" aria-label={`${BRAND.displayName} — home`}><span className="mr-title text-[1.35rem] text-mr-ink sm:text-[1.5rem]">{BRAND.displayName}</span><span aria-hidden="true" className="mt-1.5 h-px w-8 bg-mr-brass" /></a>;
+  return <a href={fineBinderyHomePath(locale)} className="inline-flex shrink-0 flex-col leading-none" aria-label={`${BRAND.displayName} — home`}><span className="mr-title text-[1.35rem] text-mr-ink sm:text-[1.5rem]">{BRAND.displayName}</span><span aria-hidden="true" className="mt-1.5 h-px w-8 bg-mr-bordeaux" /></a>;
 }
 
 function navigation(locale: FineBinderyLocale) {

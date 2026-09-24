@@ -143,7 +143,7 @@ function VagueRequestProblem() {
 
 function HowItWorks() {
   return (
-    <section id="comment-ca-marche-relieur" className="scroll-mt-24 bg-mr-paper-warm">
+    <section id="comment-ca-marche-relieur" className="scroll-mt-36 lg:scroll-mt-28 bg-mr-paper-warm">
       <div className={`${SHELL} py-section-sm sm:py-section`}>
         <SectionHead eyebrow="Le parcours d'un projet" title="De la présentation du livre à son retour." />
         <ol className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3">
@@ -205,7 +205,7 @@ function DecisionsExample() {
           lead="Une question posée au client (couleur, matière, texte de dorure) devient une décision datée et conservée dans le dossier — exemple ci-dessous, pas une donnée réelle."
         />
         <div className="mt-12 max-w-[30rem] border border-mr-rule-strong bg-mr-paper p-5 lg:mt-16">
-          <p className="mr-meta text-mr-brass">Décision · Action requise</p>
+          <p className="mr-meta text-mr-bordeaux">Décision · Action requise</p>
           <p className="mr-body mt-2 font-medium text-mr-ink">
             Quelle couleur de cuir pour la reliure ?
           </p>
@@ -527,7 +527,7 @@ function ApplicationForm() {
   }
 
   return (
-    <section id="candidature" className="scroll-mt-24 bg-mr-paper-warm">
+    <section id="candidature" className="scroll-mt-36 lg:scroll-mt-28 bg-mr-paper-warm">
       <div className={`${SHELL} py-section-sm sm:py-section`}>
         <SectionHead
           eyebrow="Sans compte"

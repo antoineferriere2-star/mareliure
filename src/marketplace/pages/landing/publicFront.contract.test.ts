@@ -85,3 +85,34 @@ describe("l'image de partage", () => {
     expect(ROOT).toContain('{ property: "og:locale", content: "fr_FR" }');
   });
 });
+
+describe("lot 2 — filet, entête mobile, contrastes", () => {
+  const walk = (dir: string): string[] =>
+    readdirSync(resolve(process.cwd(), dir), { withFileTypes: true }).flatMap((entry) =>
+      entry.isDirectory() ? walk(`${dir}/${entry.name}`) : /\.(tsx?|css)$/.test(entry.name) ? [`${dir}/${entry.name}`] : [],
+    );
+
+  it("n'emploie plus aucune couleur mr-brass, retirée de la palette : un filet invisible n'est pas un filet", () => {
+    const offenders = walk("src").filter((file) => !file.endsWith(".test.ts") && /\bmr-brass\b/.test(read(file)));
+    expect(offenders).toEqual([]);
+    expect(read("src/marketplace/pages/landing/LandingChrome.tsx")).toContain('className="mt-1.5 h-px w-8 bg-mr-bordeaux"');
+    // Parcourt tout `src/` : ~1 s seul, bien plus sous une suite complète chargée.
+  }, 30_000);
+
+  it("propose Tarifs et l'accès au compte dans l'entête mobile", () => {
+    const CHROME = read("src/marketplace/pages/landing/LandingChrome.tsx");
+    const mobileNav = CHROME.slice(CHROME.indexOf('aria-label="Navigation mobile"'));
+    expect(mobileNav).toContain('className="border-t border-mr-rule/70 lg:hidden"');
+    expect(mobileNav.slice(0, 600)).toContain('href="/tarifs"');
+    expect(mobileNav.slice(0, 600)).toContain('href="/auth"');
+  });
+
+  it.each([
+    "src/marketplace/pages/TarifsPage.tsx",
+    "src/marketplace/pages/ReliureLanding.tsx",
+    "src/marketplace/pages/partners/PartnersLanding.tsx",
+    "src/marketplace/pages/landing/LandingChrome.tsx",
+  ])("%s n'écrit aucun texte sous 50 %% d'encre (contraste < 4,5:1 sur le papier)", (file) => {
+    expect(read(file)).not.toMatch(/\btext-mr-(ink|graphite)\/[1-4]\d\b/);
+  });
+});
