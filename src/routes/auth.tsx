@@ -11,6 +11,7 @@ import { getMyBinderProfile, getMyPendingBinderInvitations } from "@/marketplace
 import { MaReliureAuthPage } from "@/marketplace/pages/auth/MaReliureAuthPage";
 import { isMaReliure } from "@/brand";
 import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBrand.server";
+import { isFineBinderyLocale, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 
 export const Route = createFileRoute("/auth")({
   ssr: false,
@@ -20,9 +21,10 @@ export const Route = createFileRoute("/auth")({
   // allow-list, so an attacker-crafted link cannot redirect anyone off-site.
   // The return type keeps `redirect` optional, so every other link to /auth
   // stays valid without passing a search object.
-  validateSearch: (search: Record<string, unknown>): { redirect?: string; space?: "atelier" } => ({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string; space?: "atelier"; locale?: FineBinderyLocale } => ({
     ...(typeof search.redirect === "string" ? { redirect: search.redirect } : {}),
     ...(search.space === "atelier" ? { space: "atelier" as const } : {}),
+    ...(isFineBinderyLocale(search.locale) ? { locale: search.locale } : {}),
   }),
   // Same seam as routes/index.tsx: only the marketplace deployment has two
   // brands to tell apart, so the server round-trip is skipped entirely on
@@ -62,7 +64,7 @@ type Audience = "client" | "team";
 
 function AuthPage() {
   const navigate = useNavigate();
-  const { redirect, space } = Route.useSearch();
+  const { redirect, space, locale } = Route.useSearch();
   const { brand } = Route.useLoaderData();
   const router = useRouter();
   const [audience, setAudience] = useState<Audience>("client");
@@ -134,6 +136,7 @@ function AuthPage() {
     return (
       <MaReliureAuthPage
         brand={brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE"}
+        fineBinderyLocale={locale ?? "en"}
         initialAudience={space === "atelier" ? "binder" : "customer"}
         accessError={accessError}
         routing={routing}

@@ -3,6 +3,7 @@ import { DEFAULT_LOCALE } from "@/build/i18n";
 import type { SupportedLocale } from "@/build/i18n";
 import { FR_PUBLIC_COPY } from "./frPublicCopy";
 import { EN_BOOKBINDING_COPY } from "./enBookbindingCopy";
+import { DE_FINE_BINDERY_COPY, ES_ES_FINE_BINDERY_COPY, IT_FINE_BINDERY_COPY } from "./fineBinderyEuropeanCopy";
 
 export type { SupportedLocale } from "@/build/i18n";
 
@@ -1010,6 +1011,9 @@ const DICTIONARIES: Partial<Record<SupportedLocale, Record<string, string>>> = {
   "es-US": ES_PUBLIC_COPY,
   "fr-FR": FR_PUBLIC_COPY,
   "en-US": EN_BOOKBINDING_COPY,
+  "de-DE": DE_FINE_BINDERY_COPY,
+  "it-IT": IT_FINE_BINDERY_COPY,
+  "es-ES": ES_ES_FINE_BINDERY_COPY,
 };
 
 /**

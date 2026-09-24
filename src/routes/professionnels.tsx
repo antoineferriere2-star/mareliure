@@ -23,5 +23,5 @@ export const Route = createFileRoute("/professionnels")({
 });
 
 function DirectoryRoute() {
-  return <FineBinderyDirectoryPage profiles={Route.useLoaderData()} />;
+  return <FineBinderyDirectoryPage profiles={Route.useLoaderData()} locale="en" />;
 }

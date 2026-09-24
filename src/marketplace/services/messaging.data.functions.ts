@@ -60,7 +60,7 @@ async function loadConversationFacts(sb: Supa, caseId: string): Promise<Conversa
 
 /** `null` brand (row missing/unrecognized) falls back to Ma Reliure — never Fine Bindery by default, same rule as brandConfig.ts. */
 async function loadCaseBrand(sb: Supa, caseId: string) {
-  const { data } = await sb.from("marketplace_cases").select("brand").eq("id", caseId).maybeSingle();
+  const { data } = await sb.from("marketplace_cases").select("brand, preferred_language").eq("id", caseId).maybeSingle();
   const { isMarketplaceBrand, marketplaceBrandConfig, canonicalHome } = await import(
     "@/marketplace/brand/brandConfig"
   );
@@ -70,7 +70,7 @@ async function loadCaseBrand(sb: Supa, caseId: string) {
   return {
     brand,
     brandName: config.displayName,
-    locale: config.defaultLocale,
+    locale: data?.preferred_language === "de" ? "de-DE" : data?.preferred_language === "it" ? "it-IT" : data?.preferred_language === "es" ? "es-ES" : data?.preferred_language === "fr" ? "fr-FR" : config.defaultLocale,
     directWorkshopMessaging: config.messaging.customerWorkshopDirectMessaging,
     origin: canonicalHome(brand).replace(/\/+$/, ""),
   };
@@ -105,18 +105,21 @@ async function notifyCustomerOfNewMessage(
     const email = auth?.user?.email;
     if (!email) return;
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
-    const isEn = locale === "en-US";
+    const activity = {
+      "en-US": { heading: "New message about your project", concierge: `Your ${brandName} concierge wrote to you about your book.`, direct: `Your workshop or ${brandName} wrote to you about your book.`, cta: "View the conversation" },
+      "fr-FR": { heading: "Nouveau message au sujet de votre projet", concierge: `Votre interlocuteur ${brandName} vous a écrit au sujet de votre livre.`, direct: `Votre atelier ou ${brandName} vous a écrit au sujet de votre livre.`, cta: "Voir la conversation" },
+      "de-DE": { heading: "Neue Nachricht zu Ihrem Projekt", concierge: `Ihre Ansprechperson bei ${brandName} hat Ihnen zu Ihrem Buch geschrieben.`, direct: `Ihre Werkstatt oder ${brandName} hat Ihnen zu Ihrem Buch geschrieben.`, cta: "Unterhaltung ansehen" },
+      "it-IT": { heading: "Nuovo messaggio sul tuo progetto", concierge: `Il tuo referente ${brandName} ti ha scritto riguardo al libro.`, direct: `Il laboratorio o ${brandName} ti ha scritto riguardo al libro.`, cta: "Vedi la conversazione" },
+      "es-ES": { heading: "Nuevo mensaje sobre tu proyecto", concierge: `Tu interlocutor de ${brandName} te ha escrito sobre el libro.`, direct: `El taller o ${brandName} te ha escrito sobre el libro.`, cta: "Ver la conversación" },
+      "es-US": { heading: "Nuevo mensaje sobre tu proyecto", concierge: `Tu interlocutor de ${brandName} te ha escrito sobre el libro.`, direct: `El taller o ${brandName} te ha escrito sobre el libro.`, cta: "Ver la conversación" },
+    }[locale] ?? { heading: "New message about your project", concierge: `Your ${brandName} concierge wrote to you about your book.`, direct: `Your workshop or ${brandName} wrote to you about your book.`, cta: "View the conversation" };
     await sendTemplateEmail("case-activity", email, {
       templateData: {
         brandName,
         locale,
-        heading: isEn ? "New message about your project" : "Nouveau message sur votre projet",
-        intro: !directWorkshopMessaging
-          ? `Your ${brandName} concierge wrote to you about your book.`
-          : isEn
-            ? `Your workshop or ${brandName} wrote to you about your book.`
-            : `Votre atelier ou ${brandName} vous a écrit au sujet de votre livre.`,
-        ctaLabel: isEn ? "View the conversation" : "Voir la conversation",
+        heading: activity.heading,
+        intro: directWorkshopMessaging ? activity.direct : activity.concierge,
+        ctaLabel: activity.cta,
         ctaUrl: `${origin}/mes-livres/${caseId}`,
       },
       brand,

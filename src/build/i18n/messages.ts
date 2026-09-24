@@ -162,4 +162,7 @@ export const messagesByLocale: Record<SupportedLocale, Partial<TranslationMessag
   "en-US": enUSMessages,
   "es-US": esUSMessages,
   "fr-FR": frFRMessages,
+  "de-DE": {},
+  "it-IT": {},
+  "es-ES": esUSMessages,
 };

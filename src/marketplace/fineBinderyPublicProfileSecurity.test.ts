@@ -14,7 +14,7 @@ const PUBLIC_PAGES = readFileSync(
   resolve(process.cwd(), "src/marketplace/pages/fineBindery/PublicWorkshopPages.tsx"),
   "utf8",
 );
-const INTAKE_ROUTE = readFileSync(resolve(process.cwd(), "src/routes/m.$publicToken.tsx"), "utf8");
+const INTAKE_ROUTE = readFileSync(resolve(process.cwd(), "src/routes/$locale.project.tsx"), "utf8");
 
 describe("FineBindery public projection security", () => {
   it("serves only approved, explicitly published workshops", () => {
@@ -61,10 +61,11 @@ describe("FineBindery public projection security", () => {
     expect(reconciliation).not.toContain('fromFineBinderyProfile ? { brand: "FINE_BINDERY" }');
   });
 
-  it("opens the FineBindery Mission and preserves the French profile locale", () => {
-    expect(PUBLIC_PAGES).toContain("FINE_BINDERY_PUBLIC_TOKEN");
+  it("opens the FineBindery Mission and preserves every supported profile locale", () => {
     expect(PUBLIC_PAGES).not.toContain("BOOKBINDING_PUBLIC_TOKEN");
-    expect(INTAKE_ROUTE).toContain("isFrenchFineBinderyProfileIntake");
-    expect(INTAKE_ROUTE).toContain('initialLocale={isReliureIntake || isFrenchFineBinderyProfileIntake ? "fr-FR" : undefined}');
+    expect(INTAKE_ROUTE).toContain("FINE_BINDERY_PUBLIC_TOKEN");
+    expect(INTAKE_ROUTE).toContain("ENGINE_LOCALE[locale]");
+    expect(INTAKE_ROUTE).toContain("FINE_BINDERY_PREFERRED_LANGUAGE_KEY");
+    expect(INTAKE_ROUTE).toContain("FINE_BINDERY_SUBMISSION_LOCALE_KEY");
   });
 });

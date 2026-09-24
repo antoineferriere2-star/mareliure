@@ -23,6 +23,8 @@ import {
 import { isMaReliure } from "../brand";
 import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBrand.server";
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { getRequestFineBinderyLocale } from "@/marketplace/i18n/resolveFineBinderyLocale.server";
+import { HTML_LOCALE, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 
 /**
  * Les valeurs par défaut du document, par marque.
@@ -78,9 +80,9 @@ const FINE_BINDERY_BRAND = {
   schemas: [fineBinderyOrganizationSchema, fineBinderyWebsiteSchema],
 };
 
-function rootBrand(marketplaceBrand: MarketplaceBrand | null) {
+function rootBrand(marketplaceBrand: MarketplaceBrand | null, fineBinderyLocale: FineBinderyLocale | null = null) {
   if (!isMaReliure) return METRE_BRAND;
-  return marketplaceBrand === "FINE_BINDERY" ? FINE_BINDERY_BRAND : MARELIURE_BRAND;
+  return marketplaceBrand === "FINE_BINDERY" ? { ...FINE_BINDERY_BRAND, lang: fineBinderyLocale ? HTML_LOCALE[fineBinderyLocale] : FINE_BINDERY_BRAND.lang } : MARELIURE_BRAND;
 }
 
 function NotFoundComponent() {
@@ -146,9 +148,10 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()({
   loader: async () => ({
     marketplaceBrand: isMaReliure ? await getRequestMarketplaceBrand() : null,
+    fineBinderyLocale: isMaReliure ? await getRequestFineBinderyLocale() : null,
   }),
   head: ({ loaderData }) => {
-    const BRAND = rootBrand(loaderData?.marketplaceBrand ?? null);
+    const BRAND = rootBrand(loaderData?.marketplaceBrand ?? null, loaderData?.fineBinderyLocale ?? null);
     return {
       meta: [
         { charSet: "utf-8" },
@@ -189,8 +192,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
-  const { marketplaceBrand } = Route.useLoaderData();
-  const BRAND = rootBrand(marketplaceBrand);
+  const { marketplaceBrand, fineBinderyLocale } = Route.useLoaderData();
+  const BRAND = rootBrand(marketplaceBrand, fineBinderyLocale);
   return (
     <html lang={BRAND.lang} className={BRAND.themeClass}>
       <head>

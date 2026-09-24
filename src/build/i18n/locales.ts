@@ -6,7 +6,7 @@
  * different statements, and only Missions that declare `proposal.defaultLocale`
  * currently render in French.
  */
-export const SUPPORTED_LOCALES = ["en-US", "es-US", "fr-FR"] as const;
+export const SUPPORTED_LOCALES = ["en-US", "es-US", "fr-FR", "de-DE", "it-IT", "es-ES"] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 
 export const DEFAULT_LOCALE: SupportedLocale = "en-US";

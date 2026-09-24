@@ -23,7 +23,7 @@ import {
 } from "@react-email/components";
 import type { TemplateEntry } from "./registry";
 
-type Locale = "fr-FR" | "en-US";
+type Locale = "fr-FR" | "en-US" | "de-DE" | "it-IT" | "es-ES";
 
 interface CaseActivityEmailProps {
   brandName?: string;
@@ -37,10 +37,13 @@ interface CaseActivityEmailProps {
 const FALLBACK_CTA_LABEL: Record<Locale, string> = {
   "fr-FR": "Voir mon livre",
   "en-US": "View my book",
+  "de-DE": "Mein Buch ansehen",
+  "it-IT": "Vedi il mio libro",
+  "es-ES": "Ver mi libro",
 };
 
 function copyForLocale(locale: unknown): Locale {
-  return locale === "en-US" ? "en-US" : "fr-FR";
+  return locale === "fr-FR" || locale === "en-US" || locale === "de-DE" || locale === "it-IT" || locale === "es-ES" ? locale : "en-US";
 }
 
 const CaseActivityEmail = ({

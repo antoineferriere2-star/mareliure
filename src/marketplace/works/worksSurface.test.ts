@@ -41,9 +41,9 @@ describe("l'espace atelier", () => {
     for (const route of ["/atelier", "/atelier/ouvrages", "/atelier/devis", "/atelier/contacts", "/atelier/tarifs"]) {
       expect(LAYOUT, route).toMatch(new RegExp(`to(?:=|:)\\s*["']${route.replaceAll("/", "\\/")}["']`));
     }
-    expect(LAYOUT.indexOf("Devis")).toBeLessThan(LAYOUT.indexOf("Ouvrages"));
-    expect(LAYOUT).toContain("Messages");
-    expect(LAYOUT).toContain("Factures");
+    expect(LAYOUT.indexOf('key: "quotes"')).toBeLessThan(LAYOUT.indexOf('key: "books"'));
+    expect(LAYOUT).toContain('key: "messages"');
+    expect(LAYOUT).toContain('key: "invoices"');
   });
 
   it("garde le bouton de déconnexion de la PR #8, et des cibles tactiles de 44 px", () => {

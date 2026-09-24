@@ -37,6 +37,10 @@ import { Route as TarifsRouteImport } from './routes/tarifs'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as TermsOfSaleRouteImport } from './routes/terms-of-sale'
 import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
+import { Route as LocaleIndexRouteImport } from './routes/$locale.index'
+import { Route as LocaleSlugRouteImport } from './routes/$locale.$slug'
+import { Route as LocaleProfessionalsRouteImport } from './routes/$locale.professionals'
+import { Route as LocaleProjectRouteImport } from './routes/$locale.project'
 import { Route as AuthenticatedActiverMonAtelierRouteImport } from './routes/_authenticated/activer-mon-atelier'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
@@ -46,7 +50,6 @@ import { Route as AuthenticatedMesLivresRouteRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as ASlugRouteImport } from './routes/a.$slug'
 import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
-import { Route as FrSlugRouteImport } from './routes/fr.$slug'
 import { Route as InvitationAtelierTokenRouteImport } from './routes/invitation-atelier.$token'
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as ProjectSummaryAccessTokenRouteImport } from './routes/project-summary.$accessToken'
@@ -268,6 +271,26 @@ const TermsOfUseRoute = TermsOfUseRouteImport.update({
   path: '/terms-of-use',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocaleIndexRoute = LocaleIndexRouteImport.update({
+  id: '/$locale/',
+  path: '/$locale/',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleSlugRoute = LocaleSlugRouteImport.update({
+  id: '/$locale/$slug',
+  path: '/$locale/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleProfessionalsRoute = LocaleProfessionalsRouteImport.update({
+  id: '/$locale/professionals',
+  path: '/$locale/professionals',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleProjectRoute = LocaleProjectRouteImport.update({
+  id: '/$locale/project',
+  path: '/$locale/project',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedActiverMonAtelierRoute =
   AuthenticatedActiverMonAtelierRouteImport.update({
     id: '/activer-mon-atelier',
@@ -316,11 +339,6 @@ const ASlugRoute = ASlugRouteImport.update({
 const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
   id: '/demo/deck-project',
   path: '/demo/deck-project',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const FrSlugRoute = FrSlugRouteImport.update({
-  id: '/fr/$slug',
-  path: '/fr/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
 const InvitationAtelierTokenRoute = InvitationAtelierTokenRouteImport.update({
@@ -825,13 +843,16 @@ export interface FileRoutesByFullPath {
   '/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
   '/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/professionals': typeof LocaleProfessionalsRoute
+  '/$locale/project': typeof LocaleProjectRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
-  '/fr/$slug': typeof FrSlugRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/$locale/': typeof LocaleIndexRoute
   '/atelier/profil-public': typeof AuthenticatedAtelierProfilPublicRoute
   '/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
@@ -938,13 +959,16 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
+  '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/professionals': typeof LocaleProfessionalsRoute
+  '/$locale/project': typeof LocaleProjectRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
-  '/fr/$slug': typeof FrSlugRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/$locale': typeof LocaleIndexRoute
   '/atelier/profil-public': typeof AuthenticatedAtelierProfilPublicRoute
   '/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
@@ -1058,13 +1082,16 @@ export interface FileRoutesById {
   '/_authenticated/marketplace': typeof AuthenticatedMarketplaceRouteRouteWithChildren
   '/_authenticated/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
+  '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/professionals': typeof LocaleProfessionalsRoute
+  '/$locale/project': typeof LocaleProjectRoute
   '/_authenticated/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
-  '/fr/$slug': typeof FrSlugRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/$locale/': typeof LocaleIndexRoute
   '/_authenticated/atelier/profil-public': typeof AuthenticatedAtelierProfilPublicRoute
   '/_authenticated/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/_authenticated/build/activity': typeof AuthenticatedBuildActivityRoute
@@ -1179,13 +1206,16 @@ export interface FileRouteTypes {
     | '/marketplace'
     | '/mes-livres'
     | '/portal'
+    | '/$locale/$slug'
+    | '/$locale/professionals'
+    | '/$locale/project'
     | '/activer-mon-atelier'
     | '/a/$slug'
     | '/demo/deck-project'
-    | '/fr/$slug'
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/$locale/'
     | '/atelier/profil-public'
     | '/atelier/tarifs'
     | '/build/activity'
@@ -1292,13 +1322,16 @@ export interface FileRouteTypes {
     | '/terms'
     | '/terms-of-sale'
     | '/terms-of-use'
+    | '/$locale/$slug'
+    | '/$locale/professionals'
+    | '/$locale/project'
     | '/activer-mon-atelier'
     | '/a/$slug'
     | '/demo/deck-project'
-    | '/fr/$slug'
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/$locale'
     | '/atelier/profil-public'
     | '/atelier/tarifs'
     | '/build/activity'
@@ -1411,13 +1444,16 @@ export interface FileRouteTypes {
     | '/_authenticated/marketplace'
     | '/_authenticated/mes-livres'
     | '/_authenticated/portal'
+    | '/$locale/$slug'
+    | '/$locale/professionals'
+    | '/$locale/project'
     | '/_authenticated/activer-mon-atelier'
     | '/a/$slug'
     | '/demo/deck-project'
-    | '/fr/$slug'
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/$locale/'
     | '/_authenticated/atelier/profil-public'
     | '/_authenticated/atelier/tarifs'
     | '/_authenticated/build/activity'
@@ -1526,12 +1562,15 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   TermsOfSaleRoute: typeof TermsOfSaleRoute
   TermsOfUseRoute: typeof TermsOfUseRoute
+  LocaleSlugRoute: typeof LocaleSlugRoute
+  LocaleProfessionalsRoute: typeof LocaleProfessionalsRoute
+  LocaleProjectRoute: typeof LocaleProjectRoute
   ASlugRoute: typeof ASlugRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
-  FrSlugRoute: typeof FrSlugRoute
   InvitationAtelierTokenRoute: typeof InvitationAtelierTokenRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
   ProjectSummaryAccessTokenRoute: typeof ProjectSummaryAccessTokenRoute
+  LocaleIndexRoute: typeof LocaleIndexRoute
   ApiMarketplaceStripeHealthRoute: typeof ApiMarketplaceStripeHealthRoute
   ApiMarketplaceStripeWebhookRoute: typeof ApiMarketplaceStripeWebhookRoute
   ApiPublicAnalyzeSiteRoute: typeof ApiPublicAnalyzeSiteRoute
@@ -1748,6 +1787,34 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TermsOfUseRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$locale/': {
+      id: '/$locale/'
+      path: '/$locale'
+      fullPath: '/$locale/'
+      preLoaderRoute: typeof LocaleIndexRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/$slug': {
+      id: '/$locale/$slug'
+      path: '/$locale/$slug'
+      fullPath: '/$locale/$slug'
+      preLoaderRoute: typeof LocaleSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/professionals': {
+      id: '/$locale/professionals'
+      path: '/$locale/professionals'
+      fullPath: '/$locale/professionals'
+      preLoaderRoute: typeof LocaleProfessionalsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/project': {
+      id: '/$locale/project'
+      path: '/$locale/project'
+      fullPath: '/$locale/project'
+      preLoaderRoute: typeof LocaleProjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/activer-mon-atelier': {
       id: '/_authenticated/activer-mon-atelier'
       path: '/activer-mon-atelier'
@@ -1809,13 +1876,6 @@ declare module '@tanstack/react-router' {
       path: '/demo/deck-project'
       fullPath: '/demo/deck-project'
       preLoaderRoute: typeof DemoDeckProjectRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/fr/$slug': {
-      id: '/fr/$slug'
-      path: '/fr/$slug'
-      fullPath: '/fr/$slug'
-      preLoaderRoute: typeof FrSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/invitation-atelier/$token': {
@@ -2688,12 +2748,15 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   TermsOfSaleRoute: TermsOfSaleRoute,
   TermsOfUseRoute: TermsOfUseRoute,
+  LocaleSlugRoute: LocaleSlugRoute,
+  LocaleProfessionalsRoute: LocaleProfessionalsRoute,
+  LocaleProjectRoute: LocaleProjectRoute,
   ASlugRoute: ASlugRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
-  FrSlugRoute: FrSlugRoute,
   InvitationAtelierTokenRoute: InvitationAtelierTokenRoute,
   MPublicTokenRoute: MPublicTokenRoute,
   ProjectSummaryAccessTokenRoute: ProjectSummaryAccessTokenRoute,
+  LocaleIndexRoute: LocaleIndexRoute,
   ApiMarketplaceStripeHealthRoute: ApiMarketplaceStripeHealthRoute,
   ApiMarketplaceStripeWebhookRoute: ApiMarketplaceStripeWebhookRoute,
   ApiPublicAnalyzeSiteRoute: ApiPublicAnalyzeSiteRoute,
