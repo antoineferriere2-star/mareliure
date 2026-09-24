@@ -756,6 +756,15 @@ describe("devis accepté → facture", () => {
     expect(await listInvoices(world.sb, BINDER_A)).toHaveLength(1);
   });
 
+  it("la liste des factures porte l'échéance, et une facture annulée par avoir n'y attend plus de paiement", async () => {
+    const invoice = await issuedInvoice((await acceptedQuote()).id);
+    expect(await listInvoices(world.sb, BINDER_A)).toEqual([
+      expect.objectContaining({ id: invoice.id, status: "unpaid", dueDate: "2026-10-19" }),
+    ]);
+    world.tables.marketplace_binder_invoices.find((row) => row.id === invoice.id)!.status = "credited";
+    expect((await listInvoices(world.sb, BINDER_A))[0].status).toBe("credited");
+  });
+
   it("une facture exige l'identité complète : adresse, SIRET, TVA — un devis, non", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput({ addressLine1: null, siret: null, vatNumber: null }));
     const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY); // le devis, lui, n'est pas bloqué
