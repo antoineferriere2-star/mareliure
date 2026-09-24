@@ -26,6 +26,7 @@ import {
   PROJECT_PHOTOS_BUCKET,
   PROJECT_PHOTOS_MAX_FILE_SIZE_MB,
 } from "@/build/storage/projectPhotosBucket";
+import { runtimeSessionMetadataError } from "@/build/runtime/sessionMetadata";
 
 type Supa = SupabaseClient<Database>;
 
@@ -345,6 +346,11 @@ export async function handleSaveSession(
   // submit-time concern only (an interim autosave may legitimately be blank).
   const fieldErrors: Record<string, string> = {};
   for (const [key, value] of Object.entries(answers)) {
+    const metadataError = runtimeSessionMetadataError(key, value);
+    if (metadataError !== undefined) {
+      if (metadataError) fieldErrors[key] = metadataError;
+      continue;
+    }
     const field = findFieldByKey(schema, key);
     if (!field) {
       fieldErrors[key] = "Unknown field.";
@@ -414,6 +420,10 @@ export async function handleSubmitSession(
   // Full validation: every currently-visible field must satisfy its own
   // rules (required, not-sure, format) before a Dossier can be created.
   const fieldErrors: Record<string, string> = {};
+  for (const [key, value] of Object.entries(finalAnswers)) {
+    const metadataError = runtimeSessionMetadataError(key, value);
+    if (metadataError) fieldErrors[key] = metadataError;
+  }
   for (const { visibleFields } of computeVisibleSteps(schema, finalAnswers)) {
     for (const field of visibleFields) {
       const error = validateField(field, finalAnswers[field.key]);

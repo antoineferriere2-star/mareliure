@@ -12,9 +12,16 @@ import { bpsToPercentInput, parsePercentToBps } from "@/marketplace/quotes/quote
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
 import { PricingCatalogEditor } from "./catalog/PricingCatalogEditor";
+import { OperationPhotoLibrary } from "./catalog/OperationPhotoLibrary";
 import { CATALOG_KEY, PRICING_CATALOG_KEY, PROFILE_QUERY_KEY, profileToInput } from "./quoteQueryKeys";
 import { BinderPageHeader } from "../BinderPageUi";
 import { DOCUMENT_ACCENT_COLORS, DOCUMENT_LOGO_MAX_BYTES, DOCUMENT_LOGO_MIME_TYPES, type DocumentLogoMime } from "@/marketplace/quotes/documentBranding";
+
+const HEADINGS = {
+  documents: { tab: "Devis & documents", title: "Devis & documents", description: "Configurez ce que vos clients verront. Les devis déjà créés conservent toujours leur snapshot." },
+  services: { tab: "Prestations & tarifs", title: "Mes prestations et mes prix", description: "Adaptez la grille Ma Reliure à votre atelier. Vos documents existants restent inchangés." },
+  photos: { tab: "Photos d'exemple", title: "Mes photos d'exemple", description: "Vos réalisations, rangées par opération, proposées automatiquement dans vos devis." },
+} as const;
 
 export function TarifsPage() {
   const fetchProfile = useServerFn(getBillingProfile);
@@ -23,7 +30,7 @@ export function TarifsPage() {
   const profile = useQuery({ queryKey: PROFILE_QUERY_KEY, queryFn: () => fetchProfile() });
   const catalog = useQuery({ queryKey: CATALOG_KEY, queryFn: () => fetchCatalog({ data: {} }) });
   const pricingCatalog = useQuery({ queryKey: PRICING_CATALOG_KEY, queryFn: () => fetchPricingCatalog() });
-  const [section, setSection] = useState<"documents" | "services">("documents");
+  const [section, setSection] = useState<"documents" | "services" | "photos">("documents");
 
   if (profile.isPending || catalog.isPending || pricingCatalog.isPending) {
     return (
@@ -38,12 +45,13 @@ export function TarifsPage() {
 
   return (
     <div className="space-y-8">
-      <BinderPageHeader eyebrow="Paramètres atelier" title={section === "documents" ? "Devis & documents" : "Mes prestations et mes prix"} description={section === "documents" ? "Configurez ce que vos clients verront. Les devis déjà créés conservent toujours leur snapshot." : "Adaptez la grille Ma Reliure à votre atelier. Vos documents existants restent inchangés."} />
-      <div role="tablist" aria-label="Paramètres de l'atelier" className="flex gap-6 border-b border-[#cfc5b6]">
-        <button role="tab" aria-selected={section === "documents"} type="button" onClick={() => setSection("documents")} className={`-mb-px min-h-12 border-b-2 text-sm font-semibold ${section === "documents" ? "border-[#7a2230] text-[#241a12]" : "border-transparent text-[#74695d]"}`}>Devis & documents</button>
-        <button role="tab" aria-selected={section === "services"} type="button" onClick={() => setSection("services")} className={`-mb-px min-h-12 border-b-2 text-sm font-semibold ${section === "services" ? "border-[#7a2230] text-[#241a12]" : "border-transparent text-[#74695d]"}`}>Prestations & tarifs</button>
+      <BinderPageHeader eyebrow="Paramètres atelier" title={HEADINGS[section].title} description={HEADINGS[section].description} />
+      <div role="tablist" aria-label="Paramètres de l'atelier" className="flex gap-6 overflow-x-auto border-b border-[#cfc5b6]">
+        {(["documents", "services", "photos"] as const).map((key) => (
+          <button key={key} role="tab" aria-selected={section === key} type="button" onClick={() => setSection(key)} className={`-mb-px min-h-12 shrink-0 border-b-2 text-sm font-semibold ${section === key ? "border-[#7a2230] text-[#241a12]" : "border-transparent text-[#74695d]"}`}>{HEADINGS[key].tab}</button>
+        ))}
       </div>
-      {section === "documents" ? <ProfileForm profile={profile.data} /> : <PricingCatalogEditor items={pricingCatalog.data} services={catalog.data.services} />}
+      {section === "documents" ? <ProfileForm profile={profile.data} /> : section === "services" ? <PricingCatalogEditor items={pricingCatalog.data} services={catalog.data.services} /> : <OperationPhotoLibrary items={pricingCatalog.data} services={catalog.data.services} />}
     </div>
   );
 }

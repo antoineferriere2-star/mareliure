@@ -10,6 +10,7 @@
 import { describe, expect, it, beforeEach } from "vitest";
 import {
   archiveService,
+  attachOperationPhotoToQuoteItem,
   BinderQuotesError,
   clearDocumentLogo,
   convertQuoteToInvoice,
@@ -33,6 +34,8 @@ import {
   updateInvoiceDraft,
   uploadDocumentLogo,
 } from "./binderQuotes.server";
+import { deleteOperationPhoto, listOperationPhotos, updateOperationPhotoCaption, uploadOperationPhoto } from "./binderOperationPhotos.server";
+import { QUOTE_OPERATION_PHOTOS_BUCKET } from "@/marketplace/quotes/quotePhotos";
 import { QUOTE_ITEM_ROW_KEYS, QUOTE_ROW_KEYS } from "@/marketplace/quotes/quoteBuild";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
 import type { BillingProfileInput, QuoteInput } from "@/marketplace/quotes/quoteInput";
@@ -52,7 +55,7 @@ function makeDb() {
   const rows = (t: string) => (tables[t] ??= []);
 
   function from(table: string) {
-    let op: "select" | "insert" | "update" | "upsert" = "select";
+    let op: "select" | "insert" | "update" | "upsert" | "delete" = "select";
     let values: any;
     let onConflict: string | undefined;
     const filters: ((r: Row) => boolean)[] = [];
@@ -81,6 +84,7 @@ function makeDb() {
       } else {
         result = rows(table).filter((r) => filters.every((f) => f(r)));
         if (op === "update") result.forEach((r) => Object.assign(r, values));
+        if (op === "delete") tables[table] = rows(table).filter((r) => !result.includes(r));
         if (order) result = [...result].sort((a, b) => (a[order!.col] > b[order!.col] ? 1 : -1) * (order!.asc ? 1 : -1));
         result = result.slice(0, max);
       }
@@ -91,6 +95,7 @@ function makeDb() {
       select: () => q,
       insert: (v: any) => ((op = "insert"), (values = v), q),
       update: (v: any) => ((op = "update"), (values = v), q),
+      delete: () => ((op = "delete"), q),
       upsert: (v: any, o?: { onConflict?: string }) => ((op = "upsert"), (values = v), (onConflict = o?.onConflict), q),
       eq: (col: string, v: any) => (filters.push((r) => r[col] === v), q),
       in: (col: string, v: any[]) => (filters.push((r) => v.includes(r[col])), q),
@@ -190,6 +195,13 @@ function makeDb() {
       },
       remove: async (paths: string[]) => {
         paths.forEach((path) => storageFiles.delete(`${bucket}/${path}`));
+        return { error: null };
+      },
+      copy: async (fromPath: string, toPath: string) => {
+        const source = storageFiles.get(`${bucket}/${fromPath}`);
+        if (!source) return { error: { message: "not found" } };
+        if (storageFiles.has(`${bucket}/${toPath}`)) return { error: { message: "exists" } };
+        storageFiles.set(`${bucket}/${toPath}`, source);
         return { error: null };
       },
       createSignedUrl: async (path: string) => ({ data: { signedUrl: `https://storage.example/${bucket}/${path}` }, error: null }),
@@ -983,5 +995,79 @@ describe("PDF", () => {
     expect(pdf.pageCount).toBeGreaterThan(1);
     expect(pdf.printed.filter((t) => /page \d+\/\d+/.test(t))).toHaveLength(pdf.pageCount);
     expect(pdf.printed.join("\n")).toContain("Prestation 60");
+  });
+});
+
+describe("photos d'exemple par opération", () => {
+  const JPEG = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 1, 2, 3]).toString("base64");
+  const service = () => ({ id: null, categoryId: null, name: "Demi-cuir", description: null, unitPriceCents: 18000, vatRateBps: null, unit: null, isActive: true });
+  const upload = (binderId: string, target: { serviceId: string } | { pricingKey: string }, caption: string | null = null) =>
+    uploadOperationPhoto(world.sb, binderId, { target, mimeType: "image/jpeg", imageBase64: JPEG, caption });
+  const files = () => [...world.storageFiles.keys()];
+
+  it("range un exemple sous une prestation de l'atelier ou un tarif de base, dans le dossier privé de l'atelier", async () => {
+    const own = await saveService(world.sb, BINDER_A, service());
+    await upload(BINDER_A, { serviceId: own.id }, "Demi-cuir à coins");
+    await upload(BINDER_A, { pricingKey: "plein_cuir" });
+    const library = await listOperationPhotos(world.sb, BINDER_A);
+    // L'ordre n'a de sens qu'à l'intérieur d'une opération : les deux sont en position 1.
+    expect(library).toHaveLength(2);
+    expect(library).toEqual(expect.arrayContaining([
+      expect.objectContaining({ serviceId: own.id, pricingKey: null, caption: "Demi-cuir à coins", position: 1 }),
+      expect.objectContaining({ serviceId: null, pricingKey: "plein_cuir", caption: null, position: 1 }),
+    ]));
+    expect(files().every((key) => key.startsWith(`${QUOTE_OPERATION_PHOTOS_BUCKET}/${BINDER_A}/library/`))).toBe(true);
+    expect(await listOperationPhotos(world.sb, BINDER_B)).toEqual([]);
+  });
+
+  it("refuse la prestation d'un autre atelier, une clé de tarif inconnue et une septième photo", async () => {
+    const theirs = await saveService(world.sb, BINDER_B, service());
+    expect(await codeOf(upload(BINDER_A, { serviceId: theirs.id }))).toBe("not_found");
+    expect(await codeOf(upload(BINDER_A, { pricingKey: "cle_inventee" }))).toBe("invalid_input");
+    for (let i = 0; i < 6; i++) await upload(BINDER_A, { pricingKey: "plein_cuir" });
+    expect(await codeOf(upload(BINDER_A, { pricingKey: "plein_cuir" }))).toBe("invalid_input");
+    expect(files()).toHaveLength(6);
+  });
+
+  it("ne laisse ni lire, ni renommer, ni supprimer l'exemple d'un autre atelier", async () => {
+    const { id } = await upload(BINDER_B, { pricingKey: "plein_cuir" });
+    expect(await codeOf(updateOperationPhotoCaption(world.sb, BINDER_A, id, "volé"))).toBe("not_found");
+    expect(await codeOf(deleteOperationPhoto(world.sb, BINDER_A, id))).toBe("not_found");
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    const lineKey = world.tables.marketplace_binder_quote_items.find((row) => row.quote_id === quote.id)!.line_key;
+    expect(await codeOf(attachOperationPhotoToQuoteItem(world.sb, BINDER_A, { quoteId: quote.id, lineKey, photoId: id, caption: null, includeInPdf: true }))).toBe("not_found");
+    expect(world.tables.marketplace_binder_quote_item_photos ?? []).toEqual([]);
+  });
+
+  it("le devis reçoit une COPIE : supprimer l'exemple ne retire rien au devis", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    const lineKey = world.tables.marketplace_binder_quote_items.find((row) => row.quote_id === quote.id)!.line_key;
+    const { id } = await upload(BINDER_A, { pricingKey: "plein_cuir" }, "Maroquin rouge");
+    await attachOperationPhotoToQuoteItem(world.sb, BINDER_A, { quoteId: quote.id, lineKey, photoId: id, caption: "Maroquin rouge", includeInPdf: true });
+    await deleteOperationPhoto(world.sb, BINDER_A, id);
+
+    expect(await listOperationPhotos(world.sb, BINDER_A)).toEqual([]);
+    const reread = await getQuote(world.sb, BINDER_A, quote.id);
+    const photos = reread.items.flatMap((item) => item.photos);
+    expect(photos).toEqual([expect.objectContaining({ lineKey, caption: "Maroquin rouge", includeInPdf: true, position: 1 })]);
+    // Le fichier du devis vit sous le dossier du devis, et il existe toujours.
+    expect(files()).toEqual([expect.stringMatching(new RegExp(`/${BINDER_A}/${quote.id}/[^/]+[.]jpg$`))]);
+  });
+
+  it("ne complète qu'un brouillon, et jamais au-delà de six photos par ligne", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    const lineKey = world.tables.marketplace_binder_quote_items.find((row) => row.quote_id === quote.id)!.line_key;
+    const photoIds = [];
+    for (let i = 0; i < 6; i++) photoIds.push((await upload(BINDER_A, { pricingKey: i < 3 ? "plein_cuir" : "nerfs" })).id);
+    for (const photoId of photoIds.slice(0, 6)) await attachOperationPhotoToQuoteItem(world.sb, BINDER_A, { quoteId: quote.id, lineKey, photoId, caption: null, includeInPdf: false });
+    const extra = (await upload(BINDER_A, { pricingKey: "etui" })).id;
+    expect(await codeOf(attachOperationPhotoToQuoteItem(world.sb, BINDER_A, { quoteId: quote.id, lineKey, photoId: extra, caption: null, includeInPdf: true }))).toBe("invalid_input");
+
+    await setQuoteStatus(world.sb, BINDER_A, quote.id, "sent");
+    const otherLine = world.tables.marketplace_binder_quote_items.filter((row) => row.quote_id === quote.id)[1].line_key;
+    expect(await codeOf(attachOperationPhotoToQuoteItem(world.sb, BINDER_A, { quoteId: quote.id, lineKey: otherLine, photoId: extra, caption: null, includeInPdf: true }))).toBe("conflict");
   });
 });

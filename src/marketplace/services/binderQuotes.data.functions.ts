@@ -24,7 +24,14 @@ import {
 import { todayInParis } from "@/marketplace/quotes/quoteStatus";
 import { listBinderPricingCatalog } from "./binderPricingCatalog.server";
 import {
+  deleteOperationPhoto,
+  listOperationPhotos,
+  updateOperationPhotoCaption,
+  uploadOperationPhoto,
+} from "./binderOperationPhotos.server";
+import {
   archiveService,
+  attachOperationPhotoToQuoteItem,
   BinderQuotesError,
   convertQuoteToInvoice,
   createFullCreditNote,
@@ -218,6 +225,55 @@ export const uploadMyQuoteItemPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => quotePhotoInput.parse(data))
   .handler(({ context, data }) => run(context.userId, (binderId, sb) => uploadQuoteItemPhoto(sb, binderId, data)));
+
+// --- Photos d'exemple par opération ----------------------------------------------------
+
+const operationTarget = z.union([
+  z.object({ serviceId: z.string().uuid() }).strict(),
+  z.object({ pricingKey: z.string().trim().min(1).max(80) }).strict(),
+]);
+
+export const getMyOperationPhotos = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(({ context }) => run(context.userId, (binderId, sb) => listOperationPhotos(sb, binderId)));
+
+export const uploadMyOperationPhoto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({
+    target: operationTarget,
+    mimeType: z.enum(QUOTE_OPERATION_PHOTO_MIME_TYPES),
+    imageBase64: z.string().min(1).max(12_000_000),
+    caption: z.string().trim().max(300).nullable(),
+  }).strict().parse(data))
+  .handler(({ context, data }) => run(context.userId, (binderId, sb) => uploadOperationPhoto(sb, binderId, data)));
+
+export const updateMyOperationPhoto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), caption: z.string().trim().max(300).nullable() }).strict().parse(data))
+  .handler(({ context, data }) => run(context.userId, async (binderId, sb) => {
+    await updateOperationPhotoCaption(sb, binderId, data.id, data.caption || null);
+    return { ok: true as const };
+  }));
+
+export const deleteMyOperationPhoto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => id.parse(data))
+  .handler(({ context, data }) => run(context.userId, async (binderId, sb) => {
+    await deleteOperationPhoto(sb, binderId, data.id);
+    return { ok: true as const };
+  }));
+
+/** Copie un exemple de la bibliothèque sur une ligne d'un brouillon. */
+export const attachMyOperationPhoto = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({
+    quoteId: z.string().uuid(),
+    lineKey: z.string().trim().min(1).max(100),
+    photoId: z.string().uuid(),
+    caption: z.string().trim().max(300).nullable(),
+    includeInPdf: z.boolean(),
+  }).strict().parse(data))
+  .handler(({ context, data }) => run(context.userId, (binderId, sb) => attachOperationPhotoToQuoteItem(sb, binderId, data)));
 
 export const deleteMyQuoteItemPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
