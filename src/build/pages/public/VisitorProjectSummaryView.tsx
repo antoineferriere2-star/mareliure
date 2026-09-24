@@ -58,7 +58,7 @@ export function VisitorProjectSummaryView({
    */
   onStartNew?: () => void;
 }) {
-  const { locale } = usePublicLocale();
+  const { locale, supportsAuthoredProjectNarrative } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
 
   const projectItems = [
@@ -69,7 +69,7 @@ export function VisitorProjectSummaryView({
   const canvasItems = projectCanvasItemsFromSummary(summary, copy);
 
   const whatsNext =
-    summary.confirmationText ??
+    (supportsAuthoredProjectNarrative ? summary.confirmationText : null) ??
     copy("The team will review your project information and contact you to discuss the next step.");
 
   return (
@@ -90,7 +90,7 @@ export function VisitorProjectSummaryView({
 
         {/* Bloc 2 — Project Summary */}
         <Section title={copy("Project summary")}>
-          {summary.summary && (
+          {summary.summary && supportsAuthoredProjectNarrative && (
             <p className="mb-3 text-base leading-7 text-stone-700">{summary.summary}</p>
           )}
           {projectItems.length > 0 ? (

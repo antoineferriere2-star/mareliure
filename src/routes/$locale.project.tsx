@@ -21,5 +21,5 @@ function FineBinderyProjectRoute() {
   const seedAnswers = useMemo(() => isFineBinderyLocale(locale) ? { [FINE_BINDERY_SUBMISSION_LOCALE_KEY]: locale, [FINE_BINDERY_PREFERRED_LANGUAGE_KEY]: locale, ...(ref ? { [REFERRAL_ANSWER_KEY]: ref } : {}), ...(source === PROFILE_REQUEST_SOURCE ? { [PROFILE_SOURCE_ANSWER_KEY]: source } : {}) } : undefined, [locale, ref, source]);
   if (!isFineBinderyLocale(locale)) return null;
   const afterSubmission = ({ visitorEmail }: { visitorEmail: string | null }): ReactNode => <CustomerSpaceOffer email={visitorEmail} publicToken={FINE_BINDERY_PUBLIC_TOKEN} />;
-  return <MissionRuntime publicToken={FINE_BINDERY_PUBLIC_TOKEN} renderAfterSubmission={afterSubmission} seedAnswers={seedAnswers} initialLocale={ENGINE_LOCALE[locale]} />;
+  return <MissionRuntime publicToken={FINE_BINDERY_PUBLIC_TOKEN} renderAfterSubmission={afterSubmission} seedAnswers={seedAnswers} initialLocale={ENGINE_LOCALE[locale]} routeLocaleWins />;
 }

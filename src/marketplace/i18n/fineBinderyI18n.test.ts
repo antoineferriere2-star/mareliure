@@ -4,6 +4,9 @@ import { fineBinderyCopy } from "./fineBinderyCopy";
 import { FINE_BINDERY_LOCALES, fineBinderyAlternates, fineBinderyProfilePath, replaceFineBinderyLocale } from "./fineBinderyLocale";
 import { FINE_BINDERY_TRANSLATED_SERVICE_KEYS, languageName, serviceName, specialtyName } from "./fineBinderyGlossary";
 import { formatFineBinderyMoney, formatFineBinderyPrice } from "./fineBinderyFormat";
+import { EN_BOOKBINDING_COPY } from "@/build/pages/public/enBookbindingCopy";
+import { DE_FINE_BINDERY_COPY, ES_ES_FINE_BINDERY_COPY, IT_FINE_BINDERY_COPY } from "@/build/pages/public/fineBinderyEuropeanCopy";
+import { publicCopy } from "@/build/pages/public/publicLocaleContext";
 
 describe("FineBindery European i18n", () => {
   it("formats EUR with the active regional convention", () => {
@@ -44,5 +47,36 @@ describe("FineBindery European i18n", () => {
     expect(languageName("de", "de")).toBe("Deutsch");
     expect(languageName("de", "it")).toBe("Tedesco");
     expect(specialtyName("plein_cuir", "es")).toBe("Plena piel");
+  });
+
+  it("does not silently fall back to English in the European book journey", () => {
+    const allowedIdentical = {
+      "de-DE": new Set(["Matière", "Nom"]),
+      "it-IT": new Set(["150 – 250 €", "250 – 400 €", "400 – 700 €"]),
+      "es-ES": new Set(["Matière"]),
+    };
+    const dictionaries = {
+      "de-DE": DE_FINE_BINDERY_COPY,
+      "it-IT": IT_FINE_BINDERY_COPY,
+      "es-ES": ES_ES_FINE_BINDERY_COPY,
+    };
+
+    for (const [locale, dictionary] of Object.entries(dictionaries)) {
+      const unchanged = Object.entries(EN_BOOKBINDING_COPY)
+        .filter(([key, english]) => key !== english && dictionary[key] === english)
+        .map(([key]) => key);
+      expect(new Set(unchanged), locale).toEqual(allowedIdentical[locale as keyof typeof allowedIdentical]);
+    }
+
+    for (const locale of ["de-DE", "it-IT", "es-ES"] as const) {
+      for (const text of [
+        "Please check the following before continuing:",
+        "Project sent",
+        "Your project summary is ready",
+        "Still to confirm",
+        "What happens next",
+        '"{field}" is required.',
+      ]) expect(publicCopy(locale, text), `${locale}: ${text}`).not.toBe(text);
+    }
   });
 });

@@ -12,6 +12,7 @@ export const PUBLIC_LOCALE_STORAGE_KEY = "metre-build-public-locale";
 export interface PublicLocaleContextValue {
   locale: SupportedLocale;
   setLocale: (locale: SupportedLocale) => void;
+  supportsAuthoredProjectNarrative: boolean;
   /**
    * True when the surface itself dictates the language — a Mission that
    * declares `proposal.defaultLocale`. The visitor's own site-wide preference
@@ -42,7 +43,12 @@ export function usePublicLocale() {
 
 export function useOptionalPublicLocale() {
   const context = useContext(PublicLocaleContext);
-  return context ?? { locale: DEFAULT_LOCALE, setLocale: () => undefined, locked: false };
+  return context ?? {
+    locale: DEFAULT_LOCALE,
+    setLocale: () => undefined,
+    supportsAuthoredProjectNarrative: true,
+    locked: false,
+  };
 }
 
 export const ES_PUBLIC_COPY: Record<string, string> = {
@@ -1013,7 +1019,7 @@ const DICTIONARIES: Partial<Record<SupportedLocale, Record<string, string>>> = {
   "en-US": EN_BOOKBINDING_COPY,
   "de-DE": DE_FINE_BINDERY_COPY,
   "it-IT": IT_FINE_BINDERY_COPY,
-  "es-ES": ES_ES_FINE_BINDERY_COPY,
+  "es-ES": { ...ES_PUBLIC_COPY, ...ES_ES_FINE_BINDERY_COPY },
 };
 
 /**
