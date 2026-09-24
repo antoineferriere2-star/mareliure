@@ -942,7 +942,7 @@ export async function createFullCreditNote(sb: Supa, binderId: string, invoiceId
 export async function listInvoices(sb: Supa, binderId: string): Promise<DocumentSummary[]> {
   const { data, error } = await sb
     .from("marketplace_binder_invoices")
-    .select("id, invoice_number, status, issue_date, client_name, book_title, total_ttc_cents, currency, payment_status")
+    .select("id, invoice_number, status, issue_date, due_date, client_name, book_title, total_ttc_cents, currency, payment_status")
     .eq("binder_id", binderId)
     .order("created_at", { ascending: false });
   if (error) throw new BinderQuotesError("failed");
@@ -950,8 +950,10 @@ export async function listInvoices(sb: Supa, binderId: string): Promise<Document
     kind: "invoice" as const,
     id: row.id,
     number: row.invoice_number ?? "Brouillon",
-    status: row.status === "draft" ? "draft" : row.payment_status,
+    // Une facture annulée par un avoir n'attend plus aucun paiement : elle ne se lit pas « Non payée ».
+    status: row.status === "draft" || row.status === "credited" ? row.status : row.payment_status,
     issueDate: row.issue_date,
+    dueDate: row.due_date ?? null,
     validUntil: null,
     clientName: row.client_name,
     bookTitle: row.book_title,

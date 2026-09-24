@@ -39,7 +39,7 @@ export function QuoteStatusBadge({ status, validUntil }: { status: QuoteStatus; 
   );
 }
 
-export const PAYMENT_LABELS = { unpaid: "Non payée", deposit_paid: "Acompte payé", paid: "Payée" } as const;
+export const PAYMENT_LABELS = { unpaid: "Non payée", deposit_paid: "Acompte payé", paid: "Payée", credited: "Annulée par avoir" } as const;
 
 export function Field({ label, htmlFor, children, hint }: { label: string; htmlFor: string; children: ReactNode; hint?: string }) {
   return (
