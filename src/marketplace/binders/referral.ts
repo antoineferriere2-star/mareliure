@@ -51,4 +51,4 @@ export function slugify(workshopName: string): string {
  * property `visitorEmailFrom` already relies on for the real `email` field).
  * `reconcileCaseTriage` is the only reader, and only once per case.
  */
-export const REFERRAL_ANSWER_KEY = "_referral_slug";
+export { REFERRAL_ANSWER_KEY } from "@/build/runtime/sessionMetadata";
