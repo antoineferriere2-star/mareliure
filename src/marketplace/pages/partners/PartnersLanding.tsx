@@ -1,29 +1,37 @@
 /**
- * `/partenaires-relieurs` — la page qui recrute des ateliers, pas celle qui
- * recrute des clients (ReliureLanding.tsx). Même conteneur, même typographie,
- * même interdiction de chiffre inventé (§59 partagé avec la landing) : aucun
- * nombre d'ateliers, aucun témoignage, aucun logo, parce qu'aucun n'est réel
- * au lancement.
+ * `/partenaires-relieurs` — la page produit de l'espace atelier.
  *
- * Deux sections sont volontairement écrites au futur : la répartition 80/20
- * (Stripe Connect n'est pas branché) et la vitrine `/ateliers/:slug` (jamais
- * construite). Le reste décrit ce qui existe déjà et fonctionne en
- * production : invitation de membres, messagerie, décisions, lien de parrainage
- * personnel.
+ * Elle présentait surtout le réseau, en vingt et une sections. Elle montre
+ * désormais d'abord l'outil, tel qu'il existe : devis, tarifs, ouvrages,
+ * documents et factures, en captures réelles de l'application (données
+ * d'exemple fictives, voir ProductShot). Le réseau vient ensuite, comme un
+ * supplément, puis la gratuité, la FAQ et la candidature.
+ *
+ * Même discipline que la landing : aucun nombre d'ateliers, aucun témoignage,
+ * aucun logo, parce qu'aucun n'est réel au lancement. Ce qui n'existe pas
+ * encore (le paiement en ligne des factures de l'atelier) est écrit comme tel.
  */
-import { useState, type FormEvent } from "react";
+import { useState, type FormEvent, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SHELL } from "@/marketplace/pages/landing/LandingChrome";
+import { ActionLink, actionClass } from "@/marketplace/pages/landing/actions";
+import { ProductShot, type ProductShotKey } from "@/marketplace/pages/landing/ProductShot";
 import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
 import { submitBinderApplication } from "@/marketplace/services/binderApplications.data.functions";
 import { BINDER_SKILLS } from "@/marketplace/binders/skills";
 import {
   BENEFITS,
+  DOCUMENT_POINTS,
+  FREE_INCLUDES,
   HOW_IT_WORKS_STEPS,
-  OFFER_ROWS,
   PARTNER_FAQ,
-  WORKSPACE_CAPABILITIES,
+  PRICING_POINTS,
+  QUOTE_POINTS,
+  TOOL_OVERVIEW,
+  WORK_POINTS,
 } from "@/marketplace/pages/landing/partnersContent";
+
+const CREATE_WORKSHOP = "/auth?space=atelier";
 
 export function PartnersLandingPage() {
   usePageViewTracking();
@@ -32,25 +40,39 @@ export function PartnersLandingPage() {
       <LandingHeader />
       <main>
         <Hero />
-        <Benefits />
-        <VagueRequestProblem />
-        <HowItWorks />
-        <Workspace />
-        <DecisionsExample />
-        <InviteYourClients />
-        <BackOffice />
-        <WorkshopShowcase />
-        <NoCustomSite />
-        <CollectiveSeo />
-        <Matching />
-        <Remuneration />
-        <PayoutSplit />
-        <UnexpectedIssues />
-        <TransportRisk />
-        <WhatWeLookFor />
-        <OfferSummary />
-        <ApplicationForm />
+        <Overview />
+        <Feature
+          id="devis"
+          eyebrow="Devis"
+          title="Un devis prêt en quelques clics."
+          lead="Ouvrez un devis, cochez ce que vous allez faire : vos prestations et vos prix sont déjà là, le total se construit sous vos yeux."
+          points={QUOTE_POINTS}
+          shot="devis"
+          tone="warm"
+        />
+        <Feature
+          id="tarifs"
+          eyebrow="Prestations & tarifs"
+          title="Vos tarifs, à votre main."
+          lead="Vous ne partez pas d'une page blanche, et vous n'héritez pas d'une grille imposée : ajustez ce qui ne vous ressemble pas, ajoutez ce qui vous est propre."
+          points={PRICING_POINTS}
+          shot="tarifs"
+          reverse
+        />
+        <Feature
+          id="ouvrages"
+          eyebrow="Ouvrages"
+          title="L’ouvrage au centre."
+          lead="Un livre, une fiche. Tout ce qui le concerne s'y rattache, du premier devis à la dernière facture."
+          points={WORK_POINTS}
+          shot="ouvrages"
+          tone="warm"
+        />
+        <Documents />
+        <Network />
+        <Pricing />
         <Faq />
+        <ApplicationForm />
         <FinalCta />
       </main>
       <LandingFooter />
@@ -61,129 +83,153 @@ export function PartnersLandingPage() {
 function Hero() {
   return (
     <section className={`${SHELL} pt-14 pb-16 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24`}>
-      <p className="mr-eyebrow">Pour les ateliers de reliure</p>
-      <h1 className="mr-display mt-6 max-w-[38rem] text-mr-ink">
-        Des projets qualifiés, pas des devis dans le vide.
-      </h1>
-      <p className="mr-lead mt-7 max-w-[36rem]">
-        Ma Reliure vous adresse des livres déjà photographiés, décrits et acceptés à un prix connu.
-        Vous gardez votre atelier, votre nom, et le choix d'accepter ou non chaque projet.
-      </p>
-      <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
-        <a href="/auth?space=atelier" className="mr-tap inline-flex items-center justify-center rounded-[2px] bg-mr-ink px-7 py-4 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-walnut">
-          Créer mon espace atelier
-        </a>
-        <a href="#comment-ca-marche-relieur" className="mr-link mr-tap text-[1.0625rem]">
-          Voir comment ça marche
-        </a>
+      <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-14">
+        <div className="lg:col-span-5">
+          <p className="mr-eyebrow">Pour les relieurs et restaurateurs</p>
+          <h1 className="mr-display mt-6 text-mr-ink">
+            Vos ouvrages, vos devis, vos clients. Dans un seul outil.
+          </h1>
+          <p className="mr-lead mt-7 max-w-[34rem]">
+            L’espace atelier de Ma Reliure réunit ce qui encombre les soirées : devis, tarifs,
+            fiches ouvrage et factures. Gratuit, et à votre nom.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <ActionLink href={CREATE_WORKSHOP}>Créer mon espace atelier</ActionLink>
+            <ActionLink href="#outil" variant="secondary">
+              Voir l’outil
+            </ActionLink>
+          </div>
+          <p className="mr-small mt-8 max-w-[34rem]">
+            0 € par mois <span aria-hidden="true">·</span> Vos clients restent les vôtres{" "}
+            <span aria-hidden="true">·</span> Des projets Ma Reliure en plus
+          </p>
+        </div>
+        <ProductShot shot="aujourdhui" priority className="lg:col-span-7" sizes="(min-width: 1024px) 720px, 100vw" />
       </div>
     </section>
   );
 }
 
-function Benefits() {
+function Overview() {
+  return (
+    <section id="outil" className="scroll-mt-36 border-t border-mr-rule lg:scroll-mt-28">
+      <div className={`${SHELL} py-12 sm:py-14`}>
+        <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10">
+          {TOOL_OVERVIEW.map((item) => (
+            <li key={item.anchor}>
+              <a href={`#${item.anchor}`} className="group block">
+                <span className="mr-heading text-mr-ink underline-offset-[6px] group-hover:underline">{item.title}</span>
+                <span className="mr-small mt-2 block">{item.body}</span>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </section>
+  );
+}
+
+/** Une fonction de l'outil : le texte d'un côté, sa capture réelle de l'autre. */
+function Feature({
+  id,
+  eyebrow,
+  title,
+  lead,
+  points,
+  shot,
+  reverse = false,
+  tone = "paper",
+}: {
+  id: string;
+  eyebrow: string;
+  title: string;
+  lead: string;
+  points: readonly string[];
+  shot: ProductShotKey;
+  reverse?: boolean;
+  tone?: "paper" | "warm";
+}) {
+  return (
+    <section id={id} className={`scroll-mt-36 lg:scroll-mt-28 ${tone === "warm" ? "bg-mr-paper-warm" : ""}`}>
+      <div className={`${SHELL} py-section-sm sm:py-section`}>
+        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className={`lg:col-span-5 ${reverse ? "lg:order-2" : ""}`}>
+            <SectionHead eyebrow={eyebrow} title={title} lead={lead} />
+            <Points items={points} />
+          </div>
+          <ProductShot shot={shot} className={`lg:col-span-7 ${reverse ? "lg:order-1" : ""}`} sizes="(min-width: 1024px) 700px, 100vw" />
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Points({ items, tone = "ink" }: { items: readonly string[]; tone?: "ink" | "paper" }) {
+  return (
+    <ul className="mt-8 space-y-3">
+      {items.map((item) => (
+        <li key={item} className="mr-body flex gap-3">
+          <span aria-hidden="true" className={`mt-[0.8em] h-px w-4 shrink-0 ${tone === "paper" ? "bg-mr-paper/60" : "bg-mr-bordeaux"}`} />
+          <span>{item}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function Documents() {
+  return (
+    <section id="factures" className="scroll-mt-36 lg:scroll-mt-28">
+      <div className={`${SHELL} py-section-sm sm:py-section`}>
+        <SectionHead
+          eyebrow="Documents & factures"
+          title="Des documents à votre nom, des factures en règle."
+          lead="Le devis part au nom de votre atelier. Accepté, il devient une facture sans rien ressaisir ; la facture suit ensuite l'acompte, le paiement et, s'il le faut, l'avoir."
+        />
+        <div className="mt-12 grid items-start gap-10 lg:mt-16 lg:grid-cols-12 lg:gap-12">
+          <ProductShot shot="pdf" className="lg:col-span-5" sizes="(min-width: 1024px) 480px, 100vw" caption="Devis PDF généré par l’outil — données d’exemple" />
+          <div className="lg:col-span-7">
+            <ProductShot shot="factures" sizes="(min-width: 1024px) 700px, 100vw" />
+            <Points items={DOCUMENT_POINTS} />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Network() {
   return (
     <section className="bg-mr-paper-warm">
       <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead
-          eyebrow="Ce que ça change"
-          title="Un atelier qui reçoit du travail, pas qui en cherche."
-        />
-        <div className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:mt-16">
-          {BENEFITS.map((benefit, index) => (
-            <div key={benefit.title} className="border-t border-mr-rule pt-5">
-              <span className="mr-meta tabular-nums">{String(index + 1).padStart(2, "0")}</span>
-              <h3 className="mr-heading mt-3 text-mr-ink">{benefit.title}</h3>
+        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-5">
+            <SectionHead
+              eyebrow="Le réseau Ma Reliure"
+              title="Des projets Ma Reliure, en plus des vôtres."
+              lead="Quand votre atelier est validé, Ma Reliure vous propose des livres qui correspondent à vos savoir-faire. Chaque proposition arrive complète, dans le même espace que vos propres clients."
+            />
+          </div>
+          <ProductShot shot="projets" className="lg:col-span-7" sizes="(min-width: 1024px) 700px, 100vw" />
+        </div>
+        <div className="mt-14 grid gap-x-12 gap-y-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-4">
+          {BENEFITS.map((benefit) => (
+            <div key={benefit.title} className="border-t border-mr-rule-strong pt-5">
+              <h3 className="mr-heading text-mr-ink">{benefit.title}</h3>
               <p className="mr-body mt-2">{benefit.body}</p>
             </div>
           ))}
         </div>
-      </div>
-    </section>
-  );
-}
-
-/**
- * Le problème que Ma Reliure résout, illustré plutôt qu'affirmé : deux
- * demandes, une vague et une qualifiée, côte à côte. Aucune n'est une capture
- * d'écran ni une citation réelle — un exemple générique, présenté comme tel.
- */
-function VagueRequestProblem() {
-  return (
-    <section className={`${SHELL} py-section-sm sm:py-section`}>
-      <SectionHead
-        eyebrow="Le problème habituel"
-        title="« Bonjour, j'ai un vieux livre abîmé, combien ça coûte ? »"
-        lead="Une demande par e-mail ou téléphone oblige à deviner l'état du livre, le travail réel et le budget de la personne avant de pouvoir répondre. Ma Reliure qualifie la demande avant de vous la transmettre."
-      />
-      <div className="mt-12 grid gap-6 lg:mt-16 lg:grid-cols-2">
-        <div className="border border-mr-rule-strong p-6">
-          <p className="mr-meta text-mr-muted">Exemple — demande non qualifiée</p>
-          <p className="mr-body mt-3 italic text-mr-graphite">
-            « Bonjour, j'ai un vieux livre abîmé, vous pouvez me dire combien ça coûte ? »
-          </p>
-          <p className="mr-small mt-4 text-mr-muted">
-            Ni photo, ni dimensions, ni degré d'urgence : impossible de chiffrer sans un échange
-            supplémentaire.
-          </p>
-        </div>
-        <div className="border border-mr-ink p-6">
-          <p className="mr-meta text-mr-muted">Ce que reçoit l'atelier via Ma Reliure</p>
-          <ul className="mr-body mt-3 space-y-2">
-            <li>Photographies du livre, sous plusieurs angles</li>
-            <li>Format, état général et travail demandé</li>
-            <li>Prix déjà accepté par le client</li>
-            <li>Délai souhaité</li>
-          </ul>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-function HowItWorks() {
-  return (
-    <section id="comment-ca-marche-relieur" className="scroll-mt-36 lg:scroll-mt-28 bg-mr-paper-warm">
-      <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead eyebrow="Le parcours d'un projet" title="De la présentation du livre à son retour." />
-        <ol className="mt-12 grid gap-x-10 gap-y-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3">
-          {HOW_IT_WORKS_STEPS.map((step) => (
-            <li key={step.index} className="border-t border-mr-rule-strong pt-5">
-              <span className="mr-meta tabular-nums">{step.index}</span>
-              <p className="mr-heading mt-3 text-mr-ink">{step.title}</p>
-            </li>
-          ))}
-        </ol>
-      </div>
-    </section>
-  );
-}
-
-/**
- * Pas de capture d'écran : aucun atelier réel ne s'est encore connecté à cet
- * espace en production, et en fabriquer une serait exactement l'interface
- * inventée que le brief interdit. La liste décrit ce que l'espace contient
- * réellement (services/marketplace.data.functions.ts, BinderDashboardPage).
- */
-function Workspace() {
-  return (
-    <section className={`${SHELL} py-section-sm sm:py-section`}>
-      <div className="grid gap-12 lg:grid-cols-12 lg:gap-14">
-        <div className="lg:col-span-5">
-          <SectionHead
-            eyebrow="Votre espace atelier"
-            title="Tout le suivi au même endroit."
-            lead="Un tableau de bord réunit les projets proposés, en cours et terminés — sans jongler entre e-mails, SMS et carnet papier."
-          />
-        </div>
-        <div className="lg:col-span-7">
-          <ul className="grid grid-cols-2 gap-x-8 gap-y-4 sm:grid-cols-4">
-            {WORKSPACE_CAPABILITIES.map((capability) => (
-              <li key={capability.label} className="border-t border-mr-rule-strong pt-4">
-                <span className="mr-small font-semibold text-mr-ink">{capability.label}</span>
+        <div className="mt-14 lg:mt-16">
+          <h3 className="mr-eyebrow">Le parcours d’un projet</h3>
+          <ol className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
+            {HOW_IT_WORKS_STEPS.map((step) => (
+              <li key={step.index} className="mr-body flex gap-4">
+                <span className="mr-meta tabular-nums">{step.index}</span>
+                <span className="text-mr-ink">{step.title}</span>
               </li>
             ))}
-          </ul>
+          </ol>
         </div>
       </div>
     </section>
@@ -191,249 +237,83 @@ function Workspace() {
 }
 
 /**
- * Mockup explicitement permis par le brief : illustrer la messagerie et les
- * décisions structurées sans capture réelle. Étiqueté comme un exemple, pas
- * une donnée.
+ * La gratuité, sur fond d'encre — la seule rupture sombre de la page.
+ *
+ * Le paiement en ligne des factures de l'atelier n'existe pas encore : il est
+ * annoncé comme tel, avec son tarif, jamais présenté comme disponible.
  */
-function DecisionsExample() {
+function Pricing() {
   return (
-    <section className="bg-mr-paper-warm">
-      <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead
-          eyebrow="Messages et décisions"
-          title="Chaque validation reste écrite, jamais perdue dans un échange oral."
-          lead="Une question posée au client (couleur, matière, texte de dorure) devient une décision datée et conservée dans le dossier — exemple ci-dessous, pas une donnée réelle."
-        />
-        <div className="mt-12 max-w-[30rem] border border-mr-rule-strong bg-mr-paper p-5 lg:mt-16">
-          <p className="mr-meta text-mr-bordeaux">Décision · Action requise</p>
-          <p className="mr-body mt-2 font-medium text-mr-ink">
-            Quelle couleur de cuir pour la reliure ?
-          </p>
-          <div className="mt-4 flex flex-wrap gap-2">
-            {["Bordeaux", "Noir", "Brun cognac"].map((option) => (
-              <span
-                key={option}
-                className="mr-small border border-mr-rule-strong px-3 py-1.5 text-mr-graphite"
-              >
-                {option}
-              </span>
-            ))}
-          </div>
-          <p className="mr-meta mt-4 text-mr-muted">Exemple illustratif — aucun dossier réel</p>
-        </div>
-      </div>
-    </section>
-  );
-}
-
-/**
- * Priorisée visuellement (fond encre, comme les engagements de la landing
- * client) : c'est l'argument le plus fort pour un atelier qui a déjà ses
- * propres clients et ne veut pas les perdre en les envoyant sur Ma Reliure.
- */
-function InviteYourClients() {
-  return (
-    <section className="bg-mr-ink text-mr-paper">
+    <section id="tarif" className="scroll-mt-36 bg-mr-ink text-mr-paper lg:scroll-mt-28">
       <div className={`${SHELL} py-section sm:py-section-lg`}>
-        <SectionHead
-          eyebrow="Vos propres clients"
-          title="Invitez vos clients, ils restent vos clients."
-          lead="Votre atelier a un lien personnel : mareliure.fr/a/votre-atelier. Un client que vous y envoyez présente son livre normalement, et le dossier arrive directement dans votre espace — jamais proposé à un autre atelier."
-          tone="paper"
-        />
-        <p className="mr-body mt-8 max-w-[38rem] text-mr-paper/90">
-          Vous gagnez le suivi structuré (messages, photos, décisions, rémunération) pour des
-          clients que vous avez trouvés vous-même, sans changer votre façon de travailler avec eux.
-        </p>
+        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+          <div className="lg:col-span-5">
+            <p className="mr-eyebrow">Tarif</p>
+            <h2 className="mr-title mt-4 text-mr-paper">Gratuit pour votre atelier.</h2>
+            <p className="mt-8 flex items-baseline gap-3">
+              <span className="font-editorial text-[4.5rem] leading-none tracking-[-0.03em] sm:text-[5.5rem]">0 €</span>
+              <span className="mr-lead">par mois, sans engagement</span>
+            </p>
+            <div className="mt-10">
+              <ActionLink href={CREATE_WORKSHOP} onInk>
+                Créer mon espace atelier
+              </ActionLink>
+            </div>
+          </div>
+          <div className="lg:col-span-7 lg:pt-3">
+            <h3 className="mr-eyebrow">Inclus</h3>
+            <ul className="mt-5 grid grid-cols-2 gap-x-8 gap-y-3 sm:grid-cols-3">
+              {FREE_INCLUDES.map((item) => (
+                <li key={item} className="mr-body border-t border-mr-paper/20 pt-3">
+                  {item}
+                </li>
+              ))}
+            </ul>
+            <dl className="mt-12 divide-y divide-mr-paper/20 border-y border-mr-paper/20">
+              <PriceRow term="Paiement direct" detail="Virement, chèque, espèces : vous encaissez comme aujourd’hui." value="0 €" />
+              <PriceRow term="Paiement en ligne" detail="Facultatif, en préparation : votre client paie sa facture par carte." value="3 %" note="du montant encaissé" />
+              <PriceRow term="Projets Ma Reliure" detail="Votre rémunération est annoncée avant que vous acceptiez le projet." value="Annoncée" />
+            </dl>
+          </div>
+        </div>
       </div>
     </section>
   );
 }
 
-function BackOffice() {
+function PriceRow({ term, detail, value, note }: { term: string; detail: string; value: ReactNode; note?: string }) {
   return (
-    <section className={`${SHELL} py-section-sm sm:py-section`}>
-      <SectionHead
-        eyebrow="Côté Ma Reliure"
-        title="Une équipe qui qualifie et qui tranche, pas seulement une plateforme."
-        lead="Chaque candidature est lue par une personne. Chaque demande client est vérifiée avant d'être proposée à un atelier. En cas de désaccord ou de problème après réception, Ma Reliure reprend la discussion commerciale avec le client — ce n'est jamais à vous de renégocier."
-      />
-    </section>
-  );
-}
-
-/**
- * Devra être remplacée par de vraies vitrines (`/ateliers/:slug`, jamais
- * construites) une fois qu'un atelier existe en production. En attendant,
- * la section dit ce qui est prévu au futur, sans donner d'URL qui 404.
- */
-function WorkshopShowcase() {
-  return (
-    <section className="bg-mr-paper-warm">
-      <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead
-          eyebrow="Votre vitrine"
-          title="Une page à votre nom, sur Ma Reliure."
-          lead="Chaque atelier partenaire disposera d'une vitrine publique — votre histoire, vos savoir-faire, vos réalisations — visible des clients qui présentent un livre. Elle sera mise en place avec les premiers ateliers du réseau."
-        />
-      </div>
-    </section>
-  );
-}
-
-function NoCustomSite() {
-  return (
-    <section className={`${SHELL} py-section-sm sm:py-section`}>
-      <SectionHead
-        eyebrow="Ce que Ma Reliure n'est pas"
-        title="Pas un site sur mesure, pas une marque à votre nom."
-        lead="La vitrine suit un format commun à tous les ateliers du réseau : ni branding personnalisé, ni nom de domaine dédié. C'est ce qui permet à Ma Reliure de porter la visibilité collective plutôt qu'à chaque atelier de construire la sienne seul."
-      />
-    </section>
-  );
-}
-
-function CollectiveSeo() {
-  return (
-    <section className="bg-mr-paper-warm">
-      <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead
-          eyebrow="Visibilité"
-          title="Un site qui se positionne pour vous, pas quatorze sites qui se concurrencent."
-          lead="Un client qui cherche « reliure ancienne » ou « restaurer un livre abîmé » trouve Ma Reliure, pas un atelier isolé sur une première page de recherche déjà occupée par de plus gros acteurs. Rejoindre le réseau, c'est profiter de cette visibilité commune plutôt que de la construire seul."
-        />
-      </div>
-    </section>
-  );
-}
-
-function Matching() {
-  return (
-    <section className={`${SHELL} py-section-sm sm:py-section`}>
-      <SectionHead
-        eyebrow="Comment les projets sont attribués"
-        title="Le bon savoir-faire, pas le moins cher."
-        lead="Ma Reliure attribue chaque projet à l'atelier dont les compétences déclarées correspondent au travail demandé — reliure, restauration, dorure, cartonnage. Il n'y a pas d'enchère entre ateliers, et le prix payé à l'atelier n'est jamais mis en concurrence avec un autre partenaire sur le même dossier."
-      />
-    </section>
-  );
-}
-
-function Remuneration() {
-  return (
-    <section className="bg-mr-paper-warm">
-      <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead
-          eyebrow="Rémunération"
-          title="Vous connaissez le montant avant d'accepter."
-          lead="Ma Reliure fixe le prix présenté au client. Avant d'accepter un projet, vous voyez la rémunération proposée pour ce travail précis — vous n'avez pas à publier de grille tarifaire ni à négocier directement avec le client."
-        />
-      </div>
-    </section>
-  );
-}
-
-/**
- * Volontairement au futur et sans chiffre engageant : Stripe Connect n'est
- * pas branché (audit initial), et annoncer un taux de répartition figé serait
- * décrire un mécanisme de paiement qui n'existe pas encore.
- */
-function PayoutSplit() {
-  return (
-    <section className={`${SHELL} py-section-sm sm:py-section`}>
-      <SectionHead
-        eyebrow="Paiement — à venir"
-        title="Un versement direct, en cours de mise en place."
-        lead="Ma Reliure prépare un paiement automatisé de votre rémunération dès la fin du projet, avec une répartition claire entre l'atelier et la plateforme. Tant que ce circuit n'est pas actif, chaque versement est organisé individuellement avec les premiers ateliers du réseau."
-      />
-    </section>
-  );
-}
-
-function UnexpectedIssues() {
-  return (
-    <section className="bg-mr-paper-warm">
-      <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead
-          eyebrow="En cas d'imprévu"
-          title="Un problème découvert après réception ne devient jamais votre négociation."
-          lead="Livre plus abîmé que décrit, pièce manquante, travail finalement hors de votre champ : vous le signalez dans le dossier avec des photos. Ma Reliure reprend l'échange commercial avec le client avant toute modification du périmètre ou du prix."
-        />
-      </div>
-    </section>
-  );
-}
-
-function TransportRisk() {
-  return (
-    <section className={`${SHELL} py-section-sm sm:py-section`}>
-      <SectionHead
-        eyebrow="Transport"
-        title="Le trajet du livre est pensé selon sa valeur, pas au même tarif pour tous."
-        lead="Un livre courant et un ouvrage ancien à forte valeur ne voyagent pas dans les mêmes conditions. Ma Reliure adapte l'emballage, l'assurance et le mode d'envoi au niveau de risque du livre concerné, à l'aller comme au retour."
-      />
-    </section>
-  );
-}
-
-function WhatWeLookFor() {
-  return (
-    <section className="bg-mr-paper-warm">
-      <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead
-          eyebrow="Ce que nous cherchons"
-          title="Des ateliers installés, pas une liste de critères impossibles."
-          lead="Un atelier en activité en France, quel que soit son statut juridique ou sa taille. Un savoir-faire reconnaissable — réparation, restauration, reliure, dorure, cartonnage, création. Aucun volume minimum n'est exigé pour candidater."
-        />
-      </div>
-    </section>
-  );
-}
-
-function OfferSummary() {
-  return (
-    <section className={`${SHELL} py-section-sm sm:py-section`}>
-      <SectionHead eyebrow="En résumé" title="Ce que propose Ma Reliure à un atelier partenaire." />
-      {/* Sur un écran étroit, le tableau défile : la zone doit pouvoir prendre le
-          focus pour qu'on la fasse défiler au clavier (WCAG 2.1.1). */}
-      <div tabIndex={0} role="region" aria-label="Ce que propose Ma Reliure à un atelier partenaire" className="mt-10 overflow-x-auto focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-mr-ink lg:mt-14">
-        <table className="w-full min-w-[28rem] border-collapse text-left">
-          <tbody>
-            {OFFER_ROWS.map((row) => (
-              <tr key={row.label} className="border-t border-mr-rule-strong">
-                <th scope="row" className="mr-body py-4 pr-6 font-semibold text-mr-ink">
-                  {row.label}
-                </th>
-                <td className="mr-body py-4 text-mr-graphite">{row.value}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </section>
+    <div className="grid gap-2 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-8">
+      <dt>
+        <span className="mr-heading block text-mr-paper">{term}</span>
+        <span className="mr-small mt-1 block">{detail}</span>
+      </dt>
+      <dd className="sm:text-right">
+        <span className="font-editorial text-[1.75rem] leading-none">{value}</span>
+        {note && <span className="mr-meta mt-1 block">{note}</span>}
+      </dd>
+    </div>
   );
 }
 
 function Faq() {
   return (
-    <section className="bg-mr-paper-warm">
+    <section>
       <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead eyebrow="Questions fréquentes" title="Avant de candidater." />
-        <div className="mt-10 max-w-[42rem] divide-y divide-mr-rule-strong lg:mt-14">
-          {PARTNER_FAQ.map((item) => (
-            <details key={item.question} className="group py-5">
-              <summary className="mr-body flex cursor-pointer list-none items-center justify-between gap-4 font-semibold text-mr-ink">
-                {item.question}
-                <span aria-hidden="true" className="mr-meta text-mr-muted group-open:hidden">
-                  +
-                </span>
-                <span aria-hidden="true" className="mr-meta hidden text-mr-muted group-open:inline">
-                  −
-                </span>
-              </summary>
-              <p className="mr-body mt-3 text-mr-graphite">{item.answer}</p>
-            </details>
-          ))}
+        <div className="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-16">
+          <SectionHead eyebrow="Questions fréquentes" title="Avant de créer votre espace." className="lg:sticky lg:top-32 lg:col-span-4" />
+          <div className="divide-y divide-mr-rule-strong border-y border-mr-rule-strong lg:col-span-8">
+            {PARTNER_FAQ.map((item) => (
+              <details key={item.question} className="group py-5">
+                <summary className="mr-body flex min-h-11 cursor-pointer list-none items-center justify-between gap-4 font-semibold text-mr-ink [&::-webkit-details-marker]:hidden">
+                  {item.question}
+                  <span aria-hidden="true" className="mr-meta text-mr-muted group-open:hidden">+</span>
+                  <span aria-hidden="true" className="mr-meta hidden text-mr-muted group-open:inline">−</span>
+                </summary>
+                <p className="mr-body mt-3 max-w-[40rem] text-mr-graphite">{item.answer}</p>
+              </details>
+            ))}
+          </div>
         </div>
       </div>
     </section>
@@ -442,18 +322,15 @@ function Faq() {
 
 function FinalCta() {
   return (
-    <section className={`${SHELL} py-section-sm text-center sm:py-section`}>
-      <h2 className="mr-title mx-auto max-w-[32rem] text-mr-ink">
-        Rejoignez un réseau d'ateliers indépendants, sans perdre votre indépendance.
-      </h2>
-      <div className="mt-8 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-        <a
-          href="/auth?space=atelier"
-          className="mr-tap inline-flex items-center justify-center rounded-[2px] bg-mr-ink px-7 py-4 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-walnut"
-        >
-          Créer mon espace atelier
-        </a>
-        <IntakeCta variant="outline" />
+    <section className={`${SHELL} py-section-sm sm:py-section`}>
+      <div className="max-w-[40rem]">
+        <h2 className="mr-title text-mr-ink">Votre prochain devis peut partir ce soir.</h2>
+        <p className="mr-lead mt-5">Créez votre espace : vos prestations sont déjà là, il ne manque que vos prix.</p>
+        <div className="mt-9 flex flex-wrap items-center gap-3">
+          <ActionLink href={CREATE_WORKSHOP}>Créer mon espace atelier</ActionLink>
+          <IntakeCta variant="outline" />
+        </div>
+        <p className="mr-small mt-6">Vous avez un livre à faire relier ? Le second bouton est pour vous.</p>
       </div>
     </section>
   );
@@ -463,7 +340,7 @@ const labelClass = "mr-small block font-semibold text-mr-ink";
 const inputClass =
   "mt-2 w-full rounded-[2px] border border-mr-rule-strong bg-white px-3.5 py-3 text-[1rem] text-mr-ink";
 const submitClass =
-  "mt-8 inline-flex w-full items-center justify-center rounded-[2px] bg-mr-ink px-6 py-3.5 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-graphite disabled:opacity-60 sm:w-auto";
+  `mt-8 w-full sm:w-auto disabled:opacity-60 ${actionClass("primary")}`;
 
 /**
  * Champ list per the brief (§26) — délibérément différent de

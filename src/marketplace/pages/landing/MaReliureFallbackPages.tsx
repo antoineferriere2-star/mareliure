@@ -50,7 +50,7 @@ export function MaReliureError({ onRetry }: { onRetry: () => void }) {
       title="Cette page n'a pas pu s'afficher."
       lead="L'erreur vient de notre côté, pas du vôtre. Réessayez dans un instant ; si vous étiez en train de présenter un livre, vos réponses déjà enregistrées vous attendent."
     >
-      <button type="button" onClick={onRetry} className="inline-flex items-center justify-center rounded-[2px] bg-mr-ink px-7 py-4 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-walnut">
+      <button type="button" onClick={onRetry} className="inline-flex items-center justify-center rounded-[2px] bg-mr-ink px-7 py-4 text-[0.9375rem] font-semibold tracking-[0.01em] text-mr-paper transition-colors duration-200 hover:bg-mr-graphite">
         Réessayer
       </button>
       <a href="/" className={QUIET_LINK}>Retour à l'accueil</a>

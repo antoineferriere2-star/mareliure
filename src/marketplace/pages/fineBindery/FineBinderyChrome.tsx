@@ -9,7 +9,7 @@ export function FineBinderyIntakeCta({ locale, slug, variant = "solid", size = "
   const copy = fineBinderyCopy(locale);
   const base = "inline-flex min-h-11 items-center justify-center rounded-[2px] text-center font-semibold tracking-[0.01em] transition-colors duration-200";
   const sizes = { default: "px-7 py-3.5 text-[0.9375rem]", compact: "px-4 py-2.5 text-[0.8125rem] sm:px-5" } as const;
-  const skins = { solid: "bg-mr-ink text-mr-paper hover:bg-mr-walnut", outline: "border border-mr-ink/25 text-mr-ink hover:border-mr-ink hover:bg-mr-ink/[0.04]" } as const;
+  const skins = { solid: "bg-mr-ink text-mr-paper hover:bg-mr-graphite", outline: "border border-mr-ink/25 text-mr-ink hover:border-mr-ink hover:bg-mr-ink/[0.04]" } as const;
   return <a href={fineBinderyProjectPath(locale, slug)} className={`${base} ${sizes[size]} ${skins[variant]}`}>{copy.common.start}</a>;
 }
 

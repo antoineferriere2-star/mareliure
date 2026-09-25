@@ -37,28 +37,35 @@ export const ANCHORS = {
 
 export interface LandingStep {
   index: string;
+  /** Le moment : ce que le visiteur cherche d'abord, c'est quand il saura le prix. */
+  when: string;
   title: string;
   body: string;
 }
 
 /**
- * Trois étapes, pas six. Elles décrivent le parcours réellement opéré par Ma Reliure.
+ * Trois étapes, pas six. Elles décrivent le parcours réellement opéré par Ma Reliure,
+ * et chacune dit quand elle a lieu — le prix arrive avant tout engagement, et
+ * avant que le livre quitte son propriétaire.
  */
 export const STEPS: readonly LandingStep[] = [
   {
     index: "01",
-    title: "Décrivez votre livre",
-    body: "Ajoutez des photos, ses dimensions, son état et le projet souhaité.",
+    when: "Aujourd'hui, en quelques minutes",
+    title: "Vous présentez votre livre",
+    body: "Quelques photos, ses dimensions, son état et ce que vous souhaitez en faire. Le livre reste chez vous.",
   },
   {
     index: "02",
-    title: "Ma Reliure fixe le prix",
-    body: "Nous étudions le travail, les matériaux et la complexité avant de vous présenter un prix unique.",
+    when: "Avant tout engagement",
+    title: "Vous recevez un prix",
+    body: "Nous étudions le travail, les matériaux et la complexité, puis nous vous présentons un prix unique. Vous décidez ensuite.",
   },
   {
     index: "03",
-    title: "Un atelier accepte",
-    body: "Nous sollicitons des relieurs adaptés ; l'atelier retenu confirme sa disponibilité au prix prévu.",
+    when: "Après votre accord",
+    title: "Un artisan réalise le travail",
+    body: "L'atelier dont le savoir-faire correspond confirme au prix prévu. Le transport est convenu avec vous, projet par projet, en attendant un envoi organisé.",
   },
 ];
 

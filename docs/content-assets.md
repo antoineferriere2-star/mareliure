@@ -174,6 +174,35 @@ Composée le 24 septembre 2026 à partir de `public/fonts/fraunces-latin-var.wof
 et des tokens `mr-paper`, `mr-ink`, `mr-graphite` et `mr-bordeaux` de
 `styles.css`, puis examinée visuellement avant d'être ajoutée.
 
+### Captures de l'espace atelier — données d'exemple
+
+Des captures d'écran de l'application Ma Reliure elle-même, utilisées sur
+`/partenaires-relieurs` et dans le bloc « Vous êtes relieur ? » de l'accueil.
+Ni photographie ni œuvre de tiers : l'interface est la nôtre.
+
+**Les données affichées sont fictives** : clients, livres, références,
+numéros et montants ont été inventés pour la démonstration (atelier
+« Atelier d'exemple »). Aucune ne vient d'un compte réel, et aucune ne
+reproduit la grille des tarifs de base Ma Reliure, qui n'est pas publique :
+la capture de l'écran des prestations s'arrête aux en-têtes de colonnes,
+avant tout montant. Chaque image est légendée « données d'exemple » sur le
+site (`ProductShot`).
+
+Produites le 25 septembre 2026 sur `vite dev`, server functions simulées,
+Chrome à 2×, puis recadrées et encodées en WebP (qualité 82) en 960 et
+1600 px ; chaque fichier a été ouvert et relu avant d'être ajouté. Le devis
+PDF est rendu par le vrai moteur (`renderDocumentPdf`) puis rastérisé.
+
+| Fichier (`public/photos/product/`) | Écran | Où |
+| --- | --- | --- |
+| `atelier-aujourdhui-{960,1600}.webp` | Aujourd'hui (tableau de bord) | Accueil, héros de la page relieurs |
+| `atelier-devis-{960,1600}.webp` | Constructeur de devis | Page relieurs — Devis |
+| `atelier-tarifs-{960,1600}.webp` | Mes prestations et mes prix (sans montants) | Page relieurs — Tarifs |
+| `atelier-ouvrages-{960,1600}.webp` | Liste des ouvrages | Page relieurs — Ouvrages |
+| `atelier-factures-{960,1600}.webp` | Liste des factures | Page relieurs — Documents & factures |
+| `devis-pdf-{960,1600}.webp` | Devis PDF (en-tête et prestations) | Page relieurs — Documents & factures |
+| `atelier-projets-{960,1600}.webp` | Projets confiés par Ma Reliure | Page relieurs — Le réseau |
+
 ---
 
 ## Ce qu'il faut faire avant d'ajouter une image
