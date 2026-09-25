@@ -26,6 +26,7 @@
  * ni nombre d'artisans, parce qu'aucun n'est réel.
  */
 import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SHELL } from "./landing/LandingChrome";
+import { WorkshopProductInvite } from "./landing/WorkshopProductInvite";
 import { Photograph } from "./landing/Photograph";
 import { ArtisanCard } from "./landing/ArtisanCard";
 import {
@@ -433,6 +434,7 @@ export function ReliureLanding() {
             ))}
           </div>
         </section>
+        <WorkshopProductInvite />
         <HowItWorks />
         <Crafts />
         <Realisations />

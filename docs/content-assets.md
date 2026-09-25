@@ -214,3 +214,18 @@ snapshot de document peut encore le référencer.
 ### Usage par défaut dans l’espace atelier — 25 septembre 2026
 
 À la demande explicite du propriétaire, les 45 illustrations Ferrière ci-dessus sont proposées par défaut pour les prestations de base de chaque relieur. Les photos personnelles sont prioritaires. Les copies enregistrées dans un devis conservent le crédit Atelier Reliure Dorure Ferrière, Orléans ; elles illustrent une opération et ne sont pas présentées comme une réalisation de l’atelier destinataire. Les fichiers et l’autorisation source restent ceux du registre ci-dessus.
+
+## Captures de l’outil atelier — 25 septembre 2026
+
+Autorisation : mission du propriétaire « Mettre réellement en avant l’outil relieur sur Ma Reliure » : montrer les écrans actuels et un PDF exporté. Captures réalisées par Codex dans le logiciel existant, sans maquette ni modification des textes affichés. Les écrans partagés Ma Reliure/FineBindery ont été ouverts en français, puis recadrés pour exclure la navigation de marque et les coordonnées privées. Aucun document de production créé.
+
+| Fichier | Source et contenu | Traitement |
+| --- | --- | --- |
+| `/product/workbench.webp` | Éditeur actuel `/atelier/devis/nouveau`, client de démonstration et ouvrage saisis sans sauvegarde ; deux prestations réelles du catalogue | Cadrage de la zone principale, WebP |
+| `/product/tarifs.webp` | `/atelier/tarifs`, onglet Prestations & tarifs, base non personnalisée, 45 prestations | Cadrage du haut du catalogue, WebP |
+| `/product/ouvrage.webp` | Écran actuel `/atelier/ouvrages/nouveau`, titre et dimensions de démonstration, sans sauvegarde ni sélection d’un client réel | Cadrage du panneau principal, WebP |
+| `/product/dashboard.webp` | `/atelier`, titre et quatre indicateurs vides ; données de facturation et lignes nominatives exclues du cadrage | Cadrage de la vue supérieure gauche, WebP |
+| `/product/messages.webp` | `/atelier/messages`, état vide réel, aucun message ni coordonnées | Cadrage du panneau principal, WebP |
+| `/product/devis.webp` | Première page du véritable export de recette `devis-logo-photos.pdf`, produit lors du chantier PDF ; atelier et client fictifs, domaines `.example` | Rendu Poppler puis WebP, sans retouche |
+
+Les photographies Ferrière visibles dans le catalogue et le PDF relèvent de l’autorisation Ferrière déjà inscrite dans ce registre. La légende PDF conserve le crédit. Les exemples de montants du document sont des données de recette, pas une nouvelle grille commerciale. Les légendes publiques identifient explicitement les saisies de démonstration.
