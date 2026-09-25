@@ -542,7 +542,7 @@ async function loadQuoteRow(sb: Supa, binderId: string, quoteId: string): Promis
   return data ? asQuoteRow(data) : null;
 }
 
-async function loadQuotePhotos(sb: Supa, binderId: string, quoteId: string): Promise<(PhotoDbRow & { storage_path: string })[]> {
+async function loadQuotePhotos(sb: Supa, binderId: string, quoteId: string): Promise<PhotoDbRow[]> {
   const { data, error } = await sb.from("marketplace_binder_quote_item_photos")
     .select("id, line_key, storage_path, caption, include_in_pdf, position")
     .eq("quote_id", quoteId).eq("binder_id", binderId).order("position");
@@ -661,13 +661,16 @@ export async function attachOperationPhotoToQuoteItem(sb: Supa, binderId: string
 /** Chaque duplication conserve les photos du document, jamais celles du catalogue actuel. */
 export async function duplicateQuote(sb: Supa, binderId: string, quoteId: string, today: string): Promise<DocumentView> {
   const source = await getQuote(sb, binderId, quoteId);
-  const photos = await loadQuotePhotos(sb, binderId, quoteId);
+  const { data: photos, error: photoError } = await sb.from("marketplace_binder_quote_item_photos")
+    .select("line_key, storage_path, caption, include_in_pdf, position")
+    .eq("quote_id", quoteId).eq("binder_id", binderId).order("position");
+  if (photoError) throw new BinderQuotesError("failed");
   const input = duplicateQuoteInput(source);
   const lineKeys = new Map(source.items.map((item, index) => [item.lineKey, input.lines[index].lineKey]));
   const copy = await createQuote(sb, binderId, input, today);
   const copiedPaths: string[] = [];
   try {
-    for (const photo of photos) {
+    for (const photo of photos ?? []) {
       const lineKey = lineKeys.get(photo.line_key);
       // Une ancienne photo sans ligne correspondante ne fait pas partie du document.
       if (!lineKey) continue;
