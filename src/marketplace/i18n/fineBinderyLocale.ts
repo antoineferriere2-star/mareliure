@@ -59,6 +59,15 @@ export function replaceFineBinderyLocale(pathname: string, locale: FineBinderyLo
   return `/${parts.join("/")}`;
 }
 
+export function fineBinderyLanguageHref(pathname: string, search: string, locale: FineBinderyLocale): string {
+  if (pathname === "/auth") {
+    const params = new URLSearchParams(search);
+    params.set("locale", locale);
+    return `/auth?${params.toString()}`;
+  }
+  return `${replaceFineBinderyLocale(pathname, locale)}${search}`;
+}
+
 export function fineBinderyAlternates(pathWithoutLocale = ""): Array<{ locale: FineBinderyLocale | "x-default"; href: string }> {
   const suffix = pathWithoutLocale ? `/${pathWithoutLocale.replace(/^\/+/, "")}` : "";
   return [

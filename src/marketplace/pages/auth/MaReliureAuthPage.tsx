@@ -20,10 +20,8 @@
  *   compte à la première utilisation. L'atelier est créé en attente de
  *   validation ; seul l'admin l'autorise ensuite à recevoir des projets.
  *
- * Fine Bindery n'a qu'un seul public ici : un atelier Fine Bindery reste un
- * atelier Ma Reliure côté compte (§43 du brief international — "l'artisan
- * n'a pas besoin d'un autre compte Fine Bindery") et se connecte toujours
- * sur mareliure.fr, jamais sur finebindery.com. Pas d'onglet à choisir.
+ * Fine Bindery propose aussi les deux espaces, avec le même compte atelier
+ * et les mêmes contrôles d'accès serveur que Ma Reliure.
  *
  * La destination ne se décide pas ici. Une fois la session ouverte, la route
  * la demande au serveur (`resolveMarketplacePostAuthDestination`).
@@ -75,6 +73,8 @@ const tabClass = (active: boolean) =>
 
 /** Tout le texte qui diffère entre les deux marques — jamais deux copies de la logique au-dessus. */
 interface AuthCopy {
+  audienceLabel: string;
+  binderAccessNote: string;
   eyebrow: string;
   heading: string;
   showBinderTab: boolean;
@@ -108,6 +108,8 @@ interface AuthCopy {
 }
 
 const MA_RELIURE_COPY: AuthCopy = {
+  audienceLabel: "Vous êtes",
+  binderAccessNote: "Votre espace atelier est disponible dès la création du compte. Ma Reliure valide séparément l’accès aux nouveaux projets.",
   eyebrow: "Votre espace",
   heading: "Accéder à mon espace Ma Reliure",
   showBinderTab: true,
@@ -144,8 +146,10 @@ const MA_RELIURE_COPY: AuthCopy = {
   passwordSetError: "Le mot de passe n'a pas pu être enregistré. Réessayez dans un instant.",
 };
 
-/** Pas d'onglet atelier (§43 : un atelier Fine Bindery se connecte sur mareliure.fr, jamais ici). */
+/** Textes anglais des deux espaces Fine Bindery. */
 const FINE_BINDERY_COPY_EN: AuthCopy = {
+  audienceLabel: "Choose your space",
+  binderAccessNote: "Your workshop space is available as soon as your account is created. Fine Bindery approves access to new projects separately.",
   eyebrow: "Your space",
   heading: "Access your Fine Bindery space",
   showBinderTab: true,
@@ -185,6 +189,8 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
   en: FINE_BINDERY_COPY_EN,
   fr: {
     ...FINE_BINDERY_COPY_EN,
+    audienceLabel: "Choisissez votre espace",
+    binderAccessNote: "Votre espace atelier est disponible dès la création du compte. Fine Bindery valide séparément l’accès aux nouveaux projets.",
     eyebrow: "Votre espace",
     heading: "Accéder à votre espace Fine Bindery",
     tabClient: "Client",
@@ -216,6 +222,8 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
   },
   de: {
     ...FINE_BINDERY_COPY_EN,
+    audienceLabel: "Bereich auswählen",
+    binderAccessNote: "Ihr Werkstattbereich steht Ihnen ab der Kontoerstellung zur Verfügung. Fine Bindery gibt den Zugang zu neuen Projekten separat frei.",
     eyebrow: "Ihr Bereich", heading: "Fine-Bindery-Bereich öffnen", tabClient: "Kundschaft", tabBinder: "Werkstatt",
     leadLink: "Geben Sie die E-Mail-Adresse an, mit der Sie Ihr Buch vorgestellt haben. Wir senden Ihnen einen Anmeldelink und einen Code.",
     leadPasswordSignin: "Melden Sie sich mit dem Passwort Ihres Bereichs an.",
@@ -234,6 +242,8 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
   },
   it: {
     ...FINE_BINDERY_COPY_EN,
+    audienceLabel: "Scegli il tuo spazio",
+    binderAccessNote: "Lo spazio del laboratorio è disponibile appena creato l’account. Fine Bindery approva separatamente l’accesso ai nuovi progetti.",
     eyebrow: "Il tuo spazio", heading: "Accedi al tuo spazio Fine Bindery", tabClient: "Cliente", tabBinder: "Laboratorio",
     leadLink: "Inserisci l’indirizzo e-mail usato per presentare il libro. Ti invieremo un link e un codice di accesso.", leadPasswordSignin: "Accedi con la password del tuo spazio.",
     leadBinder: "Inserisci l’indirizzo e-mail per creare o riaprire lo spazio del laboratorio. Fine Bindery verifica prima l’indirizzo; l’accesso ai nuovi progetti viene approvato separatamente.",
@@ -248,6 +258,8 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
   },
   es: {
     ...FINE_BINDERY_COPY_EN,
+    audienceLabel: "Elige tu espacio",
+    binderAccessNote: "El espacio del taller está disponible desde la creación de la cuenta. Fine Bindery aprueba por separado el acceso a nuevos proyectos.",
     eyebrow: "Tu espacio", heading: "Accede a tu espacio Fine Bindery", tabClient: "Cliente", tabBinder: "Taller",
     leadLink: "Introduce el correo utilizado para presentar tu libro. Te enviaremos un enlace y un código de acceso.", leadPasswordSignin: "Accede con la contraseña de tu espacio.",
     leadBinder: "Introduce tu correo para crear o volver a abrir el espacio del taller. Fine Bindery verifica primero la dirección; el acceso a nuevos proyectos se aprueba por separado.",
@@ -298,7 +310,7 @@ export function MaReliureAuthPage({
         <h1 className="mr-title mt-4 text-mr-ink">{t.heading}</h1>
 
         {t.showBinderTab && (
-          <div className="mt-6 flex gap-2" role="tablist" aria-label="Vous êtes">
+          <div className="mt-6 flex gap-2" role="tablist" aria-label={t.audienceLabel}>
             <button
               type="button"
               role="tab"
@@ -390,14 +402,13 @@ export function MaReliureAuthPage({
                   }
                 >
                   {binderMethod === "link"
-                    ? "Se connecter avec un mot de passe"
-                    : "Recevoir un lien de connexion par e-mail"}
+                    ? t.preferPassword
+                    : t.backToLink}
                 </button>
               </p>
 
               <p className="mr-small mt-10 border-t border-mr-rule pt-6 text-mr-muted">
-                Votre espace atelier est disponible dès la création du compte.
-                Ma Reliure valide séparément l'accès aux nouveaux projets.
+                {t.binderAccessNote}
               </p>
             </>
           )}
