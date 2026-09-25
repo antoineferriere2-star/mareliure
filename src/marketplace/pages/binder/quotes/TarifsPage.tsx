@@ -20,7 +20,7 @@ import { DOCUMENT_ACCENT_COLORS, DOCUMENT_LOGO_MAX_BYTES, DOCUMENT_LOGO_MIME_TYP
 const HEADINGS = {
   documents: { tab: "Devis & documents", title: "Devis & documents", description: "Configurez ce que vos clients verront. Les devis déjà créés conservent toujours leur snapshot." },
   services: { tab: "Prestations & tarifs", title: "Mes prestations et mes prix", description: "Adaptez la grille Ma Reliure à votre atelier. Vos documents existants restent inchangés." },
-  photos: { tab: "Photos d'exemple", title: "Mes photos d'exemple", description: "Vos réalisations, rangées par opération, proposées automatiquement dans vos devis." },
+  photos: { tab: "Photos d'exemple", title: "Photos des prestations", description: "Des illustrations fournies par défaut, à remplacer librement par vos propres réalisations pour vos prochains devis." },
 } as const;
 
 export function TarifsPage() {
@@ -46,7 +46,7 @@ export function TarifsPage() {
   return (
     <div className="space-y-8">
       <BinderPageHeader eyebrow="Paramètres atelier" title={HEADINGS[section].title} description={HEADINGS[section].description} />
-      <div role="tablist" aria-label="Paramètres de l'atelier" className="flex gap-6 overflow-x-auto border-b border-[#cfc5b6]">
+      <div role="tablist" aria-label="Paramètres de l'atelier" className="flex gap-6 overflow-x-auto overflow-y-hidden border-b border-[#cfc5b6]">
         {(["documents", "services", "photos"] as const).map((key) => (
           <button key={key} role="tab" aria-selected={section === key} type="button" onClick={() => setSection(key)} className={`-mb-px min-h-12 shrink-0 border-b-2 text-sm font-semibold ${section === key ? "border-[#7a2230] text-[#241a12]" : "border-transparent text-[#74695d]"}`}>{HEADINGS[key].tab}</button>
         ))}

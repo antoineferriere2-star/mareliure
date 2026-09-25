@@ -3275,3 +3275,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - À la demande du propriétaire, les 45 illustrations Ferrière déjà autorisées deviennent les photos par défaut des prestations de base dans l’espace atelier. Le catalogue tarifaire et la bibliothèque les affichent ; une bibliothèque personnelle non vide a toujours priorité. Retirer les photos personnelles rétablit le défaut. Les prestations libres sans correspondance explicite ne reçoivent pas de photo arbitraire.
 - Ajouter une prestation à un nouveau devis sélectionne ses photos effectives. Les illustrations communes sont copiées en PNG dans le stockage privé du devis par le circuit existant ; leur crédit Ferrière est conservé sur la légende. Elles peuvent être retirées ou exclues du PDF. Les documents existants restent inchangés. Aucun changement de schéma ni écriture massive dans les ateliers.
 - Tests ajoutés : couverture des 45 fichiers, crédit, priorité personnelle, retour au défaut, limites et rejet des identifiants inconnus. Typecheck, lint ciblé, build Ma Reliure et suite complète verts : 224 fichiers / 3 036 tests. PR #43 ouverte ; consulter la PR et le rapport de déploiement pour leur état de publication final.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex — 25 septembre 2026, `fix/quote-photo-pdf-reliability`.
+
+- PR #43 fusionnée au SHA `30386be0f661585a0adff2f84ad6d82e63febb1e`, Worker `3e5c19b5-5fb0-443b-8f49-c36a0605d329`. Recette connectée : 45 illustrations, catalogue et bibliothèque sans débordement à 390 px, insertion automatique dans un nouveau devis, retrait et exclusion PDF. Aucun document de production créé pendant cette recette.
+- Suite autonome : le décodage asynchrone des images PDF est désormais attendu dans le bloc de gestion d’erreur. Un fichier PNG/JPEG endommagé ne doit plus faire échouer tout le document, comme pour une image indisponible au téléchargement.
+- Nouveaux tests intégrés : téléversement d’une photo PNG, relecture du devis, présence d’un objet Image dans le PDF et impression de son crédit ; exclusion sans téléchargement ; résistance aux PNG/JPEG endommagés. Le faux stockage Supabase reste en mémoire : aucune donnée réelle modifiée.
+- La bibliothèque explique dès son titre les illustrations fournies et personnalisables. Suppression du défilement vertical parasite dans la barre d’onglets ; défilement horizontal mobile conservé.
+- Aucune migration. Typecheck et lint ciblé verts. 63 tests du service devis passent ; suite complète : 3 038 réussites et deux dépassements de 5 secondes dans les scans sécurité/prix publics. Les 14 tests concernés passent isolément sans changer leurs délais ni leurs assertions. CI complète requise avant publication.
