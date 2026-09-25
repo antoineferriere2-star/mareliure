@@ -73,7 +73,7 @@ function Join({ light = false }: { light?: boolean }) {
       </a>
       <a
         href="#outil-devis"
-        className={`mr-link mr-tap py-3 text-sm ${light ? "text-mr-paper" : "text-mr-ink"}`}
+        className={`mr-link mr-tap py-3 text-sm ${light ? "!text-mr-paper" : "text-mr-ink"}`}
       >
         Découvrir l’outil de devis
       </a>
