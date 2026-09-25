@@ -1,17 +1,13 @@
-/**
- * Page publique de recrutement pour les ateliers de reliure indépendants —
- * distincte de la landing client (ReliureLanding.tsx) : celle-ci vend
- * l'entrée dans le réseau, pas la présentation d'un livre.
- */
+/** Présentation publique de l’outil gratuit pour les ateliers de reliure. */
 import { createFileRoute } from "@tanstack/react-router";
 import { PartnersLandingPage } from "@/marketplace/pages/partners/PartnersLanding";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 import { breadcrumbSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/structured-data";
 
-const TITLE = "Ateliers partenaires — Rejoindre le réseau Ma Reliure";
+const TITLE = "Ma Reliure pour les relieurs — Devis, ouvrages et facturation";
 const DESCRIPTION =
-  "Rejoignez le réseau d'ateliers indépendants de Ma Reliure : projets qualifiés, rémunération connue avant d'accepter, et vos propres clients suivis dans le même espace.";
+  "Créez vos devis, gérez vos ouvrages, clients et factures avec Ma Reliure. Outil gratuit pour les relieurs et restaurateurs. Paiement en ligne facultatif.";
 
 export const Route = createFileRoute("/partenaires-relieurs")({
   head: () => ({
@@ -31,7 +27,7 @@ export const Route = createFileRoute("/partenaires-relieurs")({
     scripts: [
       jsonLdScript(
         breadcrumbSchema(
-          [{ name: "Ateliers partenaires", path: "/partenaires-relieurs" }],
+          [{ name: "Pour les relieurs", path: "/partenaires-relieurs" }],
           MARELIURE_SITE_URL,
         ),
       ),
