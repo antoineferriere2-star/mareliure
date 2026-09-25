@@ -18,6 +18,7 @@
  */
 import type { Json, Tables } from "@/integrations/supabase/types";
 import type { Supa } from "@/build/services/adminAuth.server";
+import { duplicateQuoteInput } from "@/marketplace/quotes/duplicateQuote";
 import { findActiveBinderMembership } from "./binderMembership.server";
 import {
   buildQuoteRows,
@@ -541,7 +542,7 @@ async function loadQuoteRow(sb: Supa, binderId: string, quoteId: string): Promis
   return data ? asQuoteRow(data) : null;
 }
 
-async function loadQuotePhotos(sb: Supa, binderId: string, quoteId: string): Promise<PhotoDbRow[]> {
+async function loadQuotePhotos(sb: Supa, binderId: string, quoteId: string): Promise<(PhotoDbRow & { storage_path: string })[]> {
   const { data, error } = await sb.from("marketplace_binder_quote_item_photos")
     .select("id, line_key, storage_path, caption, include_in_pdf, position")
     .eq("quote_id", quoteId).eq("binder_id", binderId).order("position");
@@ -550,7 +551,7 @@ async function loadQuotePhotos(sb: Supa, binderId: string, quoteId: string): Pro
     const { data: signed, error: signError } = await sb.storage
       .from(QUOTE_OPERATION_PHOTOS_BUCKET).createSignedUrl(photo.storage_path, 3600);
     if (signError || !signed?.signedUrl) throw new BinderQuotesError("failed");
-    return { ...photo, url: signed.signedUrl } as PhotoDbRow;
+    return { ...photo, url: signed.signedUrl };
   }));
 }
 
@@ -655,6 +656,40 @@ export async function attachOperationPhotoToQuoteItem(sb: Supa, binderId: string
   const { error: copyError } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).copy(source.storage_path, storagePath);
   if (copyError) throw new BinderQuotesError("failed");
   return insertQuoteItemPhoto(sb, binderId, { ...input, storagePath, position });
+}
+
+/** Chaque duplication conserve les photos du document, jamais celles du catalogue actuel. */
+export async function duplicateQuote(sb: Supa, binderId: string, quoteId: string, today: string): Promise<DocumentView> {
+  const source = await getQuote(sb, binderId, quoteId);
+  const photos = await loadQuotePhotos(sb, binderId, quoteId);
+  const input = duplicateQuoteInput(source);
+  const lineKeys = new Map(source.items.map((item, index) => [item.lineKey, input.lines[index].lineKey]));
+  const copy = await createQuote(sb, binderId, input, today);
+  const copiedPaths: string[] = [];
+  try {
+    for (const photo of photos) {
+      const lineKey = lineKeys.get(photo.line_key);
+      // Une ancienne photo sans ligne correspondante ne fait pas partie du document.
+      if (!lineKey) continue;
+      const extension = photo.storage_path.endsWith(".png") ? "png" : "jpg";
+      const storagePath = `${binderId}/${copy.id}/${crypto.randomUUID()}.${extension}`;
+      const { error } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).copy(photo.storage_path, storagePath);
+      if (error) throw new BinderQuotesError("failed");
+      copiedPaths.push(storagePath);
+      await insertQuoteItemPhoto(sb, binderId, {
+        quoteId: copy.id, lineKey, storagePath, caption: photo.caption,
+        includeInPdf: photo.include_in_pdf, position: photo.position,
+      });
+    }
+    return await getQuote(sb, binderId, copy.id);
+  } catch (error) {
+    // Annuler uniquement le brouillon créé par cet appel ; jamais le devis d'origine.
+    // La suppression du parent entraîne celle des lignes et photos par les FK CASCADE.
+    const { data: removed, error: rollbackError } = await sb.from("marketplace_binder_quotes").delete()
+      .eq("id", copy.id).eq("binder_id", binderId).eq("status", "draft").select("id").maybeSingle();
+    if (!rollbackError && removed && copiedPaths.length) await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove(copiedPaths);
+    throw error;
+  }
 }
 
 export async function deleteQuoteItemPhoto(sb: Supa, binderId: string, photoId: string): Promise<void> {

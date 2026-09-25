@@ -16,6 +16,8 @@ import {
   clearDocumentLogo,
   convertQuoteToInvoice,
   createQuote,
+  deleteQuoteItemPhoto,
+  duplicateQuote,
   getInvoice,
   getQuote,
   issueInvoice,
@@ -86,7 +88,15 @@ function makeDb() {
       } else {
         result = rows(table).filter((r) => filters.every((f) => f(r)));
         if (op === "update") result.forEach((r) => Object.assign(r, values));
-        if (op === "delete") tables[table] = rows(table).filter((r) => !result.includes(r));
+        if (op === "delete") {
+          tables[table] = rows(table).filter((r) => !result.includes(r));
+          if (table === "marketplace_binder_quotes") {
+            const removed = new Set(result.map((row) => row.id));
+            for (const child of ["marketplace_binder_quote_items", "marketplace_binder_quote_item_photos"]) {
+              tables[child] = rows(child).filter((row) => !removed.has(row.quote_id));
+            }
+          }
+        }
         if (order) result = [...result].sort((a, b) => (a[order!.col] > b[order!.col] ? 1 : -1) * (order!.asc ? 1 : -1));
         result = result.slice(0, max);
       }
@@ -1051,6 +1061,62 @@ describe("photos d'exemple par opération", () => {
   const upload = (binderId: string, target: { serviceId: string } | { pricingKey: string }, caption: string | null = null) =>
     uploadOperationPhoto(world.sb, binderId, { target, mimeType: "image/jpeg", imageBase64: JPEG, caption });
   const files = () => [...world.storageFiles.keys()];
+
+  it("duplique les photos du snapshot avec leur légende et leur choix PDF, sans lien de stockage partagé", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const original = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    for (const [index, includeInPdf] of [true, false].entries()) {
+      await uploadQuoteItemPhoto(world.sb, BINDER_A, {
+        quoteId: original.id, lineKey: original.items[index].lineKey,
+        filename: "exemple.jpg", mimeType: "image/jpeg", imageBase64: JPEG,
+        caption: `Exemple ${index}`, includeInPdf,
+      });
+    }
+    const source = await getQuote(world.sb, BINDER_A, original.id);
+    const copy = await duplicateQuote(world.sb, BINDER_A, original.id, TODAY);
+    expect(copy.number).not.toBe(source.number);
+    expect(copy.totalTtcCents).toBe(source.totalTtcCents);
+    for (let index = 0; index < 2; index++) {
+      expect(copy.items[index].photos).toEqual([expect.objectContaining({
+        caption: `Exemple ${index}`, includeInPdf: index === 0,
+        lineKey: copy.items[index].lineKey, position: 1,
+      })]);
+      expect(copy.items[index].photos[0].url).not.toBe(source.items[index].photos[0].url);
+    }
+    const sourceFiles = files().filter((path) => path.includes(`/${source.id}/`));
+    await deleteQuoteItemPhoto(world.sb, BINDER_A, copy.items[0].photos[0].id);
+    expect((await getQuote(world.sb, BINDER_A, source.id)).items[0].photos).toHaveLength(1);
+    expect(files()).toEqual(expect.arrayContaining(sourceFiles));
+    const again = await duplicateQuote(world.sb, BINDER_A, copy.id, TODAY);
+    expect(again.items.map((item) => item.lineKey)).toEqual(copy.items.map((item) => item.lineKey));
+    expect(again.items[1].photos[0].includeInPdf).toBe(false);
+  });
+
+  it("refuse la duplication d’un autre atelier avant toute création", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const source = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    expect(await codeOf(duplicateQuote(world.sb, BINDER_B, source.id, TODAY))).toBe("not_found");
+    expect(world.tables.marketplace_binder_quotes).toHaveLength(1);
+  });
+
+  it("annule le nouveau brouillon et ses copies si un fichier source manque", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const source = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    for (const item of source.items.slice(0, 2)) {
+      await uploadQuoteItemPhoto(world.sb, BINDER_A, {
+        quoteId: source.id, lineKey: item.lineKey, filename: "exemple.jpg",
+        mimeType: "image/jpeg", imageBase64: JPEG, caption: null, includeInPdf: true,
+      });
+    }
+    const missing = files().filter((path) => path.includes(`/${source.id}/`)).at(-1)!;
+    world.storageFiles.delete(missing);
+    const before = files();
+    expect(await codeOf(duplicateQuote(world.sb, BINDER_A, source.id, TODAY))).toBe("failed");
+    expect(world.tables.marketplace_binder_quotes.map((row) => row.id)).toEqual([source.id]);
+    expect(world.tables.marketplace_binder_quote_items.every((row) => row.quote_id === source.id)).toBe(true);
+    expect(world.tables.marketplace_binder_quote_item_photos).toHaveLength(2);
+    expect(files()).toEqual(before);
+  });
 
   it("range un exemple sous une prestation de l'atelier ou un tarif de base, dans le dossier privé de l'atelier", async () => {
     const own = await saveService(world.sb, BINDER_A, service());

@@ -13,7 +13,6 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
-import { duplicateQuoteInput } from "@/marketplace/quotes/duplicateQuote";
 import {
   billingProfileInput,
   categoryInput,
@@ -37,6 +36,7 @@ import {
   createFullCreditNote,
   createQuote,
   deleteQuoteItemPhoto,
+  duplicateQuote,
   getInvoice,
   getQuote,
   issueInvoice,
@@ -288,8 +288,7 @@ export const duplicateMyQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => id.parse(data))
   .handler(({ context, data }) => run(context.userId, async (binderId, sb) => {
-    const source = await getQuote(sb, binderId, data.id);
-    return createQuote(sb, binderId, duplicateQuoteInput(source), todayInParis());
+    return duplicateQuote(sb, binderId, data.id, todayInParis());
   }));
 
 export const setMyQuoteStatus = createServerFn({ method: "POST" })

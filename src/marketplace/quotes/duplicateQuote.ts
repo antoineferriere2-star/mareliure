@@ -23,7 +23,7 @@ export function duplicateQuoteInput(source: DocumentView): QuoteInput {
       heightMm: source.book.heightMm, widthMm: source.book.widthMm, spineMm: source.book.spineMm,
     }]).map((block) => ({ ...block })),
     lines: source.items.map((item) => ({
-      lineKey: `copy-${item.lineKey ?? item.position}`,
+      lineKey: `copy-${item.position}`,
       blockKey: item.blockKey ?? "format-principal",
       serviceId: null, label: item.label, description: item.description, unit: item.unit,
       quantity: item.quantity, unitPriceCents: item.unitPriceCents,
