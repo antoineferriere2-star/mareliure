@@ -277,9 +277,15 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
     const left = PAGE_W - MARGIN - 218;
     const right = PAGE_W - MARGIN;
     y -= 9;
+    // Le bandeau du total monte à 18 pt au-dessus de sa ligne de base, plus haut que
+    // l'interligne de 17 pt : sans ce retrait, il recouvrait la ligne précédente (TVA).
+    const BAND_GAP = 12;
     const row = (label: string, value: string, strong = false) => {
-      pageBreakIfNeeded(strong ? 28 : 18);
-      if (strong) page.drawRectangle({ x: left - 12, y: y - 9, width: right - left + 12, height: 27, color: accent });
+      pageBreakIfNeeded(strong ? 28 + BAND_GAP : 18);
+      if (strong) {
+        y -= BAND_GAP;
+        page.drawRectangle({ x: left - 12, y: y - 9, width: right - left + 12, height: 27, color: accent });
+      }
       draw(label, left, strong ? 11 : 9, strong ? sansBold : sans, strong ? rgb(1, 1, 1) : MUTED);
       drawRight(value, right - (strong ? 8 : 0), strong ? 11 : 9, strong ? sansBold : sans, strong ? rgb(1, 1, 1) : INK);
       y -= strong ? 34 : 17;
