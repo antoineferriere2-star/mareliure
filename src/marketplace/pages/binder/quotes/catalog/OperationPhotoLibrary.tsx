@@ -57,8 +57,8 @@ export function OperationPhotoLibrary({ items, services }: { items: readonly Bin
   return (
     <div className="space-y-6">
       <div className="border-l-4 border-[#7a2230] bg-[#fffdf8] px-5 py-4 text-sm leading-6 text-[#4b3829]">
-        <p>Ajoutez vos propres réalisations à chaque opération. Quand vous l’ajoutez à un devis, ses photos sont proposées automatiquement ; vous pouvez les retirer ou décider si elles apparaissent sur le PDF.</p>
-        <p className="mt-1 text-xs text-[#685d51]">Uniquement vos photos : n’utilisez pas l’image d’un autre atelier. Elles restent privées ; seuls vos devis les montrent.</p>
+        <p>Les 45 prestations sont illustrées par défaut. Ajoutez vos photos pour remplacer les illustrations proposées. Les nouveaux devis reprennent vos photos en priorité ; vous pouvez les retirer ou les exclure du PDF.</p>
+        <p className="mt-1 text-xs text-[#685d51]">Illustrations fournies avec autorisation : Atelier Reliure Dorure Ferrière, Orléans. Elles ne représentent pas vos propres réalisations. Retirer toutes vos photos rétablit l’illustration par défaut ; les devis déjà enregistrés restent inchangés.</p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="relative sm:w-80">
@@ -89,7 +89,7 @@ function OperationRow({ operation, photos }: { operation: Operation; photos: Ope
   const queryClient = useQueryClient();
   const upload = useServerFn(uploadMyOperationPhoto);
   const [problem, setProblem] = useState<string | null>(null);
-  const room = QUOTE_OPERATION_PHOTO_MAX_PER_LINE - photos.length;
+  const room = QUOTE_OPERATION_PHOTO_MAX_PER_LINE - photos.filter((photo) => !photo.isDefault).length;
   const add = useMutation({
     mutationFn: async (files: File[]) => {
       for (const file of files) {
@@ -112,12 +112,12 @@ function OperationRow({ operation, photos }: { operation: Operation; photos: Ope
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold text-[#241a12]">{operation.label}</p>
-          <p className="text-xs text-[#685d51]">{photos.length === 0 ? "Aucune photo" : `${photos.length} photo${photos.length > 1 ? "s" : ""} sur ${QUOTE_OPERATION_PHOTO_MAX_PER_LINE}`}</p>
+          <p className="text-xs text-[#685d51]">{photos[0]?.isDefault ? "Illustration par défaut" : photos.length === 0 ? "Aucune photo" : `${photos.length} photo${photos.length > 1 ? "s" : ""} sur ${QUOTE_OPERATION_PHOTO_MAX_PER_LINE}`}</p>
         </div>
         {room > 0 && (
           <label className={`inline-flex min-h-11 cursor-pointer items-center rounded-md border border-[#cfc5b6] bg-white px-3 text-xs font-semibold hover:bg-[#f5f0e8] focus-within:ring-2 focus-within:ring-[#7a2230]/45 ${add.isPending ? "pointer-events-none opacity-60" : ""}`}>
             <Camera aria-hidden="true" className="mr-1 h-4 w-4" />
-            {add.isPending ? "Envoi…" : "Ajouter des photos"}
+            {add.isPending ? "Envoi…" : photos[0]?.isDefault ? "Remplacer par mes photos" : "Ajouter des photos"}
             <span className="sr-only"> pour {operation.label}</span>
             <input type="file" accept="image/jpeg,image/png" multiple className="sr-only" disabled={add.isPending} onChange={(event) => { onFiles(event.target.files); event.currentTarget.value = ""; }} />
           </label>
@@ -126,7 +126,7 @@ function OperationRow({ operation, photos }: { operation: Operation; photos: Ope
       {problem && <p role="alert" className="mt-2 text-xs text-[#9a3412]">{problem}</p>}
       {photos.length > 0 && (
         <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-3 lg:grid-cols-6">
-          {photos.map((photo) => <PhotoCard key={photo.id} photo={photo} operationLabel={operation.label} />)}
+          {photos.map((photo) => photo.isDefault ? <figure key={photo.id} className="overflow-hidden rounded-md border border-[#d8d0c4] bg-white"><img src={photo.url} alt={operation.label} loading="lazy" className="aspect-[4/3] w-full object-cover" /><figcaption className="p-2 text-xs text-muted-foreground">{photo.caption}</figcaption></figure> : <PhotoCard key={photo.id} photo={photo} operationLabel={operation.label} />)}
         </div>
       )}
     </li>

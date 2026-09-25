@@ -25,6 +25,7 @@ import { normalizeSearch } from "@/marketplace/reference/search";
 import { CARD, ErrorNote, FIELD, MoneyInput, PRIMARY_BUTTON, SECONDARY_BUTTON } from "../quoteUi";
 import { CATALOG_KEY, PRICING_CATALOG_KEY } from "../quoteQueryKeys";
 import { ServiceForm } from "./ServiceForm";
+import { OperationThumbnail } from "./OperationThumbnail";
 import type { Service } from "./catalogTypes";
 import { useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspaceContext";
 import { serviceFamilyName, serviceName } from "@/marketplace/i18n/fineBinderyGlossary";
@@ -353,6 +354,7 @@ function PricingRow({
             pending={favoriteMutation.isPending}
             onClick={() => favoriteMutation.mutate()}
           />
+          <OperationThumbnail pricingKey={item.pricingKey} label={item.label} />
           <span className="font-medium">{item.label}</span>
         </div>
         <span className="text-sm tabular-nums text-muted-foreground">
@@ -392,6 +394,7 @@ function PricingRow({
               checked={checked}
               onChange={(event) => onCheck(event.target.checked)}
             />
+            <OperationThumbnail pricingKey={item.pricingKey} label={item.label} />
             <h4 className="font-semibold">{item.label}</h4>
           </div>
           <FavoriteButton
