@@ -104,7 +104,11 @@ const FAMILY_NAMES: Record<string, Terms> = {
 };
 
 export function languageName(code: string, locale: FineBinderyLocale): string { return LANGUAGE_NAMES[code]?.[locale] ?? code.toUpperCase(); }
-export function countryName(code: string, locale: FineBinderyLocale): string { return COUNTRY_NAMES[code]?.[locale] ?? code; }
+/** Un réseau européen : tout pays hors glossaire est nommé par Intl plutôt qu'affiché en code ISO. */
+function regionName(code: string, locale: FineBinderyLocale): string {
+  try { return new Intl.DisplayNames([locale], { type: "region" }).of(code.toUpperCase()) ?? code; } catch { return code; }
+}
+export function countryName(code: string, locale: FineBinderyLocale): string { return COUNTRY_NAMES[code]?.[locale] ?? regionName(code, locale); }
 export function specialtyName(key: string, locale: FineBinderyLocale): string { return SPECIALTY_NAMES[key]?.[locale] ?? binderSkillLabel(key); }
 export function techniqueName(key: string, locale: FineBinderyLocale): string { return TECHNIQUE_NAMES[key]?.[locale] ?? key; }
 export function serviceName(key: string, locale: FineBinderyLocale): string { return SERVICE_NAMES[key]?.[locale] ?? WORK_ITEMS.find((item) => item.key === key)?.label ?? key; }

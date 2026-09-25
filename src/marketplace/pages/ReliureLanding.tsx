@@ -26,9 +26,10 @@
  * ni nombre d'artisans, parce qu'aucun n'est réel.
  */
 import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SHELL } from "./landing/LandingChrome";
-import { WorkshopProductInvite } from "./landing/WorkshopProductInvite";
 import { Photograph } from "./landing/Photograph";
 import { ArtisanCard } from "./landing/ArtisanCard";
+import { ActionLink } from "./landing/actions";
+import { ProductShot } from "./landing/ProductShot";
 import {
   ANCHORS,
   ARTISANS,
@@ -126,9 +127,12 @@ function HowItWorks() {
         <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8 lg:mt-16 lg:gap-12">
           {STEPS.map((step) => (
             <li key={step.index} className="border-t border-mr-rule-strong pt-5">
-              <span className="mr-meta tabular-nums">{step.index}</span>
-              <h3 className="mr-heading mt-3 text-mr-ink">{step.title}</h3>
-              <p className="mr-body mt-2 max-w-[24rem]">{step.body}</p>
+              <p className="flex items-baseline gap-3">
+                <span className="mr-meta tabular-nums">{step.index}</span>
+                <span className="text-[0.8125rem] font-semibold text-mr-bordeaux">{step.when}</span>
+              </p>
+              <h3 className="mr-title mt-4 text-[1.5rem] text-mr-ink sm:text-[1.625rem]">{step.title}</h3>
+              <p className="mr-body mt-3 max-w-[24rem]">{step.body}</p>
             </li>
           ))}
         </ol>
@@ -159,34 +163,41 @@ function Crafts() {
         </a>
         , reproduites avec son autorisation.
       </p>
-      <dl className="mt-12 grid gap-10 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3">
+      <dl className="mt-12 grid gap-x-8 gap-y-14 sm:grid-cols-2 lg:mt-16 lg:grid-cols-3 lg:gap-x-10">
         {CRAFTS.map((craft, index) => {
           const photo = ferriereServicePhoto(FERRIERE_EDITORIAL_CRAFT_KEYS[index]);
           return (
-            <div key={craft.title} className="border-t border-mr-rule pt-5">
+            <div key={craft.title}>
               {/* L'image, décorative, vit dans le <dt> : un groupe de <dl> n'accepte que <dt> et <dd>. */}
               <dt>
                 <img
                   src={photo.src}
                   srcSet={photo.srcSet}
                   sizes="(min-width: 1024px) 390px, (min-width: 640px) 50vw, 100vw"
+                  width={640}
+                  height={480}
                   alt=""
                   loading="lazy"
                   decoding="async"
                   className="aspect-[4/3] w-full bg-mr-ink/5 object-cover"
                 />
-                <span className="mt-5 block font-editorial text-[1.5rem] leading-tight text-mr-ink">
+                <span className="mt-6 block font-editorial text-[1.625rem] leading-tight text-mr-ink">
                   {craft.title}
                 </span>
               </dt>
               <dd>
                 <p className="mr-body mt-2">{craft.body}</p>
-                <p className="mr-meta mt-3">{craft.detail}</p>
+                <p className="mr-meta mt-3 border-t border-mr-rule pt-3">{craft.detail}</p>
               </dd>
             </div>
           );
         })}
       </dl>
+      <p className="mt-14">
+        <a href="/tarifs" className="mr-link mr-tap text-[1.0625rem]">
+          Voir les 45 prestations en images, et ce qui fait leur prix
+        </a>
+      </p>
     </section>
   );
 }
@@ -272,13 +283,6 @@ function Artisans() {
           <ArtisanCard key={artisan.id} artisan={artisan} />
         ))}
       </div>
-      <p className="mr-body mt-12 max-w-[38rem]">
-        Vous tenez un atelier de reliure ?{" "}
-        <a href="/partenaires-relieurs" className="mr-link">
-          Découvrez comment rejoindre le réseau
-        </a>{" "}
-        — nous cherchons des relieurs installés en France, quel que soit leur savoir-faire dominant.
-      </p>
     </section>
   );
 }
@@ -336,8 +340,11 @@ function Pricing() {
             grille donnerait un chiffre faux à la plupart des projets. Nous regardons le travail à
             faire, puis nous annonçons un prix ferme.
           </p>
-          <div className="mt-8">
+          <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
             <IntakeCta size="compact" />
+            <a href="/tarifs" className="mr-link mr-tap text-[1.0625rem]">
+              Comprendre nos tarifs
+            </a>
           </div>
         </div>
         <dl className="lg:col-span-7">
@@ -354,37 +361,29 @@ function Pricing() {
 }
 
 /**
- * L'argument national.
+ * L'appel final, pour le propriétaire du livre.
  *
- * Il lève la contrainte qui fait abandonner : le métier est traditionnellement
- * local, et quelqu'un qui n'a pas de relieur dans sa ville renonce. Traité en
- * typographie et en filets, jamais en carte de France ni en illustration
- * isométrique — nous n'avons pas d'ateliers à y placer.
+ * Texte seul, beaucoup d'air. Une image ici ne dirait rien de plus que celles
+ * déjà vues, et un grand bloc décoratif affaiblirait la seule chose qui compte
+ * à cet endroit : le bouton. Fond pierre, pour le détacher du bloc atelier
+ * qui le suit.
  *
- * Le trajet est écrit au futur là où il l'est réellement : l'expédition n'est
- * pas construite.
+ * L'argument « partout en France » avait sa propre section ; il répétait la
+ * quatrième preuve du premier écran, et la précision honnête sur le transport
+ * vit désormais dans la troisième étape.
  */
-function Reach() {
+function FinalCta() {
   return (
     <section className="bg-mr-paper-warm">
-      <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
-          <div className="lg:col-span-6">
-            <p className="mr-eyebrow">Partout en France</p>
-            <h2 className="mr-title mt-4 text-mr-ink">
-              Le bon artisan n’est pas forcément le plus proche.
-            </h2>
-          </div>
-          <div className="lg:col-span-6 lg:pt-14">
-            <p className="mr-lead">
-              Un relieur peut exceller en dorure et ne jamais toucher à une reliure ancienne. Ma
-              Reliure choisit l’atelier pour ce que votre livre demande, et organise son
-              acheminement — vous n’avez pas à trouver, ni à négocier, ni à convoyer.
-            </p>
-            <p className="mr-small mt-6">
-              L’organisation de l’envoi et du retour est en cours de mise en place. D’ici là, nous
-              convenons du transport avec vous, projet par projet.
-            </p>
+      <div className={`${SHELL} py-section sm:py-section-lg`}>
+        <div className="max-w-[34rem]">
+          <h2 className="mr-title text-mr-ink">
+            Il a déjà une histoire.
+            <br /> Confiez-nous la suite.
+          </h2>
+          <p className="mr-lead mt-6">Présentez-nous votre livre en quelques minutes. Vous connaîtrez le prix avant de vous engager.</p>
+          <div className="mt-9">
+            <IntakeCta />
           </div>
         </div>
       </div>
@@ -393,24 +392,33 @@ function Reach() {
 }
 
 /**
- * L'appel final.
+ * Le second public : les relieurs et restaurateurs.
  *
- * Texte seul, beaucoup d'air. Une image ici ne dirait rien de plus que celles
- * déjà vues, et un grand bloc décoratif affaiblirait la seule chose qui compte
- * à cet endroit : le bouton.
+ * Après l'appel final du propriétaire, jamais avant : la page reste la sienne
+ * jusqu'au bout. Le bloc montre l'outil réel (capture de l'écran Aujourd'hui,
+ * données d'exemple) plutôt qu'une promesse de réseau.
  */
-function FinalCta() {
+function ForWorkshops() {
   return (
-    <section className={`${SHELL} py-section sm:py-section-lg`}>
-      <div className="max-w-[34rem]">
-        <h2 className="mr-title text-mr-ink">
-          Il a déjà une histoire.
-          <br /> Confiez-nous la suite.
-        </h2>
-        <p className="mr-lead mt-6">Présentez-nous votre livre en quelques minutes.</p>
-        <div className="mt-9">
-          <IntakeCta />
+    <section aria-labelledby="pour-les-ateliers" className={`${SHELL} py-section-sm sm:py-section`}>
+      <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+        <div className="lg:col-span-6">
+          <p className="mr-eyebrow">Vous êtes relieur ou restaurateur ?</p>
+          <h2 id="pour-les-ateliers" className="mr-title mt-4 text-mr-ink">
+            Un outil métier conçu pour votre atelier.
+          </h2>
+          <p className="mr-lead mt-6">
+            Créez vos devis, personnalisez vos tarifs, suivez vos ouvrages et vos clients depuis un
+            seul espace.
+          </p>
+          <div className="mt-9 flex flex-wrap items-center gap-3">
+            <ActionLink href="/partenaires-relieurs">Découvrir l’espace relieur</ActionLink>
+            <ActionLink href="/auth?space=atelier" variant="secondary">
+              Créer mon espace atelier
+            </ActionLink>
+          </div>
         </div>
+        <ProductShot shot="aujourdhui" className="lg:col-span-6" sizes="(min-width: 1024px) 600px, 100vw" />
       </div>
     </section>
   );
@@ -434,15 +442,14 @@ export function ReliureLanding() {
             ))}
           </div>
         </section>
-        <WorkshopProductInvite />
         <HowItWorks />
         <Crafts />
         <Realisations />
         <Artisans />
         <Commitments />
         <Pricing />
-        <Reach />
         <FinalCta />
+        <ForWorkshops />
       </main>
       <LandingFooter />
     </div>

@@ -384,6 +384,8 @@
      Un seul. Jamais un aplat : un lien, un filet, un mot. */
   --color-mr-bordeaux: #7a2230;
   --color-mr-bordeaux-soft: #9a4451;
+  /* Brun profond : sections sombres de Fine Bindery (jamais de noir pur). */
+  --color-mr-umber: #2d241d;
 
   /* --- Rythme vertical ----------------------------------------------------
      Trois tailles de section, et rien entre les deux. Une échelle à trois
@@ -533,27 +535,36 @@
   }
 }
 
-/* Fine Bindery garde la discipline typographique de Ma Reliure, avec une
-   palette et un rythme propres au service international de conciergerie. */
+/* Fine Bindery : ivoire, charbon, brun profond, un accent cognac discret.
+   Mêmes classes que Ma Reliure — seuls les jetons changent. */
 .fb-site {
-  --color-mr-paper: #f8f6f0;
-  --color-mr-paper-warm: #ebe8de;
-  --color-mr-paper-deep: #ddd8ca;
-  --color-mr-ink: #14201d;
-  --color-mr-graphite: #34413d;
-  --color-mr-muted: #69736e;
-  --color-mr-rule: #d3d2c8;
-  --color-mr-rule-strong: #b8b8ac;
-  --color-mr-bordeaux: #8b6329;
-  --color-mr-bordeaux-soft: #a8844d;
+  --color-mr-paper: #f6f2ea;
+  --color-mr-paper-warm: #ece6da;
+  --color-mr-paper-deep: #e0d8c9;
+  --color-mr-ink: #1d1c19;
+  --color-mr-graphite: #3b3934;
+  --color-mr-muted: #67625a;
+  --color-mr-rule: #d9d1c3;
+  --color-mr-rule-strong: #bfb5a3;
+  --color-mr-bordeaux: #8a5a36;
+  --color-mr-bordeaux-soft: #a9774f;
+  --color-mr-umber: #2d241d;
 }
-
 .fb-site .mr-display {
-  max-width: 12ch;
-  font-size: clamp(2.7rem, 1.5rem + 3.7vw, 4.8rem);
-  line-height: 0.98;
+  max-width: 17ch;
+  font-size: clamp(2.5rem, 1.35rem + 3.6vw, 4.6rem);
+  font-weight: 350;
+  line-height: 1.02;
+  text-wrap: balance;
+  hyphens: manual;
 }
-
+.fb-site .mr-title {
+  font-weight: 350;
+  text-wrap: balance;
+}
+.fb-site .mr-eyebrow {
+  letter-spacing: 0.18em;
+}
 .fb-site section {
   scroll-margin-top: 6rem;
 }

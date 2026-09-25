@@ -12,6 +12,7 @@ import { MARELIURE_BRAND } from "@/marketplace/config";
 import { isMaReliure } from "@/brand";
 import { ANCHORS } from "./content";
 import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
+import { actionClass } from "./actions";
 
 /**
  * Un seul conteneur pour toutes les pages éditoriales. Les variations se
@@ -70,30 +71,21 @@ export const INTAKE_LABEL = "Présenter mon livre";
 export function IntakeCta({
   variant = "solid",
   size = "default",
+  onInk = false,
 }: {
   variant?: "solid" | "outline";
   /** `compact` pour l'entête, où le bouton accompagne la lecture au lieu de l'ouvrir. */
   size?: "default" | "compact";
+  /** Posé sur une section d'encre : le bouton s'inverse. */
+  onInk?: boolean;
 }) {
-  const base =
-    "inline-flex items-center justify-center rounded-[2px] font-semibold tracking-[0.01em] transition-colors duration-200";
-  // Une seule classe de taille par variante, jamais deux qu'il faudrait
-  // départager : entre `px-7` et `px-4` c'est l'ordre dans la feuille de style
-  // compilée qui tranche, pas l'ordre dans l'attribut — donc un résultat qu'on
-  // ne peut pas lire dans le code.
-  const sizes = {
-    default: "px-7 py-4 text-[0.9375rem]",
-    compact: "px-4 py-2.5 text-[0.8125rem] sm:px-5 sm:py-3",
-  } as const;
-  const skins = {
-    solid: "bg-mr-ink text-mr-paper hover:bg-mr-walnut",
-    outline: "border border-mr-ink/25 text-mr-ink hover:border-mr-ink hover:bg-mr-ink/[0.04]",
-  } as const;
+  // Les classes viennent de `actions.tsx` : un seul système de boutons pour
+  // tous les sites publics, une seule classe de taille par variante.
   return (
     <Link
       to="/m/$publicToken"
       params={INTAKE_PARAMS}
-      className={`${base} ${sizes[size]} ${skins[variant]}`}
+      className={actionClass(variant === "solid" ? "primary" : "secondary", size, onInk)}
     >
       {INTAKE_LABEL}
     </Link>
@@ -207,10 +199,7 @@ export function LandingHeader({ workshop = false }: { workshop?: boolean }) {
             </a>
           </span>
           {workshop ? (
-            <a
-              href="/auth?space=atelier"
-              className="inline-flex min-h-11 max-w-[190px] items-center justify-center rounded-sm bg-mr-bordeaux px-4 py-3 text-center text-sm font-semibold text-white hover:bg-mr-ink"
-            >
+            <a href="/auth?space=atelier" className={actionClass("primary", "compact")}>
               Créer mon espace atelier
             </a>
           ) : (
