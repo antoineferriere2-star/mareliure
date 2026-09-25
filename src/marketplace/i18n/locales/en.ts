@@ -1,46 +1,70 @@
 import type { FineBinderyPublicCopy } from "./types";
 
+/**
+ * English is the reference copy of Fine Bindery: plain, premium English —
+ * no marketplace vocabulary, no SaaS superlatives. The network opens with
+ * ateliers in France; the copy says so rather than implying a European
+ * roster that does not exist yet.
+ */
 export const en: FineBinderyPublicCopy = {
   seo: {
-    homeTitle: "Fine Bindery — Exceptional French bookbinding",
-    homeDescription: "Bookbinders and book conservators in France, with one international point of contact for your project.",
-    directoryTitle: "Bookbinders & book conservators in France — Fine Bindery",
-    directoryDescription: "Discover independent French workshops for bookbinding, restoration, conservation and gilding.",
+    homeTitle: "Fine Bindery — The European network for bookbinding & book conservation",
+    homeDescription: "Discover skilled bookbinders and book conservators, present your project and work with the right atelier. The network opens in France.",
+    directoryTitle: "Bookbinders & book conservators — Fine Bindery",
+    directoryDescription: "Browse independent ateliers for bookbinding, restoration, conservation and gilding, and present your project directly to one of them.",
     profileTitle: (w) => `${w} — Bookbinding and restoration | Fine Bindery`,
-    profileDescription: (w, c) => `Discover ${w}, an independent bookbinding and conservation workshop in ${c}, France.`,
+    profileDescription: (w, c) => `Discover ${w}, an independent bookbinding and conservation atelier in ${c}.`,
   },
-  nav: { how: "How it works", services: "What we do", workshops: "Our workshops", faq: "FAQ", signIn: "Sign in", language: "Language" },
-  common: { start: "Start your project", project: "Project", france: "France", skills: "Skills", languages: "Languages", techniques: "Techniques & materials", originalText: "Workshop text shown in its original language." },
-  footer: { summary: "The international network for French bookbinding and book conservation.", information: "Information", legal: "Legal notice", privacy: "Privacy policy", terms: "Terms of use", sales: "Terms of sale", closing: "French bookbinding, restoration and craftsmanship, by independent artisans." },
+  nav: { how: "How it works", services: "Disciplines", workshops: "Ateliers", faq: "FAQ", signIn: "Sign in", language: "Language", menu: "Menu" },
+  common: { start: "Present your project", project: "Project", france: "France", skills: "Skills", languages: "Languages", techniques: "Techniques & materials", originalText: "Atelier text shown in its original language." },
+  footer: { summary: "The European network for bookbinding and book conservation.", information: "Information", legal: "Legal notice", privacy: "Privacy policy", terms: "Terms of use", sales: "Terms of sale", closing: "Bookbinding, conservation and gilding, by independent ateliers." },
   home: {
-    eyebrow: "French craftsmanship, personally managed", title: "We take responsibility for the entire journey of your book.",
-    lead: "From the first conversation to its safe return, one Fine Bindery contact coordinates the right independent French workshop, the decisions and the international journey.",
-    discover: "Discover French craftsmanship", proof: "One accountable contact · Selected French workshops · Worldwide coordination",
-    benefitsEyebrow: "Your book. The right French hands.", benefitsTitle: "We select the workshop according to the book, the technique and the project — never through a bidding process.", benefitsLead: "Fine Bindery works with independent French bookbinders, gilders and conservators, selected for their specific skills.",
-    benefits: [
-      { title: "A project, understood", body: "You describe your book once. Fine Bindery reviews the work involved before proposing anything." },
-      { title: "A price you can trust", body: "A fixed price when the project can be assessed accurately, or an estimate confirmed before your book is sent." },
-      { title: "The right French hands", body: "Your project goes to the workshop whose skills match it." },
-      { title: "One point of contact", body: "Fine Bindery follows the project from the first photograph to its return home." },
+    eyebrow: "Bookbinding · Conservation · Gilding",
+    title: "The European Network for Bookbinding & Book Conservation.",
+    lead: "Discover skilled bookbinders and conservators. Present your project. Work with the right atelier.",
+    discover: "Discover the ateliers",
+    proof: "Independent ateliers, reviewed before publication · One project, one conversation · Opening in France",
+    offersEyebrow: "Disciplines", offersTitle: "The work of the network.", photoCredit: "Photographs", offers: [
+      { title: "Fine binding", body: "Traditional and contemporary bindings in leather, cloth and fine papers." },
+      { title: "Restoration & conservation", body: "Careful work on old, valuable and meaningful books, respecting their history." },
+      { title: "Collector rebinding", body: "A favourite or collectible edition, made into a unique object." },
+      { title: "Bespoke commissions", body: "One-off bindings, family books, presentation copies, boxes and slipcases." },
     ],
-    offersEyebrow: "What we do", offersTitle: "Four ways to entrust your book.", photoCredit: "Photographs", offers: [
-      { title: "Fine binding", body: "Traditional and contemporary bindings in leather, cloth and fine materials." },
-      { title: "Book restoration", body: "Careful restoration and conservation of old, valuable and meaningful books." },
-      { title: "Collector rebinding", body: "Transform a favourite or collectible edition into a unique object." },
-      { title: "Bespoke commissions", body: "One-off bindings, presentation books, family books, boxes and exceptional projects." },
+    pathsEyebrow: "Two ways to begin", pathsTitle: "Choose your atelier — or let us find it.", paths: [
+      { title: "Choose an atelier", body: "Browse the published ateliers, their work, their techniques and the languages they speak. A project presented from an atelier’s page reaches that atelier directly.", cta: "Browse the ateliers" },
+      { title: "Present your project", body: "Describe your book once. Fine Bindery reviews the work, entrusts it to the atelier whose skills match it, and follows the project until the book comes home.", cta: "Present your project" },
     ],
-    howEyebrow: "How it works", howTitle: "From your home to a French workshop — and back.", steps: ["Show us your book", "Receive your proposal", "We select the right workshop", "Your book travels to France", "Follow the craftsmanship", "Receive your book home"],
-    workshopsEyebrow: "Behind every book, a French artisan", workshopsTitle: "Independent bookbinders, conservators and gilders across France.", workshopsLead: "Each project is entrusted according to the skills it requires.", selected: "Selected by Fine Bindery for this network.", discoverWorkshops: "Discover the published workshops",
-    trustEyebrow: "Your book travels", trustTitle: "Your book travels. Its story does not get lost.", trust: ["Documented condition", "Personal coordination", "Selected French workshop", "Tracked international journey"],
-    shippingEyebrow: "Getting your book to France", shippingTitle: "Secure international shipping, adapted to the book.", shippingLead: "Fine Bindery organises the journey according to the nature and value of the book. Shipping is quoted separately from the service.",
+    howEyebrow: "How a project unfolds", howTitle: "From the first photograph to the book’s return.", steps: ["Present your book", "Receive a proposal", "The right atelier confirms", "Your book travels to the atelier", "Follow the work", "Your book comes home"],
+    workshopsEyebrow: "Behind every book, an atelier", workshopsTitle: "Independent bookbinders, conservators and gilders.", workshopsLead: "Each atelier is reviewed before its page is published: its skills, its experience and the work it wishes to receive.", selected: "Reviewed and published by Fine Bindery.", discoverWorkshops: "Discover the published ateliers",
+    networkNote: "The network opens with ateliers in France, and will welcome bookbinders and conservators from across Europe.",
+    trustEyebrow: "Your book travels", trustTitle: "Your book travels. Its story does not get lost.", trust: ["Documented condition", "One point of contact", "Reviewed ateliers", "A followed journey"],
+    shippingEyebrow: "Shipping", shippingTitle: "A journey adapted to the book.", shippingLead: "The journey is organised according to the nature and value of the book, and quoted separately from the work itself.",
     faqEyebrow: "Questions, answered", faqTitle: "Before you start.", faq: [
-      { question: "Do I need to speak French?", answer: "No. Fine Bindery remains your point of contact throughout the project." },
-      { question: "How is my workshop selected?", answer: "According to the book, the techniques required, the project's complexity and workshop availability." },
-      { question: "Is shipping included?", answer: "No. International shipping is quoted separately according to destination, value and level of care required." },
-      { question: "Can you handle valuable or antique books?", answer: "Yes, subject to individual review and suitable logistics." },
+      { question: "Can I contact an atelier directly?", answer: "Yes. A project presented from an atelier’s page reaches that atelier directly." },
+      { question: "How are ateliers chosen for the network?", answer: "Fine Bindery reviews each atelier before publishing its page: its skills, its experience and the kind of work it wishes to receive. There is no ranking and no paid placement." },
+      { question: "Do I need to speak French?", answer: "No. Each atelier lists the languages it speaks, and Fine Bindery remains your point of contact when you present a project to us." },
+      { question: "Is shipping included?", answer: "No. Shipping is quoted separately, according to destination, value and the level of care the book requires." },
+      { question: "Can valuable or antique books be entrusted?", answer: "Yes, subject to an individual review and suitable logistics." },
     ],
-    finalTitle: "Your book deserves the right hands.", finalLead: "From the first photographs to its return home, Fine Bindery coordinates the entire journey to a selected French workshop.", established: "established",
+    finalTitle: "Your book deserves the right hands.", finalLead: "Browse the ateliers of the network, or present your project and let us find the right one.", established: "established",
   },
-  directory: { eyebrow: "FineBindery Network · France", title: "Workshops chosen for their craft, experience and perspective.", lead: "Discover independent bookbinders and conservators. A project sent from a workshop page reaches that workshop directly.", country: "Country", specialty: "Specialty", language: "Language", allCountries: "All countries", allSpecialties: "All specialties", allLanguages: "All languages", empty: "No published workshop matches these filters." },
-  profile: { workshop: "FineBindery workshop", discuss: "Discuss your project", specialties: "Specialties", languages: "Languages", techniques: "Techniques & materials", according: "According to the project", training: "Training & experience", approach: "Approach", portfolio: "Selected work", work: "Work from the workshop.", before: "Before", after: "After", finalEyebrow: "One book, one conversation, the right craft", finalTitle: (w) => `Discuss your project directly with ${w}.`, website: "Workshop website", call: "Call the workshop", email: "Email the workshop", notFound: "Workshop not found", notFoundBody: "This page is not published or no longer exists.", back: "Discover the professionals" },
+  directory: {
+    eyebrow: "The network", title: "Bookbinders and conservators, chosen for their craft.",
+    lead: "Browse the published ateliers. A project presented from an atelier’s page reaches that atelier directly.",
+    filters: "Filter the ateliers", country: "Country", specialty: "Specialty", language: "Language",
+    allCountries: "All countries", allSpecialties: "All specialties", allLanguages: "All languages",
+    empty: "No published atelier matches these filters.", reset: "Clear the filters",
+    count: (n) => (n === 1 ? "1 atelier" : `${n} ateliers`), view: "View the atelier",
+    emptyTitle: "The first ateliers are being published.",
+    emptyBody: "Their pages will appear here as soon as they are reviewed. In the meantime, present your project: Fine Bindery will find the right atelier for your book.",
+    openingNote: "The network opens with ateliers in France, and will welcome bookbinders and conservators from across Europe.",
+  },
+  profile: {
+    workshop: "Atelier", discuss: "Discuss your project", about: "About the atelier", location: "Location",
+    specialties: "Specialties", languages: "Languages spoken", techniques: "Techniques & materials", according: "According to the project",
+    training: "Training & experience", approach: "Approach", portfolio: "Selected work", work: "Work from the atelier.", before: "Before", after: "After",
+    finalEyebrow: "One book, one conversation", finalTitle: (w) => `Discuss your project directly with ${w}.`,
+    website: "Atelier website", call: "Call the atelier", email: "Email the atelier",
+    notFound: "Atelier not found", notFoundBody: "This page is not published or no longer exists.", back: "Browse the ateliers",
+  },
 };

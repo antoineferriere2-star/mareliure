@@ -116,3 +116,44 @@ describe("lot 2 — filet, entête mobile, contrastes", () => {
     expect(read(file)).not.toMatch(/\btext-mr-(ink|graphite)\/[1-4]\d\b/);
   });
 });
+
+describe("refonte des sites publics — captures produit et Fine Bindery", () => {
+  it("chaque capture de l'espace atelier existe en deux largeurs et figure au registre des images", async () => {
+    const { PRODUCT_SHOTS } = await import("./ProductShot");
+    const registry = read("docs/content-assets.md");
+    for (const shot of Object.values(PRODUCT_SHOTS)) {
+      for (const size of ["960", "1600"]) {
+        expect(existsSync(resolve(process.cwd(), `public/photos/product/${shot.file}-${size}.webp`)), `${shot.file}-${size}`).toBe(true);
+      }
+      expect(registry).toContain(shot.file);
+    }
+  });
+
+  it("les boutons publics passent par une seule grammaire (actions.tsx)", () => {
+    expect(read("src/marketplace/pages/landing/LandingChrome.tsx")).toContain("actionClass(");
+    expect(read("src/marketplace/pages/fineBindery/FineBinderyChrome.tsx")).toContain("actionClass(");
+  });
+
+  it.each([
+    "src/marketplace/pages/fineBindery/FineBinderyLanding.tsx",
+    "src/marketplace/pages/fineBindery/PublicWorkshopPages.tsx",
+  ])("%s habille ses pages de la palette Fine Bindery, sans couleur codée en dur", (file) => {
+    const source = read(file);
+    expect(source).toContain("fb-site");
+    expect(source).not.toMatch(/#[0-9a-fA-F]{6}\b/);
+  });
+
+  it.each(["en", "fr", "de", "it", "es"])("Fine Bindery (%s) dit que le réseau ouvre en France, et ne parle plus de conciergerie", async (locale) => {
+    const { fineBinderyCopy } = await import("@/marketplace/i18n/fineBinderyCopy");
+    const copy = fineBinderyCopy(locale as never);
+    expect(copy.home.networkNote.length).toBeGreaterThan(40);
+    expect(copy.directory.openingNote).toBe(copy.home.networkNote);
+    expect(JSON.stringify(copy)).not.toMatch(/concierge|conciergerie|Concierge|conserjer/i);
+    expect(copy.home.paths).toHaveLength(2);
+  });
+
+  it("la page relieurs parle de projets Ma Reliure, jamais de « leads »", () => {
+    expect(read("src/marketplace/pages/landing/partnersContent.ts")).not.toMatch(/\bLeads?\b/);
+    expect(read("src/marketplace/pages/partners/PartnersLanding.tsx")).not.toMatch(/\bLeads?\b/);
+  });
+});
