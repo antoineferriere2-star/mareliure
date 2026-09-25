@@ -3,7 +3,7 @@ import {
   FINE_BINDERY_LOCALES,
   FINE_BINDERY_LOCALE_STORAGE_KEY,
   HTML_LOCALE,
-  replaceFineBinderyLocale,
+  fineBinderyLanguageHref,
   type FineBinderyLocale,
 } from "./fineBinderyLocale";
 
@@ -22,7 +22,7 @@ export function FineBinderyLanguageSwitch({ locale, label }: { locale: FineBinde
       {FINE_BINDERY_LOCALES.map((candidate) => (
         <a
           key={candidate}
-          href={`${replaceFineBinderyLocale(pathname, candidate)}${search}`}
+          href={fineBinderyLanguageHref(pathname, search, candidate)}
           hrefLang={candidate}
           lang={candidate}
           aria-current={candidate === locale ? "page" : undefined}

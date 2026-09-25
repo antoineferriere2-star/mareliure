@@ -3254,3 +3254,14 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Le lot courant permet de changer la langue FineBindery directement depuis l'espace atelier, sur bureau et mobile. Le choix est mémorisé, appliqué immédiatement au document et limité à FineBindery. Le lien d'accès direct au contenu et les intitulés de navigation suivent désormais EN, FR, DE, IT ou ES.
 - Vérifications locales vertes : typecheck, lint ciblé sans erreur, 223 fichiers Vitest / 3 032 tests et build Ma Reliure complet. Trois tests de contrat couvrent les cinq traductions, les libellés d'accessibilité et la présence du sélecteur sur les deux formats.
 - Reste : commit, publication et PR. Cette branche n'ajoute aucune migration et ne doit pas être déployée avant revue de sa PR.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex — 25 septembre 2026, `fix/finebindery-workshop-auth-copy`.
+
+- PR #39 et #41 fusionnées par merge commits, branches conservées. Production au SHA `d406a9ca38654b26d3394fa37f7bc313b028996f`, Worker `42b3e6f1-830b-4c75-8daf-e3af506a5803`, confirmé actif à 100 %. Onze routes contrôlées répondent 200. QA connectée : tableau de bord DE, changement ES puis IT sur mobile, persistance après rechargement ; langue initiale restaurée. Aucune migration.
+- Reprise après interruption : correction des textes français résiduels de la connexion atelier FineBindery et du nom de marque dans la note d’autorisation. Les cinq langues utilisent les dictionnaires existants.
+- Le sélecteur linguistique de la connexion construisait une route inexistante comme `/de/auth`. Il conserve maintenant `/auth`, modifie `locale` et préserve `space=atelier` et la destination. Test de régression sur les cinq langues, et conservation du comportement des pages publiques.
+- Typecheck passé. Suite complète, lint ciblé et build locaux en cours au moment de la publication ; la CI GitHub devra être verte avant fusion et déploiement. Aucune modification des permissions ni de la logique d’authentification.
