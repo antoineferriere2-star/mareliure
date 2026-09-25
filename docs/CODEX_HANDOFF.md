@@ -3287,3 +3287,16 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Nouveaux tests intégrés : téléversement d’une photo PNG, relecture du devis, présence d’un objet Image dans le PDF et impression de son crédit ; exclusion sans téléchargement ; résistance aux PNG/JPEG endommagés. Le faux stockage Supabase reste en mémoire : aucune donnée réelle modifiée.
 - La bibliothèque explique dès son titre les illustrations fournies et personnalisables. Suppression du défilement vertical parasite dans la barre d’onglets ; défilement horizontal mobile conservé.
 - Aucune migration. Typecheck et lint ciblé verts. 63 tests du service devis passent ; suite complète : 3 038 réussites et deux dépassements de 5 secondes dans les scans sécurité/prix publics. Les 14 tests concernés passent isolément sans changer leurs délais ni leurs assertions. CI complète requise avant publication.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex — 25 septembre 2026, `fix/duplicate-quote-photos`.
+
+- PR #44 fusionnée au SHA `af8a4b6bff56237322f6efed2f33e86efc5a5d55`, Worker `6477b8f9-2e17-4273-9568-c3c287f7fb66`. CI verte, bibliothèque avec 45 illustrations et sans débordement mobile, contrôlée en session connectée.
+- La duplication perdait les images du devis source. Elle copie désormais chaque fichier dans le dossier privé du nouveau brouillon et conserve la ligne correspondante, la légende, la position et le choix d’inclusion PDF. Elle utilise le snapshot du document et ne consulte pas les illustrations actuelles du catalogue.
+- En cas d’échec de copie ou de relecture, seul le brouillon créé par cet appel est supprimé, avec cascade vers ses lignes/photos ; les fichiers copiés sont retirés après confirmation de la suppression. Si la base refuse cette annulation, les fichiers sont conservés pour ne pas aggraver la situation. Le devis source n’est jamais modifié.
+- Les clés des lignes dupliquées restent bornées, même après des duplications successives. Tests : conservation, indépendance des fichiers, inclusion PDF, autre atelier refusé avant création, annulation après fichier manquant. 69 tests ciblés verts. Aucune migration.
+- Limite préexistante distincte : le pricingKey d’une prestation de base n’est toujours pas persisté dans les lignes de devis ; ne pas le reconstruire à partir d’un libellé libre ou d’une correspondance approximative.
+- Typecheck et lint ciblé verts. Suite locale : 3 042 tests réussis, un scan de fichiers compilés hors délai ; les 14 contrôles sécurité/prix passent isolément sans assouplissement. Les 66 tests du service devis passent après suppression d’une signature d’URL redondante. PR #45 ; CI complète requise avant fusion.
