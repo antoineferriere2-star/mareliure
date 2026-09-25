@@ -6,6 +6,8 @@ import { BookOpen, FileText, Globe2, House, Inbox, LibraryBig, Menu, MessageSqua
 import { SignOutButton } from "@/marketplace/pages/SignOutButton";
 import { getMyBinderProfile, listMyBinderCases } from "@/marketplace/services/marketplace.data.functions";
 import { FineBinderyWorkspaceProvider, PROFESSIONAL_COPY, useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspaceContext";
+import { FINE_BINDERY_LOCALES, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
+import { languageName } from "@/marketplace/i18n/fineBinderyGlossary";
 
 export const Route = createFileRoute("/_authenticated/atelier")({ ssr: false, component: AtelierLayout });
 
@@ -28,10 +30,21 @@ function Count({ value }: { value: number }) {
   return <span className="ml-auto min-w-5 rounded-full bg-[#7a2230] px-1.5 py-0.5 text-center text-[0.65rem] font-bold leading-4 text-white">{value}</span>;
 }
 
+function WorkspaceLanguageSelect({ locale, label, onChange, compact = false }: { locale: FineBinderyLocale; label: string; onChange: (locale: FineBinderyLocale) => void; compact?: boolean }) {
+  return (
+    <label className={compact ? "flex min-h-11 items-center justify-between gap-3 px-3 text-sm" : "block px-3 py-3"}>
+      <span className={compact ? "font-medium" : "mb-1 block text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[#8b8175]"}>{label}</span>
+      <select value={locale} onChange={(event) => onChange(event.target.value as FineBinderyLocale)} className="min-h-10 rounded-sm border border-[#cfc5b6] bg-[#fffdf8] px-2 text-sm text-[#241a12]">
+        {FINE_BINDERY_LOCALES.map((option) => <option key={option} value={option}>{languageName(option, option)}</option>)}
+      </select>
+    </label>
+  );
+}
+
 function AtelierLayout() { return <FineBinderyWorkspaceProvider><AtelierLayoutContent /></FineBinderyWorkspaceProvider>; }
 
 function AtelierLayoutContent() {
-  const { isFineBindery, locale } = useFineBinderyWorkspace();
+  const { isFineBindery, locale, setLocale } = useFineBinderyWorkspace();
   const copy = PROFESSIONAL_COPY[locale];
   const fetchCases = useServerFn(listMyBinderCases);
   const fetchProfile = useServerFn(getMyBinderProfile);
@@ -43,13 +56,13 @@ function AtelierLayoutContent() {
 
   return (
     <div className="min-h-screen bg-[#f4efe6] text-[#241a12] lg:grid lg:grid-cols-[15.5rem_minmax(0,1fr)]">
-      <a href="#atelier-main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:bg-[#241a12] focus:px-4 focus:py-3 focus:text-white">Aller au contenu</a>
+      <a href="#atelier-main" className="sr-only focus:not-sr-only focus:fixed focus:left-3 focus:top-3 focus:z-[70] focus:bg-[#241a12] focus:px-4 focus:py-3 focus:text-white">{copy.skipToContent}</a>
       <aside className="hidden min-h-screen border-r border-[#d8d0c4] bg-[#fbf8f2] lg:sticky lg:top-0 lg:flex lg:h-screen lg:flex-col">
         <div className="border-b border-[#d8d0c4] px-6 py-7">
           <Link to="/atelier" className="block font-editorial text-2xl leading-none tracking-[-0.02em]">{isFineBindery ? "FineBindery" : "Ma Reliure"}</Link>
           <p className="mt-2 text-[0.68rem] font-semibold uppercase tracking-[0.2em] text-[#7a2230]">{copy.space}</p>
         </div>
-        <nav aria-label="Espace atelier" className="flex-1 overflow-y-auto px-3 py-5">
+        <nav aria-label={copy.workspaceNavigation} className="flex-1 overflow-y-auto px-3 py-5">
           <p className="px-3 pb-2 text-[0.65rem] font-semibold uppercase tracking-[0.16em] text-[#8b8175]">{copy.work}</p>
           <div className="space-y-1">
             {PRIMARY_NAV.map((item) => { const Icon = item.icon; return (
@@ -67,6 +80,7 @@ function AtelierLayoutContent() {
             ); })}
           </div>
         </nav>
+        {isFineBindery && <WorkspaceLanguageSelect locale={locale} label={copy.language} onChange={setLocale} />}
         <div className="border-t border-[#d8d0c4] px-4 py-3"><SignOutButton label={copy.signOut} signedInAs={copy.signedIn} className="inline-flex min-h-11 items-center text-xs font-medium text-[#685d51] underline-offset-4 hover:underline" /></div>
       </aside>
 
@@ -83,7 +97,7 @@ function AtelierLayoutContent() {
         </main>
       </div>
 
-      <nav aria-label="Navigation mobile" className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-[#cfc5b6] bg-[#fffdf8]/95 px-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1 backdrop-blur lg:hidden">
+      <nav aria-label={copy.mobileNavigation} className="fixed inset-x-0 bottom-0 z-50 grid grid-cols-5 border-t border-[#cfc5b6] bg-[#fffdf8]/95 px-1 pb-[max(0.35rem,env(safe-area-inset-bottom))] pt-1 backdrop-blur lg:hidden">
         {PRIMARY_NAV.map((item) => { const Icon = item.icon; return (
           <Link key={item.to} to={item.to} activeOptions={item.exact ? { exact: true } : undefined} className="relative flex min-h-14 flex-col items-center justify-center gap-1 rounded-sm text-[0.65rem] font-medium text-[#74695d]" activeProps={{ className: "bg-[#f0e9df] text-[#5f1b27]" }}>
             <Icon aria-hidden="true" className="h-[1.1rem] w-[1.1rem]" />{copy[item.key]}{badgeFor(item.key) > 0 && <span className="absolute right-[23%] top-1.5 h-2 w-2 rounded-full bg-[#7a2230]" />}
@@ -93,6 +107,7 @@ function AtelierLayoutContent() {
           <summary className="flex min-h-14 cursor-pointer list-none flex-col items-center justify-center gap-1 rounded-sm text-[0.65rem] font-medium text-[#74695d] [&::-webkit-details-marker]:hidden"><Menu aria-hidden="true" className="h-[1.1rem] w-[1.1rem]" />{copy.more}</summary>
           <div className="absolute bottom-[calc(100%+0.5rem)] right-1 w-52 border border-[#cfc5b6] bg-[#fffdf8] p-2 shadow-xl">
             {SECONDARY_NAV.map((item) => { const Icon = item.icon; return <Link key={item.to} to={item.to} className="flex min-h-11 items-center gap-3 px-3 text-sm hover:bg-[#f0e9df]"><Icon aria-hidden="true" className="h-4 w-4" />{copy[item.key]}</Link>; })}
+            {isFineBindery && <WorkspaceLanguageSelect compact locale={locale} label={copy.language} onChange={setLocale} />}
           </div>
         </details>
       </nav>
