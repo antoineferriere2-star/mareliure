@@ -3242,3 +3242,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - La page précise qu'une photographie peut montrer l'état reçu, le geste ou le résultat. Les images servent de repères visuels et ne sont pas attribuées à Ma Reliure ni à un autre atelier. La photothèque privée de chaque relieur reste réservée à ses propres réalisations.
 - QA locale : galerie et accueils contrôlés sur bureau et mobile, aucun débordement horizontal, crédits lisibles. Les quatre images FineBindery ont été vérifiées en anglais, français, allemand, italien et espagnol. Vérifications vertes : 220 fichiers Vitest / 2 992 tests, typecheck, lint sans erreur et build Vite/Nitro.
 - Aucun atelier Ferrière identifiable n'existe parmi les trois ateliers actuellement approuvés en production. Aucune image n'a donc été injectée dans une photothèque privée et aucune donnée de production n'a été modifiée. PR #36 ouverte, fusionnable et CI `quality` verte, sans migration ; attendre une autorisation explicite avant fusion et déploiement.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex (GPT-6) — 25 septembre 2026, `feat/finebindery-workspace-i18n`.
+
+- Le travail Claude du tableau de bord atelier a été resynchronisé avec `main`, validé puis fusionné via la PR #39 par merge commit normal `7806cd64c0830a318ecc323294c12820eb5bb02a`. La branche est conservée et la CI `quality` est verte.
+- Un seul déploiement a suivi depuis `main` : Worker `mareliure` version `5d4d31b1-2562-4e3a-8cdf-bf5ea6889c5e`, active à 100 %. Ma Reliure `/`, `/tarifs`, `/auth` et FineBindery `/en`, `/fr`, `/de`, `/it`, `/es`, `/auth` répondent 200. Aucune migration ni écriture métier.
+- Le lot courant permet de changer la langue FineBindery directement depuis l'espace atelier, sur bureau et mobile. Le choix est mémorisé, appliqué immédiatement au document et limité à FineBindery. Le lien d'accès direct au contenu et les intitulés de navigation suivent désormais EN, FR, DE, IT ou ES.
+- Vérifications locales vertes : typecheck, lint ciblé sans erreur, 223 fichiers Vitest / 3 032 tests et build Ma Reliure complet. Trois tests de contrat couvrent les cinq traductions, les libellés d'accessibilité et la présence du sélecteur sur les deux formats.
+- Reste : commit, publication et PR. Cette branche n'ajoute aucune migration et ne doit pas être déployée avant revue de sa PR.
