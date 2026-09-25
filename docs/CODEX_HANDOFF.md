@@ -3265,3 +3265,13 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Reprise après interruption : correction des textes français résiduels de la connexion atelier FineBindery et du nom de marque dans la note d’autorisation. Les cinq langues utilisent les dictionnaires existants.
 - Le sélecteur linguistique de la connexion construisait une route inexistante comme `/de/auth`. Il conserve maintenant `/auth`, modifie `locale` et préserve `space=atelier` et la destination. Test de régression sur les cinq langues, et conservation du comportement des pages publiques.
 - Typecheck passé. Suite complète, lint ciblé et build locaux en cours au moment de la publication ; la CI GitHub devra être verte avant fusion et déploiement. Aucune modification des permissions ni de la logique d’authentification.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex — 25 septembre 2026, `feat/default-service-photos`.
+
+- À la demande du propriétaire, les 45 illustrations Ferrière déjà autorisées deviennent les photos par défaut des prestations de base dans l’espace atelier. Le catalogue tarifaire et la bibliothèque les affichent ; une bibliothèque personnelle non vide a toujours priorité. Retirer les photos personnelles rétablit le défaut. Les prestations libres sans correspondance explicite ne reçoivent pas de photo arbitraire.
+- Ajouter une prestation à un nouveau devis sélectionne ses photos effectives. Les illustrations communes sont copiées en PNG dans le stockage privé du devis par le circuit existant ; leur crédit Ferrière est conservé sur la légende. Elles peuvent être retirées ou exclues du PDF. Les documents existants restent inchangés. Aucun changement de schéma ni écriture massive dans les ateliers.
+- Tests ajoutés : couverture des 45 fichiers, crédit, priorité personnelle, retour au défaut, limites et rejet des identifiants inconnus. Typecheck, lint ciblé, build Ma Reliure et suite complète verts : 224 fichiers / 3 036 tests. PR #43 ouverte ; consulter la PR et le rapport de déploiement pour leur état de publication final.
