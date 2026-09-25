@@ -56,8 +56,9 @@ async function fetchImage(pdf: PDFDocument, url: string | null | undefined): Pro
     if (!response.ok) return null;
     const bytes = new Uint8Array(await response.arrayBuffer());
     const mime = response.headers.get("content-type") ?? "";
-    if (mime.includes("png") || url.toLowerCase().includes(".png")) return pdf.embedPng(bytes);
-    return pdf.embedJpg(bytes);
+    // Attendre aussi le décodage pour traiter une image endommagée comme indisponible.
+    if (mime.includes("png") || url.toLowerCase().includes(".png")) return await pdf.embedPng(bytes);
+    return await pdf.embedJpg(bytes);
   } catch {
     return null;
   }

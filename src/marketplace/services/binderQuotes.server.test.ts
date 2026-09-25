@@ -7,7 +7,8 @@
  * ateliers l'un de l'autre.
  */
 /* eslint-disable @typescript-eslint/no-explicit-any -- le faux client Supabase est volontairement non typé */
-import { describe, expect, it, beforeEach } from "vitest";
+import { describe, expect, it, beforeEach, afterEach, vi } from "vitest";
+import { PDFDocument, PDFName, PDFRawStream } from "pdf-lib";
 import {
   archiveService,
   attachOperationPhotoToQuoteItem,
@@ -33,6 +34,7 @@ import {
   updateQuote,
   updateInvoiceDraft,
   uploadDocumentLogo,
+  uploadQuoteItemPhoto,
 } from "./binderQuotes.server";
 import { deleteOperationPhoto, listOperationPhotos, updateOperationPhotoCaption, uploadOperationPhoto } from "./binderOperationPhotos.server";
 import { QUOTE_OPERATION_PHOTOS_BUCKET } from "@/marketplace/quotes/quotePhotos";
@@ -891,6 +893,51 @@ describe("provenance des lignes du workbench", () => {
 
 describe("PDF", () => {
   const decode = (base64: string) => Buffer.from(base64, "base64");
+  const png = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=";
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("relit une photo PNG enregistrée et imprime son image et son crédit dans le PDF", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    const caption = "Illustration — Atelier Reliure Dorure Ferrière, Orléans";
+    await uploadQuoteItemPhoto(world.sb, BINDER_A, {
+      quoteId: quote.id, lineKey: quote.items[0].lineKey!, filename: "illustration.png",
+      mimeType: "image/png", imageBase64: png, caption, includeInPdf: true,
+    });
+    const reread = await getQuote(world.sb, BINDER_A, quote.id);
+    expect(reread.items[0].photos).toHaveLength(1);
+    const fetchPhoto = vi.fn().mockResolvedValue(new Response(Buffer.from(png, "base64"), { headers: { "content-type": "image/png" } }));
+    vi.stubGlobal("fetch", fetchPhoto);
+    const rendered = await renderDocumentPdf(reread);
+    expect(fetchPhoto).toHaveBeenCalledWith(reread.items[0].photos[0].url);
+    expect(rendered.printed.join(" ")).toContain(caption);
+    const pdf = await PDFDocument.load(decode(rendered.base64));
+    expect(pdf.context.enumerateIndirectObjects().some(([, object]) => object instanceof PDFRawStream && object.dict.get(PDFName.of("Subtype")) === PDFName.of("Image"))).toBe(true);
+  });
+
+  it("ne télécharge ni n'imprime une photo exclue du PDF", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    await uploadQuoteItemPhoto(world.sb, BINDER_A, {
+      quoteId: quote.id, lineKey: quote.items[0].lineKey!, filename: "prive.png",
+      mimeType: "image/png", imageBase64: png, caption: "Photo exclue", includeInPdf: false,
+    });
+    const fetchPhoto = vi.fn();
+    vi.stubGlobal("fetch", fetchPhoto);
+    const rendered = await renderDocumentPdf(await getQuote(world.sb, BINDER_A, quote.id));
+    expect(fetchPhoto).not.toHaveBeenCalled();
+    expect(rendered.printed.join(" ")).not.toContain("Photo exclue");
+  });
+
+  it.each(["image/png", "image/jpeg"])("une image %s endommagée ne bloque pas le devis", async (mimeType) => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    quote.issuer.logoUrl = "https://storage.example/logo";
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("invalid image", { headers: { "content-type": mimeType } })));
+    const rendered = await renderDocumentPdf(quote);
+    expect(decode(rendered.base64).subarray(0, 5).toString()).toBe("%PDF-");
+    expect(rendered.printed).toContain("Total TTC");
+  });
 
   it("un devis PDF valide, avec tout ce que le brief demande", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput());
