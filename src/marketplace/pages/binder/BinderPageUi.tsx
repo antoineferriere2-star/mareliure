@@ -75,13 +75,23 @@ export function BinderLoading({ label }: { label: string }) {
 }
 
 /** Une source n'a pas répondu : on le dit, on propose de réessayer, le reste de l'écran continue de servir. */
-export function BinderRetryNote({ children, onRetry, retrying }: { children: ReactNode; onRetry: () => void; retrying?: boolean }) {
+export function BinderRetryNote({
+  children,
+  onRetry,
+  retrying,
+  labels = { retry: "Réessayer", retrying: "Nouvel essai…" },
+}: {
+  children: ReactNode;
+  onRetry: () => void;
+  retrying?: boolean;
+  labels?: { retry: string; retrying: string };
+}) {
   return (
     <div role="alert" className="flex flex-wrap items-center justify-between gap-3 border-l-4 border-[#9a3412] bg-[#fdf1ea] px-4 py-3 text-sm text-[#5a1f0c]">
       <p className="min-w-0 flex-1 leading-6">{children}</p>
       <button type="button" onClick={onRetry} disabled={retrying} className="inline-flex min-h-11 items-center gap-2 rounded-sm px-2 font-semibold underline underline-offset-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#7a2230]/50 disabled:opacity-60">
         <RefreshCw aria-hidden="true" className={`h-4 w-4 ${retrying ? "animate-spin" : ""}`} />
-        {retrying ? "Nouvel essai…" : "Réessayer"}
+        {retrying ? labels.retrying : labels.retry}
       </button>
     </div>
   );

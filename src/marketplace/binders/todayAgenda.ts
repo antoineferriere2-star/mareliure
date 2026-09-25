@@ -63,15 +63,24 @@ export type AgendaLink =
   | { to: "/atelier/devis/$quoteId/modifier"; params: { quoteId: string } }
   | { to: "/atelier/factures/$invoiceId"; params: { invoiceId: string } };
 
+/**
+ * Un élément de l'agenda : des faits, jamais une phrase. L'écran les formule dans
+ * la langue de l'atelier (voir `pages/binder/dashboardCopy.ts`).
+ */
 export type AgendaItem = {
   key: string;
   kind: AgendaKind;
-  /** Ce que c'est, en deux ou trois mots. */
-  label: string;
+  /** Titre du projet ou du livre ; vide quand la donnée n'en a pas (l'écran écrit « Sans titre »). */
   title: string;
-  detail: string;
-  /** Le verbe du bouton : ce que le relieur va faire. */
-  action: string;
+  /** Référence du projet (demandes, messages, dossiers retenus). */
+  reference?: string;
+  /** Nom du client, quand l'atelier a le droit de le connaître. */
+  clientName?: string | null;
+  /** Numéro du devis ou de la facture. */
+  documentNumber?: string;
+  /** Fin de validité (devis) ou échéance (facture), AAAA-MM-JJ. */
+  date?: string;
+  unreadCount?: number;
   link: AgendaLink;
   /** Un retard, un délai dépassé : signalé autrement que par la couleur seule. */
   late: boolean;
@@ -112,12 +121,7 @@ export function quoteFollowUp(quote: AgendaQuote, today: string): "expired" | "e
   return quote.validUntil <= addDays(today, QUOTE_FOLLOW_UP_DAYS) ? "expiring" : null;
 }
 
-const documentTitle = (doc: { bookTitle: string | null; clientName: string }) => doc.bookTitle || doc.clientName || "Sans titre";
-
-export function formatShortDate(iso: string): string {
-  const [y, m, d] = iso.split("-").map(Number);
-  return new Intl.DateTimeFormat("fr-FR", { day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d)));
-}
+const documentTitle = (doc: { bookTitle: string | null; clientName: string }) => doc.bookTitle || doc.clientName || "";
 
 export function buildAgenda(input: {
   cases: readonly AgendaCase[];
@@ -133,122 +137,53 @@ export function buildAgenda(input: {
 
   for (const row of cases) {
     if (isClosed(row)) continue;
-    const who = row.clientName ? `${row.clientName} · ${row.reference}` : row.reference;
+    const project = { title: row.title || row.reference, reference: row.reference, clientName: row.clientName };
+    const caseLink = { to: "/atelier/leads/$leadId", params: { leadId: row.caseId } } as const;
     if (row.unreadCount > 0) {
       items.push({
         key: `message:${row.caseId}`,
         kind: "message",
-        label: row.unreadCount > 1 ? `${row.unreadCount} messages non lus` : "Message non lu",
-        title: row.title || row.reference,
-        detail: who,
-        action: "Répondre",
+        ...project,
+        unreadCount: row.unreadCount,
         link: { to: "/atelier/messages/$conversationId", params: { conversationId: row.caseId } },
         late: false,
       });
       continue;
     }
     if (isNewRequest(row)) {
-      items.push({
-        key: `request:${row.caseId}`,
-        kind: "request",
-        label: "Nouvelle demande",
-        title: row.title || row.reference,
-        detail: who,
-        action: "Examiner",
-        link: { to: "/atelier/leads/$leadId", params: { leadId: row.caseId } },
-        late: false,
-      });
+      items.push({ key: `request:${row.caseId}`, kind: "request", ...project, link: caseLink, late: false });
       continue;
     }
     if (row.state !== "selected") continue;
     const work = workByCase.get(row.caseId);
-    if (!work) {
-      items.push({
-        key: `case-work:${row.caseId}`,
-        kind: "case_work",
-        label: "Atelier retenu",
-        title: row.title || row.reference,
-        detail: `${who} · fiche ouvrage à créer`,
-        action: "Ouvrir le dossier",
-        link: { to: "/atelier/leads/$leadId", params: { leadId: row.caseId } },
-        late: false,
-      });
-    } else if (!quotedWorks.has(work.id)) {
-      items.push({
-        key: `case-quote:${row.caseId}`,
-        kind: "case_quote",
-        label: "Devis à établir",
-        title: row.title || row.reference,
-        detail: who,
-        action: "Ouvrir le dossier",
-        link: { to: "/atelier/leads/$leadId", params: { leadId: row.caseId } },
-        late: false,
-      });
-    }
+    if (!work) items.push({ key: `case-work:${row.caseId}`, kind: "case_work", ...project, link: caseLink, late: false });
+    else if (!quotedWorks.has(work.id)) items.push({ key: `case-quote:${row.caseId}`, kind: "case_quote", ...project, link: caseLink, late: false });
   }
 
   for (const quote of quotes) {
+    const doc = { title: documentTitle(quote), documentNumber: quote.number, clientName: quote.clientName };
     const followUp = quoteFollowUp(quote, today);
     if (followUp) {
       items.push({
         key: `quote-${followUp}:${quote.id}`,
         kind: followUp === "expired" ? "quote_expired" : "quote_expiring",
-        label: followUp === "expired" ? "Validité dépassée" : "Devis à relancer",
-        title: documentTitle(quote),
-        detail: `${quote.number} · ${quote.clientName} · ${followUp === "expired" ? "expiré le" : "valable jusqu'au"} ${formatShortDate(quote.validUntil!)}`,
-        action: followUp === "expired" ? "Voir le devis" : "Relancer",
+        ...doc,
+        date: quote.validUntil!,
         link: { to: "/atelier/devis/$quoteId", params: { quoteId: quote.id } },
         late: followUp === "expired",
       });
     } else if (quote.status === "draft") {
-      items.push({
-        key: `quote-draft:${quote.id}`,
-        kind: "quote_draft",
-        label: "Devis à terminer",
-        title: documentTitle(quote),
-        detail: `${quote.number} · ${quote.clientName}`,
-        action: "Continuer",
-        link: { to: "/atelier/devis/$quoteId/modifier", params: { quoteId: quote.id } },
-        late: false,
-      });
+      items.push({ key: `quote-draft:${quote.id}`, kind: "quote_draft", ...doc, link: { to: "/atelier/devis/$quoteId/modifier", params: { quoteId: quote.id } }, late: false });
     } else if (quote.status === "accepted") {
-      items.push({
-        key: `quote-invoice:${quote.id}`,
-        kind: "quote_to_invoice",
-        label: "Devis accepté",
-        title: documentTitle(quote),
-        detail: `${quote.number} · facture à préparer`,
-        action: "Facturer",
-        link: { to: "/atelier/devis/$quoteId", params: { quoteId: quote.id } },
-        late: false,
-      });
+      items.push({ key: `quote-invoice:${quote.id}`, kind: "quote_to_invoice", ...doc, link: { to: "/atelier/devis/$quoteId", params: { quoteId: quote.id } }, late: false });
     }
   }
 
   for (const invoice of invoices) {
-    if (invoice.status === "draft") {
-      items.push({
-        key: `invoice-draft:${invoice.id}`,
-        kind: "invoice_draft",
-        label: "Facture à émettre",
-        title: documentTitle(invoice),
-        detail: `Brouillon · ${invoice.clientName}`,
-        action: "Émettre",
-        link: { to: "/atelier/factures/$invoiceId", params: { invoiceId: invoice.id } },
-        late: false,
-      });
-    } else if (isPaymentOverdue(invoice, today)) {
-      items.push({
-        key: `payment:${invoice.id}`,
-        kind: "payment_overdue",
-        label: "Paiement en retard",
-        title: documentTitle(invoice),
-        detail: `${invoice.number} · échéance du ${formatShortDate(invoice.dueDate!)}`,
-        action: "Voir la facture",
-        link: { to: "/atelier/factures/$invoiceId", params: { invoiceId: invoice.id } },
-        late: true,
-      });
-    }
+    const doc = { title: documentTitle(invoice), documentNumber: invoice.number, clientName: invoice.clientName };
+    const link = { to: "/atelier/factures/$invoiceId", params: { invoiceId: invoice.id } } as const;
+    if (invoice.status === "draft") items.push({ key: `invoice-draft:${invoice.id}`, kind: "invoice_draft", ...doc, link, late: false });
+    else if (isPaymentOverdue(invoice, today)) items.push({ key: `payment:${invoice.id}`, kind: "payment_overdue", ...doc, date: invoice.dueDate!, link, late: true });
   }
 
   // Tri stable : l'ordre des sources (les plus récentes d'abord) est conservé à l'intérieur d'un même type.

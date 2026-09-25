@@ -74,12 +74,12 @@ describe("« À traiter maintenant »", () => {
   it("un message non lu mène à la conversation, et ne double pas la ligne du dossier", () => {
     const items = agenda({ cases: [aCase({ unreadCount: 3 })] });
     expect(items).toHaveLength(1);
-    expect(items[0]).toMatchObject({ kind: "message", label: "3 messages non lus", link: { to: "/atelier/messages/$conversationId", params: { conversationId: "case-1" } } });
+    expect(items[0]).toMatchObject({ kind: "message", unreadCount: 3, link: { to: "/atelier/messages/$conversationId", params: { conversationId: "case-1" } } });
   });
 
   it("n'affiche pas le nom du client d'une demande que l'atelier n'a pas encore obtenue", () => {
     const [item] = agenda({ cases: [aCase({ state: "invited", clientName: null })] });
-    expect(item).toMatchObject({ kind: "request", detail: "MR-0001" });
+    expect(item).toMatchObject({ kind: "request", reference: "MR-0001", clientName: null });
   });
 
   it("ignore les dossiers clos, déclinés ou annulés", () => {
