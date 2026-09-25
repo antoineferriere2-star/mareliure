@@ -155,7 +155,7 @@ function Wordmark({ tone = "ink" }: { tone?: "ink" | "paper" }) {
 const HEADER_LINK =
   "mr-tap mr-small shrink-0 text-mr-graphite underline-offset-[6px] transition-colors hover:text-mr-ink hover:underline";
 
-export function LandingHeader() {
+export function LandingHeader({ workshop = false }: { workshop?: boolean }) {
   return (
     <header className="sticky top-0 z-40 border-b border-mr-rule/70 bg-mr-paper">
       <div className="mx-auto flex max-w-[78rem] items-center justify-between gap-6 px-5 py-3 sm:px-8 lg:py-5">
@@ -198,7 +198,13 @@ export function LandingHeader() {
               Se connecter
             </a>
           </span>
-          <IntakeCta variant="outline" size="compact" />
+          {workshop ? (
+            <a href="/auth?space=atelier" className={actionClass("primary", "compact")}>
+              Créer mon espace atelier
+            </a>
+          ) : (
+            <IntakeCta variant="outline" size="compact" />
+          )}
         </div>
       </div>
       <nav aria-label="Navigation mobile" className="border-t border-mr-rule/70 lg:hidden">

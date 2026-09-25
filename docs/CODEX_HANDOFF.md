@@ -3300,3 +3300,15 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Les clés des lignes dupliquées restent bornées, même après des duplications successives. Tests : conservation, indépendance des fichiers, inclusion PDF, autre atelier refusé avant création, annulation après fichier manquant. 69 tests ciblés verts. Aucune migration.
 - Limite préexistante distincte : le pricingKey d’une prestation de base n’est toujours pas persisté dans les lignes de devis ; ne pas le reconstruire à partir d’un libellé libre ou d’une correspondance approximative.
 - Typecheck et lint ciblé verts. Suite locale : 3 042 tests réussis, un scan de fichiers compilés hors délai ; les 14 contrôles sécurité/prix passent isolément sans assouplissement. Les 66 tests du service devis passent après suppression d’une signature d’URL redondante. PR #45 ; CI complète requise avant fusion.
+
+---
+
+## Latest handoff
+
+**Agent :** Codex — 25 septembre 2026, `feat/workshop-product-landing`.
+
+- La home Ma Reliure présente désormais son outil gratuit avec un bloc dédié. `/partenaires-relieurs` présente d’abord ouvrages, devis, tarifs et factures ; la réception de projets est un complément, toujours soumis à autorisation administrative. En-tête adapté : CTA « Créer mon espace atelier » vers `/auth?space=atelier` ; l’authentification existante sélectionne bien Atelier partenaire.
+- Six captures réelles du produit partagé, cadrées sans données privées : devis et ouvrage saisis sans sauvegarde, catalogue de base, haut du tableau quotidien sans factures, messagerie vide et PDF de recette réellement exporté. Sources et autorisation dans `docs/content-assets.md`. Les images WebP totalisent environ 290 Ko ; dimensions intrinsèques et agrandissement accessibles.
+- Gratuité et exemples 350/385/420 et 500/15/485 proviennent explicitement du brief. Le parcours Stripe à 3 % pour les factures des propres clients n’existe pas encore : la page l’identifie comme option prochainement disponible, sans promettre son activation actuelle. Ne pas retirer cette réserve avant implémentation.
+- QA navigateur : desktop et largeurs 375/390/430 sans débordement, images chargées, six CTA atelier cohérents, route d’inscription vérifiée sans envoyer d’e-mail. La fiche ouvrage montrée est l’écran de création actuel, légendé comme saisie non enregistrée ; aucun compte ou document QA ajouté en production.
+- Typecheck vert ; lint sans erreur (16 avertissements préexistants). Suite locale : 3 041 réussites et deux scans du bundle hors délai sous Windows, encore hors délai isolément. Aucun délai ou contrôle affaibli. CI complète impérative avant fusion. Aucun changement de base.

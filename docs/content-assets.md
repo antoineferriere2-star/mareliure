@@ -243,3 +243,7 @@ snapshot de document peut encore le référencer.
 ### Usage par défaut dans l’espace atelier — 25 septembre 2026
 
 À la demande explicite du propriétaire, les 45 illustrations Ferrière ci-dessus sont proposées par défaut pour les prestations de base de chaque relieur. Les photos personnelles sont prioritaires. Les copies enregistrées dans un devis conservent le crédit Atelier Reliure Dorure Ferrière, Orléans ; elles illustrent une opération et ne sont pas présentées comme une réalisation de l’atelier destinataire. Les fichiers et l’autorisation source restent ceux du registre ci-dessus.
+
+## Captures de l’outil atelier (PR #46) — retirées le 25 septembre 2026
+
+Les six captures `/product/*.webp` de la PR #46 ne sont plus publiées : la page relieurs et le bloc de l’accueil utilisent désormais les captures `/photos/product/*` décrites plus haut (PR #47). Plus aucun fichier `/product/` n’est servi.

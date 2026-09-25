@@ -37,7 +37,7 @@ export function PartnersLandingPage() {
   usePageViewTracking();
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
-      <LandingHeader />
+      <LandingHeader workshop />
       <main>
         <Hero />
         <Overview />
