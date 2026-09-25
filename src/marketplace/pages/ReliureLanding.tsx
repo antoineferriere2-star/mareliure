@@ -111,7 +111,7 @@ function Hero() {
  */
 function HowItWorks() {
   return (
-    <section id={ANCHORS.howItWorks} className="scroll-mt-24 bg-mr-paper-warm">
+    <section id={ANCHORS.howItWorks} className="scroll-mt-36 lg:scroll-mt-28 bg-mr-paper-warm">
       <div className={`${SHELL} py-section-sm sm:py-section`}>
         <SectionHead
           eyebrow="Comment ça marche"
@@ -145,7 +145,7 @@ function HowItWorks() {
  */
 function Crafts() {
   return (
-    <section id={ANCHORS.crafts} className={`${SHELL} scroll-mt-24 py-section-sm sm:py-section`}>
+    <section id={ANCHORS.crafts} className={`${SHELL} scroll-mt-36 lg:scroll-mt-28 py-section-sm sm:py-section`}>
       <SectionHead
         eyebrow="Les savoir-faire"
         title="Que voulez-vous faire de votre livre ?"
@@ -163,17 +163,20 @@ function Crafts() {
           const photo = ferriereServicePhoto(FERRIERE_EDITORIAL_CRAFT_KEYS[index]);
           return (
             <div key={craft.title} className="border-t border-mr-rule pt-5">
-              <img
-                src={photo.src}
-                srcSet={photo.srcSet}
-                sizes="(min-width: 1024px) 390px, (min-width: 640px) 50vw, 100vw"
-                alt=""
-                loading="lazy"
-                decoding="async"
-                className="aspect-[4/3] w-full bg-mr-ink/5 object-cover"
-              />
-              <dt className="mt-5 font-editorial text-[1.5rem] leading-tight text-mr-ink">
-                {craft.title}
+              {/* L'image, décorative, vit dans le <dt> : un groupe de <dl> n'accepte que <dt> et <dd>. */}
+              <dt>
+                <img
+                  src={photo.src}
+                  srcSet={photo.srcSet}
+                  sizes="(min-width: 1024px) 390px, (min-width: 640px) 50vw, 100vw"
+                  alt=""
+                  loading="lazy"
+                  decoding="async"
+                  className="aspect-[4/3] w-full bg-mr-ink/5 object-cover"
+                />
+                <span className="mt-5 block font-editorial text-[1.5rem] leading-tight text-mr-ink">
+                  {craft.title}
+                </span>
               </dt>
               <dd>
                 <p className="mr-body mt-2">{craft.body}</p>

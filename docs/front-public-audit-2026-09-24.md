@@ -27,18 +27,21 @@ Lecture seule en production : aucun parcours de demande démarré.
 
 ## À décider (non traité)
 
-1. **Navigation mobile.** Sous 1024 px, l'entête n'offre que « Se connecter »
-   et « Présenter mon livre » ; Tarifs, Comment ça marche, Savoir-faire et
-   Pour les relieurs ne sont atteignables que par le pied de page. C'est un
-   choix documenté (pas de hamburger pour trois ancres). Option proposée : un
-   lien « Tarifs » visible sur mobile, sans menu.
-2. **Filet sous le logo invisible.** `bg-mr-brass` / `text-mr-brass` /
-   `border-mr-brass` n'existent plus depuis le retrait volontaire du laiton
-   (« deux accents, c'est zéro accent », 12 septembre) : le filet du logo, le
-   filet FineBindery et des bordures de `/tarifs` ne s'affichent pas. Soit
-   retirer ces classes, soit passer le filet en bordeaux (l'accent unique).
-3. **Contrastes de `/tarifs`** : 8 violations axe sur les surtitres — la page
-   est en cours de modification dans la PR #36, à traiter après sa fusion.
+1. ~~Navigation mobile~~ — **lot 2** : seconde rangée fine sous 1024 px,
+   « Tarifs » à gauche, « Se connecter » à droite ; le bouton garde la
+   première rangée et tient sur une ligne dès 360 px. Ancres de l'accueil et
+   de la page partenaires : `scroll-mt-36` sous `lg`, pour ne pas passer sous
+   l'entête plus haut.
+2. ~~Filet sous le logo invisible~~ — **lot 2** : toutes les classes
+   `mr-brass` (couleur retirée de la palette le 12 septembre) passent en
+   `mr-bordeaux`, l'accent unique : filets des logos Ma Reliure et
+   FineBindery, soulignements et bordures de `/tarifs`, libellé de la page
+   partenaires.
+3. ~~Contrastes de `/tarifs`~~ — **lot 2** : les textes à 35 et 45 % d'encre
+   (surtitres, numéros, crédits photo ajoutés par #36 ; 20 violations axe)
+   passent en `mr-muted` (≈ 5,5:1). Au passage, la liste des savoir-faire de
+   l'accueil (#36) plaçait une `<img>` directement dans une `<dl>` : l'image
+   décorative vit maintenant dans le `<dt>`.
 4. **Poids du JavaScript** : 670 Ko à 1 Mo par page publique, CGV comprises
    (bundle applicatif chargé partout). Chantier technique à part : découpage
    par route des pages éditoriales.
