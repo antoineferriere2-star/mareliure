@@ -7,7 +7,7 @@ import { fineBinderyDirectoryHead } from "@/marketplace/i18n/fineBinderySeo";
 export const Route = createFileRoute("/$locale/professionals")({
   beforeLoad: ({ params }) => { if (!isFineBinderyLocale(params.locale)) throw notFound(); },
   loader: () => listPublicFineBinderyProfiles(),
-  head: ({ params }) => isFineBinderyLocale(params.locale) ? fineBinderyDirectoryHead(params.locale) : {},
+  head: ({ params, loaderData }) => isFineBinderyLocale(params.locale) ? fineBinderyDirectoryHead(params.locale, Boolean(loaderData?.length)) : {},
   component: LocalizedDirectory,
 });
 

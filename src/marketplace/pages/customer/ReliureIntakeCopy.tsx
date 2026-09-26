@@ -10,6 +10,7 @@
  */
 import { Clock, FileText, Package } from "lucide-react";
 import { RELIURE_INTAKE_MINUTES, RELIURE_REPLY_NOTICE } from "./reliureIntakeGuidance";
+import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
 
 /** Avant la première question : ce qu'on obtient, combien de temps, et le geste à ne pas faire. */
 export function ReliureIntakeIntro() {
@@ -26,8 +27,7 @@ export function ReliureIntakeIntro() {
           <FileText className="mt-0.5 h-5 w-5 shrink-0 text-[color:var(--metre-accent)]" aria-hidden="true" />
           <span>
             <strong className="font-semibold text-stone-950">Ce que vous obtenez.</strong> Une
-            proposition chiffrée par Ma Reliure : le travail à réaliser et son prix, avant tout
-            engagement.
+            proposition chiffrée par Ma Reliure d’après vos photos. Le livre sera vérifié à réception ; aucun travail ni changement de prix sans votre accord préalable.
           </span>
         </li>
         <li className="flex gap-3">
@@ -64,6 +64,7 @@ export function ReliureReviewNotice() {
         Vous ne payez rien maintenant et vous n’expédiez pas encore votre livre. Ma Reliure vous
         répond avec une proposition chiffrée, que vous êtes libre d’accepter ou non.
       </p>
+      <p className="mt-2">{fineBinderyCopy("fr").trust.pricePolicy}</p>
     </div>
   );
 }
@@ -119,6 +120,7 @@ export function ReliureNextSteps() {
           </li>
         ))}
       </ol>
+      <p className="mt-4 text-sm leading-6 text-stone-700">{fineBinderyCopy("fr").trust.pricePolicy}</p>
     </section>
   );
 }

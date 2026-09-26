@@ -12,10 +12,11 @@ export const fr: FineBinderyPublicCopy = {
   nav: { how: "Comment ça marche", services: "Savoir-faire", workshops: "Ateliers", faq: "Questions", signIn: "Se connecter", language: "Langue", menu: "Menu" },
   common: { start: "Présenter mon projet", project: "Projet", france: "France", skills: "Savoir-faire", languages: "Langues", techniques: "Techniques et matières", originalText: "Texte de l’atelier affiché dans sa langue d’origine." },
   footer: { summary: "Le réseau européen de la reliure et de la conservation du livre.", information: "Informations", legal: "Mentions légales", privacy: "Confidentialité", terms: "Conditions d’utilisation", sales: "Conditions de vente", closing: "Reliure, conservation et dorure, par des ateliers indépendants." },
+  trust: { atelier: "Pour les ateliers", home: "Accueil", brands: "Ma Reliure accompagne les clients en France. Fine Bindery accueille les projets internationaux et développe un réseau européen, en commençant par la France.", atelierAccess: "Créez un espace pour gérer vos propres projets. La publication dans l’annuaire et l’accès aux projets du réseau nécessitent une validation distincte.", legalLanguage: "Les documents juridiques sont actuellement disponibles en anglais.", pricePolicy: "Une proposition est établie sur vos photos. L’atelier vérifie le livre à réception. Aucun travail ni changement de prix sans votre accord préalable.", workshopImage: "Un exemple de reliure de l’atelier Reliure Dorure Ferrière" },
   home: {
     eyebrow: "Reliure · Conservation · Dorure",
     title: "Le réseau européen de la reliure et de la conservation du livre.",
-    lead: "Découvrez des relieurs et des restaurateurs de talent. Présentez votre projet. Travaillez avec le bon atelier.",
+    lead: "Présentez votre livre et votre souhait. Nous vérifierons qu’un atelier peut prendre en charge le travail.",
     discover: "Découvrir les ateliers",
     proof: "Des ateliers indépendants, relus avant publication · Un projet, un interlocuteur · Ouverture en France",
     offersEyebrow: "Savoir-faire", offersTitle: "Le travail du réseau.", photoCredit: "Photographies", offers: [
@@ -24,15 +25,15 @@ export const fr: FineBinderyPublicCopy = {
       { title: "Reliure de collection", body: "Une édition aimée ou recherchée, devenue pièce unique." },
       { title: "Créations sur mesure", body: "Reliures uniques, livres de famille, exemplaires de présentation, boîtes et étuis." },
     ],
-    pathsEyebrow: "Deux façons de commencer", pathsTitle: "Choisissez votre atelier — ou laissez-nous le trouver.", paths: [
+    pathsEyebrow: "Deux façons de commencer", pathsTitle: "Présentez un projet ou consultez l’annuaire.", paths: [
       { title: "Choisir un atelier", body: "Parcourez les ateliers publiés, leurs réalisations, leurs techniques et les langues qu’ils parlent. Un projet présenté depuis la page d’un atelier arrive directement dans cet atelier.", cta: "Parcourir les ateliers" },
-      { title: "Présenter votre projet", body: "Décrivez votre livre une fois. Fine Bindery étudie le travail, le confie à l’atelier dont le savoir-faire lui correspond, et suit le projet jusqu’au retour du livre.", cta: "Présenter mon projet" },
+      { title: "Présenter votre projet", body: "Présentez votre livre et votre souhait. Nous vérifierons qu’un atelier peut prendre en charge le travail.", cta: "Présenter mon projet" },
     ],
     howEyebrow: "Le déroulé d’un projet", howTitle: "De la première photographie au retour du livre.", steps: ["Présentez votre livre", "Recevez une proposition", "Le bon atelier confirme", "Votre livre rejoint l’atelier", "Suivez le travail", "Votre livre revient chez vous"],
-    workshopsEyebrow: "Derrière chaque livre, un atelier", workshopsTitle: "Des relieurs, des restaurateurs et des doreurs indépendants.", workshopsLead: "Chaque atelier est relu avant la publication de sa page : ses savoir-faire, son parcours et le travail qu’il souhaite recevoir.", selected: "Relu et publié par Fine Bindery.", discoverWorkshops: "Découvrir les ateliers publiés",
+    workshopsEyebrow: "Derrière chaque livre, un atelier", workshopsTitle: "Des relieurs, des restaurateurs et des doreurs indépendants.", workshopsLead: "Notre réseau se développe. Les profils apparaissent dans l’annuaire après validation.", selected: "Photographies de Reliure Dorure Ferrière, utilisées avec son autorisation ; cette présentation n’est pas un profil publié dans l’annuaire.", discoverWorkshops: "Découvrir les ateliers publiés",
     networkNote: "Le réseau ouvre avec des ateliers en France, et accueillera des relieurs et des restaurateurs de toute l’Europe.",
     trustEyebrow: "Votre livre voyage", trustTitle: "Votre livre voyage. Son histoire ne se perd pas.", trust: ["État documenté", "Un seul interlocuteur", "Des ateliers relus", "Un trajet suivi"],
-    shippingEyebrow: "Transport", shippingTitle: "Un trajet adapté au livre.", shippingLead: "Le trajet est organisé selon la nature et la valeur du livre, et chiffré à part du travail lui-même.",
+    shippingEyebrow: "Transport", shippingTitle: "Un trajet adapté au livre.", shippingLead: "Les modalités du transport sont à convenir avant l’envoi du livre. Attendez les instructions avant de l’expédier.",
     faqEyebrow: "Vos questions", faqTitle: "Avant de commencer.", faq: [
       { question: "Puis-je contacter un atelier directement ?", answer: "Oui. Un projet présenté depuis la page d’un atelier arrive directement dans cet atelier." },
       { question: "Comment les ateliers sont-ils choisis ?", answer: "Fine Bindery relit chaque atelier avant de publier sa page : ses savoir-faire, son parcours et le type de travail qu’il souhaite recevoir. Il n’y a ni classement, ni mise en avant payante." },
@@ -40,7 +41,7 @@ export const fr: FineBinderyPublicCopy = {
       { question: "Le transport est-il inclus ?", answer: "Non. Il est chiffré à part, selon la destination, la valeur du livre et le soin qu’il demande." },
       { question: "Peut-on confier un livre ancien ou précieux ?", answer: "Oui, après une étude individuelle et avec une logistique adaptée." },
     ],
-    finalTitle: "Votre livre mérite les bonnes mains.", finalLead: "Parcourez les ateliers du réseau, ou présentez votre projet et laissez-nous trouver le bon.", established: "depuis",
+    finalTitle: "Votre livre mérite les bonnes mains.", finalLead: "Présentez votre livre et votre souhait. Nous vérifierons qu’un atelier peut prendre en charge le travail.", established: "depuis",
   },
   directory: {
     eyebrow: "Le réseau", title: "Des relieurs et des restaurateurs, choisis pour leur savoir-faire.",
@@ -50,7 +51,7 @@ export const fr: FineBinderyPublicCopy = {
     empty: "Aucun atelier publié ne correspond à ces critères.", reset: "Effacer les filtres",
     count: (n) => (n <= 1 ? `${n} atelier` : `${n} ateliers`), view: "Voir l’atelier",
     emptyTitle: "Les premiers ateliers sont en cours de publication.",
-    emptyBody: "Leurs pages apparaîtront ici dès qu’elles auront été relues. D’ici là, présentez votre projet : Fine Bindery trouvera l’atelier qui convient à votre livre.",
+    emptyBody: "Aucun profil n’est publié pour le moment. Vous pouvez néanmoins présenter votre projet pour que nous l’étudiions.",
     openingNote: "Le réseau ouvre avec des ateliers en France, et accueillera des relieurs et des restaurateurs de toute l’Europe.",
   },
   profile: {

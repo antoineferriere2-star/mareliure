@@ -85,6 +85,11 @@ describe("FineBindery European i18n", () => {
         "Project sent",
         "Your project summary is ready",
         "Still to confirm",
+        "Project",
+        "To clarify",
+        "Derived",
+        "Captured",
+        "Approximate",
         "What happens next",
         '"{field}" is required.',
       ]) expect(publicCopy(locale, text), `${locale}: ${text}`).not.toBe(text);

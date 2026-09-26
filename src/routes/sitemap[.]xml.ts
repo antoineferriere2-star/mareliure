@@ -49,10 +49,8 @@ const MARELIURE_ENTRIES: SitemapEntry[] = [
 ];
 
 const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
-  { path: "/", changefreq: "weekly", priority: "1.0" },
   ...(["en", "fr", "de", "it", "es"] as const).flatMap((locale) => [
     { path: `/${locale}`, changefreq: "weekly" as const, priority: locale === "en" ? "1.0" : "0.9" },
-    { path: `/${locale}/professionals`, changefreq: "weekly" as const, priority: "0.9" },
   ]),
   { path: "/legal-notice", changefreq: "yearly", priority: "0.3" },
   { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },
@@ -91,7 +89,8 @@ export const Route = createFileRoute("/sitemap.xml")({
             const { listPublicFineBinderyProfiles } = await import("@/marketplace/services/fineBinderyProfile.data.functions");
             const profiles = await listPublicFineBinderyProfiles();
             const profileEntries = profiles.flatMap((profile) => ["en", "fr", "de", "it", "es"].map((locale) => ({ path: `/${locale}/${profile.slug}`, changefreq: "weekly" as const, priority: "0.8" })));
-            resolvedEntries = [...entries, ...profileEntries];
+            const directoryEntries = profiles.length ? ["en", "fr", "de", "it", "es"].map((locale) => ({ path: `/${locale}/professionals`, changefreq: "weekly" as const, priority: "0.9" })) : [];
+            resolvedEntries = [...entries, ...directoryEntries, ...profileEntries];
           } catch {
             // The static multilingual pages remain valid if the public
             // directory is temporarily unavailable. The sitemap never emits

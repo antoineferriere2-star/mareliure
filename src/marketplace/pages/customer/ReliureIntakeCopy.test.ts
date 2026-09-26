@@ -20,7 +20,9 @@ describe("before the first question", () => {
   });
 
   it("promises no more than the landing page: a price before commitment, transport agreed case by case", () => {
-    expect(text).toContain("avant tout engagement");
+    expect(text).toContain("d’après vos photos");
+    expect(text).toContain("vérifié à réception");
+    expect(text).toContain("aucun travail ni changement de prix sans votre accord préalable");
     expect(text).toContain("le transport est convenu avec vous");
   });
 

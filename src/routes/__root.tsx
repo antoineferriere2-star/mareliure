@@ -74,9 +74,9 @@ const MARELIURE_OG_IMAGE = `${MARELIURE_CANONICAL_HOME}og/mareliure-1200x630.png
 
 const FINE_BINDERY_BRAND = {
   lang: "en",
-  title: "Fine Bindery — Exceptional French Bookbinding",
+  title: "Fine Bindery — The European network for bookbinding & book conservation",
   description:
-    "The international concierge for exceptional French bookbinding. Entrust your book to selected independent workshops in France.",
+    "Present your bookbinding or conservation project. Fine Bindery is developing a European network, starting in France.",
   author: "Fine Bindery",
   // Même identité visuelle que Ma Reliure (tokens mr-*) — aucune icône propre
   // à Fine Bindery n'existe encore.

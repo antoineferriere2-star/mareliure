@@ -1,4 +1,5 @@
 export interface FineBinderyPublicCopy {
+  trust: { atelier: string; home: string; brands: string; atelierAccess: string; legalLanguage: string; pricePolicy: string; workshopImage: string };
   seo: {
     homeTitle: string; homeDescription: string; directoryTitle: string; directoryDescription: string;
     profileTitle: (workshop: string) => string; profileDescription: (workshop: string, city: string) => string;

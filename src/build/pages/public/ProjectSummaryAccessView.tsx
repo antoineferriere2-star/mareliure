@@ -5,6 +5,7 @@
 // ever touches the client.
 import { useEffect, useState } from "react";
 import type { DisplayPhotoReference, VisitorProjectSummary } from "@/build/schema/visitorSummary";
+import { resolveSupportedLocale, type SupportedLocale } from "@/build/i18n";
 
 /** The public endpoint's response shape: identical to VisitorProjectSummary except photos never carry a storage path — only a resolved signed url + caption. */
 type PublicVisitorProjectSummary = Omit<VisitorProjectSummary, "photos"> & {
@@ -16,6 +17,7 @@ import { publicCopy, usePublicLocale } from "./publicLocaleContext";
 
 export function ProjectSummaryAccessView({ accessToken }: { accessToken: string }) {
   const [businessName, setBusinessName] = useState<string | null>(null);
+  const [summaryLocale, setSummaryLocale] = useState<SupportedLocale | null>(null);
   return (
     // No FAQ launcher on the secure summary page either — same reasoning
     // as MissionRuntime: this is the visitor's own submitted result, not a
@@ -24,8 +26,8 @@ export function ProjectSummaryAccessView({ accessToken }: { accessToken: string 
     // Embedded chrome for the same reason too: whoever opens this link is the
     // business's customer reading their own summary, not a Métré Build
     // prospect who should be shown pricing.
-    <BuildPublicShell showFaqLauncher={false} chrome="embedded" businessName={businessName}>
-      <ProjectSummaryAccessContent accessToken={accessToken} onBusinessName={setBusinessName} />
+    <BuildPublicShell showFaqLauncher={false} chrome="embedded" businessName={businessName} lockedLocale={summaryLocale}>
+      <ProjectSummaryAccessContent accessToken={accessToken} onBusinessName={setBusinessName} onLocale={setSummaryLocale} />
     </BuildPublicShell>
   );
 }
@@ -33,9 +35,11 @@ export function ProjectSummaryAccessView({ accessToken }: { accessToken: string 
 function ProjectSummaryAccessContent({
   accessToken,
   onBusinessName,
+  onLocale,
 }: {
   accessToken: string;
   onBusinessName: (name: string | null) => void;
+  onLocale: (locale: SupportedLocale) => void;
 }) {
   const { locale } = usePublicLocale();
   const copy = (text: string) => publicCopy(locale, text);
@@ -59,6 +63,7 @@ function ProjectSummaryAccessContent({
         }
         const data = (await res.json()) as { summary: PublicVisitorProjectSummary };
         setSummary(data.summary);
+        onLocale(resolveSupportedLocale(data.summary.locale));
         onBusinessName(data.summary.businessName ?? null);
       } catch {
         if (!cancelled) setNotAvailable(true);
@@ -70,7 +75,7 @@ function ProjectSummaryAccessContent({
       cancelled = true;
     };
     // Stable setState setter — listing it does not re-trigger the fetch.
-  }, [accessToken, onBusinessName]);
+  }, [accessToken, onBusinessName, onLocale]);
 
   return (
     <main className="min-h-screen bg-[#f7f3ec] px-4 py-8 sm:px-6 lg:px-8">

@@ -24,11 +24,12 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function ItemList({ items }: { items: { label: string; value: string }[] }) {
+  const { locale } = usePublicLocale();
   return (
     <ul className="space-y-1.5 text-sm text-stone-700">
       {items.map((item) => (
         <li key={`${item.label}|${item.value}`}>
-          <span className="font-medium text-stone-950">{item.label}:</span> {item.value}
+          <span className="font-medium text-stone-950">{publicCopy(locale, item.label)}:</span> {publicCopy(locale, item.value)}
         </li>
       ))}
     </ul>
@@ -165,7 +166,7 @@ export function VisitorProjectSummaryView({
       </div>
       <ProjectCanvas
         title={copy("Your project")}
-        eyebrow={copy("Project canvas")}
+        eyebrow={copy("Project summary")}
         items={canvasItems}
         emptyText={copy("No details were provided yet.")}
         className="lg:sticky lg:top-6"

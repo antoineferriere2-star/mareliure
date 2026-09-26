@@ -1,3 +1,4 @@
+import { fineBinderyHomeHead } from "@/marketplace/i18n/fineBinderySeo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
@@ -7,7 +8,7 @@ import { faqPageSchema, jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } fr
 import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
 import { isMaReliure } from "@/brand";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
-import { MARKETPLACE_BRAND_CONFIGS, type MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { type MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBrand.server";
 import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 
@@ -92,33 +93,11 @@ function metreHead() {
   };
 }
 
-const fineBinderyTitle = "Fine Bindery — Exceptional French Bookbinding";
-const fineBinderyDescription =
-  "The international concierge for exceptional French bookbinding. Entrust your book to selected independent workshops in France — Fine Bindery manages every step.";
-
+// Keep the root available for authentication hash callbacks; consolidate search
+// indexing on the English URL without redirecting a visitor's session token.
 function fineBinderyHead() {
-  const canonical = MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY.seo.canonicalOrigin;
-  return {
-    meta: [
-      { title: fineBinderyTitle },
-      { name: "description", content: fineBinderyDescription },
-      { name: "robots", content: "index, follow" },
-      { property: "og:type", content: "website" },
-      { property: "og:site_name", content: "Fine Bindery" },
-      { property: "og:title", content: fineBinderyTitle },
-      { property: "og:description", content: fineBinderyDescription },
-      { property: "og:url", content: canonical },
-      { property: "og:locale", content: "en_US" },
-      { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: fineBinderyTitle },
-      { name: "twitter:description", content: fineBinderyDescription },
-    ],
-    links: [{ rel: "canonical", href: canonical }, EDITORIAL_FONT_PRELOAD],
-    // Les 8 questions de la section "Questions, answered" — le même tableau
-    // que FineBinderyLandingPage rend, jamais une copie à part qui pourrait
-    // diverger (audit express SEO/GEO, 15 septembre 2026, action 5).
-    scripts: [jsonLdScript(faqPageSchema(fineBinderyCopy("en").home.faq))],
-  };
+  const head = fineBinderyHomeHead("en");
+  return { ...head, links: [...head.links, EDITORIAL_FONT_PRELOAD], scripts: [jsonLdScript(faqPageSchema(fineBinderyCopy("en").home.faq))] };
 }
 
 async function loadHomeBrand(): Promise<MarketplaceBrand | null> {

@@ -212,6 +212,9 @@ export function LandingHeader({ workshop = false }: { workshop?: boolean }) {
           <a href="/tarifs" className={HEADER_LINK}>
             Tarifs
           </a>
+          <a href="/partenaires-relieurs" className={HEADER_LINK}>
+            Relieurs
+          </a>
           <a href="/auth" className={HEADER_LINK}>
             Se connecter
           </a>
@@ -272,8 +275,10 @@ export function LandingFooter() {
           <div>
             <Wordmark />
             <p className="mr-small mt-6 max-w-[20rem] text-mr-graphite">
-              Reliure, restauration et création, confiées à des ateliers indépendants installés en
-              France.
+              Ma Reliure accompagne les projets de reliure et de restauration en France.
+            </p>
+            <p className="mr-small mt-4 max-w-[20rem] text-mr-graphite">
+              Pour un projet international, découvrez <a href="https://finebindery.com/en" className="mr-link">Fine Bindery</a>, notre réseau européen en cours de développement.
             </p>
           </div>
 

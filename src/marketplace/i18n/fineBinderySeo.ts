@@ -3,17 +3,17 @@ import { fineBinderyAlternates, HTML_LOCALE, type FineBinderyLocale } from "./fi
 
 const OG_LOCALE: Record<FineBinderyLocale, string> = { en: "en_GB", fr: "fr_FR", de: "de_DE", it: "it_IT", es: "es_ES" };
 
-export function fineBinderyLocalizedHead(locale: FineBinderyLocale, options: { title: string; description: string; pathWithoutLocale?: string; type?: "website" | "profile"; image?: string | null }) {
+export function fineBinderyLocalizedHead(locale: FineBinderyLocale, options: { title: string; description: string; pathWithoutLocale?: string; type?: "website" | "profile"; image?: string | null; indexable?: boolean }) {
   const suffix = options.pathWithoutLocale ? `/${options.pathWithoutLocale}` : "";
   const canonical = `https://finebindery.com/${locale}${suffix}`;
   return {
     meta: [
-      { title: options.title }, { name: "description", content: options.description }, { name: "robots", content: "index, follow" },
+      { title: options.title }, { name: "description", content: options.description }, { name: "robots", content: options.indexable === false ? "noindex, follow" : "index, follow" },
       { property: "og:type", content: options.type ?? "website" }, { property: "og:site_name", content: "Fine Bindery" },
       { property: "og:title", content: options.title }, { property: "og:description", content: options.description },
       { property: "og:url", content: canonical }, { property: "og:locale", content: OG_LOCALE[locale] },
       ...fineBinderyAlternates(options.pathWithoutLocale).filter((item) => item.locale !== locale && item.locale !== "x-default").map((item) => ({ property: "og:locale:alternate", content: OG_LOCALE[item.locale as FineBinderyLocale] })),
-      ...(options.image ? [{ property: "og:image", content: options.image }] : []),
+      { property: "og:image", content: options.image ?? "https://finebindery.com/photos/reliure-bordeaux-800.webp" },
     ],
     links: [
       { rel: "canonical", href: canonical },
@@ -27,9 +27,9 @@ export function fineBinderyHomeHead(locale: FineBinderyLocale) {
   return fineBinderyLocalizedHead(locale, { title: copy.seo.homeTitle, description: copy.seo.homeDescription });
 }
 
-export function fineBinderyDirectoryHead(locale: FineBinderyLocale) {
+export function fineBinderyDirectoryHead(locale: FineBinderyLocale, hasPublishedProfiles = true) {
   const copy = fineBinderyCopy(locale);
-  return fineBinderyLocalizedHead(locale, { title: copy.seo.directoryTitle, description: copy.seo.directoryDescription, pathWithoutLocale: "professionals" });
+  return fineBinderyLocalizedHead(locale, { title: copy.seo.directoryTitle, description: copy.seo.directoryDescription, pathWithoutLocale: "professionals", indexable: hasPublishedProfiles });
 }
 
 export function fineBinderyDocumentLanguage(locale: FineBinderyLocale): string { return HTML_LOCALE[locale]; }
