@@ -16,13 +16,13 @@ function Wordmark({ locale }: { locale: FineBinderyLocale }) {
   return <a href={fineBinderyHomePath(locale)} className="inline-flex shrink-0 flex-col leading-none" aria-label={`${BRAND.displayName} — ${fineBinderyCopy(locale).trust.home}`}><span className="mr-title text-[1.35rem] text-mr-ink sm:text-[1.5rem]">{BRAND.displayName}</span><span aria-hidden="true" className="mt-1.5 h-px w-8 bg-mr-bordeaux" /></a>;
 }
 
-function navigation(locale: FineBinderyLocale) {
+function navigation(locale: FineBinderyLocale, hasPublishedProfiles: boolean) {
   const copy = fineBinderyCopy(locale); const home = fineBinderyHomePath(locale);
-  return [{ href: fineBinderyDirectoryPath(locale), label: copy.nav.workshops }, { href: `${home}#offers`, label: copy.nav.services }, { href: `${home}#how-it-works`, label: copy.nav.how }, { href: `${home}#faq`, label: copy.nav.faq }, { href: `/auth?space=atelier&locale=${locale}`, label: copy.trust.atelier }];
+  return [{ href: hasPublishedProfiles ? fineBinderyDirectoryPath(locale) : `${home}#workshops`, label: copy.nav.workshops }, { href: `${home}#offers`, label: copy.nav.services }, { href: `${home}#how-it-works`, label: copy.nav.how }, { href: `${home}#faq`, label: copy.nav.faq }, { href: `/auth?space=atelier&locale=${locale}`, label: copy.trust.atelier }];
 }
 
-export function FineBinderyHeader({ locale }: { locale: FineBinderyLocale }) {
-  const copy = fineBinderyCopy(locale); const nav = navigation(locale);
+export function FineBinderyHeader({ locale, hasPublishedProfiles = true }: { locale: FineBinderyLocale; hasPublishedProfiles?: boolean }) {
+  const copy = fineBinderyCopy(locale); const nav = navigation(locale, hasPublishedProfiles);
   const link = "mr-tap mr-small text-mr-graphite underline-offset-[6px] hover:text-mr-ink hover:underline";
   return <header className="sticky top-0 z-40 border-b border-mr-rule/70 bg-mr-paper/95 backdrop-blur">
     <div className="mx-auto flex max-w-[80rem] items-center justify-between gap-5 px-5 py-3 sm:px-8 lg:py-4">
@@ -42,8 +42,8 @@ export function FineBinderyHeader({ locale }: { locale: FineBinderyLocale }) {
   </header>;
 }
 
-export function FineBinderyFooter({ locale }: { locale: FineBinderyLocale }) {
-  const copy = fineBinderyCopy(locale); const nav = navigation(locale);
+export function FineBinderyFooter({ locale, hasPublishedProfiles = true }: { locale: FineBinderyLocale; hasPublishedProfiles?: boolean }) {
+  const copy = fineBinderyCopy(locale); const nav = navigation(locale, hasPublishedProfiles);
   const legal = [{ href: "/legal-notice", label: copy.footer.legal }, { href: "/privacy-policy", label: copy.footer.privacy }, { href: "/terms-of-use", label: copy.footer.terms }, { href: "/terms-of-sale", label: copy.footer.sales }];
   return <footer className="border-t border-mr-rule bg-mr-paper-warm"><div className="mx-auto max-w-[80rem] px-5 py-14 sm:px-8 sm:py-20"><div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]"><div><Wordmark locale={locale} /><p className="mr-small mt-6 max-w-[22rem] text-mr-graphite">{copy.footer.summary}</p><p className="mr-small mt-4 max-w-[26rem]">{copy.trust.brands} <a className="mr-link" href="https://mareliure.fr/">Ma Reliure</a></p><p className="mr-small mt-4 max-w-[26rem]">{copy.trust.atelierAccess}</p><div className="mt-6"><FineBinderyLanguageSwitch locale={locale} label={`${copy.nav.language} · ${BRAND.displayName}`} /></div></div><nav aria-label={`${copy.nav.menu} · ${BRAND.displayName}`}><p className="mr-eyebrow text-mr-graphite">Fine Bindery</p><ul className="mr-small mt-5 space-y-3">{nav.map((item) => <li key={item.href}><a href={item.href} className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline">{item.label}</a></li>)}</ul></nav><div><p className="mr-eyebrow text-mr-graphite">{copy.footer.information}</p><p className="mr-small mt-3">{copy.trust.legalLanguage}</p><ul className="mr-small mt-5 space-y-3">{legal.map((item) => <li key={item.href}><a href={item.href} className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline">{item.label}</a></li>)}</ul></div></div><p className="mr-small mt-12 border-t border-mr-rule pt-8 text-mr-graphite">{BRAND.displayName} — {copy.footer.closing}</p></div></footer>;
 }

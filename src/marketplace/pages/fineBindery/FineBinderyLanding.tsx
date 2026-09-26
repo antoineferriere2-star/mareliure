@@ -18,26 +18,21 @@ import {
 
 type Copy = ReturnType<typeof fineBinderyCopy>;
 
-/**
- * L'accueil Fine Bindery : le réseau d'abord (annuaire), le projet présenté
- * ensuite. Rien d'inventé — un seul atelier réel, et le réseau dit qu'il
- * ouvre en France plutôt que de laisser croire à une Europe déjà couverte.
- */
-export function FineBinderyLandingPage({ locale = "en" }: { locale?: FineBinderyLocale }) {
+export function FineBinderyLandingPage({ locale = "en", hasPublishedProfiles }: { locale?: FineBinderyLocale; hasPublishedProfiles: boolean }) {
   const copy = fineBinderyCopy(locale); useFineBinderyDocumentLocale(locale); usePageViewTracking(ENGINE_LOCALE[locale]);
-  return <div className="mr-site fb-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite"><FineBinderyHeader locale={locale} /><main id="top">
-    <Hero copy={copy} locale={locale} />
+  return <div className="mr-site fb-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite"><FineBinderyHeader locale={locale} hasPublishedProfiles={hasPublishedProfiles} /><main id="top">
+    <Hero copy={copy} locale={locale} hasPublishedProfiles={hasPublishedProfiles} />
     <Disciplines copy={copy} />
-    <Paths copy={copy} locale={locale} />
+    {hasPublishedProfiles && <Paths copy={copy} locale={locale} />}
     <HowItWorks copy={copy} />
-    <Workshops copy={copy} locale={locale} />
+    <Workshops copy={copy} locale={locale} hasPublishedProfiles={hasPublishedProfiles} />
     <Trust copy={copy} />
     <ShippingFaq copy={copy} />
-    <FinalCta copy={copy} locale={locale} />
-  </main><FineBinderyFooter locale={locale} /></div>;
+    <FinalCta copy={copy} locale={locale} hasPublishedProfiles={hasPublishedProfiles} />
+  </main><FineBinderyFooter locale={locale} hasPublishedProfiles={hasPublishedProfiles} /></div>;
 }
 
-function Hero({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
+function Hero({ copy, locale, hasPublishedProfiles }: { copy: Copy; locale: FineBinderyLocale; hasPublishedProfiles: boolean }) {
   return <section className={`${SHELL} pt-16 pb-14 text-center sm:pt-24 sm:pb-20 lg:pt-28`}>
     <p className="mr-eyebrow text-mr-bordeaux [text-wrap:balance]">{copy.home.eyebrow}</p>
     <h1 className="mr-display mx-auto mt-7 text-mr-ink">{copy.home.title}</h1>
@@ -45,7 +40,7 @@ function Hero({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
     <p className="mr-lead mx-auto mt-9 max-w-[38rem]">{copy.home.lead}</p>
     <div className="mt-10 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4">
       <FineBinderyIntakeCta locale={locale} />
-      <ActionLink href={fineBinderyDirectoryPath(locale)} variant="secondary">{copy.home.discover}</ActionLink>
+      {hasPublishedProfiles && <ActionLink href={fineBinderyDirectoryPath(locale)} variant="secondary">{copy.home.discover}</ActionLink>}
     </div>
     <p className="mr-small mx-auto mt-9 max-w-[40rem] text-mr-muted [text-wrap:balance]">{copy.home.proof}</p>
   </section>;
@@ -84,7 +79,7 @@ function HowItWorks({ copy }: { copy: Copy }) {
   </div></section>;
 }
 
-function Workshops({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
+function Workshops({ copy, locale, hasPublishedProfiles }: { copy: Copy; locale: FineBinderyLocale; hasPublishedProfiles: boolean }) {
   const w = FEATURED_WORKSHOP;
   return <section id="workshops" className="scroll-mt-32 bg-mr-paper-warm"><div className={`${SHELL} py-section-sm sm:py-section`}>
     <SectionHead eyebrow={copy.home.workshopsEyebrow} title={copy.home.workshopsTitle} lead={copy.home.workshopsLead} />
@@ -96,7 +91,7 @@ function Workshops({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) 
         <p className="mr-small mt-2">{w.artisan}{w.since ? ` — ${copy.home.established} ${w.since}` : ""}</p>
         <p className="mr-body mt-6">{w.specialties.map((value) => specialtyName(value.toLowerCase().replaceAll(" ", "_"), locale)).join(" · ")}</p>
         <p className="mr-small mt-6 text-mr-muted">{copy.home.selected}</p>
-        <a href={fineBinderyDirectoryPath(locale)} className="mr-link mr-tap mt-7 text-[1.0625rem]">{copy.home.discoverWorkshops}</a>
+        {hasPublishedProfiles && <a href={fineBinderyDirectoryPath(locale)} className="mr-link mr-tap mt-7 text-[1.0625rem]">{copy.home.discoverWorkshops}</a>}
       </div>
     </div>
     <p className="mr-body mt-14 max-w-[46rem] border-l-2 border-mr-bordeaux pl-5 text-mr-ink">{copy.home.networkNote}</p>
@@ -117,10 +112,10 @@ function ShippingFaq({ copy }: { copy: Copy }) {
   </div></section>;
 }
 
-function FinalCta({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
+function FinalCta({ copy, locale, hasPublishedProfiles }: { copy: Copy; locale: FineBinderyLocale; hasPublishedProfiles: boolean }) {
   return <section className="border-t border-mr-rule bg-mr-paper-warm"><div className={`${SHELL} py-section-sm text-center sm:py-section`}>
     <h2 className="mr-title mx-auto max-w-[34rem] text-mr-ink">{copy.home.finalTitle}</h2>
     <p className="mr-lead mx-auto mt-5 max-w-[36rem]">{copy.home.finalLead}</p>
-    <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4"><FineBinderyIntakeCta locale={locale} /><ActionLink href={fineBinderyDirectoryPath(locale)} variant="secondary">{copy.home.discover}</ActionLink></div>
+    <div className="mt-9 flex flex-col items-stretch justify-center gap-3 sm:flex-row sm:items-center sm:gap-4"><FineBinderyIntakeCta locale={locale} />{hasPublishedProfiles && <ActionLink href={fineBinderyDirectoryPath(locale)} variant="secondary">{copy.home.discover}</ActionLink>}</div>
   </div></section>;
 }

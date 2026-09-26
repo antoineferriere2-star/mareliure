@@ -1,3 +1,4 @@
+import { loadFineBinderyHomeAvailability } from "@/marketplace/pages/fineBindery/homeAvailability";
 import { fineBinderyHomeHead } from "@/marketplace/i18n/fineBinderySeo";
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect } from "react";
@@ -109,7 +110,10 @@ async function loadHomeBrand(): Promise<MarketplaceBrand | null> {
 }
 
 export const Route = createFileRoute("/")({
-  loader: async () => ({ brand: await loadHomeBrand() }),
+  loader: async () => {
+    const brand = await loadHomeBrand();
+    return { brand, hasPublishedProfiles: brand === "FINE_BINDERY" && await loadFineBinderyHomeAvailability() };
+  },
   head: ({ loaderData }) => {
     if (!isMaReliure) return metreHead();
     return loaderData?.brand === "FINE_BINDERY" ? fineBinderyHead() : maReliureHead();
@@ -124,12 +128,12 @@ export const Route = createFileRoute("/")({
 // unprocessed session token in the hash and hand it to /auth, which already
 // knows how to detect the session and route to /build or /portal.
 function HomeRoute() {
-  const { brand } = Route.useLoaderData();
+  const { brand, hasPublishedProfiles } = Route.useLoaderData();
   useEffect(() => {
     if (window.location.hash.includes("access_token")) {
       window.location.replace(`/auth${window.location.hash}`);
     }
   }, []);
   if (!isMaReliure) return <BuildPublicHome />;
-  return brand === "FINE_BINDERY" ? <FineBinderyLandingPage /> : <ReliureLanding />;
+  return brand === "FINE_BINDERY" ? <FineBinderyLandingPage hasPublishedProfiles={hasPublishedProfiles} /> : <ReliureLanding />;
 }
