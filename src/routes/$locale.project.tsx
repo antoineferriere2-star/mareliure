@@ -20,6 +20,8 @@ function FineBinderyProjectRoute() {
   const { locale } = Route.useParams(); const { ref, source } = Route.useSearch();
   const seedAnswers = useMemo(() => isFineBinderyLocale(locale) ? { [FINE_BINDERY_SUBMISSION_LOCALE_KEY]: locale, [FINE_BINDERY_PREFERRED_LANGUAGE_KEY]: locale, ...(ref ? { [REFERRAL_ANSWER_KEY]: ref } : {}), ...(source === PROFILE_REQUEST_SOURCE ? { [PROFILE_SOURCE_ANSWER_KEY]: source } : {}) } : undefined, [locale, ref, source]);
   if (!isFineBinderyLocale(locale)) return null;
-  const afterSubmission = ({ visitorEmail }: { visitorEmail: string | null }): ReactNode => <CustomerSpaceOffer email={visitorEmail} publicToken={FINE_BINDERY_PUBLIC_TOKEN} />;
-  return <MissionRuntime publicToken={FINE_BINDERY_PUBLIC_TOKEN} renderAfterSubmission={afterSubmission} seedAnswers={seedAnswers} initialLocale={ENGINE_LOCALE[locale]} routeLocaleWins />;
+  const copy = fineBinderyCopy(locale);
+  const notice = <p className="intake-muted text-sm leading-6">{copy.trust.pricePolicy}</p>;
+  const afterSubmission = ({ visitorEmail }: { visitorEmail: string | null }): ReactNode => <>{notice}<CustomerSpaceOffer email={visitorEmail} publicToken={FINE_BINDERY_PUBLIC_TOKEN} /></>;
+  return <MissionRuntime publicToken={FINE_BINDERY_PUBLIC_TOKEN} renderAfterSubmission={afterSubmission} seedAnswers={seedAnswers} initialLocale={ENGINE_LOCALE[locale]} routeLocaleWins guidance={{ intro: notice, reviewNotice: notice }} shellLinks={{ home: `/${locale}`, homeLabel: `Fine Bindery — ${copy.trust.home}`, privacy: "/privacy-policy", terms: "/terms-of-use", privacyLabel: copy.footer.privacy, termsLabel: copy.footer.terms }} />;
 }

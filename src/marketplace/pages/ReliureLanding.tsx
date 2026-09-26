@@ -72,7 +72,7 @@ function Hero() {
           </h1>
           <p className="mr-lead mt-7 max-w-[34rem]">
             Réparation, restauration, nouvelle reliure ou création : présentez votre livre en
-            quelques minutes. Ma Reliure évalue votre projet et le confie à l’artisan adapté.
+            quelques minutes. Ma Reliure étudie votre projet et vérifie sa prise en charge en atelier.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-x-8 gap-y-4">
             <IntakeCta />
@@ -83,8 +83,8 @@ function Hero() {
           {/* Une ligne, pas trois badges. Trois cartes de réassurance sous un
               CTA sont le signe le plus sûr d'un gabarit. */}
           <p className="mr-small mt-8 max-w-[34rem]">
-            Prix communiqué avant engagement <span aria-hidden="true">·</span> Artisans indépendants{" "}
-            <span aria-hidden="true">·</span> Prise en charge partout en France
+            Proposition sur photos <span aria-hidden="true">·</span> Livre vérifié à réception{" "}
+            <span aria-hidden="true">·</span> Votre accord avant tout travail
           </p>
         </div>
         <div className="lg:col-span-5">
@@ -276,7 +276,7 @@ function Artisans() {
       <SectionHead
         eyebrow="Les ateliers"
         title="Derrière chaque projet, un artisan."
-        lead="Ma Reliure travaille avec des ateliers indépendants installés en France, choisis pour leurs savoir-faire et le type de travail qu’ils souhaitent recevoir."
+        lead="Notre vitrine présente aujourd’hui le travail de Reliure Dorure Ferrière, à Orléans. Le réseau se construit progressivement ; la prise en charge de chaque projet reste à confirmer."
       />
       <div className="mt-12 lg:mt-16">
         {ARTISANS.map((artisan) => (
@@ -338,7 +338,7 @@ function Pricing() {
           <p className="mr-body mt-6">
             Chaque livre est différent. Nous ne publions pas de grille tarifaire, parce qu’une
             grille donnerait un chiffre faux à la plupart des projets. Nous regardons le travail à
-            faire, puis nous annonçons un prix ferme.
+            faire d’après vos photos. La proposition est vérifiée livre en main à réception ; aucun travail ni changement de prix sans votre accord préalable.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
             <IntakeCta size="compact" />

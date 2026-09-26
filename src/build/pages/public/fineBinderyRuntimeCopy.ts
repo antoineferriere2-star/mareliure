@@ -1,4 +1,5 @@
 export const DE_FINE_BINDERY_RUNTIME: Record<string, string> = {
+  Project: "Projekt", "To clarify": "Noch zu klären", Derived: "Aus Ihren Angaben abgeleitet", Captured: "Erfasst", Approximate: "Ungefähr",
   "This is taking longer than usual.": "Das dauert länger als üblich.",
   "Unable to save answers": "Die Antworten konnten nicht gespeichert werden", "Unable to submit": "Das Projekt konnte nicht gesendet werden", "Session not ready.": "Die Sitzung ist noch nicht bereit.",
   "detail captured": "Angabe erfasst", "details captured": "Angaben erfasst",
@@ -17,6 +18,7 @@ export const DE_FINE_BINDERY_RUNTIME: Record<string, string> = {
 };
 
 export const IT_FINE_BINDERY_RUNTIME: Record<string, string> = {
+  Project: "Progetto", "To clarify": "Da chiarire", Derived: "Ricavato dalle tue risposte", Captured: "Registrato", Approximate: "Approssimativo",
   "This is taking longer than usual.": "L’operazione sta richiedendo più tempo del previsto.",
   "Unable to save answers": "Impossibile salvare le risposte", "Unable to submit": "Impossibile inviare il progetto", "Session not ready.": "La sessione non è ancora pronta.",
   "detail captured": "dettaglio acquisito", "details captured": "dettagli acquisiti",

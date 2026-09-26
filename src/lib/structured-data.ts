@@ -165,7 +165,7 @@ export const fineBinderyOrganizationSchema = {
     url: `${FINE_BINDERY_SITE_URL}/mareliure-icon.svg`,
   },
   description:
-    "International concierge for exceptional French bookbinding, restoration and bespoke creation, entrusted to independent workshops in France.",
+    "A European bookbinding and conservation network in development, starting in France and welcoming international projects.",
 } as const;
 
 export const fineBinderyWebsiteSchema = {
@@ -174,6 +174,6 @@ export const fineBinderyWebsiteSchema = {
   "@id": FINE_BINDERY_WEBSITE_ID,
   name: "Fine Bindery",
   url: `${FINE_BINDERY_SITE_URL}/`,
-  inLanguage: "en-US",
+  inLanguage: ["en", "fr", "de", "it", "es"],
   publisher: { "@id": FINE_BINDERY_ORGANIZATION_ID },
 } as const;

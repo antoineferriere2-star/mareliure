@@ -59,13 +59,13 @@ export const STEPS: readonly LandingStep[] = [
     index: "02",
     when: "Avant tout engagement",
     title: "Vous recevez un prix",
-    body: "Nous étudions le travail, les matériaux et la complexité, puis nous vous présentons un prix unique. Vous décidez ensuite.",
+    body: "Nous étudions vos photos et vous présentons une proposition. L’atelier vérifie ensuite le livre à réception : tout travail ou changement de prix nécessite votre accord préalable.",
   },
   {
     index: "03",
     when: "Après votre accord",
     title: "Un artisan réalise le travail",
-    body: "L'atelier dont le savoir-faire correspond confirme au prix prévu. Le transport est convenu avec vous, projet par projet, en attendant un envoi organisé.",
+    body: "L’atelier examine le livre à réception et confirme le travail proposé. Les modalités du transport sont à convenir avec vous avant tout envoi.",
   },
 ];
 
@@ -97,19 +97,19 @@ export interface Proof {
 export const PROOFS: readonly Proof[] = [
   {
     title: "Prix clair",
-    body: "Vous connaissez le prix de votre projet avant de vous engager.",
+    body: "Une proposition sur photos, vérifiée à réception. Votre accord précède tout travail ou changement de prix.",
   },
   {
-    title: "Artisans indépendants sélectionnés",
-    body: "Ma Reliure travaille avec des ateliers indépendants installés en France et spécialisés dans différents savoir-faire.",
+    title: "Un réseau en construction",
+    body: "Notre vitrine présente le travail de Reliure Dorure Ferrière. D’autres ateliers pourront rejoindre le réseau après validation.",
   },
   {
     title: "Le bon savoir-faire",
-    body: "Chaque projet est confié à l'atelier dont les compétences correspondent au travail à réaliser.",
+    body: "Nous vérifions les compétences et la disponibilité nécessaires avant de confirmer la prise en charge de votre livre.",
   },
   {
     title: "Partout en France",
-    body: "Le bon artisan n'est pas forcément le plus proche. Ma Reliure permet de confier votre livre à l'atelier adapté, où qu'il soit en France.",
+    body: "Vous pouvez présenter votre projet depuis toute la France. La prise en charge et les modalités d’envoi restent à convenir avant le départ du livre.",
   },
 ];
 
@@ -188,11 +188,11 @@ export interface Commitment {
 export const COMMITMENTS: readonly Commitment[] = [
   {
     title: "Prix connu avant engagement",
-    body: "Nous étudions le travail, puis nous vous annonçons un prix ferme. Vous décidez ensuite.",
+    body: "Une proposition est établie sur photos, puis vérifiée livre en main à réception. Aucun travail ni changement de prix sans votre accord préalable.",
   },
   {
     title: "Atelier choisi selon le travail",
-    body: "Chaque projet va à l'artisan dont le savoir-faire correspond, pas au premier disponible.",
+    body: "Nous vérifions qu’un atelier peut prendre en charge votre projet avant de vous proposer la suite. Le réseau se développe progressivement.",
   },
   {
     title: "Un seul interlocuteur",

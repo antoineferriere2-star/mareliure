@@ -41,7 +41,7 @@ import {
   type SessionAuth,
 } from "./publicSessionStorage";
 import { VisitorProjectSummaryView } from "./VisitorProjectSummaryView";
-import { BuildPublicShell } from "./BuildPublicShell";
+import { BuildPublicShell, type PublicShellLinks } from "./BuildPublicShell";
 import { ProjectCanvas, ProjectCanvasMobileSheet } from "./ProjectCanvas";
 import { projectCanvasItemsFromRuntime } from "./ProjectCanvasProjection";
 import { EMPTY_BRANDING, type PublicBranding } from "@/build/branding/missionBranding";
@@ -241,6 +241,7 @@ export function MissionRuntime({
   guidance,
   initialLocale,
   routeLocaleWins = false,
+  shellLinks,
 }: {
   publicToken: string;
   renderAfterSubmission?: RenderAfterSubmission;
@@ -261,6 +262,7 @@ export function MissionRuntime({
   initialLocale?: SupportedLocale;
   /** A localized public route can deliberately override a legacy Mission locale. */
   routeLocaleWins?: boolean;
+  shellLinks?: PublicShellLinks;
   /**
    * Answers to merge in when a fresh session starts (never on resume) — the
    * generic half of carrying an opaque tag through the tunnel. The runtime
@@ -288,6 +290,7 @@ export function MissionRuntime({
       showFaqLauncher={false}
       chrome="embedded"
       businessName={businessName}
+      links={shellLinks}
       lockedLocale={routeLocaleWins ? (initialLocale ?? missionLocale) : (missionLocale ?? initialLocale ?? null)}
     >
       <MissionRuntimeContent
@@ -1007,7 +1010,7 @@ function MissionRuntimeContent({
           </div>
           <ProjectCanvas
             title={copy("Your project")}
-            eyebrow={copy("Live project canvas")}
+            eyebrow={copy("Project summary")}
             items={canvasItems}
             emptyText={copy("Your project will take shape as you answer.")}
             className="sticky top-6 hidden lg:block"

@@ -8,6 +8,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { publicCopy, useOptionalPublicLocale } from "./publicLocaleContext";
 import type { ProjectCanvasItem, ProjectCanvasStatus } from "./ProjectCanvasProjection";
 
 const STATUS_META: Record<ProjectCanvasStatus, { mark: string; label: string; className: string }> =
@@ -49,6 +50,7 @@ export function ProjectCanvas({
   density?: "standard" | "marketing" | "hero";
   maxItems?: number;
 }) {
+  const { locale } = useOptionalPublicLocale();
   const visibleItems = typeof maxItems === "number" ? items.slice(0, maxItems) : items;
   const groups = groupedItems(visibleItems);
   const isLarge = density !== "standard";
@@ -139,10 +141,10 @@ export function ProjectCanvas({
                               : "h-6 w-6 rounded-full text-sm",
                             meta.className,
                           )}
-                          title={meta.label}
+                          title={publicCopy(locale, meta.label)}
                         >
                           <span aria-hidden="true">{meta.mark}</span>
-                          {isLarge ? <span className="ml-1.5">{meta.label}</span> : <span className="sr-only">{meta.label}</span>}
+                          {isLarge ? <span className="ml-1.5">{publicCopy(locale, meta.label)}</span> : <span className="sr-only">{publicCopy(locale, meta.label)}</span>}
                         </span>
                       </dd>
                     </div>

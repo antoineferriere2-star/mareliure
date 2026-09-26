@@ -247,3 +247,7 @@ snapshot de document peut encore le référencer.
 ## Captures de l’outil atelier (PR #46) — retirées le 25 septembre 2026
 
 Les six captures `/product/*.webp` de la PR #46 ne sont plus publiées : la page relieurs et le bloc de l’accueil utilisent désormais les captures `/photos/product/*` décrites plus haut (PR #47). Plus aucun fichier `/product/` n’est servi.
+
+## Partage Fine Bindery — 26 septembre 2026
+
+Les métadonnées OpenGraph publiques réutilisent `/photos/reliure-bordeaux-800.webp` (Reliure Dorure Ferrière, autorisation et source déjà enregistrées ci-dessus). Aucune image créée, ni attribution à un autre atelier. Les profils conservent leur propre image quand elle est renseignée.

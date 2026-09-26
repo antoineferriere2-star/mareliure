@@ -12,10 +12,11 @@ export const it: FineBinderyPublicCopy = {
   nav: { how: "Come funziona", services: "Competenze", workshops: "Laboratori", faq: "Domande", signIn: "Accedi", language: "Lingua", menu: "Menu" },
   common: { start: "Presenta il tuo progetto", project: "Progetto", france: "Francia", skills: "Competenze", languages: "Lingue", techniques: "Tecniche e materiali", originalText: "Testo del laboratorio nella lingua originale." },
   footer: { summary: "La rete europea della legatoria e del restauro del libro.", information: "Informazioni", legal: "Note legali", privacy: "Privacy", terms: "Condizioni d’uso", sales: "Condizioni di vendita", closing: "Legatoria, conservazione e doratura, da laboratori indipendenti." },
+  trust: { atelier: "Per i laboratori", home: "Home", brands: "Ma Reliure segue i clienti in Francia. Fine Bindery accoglie progetti internazionali e sviluppa una rete europea, iniziando dalla Francia.", atelierAccess: "Crea uno spazio per gestire i tuoi progetti. La pubblicazione nel catalogo e l’accesso ai progetti della rete richiedono una verifica separata.", legalLanguage: "I documenti legali sono attualmente disponibili in inglese.", pricePolicy: "La proposta si basa sulle tue fotografie. Il laboratorio esamina il libro al ricevimento. Nessun lavoro o modifica di prezzo senza il tuo consenso preventivo.", workshopImage: "Un esempio di legatura del laboratorio Reliure Dorure Ferrière" },
   home: {
     eyebrow: "Legatoria · Conservazione · Doratura",
     title: "La rete europea della legatoria e del restauro del libro.",
-    lead: "Scopri legatori e restauratori esperti. Presenta il tuo progetto. Lavora con il laboratorio giusto.",
+    lead: "Presenta il tuo libro e ciò che desideri. Verificheremo se un laboratorio può occuparsi del lavoro.",
     discover: "Scopri i laboratori",
     proof: "Laboratori indipendenti, verificati prima della pubblicazione · Un progetto, un interlocutore · Apertura in Francia",
     offersEyebrow: "Competenze", offersTitle: "Il lavoro della rete.", photoCredit: "Fotografie", offers: [
@@ -24,15 +25,15 @@ export const it: FineBinderyPublicCopy = {
       { title: "Legatura da collezione", body: "Un’edizione amata o ricercata, trasformata in un pezzo unico." },
       { title: "Creazioni su misura", body: "Legature uniche, libri di famiglia, copie di presentazione, scatole e custodie." },
     ],
-    pathsEyebrow: "Due modi per iniziare", pathsTitle: "Scegli il tuo laboratorio — o lascia che lo troviamo noi.", paths: [
+    pathsEyebrow: "Due modi per iniziare", pathsTitle: "Presenta un progetto o consulta il catalogo.", paths: [
       { title: "Scegli un laboratorio", body: "Scopri i laboratori pubblicati, i loro lavori, le tecniche e le lingue che parlano. Un progetto presentato dalla pagina di un laboratorio arriva direttamente a quel laboratorio.", cta: "Sfoglia i laboratori" },
-      { title: "Presenta il tuo progetto", body: "Descrivi il tuo libro una sola volta. Fine Bindery studia il lavoro, lo affida al laboratorio con le competenze adatte e segue il progetto fino al ritorno del libro.", cta: "Presenta il tuo progetto" },
+      { title: "Presenta il tuo progetto", body: "Presenta il tuo libro e ciò che desideri. Verificheremo se un laboratorio può occuparsi del lavoro.", cta: "Presenta il tuo progetto" },
     ],
     howEyebrow: "Come si svolge un progetto", howTitle: "Dalla prima fotografia al ritorno del libro.", steps: ["Presenta il tuo libro", "Ricevi una proposta", "Il laboratorio giusto conferma", "Il libro raggiunge il laboratorio", "Segui il lavoro", "Il libro torna a casa"],
-    workshopsEyebrow: "Dietro ogni libro, un laboratorio", workshopsTitle: "Legatori, restauratori e doratori indipendenti.", workshopsLead: "Ogni laboratorio viene verificato prima della pubblicazione della sua pagina: competenze, esperienza e lavori che desidera ricevere.", selected: "Verificato e pubblicato da Fine Bindery.", discoverWorkshops: "Scopri i laboratori pubblicati",
+    workshopsEyebrow: "Dietro ogni libro, un laboratorio", workshopsTitle: "Legatori, restauratori e doratori indipendenti.", workshopsLead: "La nostra rete cresce. I profili appaiono nel catalogo dopo la verifica.", selected: "Fotografie di Reliure Dorure Ferrière, utilizzate con autorizzazione; questa presentazione non è un profilo pubblicato nel catalogo.", discoverWorkshops: "Scopri i laboratori pubblicati",
     networkNote: "La rete apre con laboratori in Francia e accoglierà legatori e restauratori di tutta Europa.",
     trustEyebrow: "Il tuo libro viaggia", trustTitle: "Il tuo libro viaggia. La sua storia non si perde.", trust: ["Stato documentato", "Un solo interlocutore", "Laboratori verificati", "Un viaggio seguito"],
-    shippingEyebrow: "Spedizione", shippingTitle: "Un viaggio adatto al libro.", shippingLead: "Il viaggio è organizzato secondo la natura e il valore del libro, e preventivato a parte rispetto al lavoro.",
+    shippingEyebrow: "Spedizione", shippingTitle: "Un viaggio adatto al libro.", shippingLead: "Le modalità di spedizione vanno concordate prima dell’invio del libro. Attendi le istruzioni prima di spedirlo.",
     faqEyebrow: "Le tue domande", faqTitle: "Prima di iniziare.", faq: [
       { question: "Posso contattare direttamente un laboratorio?", answer: "Sì. Un progetto presentato dalla pagina di un laboratorio arriva direttamente a quel laboratorio." },
       { question: "Come vengono scelti i laboratori?", answer: "Fine Bindery verifica ogni laboratorio prima di pubblicarne la pagina: competenze, esperienza e tipo di lavori che desidera ricevere. Non ci sono classifiche né posizionamenti a pagamento." },
@@ -40,7 +41,7 @@ export const it: FineBinderyPublicCopy = {
       { question: "La spedizione è inclusa?", answer: "No. Viene preventivata a parte, secondo destinazione, valore e cura richiesta." },
       { question: "Posso affidare un libro antico o prezioso?", answer: "Sì, dopo una valutazione individuale e con una logistica adeguata." },
     ],
-    finalTitle: "Il tuo libro merita le mani giuste.", finalLead: "Sfoglia i laboratori della rete, oppure presenta il tuo progetto e lascia che troviamo quello giusto.", established: "dal",
+    finalTitle: "Il tuo libro merita le mani giuste.", finalLead: "Presenta il tuo libro e ciò che desideri. Verificheremo se un laboratorio può occuparsi del lavoro.", established: "dal",
   },
   directory: {
     eyebrow: "La rete", title: "Legatori e restauratori, scelti per il loro mestiere.",
@@ -50,7 +51,7 @@ export const it: FineBinderyPublicCopy = {
     empty: "Nessun laboratorio pubblicato corrisponde a questi filtri.", reset: "Cancella i filtri",
     count: (n) => (n === 1 ? "1 laboratorio" : `${n} laboratori`), view: "Vedi il laboratorio",
     emptyTitle: "I primi laboratori sono in corso di pubblicazione.",
-    emptyBody: "Le loro pagine appariranno qui non appena saranno verificate. Nel frattempo presenta il tuo progetto: Fine Bindery troverà il laboratorio adatto al tuo libro.",
+    emptyBody: "Al momento non ci sono profili pubblicati. Puoi comunque presentare il tuo progetto perché venga valutato.",
     openingNote: "La rete apre con laboratori in Francia e accoglierà legatori e restauratori di tutta Europa.",
   },
   profile: {

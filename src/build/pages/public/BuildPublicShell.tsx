@@ -38,6 +38,7 @@ const VERTICAL_NAV_ITEMS = [
  * links Métré owes the visitor as the processor of their data.
  */
 export type PublicShellChrome = "marketing" | "embedded";
+export interface PublicShellLinks { home: string; homeLabel: string; privacy: string; terms: string; privacyLabel?: string; termsLabel?: string }
 
 export function BuildPublicShell({
   children,
@@ -45,6 +46,7 @@ export function BuildPublicShell({
   chrome = "marketing",
   businessName,
   lockedLocale,
+  links,
 }: {
   children: ReactNode;
   /**
@@ -63,6 +65,7 @@ export function BuildPublicShell({
    * every marketing page, where the visitor chooses — see PublicLocaleProvider.
    */
   lockedLocale?: SupportedLocale | null;
+  links?: PublicShellLinks;
 }) {
   return (
     <PublicLocaleProvider lockedLocale={lockedLocale}>
@@ -70,6 +73,7 @@ export function BuildPublicShell({
         showFaqLauncher={showFaqLauncher}
         chrome={chrome}
         businessName={businessName}
+        links={links}
       >
         {children}
       </BuildPublicShellContent>
@@ -82,11 +86,13 @@ function BuildPublicShellContent({
   showFaqLauncher,
   chrome,
   businessName,
+  links,
 }: {
   children: ReactNode;
   showFaqLauncher: boolean;
   chrome: PublicShellChrome;
   businessName?: string | null;
+  links?: PublicShellLinks;
 }) {
   const { locale } = usePublicLocale();
   usePageViewTracking(locale);
@@ -116,10 +122,11 @@ function BuildPublicShellContent({
                 browser's back button or the address bar. */}
             {isMaReliure ? (
               <a
-                href="/"
+                href={links?.home ?? "/"}
+                aria-label={links?.homeLabel ?? businessName ?? "Accueil"}
                 className="intake-display truncate text-base font-semibold underline-offset-4 hover:underline"
               >
-                {businessName || " "}
+                {businessName || links?.homeLabel || "Accueil"}
               </a>
             ) : (
               <span className="intake-display truncate text-base font-semibold">
@@ -147,20 +154,20 @@ function BuildPublicShellContent({
             {!isMaReliure && <span>Project intake powered by Métré Build</span>}
             <span className="flex gap-4">
               <a
-                href={isMaReliure ? "/confidentialite" : "/privacy"}
+                href={links?.privacy ?? (isMaReliure ? "/confidentialite" : "/privacy")}
                 target="_blank"
                 rel="noreferrer"
                 className="hover:text-slate-900"
               >
-                {t(locale, "footer.privacy")}
+                {links?.privacyLabel ?? t(locale, "footer.privacy")}
               </a>
               <a
-                href={isMaReliure ? "/conditions" : "/terms"}
+                href={links?.terms ?? (isMaReliure ? "/conditions" : "/terms")}
                 target="_blank"
                 rel="noreferrer"
                 className="hover:text-slate-900"
               >
-                {t(locale, "footer.terms")}
+                {links?.termsLabel ?? t(locale, "footer.terms")}
               </a>
             </span>
           </div>

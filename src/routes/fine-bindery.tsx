@@ -1,3 +1,4 @@
+import { loadFineBinderyHomeAvailability } from "@/marketplace/pages/fineBindery/homeAvailability";
 /**
  * A stable path to Fine Bindery's homepage, independent of which Host the
  * request arrived on — useful for review and QA before finebindery.com's
@@ -14,6 +15,7 @@ const DESCRIPTION =
   "The international concierge for exceptional French bookbinding. Entrust your book to selected independent workshops in France — Fine Bindery manages every step.";
 
 export const Route = createFileRoute("/fine-bindery")({
+  loader: () => loadFineBinderyHomeAvailability(),
   head: () => ({
     meta: [
       { title: TITLE },
@@ -30,5 +32,10 @@ export const Route = createFileRoute("/fine-bindery")({
     ],
     links: [EDITORIAL_FONT_PRELOAD],
   }),
-  component: FineBinderyLandingPage,
+  component: FineBinderyPreview,
 });
+
+function FineBinderyPreview() {
+  const hasPublishedProfiles = Route.useLoaderData();
+  return <FineBinderyLandingPage hasPublishedProfiles={hasPublishedProfiles} />;
+}

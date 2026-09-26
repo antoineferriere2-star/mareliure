@@ -58,7 +58,7 @@ const STEPS: readonly Step[] = [
   {
     when: "L’atelier",
     title: "Le prix est confirmé livre en main",
-    body: "Si le livre, une fois ouvert, révèle autre chose — une couture fragile, un papier à consolider — nous vous le disons avant d’aller plus loin. Vous restez libre de décider.",
+    body: "À réception, l’atelier examine le livre et vérifie la proposition établie sur photos. Aucun travail ni changement de prix n’est engagé sans votre accord préalable.",
   },
 ];
 
@@ -105,7 +105,7 @@ const FACTORS: readonly Factor[] = [
 ];
 
 const INCLUDED: readonly string[] = [
-  "Le travail de l’atelier, en entier : un seul prix, arrêté avant que le livre parte.",
+  "Le travail proposé sur photos, vérifié à réception du livre. Votre accord est nécessaire avant tout travail ou changement de prix.",
   "Le choix de l’artisan dont le savoir-faire correspond à votre ouvrage.",
   "Un interlocuteur unique du début à la fin : vous ne négociez pas avec l’atelier.",
   "Aucune surprise engagée sans vous : un changement vous est expliqué avant d’être fait.",

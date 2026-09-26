@@ -12,10 +12,11 @@ export const es: FineBinderyPublicCopy = {
   nav: { how: "Cómo funciona", services: "Oficios", workshops: "Talleres", faq: "Preguntas", signIn: "Iniciar sesión", language: "Idioma", menu: "Menú" },
   common: { start: "Presenta tu proyecto", project: "Proyecto", france: "Francia", skills: "Oficios", languages: "Idiomas", techniques: "Técnicas y materiales", originalText: "Texto del taller en su idioma original." },
   footer: { summary: "La red europea de encuadernación y conservación del libro.", information: "Información", legal: "Aviso legal", privacy: "Privacidad", terms: "Condiciones de uso", sales: "Condiciones de venta", closing: "Encuadernación, conservación y dorado, por talleres independientes." },
+  trust: { atelier: "Para los talleres", home: "Inicio", brands: "Ma Reliure atiende a clientes en Francia. Fine Bindery recibe proyectos internacionales y desarrolla una red europea, empezando por Francia.", atelierAccess: "Crea un espacio para gestionar tus propios proyectos. La publicación en el directorio y el acceso a proyectos de la red requieren una revisión independiente.", legalLanguage: "Los documentos legales están disponibles actualmente en inglés.", pricePolicy: "La propuesta se prepara a partir de tus fotografías. El taller revisa el libro al recibirlo. Ningún trabajo ni cambio de precio se realiza sin tu acuerdo previo.", workshopImage: "Un ejemplo de encuadernación del taller Reliure Dorure Ferrière" },
   home: {
     eyebrow: "Encuadernación · Conservación · Dorado",
     title: "La red europea de encuadernación y conservación del libro.",
-    lead: "Descubre encuadernadores y restauradores con oficio. Presenta tu proyecto. Trabaja con el taller adecuado.",
+    lead: "Presenta tu libro y lo que deseas. Comprobaremos si un taller puede realizar el trabajo.",
     discover: "Descubre los talleres",
     proof: "Talleres independientes, revisados antes de su publicación · Un proyecto, un interlocutor · Apertura en Francia",
     offersEyebrow: "Oficios", offersTitle: "El trabajo de la red.", photoCredit: "Fotografías", offers: [
@@ -24,15 +25,15 @@ export const es: FineBinderyPublicCopy = {
       { title: "Encuadernación de colección", body: "Una edición querida o buscada, convertida en pieza única." },
       { title: "Creaciones a medida", body: "Encuadernaciones únicas, libros de familia, ejemplares de presentación, cajas y estuches." },
     ],
-    pathsEyebrow: "Dos maneras de empezar", pathsTitle: "Elige tu taller — o deja que lo encontremos.", paths: [
+    pathsEyebrow: "Dos maneras de empezar", pathsTitle: "Presenta un proyecto o consulta el directorio.", paths: [
       { title: "Elige un taller", body: "Descubre los talleres publicados, sus trabajos, sus técnicas y los idiomas que hablan. Un proyecto presentado desde la página de un taller llega directamente a ese taller.", cta: "Ver los talleres" },
-      { title: "Presenta tu proyecto", body: "Describe tu libro una sola vez. Fine Bindery estudia el trabajo, lo confía al taller cuyo oficio le corresponde y sigue el proyecto hasta el regreso del libro.", cta: "Presenta tu proyecto" },
+      { title: "Presenta tu proyecto", body: "Presenta tu libro y lo que deseas. Comprobaremos si un taller puede realizar el trabajo.", cta: "Presenta tu proyecto" },
     ],
     howEyebrow: "Cómo avanza un proyecto", howTitle: "De la primera fotografía al regreso del libro.", steps: ["Presenta tu libro", "Recibe una propuesta", "El taller adecuado confirma", "Tu libro viaja al taller", "Sigue el trabajo", "Tu libro vuelve a casa"],
-    workshopsEyebrow: "Detrás de cada libro, un taller", workshopsTitle: "Encuadernadores, restauradores y doradores independientes.", workshopsLead: "Cada taller se revisa antes de publicar su página: su oficio, su trayectoria y el trabajo que desea recibir.", selected: "Revisado y publicado por Fine Bindery.", discoverWorkshops: "Descubre los talleres publicados",
+    workshopsEyebrow: "Detrás de cada libro, un taller", workshopsTitle: "Encuadernadores, restauradores y doradores independientes.", workshopsLead: "Nuestra red está creciendo. Los perfiles aparecen en el directorio después de su aprobación.", selected: "Fotografías de Reliure Dorure Ferrière, utilizadas con autorización; esta presentación no es un perfil publicado en el directorio.", discoverWorkshops: "Descubre los talleres publicados",
     networkNote: "La red abre con talleres en Francia y acogerá a encuadernadores y restauradores de toda Europa.",
     trustEyebrow: "Tu libro viaja", trustTitle: "Tu libro viaja. Su historia no se pierde.", trust: ["Estado documentado", "Un solo interlocutor", "Talleres revisados", "Un trayecto seguido"],
-    shippingEyebrow: "Envío", shippingTitle: "Un trayecto adaptado al libro.", shippingLead: "El trayecto se organiza según la naturaleza y el valor del libro, y se presupuesta aparte del trabajo.",
+    shippingEyebrow: "Envío", shippingTitle: "Un trayecto adaptado al libro.", shippingLead: "Las condiciones del transporte deben acordarse antes del envío del libro. Espera las instrucciones antes de enviarlo.",
     faqEyebrow: "Tus preguntas", faqTitle: "Antes de empezar.", faq: [
       { question: "¿Puedo contactar directamente con un taller?", answer: "Sí. Un proyecto presentado desde la página de un taller llega directamente a ese taller." },
       { question: "¿Cómo se eligen los talleres?", answer: "Fine Bindery revisa cada taller antes de publicar su página: su oficio, su trayectoria y el tipo de trabajo que desea recibir. No hay clasificaciones ni posiciones de pago." },
@@ -40,7 +41,7 @@ export const es: FineBinderyPublicCopy = {
       { question: "¿El envío está incluido?", answer: "No. Se presupuesta aparte, según el destino, el valor y el cuidado que requiere el libro." },
       { question: "¿Puedo confiar un libro antiguo o valioso?", answer: "Sí, tras un estudio individual y con una logística adecuada." },
     ],
-    finalTitle: "Tu libro merece las manos adecuadas.", finalLead: "Descubre los talleres de la red, o presenta tu proyecto y deja que encontremos el adecuado.", established: "desde",
+    finalTitle: "Tu libro merece las manos adecuadas.", finalLead: "Presenta tu libro y lo que deseas. Comprobaremos si un taller puede realizar el trabajo.", established: "desde",
   },
   directory: {
     eyebrow: "La red", title: "Encuadernadores y restauradores, elegidos por su oficio.",
@@ -50,7 +51,7 @@ export const es: FineBinderyPublicCopy = {
     empty: "Ningún taller publicado coincide con estos filtros.", reset: "Borrar los filtros",
     count: (n) => (n === 1 ? "1 taller" : `${n} talleres`), view: "Ver el taller",
     emptyTitle: "Los primeros talleres se están publicando.",
-    emptyBody: "Sus páginas aparecerán aquí en cuanto se hayan revisado. Mientras tanto, presenta tu proyecto: Fine Bindery encontrará el taller adecuado para tu libro.",
+    emptyBody: "Actualmente no hay perfiles publicados. Aun así, puedes presentar tu proyecto para que lo estudiemos.",
     openingNote: "La red abre con talleres en Francia y acogerá a encuadernadores y restauradores de toda Europa.",
   },
   profile: {

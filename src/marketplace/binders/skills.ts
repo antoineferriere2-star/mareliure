@@ -58,7 +58,7 @@ export const BINDER_SKILLS: readonly BinderSkill[] = [
   },
   {
     slug: "rebinding_contemporain",
-    label: "Rebinding contemporain",
+    label: "Nouvelle reliure contemporaine",
     description: "Reliures actuelles : matières et lignes d'aujourd'hui.",
   },
   {

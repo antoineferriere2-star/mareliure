@@ -12,10 +12,11 @@ export const de: FineBinderyPublicCopy = {
   nav: { how: "Ablauf", services: "Fachgebiete", workshops: "Werkstätten", faq: "Fragen", signIn: "Anmelden", language: "Sprache", menu: "Menü" },
   common: { start: "Projekt vorstellen", project: "Projekt", france: "Frankreich", skills: "Fachgebiete", languages: "Sprachen", techniques: "Techniken und Materialien", originalText: "Werkstatttext in der Originalsprache." },
   footer: { summary: "Das europäische Netzwerk für Buchbinderei und Buchrestaurierung.", information: "Informationen", legal: "Impressum", privacy: "Datenschutz", terms: "Nutzungsbedingungen", sales: "Verkaufsbedingungen", closing: "Buchbinderei, Restaurierung und Vergoldung aus unabhängigen Werkstätten." },
+  trust: { atelier: "Für Werkstätten", home: "Startseite", brands: "Ma Reliure betreut Kunden in Frankreich. Fine Bindery nimmt internationale Projekte entgegen und baut ein europäisches Netzwerk auf, beginnend in Frankreich.", atelierAccess: "Erstellen Sie einen Arbeitsbereich für Ihre eigenen Projekte. Die Veröffentlichung im Verzeichnis und der Zugang zu Netzwerkprojekten erfordern eine gesonderte Prüfung.", legalLanguage: "Die rechtlichen Dokumente sind derzeit auf Englisch verfügbar.", pricePolicy: "Auf Grundlage Ihrer Fotos wird ein Vorschlag erstellt. Die Werkstatt prüft das Buch nach Eingang. Arbeiten und Preisänderungen erfolgen nur mit Ihrer vorherigen Zustimmung.", workshopImage: "Ein Einbandbeispiel aus der Werkstatt Reliure Dorure Ferrière" },
   home: {
     eyebrow: "Buchbinderei · Restaurierung · Vergoldung",
     title: "Das europäische Netzwerk für Buchbinderei und Buchrestaurierung.",
-    lead: "Entdecken Sie erfahrene Buchbinder und Restauratoren. Stellen Sie Ihr Projekt vor. Arbeiten Sie mit der passenden Werkstatt.",
+    lead: "Stellen Sie Ihr Buch und Ihre Wünsche vor. Wir prüfen, ob eine Werkstatt die Arbeit übernehmen kann.",
     discover: "Werkstätten entdecken",
     proof: "Unabhängige, vor der Veröffentlichung geprüfte Werkstätten · Ein Projekt, ein Gespräch · Start in Frankreich",
     offersEyebrow: "Fachgebiete", offersTitle: "Die Arbeit des Netzwerks.", photoCredit: "Fotografien", offers: [
@@ -24,15 +25,15 @@ export const de: FineBinderyPublicCopy = {
       { title: "Neueinband für Sammler", body: "Eine geliebte oder gesuchte Ausgabe als Unikat." },
       { title: "Individuelle Anfertigungen", body: "Unikate, Familienbücher, Präsentationsexemplare, Kassetten und Schuber." },
     ],
-    pathsEyebrow: "Zwei Wege zum Start", pathsTitle: "Wählen Sie Ihre Werkstatt – oder lassen Sie uns sie finden.", paths: [
+    pathsEyebrow: "Zwei Wege zum Start", pathsTitle: "Stellen Sie ein Projekt vor oder sehen Sie im Verzeichnis nach.", paths: [
       { title: "Eine Werkstatt wählen", body: "Entdecken Sie die veröffentlichten Werkstätten, ihre Arbeiten, Techniken und Sprachen. Ein Projekt, das Sie auf der Seite einer Werkstatt vorstellen, erreicht diese Werkstatt direkt.", cta: "Werkstätten ansehen" },
-      { title: "Projekt vorstellen", body: "Beschreiben Sie Ihr Buch einmal. Fine Bindery prüft die Arbeit, vertraut sie der Werkstatt mit den passenden Fähigkeiten an und begleitet das Projekt bis zur Rückkehr des Buches.", cta: "Projekt vorstellen" },
+      { title: "Projekt vorstellen", body: "Stellen Sie Ihr Buch und Ihre Wünsche vor. Wir prüfen, ob eine Werkstatt die Arbeit übernehmen kann.", cta: "Projekt vorstellen" },
     ],
     howEyebrow: "Der Ablauf eines Projekts", howTitle: "Vom ersten Foto bis zur Rückkehr des Buches.", steps: ["Buch vorstellen", "Vorschlag erhalten", "Die passende Werkstatt bestätigt", "Das Buch reist zur Werkstatt", "Die Arbeit verfolgen", "Das Buch kehrt zurück"],
-    workshopsEyebrow: "Hinter jedem Buch eine Werkstatt", workshopsTitle: "Unabhängige Buchbinder, Restauratoren und Vergolder.", workshopsLead: "Jede Werkstatt wird vor der Veröffentlichung ihrer Seite geprüft: ihre Fachgebiete, ihre Erfahrung und die Arbeiten, die sie übernehmen möchte.", selected: "Von Fine Bindery geprüft und veröffentlicht.", discoverWorkshops: "Veröffentlichte Werkstätten entdecken",
+    workshopsEyebrow: "Hinter jedem Buch eine Werkstatt", workshopsTitle: "Unabhängige Buchbinder, Restauratoren und Vergolder.", workshopsLead: "Unser Netzwerk wächst. Profile erscheinen nach ihrer Freigabe im Verzeichnis.", selected: "Fotos von Reliure Dorure Ferrière, mit Genehmigung gezeigt; diese Vorstellung ist kein veröffentlichtes Werkstattprofil.", discoverWorkshops: "Veröffentlichte Werkstätten entdecken",
     networkNote: "Das Netzwerk startet mit Werkstätten in Frankreich und wird Buchbinder und Restauratoren aus ganz Europa aufnehmen.",
     trustEyebrow: "Ihr Buch reist", trustTitle: "Ihr Buch reist. Seine Geschichte geht nicht verloren.", trust: ["Zustand dokumentiert", "Eine Ansprechperson", "Geprüfte Werkstätten", "Begleiteter Weg"],
-    shippingEyebrow: "Versand", shippingTitle: "Ein Weg, der zum Buch passt.", shippingLead: "Der Weg wird nach Art und Wert des Buches organisiert und getrennt von der Arbeit selbst berechnet.",
+    shippingEyebrow: "Versand", shippingTitle: "Ein Weg, der zum Buch passt.", shippingLead: "Die Versandbedingungen müssen vor dem Versand vereinbart werden. Warten Sie auf die Anweisungen, bevor Sie das Buch versenden.",
     faqEyebrow: "Antworten auf Ihre Fragen", faqTitle: "Vor dem Start.", faq: [
       { question: "Kann ich eine Werkstatt direkt kontaktieren?", answer: "Ja. Ein Projekt, das Sie auf der Seite einer Werkstatt vorstellen, erreicht diese Werkstatt direkt." },
       { question: "Wie werden die Werkstätten ausgewählt?", answer: "Fine Bindery prüft jede Werkstatt vor der Veröffentlichung ihrer Seite: Fachgebiete, Erfahrung und die Art der Arbeiten, die sie übernehmen möchte. Es gibt weder ein Ranking noch bezahlte Platzierungen." },
@@ -40,7 +41,7 @@ export const de: FineBinderyPublicCopy = {
       { question: "Ist der Versand enthalten?", answer: "Nein. Er wird je nach Ziel, Wert und erforderlicher Sorgfalt separat berechnet." },
       { question: "Kann ich wertvolle oder alte Bücher anvertrauen?", answer: "Ja, nach individueller Prüfung und mit geeigneter Logistik." },
     ],
-    finalTitle: "Ihr Buch verdient die richtigen Hände.", finalLead: "Entdecken Sie die Werkstätten des Netzwerks – oder stellen Sie Ihr Projekt vor und lassen Sie uns die passende finden.", established: "seit",
+    finalTitle: "Ihr Buch verdient die richtigen Hände.", finalLead: "Stellen Sie Ihr Buch und Ihre Wünsche vor. Wir prüfen, ob eine Werkstatt die Arbeit übernehmen kann.", established: "seit",
   },
   directory: {
     eyebrow: "Das Netzwerk", title: "Buchbinder und Restauratoren, ausgewählt für ihr Handwerk.",
@@ -50,7 +51,7 @@ export const de: FineBinderyPublicCopy = {
     empty: "Keine veröffentlichte Werkstatt entspricht diesen Filtern.", reset: "Filter zurücksetzen",
     count: (n) => (n === 1 ? "1 Werkstatt" : `${n} Werkstätten`), view: "Werkstatt ansehen",
     emptyTitle: "Die ersten Werkstätten werden gerade veröffentlicht.",
-    emptyBody: "Ihre Seiten erscheinen hier, sobald sie geprüft sind. Stellen Sie bis dahin Ihr Projekt vor: Fine Bindery findet die passende Werkstatt für Ihr Buch.",
+    emptyBody: "Derzeit sind keine Profile veröffentlicht. Sie können Ihr Projekt dennoch zur Prüfung vorstellen.",
     openingNote: "Das Netzwerk startet mit Werkstätten in Frankreich und wird Buchbinder und Restauratoren aus ganz Europa aufnehmen.",
   },
   profile: {

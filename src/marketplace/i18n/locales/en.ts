@@ -18,10 +18,11 @@ export const en: FineBinderyPublicCopy = {
   nav: { how: "How it works", services: "Disciplines", workshops: "Ateliers", faq: "FAQ", signIn: "Sign in", language: "Language", menu: "Menu" },
   common: { start: "Present your project", project: "Project", france: "France", skills: "Skills", languages: "Languages", techniques: "Techniques & materials", originalText: "Atelier text shown in its original language." },
   footer: { summary: "The European network for bookbinding and book conservation.", information: "Information", legal: "Legal notice", privacy: "Privacy policy", terms: "Terms of use", sales: "Terms of sale", closing: "Bookbinding, conservation and gilding, by independent ateliers." },
+  trust: { atelier: "For ateliers", home: "Home", brands: "Ma Reliure serves clients in France. Fine Bindery welcomes international projects and is developing a European network, starting in France.", atelierAccess: "Create a workspace to manage your own projects. Publication in the directory and access to network projects require a separate review.", legalLanguage: "Legal documents are currently available in English.", pricePolicy: "A proposal is prepared from your photographs. The atelier checks the book on receipt. No work or price change proceeds without your prior agreement.", workshopImage: "A bookbinding example from Reliure Dorure Ferrière" },
   home: {
     eyebrow: "Bookbinding · Conservation · Gilding",
     title: "The European Network for Bookbinding & Book Conservation.",
-    lead: "Discover skilled bookbinders and conservators. Present your project. Work with the right atelier.",
+    lead: "Present your book and tell us what you have in mind. We will check whether an atelier can take on the work.",
     discover: "Discover the ateliers",
     proof: "Independent ateliers, reviewed before publication · One project, one conversation · Opening in France",
     offersEyebrow: "Disciplines", offersTitle: "The work of the network.", photoCredit: "Photographs", offers: [
@@ -30,15 +31,15 @@ export const en: FineBinderyPublicCopy = {
       { title: "Collector rebinding", body: "A favourite or collectible edition, made into a unique object." },
       { title: "Bespoke commissions", body: "One-off bindings, family books, presentation copies, boxes and slipcases." },
     ],
-    pathsEyebrow: "Two ways to begin", pathsTitle: "Choose your atelier — or let us find it.", paths: [
+    pathsEyebrow: "Two ways to begin", pathsTitle: "Present a project or consult the directory.", paths: [
       { title: "Choose an atelier", body: "Browse the published ateliers, their work, their techniques and the languages they speak. A project presented from an atelier’s page reaches that atelier directly.", cta: "Browse the ateliers" },
-      { title: "Present your project", body: "Describe your book once. Fine Bindery reviews the work, entrusts it to the atelier whose skills match it, and follows the project until the book comes home.", cta: "Present your project" },
+      { title: "Present your project", body: "Present your book and tell us what you have in mind. We will check whether an atelier can take on the work.", cta: "Present your project" },
     ],
     howEyebrow: "How a project unfolds", howTitle: "From the first photograph to the book’s return.", steps: ["Present your book", "Receive a proposal", "The right atelier confirms", "Your book travels to the atelier", "Follow the work", "Your book comes home"],
-    workshopsEyebrow: "Behind every book, an atelier", workshopsTitle: "Independent bookbinders, conservators and gilders.", workshopsLead: "Each atelier is reviewed before its page is published: its skills, its experience and the work it wishes to receive.", selected: "Reviewed and published by Fine Bindery.", discoverWorkshops: "Discover the published ateliers",
+    workshopsEyebrow: "Behind every book, an atelier", workshopsTitle: "Independent bookbinders, conservators and gilders.", workshopsLead: "Our network is developing. Published profiles appear in the directory as they are approved.", selected: "Photographs from Reliure Dorure Ferrière, shown with permission; this feature is not a published directory profile.", discoverWorkshops: "Discover the published ateliers",
     networkNote: "The network opens with ateliers in France, and will welcome bookbinders and conservators from across Europe.",
     trustEyebrow: "Your book travels", trustTitle: "Your book travels. Its story does not get lost.", trust: ["Documented condition", "One point of contact", "Reviewed ateliers", "A followed journey"],
-    shippingEyebrow: "Shipping", shippingTitle: "A journey adapted to the book.", shippingLead: "The journey is organised according to the nature and value of the book, and quoted separately from the work itself.",
+    shippingEyebrow: "Shipping", shippingTitle: "A journey adapted to the book.", shippingLead: "Shipping arrangements must be agreed before sending the book. Do not send it before receiving instructions.",
     faqEyebrow: "Questions, answered", faqTitle: "Before you start.", faq: [
       { question: "Can I contact an atelier directly?", answer: "Yes. A project presented from an atelier’s page reaches that atelier directly." },
       { question: "How are ateliers chosen for the network?", answer: "Fine Bindery reviews each atelier before publishing its page: its skills, its experience and the kind of work it wishes to receive. There is no ranking and no paid placement." },
@@ -46,7 +47,7 @@ export const en: FineBinderyPublicCopy = {
       { question: "Is shipping included?", answer: "No. Shipping is quoted separately, according to destination, value and the level of care the book requires." },
       { question: "Can valuable or antique books be entrusted?", answer: "Yes, subject to an individual review and suitable logistics." },
     ],
-    finalTitle: "Your book deserves the right hands.", finalLead: "Browse the ateliers of the network, or present your project and let us find the right one.", established: "established",
+    finalTitle: "Your book deserves the right hands.", finalLead: "Present your book and tell us what you have in mind. We will check whether an atelier can take on the work.", established: "established",
   },
   directory: {
     eyebrow: "The network", title: "Bookbinders and conservators, chosen for their craft.",
@@ -56,7 +57,7 @@ export const en: FineBinderyPublicCopy = {
     empty: "No published atelier matches these filters.", reset: "Clear the filters",
     count: (n) => (n === 1 ? "1 atelier" : `${n} ateliers`), view: "View the atelier",
     emptyTitle: "The first ateliers are being published.",
-    emptyBody: "Their pages will appear here as soon as they are reviewed. In the meantime, present your project: Fine Bindery will find the right atelier for your book.",
+    emptyBody: "There are currently no published profiles. You can still present your project so we can review it.",
     openingNote: "The network opens with ateliers in France, and will welcome bookbinders and conservators from across Europe.",
   },
   profile: {

@@ -18,6 +18,8 @@ export const COUNTRY_NAMES: Record<string, Terms> = {
 };
 
 export const SPECIALTY_NAMES: Record<string, Terms> = {
+  reliure: terms("Bookbinding", "Reliure", "Buchbinderei", "Legatoria", "Encuadernación"),
+  pose_de_cuir: terms("Leather covering", "Pose de cuir", "Lederbezug", "Copertura in pelle", "Recubrimiento en piel"),
   reliure_toile: terms("Cloth binding", "Reliure toile", "Gewebeeinband", "Legatura in tela", "Encuadernación en tela"),
   papier_decore: terms("Decorated paper binding", "Reliure en papier décoré", "Buntpapiereinband", "Legatura in carta decorata", "Encuadernación en papel decorado"),
   demi_cuir: terms("Half-leather binding", "Demi-reliure cuir", "Halbledereinband", "Mezza pelle", "Media piel"),

@@ -363,7 +363,7 @@ const SALES_TERMS_SECTIONS_FR: LegalSection[] = [
   {
     heading: "Prix",
     body: [
-      "Le prix qui vous est proposé pour votre projet devient définitif au moment où vous le confirmez ; il correspond au prix affiché dans votre espace client au moment de la commande, toutes taxes comprises.",
+      "La proposition est établie d’après les photos et les informations communiquées. L’atelier vérifie le livre à réception. Le prix convenu est celui accepté dans votre espace client, toutes taxes comprises ; aucun travail ni changement de prix ne peut être engagé sans votre accord préalable.",
       "Le prix ne devient exigible qu'une fois votre commande passée selon les modalités décrites ci-dessous ; le paiement s'effectue par carte bancaire via notre prestataire de paiement, Stripe.",
     ],
   },
@@ -723,7 +723,7 @@ const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
   {
     heading: "Price",
     body: [
-      "The price offered for your project becomes final once you confirm it; it matches the price shown in your customer space at the time of ordering, all taxes included.",
+      "The proposal is based on the photographs and information provided. The atelier checks the book on receipt. The agreed price is the one accepted in your customer space, including taxes; no work or price change proceeds without your prior agreement.",
       "The price is only due once your order is placed as described below; payment is made by card through our payment provider, Stripe.",
     ],
   },
