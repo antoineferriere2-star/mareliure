@@ -8,7 +8,7 @@ Preuves exécutables locales : `npx vitest run src/marketplace/commercial/paymen
 
 ## Préparation et ordre des migrations
 
-1. Fournir un projet Supabase de recette explicitement identifié et jetable, avec Auth et Storage, sans données personnelles réelles. Interdire la référence production `qwfhebtxeubfmvvdsqdt`. Ne pas réutiliser `.env.production.mareliure` pour ce travail.
+1. Fournir un projet Supabase de recette explicitement identifié et jetable, avec Auth et Storage, sans données personnelles réelles. Exclure la production actuelle `hljxohondjvrkzqicexl`, l'ancienne référence `qwfhebtxeubfmvvdsqdt` et la référence non qualifiée `imivilculbdgjvmfyohz`. Ne pas réutiliser `.env.production.mareliure` pour ce travail. Vérifier positivement le nom, la référence et l'usage QA de la cible avant toute écriture.
 2. Utiliser une base au niveau du main parent de la PR, construite avec toutes les migrations antérieures du dépôt (pas avec les stubs PGlite). Vérifier `select version from supabase_migrations.schema_migrations order by version;` et l'absence des deux versions 20260928. Si 0900 d'une version antérieure de PR #51 a déjà été appliquée, reconstruire cette instance jetable : ne pas masquer la divergence par une réparation de l'historique.
 3. Avant 0900, contrôler les doublons qui empêcheraient l'index unique :
 
@@ -25,7 +25,7 @@ group by 1 having count(*) > 1;
 6. Générer depuis **cette instance test**, après les deux migrations, vers un fichier intermédiaire :
 
 ```powershell
-if (!$env:SUPABASE_TEST_PROJECT_REF -or $env:SUPABASE_TEST_PROJECT_REF -eq 'qwfhebtxeubfmvvdsqdt') { throw 'Projet de recette requis' }
+if (!$env:SUPABASE_TEST_PROJECT_REF -or $env:SUPABASE_TEST_PROJECT_REF -in @('hljxohondjvrkzqicexl','qwfhebtxeubfmvvdsqdt','imivilculbdgjvmfyohz')) { throw 'Projet de recette requis' }
 npx supabase gen types typescript --project-id $env:SUPABASE_TEST_PROJECT_REF --schema public > output/types.recipe.ts
 git diff --no-index -- src/integrations/supabase/types.ts output/types.recipe.ts
 ```
@@ -71,3 +71,6 @@ Créer depuis l'espace A un contact propre `QA client externe`, sans dossier ré
 Consigner UUID de fixtures, versions de migrations, captures, PDF, réponses Auth/HTTP, diff types et résultats des étapes. Ne pas effacer l'historique immuable pour nettoyer : détruire uniquement l'instance jetable selon son processus dédié. Aucun nettoyage en production.
 
 **Impossible actuellement faute d'instance test accessible :** connexion membre réelle, envoi du devis, fonctionnement PostgREST/RLS avec vrais JWT, PDF via HTTP et Storage, chaîne réseau complète hébergée, génération des types. Les tests locaux passent mais ne remplacent pas ces contrôles. Carte 3 %, commission 25 %, conciergerie payante et abonnement restent fermés ; aucune création de Price.
+
+## Reprise hébergée du 28 septembre
+Voir [le rapport d'accès](hosted-qa-access-report-20260928.md) : production actuelle hljxohondjvrkzqicexl confirmée dans le dashboard et la configuration. L'ancienne référence qwfhebtxeubfmvvdsqdt et la référence non qualifiée imivilculbdgjvmfyohz sont également exclues. Aucun projet QA identifié ; aucune migration distante, aucun type régénéré. Le précontrôle hosted-qa-preflight.sql est prêt, non exécuté. Une référence différente de ces trois projets doit encore être positivement identifiée comme recette.
