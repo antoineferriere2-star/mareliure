@@ -38,7 +38,7 @@ Les deux branches ajoutent PGlite pour les tests et des signatures RPC dans `typ
 
 ## Recette Supabase hébergée à exécuter
 
-Aucune URL/clé de test disponible ici. Ne jamais employer la référence production `qwfhebtxeubfmvvdsqdt` ni ses clés. Préparer une instance jetable avec migrations du main, Auth et Storage, et deux origines de recette reproduisant les contextes Ma Reliure / Fine Bindery.
+Aucune URL/clé de test disponible ici. Ne jamais employer la production actuelle `hljxohondjvrkzqicexl`, l'ancienne référence `qwfhebtxeubfmvvdsqdt` ni leurs clés. La référence `imivilculbdgjvmfyohz` du dépôt n'est pas qualifiée comme test et reste exclue. Préparer une instance jetable positivement identifiée par nom, référence et usage QA, avec migrations du main, Auth et Storage, et deux origines de recette reproduisant les contextes Ma Reliure / Fine Bindery.
 
 1. Créer deux comptes Auth test et deux ateliers `QA LOGISTIQUE A` / `QA LOGISTIQUE B`, avec membres actifs distincts. Dans A créer le contact `QA client logistique` et l'ouvrage `QA ouvrage colis`, référence attribuée par le serveur. Dans B créer `QA ouvrage B`. Consigner les UUID réellement retournés.
 2. Appliquer 1300 sur main de recette. Contrôler historique `supabase_migrations.schema_migrations`, les deux tables/RLS/triggers, la fonction et le bucket privé. Refaire sur une seconde instance avec 0900 corrigée/1100 de #51 puis 1300 et dérouler aussi sa recette externe ; aucun paiement Stripe nécessaire.
@@ -50,7 +50,7 @@ Aucune URL/clé de test disponible ici. Ne jamais employer la référence produc
 8. Générer les types depuis la recette, vers un fichier intermédiaire :
 
 ```powershell
-if (!$env:SUPABASE_TEST_PROJECT_REF -or $env:SUPABASE_TEST_PROJECT_REF -eq 'qwfhebtxeubfmvvdsqdt') { throw 'Instance test requise' }
+if (!$env:SUPABASE_TEST_PROJECT_REF -or $env:SUPABASE_TEST_PROJECT_REF -in @('hljxohondjvrkzqicexl','qwfhebtxeubfmvvdsqdt','imivilculbdgjvmfyohz')) { throw 'Instance test requise' }
 npx supabase gen types typescript --project-id $env:SUPABASE_TEST_PROJECT_REF --schema public > output/types.recipe.ts
 git diff --no-index -- src/integrations/supabase/types.ts output/types.recipe.ts
 ```
@@ -58,3 +58,6 @@ git diff --no-index -- src/integrations/supabase/types.ts output/types.recipe.ts
 Vérifier les deux tables et la RPC, expliquer toute différence indépendante ; ne pas écraser `types.ts` en cas de sortie vide/erreur. Pour la branche logistique, ne pas importer les types paiements issus d'une recette combinée. Relancer TypeScript et les tests après intégration des types de la base logistique seule.
 
 **Avant publication restent à vérifier** : vrais JWT/HTTP, Storage (upload/lecture/expiration), concurrence multi-connexions, deux contextes Auth de marque et types générés. PR à relire, aucune fusion, aucun déploiement ni migration production autorisés ici.
+
+## Reprise hébergée du 28 septembre
+Voir [le rapport d'accès](hosted-qa-access-report-20260928.md) : production actuelle hljxohondjvrkzqicexl confirmée, ancienne référence qwfhebtxeubfmvvdsqdt et référence non qualifiée imivilculbdgjvmfyohz exclues. Aucun projet QA identifié. Le précontrôle hosted-qa-preflight.sql est préparé mais non exécuté. Les types ne sont pas régénérés ; les scénarios hébergés restent bloquants. [Fiche Sendcloud sans achat](sendcloud-book-roundtrip-trial.md).
