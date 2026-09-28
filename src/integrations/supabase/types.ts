@@ -3823,6 +3823,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      marketplace_work_logistics: {
+        Args: { p_work: string; p_binder: string; p_actor: string; p_action: string; p_data: Json }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
