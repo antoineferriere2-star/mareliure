@@ -85,14 +85,25 @@ CREATE FUNCTION public.marketplace_snapshot_payment_circuit() RETURNS trigger
 LANGUAGE plpgsql SET search_path=public AS $$
 DECLARE v public.marketplace_case_payment_circuits%ROWTYPE;
 BEGIN
-  IF TG_OP='UPDATE' AND OLD.accepted_at IS NOT NULL THEN RETURN NEW; END IF;
+  IF TG_OP='UPDATE' AND OLD.accepted_at IS NOT NULL THEN
+    IF NEW.payment_circuit IS DISTINCT FROM OLD.payment_circuit
+      OR NEW.payment_provenance IS DISTINCT FROM OLD.payment_provenance THEN
+      RAISE EXCEPTION 'accepted_payment_terms_immutable';
+    END IF;
+    RETURN NEW;
+  END IF;
   PERFORM 1 FROM public.marketplace_cases WHERE id=NEW.case_id FOR UPDATE;
   SELECT * INTO v FROM public.marketplace_case_payment_circuits WHERE case_id=NEW.case_id;
-  IF NOT FOUND OR v.circuit <> 'legacy_resale' THEN
+  -- Dossier qualification is future intent, not an activated seller contract.
+  -- Both brands still use the existing resale calculator and acceptance flow.
+  -- A target contract requires a separate implementation/migration; classification
+  -- alone must neither activate fees nor interrupt that existing flow.
+  IF NEW.payment_circuit IS DISTINCT FROM 'legacy_resale' THEN
     RAISE EXCEPTION 'target_payment_contract_required';
   END IF;
-  NEW.payment_circuit := v.circuit;
-  NEW.payment_provenance := v.provenance;
+  IF NOT FOUND THEN RAISE EXCEPTION 'payment_classification_missing'; END IF;
+  NEW.payment_provenance := v.provenance || jsonb_build_object(
+    'qualified_circuit',v.circuit,'contract_model','legacy_resale');
   RETURN NEW;
 END $$;
 CREATE TRIGGER marketplace_snapshot_payment_circuit BEFORE INSERT OR UPDATE ON public.marketplace_commercial_proposals

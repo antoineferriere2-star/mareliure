@@ -41,7 +41,24 @@ describe("payment circuits on isolated PostgreSQL", () => {
     await expect(call(id(1),id(6))).rejects.toThrow("evidence_case_mismatch");
     await call(id(1),id(5));
     expect((await db.query(`SELECT circuit FROM marketplace_case_payment_circuits WHERE case_id='${id(4)}'`)).rows).toEqual([{ circuit: "network_sale" }]);
-    await expect(db.exec(`INSERT INTO marketplace_commercial_proposals(id,case_id,status) VALUES('${id(7)}','${id(4)}','proposed')`)).rejects.toThrow("target_payment_contract_required");
+    await db.exec(`INSERT INTO marketplace_commercial_proposals(id,case_id,status) VALUES('${id(7)}','${id(4)}','proposed')`);
+    expect((await db.query(`SELECT payment_circuit, payment_provenance->>'qualified_circuit' AS qualification FROM marketplace_commercial_proposals WHERE id='${id(7)}'`)).rows)
+      .toEqual([{ payment_circuit: "legacy_resale", qualification: "network_sale" }]);
+    await expect(db.exec(`UPDATE marketplace_commercial_proposals SET payment_circuit='network_sale' WHERE id='${id(7)}'`)).rejects.toThrow("target_payment_contract_required");
+  });
+  it.each(["MA_RELIURE_ACQUIRED", "FINEBINDERY_PROFILE"])("keeps new %s dossiers operational without activating target fees", async (origin) => {
+    const caseId = id(origin === "MA_RELIURE_ACQUIRED" ? 40 : 41);
+    const proposalId = id(origin === "MA_RELIURE_ACQUIRED" ? 42 : 43);
+    await db.exec(`INSERT INTO marketplace_cases VALUES('${caseId}','${origin}',NULL);
+      INSERT INTO marketplace_commercial_proposals(id,case_id,status,currency,total_cents)
+      VALUES('${proposalId}','${caseId}','draft','EUR',12000);
+      UPDATE marketplace_commercial_proposals SET status='proposed' WHERE id='${proposalId}';
+      UPDATE marketplace_commercial_proposals SET status='accepted',accepted_at=now() WHERE id='${proposalId}';`);
+    expect((await db.query(`SELECT payment_circuit,total_cents,payment_provenance->>'qualified_circuit' AS qualification
+      FROM marketplace_commercial_proposals WHERE id='${proposalId}'`)).rows)
+      .toEqual([{ payment_circuit: "legacy_resale", total_cents: 12000, qualification: "review_required" }]);
+    await expect(db.exec(`UPDATE marketplace_commercial_proposals SET payment_circuit='network_sale' WHERE id='${proposalId}'`)).rejects.toThrow("accepted_payment_terms_immutable");
+    await expect(db.exec(`UPDATE marketplace_commercial_proposals SET payment_provenance='{}' WHERE id='${proposalId}'`)).rejects.toThrow("accepted_payment_terms_immutable");
   });
   it("snapshots own-client terms, freezes agreement and links the invoice", async () => {
     await db.exec(`INSERT INTO marketplace_binder_clients VALUES('${id(10)}','${id(11)}',NULL,'mon_client');

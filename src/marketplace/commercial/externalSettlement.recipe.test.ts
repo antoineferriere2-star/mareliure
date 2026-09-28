@@ -45,6 +45,16 @@ const state = async () => (await db.query<{ s: { netCents: number; disputed: boo
   "SELECT marketplace_external_settlement_state($1,$2,$3) s", [invoice,id(2),id(1)])).rows[0].s;
 
 describe("own-client external settlement on a recipe database", () => {
+  it.each(["MA_RELIURE_ACQUIRED", "FINEBINDERY_PROFILE"])("preserves the resale lifecycle for %s after both migrations", async (origin) => {
+    const caseId = id(origin === "MA_RELIURE_ACQUIRED" ? 80 : 81);
+    const proposalId = id(origin === "MA_RELIURE_ACQUIRED" ? 82 : 83);
+    await db.query("INSERT INTO marketplace_cases VALUES($1,$2,NULL)", [caseId, origin]);
+    await db.query("INSERT INTO marketplace_commercial_proposals(id,case_id,status) VALUES($1,$2,'draft')", [proposalId,caseId]);
+    await db.query("UPDATE marketplace_commercial_proposals SET status='proposed' WHERE id=$1", [proposalId]);
+    await db.query("UPDATE marketplace_commercial_proposals SET status='accepted',accepted_at=now() WHERE id=$1", [proposalId]);
+    expect((await db.query("SELECT payment_circuit FROM marketplace_commercial_proposals WHERE id=$1", [proposalId])).rows)
+      .toEqual([{ payment_circuit: "legacy_resale" }]);
+  });
   it("requires a documented agreement and executes the real quote → agreement → draft → issued invoice RPCs", async () => {
     await expect(db.exec(`UPDATE marketplace_binder_quotes SET status='accepted' WHERE id='${id(4)}'`)).rejects.toThrow("own_agreement_required");
     const revision = async () => (await db.query<{ r:string }>("SELECT marketplace_own_contract($1,$2,$3)->>'revision' r",[id(4),id(2),id(1)])).rows[0].r;
