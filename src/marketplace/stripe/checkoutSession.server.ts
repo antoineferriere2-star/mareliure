@@ -94,6 +94,7 @@ export async function createCheckoutForCase(input: {
     const proposal = await loadAcceptedCommercialProposal(sb, data.caseId);
     if (!proposal) fail(409, "Aucune proposition commerciale acceptée pour ce dossier.");
 
+    if (proposal.paymentCircuit !== "legacy_resale") fail(409, "Ce circuit nécessite un contrat de paiement distinct ; aucun encaissement automatique n'est activé.");
     const paymentState = await loadCommercialPaymentState(sb, proposal.id);
     if (paymentState?.paidAt) fail(409, "Cette commande est déjà payée.");
 
@@ -139,12 +140,23 @@ export async function createCheckoutForCase(input: {
     // demande EXACTEMENT le montant exigible : une session ouverte avant la
     // correction TTC réclamerait encore le HT — elle est expirée, jamais
     // réutilisée.
+    let previousSessionId: string | null = null;
     if (paymentState?.stripeCheckoutSessionId) {
       const stripe = getMarketplaceStripeClient();
       const existing = await stripe.checkout.sessions.retrieve(
         paymentState.stripeCheckoutSessionId,
       );
-      if (existing.status === "open" && existing.url) {
+      if (existing.metadata?.case_id !== data.caseId || existing.metadata?.proposal_id !== proposal.id || existing.mode !== "payment") {
+        fail(409, "La session de paiement ne correspond pas à cette proposition.");
+      }
+      // A completed Checkout may still be settling asynchronously. Never charge again.
+      if (existing.status === "complete" || existing.payment_status === "paid") {
+        fail(409, "Paiement terminé ou en cours de confirmation. Aucun nouveau paiement n'est demandé.");
+      }
+      if (existing.status !== "open" && existing.status !== "expired") fail(409, "État de paiement à vérifier.");
+      previousSessionId = existing.id;
+      if (existing.status === "open") {
+        if (!existing.url) fail(409, "La session de paiement doit être vérifiée avant de réessayer.");
         const sameAmount =
           existing.amount_total === amountDue.amountCents &&
           String(existing.currency ?? "").toLowerCase() === amountDue.currency;
@@ -203,7 +215,7 @@ export async function createCheckoutForCase(input: {
       // crée jamais une deuxième session pour la même commande, et un montant corrigé ne
       // se voit jamais répondre la session mise en cache pour l'ancien (Stripe refuse
       // d'ailleurs qu'une même clé serve à des paramètres différents).
-      { idempotencyKey: `checkout-session-${proposal.id}-${amountDue.amountCents}` },
+      { idempotencyKey: `checkout-session-${proposal.id}-${amountDue.amountCents}${previousSessionId ? `-after-${previousSessionId}` : ""}` },
     );
 
     await recordCheckoutSession(sb, proposal.id, session.id);

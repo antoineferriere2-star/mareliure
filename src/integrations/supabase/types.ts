@@ -3823,6 +3823,11 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      // Migration 20260928090000, local schema contract; production is not migrated.
+      marketplace_set_case_payment_circuit: {
+        Args: { p_case_id: string; p_circuit: string; p_event_id: string; p_actor: string; p_notes: string }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]

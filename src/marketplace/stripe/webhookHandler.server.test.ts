@@ -82,8 +82,9 @@ vi.mock("@/build/services/operationalLog.server", () => ({
 vi.mock("./stripeClient.server", () => ({
   getMarketplaceStripeWebhookSecret: () => "whsec_test",
   getMarketplaceStripeClient: () => ({
+    checkout: { sessions: { retrieve: async () => ({ payment_intent: "pi_1", metadata: { case_id: CASE_ID, proposal_id: PROPOSAL_ID } }) } },
     webhooks: {
-      constructEvent: (raw: string) => {
+      constructEventAsync: async (raw: string) => {
         if (raw === "FORGED") throw new Error("bad signature");
         return JSON.parse(raw);
       },
@@ -221,6 +222,23 @@ beforeEach(() => {
 });
 
 describe("P1-2 — un paiement n'est marqué qu'une fois vérifié", () => {
+  it("a PaymentIntent with copied metadata is rejected unless the recorded session owns it", async () => {
+    const result = await deliver(piEvent({ id: "pi_alien" }));
+    expect(result.status).toBe(500);
+    expect(result.body.reason).toBe("session_mismatch");
+    expect(paid()).toBe(false);
+  });
+
+  it("a PaymentIntent arriving before session persistence remains retryable", async () => {
+    const pending = db.payment;
+    db.payment = null;
+    const event = piEvent();
+    expect((await deliver(event)).status).toBe(500);
+    expect(paid()).toBe(false);
+    db.payment = pending;
+    expect((await deliver(event)).status).toBe(200);
+    expect(paid()).toBe(true);
+  });
   it("payé, bon montant TTC, bonne devise, bonne session → marqué payé, journalisé, événement traité", async () => {
     const event = sessionEvent();
     const res = await deliver(event);
@@ -393,15 +411,15 @@ describe("P1-3 — un événement en échec n'est jamais « traité » : la red�
     expect(db.events.get("evt_stale")).toMatchObject({ status: "processed", attempts: 2 });
   });
 
-  it("l'échec persistant : 500 tant qu'on peut réessayer, 200 à la dernière tentative — mais TOUJOURS failed, jamais processed", async () => {
+  it("l'échec persistant reste 500 et rejouable après le seuil d'alerte", async () => {
     const event = sessionEvent({ amount_total: 1 });
     let last = { status: 0, body: {} as Record<string, unknown> };
     for (let i = 1; i <= MAX_WEBHOOK_ATTEMPTS; i += 1) {
       last = await deliver(event);
       if (i < MAX_WEBHOOK_ATTEMPTS) expect(last.status).toBe(500);
     }
-    expect(last.status).toBe(200);
-    expect(last.body).toMatchObject({ ok: false, giveUp: true, attempts: MAX_WEBHOOK_ATTEMPTS });
+    expect(last.status).toBe(500);
+    expect(last.body).toMatchObject({ ok: false, needsAttention: true, attempts: MAX_WEBHOOK_ATTEMPTS });
     expect(db.events.get(event.id)).toMatchObject({ status: "failed", attempts: MAX_WEBHOOK_ATTEMPTS });
     expect(paid()).toBe(false);
   });

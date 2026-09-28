@@ -108,7 +108,7 @@ export const PARTNER_FAQ: PartnerFaqItem[] = [
   {
     question: "L'outil est-il vraiment gratuit ?",
     answer:
-      "Oui : 0 € par mois, sans engagement. Devis, factures, ouvrages, clients, prestations et messages sont inclus. Seul le paiement en ligne, quand vous l'activerez, coûtera 3 % du montant encaissé ; un paiement direct (virement, chèque, espèces) ne coûte rien.",
+      "Oui : 0 € par mois, sans engagement. Devis, factures, ouvrages, clients, prestations et messages sont inclus. Le paiement en ligne est en préparation : le modèle envisagé prévoit 3 % de rémunération plateforme sur l’encaissement, avec les frais de traitement Stripe identifiés séparément. Un paiement direct (virement, chèque, espèces) ne crée pas de commission de paiement plateforme.",
   },
   {
     question: "Puis-je utiliser l'outil sans recevoir de projets Ma Reliure ?",
