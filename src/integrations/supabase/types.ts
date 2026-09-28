@@ -3824,6 +3824,10 @@ export type Database = {
     }
     Functions: {
       // Migration 20260928090000, local schema contract; production is not migrated.
+      marketplace_own_contract: { Args: { p_quote: string; p_binder: string; p_actor: string }; Returns: Json }
+      marketplace_accept_own_quote: { Args: { p_quote: string; p_binder: string; p_actor: string; p_evidence: string }; Returns: undefined }
+      marketplace_external_settlement_state: { Args: { p_invoice: string; p_binder: string; p_actor: string }; Returns: Json }
+      marketplace_record_external_settlement: { Args: { p_id: string; p_invoice: string; p_binder: string; p_actor: string; p_kind: string; p_amount: number; p_evidence: string }; Returns: undefined }
       marketplace_set_case_payment_circuit: {
         Args: { p_case_id: string; p_circuit: string; p_event_id: string; p_actor: string; p_notes: string }
         Returns: undefined

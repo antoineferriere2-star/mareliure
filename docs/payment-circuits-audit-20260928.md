@@ -1,5 +1,7 @@
 # Paiements — audit et socle du 28 septembre 2026
 
+**Mise à jour :** les quatre orientations ont été validées pour les nouveaux contrats. Voir [les parcours contractuels, le premier circuit livré et les verrous d'activation](payment-activation-contracts.md). Les décisions de fin de cet audit constituent désormais l'historique, pas une nouvelle demande d'accord.
+
 Branche `fix/payment-circuits-reconciliation`, base `origin/main` bbd4b57. PR #50 ouverte, non incluse. Aucun débit, migration production, merge ni déploiement. Les termes ci-dessous décrivent séparément le produit existant et la cible demandée ; cette PR n'active pas les commissions ni l'abonnement atelier.
 
 ## Flux constatés

@@ -107,7 +107,7 @@ const isNewRequest = (row: AgendaCase) => row.state === "offered" || row.state =
 
 /** Une facture émise, non annulée par avoir, dont le solde reste dû. */
 export function awaitsPayment(invoice: AgendaInvoice): boolean {
-  return invoice.status === "unpaid" || invoice.status === "deposit_paid";
+  return invoice.status === "unpaid" || invoice.status === "deposit_paid" || invoice.status === "partial";
 }
 
 export function isPaymentOverdue(invoice: AgendaInvoice, today: string): boolean {

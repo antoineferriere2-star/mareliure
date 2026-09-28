@@ -106,7 +106,7 @@ export interface DocumentView {
   workId?: string | null;
   createdAt: string;
   /** Facture seulement : le suivi de paiement (aucun encaissement n'est fait ici). */
-  payment: { status: "unpaid" | "deposit_paid" | "paid"; amountPaidCents: number; depositPaidCents: number } | null;
+  payment: { status: "unpaid" | "deposit_paid" | "partial" | "paid"; amountPaidCents: number; depositPaidCents: number; declaredExternal?: boolean } | null;
   invoiceCompliance: {
     serviceDate: string | null;
     dueDate: string | null;
@@ -203,7 +203,8 @@ export interface InvoiceDbRow extends CommonRow {
   early_payment_discount_terms: string | null;
   late_penalty_terms: string | null;
   legal_mentions: string[];
-  payment_status: "unpaid" | "deposit_paid" | "paid";
+  payment_status: "unpaid" | "deposit_paid" | "partial" | "paid";
+  payment_snapshot?: { agreement_version?: string } | null;
   amount_paid_cents: number;
   deposit_paid_cents: number;
 }
@@ -365,6 +366,7 @@ export function invoiceView(
       status: row.payment_status,
       amountPaidCents: row.amount_paid_cents,
       depositPaidCents: row.deposit_paid_cents,
+      ...(row.payment_snapshot?.agreement_version === "own-external-v1" ? { declaredExternal: true } : {}),
     },
     invoiceCompliance: {
       serviceDate: row.service_date,

@@ -11,6 +11,9 @@ describe("separate commercial circuits", () => {
   it("own-client external collection has no platform payment fee", () => {
     expect(platformRevenue({ ...base, circuit: "own_client", collection: "external" })).toEqual({ kind: "none", amountCents: 0 });
   });
+  it.each(["service_ttc", "collected_ttc"] as const)("network commission rejects the unapproved %s basis", basis => {
+    expect(platformRevenue({ ...base, agreement: { ...fee, basis } })).toEqual({ kind: "review_required" });
+  });
   it("own-client platform collection requires an accepted 3% collection basis", () => {
     expect(platformRevenue({ ...base, circuit: "own_client" })).toEqual({ kind: "review_required" });
     expect(platformRevenue({ ...base, circuit: "own_client", agreement: { ...fee, rateBps: 300, basis: "collected_ttc", basisCents: 12000 } })).toMatchObject({ kind: "fee", amountCents: 360 });

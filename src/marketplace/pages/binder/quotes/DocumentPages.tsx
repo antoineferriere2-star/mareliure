@@ -27,6 +27,8 @@ import type { InvoiceDraftInput } from "@/marketplace/invoices/invoiceCompliance
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, PAYMENT_LABELS, PRIMARY_BUTTON, QuoteStatusBadge, SECONDARY_BUTTON } from "./quoteUi";
 import { INVOICES_KEY, QUOTES_KEY } from "./quoteQueryKeys";
+import { acceptOwnQuote, getOwnContract } from "@/marketplace/services/externalSettlement.data.functions";
+import { ExternalSettlementPanel } from "./ExternalSettlementPanel";
 
 const TRANSITION_LABELS: Partial<Record<QuoteStatus, string>> = {
   sent: "Marquer comme envoyé",
@@ -157,6 +159,10 @@ function PdfActions({ fetchPdf, id }: { fetchPdf: (args: { data: { id: string } 
 // ---------------------------------------------------------------------------
 
 export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
+  const fetchContract = useServerFn(getOwnContract);
+  const acceptExternal = useServerFn(acceptOwnQuote);
+  const [acceptanceEvidence, setAcceptanceEvidence] = useState("");
+  const contract = useQuery({ queryKey: ["own-contract", quoteId], queryFn: () => fetchContract({ data: { id: quoteId } }) });
   const fetchQuote = useServerFn(getMyQuote);
   const fetchPdf = useServerFn(getMyQuotePdf);
   const setStatus = useServerFn(setMyQuoteStatus);
@@ -173,7 +179,10 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
     Promise.all([queryClient.invalidateQueries({ queryKey: QUOTES_KEY }), queryClient.invalidateQueries({ queryKey: INVOICES_KEY })]);
 
   const status = useMutation({
-    mutationFn: (to: QuoteStatus) => setStatus({ data: { id: quoteId, status: to } }),
+    mutationFn: async (to: QuoteStatus) => {
+      if (to === "accepted" && contract.data?.eligible) { await acceptExternal({ data: { id: quoteId, evidence: acceptanceEvidence } }); return; }
+      await setStatus({ data: { id: quoteId, status: to } });
+    },
     onMutate: () => setActionError(false),
     onSuccess: refresh,
     onError: () => setActionError(true),
@@ -256,9 +265,15 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
       {allowedTransitions(current).length > 0 && (
         <section aria-labelledby="doc-status" className={CARD}>
           <h2 id="doc-status" className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Suivi</h2>
+          {contract.error && <p role="alert" className="mt-2 text-sm">Les conditions de règlement sont indisponibles. Rechargez avant d'enregistrer un accord.</p>}
+          {contract.data?.eligible && current === "sent" && <div className="mt-3 space-y-2 text-sm">
+            <p>Client propre : votre atelier vend et facture les travaux pour {new Intl.NumberFormat("fr-FR", { style: "currency", currency: contract.data.currency }).format(contract.data.totalCents / 100)} TTC. Le client règle directement votre atelier. Frais de paiement plateforme : 0 €. Aucun paiement par carte n'est activé ici.</p>
+            <p>Enregistrez uniquement un accord client déjà obtenu sur ce devis. Conservez l'e-mail ou le devis signé ; cette déclaration n'est pas une signature électronique.</p>
+            <Field label="Référence de l'accord client" htmlFor="acceptance-evidence"><input id="acceptance-evidence" className={FIELD} maxLength={500} value={acceptanceEvidence} onChange={e => setAcceptanceEvidence(e.target.value)} /></Field>
+          </div>}
           <div className="mt-3 flex flex-wrap gap-2">
             {allowedTransitions(current).map((to) => (
-              <button key={to} type="button" className={SECONDARY_BUTTON} disabled={busy} onClick={() => status.mutate(to)}>
+              <button key={to} type="button" className={SECONDARY_BUTTON} disabled={busy || (to === "accepted" && (contract.isPending || !!contract.error || (contract.data?.eligible && acceptanceEvidence.trim().length < 8)))} onClick={() => status.mutate(to)}>
                 {TRANSITION_LABELS[to] ?? QUOTE_STATUS_LABELS[to]}
               </button>
             ))}
@@ -446,13 +461,14 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
           </p>
         </div>
         {doc.status !== "draft" && doc.payment && (
-          <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold">{PAYMENT_LABELS[doc.payment.status]}</span>
+          <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold">{PAYMENT_LABELS[doc.payment.status]}{doc.payment.declaredExternal ? " · déclaration atelier" : ""}</span>
         )}
       </header>
       <div className="flex flex-wrap items-center gap-2">
         {doc.status !== "draft" && <PdfActions fetchPdf={fetchPdf} id={doc.id} />}
       </div>
       {doc.status === "draft" ? <InvoiceDraftEditor doc={doc} /> : <p className="text-sm text-muted-foreground">Cette facture est émise et ne peut plus être modifiée ni supprimée. Une correction passe par un avoir.</p>}
+      {doc.status !== "draft" && <ExternalSettlementPanel invoiceId={invoiceId} />}
       <DocumentBody doc={doc} />
       {doc.status !== "draft" && <section aria-labelledby="credit-note-title" className={CARD}>
         <h2 id="credit-note-title" className="font-serif text-lg">Rectification</h2>

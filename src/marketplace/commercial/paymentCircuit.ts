@@ -39,6 +39,7 @@ export function platformRevenue(input: {
       !Number.isSafeInteger(input.amountPaidCents) || input.amountPaidCents <= 0 ||
       !Number.isSafeInteger(a.agreedTotalCents) || a.agreedTotalCents !== input.amountPaidCents ||
       input.refundedCents !== 0 || a.basisCents > input.amountPaidCents ||
+      (input.circuit === "network_sale" && a.basis !== "service_ht") ||
       (input.circuit === "own_client" && (a.basis !== "collected_ttc" || a.basisCents !== input.amountPaidCents))) {
     return { kind: "review_required" };
   }
