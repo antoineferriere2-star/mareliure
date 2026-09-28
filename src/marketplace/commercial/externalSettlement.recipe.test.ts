@@ -47,13 +47,20 @@ const state = async () => (await db.query<{ s: { netCents: number; disputed: boo
 describe("own-client external settlement on a recipe database", () => {
   it("requires a documented agreement and executes the real quote → agreement → draft → issued invoice RPCs", async () => {
     await expect(db.exec(`UPDATE marketplace_binder_quotes SET status='accepted' WHERE id='${id(4)}'`)).rejects.toThrow("own_agreement_required");
-    await db.query("SELECT marketplace_accept_own_quote($1,$2,$3,$4)", [id(4),id(2),id(1),"QA accord écrit du client"]);
+    const revision = async () => (await db.query<{ r:string }>("SELECT marketplace_own_contract($1,$2,$3)->>'revision' r",[id(4),id(2),id(1)])).rows[0].r;
+    const stale = await revision();
+    await db.exec(`UPDATE marketplace_binder_quotes SET notes='QA version relue' WHERE id='${id(4)}'`);
+    await expect(db.query("SELECT marketplace_accept_own_quote($1,$2,$3,$4,$5)",[id(4),id(2),id(1),"QA accord écrit du client",stale])).rejects.toThrow("quote_changed_review_required");
+    await db.query("SELECT marketplace_accept_own_quote($1,$2,$3,$4,$5)", [id(4),id(2),id(1),"QA accord écrit du client",await revision()]);
     invoice = (await db.query<{ id: string }>("SELECT marketplace_binder_create_invoice_draft($1,$2,$3::jsonb) id", [id(2),id(4),JSON.stringify({
       issue_date:"2026-09-28",service_date:"2026-09-28",due_date:"2026-10-28",operation_nature:"services",client_type:"individual",
       client_billing_address_line1:"QA fictif",client_billing_postal_code:"00000",client_billing_city:"QA",client_billing_country:"FR",
       issuer:{legalForm:"QA",siren:"000000000",siret:"00000000000000",addressLine1:"QA fictif",postalCode:"00000",city:"QA"},
       vat_mention:"Mention de recette uniquement",
     })])).rows[0].id;
+    await db.query("UPDATE marketplace_binder_invoices SET issuer=jsonb_set(issuer,'{siret}','\"99999999999999\"') WHERE id=$1",[invoice]);
+    await expect(db.query("SELECT marketplace_binder_issue_invoice($1,$2,'[]'::jsonb)", [id(2),invoice])).rejects.toThrow("invoice_seller_changed_new_agreement_required");
+    await db.query("UPDATE marketplace_binder_invoices SET issuer=jsonb_set(issuer,'{siret}','\"00000000000000\"') WHERE id=$1",[invoice]);
     await db.query("SELECT marketplace_binder_issue_invoice($1,$2,'[]'::jsonb)", [id(2),invoice]);
     expect((await db.query<{ status: string; payment_snapshot: { platform_fee_cents: number } }>("SELECT status,payment_snapshot FROM marketplace_binder_invoices WHERE id=$1",[invoice])).rows[0]).toMatchObject({ status:"issued",payment_snapshot:{ platform_fee_cents:0 } });
   });

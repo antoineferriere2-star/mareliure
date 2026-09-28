@@ -29,6 +29,8 @@ Sur un devis envoyé, l'atelier voit le TTC/devise, son rôle de vendeur et les 
 
 La facture est préparée puis émise par les RPC existantes, avec contrôles fiscaux et mentions existants. Le montant, la devise et la référence devis doivent correspondre à l'accord ; les documents émis restent immuables. L'atelier peut déclarer les sommes reçues directement, avec une référence unique de justificatif. Le serveur dérive la devise de la facture et calcule le solde sous verrou transactionnel. Un retry identique ne crée rien ; changement de contenu avec la même clé, doublon de justificatif ou dépassement du solde est refusé. Le statut partiel est distinct d'un acompte : aucun échéancier d'acompte n'est activé.
 
+L'accord vérifie une empreinte de la version affichée du devis : une modification concurrente impose de relire avant confirmation. Le SIRET de l'émetteur à l'émission doit correspondre à celui figé dans l'accord. Le statut payé et son montant ne peuvent pas être modifiés indépendamment du journal pour ce circuit.
+
 Le journal est append-only, accessible via fonctions authentifiées seulement. Le reçu est **déclaré par l'atelier**, pas vérifié auprès d'une banque : conserver le justificatif original. Aucun upload de relevé bancaire ou stockage de coordonnées bancaires n'est demandé.
 
 ## Annulation, remboursement et litige

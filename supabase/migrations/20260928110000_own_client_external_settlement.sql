@@ -60,12 +60,12 @@ BEGIN
   PERFORM marketplace_external_member(p_binder,p_actor);
   SELECT * INTO q FROM marketplace_binder_quotes WHERE id=p_quote AND binder_id=p_binder;
   IF NOT FOUND THEN RAISE EXCEPTION 'quote_not_found'; END IF;
-  RETURN jsonb_build_object('eligible',marketplace_own_quote_eligible(p_quote,p_binder),'version','own-external-v1',
+  RETURN jsonb_build_object('eligible',marketplace_own_quote_eligible(p_quote,p_binder),'version','own-external-v1','revision',md5(to_jsonb(q)::text),
     'seller',q.issuer,'currency',q.currency,'totalCents',q.total_ttc_cents,'feeCents',0,
     'evidence',(SELECT evidence FROM marketplace_own_client_agreements WHERE quote_id=q.id));
 END $$;
 
-CREATE FUNCTION public.marketplace_accept_own_quote(p_quote uuid,p_binder uuid,p_actor uuid,p_evidence text) RETURNS void
+CREATE FUNCTION public.marketplace_accept_own_quote(p_quote uuid,p_binder uuid,p_actor uuid,p_evidence text,p_revision text) RETURNS void
 LANGUAGE plpgsql SET search_path=public AS $$
 DECLARE q marketplace_binder_quotes%ROWTYPE; a marketplace_own_client_agreements%ROWTYPE;
 BEGIN
@@ -74,12 +74,13 @@ BEGIN
   IF NOT FOUND THEN RAISE EXCEPTION 'quote_not_found'; END IF;
   SELECT * INTO a FROM marketplace_own_client_agreements WHERE quote_id=p_quote;
   IF FOUND THEN
-    IF a.evidence IS DISTINCT FROM btrim(p_evidence) THEN RAISE EXCEPTION 'agreement_already_recorded'; END IF;
+    IF a.evidence IS DISTINCT FROM btrim(p_evidence) OR a.terms->>'revision' IS DISTINCT FROM p_revision THEN RAISE EXCEPTION 'agreement_already_recorded'; END IF;
     RETURN;
   END IF;
   IF q.status<>'sent' OR NOT marketplace_own_quote_eligible(p_quote,p_binder) THEN RAISE EXCEPTION 'external_contract_unavailable'; END IF;
+  IF p_revision IS DISTINCT FROM md5(to_jsonb(q)::text) THEN RAISE EXCEPTION 'quote_changed_review_required'; END IF;
   INSERT INTO marketplace_own_client_agreements(quote_id,binder_id,actor_id,evidence,terms)
-  VALUES(q.id,p_binder,p_actor,btrim(p_evidence),jsonb_build_object('version','own-external-v1','seller',q.issuer,
+  VALUES(q.id,p_binder,p_actor,btrim(p_evidence),jsonb_build_object('version','own-external-v1','revision',p_revision,'seller',q.issuer,
     'currency',q.currency,'total_ttc_cents',q.total_ttc_cents,'collection','external','platform_fee_cents',0));
   UPDATE marketplace_binder_quotes SET status='accepted' WHERE id=q.id;
 END $$;
@@ -105,6 +106,8 @@ CREATE FUNCTION public.marketplace_external_balance_guard() RETURNS trigger LANG
 DECLARE net bigint;
 BEGIN
   IF NEW.payment_snapshot->>'agreement_version'='own-external-v1' THEN
+    IF NEW.status='issued' AND (SELECT terms->'seller'->>'siret' FROM marketplace_own_client_agreements WHERE quote_id=NEW.quote_id)
+      IS DISTINCT FROM NEW.issuer->>'siret' THEN RAISE EXCEPTION 'invoice_seller_changed_new_agreement_required'; END IF;
     SELECT coalesce(sum(CASE WHEN kind='receipt' THEN amount_cents WHEN kind='refund' THEN -amount_cents ELSE 0 END),0)
       INTO net FROM marketplace_external_settlements WHERE invoice_id=NEW.id;
     IF NEW.amount_paid_cents IS DISTINCT FROM net OR NEW.deposit_paid_cents<>0
@@ -166,8 +169,8 @@ BEGIN
 END $$;
 
 REVOKE ALL ON FUNCTION public.marketplace_external_member(uuid,uuid),public.marketplace_own_quote_eligible(uuid,uuid),
- public.marketplace_own_contract(uuid,uuid,uuid),public.marketplace_accept_own_quote(uuid,uuid,uuid,text),
+ public.marketplace_own_contract(uuid,uuid,uuid),public.marketplace_accept_own_quote(uuid,uuid,uuid,text,text),
  public.marketplace_external_settlement_state(uuid,uuid,uuid),public.marketplace_record_external_settlement(uuid,uuid,uuid,uuid,text,integer,text) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.marketplace_external_member(uuid,uuid),public.marketplace_own_quote_eligible(uuid,uuid),
- public.marketplace_own_contract(uuid,uuid,uuid),public.marketplace_accept_own_quote(uuid,uuid,uuid,text),
+ public.marketplace_own_contract(uuid,uuid,uuid),public.marketplace_accept_own_quote(uuid,uuid,uuid,text,text),
  public.marketplace_external_settlement_state(uuid,uuid,uuid),public.marketplace_record_external_settlement(uuid,uuid,uuid,uuid,text,integer,text) TO service_role;

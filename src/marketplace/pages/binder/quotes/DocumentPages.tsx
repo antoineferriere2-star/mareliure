@@ -180,7 +180,7 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
 
   const status = useMutation({
     mutationFn: async (to: QuoteStatus) => {
-      if (to === "accepted" && contract.data?.eligible) { await acceptExternal({ data: { id: quoteId, evidence: acceptanceEvidence } }); return; }
+      if (to === "accepted" && contract.data?.eligible) { await acceptExternal({ data: { id: quoteId, evidence: acceptanceEvidence, revision: contract.data.revision } }); return; }
       await setStatus({ data: { id: quoteId, status: to } });
     },
     onMutate: () => setActionError(false),

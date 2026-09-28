@@ -7,7 +7,7 @@ import { requireBinderId } from "./binderQuotes.server";
 
 const id = z.object({ id: z.string().uuid() }).strict();
 const evidence = z.string().trim().min(8).max(500);
-export interface OwnContract { eligible: boolean; version: string; currency: string; totalCents: number; feeCents: number; evidence: string | null }
+export interface OwnContract { eligible: boolean; version: string; revision: string; currency: string; totalCents: number; feeCents: number; evidence: string | null }
 export interface SettlementState {
   eligible: boolean; currency: string; totalCents: number; netCents: number; disputed: boolean;
   events: { id: string; kind: string; amount_cents: number; currency: string; evidence: string; created_at: string }[];
@@ -24,9 +24,9 @@ export const getOwnContract = createServerFn({ method: "GET" }).middleware([requ
     return result.data as unknown as OwnContract;
   });
 export const acceptOwnQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.extend({ evidence }).strict().parse(data)).handler(async ({ context, data }) => {
+  .inputValidator((data: unknown) => id.extend({ evidence, revision: z.string().regex(/^[a-f0-9]{32}$/) }).strict().parse(data)).handler(async ({ context, data }) => {
     const { sb, binderId } = await scope(context.userId);
-    const result = await sb.rpc("marketplace_accept_own_quote", { p_quote: data.id, p_binder: binderId, p_actor: context.userId, p_evidence: data.evidence });
+    const result = await sb.rpc("marketplace_accept_own_quote", { p_quote: data.id, p_binder: binderId, p_actor: context.userId, p_evidence: data.evidence, p_revision: data.revision });
     if (result.error) fail(409, "Accord non enregistré. Vérifiez le devis envoyé, son origine et la référence de l'accord client.");
     return { ok: true };
   });
