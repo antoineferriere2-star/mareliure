@@ -3377,3 +3377,32 @@ Codex — 29 septembre 2026 : clôture navigateur de l’accord client annoncée
 
 ## Latest handoff
 Codex — 29 septembre 2026 : audit contradictoire avant publication. Périmètre annoncé : retirer le refus d'un accord figé, préserver les acceptations historiques hors éligibilité du circuit externe, tests SQL/UI et recette qwf. Aucun changement de contrat accepté, aucune production, fusion ou publication. Ancien avis favorable suspendu jusqu'aux nouvelles preuves.
+
+## Latest handoff
+Codex — 28 septembre 2026 : périmètre annoncé avant code, logistique manuelle par ouvrage sur feat/work-logistics-manual depuis bbd4b57. Patch externe et commit 2ec6e21 indisponibles. PR #51, #50 et #38 laissées intactes. Journal append-only, transitions sérialisées, photos privées, UI atelier commune aux deux marques ; aucune migration production, fusion ni publication.
+- Livraison logistique : migration additive 20260928130000, journal immuable/versionné, réception physique distincte du transporteur, retour conditionné, preuve atelier finale et photos privées. 3065 tests verts puis 9 tests logistique verts ; recette combinée #51 18 tests verts. TypeScript/lint/build générique passent. QA parcours local et visuel mobile 390 px ; pas de Supabase test accessible, types seulement préparés manuellement. Détails et gate dans docs/work-logistics-manual.md. PR indépendante, aucune production touchée.
+
+- Reprise recette hébergée et Sendcloud : audit en lecture seule ; production actuelle hljxohondjvrkzqicexl confirmée dans le dashboard et la configuration, ancienne référence qwfhebtxeubfmvvdsqdt également exclue. Aucun projet explicitement QA accessible. Périmètre : précontrôle SQL en lecture seule, procédures et fiche d'essai Sendcloud sans achat ni API ; aucune écriture distante.
+
+## Latest handoff
+Codex — 29 septembre 2026 : recette hébergée autorisée sur qwfhebtxeubfmvvdsqdt après réconciliation V3.1 réussie. Périmètre de modification : types strictement propres à cette PR et preuves de recette. Aucun déploiement ni fusion ; production exclue. Le fichier généré complet contient aussi les écarts hérités du projet de test et les ajouts de l’autre PR : il ne remplace pas aveuglément types.ts.
+
+## Latest handoff
+Codex — 29 septembre 2026 : complément de recette annoncé avant code, échecs photos et Storage réel, reprise après erreur, distinction projets réseau / ouvrages propres dans le bandeau multilingue. Projet qwf uniquement, aucune nouvelle migration, fusion ni déploiement.
+
+## Latest handoff
+Codex — 29 septembre 2026 : panne contrôlée du seul serveur local entre Storage et SQL. Défaut prouvé : la reprise crée un second objet et conserve le premier sans association. Périmètre avant code : identifiant stable de photo et récupération après réponse perdue, sans migration ni suppression, uniquement fixtures qwf. Parcours publics à terminer séparément.
+
+## Latest handoff
+Codex — 29 septembre 2026 : concurrence de deux fichiers distincts sur la huitième place reproduite (SQL 8, Storage 9). Périmètre avant code : récupération après échec et nettoyage du seul objet non associé lorsque le constat immuable est confirmé complet ; aucun effacement des anciens objets QA, aucune migration. Recette navigateur mobile des deux marques et rapports séparés des paiements.
+
+## Latest handoff
+Codex — 29 septembre 2026 : périmètre annoncé avant code, traduction complète du journal logistique EN/FR/DE/IT/ES via la langue de l’espace atelier, validation navigateur mobile et bureau. Pas de changement de droits, SQL ou circuit commercial. qwf uniquement ; aucune fusion ni publication.
+
+- Complément exécuté : journal/validation/dates et changement de langue contrôlés dans les cinq langues à 1 440 px et 390 px. Défaut reproduit puis corrigé : erreur photo persistante après une reprise réussie. Reprise SVG refusé → PNG distinct, SQL/Storage 1/1 → 1/1 → 2/2, erreur disparue. Dix tests de traduction ajoutés. Avis et limites dans `docs/qa/20260929/publication-review.md` ; CI du nouveau HEAD requise. Aucune migration ni publication.
+
+## Latest handoff
+Codex — 29 septembre 2026 : audit photo volumineuse. Périmètre annoncé : décodage natif des photos serveur et essai du bundle Worker local avec Storage qwf. Aucun suivi client ajouté, aucune migration, aucune production.
+
+## Latest handoff
+Codex — 29 septembre 2026 : préparation coordonnée uniquement, branche locale review/publication-51-52-v2. Assemblage #51 puis #52, conservation des types et rapports des deux PR. Précontrôles production autorisés en lecture seule ; aucune migration, fusion distante, publication ou opération payante. Les branches des PR sont inchangées.

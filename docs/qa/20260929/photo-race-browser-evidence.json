@@ -1,0 +1,17 @@
+{
+  "sql": 8,
+  "storage": 8,
+  "views": [
+    {
+      "images": 8,
+      "uploadInputs": 0,
+      "errorShown": true
+    },
+    {
+      "images": 8,
+      "uploadInputs": 0,
+      "errorShown": false
+    }
+  ],
+  "distinctFiles": 9
+}

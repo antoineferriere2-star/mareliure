@@ -1,0 +1,46 @@
+{
+  "results": [
+    {
+      "locale": "en",
+      "desktopOverflow": false,
+      "validationTranslated": true,
+      "mobileOverflow": false,
+      "mobileSwitchPreservesInput": true,
+      "dateTranslated": true
+    },
+    {
+      "locale": "fr",
+      "desktopOverflow": false,
+      "validationTranslated": true,
+      "mobileOverflow": false,
+      "mobileSwitchPreservesInput": true,
+      "dateTranslated": true
+    },
+    {
+      "locale": "de",
+      "desktopOverflow": false,
+      "validationTranslated": true,
+      "mobileOverflow": false,
+      "mobileSwitchPreservesInput": true,
+      "dateTranslated": true
+    },
+    {
+      "locale": "it",
+      "desktopOverflow": false,
+      "validationTranslated": true,
+      "mobileOverflow": false,
+      "mobileSwitchPreservesInput": true,
+      "dateTranslated": true
+    },
+    {
+      "locale": "es",
+      "desktopOverflow": false,
+      "validationTranslated": true,
+      "mobileOverflow": false,
+      "mobileSwitchPreservesInput": true,
+      "dateTranslated": true
+    }
+  ],
+  "photoRefusalTranslated": true,
+  "photoRetryClearsError": true
+}

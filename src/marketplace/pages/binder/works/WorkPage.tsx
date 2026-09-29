@@ -14,6 +14,7 @@ import { isQuoteStatus } from "@/marketplace/quotes/quoteStatus";
 import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
 import { formatWeight, formatWorkDimensions } from "@/marketplace/works/workViews";
 import { WORK_KEY, WORKS_KEY } from "./workKeys";
+import { LogisticsPanel } from "./LogisticsPanel";
 
 /** La provenance d'un ouvrage, dite sans ambiguïté : les deux voies ne se confondent jamais. */
 export function SourceBadge({ source }: { source: "mon_client" | "ma_reliure" }) {
@@ -147,6 +148,8 @@ export function WorkPage({ workId }: { workId: string }) {
           </p>
         )}
       </section>
+
+      <LogisticsPanel workId={workId} />
 
       <section aria-labelledby="work-quotes" className="space-y-3">
         <h2 id="work-quotes" className="font-serif text-xl">Devis</h2>

@@ -1,0 +1,28 @@
+[
+  {
+    "mode": "before",
+    "firstError": true,
+    "initial": {
+      "sql": 0,
+      "storage": 1
+    },
+    "final": {
+      "sql": 1,
+      "storage": 1
+    },
+    "concurrentRetries": "both succeeded"
+  },
+  {
+    "mode": "after",
+    "firstError": false,
+    "initial": {
+      "sql": 1,
+      "storage": 1
+    },
+    "final": {
+      "sql": 1,
+      "storage": 1
+    },
+    "concurrentRetries": "both succeeded"
+  }
+]

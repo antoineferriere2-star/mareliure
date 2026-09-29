@@ -1,0 +1,35 @@
+{
+  "project": "qwfhebtxeubfmvvdsqdt",
+  "runtime": "wrangler dev local / workerd / actual built app",
+  "workId": "f78e9f2c-a93c-45fb-b989-622ce7c748d6",
+  "eventId": "f9f8d8fb-fe4b-440f-8030-158897e634a1",
+  "photos": [
+    {
+      "id": "c5f1f9c1-f9f1-8693-a81f-b5ed3916250b",
+      "bytes": 4194304,
+      "sha256": "d86ed98dbef8667077997479390703116929054467422b291cc4aee857babc51",
+      "status": 200,
+      "error": false,
+      "elapsedMs": 14511,
+      "storageBytesIdentical": true
+    },
+    {
+      "id": "dbc69688-26a9-81de-bae0-6960bef3cac3",
+      "bytes": 5242880,
+      "sha256": "a9df367c8b9456fd582216bbe317e388c8f6e48185f6ced9fb00f07074573b25",
+      "status": 200,
+      "error": false,
+      "elapsedMs": 4884,
+      "storageBytesIdentical": true
+    }
+  ],
+  "checks": [
+    "retry-idempotent",
+    "other-workshop-denied",
+    "anonymous-denied",
+    "invalid-base64-denied",
+    "over-5MiB-denied"
+  ],
+  "sqlPhotos": 2,
+  "storageObjects": 2
+}
