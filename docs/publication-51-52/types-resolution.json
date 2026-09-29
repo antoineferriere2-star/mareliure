@@ -1,0 +1,7 @@
+{
+  "result": "PASS",
+  "publicMembers": 92,
+  "strategy": "Union of #51 and #52; #51 snapshot columns retained in shared tables",
+  "paymentHead": "26035dc",
+  "logisticsHead": "6e0e797"
+}
