@@ -1,0 +1,30 @@
+[
+  {
+    "brand": "MA_RELIURE",
+    "caseId": "8c6505a5-8013-409c-b15f-17b79520745b",
+    "proposalId": "9d50c798-486a-4b9f-9f19-44843e3e8c3e",
+    "acceptance": "authenticated application HTTP",
+    "customerRead": true,
+    "crossCustomerDenied": true,
+    "authorizedWorkshopRead": true,
+    "draftWorkshopDenied": true,
+    "status": "accepted",
+    "accepted_at": "2026-09-29T11:58:35.832+00:00",
+    "payment_circuit": "legacy_resale",
+    "customer_total_ttc_cents": 12000
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "caseId": "dae7e3ed-6167-479f-a915-16eeda1013b3",
+    "proposalId": "a4fd1597-0ebb-4aec-8d41-06d642c805ec",
+    "acceptance": "authenticated application HTTP",
+    "customerRead": true,
+    "crossCustomerDenied": true,
+    "authorizedWorkshopRead": true,
+    "draftWorkshopDenied": true,
+    "status": "accepted",
+    "accepted_at": "2026-09-29T11:58:54.424+00:00",
+    "payment_circuit": "legacy_resale",
+    "customer_total_ttc_cents": 12000
+  }
+]

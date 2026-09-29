@@ -1,0 +1,21 @@
+{
+  "project": "qwfhebtxeubfmvvdsqdt",
+  "results": [
+    {
+      "scenario": "deposit",
+      "quoteId": "4712b6b1-d3ac-459c-aa3b-89397583e88b",
+      "invoiceId": "189f0d2c-fc95-48b0-8458-158149c838a1",
+      "issued": true,
+      "externalSettlementDenied": true,
+      "refusalAfterInvoiceDenied": true
+    },
+    {
+      "scenario": "expired",
+      "quoteId": "1c2a21dc-5be7-4b37-9b6a-4e3d7fa759af",
+      "invoiceId": "074b8c08-d46a-4846-8e77-309232f65fb4",
+      "issued": true,
+      "externalSettlementDenied": true,
+      "refusalAfterInvoiceDenied": true
+    }
+  ]
+}

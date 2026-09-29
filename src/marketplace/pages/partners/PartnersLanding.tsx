@@ -271,7 +271,7 @@ function Pricing() {
             </ul>
             <dl className="mt-12 divide-y divide-mr-paper/20 border-y border-mr-paper/20">
               <PriceRow term="Paiement direct" detail="Virement, chèque, espèces : vous encaissez comme aujourd’hui." value="0 €" />
-              <PriceRow term="Paiement en ligne" detail="Facultatif, en préparation : votre client paie sa facture par carte." value="3 %" note="du montant encaissé" />
+              <PriceRow term="Paiement en ligne" detail="Facultatif, en préparation : votre client paie sa facture par carte." value="3 %" note="modèle envisagé, hors frais Stripe à préciser" />
               <PriceRow term="Projets Ma Reliure" detail="Votre rémunération est annoncée avant que vous acceptiez le projet." value="Annoncée" />
             </dl>
           </div>

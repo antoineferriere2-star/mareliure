@@ -15,8 +15,8 @@
  * - 500 : le traitement a échoué (erreur d'infrastructure OU paiement qui ne correspond pas à la
  *   proposition). L'événement est `failed` avec la raison, jamais `processed` : Stripe le
  *   redélivre, la redélivrance le REPREND (`claimed`, tentative + 1) au lieu de l'absorber comme
- *   doublon. Après `MAX_WEBHOOK_ATTEMPTS` tentatives on répond 200 pour arrêter la boucle — la
- *   ligne reste `failed`, visible et rejouable depuis le Dashboard Stripe.
+ *   doublon. Après `MAX_WEBHOOK_ATTEMPTS`, la réponse reste 500 et la ligne reste
+ *   `failed` : une alerte d'exploitation et un examen sont nécessaires avant rejeu.
  */
 import { admin } from "@/build/services/adminAuth.server";
 import { getMarketplaceStripeClient, getMarketplaceStripeWebhookSecret } from "./stripeClient.server";
@@ -33,7 +33,7 @@ import {
 } from "@/marketplace/services/commercialPaymentRepository.server";
 import { loadCommercialProposalById } from "@/marketplace/services/commercialProposalRepository.server";
 
-/** Au-delà, on cesse de faire retenter Stripe (l'événement reste `failed`, à traiter à la main). */
+/** Threshold for operational attention; failures always remain non-2xx and replayable. */
 export const MAX_WEBHOOK_ATTEMPTS = 8;
 
 type Supa = Awaited<ReturnType<typeof admin>>;
@@ -64,7 +64,7 @@ async function ensurePaymentJournal(sb: Supa, input: { caseId: string; proposalI
     event_type: "CUSTOMER_PAYMENT_SUCCEEDED",
     metadata: { proposal_id: input.proposalId, payment_intent_id: input.paymentIntentId },
   });
-  if (error) throw error;
+  if (error && error.code !== "23505") throw error;
 }
 
 async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): Promise<Outcome> {
@@ -73,6 +73,14 @@ async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): 
   if (action.kind === "mark_paid") {
     const proposal = await loadCommercialProposalById(sb, action.proposalId);
     const payment = proposal ? await loadCommercialPaymentState(sb, proposal.id) : null;
+    if (action.evidence.source === "payment_intent") {
+      if (!payment?.stripeCheckoutSessionId) return { ok: false, reason: "session_missing", detail: "checkout not recorded yet" };
+      const session = await getMarketplaceStripeClient().checkout.sessions.retrieve(payment.stripeCheckoutSessionId);
+      const intentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
+      if (intentId !== action.evidence.paymentIntentId || session.metadata?.proposal_id !== action.proposalId || session.metadata?.case_id !== action.caseId) {
+        return { ok: false, reason: "session_mismatch", detail: "PaymentIntent does not belong to the recorded checkout" };
+      }
+    }
     const verdict = verifyPaymentEvidence({ evidence: action.evidence, claimedCaseId: action.caseId, proposal, payment });
     if (!verdict.ok) return { ok: false, reason: verdict.reason, detail: verdict.detail };
 
@@ -118,7 +126,7 @@ export async function handleStripeWebhookRequest(request: Request): Promise<Resp
   const stripe = getMarketplaceStripeClient();
   let event: StripeEventLike;
   try {
-    event = stripe.webhooks.constructEvent(
+    event = await stripe.webhooks.constructEventAsync(
       rawBody,
       signature,
       getMarketplaceStripeWebhookSecret(),
@@ -168,6 +176,5 @@ export async function handleStripeWebhookRequest(request: Request): Promise<Resp
     // La ligne reste `processing` : elle sera reprise à l'expiration du délai, jamais perdue.
     logOperationalError("stripe-webhook.mark-failed-failed", err, { eventId });
   }
-  const giveUp = claim.attempts >= MAX_WEBHOOK_ATTEMPTS;
-  return json(giveUp ? 200 : 500, { ok: false, error: "processing_failed", reason: failure.reason, attempts: claim.attempts, giveUp });
+  return json(500, { ok: false, error: "processing_failed", reason: failure.reason, attempts: claim.attempts, needsAttention: claim.attempts >= MAX_WEBHOOK_ATTEMPTS });
 }

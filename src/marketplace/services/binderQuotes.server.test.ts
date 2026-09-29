@@ -18,6 +18,7 @@ import {
   createQuote,
   deleteQuoteItemPhoto,
   duplicateQuote,
+  getCreditNote,
   getInvoice,
   getQuote,
   issueInvoice,
@@ -1182,5 +1183,37 @@ describe("photos d'exemple par opération", () => {
     await setQuoteStatus(world.sb, BINDER_A, quote.id, "sent");
     const otherLine = world.tables.marketplace_binder_quote_items.filter((row) => row.quote_id === quote.id)[1].line_key;
     expect(await codeOf(attachOperationPhotoToQuoteItem(world.sb, BINDER_A, { quoteId: quote.id, lineKey: otherLine, photoId: extra, caption: null, includeInPdf: true }))).toBe("conflict");
+  });
+});
+
+
+describe("avoir PDF immuable et isolé", () => {
+  it("imprime le snapshot, la facture d’origine et le motif sans demander un paiement", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
+    const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+    const row = world.tables.marketplace_binder_invoices[0];
+    row.invoice_number = "F-QA-1";
+    row.status = "issued";
+    const credit = { id: "credit-a", binder_id: BINDER_A, invoice_id: invoice.id,
+      credit_note_number: "A-QA-1", issue_date: TODAY, reason: "Annulation convenue QA",
+      issuer: { ...row.issuer, workshopName: "Atelier figé", iban: "IBAN NE PAS IMPRIMER" },
+      client: { name: "Client figé", addressLine1: "Adresse figée", country: "FR" },
+      currency: "EUR", total_ht_cents: row.total_ht_cents, total_vat_cents: row.total_vat_cents,
+      total_ttc_cents: row.total_ttc_cents, vat_breakdown: row.vat_breakdown,
+      legal_mentions: [], created_at: "2026-09-29T10:00:00Z" };
+    world.tables.marketplace_binder_credit_notes = [credit];
+    world.tables.marketplace_binder_credit_note_items = world.tables.marketplace_binder_invoice_items.map((item) => ({ ...item, credit_note_id: credit.id }));
+    const view = await getCreditNote(world.sb, BINDER_A, credit.id);
+    expect(view.kind).toBe("credit_note");
+    expect(view.totalTtcCents).toBe(row.total_ttc_cents);
+    expect(view.items).toHaveLength(invoice.items.length);
+    const pdf = await renderDocumentPdf(view);
+    const printed = pdf.printed.join("\n");
+    for (const text of ["AVOIR", "A-QA-1", "F-QA-1", "Atelier figé", "Client figé", "Annulation convenue QA", "Total de l’avoir"]) expect(printed).toContain(text);
+    for (const text of ["Total à payer", "Acompte demandé", "IBAN NE PAS IMPRIMER", "Échéance", "Bon pour accord"]) expect(printed).not.toContain(text);
+    expect(await codeOf(getCreditNote(world.sb, BINDER_B, credit.id))).toBe("not_found");
+    expect(await codeOf(getCreditNote(world.sb, BINDER_A, "absent"))).toBe("not_found");
   });
 });
