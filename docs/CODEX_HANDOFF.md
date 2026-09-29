@@ -3363,3 +3363,6 @@ Codex — 29 septembre 2026 : concurrence de deux fichiers distincts sur la huit
 Codex — 29 septembre 2026 : périmètre annoncé avant code, traduction complète du journal logistique EN/FR/DE/IT/ES via la langue de l’espace atelier, validation navigateur mobile et bureau. Pas de changement de droits, SQL ou circuit commercial. qwf uniquement ; aucune fusion ni publication.
 
 - Complément exécuté : journal/validation/dates et changement de langue contrôlés dans les cinq langues à 1 440 px et 390 px. Défaut reproduit puis corrigé : erreur photo persistante après une reprise réussie. Reprise SVG refusé → PNG distinct, SQL/Storage 1/1 → 1/1 → 2/2, erreur disparue. Dix tests de traduction ajoutés. Avis et limites dans `docs/qa/20260929/publication-review.md` ; CI du nouveau HEAD requise. Aucune migration ni publication.
+
+## Latest handoff
+Codex — 29 septembre 2026 : audit photo volumineuse. Périmètre annoncé : décodage natif des photos serveur et essai du bundle Worker local avec Storage qwf. Aucun suivi client ajouté, aucune migration, aucune production.

@@ -1,5 +1,6 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
+import { Buffer } from "node:buffer";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
@@ -72,7 +73,9 @@ export const uploadLogisticsPhoto = createServerFn({ method: "POST" })
       fail(409, "Photo impossible pour ce constat.");
     let bytes: Uint8Array;
     try {
-      bytes = Uint8Array.from(atob(data.base64), (c) => c.charCodeAt(0));
+      const decoded = Buffer.from(data.base64, "base64");
+      if (decoded.toString("base64") !== data.base64) fail(400, "Photo invalide.");
+      bytes = decoded;
     } catch {
       fail(400, "Photo invalide.");
     }
