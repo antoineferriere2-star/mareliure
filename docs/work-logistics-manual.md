@@ -1,10 +1,12 @@
 # Logistique manuelle des ouvrages — recette avant publication
 
+**Mise à jour du 29 septembre :** [recette hébergée et avis actuel](qa/20260929/publication-review.md). L'instance `qwfhebtxeubfmvvdsqdt` a depuis été explicitement réautorisée et réconciliée ; Auth/Storage/concurrence/mobile et types ont été vérifiés. Les prérequis et interdictions historiques ci-dessous ne sont pas une procédure à rejouer. Aucun nouvel accès production ni migration n'est autorisé ici.
+
 Branche `feat/work-logistics-manual`, base main `bbd4b57`. Le patch `/workspace/scratch/8802e09064a3/work-logistics-manual.patch` et le commit `2ec6e21` n'étaient pas accessibles : périmètre reconstruit, pas de reprise présumée du patch ni de ses résultats. Aucun paiement, achat d'étiquette, prix de transport ou niveau d'assurance ajouté.
 
 ## Parcours livré
 
-Le panneau « Trajet et réception de l’ouvrage » est intégré à chaque fiche `/atelier/ouvrages/$workId`, commune à Ma Reliure et Fine Bindery. L'espace atelier existant reste en français sur les deux marques ; cette PR n'ajoute pas de portail logistique client ou de traductions publiques.
+Le panneau « Trajet et réception de l’ouvrage » est intégré à chaque fiche `/atelier/ouvrages/$workId`, commune à Ma Reliure et Fine Bindery. Le journal est traduit dans les cinq langues de l'espace Fine Bindery ; Ma Reliure reste en français. Cette PR n'ajoute pas de portail logistique client.
 
 1. Aller : colis suivi (transporteur et numéro obligatoires) ou remise en main propre.
 2. Mention facultative « livré selon le transporteur », saisie manuellement avec référence de preuve. Elle ne change jamais l'état en réception physique.
@@ -21,7 +23,7 @@ Un incident ou une note de correction peut être ajouté à tout moment, même a
 - Tables événements/photos avec RLS, aucun accès direct anon/authenticated. Historique et pièces jointes non modifiables/supprimables, y compris par les fonctions applicatives.
 - Bucket `work-logistics-private`, privé, formats JPEG/PNG/WebP, maximum 5 Mo. Signature de fichier contrôlée côté serveur ; SVG/HTML refusés. Pas d'analyse antivirus ou de réencodage des images dans cette V1. Ne pas exposer les originaux hors des ateliers autorisés.
 - Politique Storage restrictive excluant ce bucket de toute permission navigateur, même si une autre politique est trop large. Téléversement serveur, chemins construits avec atelier/ouvrage/événement/UUID. Photos seulement sur constat de réception ou incident. URLs signées 60 secondes, renouvelées par le panneau ; une URL déjà émise reste utilisable jusqu'à expiration, même après révocation du compte.
-- Si l'insertion de référence photo échoue de façon ambiguë après l'upload, l'objet privé est conservé : une suppression immédiate pourrait détruire une pièce dont l'insertion a réussi. Contrôler les objets orphelins avant publication ; un nouvel envoi après erreur peut créer une seconde photo, dans la limite de huit. Aucun nettoyage automatique de données réelles.
+- Si l'association photo échoue, une relecture reconnaît un succès déjà enregistré. L'identifiant stable permet la reprise sans doublon. Si le constat immuable est confirmé complet et cet identifiant absent, seul l'objet perdant est retiré ; si le résultat reste ambigu, l'objet est conservé pour reprise. Voir `qa/20260929/last-slot-concurrency.md`. Les anciens objets QA isolés sont conservés séparément.
 
 ## Vérifications locales effectuées
 

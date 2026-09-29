@@ -1,5 +1,7 @@
 # Complément : concurrence de photos et mobile
 
+**Complété par [publication-review.md](publication-review.md) : journal désormais traduit et contrôlé dans les cinq langues, reprise d'erreur photo corrigée. Les constats de traduction ci-dessous décrivent l'état antérieur.**
+
 Instance unique : `qwfhebtxeubfmvvdsqdt`. Aucune migration supplémentaire. Application locale de la branche #52, Auth et Storage hébergés. Aucun déploiement.
 
 ## Défaut reproduit et correction

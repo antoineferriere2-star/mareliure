@@ -8,14 +8,17 @@ import {
 } from "@/marketplace/services/workLogistics.data.functions";
 import {
   logisticsActions,
-  logisticsLabels,
   type LogisticsEvent,
   type LogisticsJournal,
   type LogisticsKind,
 } from "@/marketplace/works/logistics";
 import { CARD, ErrorNote, PRIMARY_BUTTON } from "../quotes/quoteUi";
+import { useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspaceContext";
+import { logisticsCopy } from "@/marketplace/works/logisticsCopy";
 
 export function LogisticsPanel({ workId }: { workId: string }) {
+  const { locale } = useFineBinderyWorkspace();
+  const t = logisticsCopy[locale];
   const read = useServerFn(readWorkLogistics),
     append = useServerFn(appendWorkLogistics),
     upload = useServerFn(uploadLogisticsPhoto);
@@ -33,7 +36,7 @@ export function LogisticsPanel({ workId }: { workId: string }) {
   const photo = useMutation({
     mutationFn: async ({ eventId, file }: { eventId: string; file: File }) => {
       if (!["image/jpeg", "image/png", "image/webp"].includes(file.type) || file.size > 5242880)
-        throw new Error("Photo JPEG, PNG ou WebP de 5 Mo maximum requise.");
+        throw new Error(t.photoRequirements);
       const base64 = await new Promise<string>((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = () => resolve(String(reader.result).split(",")[1]);
@@ -45,19 +48,16 @@ export function LogisticsPanel({ workId }: { workId: string }) {
     onSettled: () => cache.invalidateQueries({ queryKey: key }),
   });
   return (
-    <section className={CARD} aria-label="Logistique de l’ouvrage">
-      <h2 className="font-serif text-xl">Trajet et réception de l’ouvrage</h2>
-      <p className="my-3 text-sm text-muted-foreground">
-        Suivi manuel déclaré par l’atelier. Aucun achat de transport ni paiement. « Livré » selon le
-        transporteur ne vaut pas réception physique à l’atelier.
-      </p>
+    <section className={CARD} aria-label={t.region}>
+      <h2 className="font-serif text-xl">{t.title}</h2>
+      <p className="my-3 text-sm text-muted-foreground">{t.introduction}</p>
       {query.isPending ? (
-        <p role="status">Chargement du suivi…</p>
+        <p role="status">{t.loading}</p>
       ) : query.isError ? (
         <ErrorNote>
-          Impossible de charger le suivi.{" "}
+          {t.loadError}{" "}
           <button onClick={() => void query.refetch()} className="underline">
-            Réessayer
+            {t.retry}
           </button>
         </ErrorNote>
       ) : (
@@ -74,12 +74,7 @@ export function LogisticsPanel({ workId }: { workId: string }) {
           uploading={photo.isPending}
         />
       )}
-      {(mutation.isError || photo.isError) && (
-        <ErrorNote>
-          Enregistrement non confirmé. Rechargez le suivi avant de réessayer. Vérifiez le constat,
-          la preuve et les photos (JPEG/PNG/WebP, 5 Mo maximum).
-        </ErrorNote>
-      )}
+      {(mutation.isError || photo.isError) && <ErrorNote>{t.saveError}</ErrorNote>}
     </section>
   );
 }
@@ -106,6 +101,8 @@ export function LogisticsEditor({
   upload: (eventId: string, file: File) => Promise<void>;
   uploading: boolean;
 }) {
+  const { locale } = useFineBinderyWorkspace();
+  const t = logisticsCopy[locale];
   const [selected, setSelected] = useState<LogisticsKind>("outbound");
   const [mode, setMode] = useState<"parcel" | "hand">("parcel");
   const [condition, setCondition] = useState<"consistent" | "difference">("consistent");
@@ -113,7 +110,9 @@ export function LogisticsEditor({
     [tracking, setTracking] = useState(""),
     [description, setDescription] = useState(""),
     [proof, setProof] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState<"invalid" | "actionUnconfirmed" | "photoUnconfirmed" | null>(
+    null,
+  );
   const request = useRef<{ fingerprint: string; id: string } | null>(null);
   const actions = logisticsActions(journal.events);
   const kind = actions.includes(selected) ? selected : actions[0];
@@ -123,7 +122,7 @@ export function LogisticsEditor({
     kind === "incident" || kind === "note" || (kind === "received" && condition === "difference");
   const field = "block w-full min-w-0 rounded-md border border-border bg-background p-3 text-base";
   async function submit() {
-    setError("");
+    setError(null);
     const details: LogisticsEvent["details"] = {};
     if (shipping) {
       details.mode = mode;
@@ -140,9 +139,7 @@ export function LogisticsEditor({
       (needsProof && proof.trim().length < 8) ||
       (needsDescription && description.trim().length < 8)
     ) {
-      setError(
-        "Renseignez les champs obligatoires (description et preuve : 8 caractères minimum).",
-      );
+      setError("invalid");
       return;
     }
     const payload = { workId, version: journal.events.at(-1)?.sequence ?? 0, kind, details };
@@ -157,87 +154,84 @@ export function LogisticsEditor({
       setCarrier("");
       setTracking("");
     } catch {
-      setError("Action non confirmée. Relisez l’historique avant de réessayer.");
+      setError("actionUnconfirmed");
     }
   }
   return (
     <div className="min-w-0 space-y-5">
-      <ol className="space-y-3" aria-label="Historique logistique">
+      <ol className="space-y-3" aria-label={t.history}>
         {journal.events.map((event) => (
           <li
             key={event.id}
             className="min-w-0 rounded border border-border p-3 text-sm [overflow-wrap:anywhere]"
           >
-            <strong>{logisticsLabels[event.kind]}</strong>
+            <strong>{t.kinds[event.kind]}</strong>
             <time className="block text-muted-foreground" dateTime={event.created_at}>
-              {new Date(event.created_at).toLocaleString("fr-FR")}
+              {new Date(event.created_at).toLocaleString(locale)}
             </time>
-            {event.details.mode && (
-              <p>{event.details.mode === "parcel" ? "Colis suivi" : "Remise en main propre"}</p>
-            )}
+            {event.details.mode && <p>{event.details.mode === "parcel" ? t.parcel : t.hand}</p>}
             {event.details.carrier && (
               <p>
                 {event.details.carrier} · {event.details.tracking}
               </p>
             )}
             {event.details.condition && (
-              <p>
-                {event.details.condition === "difference"
-                  ? "Écart constaté à la réception"
-                  : "État conforme au constat attendu"}
-              </p>
+              <p>{event.details.condition === "difference" ? t.difference : t.consistent}</p>
             )}
             {event.details.description && (
               <p className="whitespace-pre-wrap">{event.details.description}</p>
             )}
-            {event.details.proof && <p>Référence de preuve : {event.details.proof}</p>}
-            {event.kind === "completed" && (
-              <p>Déclaration de l’atelier ; ce n’est pas une confirmation donnée par le client.</p>
+            {event.details.proof && (
+              <p>
+                {t.proof} : {event.details.proof}
+              </p>
             )}
+            {event.kind === "completed" && <p>{t.finalDeclaration}</p>}
             <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {event.photos.map((photo) =>
                 photo.url ? (
                   <a href={photo.url} key={photo.id} target="_blank" rel="noreferrer">
                     <img
                       src={photo.url}
-                      alt={`Photo privée — ${logisticsLabels[event.kind]}`}
+                      alt={`${t.privatePhoto} — ${t.kinds[event.kind]}`}
                       className="aspect-square w-full rounded object-cover"
                     />
                   </a>
                 ) : (
-                  <span key={photo.id}>Photo temporairement indisponible</span>
+                  <span key={photo.id}>{t.photoUnavailable}</span>
                 ),
               )}
             </div>
             {["received", "incident"].includes(event.kind) && event.photos.length < 8 && (
               <label className="mt-3 block">
-                Ajouter une photo privée (5 Mo max., 8 par constat)
+                {t.addPhoto}
                 <input
-                  className="block w-full min-w-0 py-2"
+                  className="peer sr-only"
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
                   disabled={uploading}
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     e.target.value = "";
-                    if (file)
-                      void upload(event.id, file).catch(() =>
-                        setError(
-                          "Photo non confirmée. Vérifiez l’historique avant un nouvel envoi.",
-                        ),
-                      );
+                    if (file) {
+                      setError(null);
+                      void upload(event.id, file).catch(() => setError("photoUnconfirmed"));
+                    }
                   }}
                 />
+                <span className="mt-2 flex min-h-11 w-fit cursor-pointer items-center rounded border px-3 py-2 peer-focus-visible:outline peer-focus-visible:outline-2 peer-disabled:opacity-50">
+                  {uploading ? t.uploading : t.choosePhoto}
+                </span>
               </label>
             )}
           </li>
         ))}
       </ol>
-      {!journal.events.length && <p>Aucun trajet enregistré.</p>}
+      {!journal.events.length && <p>{t.empty}</p>}
       <fieldset disabled={pending} className="min-w-0 space-y-3">
-        <legend className="font-medium">Ajouter un événement — l’historique est conservé</legend>
+        <legend className="font-medium">{t.addEvent}</legend>
         <label className="block">
-          Action
+          {t.action}
           <select
             className={field}
             value={kind}
@@ -245,7 +239,7 @@ export function LogisticsEditor({
           >
             {actions.map((action) => (
               <option key={action} value={action}>
-                {logisticsLabels[action]}
+                {t.kinds[action]}
               </option>
             ))}
           </select>
@@ -253,20 +247,20 @@ export function LogisticsEditor({
         {shipping && (
           <>
             <label className="block">
-              Mode
+              {t.mode}
               <select
                 className={field}
                 value={mode}
                 onChange={(e) => setMode(e.target.value as "parcel" | "hand")}
               >
-                <option value="parcel">Colis suivi</option>
-                <option value="hand">Remise en main propre</option>
+                <option value="parcel">{t.parcel}</option>
+                <option value="hand">{t.hand}</option>
               </select>
             </label>
             {mode === "parcel" && (
               <div className="grid gap-3 sm:grid-cols-2">
                 <label>
-                  Transporteur *
+                  {t.carrier} *
                   <input
                     className={field}
                     maxLength={120}
@@ -275,7 +269,7 @@ export function LogisticsEditor({
                   />
                 </label>
                 <label>
-                  Numéro de suivi *
+                  {t.tracking} *
                   <input
                     className={field}
                     maxLength={200}
@@ -289,19 +283,19 @@ export function LogisticsEditor({
         )}
         {kind === "received" && (
           <label className="block">
-            État à la réception
+            {t.condition}
             <select
               className={field}
               value={condition}
               onChange={(e) => setCondition(e.target.value as "consistent" | "difference")}
             >
-              <option value="consistent">Conforme au constat attendu</option>
-              <option value="difference">Écart constaté — description obligatoire</option>
+              <option value="consistent">{t.expected}</option>
+              <option value="difference">{t.differenceRequired}</option>
             </select>
           </label>
         )}
         <label className="block">
-          Description {needsDescription ? "*" : "(facultative)"}
+          {t.description} {needsDescription ? "*" : `(${t.optional})`}
           <textarea
             className={field}
             maxLength={2000}
@@ -311,7 +305,7 @@ export function LogisticsEditor({
         </label>
         {needsProof && (
           <label className="block">
-            Référence de preuve *
+            {t.proof} *
             <input
               className={field}
               maxLength={500}
@@ -320,19 +314,14 @@ export function LogisticsEditor({
             />
           </label>
         )}
-        {kind === "completed" && (
-          <p className="text-sm">
-            Vous déclarez la remise au client avec votre référence de preuve. Le client ne confirme
-            rien sur cet écran.
-          </p>
-        )}
+        {kind === "completed" && <p className="text-sm">{t.completionHint}</p>}
         <button className={PRIMARY_BUTTON} type="button" onClick={() => void submit()}>
-          {pending ? "Enregistrement…" : "Enregistrer la déclaration"}
+          {pending ? t.saving : t.save}
         </button>
       </fieldset>
       {error && (
         <p role="alert" className="text-sm text-destructive">
-          {error}
+          {t[error]}
         </p>
       )}
     </div>

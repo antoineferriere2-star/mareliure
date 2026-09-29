@@ -1,5 +1,7 @@
 # Recette hébergée PR #52 — 29 septembre 2026
 
+**Synthèse actuelle : [avis de publication](qa/20260929/publication-review.md).** Ce rapport conserve les étapes et blocages rencontrés ; leurs résolutions ultérieures (mobile, concurrence, reprises et traduction) sont documentées dans les compléments. Ne pas interpréter ses anciennes listes « non exécuté » comme l'état final.
+
 ## Complément : échecs de photos et bandeau d'autorisation
 
 - Tests HTTP applicatifs avec Auth réelle sur `qwfhebtxeubfmvvdsqdt` : SVG refusé, dépassement de 5 Mo refusé, envoi depuis B vers le constat de A refusé. Inventaire réel des objets Storage avant/après : aucun objet ajouté dans ces trois cas.

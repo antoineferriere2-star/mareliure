@@ -3358,3 +3358,8 @@ Codex — 29 septembre 2026 : panne contrôlée du seul serveur local entre Stor
 
 ## Latest handoff
 Codex — 29 septembre 2026 : concurrence de deux fichiers distincts sur la huitième place reproduite (SQL 8, Storage 9). Périmètre avant code : récupération après échec et nettoyage du seul objet non associé lorsque le constat immuable est confirmé complet ; aucun effacement des anciens objets QA, aucune migration. Recette navigateur mobile des deux marques et rapports séparés des paiements.
+
+## Latest handoff
+Codex — 29 septembre 2026 : périmètre annoncé avant code, traduction complète du journal logistique EN/FR/DE/IT/ES via la langue de l’espace atelier, validation navigateur mobile et bureau. Pas de changement de droits, SQL ou circuit commercial. qwf uniquement ; aucune fusion ni publication.
+
+- Complément exécuté : journal/validation/dates et changement de langue contrôlés dans les cinq langues à 1 440 px et 390 px. Défaut reproduit puis corrigé : erreur photo persistante après une reprise réussie. Reprise SVG refusé → PNG distinct, SQL/Storage 1/1 → 1/1 → 2/2, erreur disparue. Dix tests de traduction ajoutés. Avis et limites dans `docs/qa/20260929/publication-review.md` ; CI du nouveau HEAD requise. Aucune migration ni publication.
