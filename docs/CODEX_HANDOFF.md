@@ -3352,3 +3352,6 @@ Codex — 29 septembre 2026 : recette hébergée autorisée sur qwfhebtxeubfmvvd
 
 ## Latest handoff
 Codex — 29 septembre 2026 : complément de recette annoncé avant code, échecs photos et Storage réel, reprise après erreur, distinction projets réseau / ouvrages propres dans le bandeau multilingue. Projet qwf uniquement, aucune nouvelle migration, fusion ni déploiement.
+
+## Latest handoff
+Codex — 29 septembre 2026 : panne contrôlée du seul serveur local entre Storage et SQL. Défaut prouvé : la reprise crée un second objet et conserve le premier sans association. Périmètre avant code : identifiant stable de photo et récupération après réponse perdue, sans migration ni suppression, uniquement fixtures qwf. Parcours publics à terminer séparément.

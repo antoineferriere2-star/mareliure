@@ -1,0 +1,35 @@
+{
+  "projectRef": "qwfhebtxeubfmvvdsqdt",
+  "scenarios": [
+    {
+      "mode": "before",
+      "afterFailure": {
+        "objects": 1,
+        "associations": 0
+      },
+      "afterRetry": {
+        "objects": 1,
+        "associations": 1
+      },
+      "afterConcurrentRetries": {
+        "objects": 1,
+        "associations": 1
+      }
+    },
+    {
+      "mode": "after",
+      "afterFailure": {
+        "objects": 1,
+        "associations": 1
+      },
+      "afterRetry": {
+        "objects": 1,
+        "associations": 1
+      },
+      "afterConcurrentRetries": {
+        "objects": 1,
+        "associations": 1
+      }
+    }
+  ]
+}

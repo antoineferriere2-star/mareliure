@@ -7,6 +7,8 @@ import type { Json } from "@/integrations/supabase/types";
 import { requireBinderId } from "./binderQuotes.server";
 import { logisticsAppend, photoMime, type LogisticsJournal } from "@/marketplace/works/logistics";
 
+import { logisticsPhotoId, samePhotoBytes } from "@/marketplace/works/logisticsPhoto";
+
 const bucket = "work-logistics-private";
 const workInput = z.object({ workId: z.string().uuid() }).strict();
 async function access(actor: string) {
@@ -65,7 +67,7 @@ export const uploadLogisticsPhoto = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const { sb, binder, value } = await journal(context.userId, data.workId, "read");
     const event = value.events.find((e) => e.id === data.eventId);
-    if (!event || !["received", "incident"].includes(event.kind) || event.photos.length >= 8)
+    if (!event || !["received", "incident"].includes(event.kind))
       fail(409, "Photo impossible pour ce constat.");
     let bytes: Uint8Array;
     try {
@@ -76,14 +78,21 @@ export const uploadLogisticsPhoto = createServerFn({ method: "POST" })
     const mime = photoMime(bytes!);
     if (!mime || bytes!.length > 5242880)
       fail(400, "Photo JPEG, PNG ou WebP de 5 Mo maximum requise.");
-    const id = crypto.randomUUID();
+    const id = await logisticsPhotoId(`${binder}/${data.workId}/${data.eventId}/${context.userId}`, bytes!);
+    if (event.photos.some((photo) => photo.id === id)) return { ok: true };
+    if (event.photos.length >= 8) fail(409, "Photo impossible pour ce constat.");
     const path = `${binder}/${data.workId}/${data.eventId}/${id}`;
     const uploaded = await sb.storage
       .from(bucket)
       .upload(path, bytes!, { contentType: mime!, upsert: false });
-    if (uploaded.error) fail(503, "La photo n’a pas été enregistrée. Réessayez.");
+    if (uploaded.error) {
+      const previous = await sb.storage.from(bucket).download(path);
+      if (previous.error || !previous.data || !samePhotoBytes(bytes!, new Uint8Array(await previous.data.arrayBuffer())))
+        fail(503, "La photo n’a pas été enregistrée. Réessayez.");
+    }
     // On ambiguous database failure retain the private object: deleting it could destroy
-    // evidence if the insert committed but its response was lost. Reconcile orphans in recipe.
+    // evidence if the insert committed but its response was lost. The same content retries
+    // with the same id, reuses its verified private object and repairs the association.
     await journal(context.userId, data.workId, "photo", { id, event: data.eventId });
     return { ok: true };
   });

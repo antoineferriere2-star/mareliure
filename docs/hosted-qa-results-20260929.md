@@ -51,3 +51,15 @@ Premier passage complet : 3058 tests réussis, 8 expirations de délai et une er
 Reprise complète avec un worker et seuils inchangés : **226 fichiers, 3066 tests réussis**, zéro échec (282,95 s). Lint : zéro erreur, 17 avertissements. Build générique : réussi. Les modifications des types ont été limitées à 78 lignes environ, sans reformatage global du fichier.
 
 Types bruts hébergés SHA256 : B3C032E51E0FD96723A7B3A510875A316D738EF8798050E208C7061665585DE4. Les branches restent séparées. Les rapports et types sont préparés localement ; aucune nouvelle CI distante ni publication annoncée.
+
+## Complément de reprise Storage/SQL
+
+Une injection de panne dans le serveur local, sur le seul RPC logistique du projet de test, a reproduit un défaut : Storage écrivait le fichier, puis la panne avant SQL laissait un objet isolé ; une nouvelle tentative créait un second objet. Le correctif dérive désormais l’identifiant de la photo de son contenu et de son atelier/ouvrage/constat/auteur. Un objet existant est relu et comparé octet par octet, jamais écrasé. La RPC existante reste idempotente. Aucune migration ajoutée.
+
+Après correctif, essais hébergés réussis : panne avant SQL (1 objet, 0 association), reprise (1 objet, 1 association) ; réponse perdue après SQL (1 objet, 1 association), reprise inchangée ; deux reprises simultanées dans chacun de ces cas, toujours 1 objet et 1 association. Les inventaires sont lus dans Storage et dans le journal SQL, pas déduits de l’interface. L’objet isolé du test avant correction est conservé et identifié dans les preuves privées ; aucun nettoyage destructif.
+
+Tests ciblés du calcul d’identité et de la comparaison des octets : 2/2 ; TypeScript et lint ciblé réussis. Les contrôles complets du nouveau commit sont à lire dans la CI associée.
+
+Parcours public Fine Bindery : saisie des neuf étapes et dépôt par le sélecteur de fichiers, puis confirmation affichée. Une illustration de devis fictif remplace le livre de recette. L’envoi est lent dans le serveur local ; aucun second envoi déclenché. Anomalies distinctes : libellés du récapitulatif encore français (correctif partagé porté sur #51) ; phrase narrative du playbook historique français ; lien de résumé absolu vers Ma Reliure, non suivi depuis la recette. Ces observations ne constituent pas une recette complète de l’accès public au résumé ni de l’habillage atelier Fine Bindery.
+
+Restent non exécutés : limite de huit fichiers distincts et course au dernier emplacement, toutes les transitions depuis les contrôles mobiles, parcours public Ma Reliure complet et accès public jusqu’à proposition/accord. Les scénarios HTTP déjà réussis ne les remplacent pas. Aucun feu vert publication tant que ces limites ne sont pas levées.
