@@ -1,5 +1,7 @@
 # Complément de recette — 29 septembre 2026
 
+**État historique, complété ensuite : voir [last-slot-concurrency.md](last-slot-concurrency.md).** Les quatre parcours mobiles et la course de fichiers distincts sont désormais exécutés ; le défaut Storage de la dernière place est corrigé. Les preuves du bouton d'avoir et de la suite HTTP des demandes publiques sont sur la branche de #51.
+
 Cible unique : qwfhebtxeubfmvvdsqdt. Application locale, Auth/PostgREST/Storage hébergés. Aucun Worker publié, aucun rejeu de réconciliation ni migration supplémentaire.
 
 ## Parcours publics effectivement exécutés

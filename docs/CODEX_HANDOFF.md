@@ -3355,3 +3355,6 @@ Codex — 29 septembre 2026 : complément de recette annoncé avant code, échec
 
 ## Latest handoff
 Codex — 29 septembre 2026 : panne contrôlée du seul serveur local entre Storage et SQL. Défaut prouvé : la reprise crée un second objet et conserve le premier sans association. Périmètre avant code : identifiant stable de photo et récupération après réponse perdue, sans migration ni suppression, uniquement fixtures qwf. Parcours publics à terminer séparément.
+
+## Latest handoff
+Codex — 29 septembre 2026 : concurrence de deux fichiers distincts sur la huitième place reproduite (SQL 8, Storage 9). Périmètre avant code : récupération après échec et nettoyage du seul objet non associé lorsque le constat immuable est confirmé complet ; aucun effacement des anciens objets QA, aucune migration. Recette navigateur mobile des deux marques et rapports séparés des paiements.

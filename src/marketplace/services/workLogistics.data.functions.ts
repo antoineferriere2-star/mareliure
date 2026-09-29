@@ -8,6 +8,7 @@ import { requireBinderId } from "./binderQuotes.server";
 import { logisticsAppend, photoMime, type LogisticsJournal } from "@/marketplace/works/logistics";
 
 import { logisticsPhotoId, samePhotoBytes } from "@/marketplace/works/logisticsPhoto";
+import { associateLogisticsPhoto } from "@/marketplace/works/logisticsPhotoRecovery";
 
 const bucket = "work-logistics-private";
 const workInput = z.object({ workId: z.string().uuid() }).strict();
@@ -93,6 +94,17 @@ export const uploadLogisticsPhoto = createServerFn({ method: "POST" })
     // On ambiguous database failure retain the private object: deleting it could destroy
     // evidence if the insert committed but its response was lost. The same content retries
     // with the same id, reuses its verified private object and repairs the association.
-    await journal(context.userId, data.workId, "photo", { id, event: data.eventId });
+    await associateLogisticsPhoto(
+      id,
+      () => journal(context.userId, data.workId, "photo", { id, event: data.eventId }),
+      async () => {
+        const current = await journal(context.userId, data.workId, "read");
+        return current.value.events.find((entry) => entry.id === data.eventId)?.photos;
+      },
+      async () => {
+        const removed = await sb.storage.from(bucket).remove([path]);
+        if (removed.error) fail(503, "Nettoyage de la photo non confirmé. Réessayez.");
+      },
+    );
     return { ok: true };
   });
