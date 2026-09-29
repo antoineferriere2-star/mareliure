@@ -54,3 +54,13 @@ Build générique réussi. Premier test complet : 3093 réussis, 6 expirations d
 - Parcours public Fine Bindery : la mission attendue était absente du projet de test, ce qui empêchait le chargement. Ajout identifié QA d'une mission et de son inscription Fine Bindery, sans modifier la mission Ma Reliure ni le Playbook historique. La reprise navigateur a expiré : aucune soumission publique complète n'est revendiquée. Ma Reliure public, confirmation finale et contrôle documentaire depuis leurs écrans restent ouverts.
 
 **Gate : non publiable à ce stade.** La preuve HTTP du PDF d'avoir ne remplace ni le parcours public complet ni une CI complète verte sur le nouveau commit. Aucun rejeu de réconciliation, migration supplémentaire, accès production, fusion, déploiement ou paiement.
+
+## Complément du récapitulatif public et état CI
+
+Fine Bindery : un projet fictif a été saisi dans les neuf étapes du navigateur, avec dépôt via le sélecteur de fichiers, puis confirmation. Le dossier hébergé porte bien FINE_BINDERY ; cette saisie utilise le serveur local de #52 et la base combinée, pas le futur Worker. La vérification des propositions historiques/revente reste celle du scénario backend décrit plus haut. Le parcours public jusqu’à proposition et accord n’est pas encore couvert.
+
+Le récapitulatif affichait les libellés de choix du playbook français dans le parcours anglais. Correction dans ReviewAnswers : traduction de chaque choix configuré, y compris listes, sans traduction du texte libre ni modification des données enregistrées. Régression couverte par le rendu des composants : 8 tests réussis. Le récit généré depuis le playbook historique et le lien absolu de résumé restent à qualifier ; aucun lien pointant vers la production n’a été suivi depuis cette recette.
+
+La CI complète du précédent commit 1a36acd est verte (run 36550541664). Les timeouts locaux sont des lectures de fichiers sensibles à la charge Windows ; aucun seuil ni assertion n’a été assoupli. Le nouveau commit doit repasser sa propre CI. Le téléchargement de l’avoir depuis le bouton et le parcours public Ma Reliure complet ne sont toujours pas validés : le serveur local et les navigations expirent de façon intermittente. Les preuves HTTP de PDF, leur inspection visuelle et les refus inter-ateliers sont acquis séparément.
+
+Aucune réconciliation rejouée, aucune migration supplémentaire et aucune action en production. Ce complément ne donne pas de feu vert publication.

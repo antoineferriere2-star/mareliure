@@ -3365,3 +3365,6 @@ Codex — 29 septembre 2026 : recette hébergée autorisée sur qwfhebtxeubfmvvd
 ## Latest handoff
 
 Codex — 29 septembre 2026 : complément de recette annoncé avant code, PDF dédié aux avoirs immuables, droits et parcours publics sur qwfhebtxeubfmvvdsqdt, diagnostic des scans secrets. Réconciliation terminée : aucun rejeu ni migration. Correctifs sur #51, sans fusion ni déploiement.
+
+### 2026-09-29 — complément recette publique PR #51
+Récapitulatif Fine Bindery : traduire les libellés des choix enregistrés sans traduire le texte libre. Aucune modification des réponses ni des contrats.
