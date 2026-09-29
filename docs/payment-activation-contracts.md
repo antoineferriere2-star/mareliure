@@ -1,5 +1,7 @@
 # Activation progressive des paiements — nouveaux accords uniquement
 
+**Mise à jour recette, 29 septembre :** les réserves de recette hébergée et d'accord navigateur formulées lors de la préparation ci-dessous sont complétées par [l'avis de publication du circuit externe](qa/20260929/publication-review.md). Auth, HTTP/PDF/Storage, droits, types et accord public des deux marques ont leurs preuves sur le projet de test. Les restrictions d'activation payante et l'exigence d'une autorisation distincte pour la production restent inchangées.
+
 Les quatre orientations de l'audit ont été validées par le propriétaire le 28 septembre 2026. Ce document remplace la liste des décisions commerciales ouvertes de `payment-circuits-audit-20260928.md`. Il ne constitue pas des CGV acceptées par les ateliers ou leurs clients. PR #51 reste ouverte ; aucune migration production, aucun paiement ni déploiement.
 
 ## Ordre proposé

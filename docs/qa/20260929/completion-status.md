@@ -1,5 +1,7 @@
 # Complément de recette — 29 septembre 2026
 
+**Clôture navigateur et avis actuel : [publication-review.md](publication-review.md).** Accord client cliqué, confirmation finale après rechargement et consultation atelier vérifiés pour les deux marques.
+
 **État historique, complété ensuite : voir [final-payments-recipe.md](final-payments-recipe.md).** Le bouton de téléchargement est désormais vérifié sur le fichier reçu ; les deux demandes sont acceptées et consultables via les fonctions HTTP authentifiées. Les limites de rendu navigateur restent distinguées.
 
 Cible unique : qwfhebtxeubfmvvdsqdt. Application locale, Auth/PostgREST/Storage hébergés. Aucun Worker publié, aucun rejeu de réconciliation ni migration supplémentaire.

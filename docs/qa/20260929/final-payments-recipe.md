@@ -1,5 +1,7 @@
 # Recette paiements — complément du 29 septembre 2026
 
+**Complément final : [publication-review.md](publication-review.md).** La limite du clic d'accord navigateur décrite ci-dessous est désormais levée sur deux nouvelles propositions QA, sans réinitialiser les accords existants.
+
 Cible unique : `qwfhebtxeubfmvvdsqdt`. Serveur applicatif local de #51, Auth et base Supabase hébergées. Aucun Worker déployé, aucune migration, aucun paiement ni appel Stripe. La réconciliation n'a pas été rejouée.
 
 ## Avoir téléchargé depuis le bouton : réussi
