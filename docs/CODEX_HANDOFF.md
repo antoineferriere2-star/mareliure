@@ -3368,3 +3368,6 @@ Codex — 29 septembre 2026 : complément de recette annoncé avant code, PDF d�
 
 ### 2026-09-29 — complément recette publique PR #51
 Récapitulatif Fine Bindery : traduire les libellés des choix enregistrés sans traduire le texte libre. Aucune modification des réponses ni des contrats.
+
+## Latest handoff
+Codex — 29 septembre 2026 : complément de recette PR #51, périmètre documentaire. Téléchargement réel du bouton avoir capturé dans Chromium, contenu PDF et refus autre atelier/session absente contrôlés. Demandes publiques existantes poursuivies par Auth réelle et fonctions HTTP de création/validation/accord/consultation. Aucune migration, production, fusion, publication ou opération payante.

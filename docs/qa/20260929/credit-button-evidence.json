@@ -1,0 +1,18 @@
+{
+  "buttonDownload": true,
+  "suggestedFilename": "avoir-A-2026-0001.pdf",
+  "bytes": 2697,
+  "sha256": "bf59b0a518d6810017b12c35c9e2a79f8f9244fb29b0818d0ffadeaf1c55cf8e",
+  "denials": [
+    {
+      "label": "other-workshop",
+      "status": 200,
+      "denied": true
+    },
+    {
+      "label": "anonymous",
+      "status": 200,
+      "denied": true
+    }
+  ]
+}
