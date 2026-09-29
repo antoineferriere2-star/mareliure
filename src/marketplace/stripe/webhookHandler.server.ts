@@ -15,8 +15,8 @@
  * - 500 : le traitement a échoué (erreur d'infrastructure OU paiement qui ne correspond pas à la
  *   proposition). L'événement est `failed` avec la raison, jamais `processed` : Stripe le
  *   redélivre, la redélivrance le REPREND (`claimed`, tentative + 1) au lieu de l'absorber comme
- *   doublon. Après `MAX_WEBHOOK_ATTEMPTS` tentatives on répond 200 pour arrêter la boucle — la
- *   ligne reste `failed`, visible et rejouable depuis le Dashboard Stripe.
+ *   doublon. Après `MAX_WEBHOOK_ATTEMPTS`, la réponse reste 500 et la ligne reste
+ *   `failed` : une alerte d'exploitation et un examen sont nécessaires avant rejeu.
  */
 import { admin } from "@/build/services/adminAuth.server";
 import { getMarketplaceStripeClient, getMarketplaceStripeWebhookSecret } from "./stripeClient.server";

@@ -23,7 +23,7 @@ export const QUOTE_STATUS_LABELS: Record<QuoteStatus, string> = {
 const TRANSITIONS: Record<QuoteStatus, readonly QuoteStatus[]> = {
   draft: ["sent", "accepted", "refused"],
   sent: ["accepted", "refused", "expired"],
-  accepted: ["refused"],
+  accepted: [],
   refused: [],
   expired: ["sent", "accepted"],
   invoiced: [],

@@ -3374,3 +3374,6 @@ Codex — 29 septembre 2026 : complément de recette PR #51, périmètre documen
 
 ## Latest handoff
 Codex — 29 septembre 2026 : clôture navigateur de l’accord client annoncée, deux nouvelles fixtures QA pour conserver les contrats déjà acceptés. Contrôle avant/après en bureau/mobile, état accepté explicite après clic et rechargement, consultation atelier. Documentation des limites et avis de publication restreint au circuit externe ; qwf uniquement, aucun Checkout, migration, fusion ni déploiement.
+
+## Latest handoff
+Codex — 29 septembre 2026 : audit contradictoire avant publication. Périmètre annoncé : retirer le refus d'un accord figé, préserver les acceptations historiques hors éligibilité du circuit externe, tests SQL/UI et recette qwf. Aucun changement de contrat accepté, aucune production, fusion ou publication. Ancien avis favorable suspendu jusqu'aux nouvelles preuves.

@@ -229,6 +229,10 @@ describe("dimensions", () => {
 });
 
 describe("statuts", () => {
+  it("un accord accepté ne propose plus de refus ni de réécriture", () => {
+    expect(allowedTransitions("accepted")).toEqual([]);
+    expect(canTransition("accepted", "refused")).toBe(false);
+  });
   it("les six statuts du brief existent", () => {
     expect([...QUOTE_STATUSES]).toEqual(["draft", "sent", "accepted", "refused", "expired", "invoiced"]);
   });

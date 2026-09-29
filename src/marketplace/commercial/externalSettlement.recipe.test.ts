@@ -1,3 +1,4 @@
+import { quoteRecipePrerequisites } from "./quoteRecipe.fixture";
 import { PGlite } from "@electric-sql/pglite";
 import { readFileSync } from "node:fs";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
@@ -9,19 +10,7 @@ const migration = (name: string) => readFileSync(new URL(`../../../supabase/migr
 beforeAll(async () => {
   db = new PGlite();
   // Isolated recipe database. Stub only dependencies outside quote/invoice billing.
-  await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role BYPASSRLS;
-    CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY);
-    CREATE TABLE user_roles(user_id uuid,role text);
-    CREATE TABLE marketplace_binders(id uuid PRIMARY KEY);
-    CREATE TABLE marketplace_binder_members(binder_id uuid,user_id uuid,account_status text);
-    CREATE TABLE marketplace_cases(id uuid PRIMARY KEY,acquisition_origin text,referred_binder_id uuid);
-    CREATE TABLE marketplace_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),case_id uuid,actor_user_id uuid,event_type text,metadata jsonb);
-    CREATE TABLE marketplace_commercial_proposals(id uuid PRIMARY KEY,case_id uuid,status text,accepted_at timestamptz);
-    CREATE FUNCTION build_touch_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at=now(); RETURN NEW; END $$;
-    CREATE SCHEMA storage;
-    CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
-    CREATE TABLE storage.objects(id uuid,bucket_id text);
-  `);
+  await db.exec(quoteRecipePrerequisites);
   for (const file of ["20260919090000_marketplace_binder_quotes", "20260920100000_marketplace_binder_invoice_vat_mention",
     "20260921090000_marketplace_binder_contacts_works", "20260923100000_marketplace_quote_size_blocks_photos",
     "20260923110000_marketplace_document_branding", "20260923120000_marketplace_invoice_compliance",
@@ -32,7 +21,7 @@ beforeAll(async () => {
     INSERT INTO marketplace_binder_billing_profiles(binder_id) VALUES('${id(2)}');
     INSERT INTO marketplace_binder_quotes(id,binder_id,client_id,quote_number,status,issue_date,valid_until,client_name,
       currency,issuer,vat_regime,vat_mention,subtotal_cents,total_ht_cents,total_vat_cents,total_ttc_cents)
-    VALUES('${id(4)}','${id(2)}','${id(3)}','QA-D-1','sent','2026-09-28','2026-10-28','QA client fictif',
+    VALUES('${id(4)}','${id(2)}','${id(3)}','QA-D-1','sent','2026-09-28',CURRENT_DATE + 30,'QA client fictif',
       'EUR','{"legalForm":"QA","siren":"000000000","siret":"00000000000000","addressLine1":"QA fictif","postalCode":"00000","city":"QA"}',
       'FRANCHISE','Mention de recette uniquement',10000,10000,0,10000);
     INSERT INTO marketplace_binder_quote_items(quote_id,binder_id,position,label,unit_price_cents,vat_rate_bps,total_ht_cents,line_key)

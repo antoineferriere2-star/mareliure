@@ -49,6 +49,7 @@ LANGUAGE sql STABLE SET search_path=public AS $$
     LEFT JOIN marketplace_binder_works w ON w.id=q.work_id AND w.binder_id=q.binder_id
     LEFT JOIN marketplace_binder_clients c ON c.id=q.client_id AND c.binder_id=q.binder_id
     WHERE q.id=p_quote AND q.binder_id=p_binder AND q.deposit_cents=0
+    AND q.status='sent' AND q.valid_until >= (now() AT TIME ZONE 'Europe/Paris')::date
     AND ((q.work_id IS NOT NULL AND w.source='mon_client' AND w.case_id IS NULL)
       OR (q.work_id IS NULL AND c.origin='mon_client' AND c.origin_case_id IS NULL)))
 $$;
@@ -89,7 +90,10 @@ CREATE FUNCTION public.marketplace_require_own_agreement() RETURNS trigger LANGU
 DECLARE a marketplace_own_client_agreements%ROWTYPE;
 BEGIN
   IF NEW.status='accepted' AND (TG_OP='INSERT' OR OLD.status NOT IN ('accepted','invoiced'))
-    AND NEW.payment_snapshot->>'circuit'='own_client' THEN
+    AND NEW.payment_snapshot->>'circuit'='own_client'
+    AND NEW.deposit_cents=0
+    AND NEW.valid_until >= (now() AT TIME ZONE 'Europe/Paris')::date
+    AND (TG_OP='INSERT' OR OLD.status='sent') THEN
     SELECT * INTO a FROM marketplace_own_client_agreements WHERE quote_id=NEW.id AND binder_id=NEW.binder_id;
     IF NOT FOUND OR a.terms->>'currency' IS DISTINCT FROM NEW.currency
       OR (a.terms->>'total_ttc_cents')::bigint IS DISTINCT FROM NEW.total_ttc_cents THEN RAISE EXCEPTION 'own_agreement_required'; END IF;

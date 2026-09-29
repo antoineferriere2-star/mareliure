@@ -177,7 +177,7 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
   const quote = useQuery({ queryKey: [...QUOTES_KEY, quoteId] as const, queryFn: () => fetchQuote({ data: { id: quoteId } }) });
 
   const refresh = () =>
-    Promise.all([queryClient.invalidateQueries({ queryKey: QUOTES_KEY }), queryClient.invalidateQueries({ queryKey: INVOICES_KEY })]);
+    Promise.all([queryClient.invalidateQueries({ queryKey: QUOTES_KEY }), queryClient.invalidateQueries({ queryKey: INVOICES_KEY }), queryClient.invalidateQueries({ queryKey: ["own-contract", quoteId] })]);
 
   const status = useMutation({
     mutationFn: async (to: QuoteStatus) => {
@@ -259,7 +259,9 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
           <Link to="/atelier/tarifs" className="mt-1 inline-block underline">Compléter mon profil</Link>
         </div>
       )}
-      {actionError && <ErrorNote>Cette action n'a pas pu être effectuée. Rechargez la page et réessayez.</ErrorNote>}
+      {actionError && <ErrorNote>Cette action n'a pas été enregistrée. Le devis ou ses conditions ont pu changer : rechargez la page avant de poursuivre. Un accord accepté ne peut pas être remplacé par un refus.</ErrorNote>}
+
+      {(current === "accepted" || current === "invoiced") && <p className="text-sm text-muted-foreground">L'accord accepté est conservé. Pour une annulation, conservez l'échange avec le client ; si une facture a été émise, utilisez son avoir. Aucun remboursement bancaire n'est déclenché ici.</p>}
 
       <DocumentBody doc={doc} />
 
