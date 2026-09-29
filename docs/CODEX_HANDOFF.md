@@ -3358,3 +3358,10 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - Correctif : qualification future indépendante du contrat legacy_resale, cible explicitement refusée, provenance/contrat acceptés immuables. 19 tests SQL verts dont les deux marques après les deux migrations ; 4 tests bundle PDF repassés après timeout local. Typecheck/build verts ; lint livrable 0 erreur (17 avertissements existants), ancienne fixture output non suivie exclue. Recette Supabase hébergée et génération des types impossibles sans accès test ; procédure et données exactes dans docs/payment-external-hosted-recipe.md. Aucun merge, déploiement, Stripe ou production.
 
 - Reprise recette hébergée : audit en lecture seule de la session Supabase et des variables disponibles. Le projet nommé Ma Reliure - production est hljxohondjvrkzqicexl, également présent dans .env.production.mareliure ; qwfhebtxeubfmvvdsqdt est l'ancienne référence exclue. Aucun projet explicitement QA trouvé. Périmètre de reprise : corriger les garde-fous documentaires, préparer précontrôle SQL en lecture seule et préciser les accès manquants ; aucune écriture distante.
+
+## Latest handoff
+Codex — 29 septembre 2026 : recette hébergée autorisée sur qwfhebtxeubfmvvdsqdt après réconciliation V3.1 réussie. Périmètre de modification : types strictement propres à cette PR et preuves de recette. Aucun déploiement ni fusion ; production exclue. Le fichier généré complet contient aussi les écarts hérités du projet de test et les ajouts de l’autre PR : il ne remplace pas aveuglément types.ts.
+
+## Latest handoff
+
+Codex — 29 septembre 2026 : complément de recette annoncé avant code, PDF dédié aux avoirs immuables, droits et parcours publics sur qwfhebtxeubfmvvdsqdt, diagnostic des scans secrets. Réconciliation terminée : aucun rejeu ni migration. Correctifs sur #51, sans fusion ni déploiement.

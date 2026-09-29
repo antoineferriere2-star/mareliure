@@ -133,6 +133,12 @@ export interface DocumentView {
   creditNote: { id: string; number: string; issueDate: string } | null;
 }
 
+export type CreditNoteDocumentView = Omit<DocumentView, "kind"> & {
+  kind: "credit_note";
+  originalInvoice: { number: string; issueDate: string };
+  reason: string;
+};
+
 /** Une ligne SQL de devis ou de facture — la partie commune. */
 interface CommonRow {
   id: string;

@@ -37,6 +37,7 @@ import {
   createQuote,
   deleteQuoteItemPhoto,
   duplicateQuote,
+  getCreditNote,
   getInvoice,
   getQuote,
   issueInvoice,
@@ -355,5 +356,16 @@ export const getMyInvoicePdf = createServerFn({ method: "GET" })
       if (invoice.status === "draft") throw new BinderQuotesError("conflict");
       const { base64 } = await renderDocumentPdf(invoice);
       return { filename: `facture-${safeFileName(invoice.number)}.pdf`, base64 };
+    }),
+  );
+
+export const getMyCreditNotePdf = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => id.parse(data))
+  .handler(({ context, data }) =>
+    run(context.userId, async (binderId, sb) => {
+      const credit = await getCreditNote(sb, binderId, data.id);
+      const { base64 } = await renderDocumentPdf(credit);
+      return { filename: `avoir-${safeFileName(credit.number)}.pdf`, base64 };
     }),
   );

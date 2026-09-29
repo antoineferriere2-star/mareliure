@@ -4,7 +4,7 @@
  */
 import { PDFDocument, StandardFonts, rgb, type PDFImage, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
 import { formatDimensions } from "./quoteLines";
-import type { DocumentItemView, DocumentView } from "./quoteViews";
+import type { DocumentItemView, DocumentView, CreditNoteDocumentView } from "./quoteViews";
 
 export interface RenderedPdf { base64: string; pageCount: number; printed: string[] }
 
@@ -64,7 +64,7 @@ async function fetchImage(pdf: PDFDocument, url: string | null | undefined): Pro
   }
 }
 
-export async function renderDocumentPdf(document: DocumentView): Promise<RenderedPdf> {
+export async function renderDocumentPdf(document: DocumentView | CreditNoteDocumentView): Promise<RenderedPdf> {
   const pdf = await PDFDocument.create();
   const serif = await pdf.embedFont(StandardFonts.TimesRoman);
   const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
@@ -74,6 +74,8 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
   const accent = colorFromHex(document.issuer.documentAccentColor);
   const printed: string[] = [];
   const isQuote = document.kind === "quote";
+  const isCredit = document.kind === "credit_note";
+  const documentLabel = isCredit ? "AVOIR" : isQuote ? "DEVIS" : "FACTURE";
   const logo = await fetchImage(pdf, document.issuer.logoUrl);
   const imageCache = new Map<string, PDFImage | null>();
   let page: PDFPage;
@@ -118,7 +120,7 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
     page.drawRectangle({ x: 0, y: PAGE_H - 4, width: PAGE_W, height: 4, color: accent });
     y = PAGE_H - 36;
     draw(document.issuer.workshopName || document.issuer.legalName || "Atelier", MARGIN, 10, serifBold);
-    drawRight(`${isQuote ? "DEVIS" : "FACTURE"} ${document.number}`, PAGE_W - MARGIN, 8.5, sansBold, accent);
+    drawRight(`${documentLabel} ${document.number}`, PAGE_W - MARGIN, 8.5, sansBold, accent);
     y = PAGE_H - 76;
   };
   const newPage = (continuation = true) => {
@@ -168,7 +170,7 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
     const identity = [issuer.legalName && issuer.legalName !== name ? issuer.legalName : null, issuer.legalForm, issuer.shareCapital ? `Capital ${issuer.shareCapital}` : null, issuer.addressLine1, issuer.addressLine2, [issuer.postalCode, issuer.city].filter(Boolean).join(" ") || null, issuer.siren ? `SIREN ${issuer.siren}` : null, issuer.siret ? `SIRET ${issuer.siret}` : null, issuer.vatNumber ? `TVA ${issuer.vatNumber}` : null, issuer.phone, issuer.email, issuer.website].filter((value): value is string => Boolean(value));
     for (const line of identity.slice(0, 9)) { draw(line, leftX, 8.2, sans, MUTED); y -= 11; }
     y = PAGE_H - 54;
-    drawRight(isQuote ? "DEVIS" : "FACTURE", PAGE_W - MARGIN, 25, serif, accent);
+    drawRight(documentLabel, PAGE_W - MARGIN, 25, serif, accent);
     y -= 28;
     drawRight(`N° ${document.number}`, PAGE_W - MARGIN, 10.5, sansBold);
     y -= 18;
@@ -176,8 +178,13 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
     y -= 14;
     if (isQuote && document.validUntil) { drawRight(`Valable jusqu'au ${formatDateFr(document.validUntil)}`, PAGE_W - MARGIN, 9); y -= 14; }
     if (!isQuote && document.invoiceCompliance?.serviceDate) { drawRight(`Prestation : ${formatDateFr(document.invoiceCompliance.serviceDate)}`, PAGE_W - MARGIN, 8.5, sans, MUTED); y -= 13; }
-    if (!isQuote && document.invoiceCompliance?.dueDate) { drawRight(`Échéance : ${formatDateFr(document.invoiceCompliance.dueDate)}`, PAGE_W - MARGIN, 8.5, sans, MUTED); y -= 13; }
-    if (!isQuote && document.linkedQuoteNumber) drawRight(`Facture issue du devis ${document.linkedQuoteNumber}`, PAGE_W - MARGIN, 8.5, sans, MUTED);
+    if (!isQuote && !isCredit && document.invoiceCompliance?.dueDate) { drawRight(`Échéance : ${formatDateFr(document.invoiceCompliance.dueDate)}`, PAGE_W - MARGIN, 8.5, sans, MUTED); y -= 13; }
+    if (!isQuote && !isCredit && document.linkedQuoteNumber) drawRight(`Facture issue du devis ${document.linkedQuoteNumber}`, PAGE_W - MARGIN, 8.5, sans, MUTED);
+    if (document.kind === "credit_note") {
+      drawRight(`Facture ${document.originalInvoice.number}`, PAGE_W - MARGIN, 8.5, sans, MUTED);
+      y -= 13;
+      drawRight(`du ${formatDateFr(document.originalInvoice.issueDate)}`, PAGE_W - MARGIN, 8.5, sans, MUTED);
+    }
     y = PAGE_H - 208;
   };
 
@@ -296,8 +303,8 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
     }
     row("Total HT", formatMoneyPdf(document.totalHtCents));
     if (showVat) document.vatBreakdown.filter((group) => group.baseHtCents !== 0 || group.vatCents !== 0).forEach((group) => row(`TVA ${rateLabel(group.vatRateBps)}`, formatMoneyPdf(group.vatCents)));
-    row(showVat ? "Total TTC" : "Total à payer", formatMoneyPdf(document.totalTtcCents), true);
-    if (document.depositCents > 0) {
+    row(isCredit ? "Total de l’avoir" : showVat ? "Total TTC" : "Total à payer", formatMoneyPdf(document.totalTtcCents), true);
+    if (!isCredit && document.depositCents > 0) {
       row(document.depositType === "PERCENT" ? `Acompte demandé (${rateLabel(document.depositValue)})` : "Acompte demandé", formatMoneyPdf(document.depositCents));
       row("Solde restant", formatMoneyPdf(document.balanceCents));
     }
@@ -316,9 +323,13 @@ export async function renderDocumentPdf(document: DocumentView): Promise<Rendere
       pageBreakIfNeeded(24);
       paragraph(document.vatMention, MARGIN, 8.5, CONTENT_W);
     }
-    if (document.paymentTerms) section("CONDITIONS DE PAIEMENT", document.paymentTerms);
+    if (!isCredit && document.paymentTerms) section("CONDITIONS DE PAIEMENT", document.paymentTerms);
     if (!isQuote && document.invoiceCompliance?.legalMentions.length) section("MENTIONS RÉGLEMENTAIRES", document.invoiceCompliance.legalMentions.filter((mention) => mention !== document.vatMention).join("\n"));
-    if (!isQuote && document.issuer.iban) section("RÈGLEMENT", `IBAN ${document.issuer.iban}`);
+    if (!isQuote && !isCredit && document.issuer.iban) section("RÈGLEMENT", `IBAN ${document.issuer.iban}`);
+    if (document.kind === "credit_note") {
+      section("MOTIF DE L’AVOIR", document.reason);
+      section("SUIVI", "Cet avoir annule intégralement la facture référencée. Il ne constitue pas une preuve de remboursement. Les remboursements effectués sont déclarés séparément par l’atelier.");
+    }
     if (document.notes) section(isQuote ? "CONDITIONS" : "MENTIONS", document.notes);
     if (isQuote) {
       y -= 6;

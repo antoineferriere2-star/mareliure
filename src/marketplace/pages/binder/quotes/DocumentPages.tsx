@@ -12,6 +12,7 @@ import {
   createMyFullCreditNote,
   duplicateMyQuote,
   getMyInvoice,
+  getMyCreditNotePdf,
   getMyInvoicePdf,
   getMyQuote,
   getMyQuotePdf,
@@ -130,7 +131,7 @@ function DocumentBody({ doc }: { doc: DocumentView }) {
   );
 }
 
-function PdfActions({ fetchPdf, id }: { fetchPdf: (args: { data: { id: string } }) => Promise<{ filename: string; base64: string }>; id: string }) {
+function PdfActions({ fetchPdf, id, credit = false }: { credit?: boolean; fetchPdf: (args: { data: { id: string } }) => Promise<{ filename: string; base64: string }>; id: string }) {
   const [failed, setFailed] = useState(false);
   const pdf = useMutation({
     mutationFn: async (mode: "download" | "print") => {
@@ -144,10 +145,10 @@ function PdfActions({ fetchPdf, id }: { fetchPdf: (args: { data: { id: string } 
   return (
     <>
       <button type="button" className={SECONDARY_BUTTON} disabled={pdf.isPending} onClick={() => pdf.mutate("download")}>
-        {pdf.isPending ? "Préparation…" : "Télécharger le PDF"}
+        {pdf.isPending ? "Préparation…" : credit ? "Télécharger l’avoir PDF" : "Télécharger le PDF"}
       </button>
       <button type="button" className={SECONDARY_BUTTON} disabled={pdf.isPending} onClick={() => pdf.mutate("print")}>
-        Imprimer
+        {credit ? "Imprimer l’avoir" : "Imprimer"}
       </button>
       {failed && <ErrorNote>Le PDF n'a pas pu être généré. Réessayez.</ErrorNote>}
     </>
@@ -425,6 +426,7 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
 export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
   const fetchInvoice = useServerFn(getMyInvoice);
   const fetchPdf = useServerFn(getMyInvoicePdf);
+  const fetchCreditPdf = useServerFn(getMyCreditNotePdf);
   const createCreditNote = useServerFn(createMyFullCreditNote);
   const queryClient = useQueryClient();
   const [creditReason, setCreditReason] = useState("");
@@ -472,7 +474,7 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
       <DocumentBody doc={doc} />
       {doc.status !== "draft" && <section aria-labelledby="credit-note-title" className={CARD}>
         <h2 id="credit-note-title" className="font-serif text-lg">Rectification</h2>
-        {doc.creditNote ? <p className="mt-2 text-sm">Avoir complet {doc.creditNote.number}, émis le {formatDateLong(doc.creditNote.issueDate)}. La facture d'origine reste inchangée.</p> : <>
+        {doc.creditNote ? <div><PdfActions fetchPdf={fetchCreditPdf} id={doc.creditNote.id} credit /><p className="mt-2 text-sm">Avoir complet {doc.creditNote.number}, émis le {formatDateLong(doc.creditNote.issueDate)}. La facture d'origine reste inchangée.</p></div> : <>
           <p className="mt-1 text-sm text-muted-foreground">Un avoir complet annule économiquement cette facture tout en conservant la pièce d'origine.</p>
           <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-end">
             <Field label="Motif de l'avoir" htmlFor="credit-note-reason"><input id="credit-note-reason" className={FIELD} value={creditReason} onChange={(event) => setCreditReason(event.target.value)} /></Field>

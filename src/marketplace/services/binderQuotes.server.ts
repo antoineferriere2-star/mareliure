@@ -40,6 +40,7 @@ import { canTransition, isQuoteStatus, type QuoteStatus } from "@/marketplace/qu
 import {
   invoiceView,
   quoteView,
+  type CreditNoteDocumentView,
   type DocumentSummary,
   type DocumentView,
   type InvoiceDbRow,
@@ -567,7 +568,7 @@ export async function getQuote(sb: Supa, binderId: string, quoteId: string): Pro
   return signIssuerLogo(sb, quoteView(row, asItemRows(items.data ?? []), invoice.data ?? null, photos));
 }
 
-async function signIssuerLogo(sb: Supa, document: DocumentView): Promise<DocumentView> {
+async function signIssuerLogo<T extends Pick<DocumentView, "issuer">>(sb: Supa, document: T): Promise<T> {
   if (!document.issuer.logoStoragePath) return document;
   const { data } = await sb.storage.from(DOCUMENT_LOGOS_BUCKET)
     .createSignedUrl(document.issuer.logoStoragePath, 3600);
@@ -992,6 +993,51 @@ export async function getInvoice(sb: Supa, binderId: string, invoiceId: string):
   if (items.error) throw new BinderQuotesError("failed");
   if (creditNote.error) throw new BinderQuotesError("failed");
   return signIssuerLogo(sb, invoiceView(asInvoiceRow(row), asItemRows(items.data ?? []), quote.data ?? null, photos, creditNote.data));
+}
+
+/** L'avoir et ses lignes sont immuables ; aucun profil ni catalogue courant n'est consulté. */
+export async function getCreditNote(sb: Supa, binderId: string, creditId: string): Promise<CreditNoteDocumentView> {
+  const { data: credit, error } = await sb.from("marketplace_binder_credit_notes")
+    .select("*").eq("id", creditId).eq("binder_id", binderId).maybeSingle();
+  if (error) throw new BinderQuotesError("failed");
+  if (!credit) throw new BinderQuotesError("not_found");
+  const [invoice, items] = await Promise.all([
+    getInvoice(sb, binderId, credit.invoice_id),
+    sb.from("marketplace_binder_credit_note_items").select("*")
+      .eq("credit_note_id", credit.id).eq("binder_id", binderId).order("position"),
+  ]);
+  if (items.error) throw new BinderQuotesError("failed");
+  const client = credit.client as Record<string, Json>;
+  const text = (key: string) => typeof client[key] === "string" ? client[key] as string : null;
+  return signIssuerLogo(sb, {
+    ...invoice,
+    kind: "credit_note",
+    id: credit.id, number: credit.credit_note_number, issueDate: credit.issue_date,
+    originalInvoice: { number: invoice.number, issueDate: invoice.issueDate },
+    reason: credit.reason, createdAt: credit.created_at, currency: credit.currency,
+    issuer: credit.issuer as unknown as DocumentView["issuer"],
+    client: { id: null, name: text("name") ?? "", email: null, phone: null,
+      addressLine1: text("addressLine1"), postalCode: text("postalCode"), city: text("city"), country: text("country") },
+    invoiceCompliance: invoice.invoiceCompliance ? { ...invoice.invoiceCompliance,
+      dueDate: null, clientLegalName: text("legalName"), billingAddressLine1: text("addressLine1"),
+      billingPostalCode: text("postalCode"), billingCity: text("city"), billingCountry: text("country"),
+      clientSiren: text("siren"), clientVatNumber: text("vatNumber"),
+      legalMentions: credit.legal_mentions as string[],
+    } : null,
+    blocks: invoice.blocks,
+    items: (items.data ?? []).map((item) => ({
+      position: item.position, lineKey: `credit-${item.position}`,
+      blockKey: invoice.items.find((line) => line.position === item.position)?.blockKey ?? "credit", serviceId: null,
+      label: item.label, description: item.description, unit: item.unit, quantity: Number(item.quantity),
+      unitPriceCents: item.unit_price_cents, catalogPriceCents: null, vatRateBps: item.vat_rate_bps,
+      totalHtCents: item.total_ht_cents, photos: [],
+    })),
+    totalHtCents: credit.total_ht_cents, totalVatCents: credit.total_vat_cents, totalTtcCents: credit.total_ttc_cents,
+    vatBreakdown: credit.vat_breakdown as unknown as DocumentView["vatBreakdown"],
+    paymentTerms: null, notes: null, payment: null, creditNote: null,
+    depositType: "NONE", depositValue: 0, depositCents: 0, balanceCents: 0,
+    linkedQuoteId: null, linkedQuoteNumber: null, linkedInvoiceId: invoice.id, linkedInvoiceNumber: invoice.number,
+  });
 }
 
 export async function createFullCreditNote(sb: Supa, binderId: string, invoiceId: string, today: string, reason: string) {

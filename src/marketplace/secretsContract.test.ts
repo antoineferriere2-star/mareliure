@@ -29,9 +29,9 @@ const SERVER_ONLY = [
 ];
 
 function walk(dir: string, out: string[] = []): string[] {
-  for (const entry of readdirSync(dir)) {
-    const full = join(dir, entry);
-    if (statSync(full).isDirectory()) {
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const full = join(dir, entry.name);
+    if (entry.isDirectory() || (entry.isSymbolicLink() && statSync(full).isDirectory())) {
       walk(full, out);
       continue;
     }
