@@ -3346,3 +3346,9 @@ Codex — 28 septembre 2026 : périmètre annoncé avant code, logistique manuel
 - Livraison logistique : migration additive 20260928130000, journal immuable/versionné, réception physique distincte du transporteur, retour conditionné, preuve atelier finale et photos privées. 3065 tests verts puis 9 tests logistique verts ; recette combinée #51 18 tests verts. TypeScript/lint/build générique passent. QA parcours local et visuel mobile 390 px ; pas de Supabase test accessible, types seulement préparés manuellement. Détails et gate dans docs/work-logistics-manual.md. PR indépendante, aucune production touchée.
 
 - Reprise recette hébergée et Sendcloud : audit en lecture seule ; production actuelle hljxohondjvrkzqicexl confirmée dans le dashboard et la configuration, ancienne référence qwfhebtxeubfmvvdsqdt également exclue. Aucun projet explicitement QA accessible. Périmètre : précontrôle SQL en lecture seule, procédures et fiche d'essai Sendcloud sans achat ni API ; aucune écriture distante.
+
+## Latest handoff
+Codex — 29 septembre 2026 : recette hébergée autorisée sur qwfhebtxeubfmvvdsqdt après réconciliation V3.1 réussie. Périmètre de modification : types strictement propres à cette PR et preuves de recette. Aucun déploiement ni fusion ; production exclue. Le fichier généré complet contient aussi les écarts hérités du projet de test et les ajouts de l’autre PR : il ne remplace pas aveuglément types.ts.
+
+## Latest handoff
+Codex — 29 septembre 2026 : complément de recette annoncé avant code, échecs photos et Storage réel, reprise après erreur, distinction projets réseau / ouvrages propres dans le bandeau multilingue. Projet qwf uniquement, aucune nouvelle migration, fusion ni déploiement.

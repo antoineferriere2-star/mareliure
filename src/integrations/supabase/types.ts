@@ -3818,13 +3818,89 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_work_logistics_photos: {
+        Row: {
+          actor_id: string
+          created_at: string
+          event_id: string
+          id: string
+          path: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          event_id: string
+          id: string
+          path: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_work_logistics_photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_work_logistics_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_work_logistics_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          details: Json
+          id: string
+          kind: string
+          sequence: number
+          work_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          details: Json
+          id: string
+          kind: string
+          sequence: number
+          work_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          kind?: string
+          sequence?: number
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_work_logistics_events_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
       marketplace_work_logistics: {
-        Args: { p_work: string; p_binder: string; p_actor: string; p_action: string; p_data: Json }
+        Args: {
+          p_action: string
+          p_actor: string
+          p_binder: string
+          p_data: Json
+          p_work: string
+        }
         Returns: Json
       }
       has_role: {
