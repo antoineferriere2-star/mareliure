@@ -90,3 +90,9 @@ Les circuits carte 3 %, commission 25 %, conciergerie payante et abonnement rest
 ## Actualisation après recette hébergée autorisée
 
 Voir [RECETTE-HEBERGEE-20260930.md](RECETTE-HEBERGEE-20260930.md). L'accès dashboard et l'autorisation QA sont maintenant acquis ; le Worker temporaire a été déployé, testé puis supprimé. **La publication reste bloquée** : CPU photo supérieur au plafond Workers Free (10 ms), gel des écrivains Supabase directs non entièrement éprouvé. La maintenance HTTP est vérifiée. L'ancienne valeur CLI exposée est rejetée. Le préparateur distant refuse Execute ; ne pas considérer le présent dossier comme une autorisation ou un exécuteur prêt à lancer.
+
+## Clôture des preuves du 30 septembre — lecture prioritaire
+
+Voir [DERNIERS-BLOCAGES.md](DERNIERS-BLOCAGES.md), qui actualise les gates ci-dessus. Maintenance métier qwf réussie (53 tables, refus REST/RPC, reprise et dérive Auth/Storage contrôlée). Lanceur avec dérive dans la connexion d'exécution, backup frais lié aux preuves et arrêts sans rejeu éprouvé localement avec postgres non superutilisateur, dont une vraie perte de connexion après COMMIT. Execute distant toujours désactivé. Worker temporaire v2 supprimé.
+
+Reste une seule décision de capacité : Workers Paid, 5 USD/mois minimum + éventuels dépassements ; aucun achat réalisé. JSON 5 Mio seul mesuré 14,403 ms, supérieur au plafond Free 10 ms. La refonte du transport est arrêtée conformément à la consigne. Code produit/migrations/artefact production inchangés. Toute publication exige encore une décision distincte ; aucune action production autorisée ou exécutée ici.

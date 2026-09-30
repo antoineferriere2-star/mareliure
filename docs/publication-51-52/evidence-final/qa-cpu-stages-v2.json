@@ -1,0 +1,66 @@
+[
+  {
+    "sizeMiB": 4,
+    "stage": "parse",
+    "started": "2026-09-30T16:15:07.505Z",
+    "ended": "2026-09-30T16:15:09.171Z",
+    "status": 200,
+    "ray": "a434864c192dfcf1-CDG"
+  },
+  {
+    "sizeMiB": 4,
+    "stage": "decode",
+    "started": "2026-09-30T16:15:13.178Z",
+    "ended": "2026-09-30T16:15:14.013Z",
+    "status": 200,
+    "ray": "a434866d1b3bfcf1-CDG"
+  },
+  {
+    "sizeMiB": 4,
+    "stage": "canonical",
+    "started": "2026-09-30T16:15:18.018Z",
+    "ended": "2026-09-30T16:15:18.951Z",
+    "status": 200,
+    "ray": "a434868b5c49fcf1-CDG"
+  },
+  {
+    "sizeMiB": 4,
+    "stage": "hash",
+    "started": "2026-09-30T16:15:22.954Z",
+    "ended": "2026-09-30T16:15:23.784Z",
+    "status": 200,
+    "ray": "a43486aa4a85fcf1-CDG"
+  },
+  {
+    "sizeMiB": 5,
+    "stage": "parse",
+    "started": "2026-09-30T16:15:27.916Z",
+    "ended": "2026-09-30T16:15:28.994Z",
+    "status": 200,
+    "ray": "a43486c96eacfcf1-CDG"
+  },
+  {
+    "sizeMiB": 5,
+    "stage": "decode",
+    "started": "2026-09-30T16:15:33.013Z",
+    "ended": "2026-09-30T16:15:34.044Z",
+    "status": 200,
+    "ray": "a43486e94927fcf1-CDG"
+  },
+  {
+    "sizeMiB": 5,
+    "stage": "canonical",
+    "started": "2026-09-30T16:15:38.053Z",
+    "ended": "2026-09-30T16:15:39.053Z",
+    "status": 200,
+    "ray": "a4348708ba8afcf1-CDG"
+  },
+  {
+    "sizeMiB": 5,
+    "stage": "hash",
+    "started": "2026-09-30T16:15:43.057Z",
+    "ended": "2026-09-30T16:15:44.043Z",
+    "status": 200,
+    "ray": "a4348727fa0afcf1-CDG"
+  }
+]

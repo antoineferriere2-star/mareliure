@@ -1,0 +1,133 @@
+{
+    "data":  {
+                 "viewer":  {
+                                "accounts":  [
+                                                 {
+                                                     "workersInvocationsAdaptive":  [
+                                                                                        {
+                                                                                            "dimensions":  {
+                                                                                                               "datetime":  "2026-09-30T16:15:34Z",
+                                                                                                               "scriptName":  "mareliure-ops-qa-20260930-v2",
+                                                                                                               "status":  "success"
+                                                                                                           },
+                                                                                            "quantiles":  {
+                                                                                                              "cpuTimeP50":  17923,
+                                                                                                              "cpuTimeP99":  17923
+                                                                                                          },
+                                                                                            "sum":  {
+                                                                                                        "errors":  0,
+                                                                                                        "requests":  1
+                                                                                                    }
+                                                                                        },
+                                                                                        {
+                                                                                            "dimensions":  {
+                                                                                                               "datetime":  "2026-09-30T16:15:18Z",
+                                                                                                               "scriptName":  "mareliure-ops-qa-20260930-v2",
+                                                                                                               "status":  "success"
+                                                                                                           },
+                                                                                            "quantiles":  {
+                                                                                                              "cpuTimeP50":  19705,
+                                                                                                              "cpuTimeP99":  19705
+                                                                                                          },
+                                                                                            "sum":  {
+                                                                                                        "errors":  0,
+                                                                                                        "requests":  1
+                                                                                                    }
+                                                                                        },
+                                                                                        {
+                                                                                            "dimensions":  {
+                                                                                                               "datetime":  "2026-09-30T16:15:39Z",
+                                                                                                               "scriptName":  "mareliure-ops-qa-20260930-v2",
+                                                                                                               "status":  "success"
+                                                                                                           },
+                                                                                            "quantiles":  {
+                                                                                                              "cpuTimeP50":  21141,
+                                                                                                              "cpuTimeP99":  21141
+                                                                                                          },
+                                                                                            "sum":  {
+                                                                                                        "errors":  0,
+                                                                                                        "requests":  1
+                                                                                                    }
+                                                                                        },
+                                                                                        {
+                                                                                            "dimensions":  {
+                                                                                                               "datetime":  "2026-09-30T16:15:08Z",
+                                                                                                               "scriptName":  "mareliure-ops-qa-20260930-v2",
+                                                                                                               "status":  "success"
+                                                                                                           },
+                                                                                            "quantiles":  {
+                                                                                                              "cpuTimeP50":  9926,
+                                                                                                              "cpuTimeP99":  9926
+                                                                                                          },
+                                                                                            "sum":  {
+                                                                                                        "errors":  0,
+                                                                                                        "requests":  1
+                                                                                                    }
+                                                                                        },
+                                                                                        {
+                                                                                            "dimensions":  {
+                                                                                                               "datetime":  "2026-09-30T16:15:29Z",
+                                                                                                               "scriptName":  "mareliure-ops-qa-20260930-v2",
+                                                                                                               "status":  "success"
+                                                                                                           },
+                                                                                            "quantiles":  {
+                                                                                                              "cpuTimeP50":  14403,
+                                                                                                              "cpuTimeP99":  14403
+                                                                                                          },
+                                                                                            "sum":  {
+                                                                                                        "errors":  0,
+                                                                                                        "requests":  1
+                                                                                                    }
+                                                                                        },
+                                                                                        {
+                                                                                            "dimensions":  {
+                                                                                                               "datetime":  "2026-09-30T16:15:14Z",
+                                                                                                               "scriptName":  "mareliure-ops-qa-20260930-v2",
+                                                                                                               "status":  "success"
+                                                                                                           },
+                                                                                            "quantiles":  {
+                                                                                                              "cpuTimeP50":  10399,
+                                                                                                              "cpuTimeP99":  10399
+                                                                                                          },
+                                                                                            "sum":  {
+                                                                                                        "errors":  0,
+                                                                                                        "requests":  1
+                                                                                                    }
+                                                                                        },
+                                                                                        {
+                                                                                            "dimensions":  {
+                                                                                                               "datetime":  "2026-09-30T16:15:44Z",
+                                                                                                               "scriptName":  "mareliure-ops-qa-20260930-v2",
+                                                                                                               "status":  "success"
+                                                                                                           },
+                                                                                            "quantiles":  {
+                                                                                                              "cpuTimeP50":  25415,
+                                                                                                              "cpuTimeP99":  25415
+                                                                                                          },
+                                                                                            "sum":  {
+                                                                                                        "errors":  0,
+                                                                                                        "requests":  1
+                                                                                                    }
+                                                                                        },
+                                                                                        {
+                                                                                            "dimensions":  {
+                                                                                                               "datetime":  "2026-09-30T16:15:23Z",
+                                                                                                               "scriptName":  "mareliure-ops-qa-20260930-v2",
+                                                                                                               "status":  "success"
+                                                                                                           },
+                                                                                            "quantiles":  {
+                                                                                                              "cpuTimeP50":  23703,
+                                                                                                              "cpuTimeP99":  23703
+                                                                                                          },
+                                                                                            "sum":  {
+                                                                                                        "errors":  0,
+                                                                                                        "requests":  1
+                                                                                                    }
+                                                                                        }
+                                                                                    ]
+                                                 }
+                                             ]
+                            }
+             },
+    "errors":  null
+}
