@@ -1,0 +1,16 @@
+{
+  "sqlCount": 2,
+  "storageCount": 2,
+  "stored": [
+    {
+      "id": "1542aa7d-1c57-8aad-8a53-9b68253dd0ce",
+      "bytes": 4194304,
+      "identical": true
+    },
+    {
+      "id": "4246018f-5248-859b-b811-3725075ec5b7",
+      "bytes": 5242880,
+      "identical": true
+    }
+  ]
+}

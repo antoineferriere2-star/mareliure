@@ -1,0 +1,18 @@
+[
+  {
+    "path": "/qa-health",
+    "status": 200
+  },
+  {
+    "path": "/api/marketplace/stripe-webhook",
+    "status": 400
+  },
+  {
+    "prefix": "9b4f7fd9",
+    "status": 404
+  },
+  {
+    "prefix": "5b6d1a2d",
+    "status": 404
+  }
+]

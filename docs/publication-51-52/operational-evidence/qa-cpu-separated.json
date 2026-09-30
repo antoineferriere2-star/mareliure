@@ -1,0 +1,42 @@
+[
+  {
+    "name": "retry-4MiB-a",
+    "bytes": 4194304,
+    "started": "2026-09-30T14:51:13.314Z",
+    "ended": "2026-09-30T14:51:14.370Z",
+    "status": 200,
+    "applicationError": false,
+    "resourceLimit": false,
+    "ray": "a4340b619f03703e-CDG"
+  },
+  {
+    "name": "retry-4MiB-b",
+    "bytes": 4194304,
+    "started": "2026-09-30T14:51:18.429Z",
+    "ended": "2026-09-30T14:51:19.326Z",
+    "status": 200,
+    "applicationError": false,
+    "resourceLimit": false,
+    "ray": "a4340b82082beb4f-CDG"
+  },
+  {
+    "name": "retry-5MiB-a",
+    "bytes": 5242880,
+    "started": "2026-09-30T14:51:23.410Z",
+    "ended": "2026-09-30T14:51:24.596Z",
+    "status": 200,
+    "applicationError": false,
+    "resourceLimit": false,
+    "ray": "a4340ba12b2001cc-CDG"
+  },
+  {
+    "name": "retry-5MiB-b",
+    "bytes": 5242880,
+    "started": "2026-09-30T14:51:28.684Z",
+    "ended": "2026-09-30T14:51:30.074Z",
+    "status": 200,
+    "applicationError": false,
+    "resourceLimit": false,
+    "ray": "a4340bc21f9053c5-CDG"
+  }
+]

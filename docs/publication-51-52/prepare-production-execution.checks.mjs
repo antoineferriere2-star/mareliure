@@ -1,0 +1,10 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtempSync, writeFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { target, assertTarget, assertReceipt, hash, outcome, prepare } from './prepare-production-execution.mjs';
+test('Reject another project, host, port, user and weakened TLS',()=>{for(const key of Object.keys(target))assert.throws(()=>assertTarget({...target,[key]:'unexpected'}),/mismatch/);});
+test('Execute cannot be enabled without editing and reviewing code',()=>assert.throws(()=>prepare({mode:'Execute'}),/DISABLED/));
+test('Uncertain commit or error never permits automatic replay',()=>{assert.equal(outcome(1,'publication_commit_confirmed'),'STOP-inspect-readonly-no-retry');assert.equal(outcome(0,''),'STOP-inspect-readonly-no-retry');assert.equal(outcome(0,'publication_commit_confirmed'),'commit-confirmed-postchecks-required');});
+test('Freshness, direct writers and integrity of backup evidence are mandatory',()=>{const dir=mkdtempSync(join(tmpdir(),'publication-guard-'));try{const path=join(dir,'synthetic-proof');writeFileSync(path,'synthetic-local-only');const evidence=Object.fromEntries(['databaseArchive','storageManifest','restoreComparison','schemaComparison','historyComparison','maintenanceEvidence'].map(k=>[k,{path,sha256:hash('synthetic-local-only')}]));const receipt={target,completedAt:new Date().toISOString(),historyCount:91,restoredTableCount:96,maintenanceVerified:true,directWritersStopped:true,authStorageDriftChecked:true,restoreCompared:true,storageObjectsCompared:true,evidence};assert.doesNotThrow(()=>assertReceipt(receipt));assert.throws(()=>assertReceipt({...receipt,completedAt:'2020-01-01'}),/Fresh/);assert.throws(()=>assertReceipt({...receipt,directWritersStopped:false}),/gate/);writeFileSync(path,'changed');assert.throws(()=>assertReceipt(receipt),/changed/);}finally{rmSync(dir,{recursive:true,force:true});}});

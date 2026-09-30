@@ -1,0 +1,10 @@
+{
+  "checkedAt": "2026-09-30T14:58:12.388Z",
+  "account": "04a831172950eda4a2d9b22435dc114d",
+  "dashboard": "https://dash.cloudflare.com/04a831172950eda4a2d9b22435dc114d/workers/plans",
+  "currentPlan": "Free",
+  "cpuLimitMs": 10,
+  "source": "Authenticated dashboard Current plan disabled button under Free",
+  "productionVersion": "bdddc8b4-2d9a-4193-a477-87e7df682c70",
+  "productionModified": false
+}

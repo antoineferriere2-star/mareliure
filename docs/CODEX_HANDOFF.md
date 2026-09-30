@@ -3409,3 +3409,10 @@ Codex — 29 septembre 2026 : préparation coordonnée uniquement, branche local
 
 ## Latest handoff
 Codex — 30 septembre 2026 : préparation opérationnelle #51/#52/#53, sans modification métier. Sauvegarde production en lecture seule, essais isolés et garde de maintenance de recette documentaire. Aucun déploiement, activation de maintenance distante ou migration distante.
+
+## Latest handoff
+Codex — 30 septembre 2026 : recette Worker temporaire autorisée, exclusivement qwf ; CPU, maintenance hébergée, clôture de l'incident CLI et lanceur distant désactivé. Aucune modification du Worker mareliure, migration de production ou fusion.
+
+### 2026-09-30 — preuve CPU/maintenance hébergée, publication toujours bloquée
+
+PR #53 : recette temporaire `mareliure-ops-qa-20260930` exclusivement qwf créée puis supprimée, ainsi que son ouvrage/incident/deux photos. Forfait dashboard Free, 10 ms CPU. Reprises 4 Mio 45,550–49,851 ms et 5 Mio 49,367–121,839 ms : budget non validé malgré succès fonctionnel et Storage identique. Garde HTTP et fermeture previews éprouvés ; gel direct Supabase toujours non validé. Ancienne valeur temporaire CLI exacte rejetée à nouveau, diagnostic désormais à sortie fermée. Préparateur avec Execute inconditionnellement désactivé, pas un lanceur connecté final. Rapport : docs/publication-51-52/RECETTE-HEBERGEE-20260930.md. Tests complets mono-worker 3168/3168 après trois timeouts de scan en parallèle ; typecheck/lint réussis. Aucun changement applicatif, aucune fusion/production/paiement. Prochaine étape : lever CPU et gel direct, puis finaliser exécuteur ; aucune autorisation de publication acquise.
