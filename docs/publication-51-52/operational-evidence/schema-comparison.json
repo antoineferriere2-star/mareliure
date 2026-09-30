@@ -1,0 +1,10 @@
+{
+  "omittedRevokes": 51,
+  "allExtensionPostgresRevokes": true,
+  "remainingDDLIdentical": true,
+  "effectivePrivileges": {
+    "checked": 57,
+    "equal": true,
+    "differences": 0
+  }
+}

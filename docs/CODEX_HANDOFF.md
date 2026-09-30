@@ -3406,3 +3406,6 @@ Codex — 29 septembre 2026 : audit photo volumineuse. Périmètre annoncé : d�
 
 ## Latest handoff
 Codex — 29 septembre 2026 : préparation coordonnée uniquement, branche locale review/publication-51-52-v2. Assemblage #51 puis #52, conservation des types et rapports des deux PR. Précontrôles production autorisés en lecture seule ; aucune migration, fusion distante, publication ou opération payante. Les branches des PR sont inchangées.
+
+## Latest handoff
+Codex — 30 septembre 2026 : préparation opérationnelle #51/#52/#53, sans modification métier. Sauvegarde production en lecture seule, essais isolés et garde de maintenance de recette documentaire. Aucun déploiement, activation de maintenance distante ou migration distante.

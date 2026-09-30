@@ -1,0 +1,10 @@
+{
+  "schedules": {
+    "schedules": []
+  },
+  "subdomain": {
+    "enabled": true,
+    "previews_enabled": true
+  },
+  "routes": []
+}

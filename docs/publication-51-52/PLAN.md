@@ -1,5 +1,7 @@
 # Publication coordonnée #51 / #52 — revue après audit contradictoire
 
+**Complément opérationnel du 30 septembre : [OPERATIONNEL.md](OPERATIONNEL.md).** Il remplace les mentions ci-dessous « sauvegarde non exécutée » et « build générique » : sauvegarde cohérente restaurée, migrations répétées localement et artefact production préparé. Il conserve les blocages CPU et maintenance distante. Aucune autorisation d'exécution n'est déduite de ces essais.
+
 Actualisé le 29 septembre 2026 après correction des régressions. Le précédent assemblage a30a8e9 et ses 3 138 tests ne valident pas ce candidat. **Aucune autorisation d'exécuter n'est déduite de ce document.** Aucune PR fusionnée, migration ou donnée de production écrite. Les correctifs autorisés ont été poussés sur #51/#52 ; aucune opération Stripe/Sendcloud. Seuls des SELECT en transactions `READ ONLY` ont été exécutés sur la production via la CLI Supabase. Les recettes utilisent le projet qwf et le Worker local ; les CI sont exécutées par GitHub.
 
 ## 1. Résultat et références contrôlées

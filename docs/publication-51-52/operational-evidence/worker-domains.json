@@ -1,0 +1,22 @@
+[
+  {
+    "hostname": "mareliure.fr",
+    "service": "mareliure",
+    "environment": "production"
+  },
+  {
+    "hostname": "www.mareliure.fr",
+    "service": "mareliure",
+    "environment": "production"
+  },
+  {
+    "hostname": "finebindery.com",
+    "service": "mareliure",
+    "environment": "production"
+  },
+  {
+    "hostname": "www.finebindery.com",
+    "service": "mareliure",
+    "environment": "production"
+  }
+]
