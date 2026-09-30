@@ -1,0 +1,11 @@
+{
+  "account": "04a831172950eda4a2d9b22435dc114d",
+  "plan": "Workers Paid",
+  "currentPlanVerified": true,
+  "subscriptionActive": true,
+  "baseFeeUSD": 5,
+  "usageBeyondIncluded": true,
+  "additionalOptionSelected": false,
+  "proof": "cloudflare-workers-paid-active.png",
+  "at": "2026-09-30T19:26:08.976Z"
+}

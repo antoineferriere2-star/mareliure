@@ -1,0 +1,58 @@
+{
+  "target": "qwfhebtxeubfmvvdsqdt",
+  "checks": [
+    {
+      "table": "marketplace_cases",
+      "status": 500,
+      "code": "55000"
+    },
+    {
+      "table": "marketplace_commercial_proposals",
+      "status": 500,
+      "code": "55000"
+    },
+    {
+      "table": "marketplace_binder_quotes",
+      "status": 500,
+      "code": "55000"
+    },
+    {
+      "table": "marketplace_binder_invoices",
+      "status": 500,
+      "code": "55000"
+    },
+    {
+      "table": "marketplace_external_settlements",
+      "status": 500,
+      "code": "55000"
+    },
+    {
+      "table": "marketplace_work_logistics_events",
+      "status": 500,
+      "code": "55000"
+    },
+    {
+      "table": "marketplace_work_logistics_photos",
+      "status": 500,
+      "code": "55000"
+    },
+    {
+      "table": "marketplace_binder_works",
+      "status": 500,
+      "code": "55000"
+    },
+    {
+      "table": "marketplace_stripe_webhook_events",
+      "status": 500,
+      "code": "55000"
+    }
+  ],
+  "concurrentRPCDenied": 2,
+  "actualWorkUpdateDenied": true,
+  "actorWriteDenied": 500,
+  "authLoginContinued": true,
+  "privateStorageUploadContinued": true,
+  "privateStorageBytesIdentical": true,
+  "businessUnchanged": true,
+  "at": "2026-09-30T16:16:31.751Z"
+}

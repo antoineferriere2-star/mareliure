@@ -1,0 +1,83 @@
+{
+  "automaticFix": false,
+  "findings": [
+    {
+      "name": "@vitest/mocker",
+      "severity": "moderate",
+      "unchangedFromMain": true,
+      "advisories": [
+        {
+          "title": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+          "url": "https://github.com/advisories/GHSA-82fw-gwwq-j7x9"
+        }
+      ]
+    },
+    {
+      "name": "brace-expansion",
+      "severity": "high",
+      "unchangedFromMain": true,
+      "advisories": [
+        {
+          "title": "brace-expansion: DoS via unbounded expansion length causing an out-of-memory process crash",
+          "url": "https://github.com/advisories/GHSA-mh99-v99m-4gvg"
+        },
+        {
+          "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+          "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895"
+        },
+        {
+          "title": "brace-expansion: DoS via unbounded intermediate arrays, bypassing the CVE-2026-14257 mitigation",
+          "url": "https://github.com/advisories/GHSA-rgw5-rvv9-x895"
+        }
+      ]
+    },
+    {
+      "name": "js-yaml",
+      "severity": "high",
+      "unchangedFromMain": true,
+      "advisories": [
+        {
+          "title": "JS-YAML: Quadratic CPU consumption in !!omap resolution (3.x and 4.x) — CVE-2026-59870 fix not backported",
+          "url": "https://github.com/advisories/GHSA-5p4m-2wfm-xmqj"
+        },
+        {
+          "title": "js-yaml: maxTotalMergeKeys does not limit CPU use for empty merge sources",
+          "url": "https://github.com/advisories/GHSA-2883-xcg3-v3hh"
+        }
+      ]
+    },
+    {
+      "name": "nanoid",
+      "severity": "high",
+      "unchangedFromMain": true,
+      "advisories": [
+        {
+          "title": "nanoid: custom generators can loop indefinitely when size is zero",
+          "url": "https://github.com/advisories/GHSA-2v37-7h3g-55p8"
+        }
+      ]
+    },
+    {
+      "name": "postcss",
+      "severity": "moderate",
+      "unchangedFromMain": true,
+      "advisories": [
+        {
+          "title": "PostCSS: incomplete fix of GHSA-6g55-p6wh-862q — attacker-controlled sourceMappingURL reads arbitrary .map files when `from` is unset",
+          "url": "https://github.com/advisories/GHSA-fxqj-rqcc-2cmp"
+        }
+      ]
+    },
+    {
+      "name": "vitest",
+      "severity": "moderate",
+      "unchangedFromMain": true,
+      "advisories": [
+        {
+          "title": "Vitest: Path Traversal / Arbitrary File Read via @vitest/mocker Redirect Mock",
+          "url": "https://github.com/advisories/GHSA-82fw-gwwq-j7x9"
+        }
+      ]
+    }
+  ]
+}

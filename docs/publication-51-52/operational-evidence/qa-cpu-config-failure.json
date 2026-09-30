@@ -1,0 +1,62 @@
+[
+  {
+    "name": "upload-4MiB",
+    "bytes": 4194304,
+    "started": "2026-09-30T14:43:53.611Z",
+    "ended": "2026-09-30T14:43:54.437Z",
+    "status": 200,
+    "applicationError": true,
+    "resourceLimit": false,
+    "ray": "a43400a57f1a23e6-CDG"
+  },
+  {
+    "name": "upload-5MiB",
+    "bytes": 5242880,
+    "started": "2026-09-30T14:43:54.507Z",
+    "ended": "2026-09-30T14:43:55.299Z",
+    "status": 200,
+    "applicationError": true,
+    "resourceLimit": false,
+    "ray": "a43400ab0b6323e6-CDG"
+  },
+  {
+    "name": "retry-5MiB",
+    "bytes": 5242880,
+    "started": "2026-09-30T14:43:55.373Z",
+    "ended": "2026-09-30T14:43:55.925Z",
+    "status": 200,
+    "applicationError": true,
+    "resourceLimit": false,
+    "ray": "a43400b06e3523e6-CDG"
+  },
+  {
+    "name": "other-workshop",
+    "bytes": 5242880,
+    "started": "2026-09-30T14:43:56.012Z",
+    "ended": "2026-09-30T14:43:56.679Z",
+    "status": 200,
+    "applicationError": true,
+    "resourceLimit": false,
+    "ray": "a43400b47b8f23e6-CDG"
+  },
+  {
+    "name": "anonymous",
+    "bytes": 4194304,
+    "started": "2026-09-30T14:43:56.746Z",
+    "ended": "2026-09-30T14:43:57.230Z",
+    "status": 200,
+    "applicationError": true,
+    "resourceLimit": false,
+    "ray": "a43400b8fc9423e6-CDG"
+  },
+  {
+    "name": "oversize",
+    "bytes": 5242881,
+    "started": "2026-09-30T14:43:57.298Z",
+    "ended": "2026-09-30T14:43:57.943Z",
+    "status": 200,
+    "applicationError": true,
+    "resourceLimit": false,
+    "ray": "a43400bc692523e6-CDG"
+  }
+]

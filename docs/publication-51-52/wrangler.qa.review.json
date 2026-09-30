@@ -1,0 +1,31 @@
+{
+  "name": "mareliure-ops-qa-20260930",
+  "account_id": "04a831172950eda4a2d9b22435dc114d",
+  "main": "qa-entry.mjs",
+  "compatibility_date": "2026-09-25",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "workers_dev": true,
+  "preview_urls": false,
+  "routes": [],
+  "assets": {
+    "binding": "ASSETS",
+    "directory": "../public",
+    "run_worker_first": true
+  },
+  "no_bundle": true,
+  "rules": [
+    {
+      "type": "ESModule",
+      "globs": [
+        "**/*.mjs",
+        "**/*.js"
+      ]
+    }
+  ],
+  "vars": {
+    "SUPABASE_URL": "https://qwfhebtxeubfmvvdsqdt.supabase.co",
+    "QA_MAINTENANCE": "off"
+  }
+}

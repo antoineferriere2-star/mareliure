@@ -3340,3 +3340,94 @@ favori, prestation personnelle, masquage, cibles 44 px, aucun défilement horizo
 - **#47 reste la référence publique :** les anciennes captures `/product/*.webp` de #46 ne sont plus publiées (404 voulu) et son second bloc atelier ne doit pas revenir. Utiliser `ProductShot`, `/photos/product/` et `actions.tsx`. Conserver le SEO repris de #46, `LandingHeader({ workshop })`, les jetons FineBindery, ses cinq dictionnaires complets sans spread partiel anglais et la réserve Stripe « Facultatif, en préparation ».
 - **Points encore ouverts, ordre suggéré :** prochaine action de création d’ouvrage sur un projet clos ; jargon de l’en-tête du parcours FineBindery à localiser ; nom accessible du lien d’accueil de `BuildPublicShell.tsx` avant chargement ; audit des imports et du poids JavaScript public (670 Ko à 1 Mo signalés) avant optimisation ; recette de l’annuaire sans profil publié en production. Pour cette dernière, employer des fixtures temporaires, ne pas committer la route QA ni son changement de `src/routeTree.gen.ts` et contrôler le diff avant restauration afin de préserver les changements tiers. Le défaut TVA mentionné dans l’entrée précédente est désormais clos par #48.
 - **Coordination :** avant tout chantier, fetch, lire les PR ouvertes ou fusionnées depuis 48 h et la fin du présent document sur origin/main, puis annoncer le périmètre ici avant de coder. Revue effectuée pour cette reprise ; la PR documentaire historique #38 reste ouverte et n’est pas modifiée. Les notes de cette branche sont consultables sur GitHub après publication, mais ne font pas partie d’origin/main tant que la PR n’est pas fusionnée.
+
+## Latest handoff
+
+**Agent :** Codex — 28 septembre 2026, `fix/payment-circuits-reconciliation`.
+- Périmètre annoncé avant code : audit des circuits paiement des deux marques, provenance dossier et engagements figés, rapprochement Stripe, idempotence/rejeu, abonnement et factures. Base origin/main bbd4b57 ; #50 reste ouverte, son front hors périmètre. Aucun prix actif modifié, aucune migration production, aucun débit, merge ou déploiement. Livrer une PR dédiée et isoler les décisions commerciales.
+- Livré : garde Checkout complet/expiré/étranger, rapprochement PaymentIntent avec sa session Stripe, signature Worker asynchrone, erreurs webhook toujours rejouables, persistance abonnement non acquittée en cas d'échec. Migration proposée pour circuit dossier, preuve admin, snapshot des devis/factures et unicité du journal de paiement. Calculs 3 % / 25 % séparés, non branchés à l'encaissement.
+- **Ne pas déployer cette fondation comme une activation commerciale** : les nouveaux circuits sont volontairement exclus de l'ancien calculateur de revente. Lire `docs/payment-circuits-audit-20260928.md` pour l'impact et les décisions. Aucun abonnement atelier créé, aucun prix Stripe remplacé, aucun acompte réactivé. Migration production non appliquée ; signature RPC typée localement seulement.
+- Vérifications locales : TypeScript sans erreur, build vert ; lint du code livrable sans erreur (17 avertissements existants ; ancienne fixture non suivie `output/` exclue). Suite générale : 3 092/3 094, deux timeouts de lecture des bundles sous Windows, sans modifier leur limite ; huit tests de migration SQL locale passent après ajout du cas de devis sans fiche client. Résultat CI et contrôle complémentaire des bundles dans la PR. Pas de clés Stripe disponibles : catalogue réel et E2E Stripe test non vérifiés. Aucun appel monétaire.
+- Après build : les deux fichiers de contrôle des bundles repassent intégralement (12 tests, 1,84 s), sans modification des tests ni des timeouts.
+- Reprise autorisée : orientations validées pour nouveaux contrats. Périmètre avant code : premier circuit client propre / règlement externe, accord documenté, journal de règlements/remboursements/litiges sans mouvement bancaire ; recette SQL devis → facture et verrous explicites des circuits Stripe. Même branche/PR #51, aucun merge ni production.
+- Livraison de reprise : `20260928110000_own_client_external_settlement.sql`, accord `own-external-v1` référencé avant acceptation, écran de déclaration des règlements/remboursements/litiges, journal immuable/idempotent, droits atelier et statut payé dérivé des justificatifs. Première activation proposée : client propre sans acompte et règlement externe, zéro frais de paiement plateforme. Pas de rétroqualification des anciens accords.
+- Recette : sept scénarios PostgreSQL local/PGlite avec huit migrations réelles devis/factures et RPC accord → brouillon → émission → suivi ; droits service_role/anon et membre vérifiés. Ce n'est pas une instance Supabase distante. QA panneau desktop et viewport 390 px sans débordement, données fictives ; route temporaire retirée et routeTree restauré. Typecheck/lint/build locaux passent ; deux échecs du passage général (timeout scan secret et format d'ancienne facture) traités puis 72 tests concernés verts. CI finale dans la PR.
+- Référence contractuelle : `docs/payment-activation-contracts.md`. Catalogue Stripe et tests Stripe indisponibles (aucune clé test). Encaissement 3 %, commission 25 %, conciergerie et abonnement 15 € HT restent sous verrou ; pas d'avoir partiel généré, pas de remboursement bancaire automatique. Garder l'ancienne revente acceptée intacte. Aucune fusion, migration production ni publication autorisée dans cette mission.
+
+- Reprise au SHA 94f9592, périmètre annoncé avant code : séparer qualification future des dossiers et contrat de revente opérationnel dans la migration non publiée 0900, tester les deux marques et documenter la recette hébergée manquante. Aucun changement front, merge, déploiement ou migration production.
+- Correctif : qualification future indépendante du contrat legacy_resale, cible explicitement refusée, provenance/contrat acceptés immuables. 19 tests SQL verts dont les deux marques après les deux migrations ; 4 tests bundle PDF repassés après timeout local. Typecheck/build verts ; lint livrable 0 erreur (17 avertissements existants), ancienne fixture output non suivie exclue. Recette Supabase hébergée et génération des types impossibles sans accès test ; procédure et données exactes dans docs/payment-external-hosted-recipe.md. Aucun merge, déploiement, Stripe ou production.
+
+- Reprise recette hébergée : audit en lecture seule de la session Supabase et des variables disponibles. Le projet nommé Ma Reliure - production est hljxohondjvrkzqicexl, également présent dans .env.production.mareliure ; qwfhebtxeubfmvvdsqdt est l'ancienne référence exclue. Aucun projet explicitement QA trouvé. Périmètre de reprise : corriger les garde-fous documentaires, préparer précontrôle SQL en lecture seule et préciser les accès manquants ; aucune écriture distante.
+
+## Latest handoff
+Codex — 29 septembre 2026 : recette hébergée autorisée sur qwfhebtxeubfmvvdsqdt après réconciliation V3.1 réussie. Périmètre de modification : types strictement propres à cette PR et preuves de recette. Aucun déploiement ni fusion ; production exclue. Le fichier généré complet contient aussi les écarts hérités du projet de test et les ajouts de l’autre PR : il ne remplace pas aveuglément types.ts.
+
+## Latest handoff
+
+Codex — 29 septembre 2026 : complément de recette annoncé avant code, PDF dédié aux avoirs immuables, droits et parcours publics sur qwfhebtxeubfmvvdsqdt, diagnostic des scans secrets. Réconciliation terminée : aucun rejeu ni migration. Correctifs sur #51, sans fusion ni déploiement.
+
+### 2026-09-29 — complément recette publique PR #51
+Récapitulatif Fine Bindery : traduire les libellés des choix enregistrés sans traduire le texte libre. Aucune modification des réponses ni des contrats.
+
+## Latest handoff
+Codex — 29 septembre 2026 : complément de recette PR #51, périmètre documentaire. Téléchargement réel du bouton avoir capturé dans Chromium, contenu PDF et refus autre atelier/session absente contrôlés. Demandes publiques existantes poursuivies par Auth réelle et fonctions HTTP de création/validation/accord/consultation. Aucune migration, production, fusion, publication ou opération payante.
+
+## Latest handoff
+Codex — 29 septembre 2026 : clôture navigateur de l’accord client annoncée, deux nouvelles fixtures QA pour conserver les contrats déjà acceptés. Contrôle avant/après en bureau/mobile, état accepté explicite après clic et rechargement, consultation atelier. Documentation des limites et avis de publication restreint au circuit externe ; qwf uniquement, aucun Checkout, migration, fusion ni déploiement.
+
+## Latest handoff
+Codex — 29 septembre 2026 : audit contradictoire avant publication. Périmètre annoncé : retirer le refus d'un accord figé, préserver les acceptations historiques hors éligibilité du circuit externe, tests SQL/UI et recette qwf. Aucun changement de contrat accepté, aucune production, fusion ou publication. Ancien avis favorable suspendu jusqu'aux nouvelles preuves.
+
+## Latest handoff
+Codex — 28 septembre 2026 : périmètre annoncé avant code, logistique manuelle par ouvrage sur feat/work-logistics-manual depuis bbd4b57. Patch externe et commit 2ec6e21 indisponibles. PR #51, #50 et #38 laissées intactes. Journal append-only, transitions sérialisées, photos privées, UI atelier commune aux deux marques ; aucune migration production, fusion ni publication.
+- Livraison logistique : migration additive 20260928130000, journal immuable/versionné, réception physique distincte du transporteur, retour conditionné, preuve atelier finale et photos privées. 3065 tests verts puis 9 tests logistique verts ; recette combinée #51 18 tests verts. TypeScript/lint/build générique passent. QA parcours local et visuel mobile 390 px ; pas de Supabase test accessible, types seulement préparés manuellement. Détails et gate dans docs/work-logistics-manual.md. PR indépendante, aucune production touchée.
+
+- Reprise recette hébergée et Sendcloud : audit en lecture seule ; production actuelle hljxohondjvrkzqicexl confirmée dans le dashboard et la configuration, ancienne référence qwfhebtxeubfmvvdsqdt également exclue. Aucun projet explicitement QA accessible. Périmètre : précontrôle SQL en lecture seule, procédures et fiche d'essai Sendcloud sans achat ni API ; aucune écriture distante.
+
+## Latest handoff
+Codex — 29 septembre 2026 : recette hébergée autorisée sur qwfhebtxeubfmvvdsqdt après réconciliation V3.1 réussie. Périmètre de modification : types strictement propres à cette PR et preuves de recette. Aucun déploiement ni fusion ; production exclue. Le fichier généré complet contient aussi les écarts hérités du projet de test et les ajouts de l’autre PR : il ne remplace pas aveuglément types.ts.
+
+## Latest handoff
+Codex — 29 septembre 2026 : complément de recette annoncé avant code, échecs photos et Storage réel, reprise après erreur, distinction projets réseau / ouvrages propres dans le bandeau multilingue. Projet qwf uniquement, aucune nouvelle migration, fusion ni déploiement.
+
+## Latest handoff
+Codex — 29 septembre 2026 : panne contrôlée du seul serveur local entre Storage et SQL. Défaut prouvé : la reprise crée un second objet et conserve le premier sans association. Périmètre avant code : identifiant stable de photo et récupération après réponse perdue, sans migration ni suppression, uniquement fixtures qwf. Parcours publics à terminer séparément.
+
+## Latest handoff
+Codex — 29 septembre 2026 : concurrence de deux fichiers distincts sur la huitième place reproduite (SQL 8, Storage 9). Périmètre avant code : récupération après échec et nettoyage du seul objet non associé lorsque le constat immuable est confirmé complet ; aucun effacement des anciens objets QA, aucune migration. Recette navigateur mobile des deux marques et rapports séparés des paiements.
+
+## Latest handoff
+Codex — 29 septembre 2026 : périmètre annoncé avant code, traduction complète du journal logistique EN/FR/DE/IT/ES via la langue de l’espace atelier, validation navigateur mobile et bureau. Pas de changement de droits, SQL ou circuit commercial. qwf uniquement ; aucune fusion ni publication.
+
+- Complément exécuté : journal/validation/dates et changement de langue contrôlés dans les cinq langues à 1 440 px et 390 px. Défaut reproduit puis corrigé : erreur photo persistante après une reprise réussie. Reprise SVG refusé → PNG distinct, SQL/Storage 1/1 → 1/1 → 2/2, erreur disparue. Dix tests de traduction ajoutés. Avis et limites dans `docs/qa/20260929/publication-review.md` ; CI du nouveau HEAD requise. Aucune migration ni publication.
+
+## Latest handoff
+Codex — 29 septembre 2026 : audit photo volumineuse. Périmètre annoncé : décodage natif des photos serveur et essai du bundle Worker local avec Storage qwf. Aucun suivi client ajouté, aucune migration, aucune production.
+
+## Latest handoff
+Codex — 29 septembre 2026 : préparation coordonnée uniquement, branche locale review/publication-51-52-v2. Assemblage #51 puis #52, conservation des types et rapports des deux PR. Précontrôles production autorisés en lecture seule ; aucune migration, fusion distante, publication ou opération payante. Les branches des PR sont inchangées.
+
+## Latest handoff
+Codex — 30 septembre 2026 : préparation opérationnelle #51/#52/#53, sans modification métier. Sauvegarde production en lecture seule, essais isolés et garde de maintenance de recette documentaire. Aucun déploiement, activation de maintenance distante ou migration distante.
+
+## Latest handoff
+Codex — 30 septembre 2026 : recette Worker temporaire autorisée, exclusivement qwf ; CPU, maintenance hébergée, clôture de l'incident CLI et lanceur distant désactivé. Aucune modification du Worker mareliure, migration de production ou fusion.
+
+### 2026-09-30 — preuve CPU/maintenance hébergée, publication toujours bloquée
+
+PR #53 : recette temporaire `mareliure-ops-qa-20260930` exclusivement qwf créée puis supprimée, ainsi que son ouvrage/incident/deux photos. Forfait dashboard Free, 10 ms CPU. Reprises 4 Mio 45,550–49,851 ms et 5 Mio 49,367–121,839 ms : budget non validé malgré succès fonctionnel et Storage identique. Garde HTTP et fermeture previews éprouvés ; gel direct Supabase toujours non validé. Ancienne valeur temporaire CLI exacte rejetée à nouveau, diagnostic désormais à sortie fermée. Préparateur avec Execute inconditionnellement désactivé, pas un lanceur connecté final. Rapport : docs/publication-51-52/RECETTE-HEBERGEE-20260930.md. Tests complets mono-worker 3168/3168 après trois timeouts de scan en parallèle ; typecheck/lint réussis. Aucun changement applicatif, aucune fusion/production/paiement. Prochaine étape : lever CPU et gel direct, puis finaliser exécuteur ; aucune autorisation de publication acquise.
+
+## Latest handoff
+Codex — 30 septembre 2026 : dernière préparation #53, coût CPU par étapes du chemin photo sur Worker qwf privé, gel ciblé des tables métier sur qwf avec reprise, dérive dans la connexion transactionnelle du lanceur et essais locaux. Incident CLI clôturé ; aucune nouvelle revue de cet incident, production Execute désactivé. Alternative de capacité minimale à chiffrer si 10 ms impose un changement d’architecture.
+
+### 30 septembre — #53 preuves finales, publication non autorisée
+
+Maintenance qwf : 53 tables métier protégées, neuf refus service-role 55000, deux RPC concurrents refusés, données/historique inchangés ; Auth/Storage continuent avec dérive détectée, objet temporaire retiré/session conservée, reprise confirmée. Worker QA v2 supprimé. Lanceur final désactivé, dérive en même connexion, sauvegarde fraîche liée aux empreintes, rollback/COMMIT incertain réellement éprouvés sur copie Docker restaurée, postgres non superutilisateur. Voir docs/publication-51-52/DERNIERS-BLOCAGES.md et evidence-final. Seul blocage de capacité : forfait Free 10 ms incompatible (JSON 5 Mio seul 14,403 ms). Alternative Workers Paid 5 USD/mois + usage, aucun achat. Aucun code produit changé, aucune fusion/migration/publication production. CI complète requise sur ce HEAD ; aucun double merge des sources #51/#52.
+
+### Workers Paid autorisé — préparation CPU sans publication
+
+Le propriétaire autorise uniquement Workers Paid 5 USD/mois + usage et la recette qwf. Préparation d'un plafond CPU 1 000 ms et nouvel artefact configuré ; aucune modification du Worker mareliure en service, aucune fusion/migration production. La saisie d'un moyen de paiement manquant doit se faire directement dans Cloudflare, jamais dans le chat.
+
+### Workers Paid actif — recette qwf réussie, aucune publication
+
+Abonnement Workers Paid 5 USD/mois + usage activé sur le compte autorisé, forfait courant confirmé ; aucune autre option payante sélectionnée. Alerte compte 10 USD active, informative seulement. Worker QA `mareliure-ops-qa-20260930-paid`, plafond API 1000 ms, qwf uniquement, sans routes/previews ; photos 4/5 Mio acceptées, reprise sans doublon, autre atelier/session absente/5 Mio+1 refusés, deux associations/deux objets relus à octets identiques. CPU réel Cloudflare 13,357–82,370 ms, marge minimale 917,630 ms. Worker et toutes les données temporaires de cette recette supprimés avec contrôles, Auth géré conservé. Production Worker version bdddc8b4 inchangée ; aucun plafond explicite en service (défaut Paid 30s). Nouvel artefact CPU1000 et SHA dans WORKERS-PAID.md. Lanceur distant toujours désactivé ; publication/migrations/fusion non autorisées. Recettes précédentes/incidents non rouverts.

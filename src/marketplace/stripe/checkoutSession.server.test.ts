@@ -67,6 +67,7 @@ const PROPOSAL_ID = "22222222-2222-4222-8222-222222222222";
 
 function acceptedProposal(amount: AmountDueInput, over: Record<string, unknown> = {}) {
   return {
+    paymentCircuit: "legacy_resale",
     id: PROPOSAL_ID,
     caseId: CASE_ID,
     brand: "MA_RELIURE",
@@ -145,7 +146,7 @@ describe("proposition acceptée → Checkout → montant attendu", () => {
   it("une session ouverte qui demande déjà le bon montant est réutilisée, pas dupliquée", async () => {
     h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
     h.payment = { paidAt: null, stripeCheckoutSessionId: "cs_open" };
-    h.stripe.retrieve.mockResolvedValue({ id: "cs_open", status: "open", url: "https://checkout.stripe.test/cs_open", amount_total: 60_000, currency: "eur" });
+    h.stripe.retrieve.mockResolvedValue({ id: "cs_open", mode: "payment", metadata: { case_id: CASE_ID, proposal_id: PROPOSAL_ID }, status: "open", url: "https://checkout.stripe.test/cs_open", amount_total: 60_000, currency: "eur" });
     expect((await run()).url).toBe("https://checkout.stripe.test/cs_open");
     expect(h.stripe.create).not.toHaveBeenCalled();
     expect(h.stripe.expire).not.toHaveBeenCalled();
@@ -154,7 +155,7 @@ describe("proposition acceptée → Checkout → montant attendu", () => {
   it("une session ouverte AVANT la correction (montant HT) n'est jamais réutilisée : expirée puis recréée au TTC", async () => {
     h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
     h.payment = { paidAt: null, stripeCheckoutSessionId: "cs_old" };
-    h.stripe.retrieve.mockResolvedValue({ id: "cs_old", status: "open", url: "https://checkout.stripe.test/cs_old", amount_total: 50_000, currency: "eur" });
+    h.stripe.retrieve.mockResolvedValue({ id: "cs_old", mode: "payment", metadata: { case_id: CASE_ID, proposal_id: PROPOSAL_ID }, status: "open", url: "https://checkout.stripe.test/cs_old", amount_total: 50_000, currency: "eur" });
     const result = await run();
     expect(h.stripe.expire).toHaveBeenCalledWith("cs_old");
     expect(result.url).toBe("https://checkout.stripe.test/cs_new");
@@ -164,13 +165,57 @@ describe("proposition acceptée → Checkout → montant attendu", () => {
   it("une session ouverte dans une autre devise n'est pas réutilisée non plus", async () => {
     h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
     h.payment = { paidAt: null, stripeCheckoutSessionId: "cs_usd" };
-    h.stripe.retrieve.mockResolvedValue({ id: "cs_usd", status: "open", url: "u", amount_total: 60_000, currency: "usd" });
+    h.stripe.retrieve.mockResolvedValue({ id: "cs_usd", mode: "payment", metadata: { case_id: CASE_ID, proposal_id: PROPOSAL_ID }, status: "open", url: "u", amount_total: 60_000, currency: "usd" });
     await run();
     expect(h.stripe.expire).toHaveBeenCalledWith("cs_usd");
   });
 });
 
 describe("ce qui ne doit jamais atteindre Stripe", () => {
+  it.each(["own_client", "network_sale", "concierge", "review_required"])("%s cannot use historical resale checkout", async paymentCircuit => {
+    h.proposal = acceptedProposal(amountInput(50_000, 0, 2000), { paymentCircuit });
+    expect(await codeOf(run())).toBe(409);
+    expect(h.stripe.create).not.toHaveBeenCalled();
+  });
+
+  it("another customer cannot pay or inspect this dossier", async () => {
+    h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
+    expect(await codeOf(createCheckoutForCase({ sb, caseId: CASE_ID, userId: "someone-else", isAdmin: false, origin: "https://mareliure.test" }))).toBe(403);
+    expect(h.stripe.create).not.toHaveBeenCalled();
+  });
+
+  it.each(["paid", "unpaid"])("completed Checkout (%s) waits for reconciliation, never charges twice", async payment_status => {
+    h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
+    h.payment = { paidAt: null, stripeCheckoutSessionId: "cs_complete" };
+    h.stripe.retrieve.mockResolvedValue({ id: "cs_complete", mode: "payment", status: "complete", payment_status, metadata: { case_id: CASE_ID, proposal_id: PROPOSAL_ID } });
+    expect(await codeOf(run())).toBe(409);
+    expect(h.stripe.create).not.toHaveBeenCalled();
+  });
+
+  it("expired checkout uses a new stable generation, not the cached expired URL", async () => {
+    h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
+    h.payment = { paidAt: null, stripeCheckoutSessionId: "cs_expired" };
+    h.stripe.retrieve.mockResolvedValue({ id: "cs_expired", mode: "payment", status: "expired", metadata: { case_id: CASE_ID, proposal_id: PROPOSAL_ID } });
+    await run();
+    expect(h.stripe.create.mock.calls[0][1]).toEqual({ idempotencyKey: `checkout-session-${PROPOSAL_ID}-60000-after-cs_expired` });
+  });
+
+  it("does not create a second session when an open checkout has no usable URL", async () => {
+    h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
+    h.payment = { paidAt: null, stripeCheckoutSessionId: "cs_open" };
+    h.stripe.retrieve.mockResolvedValue({ id: "cs_open", mode: "payment", status: "open", url: null, metadata: { case_id: CASE_ID, proposal_id: PROPOSAL_ID } });
+    expect(await codeOf(run())).toBe(409);
+    expect(h.stripe.create).not.toHaveBeenCalled();
+  });
+
+  it("never reuses or expires a session for a different dossier even with the same price", async () => {
+    h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
+    h.payment = { paidAt: null, stripeCheckoutSessionId: "cs_alien" };
+    h.stripe.retrieve.mockResolvedValue({ id: "cs_alien", mode: "payment", status: "open", url: "u", currency: "eur", amount_total: 60000, metadata: { case_id: "other", proposal_id: PROPOSAL_ID } });
+    expect(await codeOf(run())).toBe(409);
+    expect(h.stripe.create).not.toHaveBeenCalled();
+    expect(h.stripe.expire).not.toHaveBeenCalled();
+  });
   it.each([
     ["TVA non résolue", () => acceptedProposal(amountInput(50_000, 0, null)), 409],
     ["snapshot incohérent (TTC ≠ HT + TVA)", () => acceptedProposal(amountInput(50_000, 0, 2000, { customerTotalTtcCents: 50_000 })), 409],

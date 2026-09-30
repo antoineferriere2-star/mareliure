@@ -1,0 +1,10 @@
+{
+  "result": "PASS",
+  "connectionTerminatedAfterCommit": true,
+  "commitMarkerReceived": false,
+  "automaticReplayRefused": true,
+  "readonlyInspectionHistory": 94,
+  "businessPreserved": true,
+  "productionExecuteEnabled": false,
+  "at": "2026-09-30T16:36:43.163Z"
+}

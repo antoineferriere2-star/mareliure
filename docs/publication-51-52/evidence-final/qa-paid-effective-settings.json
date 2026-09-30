@@ -1,0 +1,23 @@
+{
+  "qa": {
+    "subdomain": {
+      "enabled": true,
+      "previews_enabled": false
+    },
+    "name": "mareliure-ops-qa-20260930-paid",
+    "version": "48712b52-4439-4325-aaeb-a61f41d39dbc",
+    "routes": [],
+    "limits": {
+      "cpu_ms": 1000
+    },
+    "target": "qwfhebtxeubfmvvdsqdt"
+  },
+  "production": {
+    "mutated": false,
+    "worker": "mareliure",
+    "version": "bdddc8b4-2d9a-4193-a477-87e7df682c70",
+    "limits": null,
+    "defaultCpuMsInferredFromPaid": 30000
+  },
+  "at": "2026-09-30T19:27:45.0785018Z"
+}

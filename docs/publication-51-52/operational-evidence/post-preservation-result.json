@@ -1,0 +1,7 @@
+{
+  "oldRelations": 96,
+  "changedRelations": [
+    "storage.buckets",
+    "supabase_migrations.schema_migrations"
+  ]
+}

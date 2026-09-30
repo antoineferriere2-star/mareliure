@@ -1,0 +1,76 @@
+{
+  "subscriptions": {
+    "available": false,
+    "status": 403
+  },
+  "usageModel": "standard",
+  "compatibilityFlags": [
+    "nodejs_compat"
+  ],
+  "worker": "mareliure",
+  "compatibilityDate": "2026-09-25",
+  "bindings": [
+    {
+      "name": "ASSETS",
+      "type": "assets"
+    },
+    {
+      "name": "IP_HASH_SALT",
+      "type": "secret_text"
+    },
+    {
+      "name": "RESEND_API_KEY",
+      "type": "secret_text"
+    },
+    {
+      "name": "SEND_EMAIL_HOOK_SECRET",
+      "type": "secret_text"
+    },
+    {
+      "name": "STRIPE_EXPECTED_ACCOUNT_ID",
+      "type": "secret_text"
+    },
+    {
+      "name": "STRIPE_HEALTHCHECK_TOKEN",
+      "type": "secret_text"
+    },
+    {
+      "name": "STRIPE_PRODUCT_FINE_BINDERY_SERVICE",
+      "type": "secret_text"
+    },
+    {
+      "name": "STRIPE_PRODUCT_MA_RELIURE_SERVICE",
+      "type": "secret_text"
+    },
+    {
+      "name": "STRIPE_PRODUCT_SHIPPING",
+      "type": "secret_text"
+    },
+    {
+      "name": "STRIPE_SECRET_KEY",
+      "type": "secret_text"
+    },
+    {
+      "name": "STRIPE_WEBHOOK_SECRET",
+      "type": "secret_text"
+    },
+    {
+      "name": "SUPABASE_PROJECT_ID",
+      "type": "secret_text"
+    },
+    {
+      "name": "SUPABASE_PUBLISHABLE_KEY",
+      "type": "secret_text"
+    },
+    {
+      "name": "SUPABASE_SERVICE_ROLE_KEY",
+      "type": "secret_text"
+    },
+    {
+      "name": "SUPABASE_URL",
+      "type": "secret_text"
+    }
+  ],
+  "limits": null,
+  "checkedAt": "2026-09-30T13:30:09.8662274Z"
+}

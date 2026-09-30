@@ -17,6 +17,8 @@ jobs:
           cache: npm
       - name: Install
         run: npm ci
+      - name: Publication safeguards
+        run: node --test docs/publication-51-52/*.checks.mjs
       - name: Typecheck
         run: npm run typecheck
       - name: Lint

@@ -1,0 +1,21 @@
+{
+  "projectRef": "qwfhebtxeubfmvvdsqdt",
+  "work": "89dd8e53-1d1f-4061-a62f-6aeead6dcc43",
+  "event": "1b48623d-cd6d-4271-8fba-ff75ccd6a996",
+  "before": {
+    "sql": 1,
+    "storage": 1
+  },
+  "refused": {
+    "sql": 1,
+    "storage": 1
+  },
+  "after": {
+    "sql": 2,
+    "storage": 2
+  },
+  "errorGone": true,
+  "locale": "es",
+  "viewport": "390x844",
+  "file": "qa-1.png"
+}

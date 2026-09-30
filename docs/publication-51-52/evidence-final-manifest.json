@@ -1,0 +1,108 @@
+{
+  "remoteExecuteEnabled": false,
+  "evidence": [
+    {
+      "sha256": "58DC46515238160E6BD7680354936EF72DF0135CF0D15F41F271C15400E7EFE9",
+      "file": "business-guard-install.REVIEW.sql"
+    },
+    {
+      "sha256": "0ECCD7D9402E06B51DEC02F20909042F8C8B0BE3AF0F53BA4DB14C1CB3605DE1",
+      "file": "business-guard-remove.REVIEW.sql"
+    },
+    {
+      "sha256": "F28DD7FA1A202607F2A30BE3EB74747B058F48D240AA42EE830A779AA99DCFCD",
+      "file": "qa-cpu-entry-v2.mjs"
+    },
+    {
+      "sha256": "11C588D1354693318EEA74BA82DB90BB45C49B752546BE631659E593DCEC1085",
+      "file": "qa-cpu-stages-metrics-v2.json"
+    },
+    {
+      "sha256": "68ED66070CB4D83E5F538DB01E79EAC0F758596EFC2090D704FAC40719953AFA",
+      "file": "qa-cpu-stages-v2.json"
+    },
+    {
+      "sha256": "45DD6090D8746F5859E9B98BBDA27FF1CA359370F7C9B9140AC98A3E0E0D0A72",
+      "file": "qa-v2-cleanup.json"
+    },
+    {
+      "sha256": "7B5B395362DB82E61F6FABCE2264337909F808C4980788725270D0ECFA283923",
+      "file": "qa-v2-inventory.json"
+    },
+    {
+      "sha256": "A014761169BFA41166A030D2B077D11203B027F296CCAF6E8FCD189008F1F6F6",
+      "file": "qwf-business-after-v2.json"
+    },
+    {
+      "sha256": "96116CEE577ACB45C9CB09DD2FFE5381554DA8FE51E05A649E22AD958DD84A77",
+      "file": "qwf-business-before-v2.json"
+    },
+    {
+      "sha256": "03A7E315F8C9C8C48869376DBCB0856AF3821A4FB42DA5FCD03E74C0A5715DAE",
+      "file": "qwf-business-during-v2.json"
+    },
+    {
+      "sha256": "C8065F5484D25B421DFBAC0F0EDF4318B8077F1E104B2E4505B4EF65C46B8AFF",
+      "file": "qwf-guard-installed-v2.json"
+    },
+    {
+      "sha256": "4D52B5368FB54E8F7EF574AAFEBB8108FCB0C806499510B304999F7AC4AABE5E",
+      "file": "qwf-guard-removed-v2.json"
+    },
+    {
+      "sha256": "0B016508D503E0AC567CF179B430DF198333FAF4792727BFB913803C1F0A65AC",
+      "file": "qwf-maintenance-resume-v2.json"
+    },
+    {
+      "sha256": "6D55243FEA6B548806B619E72AFC496A0EA98FDFCB4E09B8DB4D9486738003AF",
+      "file": "qwf-maintenance-tests.json"
+    },
+    {
+      "sha256": "0C0FDA6BF48ECD7D22C3A863C046523630021A5708EC5DFBC3FF2155B2D7700C",
+      "file": "qwf-maintenance-window-v2.json"
+    },
+    {
+      "sha256": "179356C784B26DBDC3AD35FA52D4ABD3C5149CCEBE47915E408A9768168EDBB5",
+      "file": "qwf-managed-before-v2.json"
+    },
+    {
+      "sha256": "1F702F43D31AEAE59D31E6097721E23DDE30D782423FE874CEFADF639358876C",
+      "file": "qwf-managed-during-v2.json"
+    },
+    {
+      "sha256": "87284D648D769C83F9E7C9A5F683CFCF6528076FB8F8D44DAD18DECAF97977E3",
+      "file": "runner-local-v3-results.json"
+    },
+    {
+      "sha256": "B34033F90B75B1AC3BA6B5D83A73BD509FFA395A25BE0C7C498DDC1F456ABCAE",
+      "file": "runner-local-v3-uncertain-results.json"
+    }
+  ],
+  "launcher": [
+    {
+      "sha256": "5695F86AF7CAB8E65DA529809C5FE0DB9F0B76CA2885ED0385841901BD1DE6C7",
+      "file": "production-runner.mjs"
+    },
+    {
+      "sha256": "0E71B7254C1A3011B68BB4DA1BF10A70F1C2AEEEE0CAFE76AD0D7656FA9B9923",
+      "file": "execution-fingerprints.mjs"
+    },
+    {
+      "sha256": "DFCC96D6FA2C2B1650052EC13D853D51B042BFDFF8537D09BF5981117995CD29",
+      "file": "publication-contract.mjs"
+    },
+    {
+      "sha256": "EB12A657976C088E22474DF4B6EB46118AD0A573EDA7FC03744634BECB9CF60A",
+      "file": "production-runner-cli.mjs"
+    },
+    {
+      "sha256": "E454B6EAD009E3A4B91C3F3535E5D42CA62FD0CFC39A49C02FAE1B80657F11BF",
+      "file": "prepare-production-execution.mjs"
+    },
+    {
+      "sha256": "490420FD07831CBB2DF1A741059D032C0EC0B812B128D231805F454A805F300D",
+      "file": "run-production-preparation.ps1"
+    }
+  ],
+  "productArtifactChanged": false
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "brand": "FINE_BINDERY",
+    "mode": "parcel",
+    "workId": "89dd8e53-1d1f-4061-a62f-6aeead6dcc43",
+    "steps": [
+      "outbound",
+      "carrier_delivered",
+      "received",
+      "incident",
+      "return",
+      "carrier_delivered",
+      "completed"
+    ],
+    "overflow": false,
+    "finalAtelierDeclaration": true,
+    "sqlKinds": [
+      "outbound",
+      "carrier_delivered",
+      "received",
+      "incident",
+      "return",
+      "carrier_delivered",
+      "completed"
+    ],
+    "complete": true
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "mode": "hand",
+    "workId": "c6d77645-e806-454f-947d-0d9e6a6b4441",
+    "steps": [
+      "outbound",
+      "received",
+      "incident",
+      "return",
+      "completed"
+    ],
+    "overflow": false,
+    "finalAtelierDeclaration": true,
+    "sqlKinds": [
+      "outbound",
+      "received",
+      "incident",
+      "return",
+      "completed"
+    ],
+    "complete": true
+  },
+  {
+    "brand": "MA_RELIURE",
+    "mode": "parcel",
+    "workId": "2c3b374e-6c51-449e-ad3c-f3443e694410",
+    "steps": [
+      "outbound",
+      "carrier_delivered",
+      "received",
+      "incident",
+      "return",
+      "carrier_delivered",
+      "completed"
+    ],
+    "overflow": false,
+    "finalAtelierDeclaration": true,
+    "sqlKinds": [
+      "outbound",
+      "carrier_delivered",
+      "received",
+      "incident",
+      "return",
+      "carrier_delivered",
+      "completed"
+    ],
+    "complete": true
+  },
+  {
+    "brand": "MA_RELIURE",
+    "mode": "hand",
+    "workId": "60f1ca9e-3666-4c05-94b1-1a797bfec16a",
+    "steps": [
+      "outbound",
+      "received",
+      "incident",
+      "return",
+      "completed"
+    ],
+    "overflow": false,
+    "finalAtelierDeclaration": true,
+    "sqlKinds": [
+      "outbound",
+      "received",
+      "incident",
+      "return",
+      "completed"
+    ],
+    "complete": true
+  }
+]

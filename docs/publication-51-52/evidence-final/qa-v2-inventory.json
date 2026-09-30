@@ -1,0 +1,12 @@
+{
+  "versions": [
+    "670d91e5-6a0f-4e31-b214-a0f63d02777d",
+    "2d2c923f-b015-44ea-837c-707de1b57b83"
+  ],
+  "routes": [],
+  "subdomain": {
+    "enabled": true,
+    "previews_enabled": false
+  },
+  "name": "mareliure-ops-qa-20260930-v2"
+}

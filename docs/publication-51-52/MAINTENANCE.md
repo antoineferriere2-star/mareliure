@@ -1,0 +1,20 @@
+# Maintenance : mécanisme préparé, pas activé
+
+## Résultats locaux
+
+`node --test docs/publication-51-52/maintenance-gate.checks.mjs` : 5 tests réussis, dont un serveur HTTP local. Les deux hôtes sont bloqués avant appel du serveur applicatif, y compris GET, POST et webhook ; réponse 503 / Retry-After / no-store. Un jeton opérateur privé ne permet que GET/HEAD sur des chemins explicitement relus. Il ne permet jamais un POST d'opérateur. La désactivation est testée. Aucun jeton réel dans ces fichiers.
+
+`maintenance-local.sql` éprouvé dans une transaction annulée sur la copie Supabase restaurée : INSERT des rôles `anon`, `authenticated`, `service_role` refusés ; TRUNCATE de `service_role` refusé ; lecture opérateur possible ; aucune ligne de test conservée et schéma de garde absent après rollback. Ce contrôle utilise `session_user`, non un paramètre GUC falsifiable ou le `current_user` d'une fonction SECURITY DEFINER.
+
+## Protocole à finaliser avant autorisation d'exécution
+
+1. Inventorier les routes Cloudflare des deux domaines, www, workers.dev et les éventuelles URL de prévisualisation. Le Worker séparé `maintenance-worker.mjs` est une préparation : liaison de service APPLICATION vers `mareliure`, sans boucle de fetch. Il doit couvrir **tous** les points d'entrée, et l'accès direct workers.dev/preview au Worker applicatif doit être fermé. La règle de routes doit être exportée avant modification pour sa restauration exacte.
+2. Mettre le jeton opérateur dans un secret runtime, jamais dans une URL, un bundle client ou un journal. Réduire les chemins autorisés aux lectures inspectées et documents existants. Les server functions GET qui créent un document, une session ou un objet ne sont pas automatiquement des lectures autorisées.
+3. Suspendre les écrivains directs connus : sessions dashboard SQL, tâches CLI, intégrations REST/RPC, scripts manuels, fonctions Edge et tâches planifiées. Relever `cron.job`, fonctions et webhooks déployés avant la fenêtre. Le garde SQL de démonstration n'est **pas** encore un script de maintenance production approuvé : épingler l'identité `session_user` réelle du lanceur hébergé, les propriétaires/grants et le manifeste des tables, installer le garde transactionnellement et le reporter aux cinq nouvelles tables avant COMMIT. Ne jamais accorder de nouveaux droits au rôle hébergé pour passer un contrôle.
+4. Auth et Storage sont des services gérés. Aucun garde sur `public` ni règle sur mareliure.fr ne les bloque. La maintenance doit arrêter les consommateurs connus, laisser expirer les envois préautorisés et contrôler la dérive de leurs inventaires. Si un écrivain Storage externe ou une URL d'envoi encore valide ne peut être neutralisé, **ne pas ouvrir la fenêtre de migration**. Ne pas prétendre disposer d'un gel global de Supabase. Les éventuelles écritures Auth sans effet métier sont conservées, pas restaurées automatiquement.
+5. Vérifier 503 depuis une session sans jeton sur les deux marques, leurs alias et les webhooks ; vérifier refus SQL/RPC des rôles applicatifs ; vérifier absence de sessions/transactions mutantes restantes. Les webhooks ne doivent jamais recevoir 200 sans traitement. Pas de paiement Stripe pour les tester.
+6. Après approbation distincte seulement : sauvegarde fraîche restaurée/comparée, migration, postcontrôles, nouveau Worker, lectures opérateur. Retirer les gardes SQL et les routes de maintenance uniquement après avis vert ; restaurer exactement les routes sauvegardées. Contrôler la reprise et les nouvelles livraisons des événements réels sans en générer.
+
+## Limite bloquante
+
+Les composants sont éprouvés localement, **pas une activation complète sur l'infrastructure Cloudflare/Supabase**. La couverture effective des alias, fonctions/cron et écrivains directs n'est pas encore prouvée. Ne pas qualifier le gel de production de prêt sur la seule base des cinq tests. La consigne actuelle interdit toute activation distante : aucune route, aucun webhook et aucun grant distant n'a été modifié.

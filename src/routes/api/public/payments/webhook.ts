@@ -61,6 +61,7 @@ async function handleSubscriptionEvent(subscription: Stripe.Subscription) {
       workspaceId,
       subscriptionId: subscription.id,
     });
+    throw error;
   }
 }
 
@@ -85,6 +86,7 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
       workspaceId,
       subscriptionId: subscription.id,
     });
+    throw error;
   }
 }
 
@@ -115,6 +117,7 @@ async function handleCheckoutCompleted(session: Stripe.Checkout.Session) {
       workspaceId,
       checkoutSessionId: session.id,
     });
+    throw error;
   }
 }
 

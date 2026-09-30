@@ -1,0 +1,10 @@
+{
+  "result": "prepared-not-deployed",
+  "files": 830,
+  "cpu_ms": 1000,
+  "manifestSha256": "CFFAE4DA529D215309BF133BBAEB144B735A67C7D233AD886776296361EE3FF5",
+  "changedFiles": [
+    "server/wrangler.json"
+  ],
+  "archiveSha256": "45C1DD7A13385E377504B667205A268FE8C7DF7BA2ACD6C5201B6A7E62AD85B2"
+}

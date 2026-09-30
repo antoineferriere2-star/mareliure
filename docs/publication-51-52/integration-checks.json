@@ -1,0 +1,38 @@
+{
+  "applicationSnapshot": "4783f5ef6affc6a84fc27a53b338de438e44ba33",
+  "main": "bbd4b57aed33722837ae4a6316560b4ee341df39",
+  "pr51": "26035dc2cf17d3d80a36712b99e670bd3eab51e0",
+  "pr52": "6e0e7972170a9386363d05d4500310328fba0428",
+  "node": "24.14.0",
+  "npm": "11.9.0",
+  "install": "fresh npm ci, independent directory; PASS",
+  "typecheck": "PASS",
+  "lint": {
+    "errors": 0,
+    "warnings": 17
+  },
+  "tests": {
+    "files": 234,
+    "passed": 3168,
+    "failed": 0,
+    "durationSeconds": 175.79,
+    "maxWorkers": 1
+  },
+  "build": "PASS (generic validation artifact; not for deployment)",
+  "ciApplication": "https://github.com/antoineferriere2-star/mareliure/actions/runs/36595518507",
+  "ciApplicationResult": "SUCCESS",
+  "postBuildScans": {
+    "passed": 10,
+    "files": 2,
+    "workerPdfScanMs": 385
+  },
+  "supersedes": "a30a8e9 / 3138 tests",
+  "logSha256": {
+    "install": "986c4509756b68720f24682805491e19d6ffb6c10e3c7f62564582f9cc139017",
+    "typecheck": "e5046545a3a9fcc0cf6950c9402c78a2b227f07a6a658d2a0c1fbc5f4a194da0",
+    "lint": "e46a0edc4fa7e7634cfcb9c81619a41ad6f6ea6dd134c3885b66513555a1f0a0",
+    "test": "85b64113e76e48c18848efb40a4663b3fae4809dbb9b43b592b9c4cce805bd52",
+    "build": "a87b2d8882f006add5e048554065c0b15707d7004d4692b769d98a37697e070e",
+    "postbuild": "56b89e048a3cad79d52f6df6474d85a304b92c67e50ea61a996351125cc9f79e"
+  }
+}

@@ -1,0 +1,245 @@
+{
+  "project": "qwfhebtxeubfmvvdsqdt",
+  "results": [
+    {
+      "quoteId": "35220fd6-2828-481f-82a3-c8c122d5b443",
+      "status": "draft",
+      "deposit": 0,
+      "past": false,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "fbb52139-e85a-4bd9-b492-c7e52b2f668e",
+      "status": "draft",
+      "deposit": 0,
+      "past": false,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "aeb985e5-fa7f-44df-a758-1b4f76c3e407",
+      "status": "draft",
+      "deposit": 0,
+      "past": true,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "56d8ceec-5f5d-4288-a446-3b062b2a2114",
+      "status": "draft",
+      "deposit": 0,
+      "past": true,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "97ec1232-ca4d-4455-a573-74b7af02dd34",
+      "status": "draft",
+      "deposit": 1000,
+      "past": false,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "16fd3902-6a4a-4736-b157-e3a38bf82244",
+      "status": "draft",
+      "deposit": 1000,
+      "past": false,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "a8e3d7b4-f7a6-4311-8f64-8dce3f55eb03",
+      "status": "draft",
+      "deposit": 1000,
+      "past": true,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "f20b837f-ef97-475c-9c63-3123c738b72f",
+      "status": "draft",
+      "deposit": 1000,
+      "past": true,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "98a2efe7-ffb0-4a15-928c-d2f62a8554a5",
+      "status": "sent",
+      "deposit": 0,
+      "past": false,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "10074e0e-043f-4c76-886b-58e4b4726b48",
+      "status": "sent",
+      "deposit": 0,
+      "past": false,
+      "own": true,
+      "external": true,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "fd360db9-193b-4ef3-b86f-4f026020ca11",
+      "status": "sent",
+      "deposit": 0,
+      "past": true,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "3d616c99-2f4b-4864-8237-eede39612d24",
+      "status": "sent",
+      "deposit": 0,
+      "past": true,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "aa004a61-79ee-4f85-880f-efa5f1e21b09",
+      "status": "sent",
+      "deposit": 1000,
+      "past": false,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "84f915ad-8c3e-4ed5-a2c3-09ddda6feaea",
+      "status": "sent",
+      "deposit": 1000,
+      "past": false,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "d87f7e7e-6743-4062-907c-f26076fff2f5",
+      "status": "sent",
+      "deposit": 1000,
+      "past": true,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "b4c37f66-92e4-435e-8db7-af179711f644",
+      "status": "sent",
+      "deposit": 1000,
+      "past": true,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "e5261d5f-b1f8-4138-8970-b72938cbb5a6",
+      "status": "expired",
+      "deposit": 0,
+      "past": false,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "b6c854a6-cc59-4de8-98c2-5c7478298e50",
+      "status": "expired",
+      "deposit": 0,
+      "past": false,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "990bd7dd-dd22-4b0c-8bc7-a22a9f320beb",
+      "status": "expired",
+      "deposit": 0,
+      "past": true,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "4ca90eed-8638-4047-9930-6951471f11cc",
+      "status": "expired",
+      "deposit": 0,
+      "past": true,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "06f86a29-afb6-4777-a8f3-0ece7981c112",
+      "status": "expired",
+      "deposit": 1000,
+      "past": false,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "e29963d7-e164-40ae-8dea-bc1ef26342d9",
+      "status": "expired",
+      "deposit": 1000,
+      "past": false,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "0b4769d7-b3fc-4a71-996c-608c82f6843b",
+      "status": "expired",
+      "deposit": 1000,
+      "past": true,
+      "own": false,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    },
+    {
+      "quoteId": "ced77e32-61a9-4d8e-8995-5f7b4f89f017",
+      "status": "expired",
+      "deposit": 1000,
+      "past": true,
+      "own": true,
+      "external": false,
+      "authenticatedAcceptance": "PASS",
+      "refusalDeniedHttpAndSql": "PASS"
+    }
+  ]
+}

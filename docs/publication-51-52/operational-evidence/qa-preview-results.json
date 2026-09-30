@@ -1,0 +1,22 @@
+[
+  {
+    "prefix": "9b4f7fd9",
+    "auth": false,
+    "status": 403
+  },
+  {
+    "prefix": "9b4f7fd9",
+    "auth": true,
+    "status": 403
+  },
+  {
+    "prefix": "5b6d1a2d",
+    "auth": false,
+    "status": 403
+  },
+  {
+    "prefix": "5b6d1a2d",
+    "auth": true,
+    "status": 503
+  }
+]

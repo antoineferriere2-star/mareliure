@@ -388,3 +388,6 @@ mieux" combiné dans la fonction pure.
   qui existait, appliqué désormais à un prix Ma Reliure mieux plafonné.
 - Le 80/20 atelier reste une politique documentée, non implémentée (aucun
   Stripe Connect).
+# Évolution du 28 septembre 2026
+
+Ce document décrit le modèle historique de revente. La cible distingue désormais client propre, vente apportée et conciergerie : voir [l'audit paiement et ses limites d'activation](payment-circuits-audit-20260928.md). Aucun contrat accepté ni prix actif ne doit être requalifié silencieusement en commission.

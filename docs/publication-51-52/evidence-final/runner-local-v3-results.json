@@ -1,0 +1,62 @@
+{
+  "localDatabase": "publication_runner_v3_20260930",
+  "role": "postgres",
+  "superuser": false,
+  "scenarios": [
+    {
+      "name": "schema-drift",
+      "result": "PASS",
+      "expectedFailure": "schema_drift",
+      "migrationsWritten": 0
+    },
+    {
+      "name": "history-drift",
+      "result": "PASS",
+      "expectedFailure": "history_drift",
+      "migrationsWritten": 0
+    },
+    {
+      "name": "business-drift",
+      "result": "PASS",
+      "expectedFailure": "business_drift",
+      "migrationsWritten": 0
+    },
+    {
+      "name": "precommit-error",
+      "result": "PASS",
+      "allDDLAndHistoryRolledBack": true
+    },
+    {
+      "name": "successful-atomic-execution",
+      "result": "PASS",
+      "historicalMigrationsPreserved": 91,
+      "addedMigrations": 3,
+      "businessDataPreserved": true,
+      "existingBucketMetadataPreserved": true,
+      "newTablesRemainGuarded": true
+    },
+    {
+      "name": "automatic-replay",
+      "result": "PASS",
+      "refusedBeforeConnection": true
+    }
+  ],
+  "managedBefore": {
+    "auth_users": 6,
+    "auth_sessions": 10,
+    "auth_users_hash": "ede731f8ac7bfadf5c332db59dd796a3",
+    "storage_objects": 20,
+    "storage_objects_hash": "b8ebc18c08cbd71ffc136c110e4d687a",
+    "existing_buckets_hash": "6bc79e20cc8bb0ddd8d56b0e468f5d1f"
+  },
+  "managedAfter": {
+    "auth_users": 6,
+    "auth_sessions": 10,
+    "auth_users_hash": "ede731f8ac7bfadf5c332db59dd796a3",
+    "storage_objects": 20,
+    "storage_objects_hash": "b8ebc18c08cbd71ffc136c110e4d687a",
+    "existing_buckets_hash": "6bc79e20cc8bb0ddd8d56b0e468f5d1f"
+  },
+  "productionExecuteEnabled": false,
+  "at": "2026-09-30T16:32:31.545Z"
+}

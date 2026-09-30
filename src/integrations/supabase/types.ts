@@ -1570,6 +1570,7 @@ export type Database = {
           vat_mention: string | null
           vat_regime: string
           width_mm: number | null
+                  payment_snapshot: Json | null
         }
         Insert: {
           amount_paid_cents?: number
@@ -1651,6 +1652,7 @@ export type Database = {
           vat_mention?: string | null
           vat_regime: string
           width_mm?: number | null
+                  payment_snapshot?: Json | null
         }
         Update: {
           amount_paid_cents?: number
@@ -1732,6 +1734,7 @@ export type Database = {
           vat_mention?: string | null
           vat_regime?: string
           width_mm?: number | null
+                  payment_snapshot?: Json | null
         }
         Relationships: [
           {
@@ -2164,6 +2167,7 @@ export type Database = {
           vat_regime: string
           width_mm: number | null
           work_id: string | null
+                  payment_snapshot: Json | null
         }
         Insert: {
           binder_id: string
@@ -2206,6 +2210,7 @@ export type Database = {
           vat_regime: string
           width_mm?: number | null
           work_id?: string | null
+                  payment_snapshot?: Json | null
         }
         Update: {
           binder_id?: string
@@ -2248,6 +2253,7 @@ export type Database = {
           vat_regime?: string
           width_mm?: number | null
           work_id?: string | null
+                  payment_snapshot?: Json | null
         }
         Relationships: [
           {
@@ -3115,6 +3121,8 @@ export type Database = {
           validated_at: string | null
           validated_by: string | null
           version: number
+                  payment_provenance: Json | null
+                  payment_circuit: string
         }
         Insert: {
           accepted_at?: string | null
@@ -3173,6 +3181,8 @@ export type Database = {
           validated_at?: string | null
           validated_by?: string | null
           version: number
+                  payment_provenance?: Json | null
+                  payment_circuit?: string
         }
         Update: {
           accepted_at?: string | null
@@ -3231,6 +3241,8 @@ export type Database = {
           validated_at?: string | null
           validated_by?: string | null
           version?: number
+                  payment_provenance?: Json | null
+                  payment_circuit?: string
         }
         Relationships: [
           {
@@ -3818,11 +3830,250 @@ export type Database = {
         }
         Relationships: []
       }
+          marketplace_own_client_agreements: {
+        Row: {
+          accepted_at: string
+          actor_id: string
+          binder_id: string
+          evidence: string
+          quote_id: string
+          terms: Json
+        }
+        Insert: {
+          accepted_at?: string
+          actor_id: string
+          binder_id: string
+          evidence: string
+          quote_id: string
+          terms: Json
+        }
+        Update: {
+          accepted_at?: string
+          actor_id?: string
+          binder_id?: string
+          evidence?: string
+          quote_id?: string
+          terms?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_own_client_agreements_binder_id_fkey"
+            columns: ["binder_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_own_client_agreements_quote_id_fkey"
+            columns: ["quote_id"]
+            isOneToOne: true
+            referencedRelation: "marketplace_binder_quotes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+          marketplace_external_settlements: {
+        Row: {
+          actor_id: string
+          amount_cents: number
+          created_at: string
+          currency: string
+          evidence: string
+          id: string
+          invoice_id: string
+          kind: string
+        }
+        Insert: {
+          actor_id: string
+          amount_cents: number
+          created_at?: string
+          currency: string
+          evidence: string
+          id: string
+          invoice_id: string
+          kind: string
+        }
+        Update: {
+          actor_id?: string
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          evidence?: string
+          id?: string
+          invoice_id?: string
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_external_settlements_invoice_id_fkey"
+            columns: ["invoice_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_invoices"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+          marketplace_case_payment_circuits: {
+        Row: {
+          case_id: string
+          circuit: string
+          evidence_event_id: string | null
+          notes: string
+          provenance: Json
+          reviewed_at: string | null
+          reviewed_by: string | null
+        }
+        Insert: {
+          case_id: string
+          circuit: string
+          evidence_event_id?: string | null
+          notes?: string
+          provenance: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Update: {
+          case_id?: string
+          circuit?: string
+          evidence_event_id?: string | null
+          notes?: string
+          provenance?: Json
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_case_payment_circuits_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: true
+            referencedRelation: "marketplace_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketplace_case_payment_circuits_evidence_event_id_fkey"
+            columns: ["evidence_event_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+          marketplace_work_logistics_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          details: Json
+          id: string
+          kind: string
+          sequence: number
+          work_id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          details: Json
+          id: string
+          kind: string
+          sequence: number
+          work_id: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          details?: Json
+          id?: string
+          kind?: string
+          sequence?: number
+          work_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_work_logistics_events_work_id_fkey"
+            columns: ["work_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_binder_works"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_work_logistics_photos: {
+        Row: {
+          actor_id: string
+          created_at: string
+          event_id: string
+          id: string
+          path: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          event_id: string
+          id: string
+          path: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          event_id?: string
+          id?: string
+          path?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_work_logistics_photos_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_work_logistics_events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      // Migration 20260928090000, local schema contract; production is not migrated.
+      marketplace_own_contract: {
+        Args: { p_actor: string; p_binder: string; p_quote: string }
+        Returns: Json
+      }
+      marketplace_accept_own_quote: {
+        Args: {
+          p_actor: string
+          p_binder: string
+          p_evidence: string
+          p_quote: string
+          p_revision: string
+        }
+        Returns: undefined
+      }
+      marketplace_external_settlement_state: {
+        Args: { p_actor: string; p_binder: string; p_invoice: string }
+        Returns: Json
+      }
+      marketplace_record_external_settlement: {
+        Args: {
+          p_actor: string
+          p_amount: number
+          p_binder: string
+          p_evidence: string
+          p_id: string
+          p_invoice: string
+          p_kind: string
+        }
+        Returns: undefined
+      }
+      marketplace_set_case_payment_circuit: {
+        Args: {
+          p_actor: string
+          p_case_id: string
+          p_circuit: string
+          p_event_id: string
+          p_notes: string
+        }
+        Returns: undefined
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -4083,6 +4334,24 @@ export type Database = {
           playbook_version_id: string
           reused_existing: boolean
         }[]
+      }
+          marketplace_own_quote_eligible: {
+        Args: { p_binder: string; p_quote: string }
+        Returns: boolean
+      }
+          marketplace_external_member: {
+        Args: { p_actor: string; p_binder: string }
+        Returns: undefined
+      }
+          marketplace_work_logistics: {
+        Args: {
+          p_action: string
+          p_actor: string
+          p_binder: string
+          p_data: Json
+          p_work: string
+        }
+        Returns: Json
       }
     }
     Enums: {

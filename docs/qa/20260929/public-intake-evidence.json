@@ -1,0 +1,25 @@
+{
+  "projectRef": "qwfhebtxeubfmvvdsqdt",
+  "scenarios": [
+    {
+      "brand": "FINE_BINDERY",
+      "caseId": "dae7e3ed-6167-479f-a915-16eeda1013b3",
+      "sessionStatus": "submitted",
+      "photos": 1,
+      "submissionLocale": null,
+      "preferredLanguage": null,
+      "triaged": false,
+      "seedLocale": "en"
+    },
+    {
+      "brand": "MA_RELIURE",
+      "caseId": "8c6505a5-8013-409c-b15f-17b79520745b",
+      "sessionStatus": "submitted",
+      "photos": 1,
+      "submissionLocale": null,
+      "preferredLanguage": null,
+      "triaged": false,
+      "seedLocale": null
+    }
+  ]
+}

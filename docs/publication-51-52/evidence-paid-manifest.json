@@ -1,0 +1,62 @@
+{
+  "productionDeployed": false,
+  "paidActive": true,
+  "evidence": [
+    {
+      "file": "qa-paid-cleanup-attempt.json",
+      "sha256": "5F2584507AE6DA18DBD21ECB9C401199EB1B6EE46839798D8A4C94ACB8EE181E"
+    },
+    {
+      "file": "qa-paid-cleanup-executed.sql",
+      "sha256": "E99098E67F5394FE73254CDFCA1A5C659ECB3C53D3292FE669B9D05C13A1F3A6"
+    },
+    {
+      "file": "qa-paid-cleanup-result.json",
+      "sha256": "54C1F728A807009E22B186C2884E94896EE72DC3D8A0B813D7D85136F677E485"
+    },
+    {
+      "file": "qa-paid-cleanup-storage-result.json",
+      "sha256": "44B46C7EAA699C10BEE5079733803BABC3007672D37A4009B4FEE64B0091F1DE"
+    },
+    {
+      "file": "qa-paid-cpu-metrics.json",
+      "sha256": "507048A18E115590DD2F759321FC8AAF688FBF67D12A5315A121BB96BE67DD61"
+    },
+    {
+      "file": "qa-paid-effective-settings.json",
+      "sha256": "41AA649183FDF64895B2110FC461248C3A752D578BDBC31999F69DF3DCB8737C"
+    },
+    {
+      "file": "qa-paid-requests.json",
+      "sha256": "BDCD1BD0927C79623CED9F1A88DB5089CD8ABA37BE9188D69C044ECF56046141"
+    },
+    {
+      "file": "qa-paid-storage-results.json",
+      "sha256": "A60B50D7AFBB287BFD0E703C6C32D057A32D137D7A8C24AF2D7F35E9AE78CFE5"
+    },
+    {
+      "file": "qa-paid-summary.json",
+      "sha256": "6BC51A2085D15181FCA05622B1367A891591460B459A360C82AD00638AF71BD5"
+    },
+    {
+      "file": "qa-paid-test.REVIEW.cjs",
+      "sha256": "FCA9A267B6C57B9E595CF20B6C29B5F584A6A81292132A003980FD34821B4B3A"
+    },
+    {
+      "file": "qa-paid-worker-cleanup.json",
+      "sha256": "CDE46597C13F94E13CAE9DFFA39B0E5C4A18D34E139954D821D005D417D97917"
+    },
+    {
+      "file": "workers-paid-confirmed.json",
+      "sha256": "62449E637C5153B415B928926B813AC625E05EC100739A37012B0BAA860BB3FF"
+    },
+    {
+      "file": "cloudflare-workers-paid-active.png",
+      "sha256": "F86C1715EDDCB26D132AAFA5F55E20A51A7525B17BFBBF6E49B8D3225F683E99"
+    },
+    {
+      "file": "wrangler.qa-paid.json",
+      "sha256": "79F106521A68F8482AFE468DB0B04260074AF41245EB72A6E9A0EA585578D3CC"
+    }
+  ]
+}

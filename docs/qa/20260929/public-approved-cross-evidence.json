@@ -1,0 +1,10 @@
+[
+  {
+    "brand": "MA_RELIURE",
+    "approvedUnassignedWorkshopDenied": true
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "approvedUnassignedWorkshopDenied": true
+  }
+]

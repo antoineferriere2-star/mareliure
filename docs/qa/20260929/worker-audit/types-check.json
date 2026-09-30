@@ -1,0 +1,65 @@
+{
+  "project": "qwfhebtxeubfmvvdsqdt",
+  "checks": [
+    {
+      "repo": "mareliure-workspace-i18n",
+      "group": "Tables",
+      "name": "marketplace_own_client_agreements",
+      "result": "identical"
+    },
+    {
+      "repo": "mareliure-workspace-i18n",
+      "group": "Tables",
+      "name": "marketplace_external_settlements",
+      "result": "identical"
+    },
+    {
+      "repo": "mareliure-workspace-i18n",
+      "group": "Tables",
+      "name": "marketplace_case_payment_circuits",
+      "result": "identical"
+    },
+    {
+      "repo": "mareliure-workspace-i18n",
+      "group": "Functions",
+      "name": "marketplace_accept_own_quote",
+      "result": "identical"
+    },
+    {
+      "repo": "mareliure-workspace-i18n",
+      "group": "Functions",
+      "name": "marketplace_own_contract",
+      "result": "identical"
+    },
+    {
+      "repo": "mareliure-workspace-i18n",
+      "group": "Functions",
+      "name": "marketplace_external_settlement_state",
+      "result": "identical"
+    },
+    {
+      "repo": "mareliure-workspace-i18n",
+      "group": "Functions",
+      "name": "marketplace_record_external_settlement",
+      "result": "identical"
+    },
+    {
+      "repo": "mareliure-work-logistics",
+      "group": "Tables",
+      "name": "marketplace_work_logistics_events",
+      "result": "identical"
+    },
+    {
+      "repo": "mareliure-work-logistics",
+      "group": "Tables",
+      "name": "marketplace_work_logistics_photos",
+      "result": "identical"
+    },
+    {
+      "repo": "mareliure-work-logistics",
+      "group": "Functions",
+      "name": "marketplace_work_logistics",
+      "result": "identical"
+    }
+  ]
+}

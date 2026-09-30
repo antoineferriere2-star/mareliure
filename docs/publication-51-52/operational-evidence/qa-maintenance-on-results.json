@@ -1,0 +1,42 @@
+[
+  {
+    "name": "client-MaReliure",
+    "status": 503,
+    "retryAfter": "300"
+  },
+  {
+    "name": "client-FineBindery",
+    "status": 503,
+    "retryAfter": "300"
+  },
+  {
+    "name": "mutation",
+    "status": 503,
+    "retryAfter": "300"
+  },
+  {
+    "name": "webhook",
+    "status": 503,
+    "retryAfter": "300"
+  },
+  {
+    "name": "operator-read",
+    "status": 200,
+    "retryAfter": null
+  },
+  {
+    "name": "operator-write",
+    "status": 503,
+    "retryAfter": "300"
+  },
+  {
+    "name": "operator-unlisted-read",
+    "status": 503,
+    "retryAfter": "300"
+  },
+  {
+    "name": "no-private-access",
+    "status": 403,
+    "retryAfter": null
+  }
+]

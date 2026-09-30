@@ -106,3 +106,12 @@ describe("ReviewAnswers", () => {
     expect(text).not.toContain("Aller à la première");
   });
 });
+
+
+it("translates each selected choice but preserves the visitor's free text", () => {
+  const enAnswers: Answers = { ...answers, titre: "Réparation", etat: ["dos_abime", "couverture_usee"] };
+  const html = render({ answers: enAnswers, steps: computeVisibleSteps(playbook, enAnswers), copy: (text) => publicCopy("en-US", text) });
+  expect(html).toContain(">Repair<");
+  expect(html).toContain("Damaged spine, Worn cover");
+  expect(html).toContain(">Réparation<");
+});

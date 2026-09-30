@@ -1,0 +1,596 @@
+{
+  "checkedAt": "2026-09-29T16:10:46.329Z",
+  "projectRef": "hljxohondjvrkzqicexl",
+  "mode": "read-only",
+  "main": "bbd4b57aed33722837ae4a6316560b4ee341df39",
+  "pr51": "26035dc2cf17d3d80a36712b99e670bd3eab51e0",
+  "pr52": "6e0e7972170a9386363d05d4500310328fba0428",
+  "baselineMigrationCount": 91,
+  "lastMigration": "20260924160000",
+  "migrations": [
+    {
+      "name": "20260928090000_marketplace_payment_circuits.sql",
+      "sha256": "b5259dba1a453d02b8183f22f57d79576ae5dd7d964eba36f1bffbc48224def6"
+    },
+    {
+      "name": "20260928110000_own_client_external_settlement.sql",
+      "sha256": "d367a183cd61b7dd7158a4b013bd845e686438ff31ed674b4451a4c9f3a2c63e"
+    },
+    {
+      "name": "20260928130000_work_logistics_manual.sql",
+      "sha256": "1129357f312e12572b7c36e4c97f8e9c97a48d9fb0e7731bf10ad0d3c565cc0c"
+    }
+  ],
+  "checks": [
+    {
+      "name": "Exactly main migration versions present",
+      "passed": true
+    },
+    {
+      "name": "Three planned versions absent",
+      "passed": true
+    },
+    {
+      "name": "READ ONLY and postgres role",
+      "passed": true
+    },
+    {
+      "name": "Required columns marketplace_cases",
+      "passed": true
+    },
+    {
+      "name": "Required columns marketplace_events",
+      "passed": true
+    },
+    {
+      "name": "Required columns marketplace_commercial_proposals",
+      "passed": true
+    },
+    {
+      "name": "Required columns marketplace_binder_quotes",
+      "passed": true
+    },
+    {
+      "name": "Required columns marketplace_binder_invoices",
+      "passed": true
+    },
+    {
+      "name": "Required columns marketplace_binder_works",
+      "passed": true
+    },
+    {
+      "name": "Required columns marketplace_binder_clients",
+      "passed": true
+    },
+    {
+      "name": "Required columns marketplace_binder_members",
+      "passed": true
+    },
+    {
+      "name": "Required columns marketplace_binder_credit_notes",
+      "passed": true
+    },
+    {
+      "name": "Required columns user_roles",
+      "passed": true
+    },
+    {
+      "name": "No new column collision",
+      "passed": true
+    },
+    {
+      "name": "No new function collision",
+      "passed": true
+    },
+    {
+      "name": "No new table collision",
+      "passed": true
+    },
+    {
+      "name": "No new trigger collision",
+      "passed": true
+    },
+    {
+      "name": "No unique payment index collision",
+      "passed": true
+    },
+    {
+      "name": "No repeated successful payment intent",
+      "passed": true
+    },
+    {
+      "name": "Invoice payment status baseline",
+      "passed": true
+    },
+    {
+      "name": "No logistics bucket or policy collision",
+      "passed": true
+    },
+    {
+      "name": "Public owner rights and schema create",
+      "passed": true
+    },
+    {
+      "name": "Auth reference privilege",
+      "passed": true
+    },
+    {
+      "name": "Storage insert privilege",
+      "passed": true
+    },
+    {
+      "name": "Supabase Storage policy grant",
+      "passed": true
+    }
+  ],
+  "dataBaseline": {
+    "cases": 8,
+    "acceptedProposals": 1,
+    "quotes": 4,
+    "acceptedQuotes": 2,
+    "invoices": 2,
+    "duplicatePaymentIntentGroups": 0
+  },
+  "historicalMigrationFingerprints": [
+    {
+      "name": "0d548b55-ed6e-424f-abcd-ae90a7557218",
+      "statements_md5": null,
+      "version": "20260723151154"
+    },
+    {
+      "name": "39b151fc-b758-421a-879a-8b51849e277d",
+      "statements_md5": null,
+      "version": "20260723151756"
+    },
+    {
+      "name": "7c9b574c-6fc5-44d7-85bb-2fc162e967a5",
+      "statements_md5": null,
+      "version": "20260723152742"
+    },
+    {
+      "name": "seed admin de l ancien projet - volontairement non rejoue",
+      "statements_md5": null,
+      "version": "20260723161118"
+    },
+    {
+      "name": "2e15e45a-bd04-4990-ab39-df04f26a096b",
+      "statements_md5": null,
+      "version": "20260723184720"
+    },
+    {
+      "name": "3c2f85f1-dd68-469b-a314-2d69df646876",
+      "statements_md5": null,
+      "version": "20260724054451"
+    },
+    {
+      "name": "476d26bb-02e1-4b42-a4bd-584b28fc109c",
+      "statements_md5": null,
+      "version": "20260724073603"
+    },
+    {
+      "name": "dossier_ai_insights",
+      "statements_md5": null,
+      "version": "20260724090000"
+    },
+    {
+      "name": "doublon ignore - objet deja cree par une migration anterieure",
+      "statements_md5": null,
+      "version": "20260724103728"
+    },
+    {
+      "name": "0d644ebd-0583-4886-b07f-a1419c148bc6",
+      "statements_md5": null,
+      "version": "20260724193011"
+    },
+    {
+      "name": "public_request_audit",
+      "statements_md5": null,
+      "version": "20260725060000"
+    },
+    {
+      "name": "build_workspaces",
+      "statements_md5": null,
+      "version": "20260725070000"
+    },
+    {
+      "name": "dossier_followup",
+      "statements_md5": null,
+      "version": "20260725080000"
+    },
+    {
+      "name": "c8c530f5-21b9-4359-89f3-196c71c58c44",
+      "statements_md5": null,
+      "version": "20260725102046"
+    },
+    {
+      "name": "doublon ignore - objet deja cree par une migration anterieure",
+      "statements_md5": null,
+      "version": "20260725122224"
+    },
+    {
+      "name": "workspace_plan_quotas",
+      "statements_md5": null,
+      "version": "20260725130000"
+    },
+    {
+      "name": "doublon ignore - objet deja cree par une migration anterieure",
+      "statements_md5": null,
+      "version": "20260725200100"
+    },
+    {
+      "name": "doublon ignore - objet deja cree par une migration anterieure",
+      "statements_md5": null,
+      "version": "20260725200136"
+    },
+    {
+      "name": "stripe_billing_columns",
+      "statements_md5": null,
+      "version": "20260726080000"
+    },
+    {
+      "name": "0240fe83-47b0-4d3f-8d36-57a31adbc332",
+      "statements_md5": null,
+      "version": "20260726081511"
+    },
+    {
+      "name": "260feceb-8a6e-46d7-a9b4-c347816c4e62",
+      "statements_md5": null,
+      "version": "20260727064115"
+    },
+    {
+      "name": "c01fd3ac-bdf6-4fee-a2d6-9fbce52c31e2",
+      "statements_md5": null,
+      "version": "20260727064814"
+    },
+    {
+      "name": "3896a37b-dd1d-4d9b-9ff2-840a656507d4",
+      "statements_md5": null,
+      "version": "20260727082509"
+    },
+    {
+      "name": "209ff3fc-26fe-40ab-adf3-9bdc68dd78e5",
+      "statements_md5": null,
+      "version": "20260727082519"
+    },
+    {
+      "name": "c7b07a3a-1f27-43a5-854b-7d07866a780e",
+      "statements_md5": null,
+      "version": "20260727083103"
+    },
+    {
+      "name": "0176cb4e-b4de-4dc9-b777-94df20fd0c9a",
+      "statements_md5": null,
+      "version": "20260727094538"
+    },
+    {
+      "name": "d64fa358-8e78-4b7d-b7b7-d19f37b52f18",
+      "statements_md5": null,
+      "version": "20260727094603"
+    },
+    {
+      "name": "onboarding_publish",
+      "statements_md5": null,
+      "version": "20260727110000"
+    },
+    {
+      "name": "b5127f5f-6fdb-4332-9514-87a5189de389",
+      "statements_md5": null,
+      "version": "20260727111547"
+    },
+    {
+      "name": "visitor_project_summary",
+      "statements_md5": null,
+      "version": "20260729090000"
+    },
+    {
+      "name": "visitor_summary_email",
+      "statements_md5": null,
+      "version": "20260729093000"
+    },
+    {
+      "name": "0ac302fa-52d2-4182-a7be-5e1b2c478d00",
+      "statements_md5": null,
+      "version": "20260729112838"
+    },
+    {
+      "name": "848b1630-a92d-4ebf-a0f6-f4bd33d332c8",
+      "statements_md5": null,
+      "version": "20260730125429"
+    },
+    {
+      "name": "workspace_trial_entitlements",
+      "statements_md5": null,
+      "version": "20260801120000"
+    },
+    {
+      "name": "create_inspiration_photos_bucket",
+      "statements_md5": null,
+      "version": "20260801120100"
+    },
+    {
+      "name": "align_inspiration_photos_bucket_limits",
+      "statements_md5": null,
+      "version": "20260801130000"
+    },
+    {
+      "name": "c6d39cc3-d76e-4470-b710-1f7122482108",
+      "statements_md5": null,
+      "version": "20260801185515"
+    },
+    {
+      "name": "e22c85fb-bd44-4e61-821a-1bd7d84fdbf9",
+      "statements_md5": null,
+      "version": "20260802183843"
+    },
+    {
+      "name": "54cd465d-06f2-456f-8847-24a7e0d8e11b",
+      "statements_md5": null,
+      "version": "20260803080534"
+    },
+    {
+      "name": "multiple_intakes_per_workspace",
+      "statements_md5": null,
+      "version": "20260803100000"
+    },
+    {
+      "name": "publish_targets_in_flight_setup",
+      "statements_md5": null,
+      "version": "20260803100100"
+    },
+    {
+      "name": "public_site_analyses",
+      "statements_md5": null,
+      "version": "20260806000000"
+    },
+    {
+      "name": "ad72d53f-9ca4-4f3c-b4a5-29adbd1e7d54",
+      "statements_md5": null,
+      "version": "20260807111654"
+    },
+    {
+      "name": "b882a08e-92e5-4a2a-86f9-573918b198e5",
+      "statements_md5": null,
+      "version": "20260807121357"
+    },
+    {
+      "name": "create_project_photos_bucket",
+      "statements_md5": null,
+      "version": "20260808090000"
+    },
+    {
+      "name": "internal_sales_workspace",
+      "statements_md5": null,
+      "version": "20260815120000"
+    },
+    {
+      "name": "4ec816c1-9480-415b-9fdd-d9fc9ea25c48",
+      "statements_md5": null,
+      "version": "20260815173415"
+    },
+    {
+      "name": "0d97d4b1-1e58-46fd-b6f6-cc422c7c25b6",
+      "statements_md5": null,
+      "version": "20260815175655"
+    },
+    {
+      "name": "mission_branding_snapshot",
+      "statements_md5": null,
+      "version": "20260815220000"
+    },
+    {
+      "name": "doublon ignore - objet deja cree par une migration anterieure",
+      "statements_md5": null,
+      "version": "20260826175701"
+    },
+    {
+      "name": "bca0a330-c16f-42c3-ab13-65acf971e977",
+      "statements_md5": null,
+      "version": "20260826175902"
+    },
+    {
+      "name": "40d48ec8-500f-4a6b-8c23-94b436c014d7",
+      "statements_md5": null,
+      "version": "20260826185101"
+    },
+    {
+      "name": "workspace_notification_settings",
+      "statements_md5": null,
+      "version": "20260826200000"
+    },
+    {
+      "name": "hermes_prospect_funnel_batch",
+      "statements_md5": null,
+      "version": "20260831120000"
+    },
+    {
+      "name": "24448191-6152-4bb1-95ae-4cf58d963c0d",
+      "statements_md5": null,
+      "version": "20260831185132"
+    },
+    {
+      "name": "85155391-bef0-460d-9fd9-d47ce21c4b4d",
+      "statements_md5": null,
+      "version": "20260901172458"
+    },
+    {
+      "name": "marketplace_reliure",
+      "statements_md5": null,
+      "version": "20260908120000"
+    },
+    {
+      "name": "managed_pricing_offers",
+      "statements_md5": null,
+      "version": "20260908210000"
+    },
+    {
+      "name": "pricing_reference_system",
+      "statements_md5": null,
+      "version": "20260909120000"
+    },
+    {
+      "name": "marketplace_binder_membership",
+      "statements_md5": null,
+      "version": "20260911120000"
+    },
+    {
+      "name": "marketplace_referral",
+      "statements_md5": null,
+      "version": "20260911130000"
+    },
+    {
+      "name": "marketplace_messaging",
+      "statements_md5": null,
+      "version": "20260912090000"
+    },
+    {
+      "name": "marketplace_decisions",
+      "statements_md5": null,
+      "version": "20260912100000"
+    },
+    {
+      "name": "marketplace_pricing_modes",
+      "statements_md5": null,
+      "version": "20260913090000"
+    },
+    {
+      "name": "marketplace_binder_applications",
+      "statements_md5": null,
+      "version": "20260914090000"
+    },
+    {
+      "name": "marketplace_binder_applications_extend",
+      "statements_md5": "b90658c8ca57019fa7230951eaa19498",
+      "version": "20260915090000"
+    },
+    {
+      "name": "marketplace_fine_bindery_brand",
+      "statements_md5": "b90658c8ca57019fa7230951eaa19498",
+      "version": "20260916090000"
+    },
+    {
+      "name": "marketplace_commercial_proposals",
+      "statements_md5": "84c0541efba4eeecd7efa94ca2f153a3",
+      "version": "20260916100000"
+    },
+    {
+      "name": "marketplace_pricebook_wiring",
+      "statements_md5": "0d7c944773e0cd69e19e9eb678d11e53",
+      "version": "20260916110000"
+    },
+    {
+      "name": "marketplace_stripe",
+      "statements_md5": "b9577a90d918edb1a93e5234242b087e",
+      "version": "20260916120000"
+    },
+    {
+      "name": "marketplace_commercial_proposal_tax",
+      "statements_md5": "9388ae1b01b1a27882db516a21370216",
+      "version": "20260917090000"
+    },
+    {
+      "name": "marketplace_commercial_proposal_customer_type",
+      "statements_md5": "8173f715c236a5e13452252aa3c3eee2",
+      "version": "20260917100000"
+    },
+    {
+      "name": "marketplace_commercial_proposal_tax_auto_france",
+      "statements_md5": "fac77a718c591c4d015a918027189ed0",
+      "version": "20260918090000"
+    },
+    {
+      "name": "marketplace_binder_quotes",
+      "statements_md5": "0a725deccc5de1d807c38a36709cb5fd",
+      "version": "20260919090000"
+    },
+    {
+      "name": "marketplace_verified_email_exact_match",
+      "statements_md5": "320dc7e5962a25067be94d85b6aae0a3",
+      "version": "20260920090000"
+    },
+    {
+      "name": "marketplace_binder_invoice_vat_mention",
+      "statements_md5": "4843a8a567ae3e827e8889e1fd9c821b",
+      "version": "20260920100000"
+    },
+    {
+      "name": "marketplace_stripe_webhook_states",
+      "statements_md5": "664d6565f77b947504c8798c4200f9b6",
+      "version": "20260920110000"
+    },
+    {
+      "name": "marketplace_case_engagement_guard",
+      "statements_md5": "5d9d4d6a7f2011d961d52217c4ed8b3e",
+      "version": "20260920120000"
+    },
+    {
+      "name": "marketplace_message_audiences",
+      "statements_md5": "8e5a0ec3aa54bf9661d66e1d0ea65b8b",
+      "version": "20260920130000"
+    },
+    {
+      "name": "marketplace_binder_contacts_works",
+      "statements_md5": "a331efa32e9a92b06726ccefc2e1d1f7",
+      "version": "20260921090000"
+    },
+    {
+      "name": "marketplace_binder_reference_links",
+      "statements_md5": "b6b62093064ee3d7af71654d9c4956eb",
+      "version": "20260921100000"
+    },
+    {
+      "name": "marketplace_base_prices",
+      "statements_md5": "ad191c10a79b296506420575f209e969",
+      "version": "20260921110000"
+    },
+    {
+      "name": "marketplace_base_prices_v1_seed",
+      "statements_md5": "99914b932bd37a50b983c5e7c90ae93b",
+      "version": "20260922130000"
+    },
+    {
+      "name": "marketplace_binder_case_work",
+      "statements_md5": "6fe139b3578c0dbc8c776ccb736b6e84",
+      "version": "20260922140000"
+    },
+    {
+      "name": "marketplace_quote_size_blocks_photos",
+      "statements_md5": "4b0b5721f1dbabb28f142f8aeec8a87a",
+      "version": "20260923100000"
+    },
+    {
+      "name": "marketplace_document_branding",
+      "statements_md5": "37c0a2fe4ba32eaecd6fd047e21b41f6",
+      "version": "20260923110000"
+    },
+    {
+      "name": "marketplace_invoice_compliance",
+      "statements_md5": "ee8abc02d4e0dd4759edabccb70d3bb5",
+      "version": "20260923120000"
+    },
+    {
+      "name": "marketplace_binder_pricing_catalog",
+      "statements_md5": "8fbe5c1a32a08b62ced70d0a4af3e297",
+      "version": "20260923130000"
+    },
+    {
+      "name": "finebindery_public_profiles",
+      "statements_md5": "900025501090ab98cd9038f47b4e2396",
+      "version": "20260923140000"
+    },
+    {
+      "name": "finebindery_i18n",
+      "statements_md5": "2a2ef5f9ee045c29230f94e1ce6c6e6c",
+      "version": "20260924120000"
+    },
+    {
+      "name": "marketplace_binder_operation_photos",
+      "statements_md5": "90d7087b0d63b1e19d54bb8939dbab5f",
+      "version": "20260924160000"
+    }
+  ],
+  "limitations": [
+    "No production DDL attempted; Storage policy authorization is a read-only configuration check.",
+    "No fresh production backup or restoration performed in this preparation.",
+    "Catalogue and data reads use separate transactions; repeat under the approved maintenance window."
+  ]
+}

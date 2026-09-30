@@ -1098,13 +1098,17 @@ export function ReviewAnswers({
               // The engine words "not sure" and a ticked consent ("Yes") in
               // English on purpose (they feed the internal Brief); the visitor
               // reads them here, so they go through the dictionary — and only
-              // these cases do, never free text a visitor typed.
+              // these cases and configured choice labels do, never free text a visitor typed.
               const shown =
                 value === NOT_SURE_VALUE
                   ? copy("Not sure")
                   : typeof value === "boolean"
                     ? copy(text)
-                    : text;
+                    : "options" in field || (field.type === "budget" && field.ranges)
+                      ? (Array.isArray(value) ? value : [value])
+                          .map((part) => copy(formatAnswerForDisplay(field, part as AnswerValue)))
+                          .join(", ")
+                      : text;
               const photos =
                 field.type === "photo" && Array.isArray(value) ? (value as PhotoAnswerEntry[]) : [];
               return (

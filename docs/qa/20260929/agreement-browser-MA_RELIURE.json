@@ -1,0 +1,38 @@
+{
+  "brand": "MA_RELIURE",
+  "caseId": "593d860e-8049-4bac-b2d3-01bc119f089e",
+  "proposalId": "0900bc09-30fe-4f10-835b-b586c11e7725",
+  "before": [
+    {
+      "viewport": "desktop",
+      "overflow": false
+    },
+    {
+      "viewport": "mobile",
+      "overflow": false
+    }
+  ],
+  "buttonClickStarted": true,
+  "after": [
+    {
+      "viewport": "mobile",
+      "overflow": false
+    },
+    {
+      "viewport": "desktop",
+      "overflow": false
+    }
+  ],
+  "accepted": {
+    "accepted_at": "2026-09-29T12:58:51.957+00:00",
+    "status": "accepted",
+    "payment_circuit": "legacy_resale",
+    "customer_total_ttc_cents": 12000
+  },
+  "buttonGone": true,
+  "acceptancePersistsAfterReload": true,
+  "workshopBrowserRead": true,
+  "workshopOverflow": false,
+  "complete": true,
+  "acceptedLabelVisible": true
+}

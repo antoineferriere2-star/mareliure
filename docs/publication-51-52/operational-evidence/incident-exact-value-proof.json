@@ -1,0 +1,12 @@
+{
+  "diagnosticEvent": "2026-09-30T13:30:12.963Z",
+  "exactValueRecoveredWithoutPrinting": true,
+  "kind": "temporary CLI PostgreSQL login credential",
+  "role": "cli_login_postgres",
+  "project": "hljxohondjvrkzqicexl",
+  "checkedAt": "2026-09-30T14:50:20.215Z",
+  "exit": 2,
+  "authenticationRejected": true,
+  "connectionAccepted": false,
+  "reason": "database/pooler authentication rejection"
+}

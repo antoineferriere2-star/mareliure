@@ -1,0 +1,38 @@
+{
+  "brand": "FINE_BINDERY",
+  "caseId": "466d2ec6-efad-4943-90da-469d9ecf7ad8",
+  "proposalId": "7d628ecc-2717-4f59-839f-4e4531683e65",
+  "before": [
+    {
+      "viewport": "desktop",
+      "overflow": false
+    },
+    {
+      "viewport": "mobile",
+      "overflow": false
+    }
+  ],
+  "buttonClickStarted": true,
+  "acceptedLabelVisible": true,
+  "after": [
+    {
+      "viewport": "mobile",
+      "overflow": false
+    },
+    {
+      "viewport": "desktop",
+      "overflow": false
+    }
+  ],
+  "accepted": {
+    "accepted_at": "2026-09-29T13:02:07.347+00:00",
+    "status": "accepted",
+    "payment_circuit": "legacy_resale",
+    "customer_total_ttc_cents": 12000
+  },
+  "buttonGone": true,
+  "acceptancePersistsAfterReload": true,
+  "workshopBrowserRead": true,
+  "workshopOverflow": false,
+  "complete": true
+}

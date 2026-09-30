@@ -1,0 +1,306 @@
+{
+  "results": [
+    {
+      "scenario": "real-auth-and-independent-workshop-A",
+      "result": "PASS"
+    },
+    {
+      "scenario": "real-auth-and-independent-workshop-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-direct-RPC-denied-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-direct-table-no-leak-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-direct-RPC-denied-A",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-direct-table-no-leak-A",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-direct-RPC-denied-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-direct-table-no-leak-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-other-actor-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-other-workshop-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-exact-retry-one-event",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-carrier-delivery-not-physical-receipt",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-difference-description-required",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-concurrent-sessions-one-transition",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-parcel-roundtrip-completed",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-private-photo-upload-and-reference",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-storage-read-denied-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-storage-read-denied-A",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-storage-read-denied-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-public-photo-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-signed-photo-http-200-byte-identical",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-hand-roundtrip-and-post-completion-incident",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-accept-without-agreement-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-stale-agreement-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-versioned-own-client-agreement",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-invoice-issued-via-real-hosted-RPC",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-concurrent-exact-retry-one-receipt",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-duplicate-proof-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-overpayment-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-partial-then-full-receipts",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-excess-refund-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-partial-and-full-refund-declarations",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-dispute-blocks-receipt",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-dispute-open-close",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-credit-blocks-new-receipt",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-full-credit-and-refund-after-credit",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-other-actor-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-direct-journal-RPC-denied-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-direct-invoice-no-leak-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-direct-journal-RPC-denied-A",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-direct-invoice-no-leak-A",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-direct-journal-RPC-denied-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-direct-invoice-no-leak-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-signed-photo-expired-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-invoice-pdf-owner",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-invoice-denied-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-invoice-denied-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-quote-pdf-owner",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-quote-denied-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-quote-denied-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-hosted-backend-new-network-legacy-MA_RELIURE",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-hosted-backend-new-network-legacy-FINE_BINDERY",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-app-http-journal-A",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-app-http-journal-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-app-http-journal-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-app-rejects-SVG",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-app-photo-upload-after-invalid-file",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-app-cross-workshop-photo-upload-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-app-disabled-member-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-invoice-pdf-owner",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-invoice-denied-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-invoice-denied-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-quote-pdf-owner",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-quote-denied-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-quote-denied-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-credit-pdf-owner",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-credit-denied-B",
+      "result": "PASS"
+    },
+    {
+      "scenario": "51-http-credit-denied-anon",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-storage-unchanged-on-svg",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-storage-unchanged-on-oversize",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-storage-unchanged-on-cross-workshop",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-interrupted-request-body-no-storage-object",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-retry-after-interruption-real-object-created",
+      "result": "PASS"
+    },
+    {
+      "scenario": "52-pending-account-own-work-allowed-network-case-denied",
+      "result": "PASS"
+    },
+    {
+      "scenario": "public-fine-bindery-test-mission-created-additively",
+      "result": "PASS"
+    }
+  ],
+  "kind": "Supabase hosted APIs with local app",
+  "project": "qwfhebtxeubfmvvdsqdt"
+}
