@@ -87,3 +87,7 @@ Migrations inchangées épinglées dans publication-contract.mjs : **20260928090
 Worker v2 supprimé, absence API vérifiée (`qa-v2-cleanup.json`). Ressources créées ici retirées ; session Auth gérée conservée volontairement. Aucun secret, dump ou octet Storage publié. Worker production inchangé.
 
 Limites déjà examinées : délivrabilité e-mail réelle, ancien contenu libre Fine Bindery français, Safari/iOS physique, panne hébergée du nettoyage Storage restent suivi explicite, non bloquants pour ce périmètre atelier sous les conditions PLAN.md. Ni retestés ni déclarés levés ici.
+
+## Actualisation après décision de capacité
+
+Le blocage de capacité ci-dessus est maintenant levé : Workers Paid actif, recette CPU1000 qwf réussie et cleanup confirmé. Voir **WORKERS-PAID.md** pour état final, nouvel artefact et déroulé exact. Aucun autre audit rejoué, aucune autorisation de publication reçue ; Execute production reste désactivé.

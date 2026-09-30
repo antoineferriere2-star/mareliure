@@ -3427,3 +3427,7 @@ Maintenance qwf : 53 tables métier protégées, neuf refus service-role 55000, 
 ### Workers Paid autorisé — préparation CPU sans publication
 
 Le propriétaire autorise uniquement Workers Paid 5 USD/mois + usage et la recette qwf. Préparation d'un plafond CPU 1 000 ms et nouvel artefact configuré ; aucune modification du Worker mareliure en service, aucune fusion/migration production. La saisie d'un moyen de paiement manquant doit se faire directement dans Cloudflare, jamais dans le chat.
+
+### Workers Paid actif — recette qwf réussie, aucune publication
+
+Abonnement Workers Paid 5 USD/mois + usage activé sur le compte autorisé, forfait courant confirmé ; aucune autre option payante sélectionnée. Alerte compte 10 USD active, informative seulement. Worker QA `mareliure-ops-qa-20260930-paid`, plafond API 1000 ms, qwf uniquement, sans routes/previews ; photos 4/5 Mio acceptées, reprise sans doublon, autre atelier/session absente/5 Mio+1 refusés, deux associations/deux objets relus à octets identiques. CPU réel Cloudflare 13,357–82,370 ms, marge minimale 917,630 ms. Worker et toutes les données temporaires de cette recette supprimés avec contrôles, Auth géré conservé. Production Worker version bdddc8b4 inchangée ; aucun plafond explicite en service (défaut Paid 30s). Nouvel artefact CPU1000 et SHA dans WORKERS-PAID.md. Lanceur distant toujours désactivé ; publication/migrations/fusion non autorisées. Recettes précédentes/incidents non rouverts.

@@ -1,0 +1,91 @@
+{
+  "target": "qwfhebtxeubfmvvdsqdt",
+  "worker": "mareliure-ops-qa-20260930-paid",
+  "results": [
+    {
+      "name": "upload-4MiB",
+      "bytes": 4194304,
+      "started": "2026-09-30T19:26:34.756Z",
+      "ended": "2026-09-30T19:26:36.232Z",
+      "status": 200,
+      "applicationError": false,
+      "resourceLimit": false,
+      "ray": "a4359ebd09b2e84d-CDG",
+      "cpuMs": 52.671,
+      "cpuLimitMs": 1000,
+      "marginMs": 947.329
+    },
+    {
+      "name": "upload-5MiB",
+      "bytes": 5242880,
+      "started": "2026-09-30T19:26:40.309Z",
+      "ended": "2026-09-30T19:26:42.123Z",
+      "status": 200,
+      "applicationError": false,
+      "resourceLimit": false,
+      "ray": "a4359ee068f8b1aa-CDG",
+      "cpuMs": 55.391,
+      "cpuLimitMs": 1000,
+      "marginMs": 944.609
+    },
+    {
+      "name": "retry-5MiB",
+      "bytes": 5242880,
+      "started": "2026-09-30T19:26:46.221Z",
+      "ended": "2026-09-30T19:26:47.418Z",
+      "status": 200,
+      "applicationError": false,
+      "resourceLimit": false,
+      "ray": "a4359f055bc2784a-CDG",
+      "cpuMs": 67.331,
+      "cpuLimitMs": 1000,
+      "marginMs": 932.669
+    },
+    {
+      "name": "other-workshop",
+      "bytes": 5242880,
+      "started": "2026-09-30T19:26:51.493Z",
+      "ended": "2026-09-30T19:26:52.569Z",
+      "status": 200,
+      "applicationError": true,
+      "resourceLimit": false,
+      "ray": "a4359f262d109e64-CDG",
+      "cpuMs": 13.357,
+      "cpuLimitMs": 1000,
+      "marginMs": 986.643
+    },
+    {
+      "name": "anonymous",
+      "bytes": 4194304,
+      "started": "2026-09-30T19:26:56.673Z",
+      "ended": "2026-09-30T19:26:57.451Z",
+      "status": 200,
+      "applicationError": true,
+      "resourceLimit": false,
+      "ray": "a4359f467d11d0be-CDG",
+      "cpuMs": 14.999,
+      "cpuLimitMs": 1000,
+      "marginMs": 985.001
+    },
+    {
+      "name": "oversize",
+      "bytes": 5242881,
+      "started": "2026-09-30T19:27:01.537Z",
+      "ended": "2026-09-30T19:27:03.290Z",
+      "status": 200,
+      "applicationError": true,
+      "resourceLimit": false,
+      "ray": "a4359f64ee769e49-CDG",
+      "cpuMs": 82.37,
+      "cpuLimitMs": 1000,
+      "marginMs": 917.63
+    }
+  ],
+  "sqlCount": 2,
+  "storageCount": 2,
+  "byteEquality": true,
+  "retryNoDuplicate": true,
+  "cpuMetricUnit": "Cloudflare microseconds divided by 1000",
+  "peakCpuMs": 82.37,
+  "pass": true
+}

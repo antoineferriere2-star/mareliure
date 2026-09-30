@@ -1,0 +1,118 @@
+{
+  "data": {
+    "viewer": {
+      "accounts": [
+        {
+          "workersInvocationsAdaptive": [
+            {
+              "dimensions": {
+                "datetime": "2026-09-30T19:26:32Z",
+                "scriptName": "mareliure-ops-qa-20260930-paid",
+                "status": "success"
+              },
+              "quantiles": {
+                "cpuTimeP50": 738,
+                "cpuTimeP99": 738
+              },
+              "sum": {
+                "errors": 0,
+                "requests": 1
+              }
+            },
+            {
+              "dimensions": {
+                "datetime": "2026-09-30T19:26:35Z",
+                "scriptName": "mareliure-ops-qa-20260930-paid",
+                "status": "success"
+              },
+              "quantiles": {
+                "cpuTimeP50": 52671,
+                "cpuTimeP99": 52671
+              },
+              "sum": {
+                "errors": 0,
+                "requests": 1
+              }
+            },
+            {
+              "dimensions": {
+                "datetime": "2026-09-30T19:26:57Z",
+                "scriptName": "mareliure-ops-qa-20260930-paid",
+                "status": "success"
+              },
+              "quantiles": {
+                "cpuTimeP50": 14999,
+                "cpuTimeP99": 14999
+              },
+              "sum": {
+                "errors": 0,
+                "requests": 1
+              }
+            },
+            {
+              "dimensions": {
+                "datetime": "2026-09-30T19:26:52Z",
+                "scriptName": "mareliure-ops-qa-20260930-paid",
+                "status": "success"
+              },
+              "quantiles": {
+                "cpuTimeP50": 13357,
+                "cpuTimeP99": 13357
+              },
+              "sum": {
+                "errors": 0,
+                "requests": 1
+              }
+            },
+            {
+              "dimensions": {
+                "datetime": "2026-09-30T19:26:41Z",
+                "scriptName": "mareliure-ops-qa-20260930-paid",
+                "status": "success"
+              },
+              "quantiles": {
+                "cpuTimeP50": 55391,
+                "cpuTimeP99": 55391
+              },
+              "sum": {
+                "errors": 0,
+                "requests": 1
+              }
+            },
+            {
+              "dimensions": {
+                "datetime": "2026-09-30T19:26:47Z",
+                "scriptName": "mareliure-ops-qa-20260930-paid",
+                "status": "success"
+              },
+              "quantiles": {
+                "cpuTimeP50": 67331,
+                "cpuTimeP99": 67331
+              },
+              "sum": {
+                "errors": 0,
+                "requests": 1
+              }
+            },
+            {
+              "dimensions": {
+                "datetime": "2026-09-30T19:27:02Z",
+                "scriptName": "mareliure-ops-qa-20260930-paid",
+                "status": "success"
+              },
+              "quantiles": {
+                "cpuTimeP50": 82370,
+                "cpuTimeP99": 82370
+              },
+              "sum": {
+                "errors": 0,
+                "requests": 1
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "errors": null
+}
