@@ -3423,3 +3423,7 @@ Codex — 30 septembre 2026 : dernière préparation #53, coût CPU par étapes 
 ### 30 septembre — #53 preuves finales, publication non autorisée
 
 Maintenance qwf : 53 tables métier protégées, neuf refus service-role 55000, deux RPC concurrents refusés, données/historique inchangés ; Auth/Storage continuent avec dérive détectée, objet temporaire retiré/session conservée, reprise confirmée. Worker QA v2 supprimé. Lanceur final désactivé, dérive en même connexion, sauvegarde fraîche liée aux empreintes, rollback/COMMIT incertain réellement éprouvés sur copie Docker restaurée, postgres non superutilisateur. Voir docs/publication-51-52/DERNIERS-BLOCAGES.md et evidence-final. Seul blocage de capacité : forfait Free 10 ms incompatible (JSON 5 Mio seul 14,403 ms). Alternative Workers Paid 5 USD/mois + usage, aucun achat. Aucun code produit changé, aucune fusion/migration/publication production. CI complète requise sur ce HEAD ; aucun double merge des sources #51/#52.
+
+### Workers Paid autorisé — préparation CPU sans publication
+
+Le propriétaire autorise uniquement Workers Paid 5 USD/mois + usage et la recette qwf. Préparation d'un plafond CPU 1 000 ms et nouvel artefact configuré ; aucune modification du Worker mareliure en service, aucune fusion/migration production. La saisie d'un moyen de paiement manquant doit se faire directement dans Cloudflare, jamais dans le chat.
