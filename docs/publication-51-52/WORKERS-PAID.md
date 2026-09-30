@@ -39,3 +39,5 @@ Les opérations ci-dessous restent conditionnées à une autorisation distincte 
 8. Réouverture opérateur après contrôles, surveillance/reprise des webhooks naturels. Avant COMMIT rollback ; après COMMIT correction compatible ou restauration avec nouvelle décision/delta/RPO, jamais écrasement Auth/Storage.
 
 Execute production toujours désactivé. Circuits payants et suivi client après paiement exclus. Incidents/recettes déjà validés non rouverts.
+
+Lecture API après rafraîchissement OAuth normal : mareliure reste version `bdddc8b4-2d9a-4193-a477-87e7df682c70`, compatibilité 2026-09-25, aucun `limits` explicite (`null`). Le plafond suit donc le forfait réellement actif tant que le nouveau paquet n'est pas publié ; ne pas assimiler cette lecture à une activation Paid. Capture de l'alerte active dans evidence-final, sans données bancaires. La finalisation du checkout n'est pas confirmée, recette Paid non exécutée à ce stade.
