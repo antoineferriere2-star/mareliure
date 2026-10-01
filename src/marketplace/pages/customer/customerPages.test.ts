@@ -62,6 +62,7 @@ interface DetailOverrides {
   caseFacts?: Record<string, unknown>;
   /** Remplace le fil de messages renvoyé par le serveur. */
   messages?: ReturnType<typeof conversationFixture>["messages"];
+  proposal?: Record<string, unknown>;
 }
 
 function client(brand: Brand, scenario: string, only: "list" | "detail", over: DetailOverrides = {}) {
@@ -69,7 +70,11 @@ function client(brand: Brand, scenario: string, only: "list" | "detail", over: D
   if (only === "list") c.setQueryData(["marketplace", "customer", "cases"], listFixture(brand, scenario));
   else {
     const base = detailFixture(brand, scenario);
-    c.setQueryData(["marketplace", "customer", "case", CASE_ID], { ...base, case: { ...base.case, ...over.caseFacts } });
+    c.setQueryData(["marketplace", "customer", "case", CASE_ID], {
+      ...base,
+      case: { ...base.case, ...over.caseFacts },
+      proposal: over.proposal ? { ...base.proposal, ...over.proposal } : base.proposal,
+    });
     const thread = conversationFixture(brand, scenario);
     c.setQueryData(["marketplace", "conversation", CASE_ID], over.messages ? { ...thread, messages: over.messages } : thread);
     const decisions = decisionsFixture(brand, over.caseFacts?.openDecisions ? "G" : scenario);
@@ -226,6 +231,23 @@ describe("détail : ce que le client lit", () => {
     expect(html).toContain("Total incl. tax");
     expect(html).toContain("Fixed price");
     expect(html).not.toContain(">Payer<");
+  });
+
+  it("nomme la ligne d'aller-retour avant paiement sans renommer un ancien transport", () => {
+    const roundTrip = {
+      shippingCents: 1250,
+      shippingOfferKind: "book_round_trip_fr",
+      totalHtCents: 38750,
+      vatCents: 7750,
+      totalTtcCents: 46500,
+    };
+    const fr = detail("MA_RELIURE", "E", { proposal: roundTrip });
+    const en = detail("FINE_BINDERY", "E", { proposal: roundTrip });
+    expect(fr).toContain("Transport aller-retour");
+    expect(fr).toMatch(/15,00.*TTC/);
+    expect(en).toContain("Round-trip shipping");
+    expect(en).toMatch(/15.00.*incl. tax/);
+    expect(detail("MA_RELIURE", "E")).not.toContain("Transport aller-retour");
   });
 
   it("F — payé : plus de bouton, un accusé de réception", () => {

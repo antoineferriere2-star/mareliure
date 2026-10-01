@@ -24,6 +24,7 @@ type Supa = SupabaseClient<Database>;
 
 export interface CommercialProposalRow extends CommercialProposalSnapshot {
   paymentCircuit: string;
+  shippingOfferKind: "manual" | "book_round_trip_fr";
   id: string;
   version: number;
   createdAt: string;
@@ -35,12 +36,13 @@ export interface CommercialProposalRow extends CommercialProposalSnapshot {
 }
 
 const COLUMNS =
-  "payment_circuit, id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, tax_country, tax_basis, tax_validation_source, tax_validated_at, tax_validated_by, customer_type, business_name, business_vat_number, business_vat_validation_status, billing_country, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at";
+  "payment_circuit, shipping_offer_kind, id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, tax_country, tax_basis, tax_validation_source, tax_validated_at, tax_validated_by, customer_type, business_name, business_vat_number, business_vat_validation_status, billing_country, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toRow(row: any): CommercialProposalRow {
   return {
     paymentCircuit: row.payment_circuit,
+    shippingOfferKind: row.shipping_offer_kind,
     id: row.id,
     caseId: row.case_id,
     version: row.version,

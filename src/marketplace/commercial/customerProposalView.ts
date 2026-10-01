@@ -21,6 +21,7 @@ export interface CustomerProposalSource {
   currency: string;
   customerServicePriceCents: number;
   shippingTotalCents: number;
+  shippingOfferKind?: "manual" | "book_round_trip_fr";
   customerTotalHtCents: number;
   customerVatRateBps: number | null;
   customerVatAmountCents: number | null;
@@ -42,6 +43,7 @@ export interface CustomerProposalView {
   currency: string;
   serviceCents: number;
   shippingCents: number;
+  shippingOfferKind: "manual" | "book_round_trip_fr";
   totalHtCents: number;
   /** `null` tant que la fiscalité n'est pas déterminée : jamais un taux deviné. */
   vatRateBps: number | null;
@@ -60,6 +62,7 @@ export function toCustomerProposalView(source: CustomerProposalSource): Customer
     currency: source.currency,
     serviceCents: source.customerServicePriceCents,
     shippingCents: source.shippingTotalCents,
+    shippingOfferKind: source.shippingOfferKind ?? "manual",
     totalHtCents: source.customerTotalHtCents,
     vatRateBps: source.customerVatRateBps,
     vatCents: source.customerVatAmountCents,

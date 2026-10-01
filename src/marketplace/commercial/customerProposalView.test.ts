@@ -78,6 +78,7 @@ describe("vue client d'une proposition", () => {
         "preparedAt",
         "serviceCents",
         "shippingCents",
+        "shippingOfferKind",
         "totalHtCents",
         "totalTtcCents",
         "vatCents",
@@ -99,6 +100,13 @@ describe("vue client d'une proposition", () => {
     expect(view.vatCents).toBe(7980);
     expect(view.vatRateBps).toBe(2000);
     expect(view.totalTtcCents).toBe(47880);
+    expect(view.shippingOfferKind).toBe("manual");
+  });
+
+  it("nomme l'aller-retour seulement si la nouvelle proposition l'a choisi explicitement", () => {
+    expect(toCustomerProposalView({ ...fullRow, shippingOfferKind: "book_round_trip_fr" }).shippingOfferKind)
+      .toBe("book_round_trip_fr");
+    expect(toCustomerProposalView(fullRow).shippingOfferKind).toBe("manual");
   });
 
   it("ne devine jamais une taxe : une fiscalité non déterminée reste vide", () => {

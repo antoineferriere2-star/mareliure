@@ -308,7 +308,14 @@ function ProposalCard({
         <dl className="mt-4">
           <Row label={copy.proposalService} value={fmt(proposal.serviceCents)} />
           {proposal.shippingCents > 0 && (
-            <Row label={copy.proposalShipping} value={fmt(proposal.shippingCents)} />
+            <Row
+              label={proposal.shippingOfferKind === "book_round_trip_fr"
+                ? (locale === "en-US" ? "Round-trip shipping" : "Transport aller-retour")
+                : copy.proposalShipping}
+              value={proposal.shippingOfferKind === "book_round_trip_fr" && showTax && proposal.vatRateBps === 2000
+                ? `${fmt(proposal.shippingCents)} ${locale === "en-US" ? "excl. tax" : "HT"} · ${fmt(1500)} ${locale === "en-US" ? "incl. tax" : "TTC"}`
+                : fmt(proposal.shippingCents)}
+            />
           )}
           {showTax ? (
             <>
