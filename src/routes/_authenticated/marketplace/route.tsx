@@ -4,6 +4,7 @@
  * a second bespoke notion of "who runs the marketplace".
  */
 import { createFileRoute, Outlet, Link, redirect, isRedirect } from "@tanstack/react-router";
+import { isHydrated, navigateBeforeHydration } from "@/lib/hydration";
 import { requireBuildAdmin } from "@/build/services/admin.functions";
 import { BookMarked, Inbox, Receipt } from "lucide-react";
 import { SignOutButton } from "@/marketplace/pages/SignOutButton";
@@ -15,6 +16,7 @@ export const Route = createFileRoute("/_authenticated/marketplace")({
       return { admin: await requireBuildAdmin() };
     } catch (err) {
       if (isRedirect(err)) throw err;
+      if (!isHydrated()) return navigateBeforeHydration("/auth");
       throw redirect({ to: "/auth" });
     }
   },
