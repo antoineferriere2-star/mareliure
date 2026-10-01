@@ -16,7 +16,7 @@
  */
 import type { Tables } from "@/integrations/supabase/types";
 import type { Supa } from "@/build/services/adminAuth.server";
-import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
+import { creditedByInvoice, invoiceListStatus, type DocumentSummary } from "@/marketplace/quotes/quoteViews";
 import { contactDisplayName } from "@/marketplace/works/contactName";
 import type { ContactInput, WorkInput } from "@/marketplace/works/workInput";
 import type {
@@ -121,11 +121,20 @@ const quoteSummary = (row: Tables<"marketplace_binder_quotes">): DocumentSummary
   currency: row.currency,
 });
 
-const invoiceSummary = (row: Tables<"marketplace_binder_invoices">): DocumentSummary => ({
+/** Avoirs des factures listées : une facture neutralisée par un avoir ne se lit pas « non payée ». */
+async function loadCredits(sb: Supa, binderId: string, invoices: readonly { id: string }[]): Promise<Map<string, number>> {
+  if (!invoices.length) return new Map();
+  const { data, error } = await sb.from("marketplace_binder_credit_notes").select("invoice_id, total_ttc_cents")
+    .eq("binder_id", binderId).in("invoice_id", invoices.map((invoice) => invoice.id));
+  if (error) throw new BinderQuotesError("failed");
+  return creditedByInvoice(data ?? []);
+}
+
+const invoiceSummary = (credited: Map<string, number>) => (row: Tables<"marketplace_binder_invoices">): DocumentSummary => ({
   kind: "invoice",
   id: row.id,
   number: row.invoice_number ?? "Brouillon",
-  status: row.status === "draft" ? "draft" : row.payment_status,
+  status: invoiceListStatus(row, credited.get(row.id)),
   issueDate: row.issue_date,
   validUntil: null,
   clientName: row.client_name,
@@ -187,7 +196,7 @@ export async function getContact(sb: Supa, binderId: string, contactId: string):
     contact: contactView(row),
     works: (works.data ?? []).map((w) => workSummary(w, row.name, quotesByWork.get(w.id) ?? 0)),
     quotes: quoteRows.map(quoteSummary),
-    invoices: (invoices.data ?? []).map(invoiceSummary),
+    invoices: (invoices.data ?? []).map(invoiceSummary(await loadCredits(sb, binderId, invoices.data ?? []))),
   };
 }
 
@@ -292,7 +301,7 @@ export async function getWork(sb: Supa, binderId: string, workId: string): Promi
     work: workView(row),
     contact: contact ? contactView(contact) : null,
     quotes: quoteRows.map(quoteSummary),
-    invoices: (invoices.data ?? []).map(invoiceSummary),
+    invoices: (invoices.data ?? []).map(invoiceSummary(await loadCredits(sb, binderId, invoices.data ?? []))),
   };
 }
 

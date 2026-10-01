@@ -9,6 +9,6 @@ export const quoteRecipePrerequisites = `CREATE ROLE anon; CREATE ROLE authentic
     CREATE TABLE marketplace_commercial_proposals(id uuid PRIMARY KEY,case_id uuid,status text,accepted_at timestamptz);
     CREATE FUNCTION build_touch_updated_at() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN NEW.updated_at=now(); RETURN NEW; END $$;
     CREATE SCHEMA storage;
-    CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[]);
-    CREATE TABLE storage.objects(id uuid,bucket_id text);
+    CREATE TABLE storage.buckets(id text PRIMARY KEY,name text,public boolean,file_size_limit bigint,allowed_mime_types text[],created_at timestamptz DEFAULT now());
+    CREATE TABLE storage.objects(id uuid,bucket_id text,name text);
   `;

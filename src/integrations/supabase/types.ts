@@ -2127,6 +2127,7 @@ export type Database = {
       }
       marketplace_binder_quotes: {
         Row: {
+          contract_epoch: string
           binder_id: string
           book_author: string | null
           book_notes: string | null
@@ -2170,6 +2171,7 @@ export type Database = {
                   payment_snapshot: Json | null
         }
         Insert: {
+          contract_epoch?: string
           binder_id: string
           book_author?: string | null
           book_notes?: string | null
@@ -2213,6 +2215,7 @@ export type Database = {
                   payment_snapshot?: Json | null
         }
         Update: {
+          contract_epoch?: string
           binder_id?: string
           book_author?: string | null
           book_notes?: string | null
@@ -3830,6 +3833,36 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_own_agreement_identity_completions: {
+        Row: {
+          actor_id: string
+          attestation: string
+          binder_id: string
+          created_at: string
+          quote_id: string
+          seller: Json
+          seller_entity: string
+        }
+        Insert: {
+          actor_id: string
+          attestation: string
+          binder_id: string
+          created_at?: string
+          quote_id: string
+          seller: Json
+          seller_entity: string
+        }
+        Update: {
+          actor_id?: string
+          attestation?: string
+          binder_id?: string
+          created_at?: string
+          quote_id?: string
+          seller?: Json
+          seller_entity?: string
+        }
+        Relationships: []
+      }
           marketplace_own_client_agreements: {
         Row: {
           accepted_at: string
@@ -4034,6 +4067,22 @@ export type Database = {
     }
     Functions: {
       // Migration 20260928090000, local schema contract; production is not migrated.
+      marketplace_own_agreement_identity: {
+        Args: { p_actor: string; p_binder: string; p_quote: string }
+        Returns: Json
+      }
+      marketplace_complete_own_agreement_identity: {
+        Args: { p_actor: string; p_attestation: string; p_binder: string; p_quote: string }
+        Returns: undefined
+      }
+      marketplace_seller_entity: {
+        Args: { p_issuer: Json }
+        Returns: string
+      }
+      marketplace_norm_identifier: {
+        Args: { p_value: string }
+        Returns: string
+      }
       marketplace_own_contract: {
         Args: { p_actor: string; p_binder: string; p_quote: string }
         Returns: Json

@@ -2,6 +2,9 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getExternalSettlements, recordExternalSettlement } from "@/marketplace/services/externalSettlement.data.functions";
+import { SETTLEMENT_UNAVAILABLE } from "./settlementCopy";
+import { isNoWorkshopError } from "@/marketplace/i18n/noWorkshopCopy";
+import { NoWorkshopNotice } from "../NoWorkshopNotice";
 import { CARD, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
 import { INVOICES_KEY } from "./quoteQueryKeys";
 
@@ -25,8 +28,9 @@ export function ExternalSettlementPanel({ invoiceId }: { invoiceId: string }) {
     },
   });
   if (state.isPending) return <p role="status">Chargement du suivi des règlements…</p>;
+  if (state.error && isNoWorkshopError(state.error)) return <NoWorkshopNotice />;
   if (state.error) return <p role="alert">Suivi des règlements indisponible. Rechargez la page avant toute déclaration.</p>;
-  if (!state.data?.eligible) return <p className="text-sm text-muted-foreground">Encaissement en ligne non activé. Le suivi direct est réservé aux nouveaux accords « client propre, règlement externe ».</p>;
+  if (!state.data?.eligible) return <p className="text-sm text-muted-foreground">{SETTLEMENT_UNAVAILABLE[state.data?.reason ?? "not_issued"] ?? SETTLEMENT_UNAVAILABLE.not_issued} Aucun paiement en ligne n'est activé.</p>;
   const money = (n: number) => new Intl.NumberFormat("fr-FR", { style: "currency", currency: state.data.currency }).format(n / 100);
   return <section className={CARD} aria-labelledby="settlement-title">
     <h2 id="settlement-title" className="font-serif text-lg">Règlements directs à l'atelier</h2>

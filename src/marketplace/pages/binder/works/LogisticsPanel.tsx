@@ -15,6 +15,8 @@ import {
 import { CARD, ErrorNote, PRIMARY_BUTTON } from "../quotes/quoteUi";
 import { useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspaceContext";
 import { logisticsCopy } from "@/marketplace/works/logisticsCopy";
+import { isNoWorkshopError } from "@/marketplace/i18n/noWorkshopCopy";
+import { NoWorkshopNotice } from "../NoWorkshopNotice";
 
 export function LogisticsPanel({ workId }: { workId: string }) {
   const { locale } = useFineBinderyWorkspace();
@@ -53,6 +55,8 @@ export function LogisticsPanel({ workId }: { workId: string }) {
       <p className="my-3 text-sm text-muted-foreground">{t.introduction}</p>
       {query.isPending ? (
         <p role="status">{t.loading}</p>
+      ) : query.isError && isNoWorkshopError(query.error) ? (
+        <NoWorkshopNotice />
       ) : query.isError ? (
         <ErrorNote>
           {t.loadError}{" "}

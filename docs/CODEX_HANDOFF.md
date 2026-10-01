@@ -3431,3 +3431,11 @@ Le propriétaire autorise uniquement Workers Paid 5 USD/mois + usage et la recet
 ### Workers Paid actif — recette qwf réussie, aucune publication
 
 Abonnement Workers Paid 5 USD/mois + usage activé sur le compte autorisé, forfait courant confirmé ; aucune autre option payante sélectionnée. Alerte compte 10 USD active, informative seulement. Worker QA `mareliure-ops-qa-20260930-paid`, plafond API 1000 ms, qwf uniquement, sans routes/previews ; photos 4/5 Mio acceptées, reprise sans doublon, autre atelier/session absente/5 Mio+1 refusés, deux associations/deux objets relus à octets identiques. CPU réel Cloudflare 13,357–82,370 ms, marge minimale 917,630 ms. Worker et toutes les données temporaires de cette recette supprimés avec contrôles, Auth géré conservé. Production Worker version bdddc8b4 inchangée ; aucun plafond explicite en service (défaut Paid 30s). Nouvel artefact CPU1000 et SHA dans WORKERS-PAID.md. Lanceur distant toujours désactivé ; publication/migrations/fusion non autorisées. Recettes précédentes/incidents non rouverts.
+
+## Latest handoff
+
+**Agent :** Claude Code (Opus 5.5) — 1er octobre 2026, `fix/audit-53-c1-c4` (PR corrective de l'audit du 1er octobre sur #53, distincte du transport).
+
+- Migration additive `20261001150000_own_client_seller_identity_contract_epoch.sql` : identité vendeur comparée par entité juridique normalisée, attestation append-only pour les accords incomplets (C1) ; époque contractuelle des devis, frontière = transaction de publication #53 lue en base (C2) ; raisons d'absence de suivi des règlements. **Non appliquée** : ni en recette (refus du contrôle d'autorisation de l'agent), ni en production.
+- C3 : statut « Annulée par avoir » dérivé des avoirs dans les listes, l'agenda et les fiches. C4 : refus `no_binder` traduit et orienté.
+- Détails, preuves, risques et plan de publication : `docs/audit-53-corrections.md`. Ne pas fusionner ni déployer sans accord explicite.
