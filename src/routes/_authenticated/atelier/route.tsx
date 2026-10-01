@@ -5,6 +5,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { BookOpen, FileText, Globe2, House, Inbox, LibraryBig, Menu, MessageSquare, ReceiptText, Users } from "lucide-react";
 import { SignOutButton } from "@/marketplace/pages/SignOutButton";
 import { getMyBinderProfile, listMyBinderCases } from "@/marketplace/services/marketplace.data.functions";
+import { NoWorkshopNotice } from "@/marketplace/pages/binder/NoWorkshopNotice";
 import { FineBinderyWorkspaceProvider, PROFESSIONAL_COPY, useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspaceContext";
 import { FINE_BINDERY_LOCALES, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 import { languageName } from "@/marketplace/i18n/fineBinderyGlossary";
@@ -93,7 +94,8 @@ function AtelierLayoutContent() {
           {profile.data && profile.data.status !== "approved" && (
             <div role="status" className="mb-7 border-l-4 border-amber-700 bg-amber-50 px-5 py-4 text-sm text-amber-950"><strong className="block">{copy.pending}</strong><p className="mt-1 leading-6">{copy.pendingBody}</p></div>
           )}
-          <Outlet />
+          {/* Compte sans atelier : refus traduit et orienté plutôt qu'un chargement sans fin (audit #53, C4). */}
+          {profile.data === null ? <NoWorkshopNotice /> : <Outlet />}
         </main>
       </div>
 

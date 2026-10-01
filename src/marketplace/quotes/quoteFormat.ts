@@ -59,8 +59,20 @@ export function formatDateLong(iso: string): string {
  * Ce que le serveur répond quand le profil ne suffit pas : `profile_incomplete:Nom|Régime`.
  * Le client lit une LISTE de choses à renseigner, jamais un message technique.
  */
-export function parseServerError(error: unknown): { code: "profile_incomplete" | "other"; missing: string[] } {
+export type ServerErrorCode =
+  | "profile_incomplete"
+  | "agreement_required"
+  | "seller_identity_completion_required"
+  | "seller_changed"
+  | "no_binder"
+  | "other";
+
+const KNOWN_CODES = ["agreement_required", "seller_identity_completion_required", "seller_changed", "no_binder"] as const;
+
+export function parseServerError(error: unknown): { code: ServerErrorCode; missing: string[] } {
   const message = error instanceof Error ? error.message : String(error ?? "");
+  const known = KNOWN_CODES.find((code) => message === code);
+  if (known) return { code: known, missing: [] };
   if (message.startsWith("profile_incomplete")) {
     const list = message.split(":")[1] ?? "";
     return { code: "profile_incomplete", missing: list ? list.split("|") : [] };

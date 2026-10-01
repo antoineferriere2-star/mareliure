@@ -418,6 +418,27 @@ export interface DocumentSummary {
   currency: string;
 }
 
+/** Somme TTC des avoirs émis, par facture. */
+export function creditedByInvoice(rows: readonly { invoice_id: string; total_ttc_cents: number }[]): Map<string, number> {
+  const totals = new Map<string, number>();
+  for (const row of rows) totals.set(row.invoice_id, (totals.get(row.invoice_id) ?? 0) + row.total_ttc_cents);
+  return totals;
+}
+
+/**
+ * Statut d'une facture dans une liste. Un avoir couvrant tout son TTC la neutralise : elle ne se lit
+ * plus « non payée » ni « en retard ». Un avoir partiel n'est jamais un paiement : le statut de
+ * règlement déclaré reste affiché. Aucune pièce n'est modifiée ni supprimée.
+ */
+export function invoiceListStatus(
+  row: { status: string; payment_status: string; total_ttc_cents: number },
+  creditedTtcCents = 0,
+): string {
+  if (row.status === "draft") return "draft";
+  if (row.status === "credited" || (creditedTtcCents > 0 && creditedTtcCents >= row.total_ttc_cents)) return "credited";
+  return row.payment_status;
+}
+
 export function summaryOf(view: DocumentView): DocumentSummary {
   return {
     kind: view.kind,

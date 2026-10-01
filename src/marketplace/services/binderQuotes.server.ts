@@ -38,6 +38,8 @@ import type {
 } from "@/marketplace/quotes/quoteInput";
 import { canTransition, isQuoteStatus, type QuoteStatus } from "@/marketplace/quotes/quoteStatus";
 import {
+  creditedByInvoice,
+  invoiceListStatus,
   invoiceView,
   quoteView,
   type CreditNoteDocumentView,
@@ -81,6 +83,9 @@ export type BinderQuotesErrorCode =
   | "conflict"
   | "invalid_input"
   | "profile_incomplete"
+  | "agreement_required"
+  | "seller_identity_completion_required"
+  | "seller_changed"
   | "failed";
 
 const STATUS_BY_CODE: Record<BinderQuotesErrorCode, number> = {
@@ -89,6 +94,9 @@ const STATUS_BY_CODE: Record<BinderQuotesErrorCode, number> = {
   conflict: 409,
   invalid_input: 400,
   profile_incomplete: 422,
+  agreement_required: 409,
+  seller_identity_completion_required: 409,
+  seller_changed: 409,
   failed: 500,
 };
 
@@ -819,6 +827,8 @@ export async function setQuoteStatus(sb: Supa, binderId: string, quoteId: string
     .eq("status", from)
     .select("id")
     .maybeSingle();
+  // Un devis client propre du circuit externe ne s'accepte que par un accord référencé (audit #53, C2).
+  if (error && String(error.message).includes("own_agreement_required")) throw new BinderQuotesError("agreement_required");
   if (error) throw new BinderQuotesError("failed");
   if (!data) throw new BinderQuotesError("conflict");
   return getQuote(sb, binderId, quoteId);
@@ -971,7 +981,13 @@ export async function issueInvoice(sb: Supa, binderId: string, invoiceId: string
     p_invoice_id: invoiceId,
     p_legal_mentions: asJson(result.legalMentions),
   });
-  if (error) throw new BinderQuotesError(String(error.message).includes("invoice_incomplete") ? "profile_incomplete" : "failed", result.missing);
+  if (error) {
+    const message = String(error.message);
+    // L'identité vendeur figée à l'accord ne correspond pas : jamais une erreur générique (audit #53, C1).
+    if (message.includes("seller_identity_completion_required")) throw new BinderQuotesError("seller_identity_completion_required");
+    if (message.includes("invoice_seller_changed")) throw new BinderQuotesError("seller_changed");
+    throw new BinderQuotesError(message.includes("invoice_incomplete") ? "profile_incomplete" : "failed", result.missing);
+  }
   return getInvoice(sb, binderId, invoiceId);
 }
 
@@ -1066,12 +1082,15 @@ export async function listInvoices(sb: Supa, binderId: string): Promise<Document
     .eq("binder_id", binderId)
     .order("created_at", { ascending: false });
   if (error) throw new BinderQuotesError("failed");
+  const credits = await sb.from("marketplace_binder_credit_notes").select("invoice_id, total_ttc_cents").eq("binder_id", binderId);
+  if (credits.error) throw new BinderQuotesError("failed");
+  const credited = creditedByInvoice(credits.data ?? []);
   return (data ?? []).map((row) => ({
     kind: "invoice" as const,
     id: row.id,
     number: row.invoice_number ?? "Brouillon",
     // Une facture annulée par un avoir n'attend plus aucun paiement : elle ne se lit pas « Non payée ».
-    status: row.status === "draft" || row.status === "credited" ? row.status : row.payment_status,
+    status: invoiceListStatus(row, credited.get(row.id)),
     issueDate: row.issue_date,
     dueDate: row.due_date ?? null,
     validUntil: null,

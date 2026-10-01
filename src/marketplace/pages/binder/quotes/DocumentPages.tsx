@@ -30,6 +30,7 @@ import { CARD, ErrorNote, FIELD, Field, PAYMENT_LABELS, PRIMARY_BUTTON, QuoteSta
 import { INVOICES_KEY, QUOTES_KEY } from "./quoteQueryKeys";
 import { acceptOwnQuote, getOwnContract } from "@/marketplace/services/externalSettlement.data.functions";
 import { ExternalSettlementPanel } from "./ExternalSettlementPanel";
+import { AgreementIdentityPanel, ContractBlockerNotice } from "./AgreementPanels";
 
 const TRANSITION_LABELS: Partial<Record<QuoteStatus, string>> = {
   sent: "Marquer comme envoyé",
@@ -173,6 +174,7 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
   const navigate = useNavigate();
   const [missing, setMissing] = useState<string[]>([]);
   const [actionError, setActionError] = useState(false);
+  const [agreementRequired, setAgreementRequired] = useState(false);
 
   const quote = useQuery({ queryKey: [...QUOTES_KEY, quoteId] as const, queryFn: () => fetchQuote({ data: { id: quoteId } }) });
 
@@ -184,9 +186,12 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
       if (to === "accepted" && contract.data?.eligible) { await acceptExternal({ data: { id: quoteId, evidence: acceptanceEvidence, revision: contract.data.revision } }); return; }
       await setStatus({ data: { id: quoteId, status: to } });
     },
-    onMutate: () => setActionError(false),
+    onMutate: () => { setActionError(false); setAgreementRequired(false); },
     onSuccess: refresh,
-    onError: () => setActionError(true),
+    onError: async (error) => {
+      if (parseServerError(error).code === "agreement_required") { setAgreementRequired(true); await refresh(); }
+      else setActionError(true);
+    },
   });
   const toInvoice = useMutation({
     mutationFn: () => convert({ data: { id: quoteId } }),
@@ -259,6 +264,7 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
           <Link to="/atelier/tarifs" className="mt-1 inline-block underline">Compléter mon profil</Link>
         </div>
       )}
+      {agreementRequired && <ErrorNote>Ce devis client propre s'accepte uniquement par l'accord référencé du client. Suivez les indications de la section « Suivi ».</ErrorNote>}
       {actionError && <ErrorNote>Cette action n'a pas été enregistrée. Le devis ou ses conditions ont pu changer : rechargez la page avant de poursuivre. Un accord accepté ne peut pas être remplacé par un refus.</ErrorNote>}
 
       {(current === "accepted" || current === "invoiced") && <p className="text-sm text-muted-foreground">L'accord accepté est conservé. Pour une annulation, conservez l'échange avec le client ; si une facture a été émise, utilisez son avoir. Aucun remboursement bancaire n'est déclenché ici.</p>}
@@ -274,8 +280,11 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
             <p>Enregistrez uniquement un accord client déjà obtenu sur ce devis. Conservez l'e-mail ou le devis signé ; cette déclaration n'est pas une signature électronique.</p>
             <Field label="Référence de l'accord client" htmlFor="acceptance-evidence"><input id="acceptance-evidence" className={FIELD} maxLength={500} value={acceptanceEvidence} onChange={e => setAcceptanceEvidence(e.target.value)} /></Field>
           </div>}
+          {contract.data?.agreementRequired && !contract.data.eligible && contract.data.blocker && (
+            <ContractBlockerNotice blocker={contract.data.blocker} onDuplicate={() => copy.mutate()} duplicating={copy.isPending} />
+          )}
           <div className="mt-3 flex flex-wrap gap-2">
-            {allowedTransitions(current).map((to) => (
+            {allowedTransitions(current).filter((to) => !(to === "accepted" && contract.data?.agreementRequired && !contract.data.eligible)).map((to) => (
               <button key={to} type="button" className={SECONDARY_BUTTON} disabled={busy || (to === "accepted" && (contract.isPending || !!contract.error || (contract.data?.eligible && acceptanceEvidence.trim().length < 8)))} onClick={() => status.mutate(to)}>
                 {TRANSITION_LABELS[to] ?? QUOTE_STATUS_LABELS[to]}
               </button>
@@ -333,6 +342,7 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
   const [saved, setSaved] = useState(false);
   const [missing, setMissing] = useState<string[]>([]);
   const [failed, setFailed] = useState(false);
+  const [sellerBlocked, setSellerBlocked] = useState(false);
   const set = (patch: Partial<InvoiceDraftInput>) => setDraft((current) => ({ ...current, ...patch }));
   const text = (key: keyof InvoiceDraftInput) => String(draft[key] ?? "");
   const refresh = () => Promise.all([
@@ -352,12 +362,15 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
       await updateDraft({ data: { id: doc.id, draft } });
       return issue({ data: { id: doc.id } });
     },
-    onMutate: () => { setMissing([]); setFailed(false); },
+    onMutate: () => { setMissing([]); setFailed(false); setSellerBlocked(false); },
     onSuccess: refresh,
-    onError: (error) => {
+    onError: async (error) => {
       const parsed = parseServerError(error);
       if (parsed.code === "profile_incomplete") setMissing(parsed.missing);
-      else setFailed(true);
+      else if (parsed.code === "seller_identity_completion_required" || parsed.code === "seller_changed") {
+        setSellerBlocked(true);
+        await queryClient.invalidateQueries({ queryKey: ["agreement-identity", doc.linkedQuoteId] });
+      } else setFailed(true);
     },
   });
   const field = (key: keyof InvoiceDraftInput, label: string, type = "text") => (
@@ -415,6 +428,7 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
         <Field label="Notes visibles" htmlFor="invoice-notes"><textarea id="invoice-notes" rows={2} className={`${FIELD} h-auto py-2`} value={text("notes")} onChange={(event) => set({ notes: valueOrNull(event.target.value) })} /></Field>
       </div>
       {missing.length > 0 && <div role="alert" className="rounded-md border border-amber-300 bg-amber-50 px-4 py-3 text-sm"><p className="font-semibold">Impossible d'émettre la facture :</p><ul className="mt-2 list-disc pl-5">{missing.map((item) => <li key={item}>{item}</li>)}</ul>{missing.some((item) => item.includes("atelier")) && <Link to="/atelier/tarifs" className="mt-2 inline-block underline">Compléter le profil atelier</Link>}</div>}
+      {sellerBlocked && <ErrorNote>Facture non émise : l'identité du vendeur ne correspond pas à l'accord du client. Voir l'encadré « Identité du vendeur » ci-dessus.</ErrorNote>}
       {failed && <ErrorNote>L'action n'a pas pu aboutir. Rechargez la page et réessayez.</ErrorNote>}
       <div className="flex flex-wrap items-center gap-3">
         <button type="submit" className={SECONDARY_BUTTON} disabled={save.isPending || emit.isPending}>{save.isPending ? "Enregistrement…" : "Enregistrer le brouillon"}</button>
@@ -465,12 +479,13 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
           </p>
         </div>
         {doc.status !== "draft" && doc.payment && (
-          <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold">{PAYMENT_LABELS[doc.payment.status]}{doc.payment.declaredExternal ? " · déclaration atelier" : ""}</span>
+          <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold">{doc.creditNote ? PAYMENT_LABELS.credited : PAYMENT_LABELS[doc.payment.status]}{doc.payment.declaredExternal ? " · déclaration atelier" : ""}</span>
         )}
       </header>
       <div className="flex flex-wrap items-center gap-2">
         {doc.status !== "draft" && <PdfActions fetchPdf={fetchPdf} id={doc.id} />}
       </div>
+      {doc.status === "draft" && doc.linkedQuoteId && <AgreementIdentityPanel quoteId={doc.linkedQuoteId} />}
       {doc.status === "draft" ? <InvoiceDraftEditor doc={doc} /> : <p className="text-sm text-muted-foreground">Cette facture est émise et ne peut plus être modifiée ni supprimée. Une correction passe par un avoir.</p>}
       {doc.status !== "draft" && <ExternalSettlementPanel invoiceId={invoiceId} />}
       <DocumentBody doc={doc} />

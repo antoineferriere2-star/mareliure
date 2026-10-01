@@ -69,6 +69,9 @@ const MESSAGES: Record<BinderQuotesErrorCode, string> = {
   conflict: "Cette action n'est plus possible sur ce document.",
   invalid_input: "Les informations envoyées ne sont pas valides.",
   profile_incomplete: "profile_incomplete",
+  agreement_required: "agreement_required",
+  seller_identity_completion_required: "seller_identity_completion_required",
+  seller_changed: "seller_changed",
   failed: "L'opération n'a pas pu aboutir. Réessayez.",
 };
 

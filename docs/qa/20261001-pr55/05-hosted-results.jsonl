@@ -1,0 +1,29 @@
+{"n": 1, "pass": true, "expected": "external_v1", "observed": "external_v1", "scenario": "C2 nouveau devis classé external_v1"}
+{"n": 2, "pass": true, "expected": "contract_epoch_immutable", "observed": "contract_epoch_immutable", "scenario": "C2 INSERT déclaré historique refusé"}
+{"n": 3, "pass": true, "expected": "seller_identity_missing", "observed": "seller_identity_missing", "scenario": "C1 devis sans identifiant : blocage expliqué"}
+{"n": 4, "pass": true, "expected": "external_contract_unavailable", "observed": "external_contract_unavailable", "scenario": "C1 accord sans identifiant refusé"}
+{"n": 5, "pass": true, "expected": "own_agreement_required", "observed": "own_agreement_required", "scenario": "C1/C2 acceptation directe sans accord refusée"}
+{"n": 6, "pass": true, "expected": "ok", "observed": "ok", "scenario": "C1 accord avec identifiant"}
+{"n": 7, "pass": true, "expected": "accepted_payment_terms_immutable", "observed": "accepted_payment_terms_immutable", "scenario": "Refus après accord toujours interdit"}
+{"n": 8, "pass": true, "expected": "invoice_seller_changed_new_agreement_required", "observed": "invoice_seller_changed_new_agreement_required", "scenario": "C1 facture sous un autre SIREN refusée"}
+{"n": 9, "pass": true, "expected": "ok", "observed": "ok", "scenario": "C1 même SIREN, autre établissement : facture émise"}
+{"n": 10, "pass": true, "expected": "ok", "observed": "ok", "scenario": "C1 règlement déclaré sur la facture émise"}
+{"n": 11, "pass": true, "expected": "active_membership_required", "observed": "active_membership_required", "scenario": "Droits : autre atelier refusé sur le suivi"}
+{"n": 12, "pass": true, "expected": "active_membership_required", "observed": "active_membership_required", "scenario": "Droits : autre atelier refusé sur l'attestation"}
+{"n": 13, "pass": true, "expected": "profile_identifier_missing", "observed": "profile_identifier_missing", "scenario": "C1 QA-AUDIT, profil sans identifiant"}
+{"n": 14, "pass": true, "expected": "seller_changed", "observed": "seller_changed", "scenario": "C1 QA-AUDIT, nom figé différent : vendeur changé"}
+{"n": 15, "pass": true, "expected": "identity_completion_not_applicable:seller_changed", "observed": "identity_completion_not_applicable:seller_changed", "scenario": "C1 QA-AUDIT, attestation refusée"}
+{"n": 16, "pass": true, "expected": "seller_changed", "observed": "seller_changed", "scenario": "C1 fixture sans nom (10074e0e) : vendeur non attestable"}
+{"n": 17, "pass": true, "expected": "attestation_required", "observed": "attestation_required", "scenario": "C1 accord incomplet au même nom : attestation requise"}
+{"n": 18, "pass": true, "expected": "ok", "observed": "ok", "scenario": "C1 attestation explicite"}
+{"n": 19, "pass": true, "expected": "settlement_history_immutable", "observed": "settlement_history_immutable", "scenario": "C1 attestation immuable"}
+{"n": 20, "pass": true, "expected": "ok", "observed": "ok", "scenario": "C1 facture émise après attestation"}
+{"n": 21, "pass": true, "expected": "ok", "observed": "ok", "scenario": "C3 avoir complet"}
+{"n": 22, "pass": true, "expected": "issued/unpaid", "observed": "issued/unpaid", "scenario": "C3 avoir ne change ni la facture ni le règlement"}
+{"n": 23, "pass": true, "expected": "true", "observed": "true", "scenario": "C3 avoir couvre tout le TTC"}
+{"n": 24, "pass": true, "expected": "send_first", "observed": "send_first", "scenario": "C2 brouillon postérieur : envoyer d'abord"}
+{"n": 25, "pass": true, "expected": "own_agreement_required", "observed": "own_agreement_required", "scenario": "C2 brouillon postérieur → accepté sans accord refusé"}
+{"n": 26, "pass": true, "expected": "false", "observed": "false", "scenario": "C2 devis reclassé avec acompte : hors circuit, accord non exigé"}
+{"n": 27, "pass": true, "expected": "ok", "observed": "ok", "scenario": "C2 devis avec acompte : acceptation préservée"}
+{"n": 28, "pass": true, "expected": "not_issued", "observed": "not_issued", "scenario": "C2 facture avec acompte : raison affichée"}
+{"n": 29, "pass": true, "expected": "0", "observed": "0", "scenario": "C2 aucun accord fabriqué pour l'acompte"}
