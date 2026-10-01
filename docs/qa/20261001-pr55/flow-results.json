@@ -1,0 +1,122 @@
+[
+  {
+    "cfg": "MR-bureau",
+    "step": "accord : bouton désactivé tant que la référence manque",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "MR-bureau",
+    "step": "accord référencé enregistré, devis accepté",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "MR-bureau",
+    "step": "aucun bouton de refus après accord",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "MR-bureau",
+    "step": "brouillon de facture préparé",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "MR-bureau",
+    "step": "aucun blocage d'identité vendeur (accord complet)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "MR-bureau",
+    "step": "facture émise",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "MR-bureau",
+    "step": "suivi des règlements proposé (accord du circuit externe)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "MR-bureau",
+    "step": "règlement partiel déclaré",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "MR-bureau",
+    "step": "badge « Règlement partiel · déclaration atelier »",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "MR-bureau",
+    "step": "aucun débordement horizontal",
+    "pass": true,
+    "detail": "0px"
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "accord : bouton désactivé tant que la référence manque",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "accord référencé enregistré, devis accepté",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "aucun bouton de refus après accord",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "brouillon de facture préparé",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "aucun blocage d'identité vendeur (accord complet)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "facture émise",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "suivi des règlements proposé (accord du circuit externe)",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "règlement partiel déclaré",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "badge « Règlement partiel · déclaration atelier »",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "cfg": "FB-mobile",
+    "step": "aucun débordement horizontal",
+    "pass": true,
+    "detail": "0px"
+  }
+]

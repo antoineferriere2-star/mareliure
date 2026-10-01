@@ -1,0 +1,226 @@
+[
+  {
+    "brand": "MA_RELIURE",
+    "device": "bureau-1440",
+    "scenario": "C2 brouillon postérieur : envoyer d'abord, « Accepté » masqué",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "bureau-1440",
+    "scenario": "Témoin : « Marquer comme accepté » présent sur un devis éligible",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "bureau-1440",
+    "scenario": "C1 devis sans identifiant : explication, profil, duplication, « Accepté » masqué",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "bureau-1440",
+    "scenario": "C1 QA-AUDIT (profil désormais identifié, nom figé différent) : vendeur différent, aucune attestation proposée",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "bureau-1440",
+    "scenario": "C3 facture couverte par un avoir : badge « Annulée par avoir », avoir téléchargeable",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "bureau-1440",
+    "scenario": "C3 liste des factures : « Annulée par avoir », pas « Non payée »",
+    "pass": true,
+    "detail": "QA-PR55-B client fictif · Livre fictif QA F-2026-0004 · 1 octobre 2026 Annulée par avoir 1"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "bureau-1440",
+    "scenario": "Aucun débordement horizontal",
+    "pass": true,
+    "detail": "0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "bureau-1440",
+    "scenario": "C4 compte sans atelier : message traduit et orientation, sans code brut ni donnée",
+    "pass": true,
+    "detail": "Aller au contenu Ma Reliure ESPACE ATELIER À TRAITER Aujourd’hui Projets Messages Devis MON ATELIER Ouvrages Contacts Fa"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "mobile-390",
+    "scenario": "C2 brouillon postérieur : envoyer d'abord, « Accepté » masqué",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "mobile-390",
+    "scenario": "Témoin : « Marquer comme accepté » présent sur un devis éligible",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "mobile-390",
+    "scenario": "C1 devis sans identifiant : explication, profil, duplication, « Accepté » masqué",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "mobile-390",
+    "scenario": "C1 QA-AUDIT (profil désormais identifié, nom figé différent) : vendeur différent, aucune attestation proposée",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "mobile-390",
+    "scenario": "C3 facture couverte par un avoir : badge « Annulée par avoir », avoir téléchargeable",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "mobile-390",
+    "scenario": "C3 liste des factures : « Annulée par avoir », pas « Non payée »",
+    "pass": true,
+    "detail": "QA-PR55-B client fictif · Livre fictif QA F-2026-0004 · 1 octobre 2026 Annulée par avoir 1"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "mobile-390",
+    "scenario": "Aucun débordement horizontal",
+    "pass": true,
+    "detail": "0px"
+  },
+  {
+    "brand": "MA_RELIURE",
+    "device": "mobile-390",
+    "scenario": "C4 compte sans atelier : message traduit et orientation, sans code brut ni donnée",
+    "pass": true,
+    "detail": "Aller au contenu Ma Reliure ESPACE ATELIER Se déconnecter Aucun atelier n'est associé à ce compte. Ces outils sont réser"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "bureau-1440",
+    "scenario": "C2 brouillon postérieur : envoyer d'abord, « Accepté » masqué",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "bureau-1440",
+    "scenario": "Témoin : « Marquer comme accepté » présent sur un devis éligible",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "bureau-1440",
+    "scenario": "C1 devis sans identifiant : explication, profil, duplication, « Accepté » masqué",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "bureau-1440",
+    "scenario": "C1 QA-AUDIT (profil désormais identifié, nom figé différent) : vendeur différent, aucune attestation proposée",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "bureau-1440",
+    "scenario": "C3 facture couverte par un avoir : badge « Annulée par avoir », avoir téléchargeable",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "bureau-1440",
+    "scenario": "C3 liste des factures : « Annulée par avoir », pas « Non payée »",
+    "pass": true,
+    "detail": "QA-PR55-B client fictif · Livre fictif QA F-2026-0004 · 1 octobre 2026 Annulée par avoir 1"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "bureau-1440",
+    "scenario": "Aucun débordement horizontal",
+    "pass": true,
+    "detail": "0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "bureau-1440",
+    "scenario": "C4 compte sans atelier : message traduit et orientation, sans code brut ni donnée",
+    "pass": true,
+    "detail": "Skip to content FineBindery WORKSHOP SPACE TO HANDLE Today Projects Messages Quotes MY WORKSHOP Books Contacts Invoices "
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "mobile-390",
+    "scenario": "C2 brouillon postérieur : envoyer d'abord, « Accepté » masqué",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "mobile-390",
+    "scenario": "Témoin : « Marquer comme accepté » présent sur un devis éligible",
+    "pass": true,
+    "detail": ""
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "mobile-390",
+    "scenario": "C1 devis sans identifiant : explication, profil, duplication, « Accepté » masqué",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "mobile-390",
+    "scenario": "C1 QA-AUDIT (profil désormais identifié, nom figé différent) : vendeur différent, aucune attestation proposée",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "mobile-390",
+    "scenario": "C3 facture couverte par un avoir : badge « Annulée par avoir », avoir téléchargeable",
+    "pass": true,
+    "detail": "débordement 0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "mobile-390",
+    "scenario": "C3 liste des factures : « Annulée par avoir », pas « Non payée »",
+    "pass": true,
+    "detail": "QA-PR55-B client fictif · Livre fictif QA F-2026-0004 · 1 octobre 2026 Annulée par avoir 1"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "mobile-390",
+    "scenario": "Aucun débordement horizontal",
+    "pass": true,
+    "detail": "0px"
+  },
+  {
+    "brand": "FINE_BINDERY",
+    "device": "mobile-390",
+    "scenario": "C4 compte sans atelier : message traduit et orientation, sans code brut ni donnée",
+    "pass": true,
+    "detail": "Skip to content FineBindery WORKSHOP SPACE Sign out No workshop is linked to this account. These tools are reserved for "
+  }
+]
