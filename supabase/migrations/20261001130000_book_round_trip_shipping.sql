@@ -91,6 +91,8 @@ CREATE TABLE public.marketplace_round_trip_label_jobs (
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now(),
   UNIQUE (case_id, direction),
+  CONSTRAINT round_trip_private_label_path CHECK (
+    private_label_path IS NULL OR private_label_path=id::text||'/label.pdf'),
   CONSTRAINT round_trip_confirmed_has_label CHECK (status <> 'confirmed' OR
     (provider_label_id IS NOT NULL AND carrier IS NOT NULL AND tracking IS NOT NULL AND private_label_path IS NOT NULL))
 );
