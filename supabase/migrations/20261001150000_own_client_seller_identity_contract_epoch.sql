@@ -71,7 +71,9 @@ ALTER TABLE public.marketplace_binder_quotes ALTER COLUMN contract_epoch SET DEF
 CREATE OR REPLACE FUNCTION public.marketplace_require_own_agreement() RETURNS trigger LANGUAGE plpgsql SET search_path=public AS $$
 DECLARE a marketplace_own_client_agreements%ROWTYPE;
 BEGIN
-  IF TG_OP='UPDATE' AND NEW.contract_epoch IS DISTINCT FROM OLD.contract_epoch THEN
+  -- L'époque est fixée par la base : un devis créé désormais ne peut pas se déclarer historique.
+  IF (TG_OP='UPDATE' AND NEW.contract_epoch IS DISTINCT FROM OLD.contract_epoch)
+    OR (TG_OP='INSERT' AND NEW.contract_epoch IS DISTINCT FROM 'external_v1') THEN
     RAISE EXCEPTION 'contract_epoch_immutable';
   END IF;
   IF NEW.status='accepted' AND (TG_OP='INSERT' OR OLD.status NOT IN ('accepted','invoiced'))
@@ -129,9 +131,15 @@ BEGIN
       WHEN c.quote_id IS NOT NULL AND c.seller_entity IS DISTINCT FROM v_current THEN 'seller_changed'
       WHEN c.quote_id IS NOT NULL THEN 'completed_by_attestation'
       WHEN v_current IS NULL THEN 'profile_identifier_missing'
-      WHEN nullif(btrim(a.terms->'seller'->>'legalName'),'') IS NOT NULL AND nullif(btrim(p.legal_name),'') IS NOT NULL
-        AND marketplace_norm_identifier(a.terms->'seller'->>'legalName') IS DISTINCT FROM marketplace_norm_identifier(p.legal_name) THEN 'seller_changed'
-      ELSE 'attestation_required' END,
+      -- Compléter n'est pas remplacer : le nom figé à l'accord doit être celui du profil.
+      -- Raison sociale si l'accord en porte une, sinon nom d'atelier ; sans nom, rien n'est attesté.
+      WHEN nullif(btrim(a.terms->'seller'->>'legalName'),'') IS NOT NULL THEN CASE
+        WHEN marketplace_norm_identifier(a.terms->'seller'->>'legalName') IS DISTINCT FROM marketplace_norm_identifier(p.legal_name)
+          THEN 'seller_changed' ELSE 'attestation_required' END
+      WHEN nullif(btrim(a.terms->'seller'->>'workshopName'),'') IS NOT NULL THEN CASE
+        WHEN marketplace_norm_identifier(a.terms->'seller'->>'workshopName') IS DISTINCT FROM marketplace_norm_identifier(p.workshop_name)
+          THEN 'seller_changed' ELSE 'attestation_required' END
+      ELSE 'seller_changed' END,
     'attestation', CASE WHEN c.quote_id IS NULL THEN NULL ELSE jsonb_build_object('text',c.attestation,'at',c.created_at) END);
 END $$;
 

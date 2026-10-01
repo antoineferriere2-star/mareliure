@@ -33,10 +33,10 @@ class Bench {
       INSERT INTO marketplace_binder_billing_profiles(binder_id,workshop_name,legal_name,country,siret,legal_form,address_line1,postal_code,city,vat_regime,vat_mention)
         VALUES('${id(2)}','Atelier QA','Atelier QA','FR','123 456 789 00012','EI','1 rue QA','75001','Paris','FRANCHISE','TVA non applicable, art. 293 B du CGI');`);
   }
-  async quote(n: number, opts: { issuer?: Issuer; status?: string; deposit?: number; created?: string } = {}) {
+  async quote(n: number, opts: { issuer?: Issuer; status?: string; deposit?: number; created?: string; epoch?: string } = {}) {
     await this.db.query(`INSERT INTO marketplace_binder_quotes(id,binder_id,client_id,quote_number,status,issue_date,valid_until,client_name,
-      currency,issuer,vat_regime,vat_mention,subtotal_cents,total_ht_cents,total_vat_cents,total_ttc_cents,deposit_cents,created_at)
-      VALUES($1,$2,$3,$4,$5,'2026-09-28','2099-01-01','QA','EUR',$6,'FRANCHISE','QA',10000,10000,0,10000,$7,${opts.created ?? "now()"})`,
+      currency,issuer,vat_regime,vat_mention,subtotal_cents,total_ht_cents,total_vat_cents,total_ttc_cents,deposit_cents,created_at${opts.epoch ? ",contract_epoch" : ""})
+      VALUES($1,$2,$3,$4,$5,'2026-09-28','2099-01-01','QA','EUR',$6,'FRANCHISE','QA',10000,10000,0,10000,$7,${opts.created ?? "now()"}${opts.epoch ? `,'${opts.epoch}'` : ""})`,
       [id(n), id(2), id(3), `QA-${n}`, opts.status ?? "sent", JSON.stringify(opts.issuer ?? seller()), opts.deposit ?? 0]);
     await this.db.query(`INSERT INTO marketplace_binder_quote_items(quote_id,binder_id,position,line_key,label,quantity,unit_price_cents,vat_rate_bps,total_ht_cents)
       VALUES($1,$2,1,'l1','Reliure QA',1,10000,0,10000)`, [id(n), id(2)]);
@@ -78,6 +78,8 @@ beforeAll(async () => {
     await bench.quote(12, { issuer: seller({ siret: "98765432100019" }) }); await bench.accept(12);
     await bench.quote(13, { issuer: seller({ siret: "12345678900099" }) }); await bench.accept(13);
     await bench.quote(14, { issuer: seller({ siret: null, legalName: "Ancienne Société" }) }); await bench.accept(14);
+    // Accord sans identifiant ni raison sociale, sous un autre nom d'atelier que le profil actuel.
+    await bench.quote(15, { issuer: seller({ siret: null, legalName: null, workshopName: "Atelier Ancien" }) }); await bench.accept(15);
     await bench.quote(20, { status: "draft", created: "now()-interval '2 days'" });
     await bench.quote(21, { status: "draft" });
     await bench.quote(22, { status: "expired" });
@@ -128,6 +130,23 @@ describe("C1 — identité vendeur figée à l'accord", () => {
     expect(await fixed.identityState(14)).toBe("seller_changed");
     await expect(fixed.attest(14)).rejects.toThrow("identity_completion_not_applicable:seller_changed");
   });
+  it("n'atteste jamais un accord dont l'entité est déjà connue", async () => {
+    await expect(fixed.attest(12)).rejects.toThrow("identity_completion_not_applicable:seller_changed");
+    await expect(fixed.attest(11)).rejects.toThrow("identity_completion_not_applicable:complete");
+  });
+  it("n'atteste pas un accord sans raison sociale dont le nom d'atelier diffère", async () => {
+    expect(await fixed.identityState(15)).toBe("seller_changed");
+    await expect(fixed.attest(15)).rejects.toThrow("identity_completion_not_applicable:seller_changed");
+  });
+  it("après attestation, refuse une facture émise sous une autre entité", async () => {
+    await fixed.quote(16, { issuer: seller({ siret: null }), status: "sent", created: "now()-interval '2 days'" });
+    // Accord historique (antérieur au correctif) : créé sur la base publiée puis rejoué ici avant attestation.
+    await fixed.db.query(`INSERT INTO marketplace_own_client_agreements(quote_id,binder_id,actor_id,evidence,terms)
+      VALUES($1,$2,$3,'Accord e-mail QA 2026',$4)`, [id(16), id(2), id(1), JSON.stringify({ version: "own-external-v1", seller: seller({ siret: null }), currency: "EUR", total_ttc_cents: 10000 })]);
+    await fixed.db.query(`UPDATE marketplace_binder_quotes SET status='accepted' WHERE id='${id(16)}'`);
+    await fixed.attest(16);
+    await expect(fixed.issue(16, invoiceSeller("987 654 321 00019"))).rejects.toThrow("invoice_seller_changed_new_agreement_required");
+  });
   it("n'impose pas un SIRET français à un atelier établi hors de France", async () => {
     const entity = async (issuer: Issuer) => (await fixed.db.query<{ e: string | null }>("SELECT marketplace_seller_entity($1::jsonb) e", [JSON.stringify(issuer)])).rows[0].e;
     expect(await entity({ country: "United Kingdom", siren: "Company 0123 4567" })).toBe("UNITEDKINGDOM:COMPANY01234567");
@@ -174,6 +193,9 @@ describe("C2 — devis postérieurs à la publication", () => {
   });
   it("interdit de réécrire l'époque contractuelle", async () => {
     await expect(fixed.db.query(`UPDATE marketplace_binder_quotes SET contract_epoch='pre_external_v1' WHERE id='${id(22)}'`)).rejects.toThrow("contract_epoch_immutable");
+  });
+  it("refuse de créer un nouveau devis en le déclarant historique", async () => {
+    await expect(fixed.quote(26, { status: "draft" , epoch: "pre_external_v1" })).rejects.toThrow("contract_epoch_immutable");
   });
   it("classe tout nouveau devis dans le circuit externe", async () => {
     await fixed.quote(25, { status: "draft" });
