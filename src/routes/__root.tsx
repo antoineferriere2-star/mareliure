@@ -12,6 +12,7 @@ import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
+import { markHydrated } from "../lib/hydration";
 import {
   fineBinderyOrganizationSchema,
   fineBinderyWebsiteSchema,
@@ -227,6 +228,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   const { marketplaceBrand, fineBinderyLocale } = Route.useLoaderData();
+  // Les routes client seulement consultent ce signal avant de rediriger (voir lib/hydration.ts).
+  useEffect(markHydrated, []);
   const BRAND = rootBrand(marketplaceBrand, fineBinderyLocale);
   return (
     <html lang={BRAND.lang} className={BRAND.themeClass}>
