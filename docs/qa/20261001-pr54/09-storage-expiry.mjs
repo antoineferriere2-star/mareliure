@@ -1,0 +1,23 @@
+// RECETTE qwf : stockage privé des étiquettes et expiration des liens signés (PDF fictif, chemin de test).
+import { readFileSync, writeFileSync } from "node:fs";
+import { randomUUID } from "node:crypto";
+const env = Object.fromEntries(readFileSync("C:/Users/antoi/Buil AI/.env", "utf8").split(/\r?\n/).filter((l) => /^[A-Z_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]));
+if (!env.SUPABASE_URL.includes("qwfhebtxeubfmvvdsqdt")) throw Error("not recette");
+const svc = { apikey: env.SUPABASE_SERVICE_ROLE_KEY, Authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}` };
+const anon = { apikey: env.SUPABASE_PUBLISHABLE_KEY, Authorization: `Bearer ${env.SUPABASE_PUBLISHABLE_KEY}` };
+const bucket = "round-trip-labels-private", path = `${randomUUID()}/label.pdf`, out = [];
+const log = (k, v) => { out.push([k, v]); console.log(k, v); };
+let r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, { method: "POST", headers: { ...svc, "Content-Type": "application/pdf", "x-upsert": "false" }, body: "%PDF-1.4 QA PR54 étiquette fictive" });
+log("upload service", r.status);
+r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/${bucket}/${path}`, { method: "POST", headers: { ...svc, "Content-Type": "text/html", "x-upsert": "true" }, body: "<html>" });
+log("refus non-PDF / écrasement", r.status);
+r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/public/${bucket}/${path}`); log("lecture publique", r.status);
+r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/authenticated/${bucket}/${path}`, { headers: anon }); log("lecture anonyme", r.status);
+r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/list/${bucket}`, { method: "POST", headers: { ...anon, "Content-Type": "application/json" }, body: JSON.stringify({ prefix: path.split("/")[0] }) });
+log("listing anonyme", `${r.status} ${(await r.text()).slice(0, 20)}`);
+r = await fetch(`${env.SUPABASE_URL}/storage/v1/object/sign/${bucket}/${path}`, { method: "POST", headers: { ...svc, "Content-Type": "application/json" }, body: JSON.stringify({ expiresIn: 60 }) });
+const signed = (await r.json()).signedURL; const url = `${env.SUPABASE_URL}/storage/v1${signed}`;
+r = await fetch(url); log("lien signé immédiat", `${r.status} ${(await r.text()).startsWith("%PDF") ? "PDF" : "?"}`);
+await new Promise((ok) => setTimeout(ok, 70000));
+r = await fetch(url); log("lien signé après 70 s", r.status);
+writeFileSync("09-storage-expiry-result.json", JSON.stringify({ path, results: Object.fromEntries(out) }, null, 2));
