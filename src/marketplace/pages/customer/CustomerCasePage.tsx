@@ -415,6 +415,7 @@ export function CustomerCasePage({
   if (!data) return null;
 
   const { view, proposal, selectedBinder } = data;
+  const shippingJourney = data.shippingJourney ?? [];
   const facts: CustomerCaseFacts = {
     status: data.case.status,
     hasPrice: data.case.customerPriceCents !== null,
@@ -559,6 +560,30 @@ export function CustomerCasePage({
               <p className="mt-4 text-sm leading-6 text-[#4b3a2c]">{selectedBinder.bio}</p>
             )}
           </div>
+        </section>
+      )}
+
+      {shippingJourney.length > 0 && (
+        <section aria-labelledby="shipping-history-title" className={CARD}>
+          <h2 id="shipping-history-title" className="font-serif text-2xl text-[#241a12]">
+            {en ? "Book delivery" : "Acheminement du livre"}
+          </h2>
+          <ol className="mt-4 space-y-3">
+            {shippingJourney.map((step, index) => (
+              <li key={`${step.kind}-${step.at}-${index}`} className="border-l-2 border-[#a98c55] pl-4 text-sm text-[#4b3a2c]">
+                <p className="font-medium text-[#241a12]">{{
+                  outbound: en ? "On its way to the workshop" : "En route vers l’atelier",
+                  carrier_delivered: en ? "Delivered according to the carrier" : "Livré selon le transporteur",
+                  received: en ? "Physically received by the workshop" : "Réception physique confirmée par l’atelier",
+                  incident: en ? "Transport incident reported" : "Incident signalé",
+                  return: en ? "On its way back" : "En route vers vous",
+                  completed: en ? "Final delivery declared by the workshop" : "Livraison finale déclarée par l’atelier",
+                }[step.kind]}</p>
+                {step.carrier && step.tracking && <p>{step.carrier} · {step.tracking}</p>}
+                <p>{formatCustomerDate(step.at, locale)}</p>
+              </li>
+            ))}
+          </ol>
         </section>
       )}
 
