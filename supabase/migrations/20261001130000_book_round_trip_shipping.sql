@@ -40,6 +40,10 @@ CREATE TABLE public.marketplace_round_trip_rate_approvals (
   outbound_cost_ttc_cents integer NOT NULL CHECK (outbound_cost_ttc_cents > 0),
   return_cost_ttc_cents integer NOT NULL CHECK (return_cost_ttc_cents > 0),
   all_other_costs_ttc_cents integer NOT NULL CHECK (all_other_costs_ttc_cents >= 0),
+  -- After recoverable VAT, carrier extras, packaging and allocated payment fees.
+  -- 15 EUR TTC at 20% VAT produces only 12.50 EUR net revenue.
+  estimated_economic_cost_cents integer NOT NULL CHECK (estimated_economic_cost_cents BETWEEN 0 AND 1250),
+  economic_cost_evidence_reference text NOT NULL CHECK (length(btrim(economic_cost_evidence_reference)) BETWEEN 3 AND 160),
   valid_until timestamptz NOT NULL,
   reviewed_by uuid NOT NULL REFERENCES auth.users(id),
   reviewed_at timestamptz NOT NULL DEFAULT now(),

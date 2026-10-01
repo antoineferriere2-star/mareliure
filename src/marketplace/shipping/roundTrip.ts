@@ -8,7 +8,9 @@ export type RoundTripReason =
   | "valuable_book"
   | "method_unconfirmed"
   | "cost_unconfirmed"
-  | "cost_exceeds_price";
+  | "cost_exceeds_price"
+  | "economic_cost_unconfirmed"
+  | "economic_cost_exceeds_revenue";
 
 export interface RoundTripParcel {
   weightGrams: number;
@@ -23,6 +25,9 @@ export interface RoundTripQuote {
   labelFeesTtcCents: number;
   packagingTtcCents: number;
   otherKnownCostsTtcCents: number;
+  /** Operator-reviewed after recoverable VAT, fees and packaging; never inferred from TTC. */
+  estimatedEconomicCostCents: number | null;
+  economicCostReference: string;
   methodReference: string;
   validUntil: string;
   bothDirectionsAvailable: boolean;
@@ -47,8 +52,10 @@ export interface RoundTripEligibility {
 }
 
 export type RoundTripDecision =
-  | { eligible: true; customerTtcCents: 1_500; estimatedCostTtcCents: number; marginTtcCents: number }
-  | { eligible: false; reason: RoundTripReason; estimatedCostTtcCents: number | null; marginTtcCents: number | null };
+  | { eligible: true; customerTtcCents: 1_500; estimatedCostTtcCents: number;
+      cashSpreadTtcCents: number; estimatedEconomicCostCents: number; estimatedNetMarginCents: number }
+  | { eligible: false; reason: RoundTripReason; estimatedCostTtcCents: number | null;
+      cashSpreadTtcCents: number | null; estimatedEconomicCostCents: number | null; estimatedNetMarginCents: number | null };
 
 const natural = (n: number) => Number.isSafeInteger(n) && n >= 0;
 const mainlandPostalCode = (code: string) => {
@@ -63,11 +70,14 @@ const ordinaryParcel = ({ weightGrams, lengthMm, widthMm, heightMm }: RoundTripP
 
 /** The cap is a candidate, never a carrier promise; every leg and fee must have a real quote. */
 export function evaluateRoundTrip(input: RoundTripEligibility): RoundTripDecision {
-  const blocked = (reason: RoundTripReason, cost: number | null = null): RoundTripDecision => ({
+  const blocked = (reason: RoundTripReason, cost: number | null = null,
+    economicCost: number | null = null): RoundTripDecision => ({
     eligible: false,
     reason,
     estimatedCostTtcCents: cost,
-    marginTtcCents: cost === null ? null : ROUND_TRIP_CUSTOMER_TTC_CENTS - cost,
+    cashSpreadTtcCents: cost === null ? null : ROUND_TRIP_CUSTOMER_TTC_CENTS - cost,
+    estimatedEconomicCostCents: economicCost,
+    estimatedNetMarginCents: economicCost === null ? null : 1_250 - economicCost,
   });
   if (!input.customerAddressVerified || !input.workshopAddressVerified || !input.workshopAgreedToReceive)
     return blocked("address_review");
@@ -90,8 +100,15 @@ export function evaluateRoundTrip(input: RoundTripEligibility): RoundTripDecisio
     return blocked("cost_unconfirmed");
   const cost = parts.reduce((sum, n) => sum + n, 0);
   if (cost > ROUND_TRIP_CUSTOMER_TTC_CENTS) return blocked("cost_exceeds_price", cost);
+  const economicCost = quote.estimatedEconomicCostCents;
+  if (economicCost === null || !natural(economicCost) || !quote.economicCostReference.trim())
+    return blocked("economic_cost_unconfirmed", cost);
+  if (economicCost > 1_250)
+    return blocked("economic_cost_exceeds_revenue", cost, economicCost);
   return { eligible: true, customerTtcCents: ROUND_TRIP_CUSTOMER_TTC_CENTS,
-    estimatedCostTtcCents: cost, marginTtcCents: ROUND_TRIP_CUSTOMER_TTC_CENTS - cost };
+    estimatedCostTtcCents: cost, cashSpreadTtcCents: ROUND_TRIP_CUSTOMER_TTC_CENTS - cost,
+    estimatedEconomicCostCents: economicCost,
+    estimatedNetMarginCents: 1_250 - economicCost };
 }
 
 /** Shipping must appear as exactly 15 EUR TTC after the validated tax rate is applied. */

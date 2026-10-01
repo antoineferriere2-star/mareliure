@@ -63,10 +63,11 @@ it("requires an accepted workshop, current review and the same addresses", async
       outbound_address_sha256,return_address_sha256,outbound_weight_grams,return_weight_grams,
       outbound_dimensions_mm,return_dimensions_mm,outbound_method,return_method,
       provider_quote_reference,coverage_evidence_reference,outbound_cost_ttc_cents,
-      return_cost_ttc_cents,all_other_costs_ttc_cents,valid_until,reviewed_by)
+      return_cost_ttc_cents,all_other_costs_ttc_cents,estimated_economic_cost_cents,
+      economic_cost_evidence_reference,valid_until,reviewed_by)
     VALUES('${id(1)}','${id(4)}','${id(2)}','${address}','${otherAddress}',500,500,
       ARRAY[350,250,80],ARRAY[350,250,80],'QA outbound','QA return','QA quote only',
-      'QA coverage only',400,400,0,now()+interval '1 day','${id(9)}');`);
+      'QA coverage only',400,400,0,700,'QA net cost only',now()+interval '1 day','${id(9)}');`);
   await expect(reserve("outbound", otherAddress, otherAddress)).rejects.toThrow("address_changed_review_required");
   await db.exec(`UPDATE marketplace_case_matches SET accepted_at=NULL WHERE case_id='${id(1)}';`);
   await expect(reserve("outbound")).rejects.toThrow("accepted_workshop_required");
@@ -107,6 +108,8 @@ it("denies direct browser roles and keeps labels private", async () => {
 });
 
 it("keeps approved costs and provider history immutable for the service role", async () => {
+  await expect(db.exec("UPDATE marketplace_round_trip_rate_approvals SET estimated_economic_cost_cents=1251"))
+    .rejects.toThrow("check constraint");
   await db.exec("SET ROLE service_role");
   try {
     await expect(db.exec("UPDATE marketplace_round_trip_rate_approvals SET outbound_cost_ttc_cents=1"))
