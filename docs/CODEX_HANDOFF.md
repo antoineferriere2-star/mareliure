@@ -3439,3 +3439,7 @@ Codex — 1er octobre 2026 : poursuite de #54 uniquement, sans C1/C2. Le formula
 
 ## Latest handoff
 Codex — 1er octobre 2026 : #54 ajoute une livraison privée de l'étiquette par URL signée de 60 secondes, soumise à la propriété directe du dossier pour l'aller ou à l'appartenance à l'atelier sélectionné pour le retour, au paiement Stripe de revente confirmé et à la cohérence de la réservation. Le chemin objet privé est contraint dans la migration. Refus contrôlés avec Storage simulé ; HTTP réel, achat fournisseur et expiration hébergée non testés. Vingt-deux tests ciblés réussis. Aucun tarif aller-retour applicable aux deux adresses et à la couverture du livre n'est encore obtenu ; offre indisponible. Aucun changement qwf/production, aucune fusion ni déploiement.
+
+## Latest handoff
+
+Claude Code (Opus 5.5) — 1er octobre 2026, #54 (`feat/book-roundtrip-shipping`) : migration renumérotée `20261001160000` (après #55), machine d'états SQL des étiquettes, orchestrateur (idempotence, reprise sans double achat, annulation), adaptateur Sendcloud v3 non activé et webhook signé et rapproché, tests PGlite et HTTP simulé. Décision chiffrée sur tarifs publics dans `docs/book-roundtrip-shipping.md` : achat fermé. Aucune étiquette, aucun appel fournisseur réel, aucune migration appliquée, aucun déploiement.

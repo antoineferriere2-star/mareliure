@@ -41,7 +41,7 @@ beforeAll(async () => {
     INSERT INTO marketplace_binder_members VALUES('${id(2)}','${id(9)}','active');
     INSERT INTO marketplace_binder_works VALUES('${id(5)}','${id(1)}','${id(2)}');
   `);
-  await db.exec(readFileSync(new URL("../../../supabase/migrations/20261001130000_book_round_trip_shipping.sql", import.meta.url), "utf8"));
+  await db.exec(readFileSync(new URL("../../../supabase/migrations/20261001160000_book_round_trip_shipping.sql", import.meta.url), "utf8"));
 }, 30000);
 afterAll(async () => { await db?.close(); });
 
@@ -119,4 +119,43 @@ it("keeps approved costs and provider history immutable for the service role", a
     await expect(db.exec("DELETE FROM marketplace_round_trip_label_events"))
       .rejects.toThrow("permission denied");
   } finally { await db.exec("RESET ROLE"); }
+});
+
+const transition = (direction: string, kind: string, details: object = {}, eventId: string | null = null) =>
+  db.query<{ result: { outcome: string; status: string; cost_review_required: boolean } }>(
+    `SELECT marketplace_round_trip_label_transition((SELECT id FROM marketplace_round_trip_label_jobs WHERE direction=$1),$2,$3,$4::jsonb) AS result`,
+    [direction, kind, eventId, JSON.stringify(details)]).then((r) => r.rows[0].result);
+const label = { provider: "sendcloud", provider_label_id: "qa-parcel-1", carrier: "qa_carrier", tracking: "QA000001", charged_cost_ttc_cents: 400 };
+
+it("treats an attempt without recorded outcome as ambiguous, never as a fresh purchase", async () => {
+  // The previous test recorded a request_started without outcome on the outbound leg.
+  expect((await transition("outbound", "request_started")).status).toBe("ambiguous");
+  await expect(transition("outbound", "purchase_failed", { code: "qa" })).rejects.toThrow("label_transition_invalid:ambiguous:purchase_failed");
+  expect((await transition("outbound", "label_confirmed", label)).status).toBe("confirmed");
+  const job = (await db.query<{ status: string; private_label_path: string; id: string }>(
+    "SELECT id,status,private_label_path FROM marketplace_round_trip_label_jobs WHERE direction='outbound'")).rows[0];
+  expect(job.private_label_path).toBe(`${job.id}/label.pdf`);
+  await expect(transition("outbound", "label_confirmed", label)).rejects.toThrow("label_transition_invalid:confirmed:label_confirmed");
+});
+
+it("records a charge above the reviewed rate and requires complete label details", async () => {
+  expect((await transition("return", "request_started")).status).toBe("claimed");
+  await expect(transition("return", "label_confirmed", { provider: "sendcloud" })).rejects.toThrow("label_details_required");
+  const confirmed = await transition("return", "label_confirmed", { ...label, provider_label_id: "qa-parcel-2", charged_cost_ttc_cents: 450 });
+  expect(confirmed).toMatchObject({ status: "confirmed", cost_review_required: true });
+  await expect(transition("return", "operator_note", { address: "1 rue privée" })).rejects.toThrow("private_details_refused");
+});
+
+it("deduplicates provider events and never assumes a cancellation or refund", async () => {
+  expect((await transition("outbound", "tracking_update", { code: "announced" }, "qa-parcel-1:1")).outcome).toBe("applied");
+  expect((await transition("outbound", "tracking_update", { code: "announced" }, "qa-parcel-1:1")).outcome).toBe("duplicate");
+  await expect(transition("outbound", "cancelled", {})).rejects.toThrow("cancellation_reference_required");
+  expect((await transition("outbound", "cancellation_requested", { provider_status: "queued" })).status).toBe("confirmed");
+  expect((await transition("outbound", "cancelled", { reference: "qa-cancel-1" })).status).toBe("cancelled");
+  const row = (await db.query<{ refunded_cost_ttc_cents: number | null }>(
+    "SELECT refunded_cost_ttc_cents FROM marketplace_round_trip_label_jobs WHERE direction='outbound'")).rows[0];
+  expect(row.refunded_cost_ttc_cents).toBeNull();
+  await db.exec("SET ROLE authenticated");
+  try { await expect(transition("return", "operator_note")).rejects.toThrow("permission denied"); }
+  finally { await db.exec("RESET ROLE"); }
 });

@@ -204,3 +204,74 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.marketplace_reserve_round_trip_label(uuid,text,text,text) FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.marketplace_reserve_round_trip_label(uuid,text,text,text) TO service_role;
+
+-- Provider state machine. Every change appends its evidence in the same transaction.
+-- `request_started` precedes each provider call; the provider reference is the job id
+-- (Sendcloud `external_reference_id`: a duplicate returns the existing shipment, 409),
+-- so a retry after an ambiguous response re-reads or re-requests without a second label.
+-- Details carry provider identifiers and statuses only: never an address, photo or proof.
+CREATE FUNCTION public.marketplace_round_trip_label_transition(
+  p_job uuid, p_kind text, p_provider_event_id text, p_details jsonb
+) RETURNS jsonb LANGUAGE plpgsql SET search_path=public AS $$
+DECLARE j public.marketplace_round_trip_label_jobs%ROWTYPE; v_next text; v_approved integer;
+  v_details jsonb := coalesce(p_details,'{}'::jsonb);
+BEGIN
+  SELECT * INTO j FROM public.marketplace_round_trip_label_jobs WHERE id=p_job FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'label_job_not_found'; END IF;
+  IF p_provider_event_id IS NOT NULL AND EXISTS (SELECT 1 FROM public.marketplace_round_trip_label_events
+      WHERE job_id=p_job AND provider_event_id=p_provider_event_id) THEN
+    RETURN jsonb_build_object('outcome','duplicate','status',j.status);
+  END IF;
+  IF v_details ?| ARRAY['address','name','email','phone','photo','proof'] THEN RAISE EXCEPTION 'private_details_refused'; END IF;
+  v_next := CASE p_kind
+    WHEN 'request_started' THEN CASE WHEN j.status IN ('claimed','ambiguous') THEN j.status END
+    WHEN 'response_ambiguous' THEN CASE WHEN j.status IN ('claimed','ambiguous') THEN 'ambiguous' END
+    WHEN 'label_confirmed' THEN CASE WHEN j.status IN ('claimed','ambiguous') THEN 'confirmed' END
+    -- Definitive refusal of the very first request only: after an ambiguous response a label
+    -- may exist, so only an operator (operator_note) may close the leg.
+    WHEN 'purchase_failed' THEN CASE WHEN j.status='claimed' THEN 'failed' END
+    WHEN 'tracking_update' THEN CASE WHEN j.status IN ('confirmed','cancelled') THEN j.status END
+    WHEN 'cancellation_requested' THEN CASE WHEN j.status='confirmed' THEN 'confirmed' END
+    WHEN 'cancelled' THEN CASE WHEN j.status='confirmed' THEN 'cancelled' END
+    WHEN 'cost_adjusted' THEN CASE WHEN j.status IN ('confirmed','cancelled') THEN j.status END
+    WHEN 'operator_note' THEN j.status
+    WHEN 'unused' THEN CASE WHEN j.status IN ('confirmed','cancelled') THEN j.status END
+  END;
+  IF v_next IS NULL THEN RAISE EXCEPTION 'label_transition_invalid:%:%', j.status, p_kind; END IF;
+  IF p_kind='request_started' AND j.status='claimed' AND EXISTS (SELECT 1 FROM public.marketplace_round_trip_label_events
+      WHERE job_id=p_job AND kind='request_started') THEN
+    -- A previous attempt has no recorded outcome: treat it as ambiguous, never as a fresh purchase.
+    v_next := 'ambiguous';
+  END IF;
+  IF p_kind='label_confirmed' THEN
+    IF nullif(btrim(v_details->>'provider'),'') IS NULL OR nullif(btrim(v_details->>'provider_label_id'),'') IS NULL
+      OR nullif(btrim(v_details->>'carrier'),'') IS NULL OR nullif(btrim(v_details->>'tracking'),'') IS NULL
+      THEN RAISE EXCEPTION 'label_details_required'; END IF;
+    SELECT CASE WHEN j.direction='outbound' THEN outbound_cost_ttc_cents ELSE return_cost_ttc_cents END
+      INTO v_approved FROM public.marketplace_round_trip_rate_approvals WHERE id=j.rate_approval_id;
+    UPDATE public.marketplace_round_trip_label_jobs SET status='confirmed', provider=v_details->>'provider',
+      provider_label_id=v_details->>'provider_label_id', carrier=v_details->>'carrier', tracking=v_details->>'tracking',
+      private_label_path=j.id::text||'/label.pdf',
+      charged_cost_ttc_cents=(v_details->>'charged_cost_ttc_cents')::integer, updated_at=now() WHERE id=p_job;
+    -- A charge above the reviewed rate is recorded, never hidden: the label exists and was paid.
+    IF (v_details->>'charged_cost_ttc_cents')::integer > v_approved THEN
+      v_details := v_details || jsonb_build_object('cost_review_required',true,'approved_cost_ttc_cents',v_approved);
+    END IF;
+  ELSIF p_kind='cancelled' THEN
+    IF nullif(btrim(v_details->>'reference'),'') IS NULL THEN RAISE EXCEPTION 'cancellation_reference_required'; END IF;
+    UPDATE public.marketplace_round_trip_label_jobs SET status='cancelled', cancelled_at=now(),
+      provider_cancellation_reference=v_details->>'reference', updated_at=now() WHERE id=p_job;
+  ELSIF p_kind='cost_adjusted' THEN
+    UPDATE public.marketplace_round_trip_label_jobs SET
+      charged_cost_ttc_cents=coalesce((v_details->>'charged_cost_ttc_cents')::integer,charged_cost_ttc_cents),
+      refunded_cost_ttc_cents=coalesce((v_details->>'refunded_cost_ttc_cents')::integer,refunded_cost_ttc_cents),
+      updated_at=now() WHERE id=p_job;
+  ELSIF v_next IS DISTINCT FROM j.status THEN
+    UPDATE public.marketplace_round_trip_label_jobs SET status=v_next, updated_at=now() WHERE id=p_job;
+  END IF;
+  INSERT INTO public.marketplace_round_trip_label_events(job_id,kind,provider_event_id,details)
+    VALUES (p_job,p_kind,p_provider_event_id,v_details);
+  RETURN jsonb_build_object('outcome','applied','status',v_next,'cost_review_required',coalesce((v_details->>'cost_review_required')::boolean,false));
+END $$;
+REVOKE ALL ON FUNCTION public.marketplace_round_trip_label_transition(uuid,text,text,jsonb) FROM PUBLIC,anon,authenticated;
+GRANT EXECUTE ON FUNCTION public.marketplace_round_trip_label_transition(uuid,text,text,jsonb) TO service_role;
