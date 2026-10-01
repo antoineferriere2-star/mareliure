@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import type { Json } from "@/integrations/supabase/types";
-import { requireBinderId } from "./binderQuotes.server";
+import { requireWorkshopAccess } from "./workshopAccess.server";
 import { logisticsAppend, photoMime, type LogisticsJournal } from "@/marketplace/works/logistics";
 
 import { logisticsPhotoId, samePhotoBytes } from "@/marketplace/works/logisticsPhoto";
@@ -15,7 +15,7 @@ const bucket = "work-logistics-private";
 const workInput = z.object({ workId: z.string().uuid() }).strict();
 async function access(actor: string) {
   const sb = await admin();
-  return { sb, binder: await requireBinderId(sb, actor) };
+  return { sb, binder: await requireWorkshopAccess(sb, actor) };
 }
 async function journal(actor: string, work: string, action: string, data: Json = {}) {
   const { sb, binder } = await access(actor);
