@@ -73,7 +73,8 @@ empêche un `revert` distrait de les réintroduire en silence.
 **Propriétaire :** Reliure Dorure Ferrière (`reliure-ferriere.fr`)  
 **Autorisation :** confirmée par le titulaire des droits, oralement et par
 écrit dans le fil de développement du 8 septembre 2026.  
-**Usage autorisé :** mareliure.fr et réseaux sociaux de Ma Reliure.  
+**Usage autorisé :** mareliure.fr et réseaux sociaux de Ma Reliure ; étendu à
+finebindery.com le 2 octobre 2026 (voir « Extension du 2 octobre 2026 »).  
 **Crédit à afficher :** « Atelier Reliure Dorure Ferrière, Orléans ».  
 **Vérification visuelle :** chaque fichier ouvert et examiné le 9 septembre 2026.
 
@@ -159,6 +160,17 @@ explicitement et ne présente pas ces ouvrages comme des projets Ma Reliure.
 | `nouvelle_couverture` | `nouvelle_couverture-{320,640}.webp` | photo n°814 | `REAL_PORTFOLIO` |
 | `reliure_de_creation` | `reliure_de_creation-{320,640}.webp` | photo n°998 | `REAL_PORTFOLIO` |
 | `projet_sur_mesure` | `projet_sur_mesure-{320,640}.webp` | photo n°320 | `REAL_PORTFOLIO` |
+
+### Extension du 2 octobre 2026 — Fine Bindery
+
+Antoine Ferrière a confirmé dans le fil de développement du 2 octobre 2026
+que l'autorisation couvre **toutes les photographies de l'atelier Ferrière**
+— les neuf pièces et les 45 prestations ci-dessus — sur les deux sites,
+mareliure.fr et finebindery.com, dans toutes leurs langues.
+
+Rien d'autre ne change : chaque usage porte le crédit « Atelier Reliure
+Dorure Ferrière, Orléans », et aucune de ces pièces n'est présentée comme un
+projet passé par Ma Reliure ou Fine Bindery.
 
 ### Graphismes de marque — sans photographie
 

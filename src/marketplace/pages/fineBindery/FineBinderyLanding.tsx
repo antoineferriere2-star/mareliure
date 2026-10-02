@@ -22,11 +22,10 @@ const ROMAN = ["I", "II", "III", "IV", "V", "VI"] as const;
 /**
  * L'accueil Fine Bindery — registre « cabinet » (docs/design/premium-art-direction.md).
  *
- * Le premier écran est sombre et purement typographique : Fine Bindery n'a
- * pas encore de photographie qui lui soit propre, et le registre des images
- * n'étend pas à ce site les pièces de l'atelier Ferrière autorisées pour Ma
- * Reliure. Les planches n'apparaissent qu'aux disciplines, dont l'usage ici
- * est couvert. Rien d'inventé : un seul atelier réel, et le réseau dit qu'il
+ * Le premier écran est sombre et purement typographique : c'est ce qui
+ * distingue le cabinet du carnet de Ma Reliure, dont le héros est une
+ * planche. Les photographies arrivent ensuite, aux disciplines et à
+ * l'atelier. Rien d'inventé : un seul atelier réel, et le réseau dit qu'il
  * ouvre en France.
  *
  * Tant que l'annuaire ne publie aucun atelier, l'action principale est de
@@ -105,11 +104,10 @@ function HowItWorks({ copy }: { copy: Copy }) {
 }
 
 /**
- * L'atelier mis en avant. Sa photographie (« Venise ») était déjà publiée ici
- * avant cette refonte ; le registre ne l'autorise que pour mareliure.fr, et la
- * confirmation pour Fine Bindery est demandée au titulaire des droits.
- * La mention « publié par Fine Bindery » a été retirée : l'annuaire ne publie
- * encore aucune page d'atelier.
+ * L'atelier mis en avant, crédité sous sa planche (usage Fine Bindery
+ * autorisé le 2 octobre 2026, docs/content-assets.md). La mention « publié
+ * par Fine Bindery » a été retirée : l'annuaire ne publie encore aucune page
+ * d'atelier.
  */
 function Workshops({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
   const w = FEATURED_WORKSHOP;
