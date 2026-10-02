@@ -193,7 +193,7 @@ export async function getContact(sb: Supa, binderId: string, contactId: string):
   const quoteRows = quotes.data ?? [];
   const quotesByWork = countBy(quoteRows, (q) => q.work_id);
   return {
-    contact: contactView(row),
+    contact: { ...contactView(row), platformBrand: row.origin_case_id ? ((await caseBrands(sb, [row.origin_case_id])).get(row.origin_case_id) ?? null) : null },
     works: (works.data ?? []).map((w) => workSummary(w, row.name, quotesByWork.get(w.id) ?? 0)),
     quotes: quoteRows.map(quoteSummary),
     invoices: (invoices.data ?? []).map(invoiceSummary(await loadCredits(sb, binderId, invoices.data ?? []))),
@@ -252,6 +252,15 @@ async function assertOwnContact(sb: Supa, binderId: string, contactId: string) {
   return row;
 }
 
+/** Marque des dossiers d'origine : un ouvrage « plateforme » vient de Ma Reliure ou de Fine Bindery. */
+async function caseBrands(sb: Supa, caseIds: (string | null)[]): Promise<Map<string, "MA_RELIURE" | "FINE_BINDERY">> {
+  const ids = [...new Set(caseIds.filter((id): id is string => Boolean(id)))];
+  if (!ids.length) return new Map();
+  const { data, error } = await sb.from("marketplace_cases").select("id, brand").in("id", ids);
+  if (error) throw new BinderQuotesError("failed");
+  return new Map((data ?? []).map((c) => [c.id, c.brand === "FINE_BINDERY" ? "FINE_BINDERY" as const : "MA_RELIURE" as const]));
+}
+
 export async function listWorks(
   sb: Supa,
   binderId: string,
@@ -267,9 +276,11 @@ export async function listWorks(
   if (works.error || contacts.error || quotes.error) throw new BinderQuotesError("failed");
   const names = new Map((contacts.data ?? []).map((c) => [c.id, c.name] as const));
   const quoteCounts = countBy(quotes.data ?? [], (q) => q.work_id);
+  const brands = await caseBrands(sb, (works.data ?? []).map((row) => row.case_id));
   return (works.data ?? [])
     .filter((row) => options.includeArchived || row.status === "active")
-    .map((row) => workSummary(row, row.contact_id ? (names.get(row.contact_id) ?? null) : null, quoteCounts.get(row.id) ?? 0));
+    .map((row) => ({ ...workSummary(row, row.contact_id ? (names.get(row.contact_id) ?? null) : null, quoteCounts.get(row.id) ?? 0),
+      platformBrand: row.case_id ? (brands.get(row.case_id) ?? null) : null }));
 }
 
 export async function getWork(sb: Supa, binderId: string, workId: string): Promise<WorkDetail> {
@@ -298,7 +309,7 @@ export async function getWork(sb: Supa, binderId: string, workId: string): Promi
     : { data: [], error: null };
   if (invoices.error) throw new BinderQuotesError("failed");
   return {
-    work: workView(row),
+    work: { ...workView(row), platformBrand: row.case_id ? ((await caseBrands(sb, [row.case_id])).get(row.case_id) ?? null) : null },
     contact: contact ? contactView(contact) : null,
     quotes: quoteRows.map(quoteSummary),
     invoices: (invoices.data ?? []).map(invoiceSummary(await loadCredits(sb, binderId, invoices.data ?? []))),

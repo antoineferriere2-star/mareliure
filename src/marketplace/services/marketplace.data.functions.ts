@@ -37,6 +37,7 @@ import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog
 import { loadCustomerCommerce } from "@/marketplace/services/customerCommerce.server";
 import { publicCopy } from "@/build/pages/public/publicLocaleContext";
 import { CASE_ANSWER_KEYS } from "@/marketplace/cases/caseProfile";
+import { customerJourney } from "@/marketplace/shipping/customerJourney";
 
 /** zod needs a literal tuple; WORK_FAMILIES stays the one place the list is written. */
 const WORK_FAMILY_KEYS = WORK_FAMILIES.map((f) => f.key) as [WorkFamilyKey, ...WorkFamilyKey[]];
@@ -1518,6 +1519,26 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
       customerPriceCents: caseContext.row.customer_price_cents,
       caseStatus: caseContext.row.status,
     });
+    // The owner may see only the transport milestones of their own paid case.
+    // The journal itself is private to the workshop; never return its raw JSON,
+    // photographs, addresses or receipt proofs to the customer portal.
+    let shippingJourney: ReturnType<typeof customerJourney> = [];
+    if (commerce.paidAt) {
+      const { data: work, error: workError } = await sb.from("marketplace_binder_works")
+        .select("id")
+        .eq("case_id", data.caseId)
+        .maybeSingle();
+      if (workError) throw workError;
+      if (work) {
+        const { data: milestones, error: milestonesError } = await sb
+          .from("marketplace_work_logistics_events")
+          .select("kind, created_at, details")
+          .eq("work_id", work.id)
+          .order("sequence", { ascending: true });
+        if (milestonesError) throw milestonesError;
+        shippingJourney = customerJourney(milestones ?? []);
+      }
+    }
     const intentLine = caseContext.brief.confirmedInformation.find(
       (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
     );
@@ -1550,6 +1571,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
           : ("concierge" as const),
       },
       proposal: commerce.proposal,
+      shippingJourney,
       view,
       selectedBinder: binder
         ? {

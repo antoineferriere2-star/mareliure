@@ -30,6 +30,7 @@ function proposal(scenario: string) {
     serviceCents: 37500,
     // C et E : la même proposition avant et après acceptation — le total ne change pas.
     shippingCents: ["C", "E"].includes(scenario) ? 2400 : 0,
+    shippingOfferKind: "manual" as const,
     totalHtCents: 37500 + (["C", "E"].includes(scenario) ? 2400 : 0),
     vatRateBps: withTax ? 2000 : null,
     vatCents: withTax ? (["C", "E"].includes(scenario) ? 7980 : 7500) : null,

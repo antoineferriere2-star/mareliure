@@ -1,0 +1,14 @@
+{"at":"2026-10-02T09:22:55.444Z","scenario":"Opérateur K3 : traitement adapté signalé (colis hors plafond)","pass":true,"detail":""}
+{"at":"2026-10-02T09:22:56.445Z","scenario":"Opérateur K3 : forfait refusé avec la raison métier","pass":true,"detail":""}
+{"at":"2026-10-02T09:22:56.530Z","scenario":"Opérateur K3 : proposition sans forfait créée (traitement manuel)","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:00.475Z","scenario":"Opérateur K1 : plan complet et éligibilité visibles","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:02.063Z","scenario":"Opérateur K1 : proposition avec ligne transport explicite","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:03.790Z","scenario":"Opérateur K1 : fiscalité France 20 % validée, aucune erreur console","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:07.875Z","scenario":"Opérateur K2 : main propre, pas de forfait","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:13.717Z","scenario":"Client K1 : « Transport aller-retour » en ligne distincte, 15,00 € TTC, avant l'accord","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:14.045Z","scenario":"Client K1 : plan figé pendant l'offre","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:16.726Z","scenario":"Client K1 : proposition acceptée, prochaine action = paiement","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:16.730Z","scenario":"Client K1 : aucun débordement ni erreur console","pass":false,"detail":"débordement 0px ; Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously tries to update the component. Move th"}
+{"at":"2026-10-02T09:23:24.887Z","scenario":"Client K2 mobile : aucune ligne transport sur la proposition","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:26.805Z","scenario":"Client K2 mobile : acceptée","pass":true,"detail":""}
+{"at":"2026-10-02T09:23:26.811Z","scenario":"Client K2 mobile : aucun débordement","pass":true,"detail":"débordement 0px ; "}

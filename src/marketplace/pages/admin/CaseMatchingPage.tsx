@@ -6,6 +6,7 @@
  * box. The admin decides, which is the whole point of a concierge MVP — and of
  * the CLAUDE.md rule that the system proposes and the human disposes.
  */
+import { OperatorLogisticsPanel } from "./OperatorLogisticsPanel";
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
@@ -726,10 +727,14 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
     queryFn: () => list({ data: caseId }),
   });
 
+  const [shippingOffer, setShippingOffer] = useState<"manual" | "book_round_trip_fr">("manual");
   const creating = useMutation({
     mutationFn: () =>
-      create({ data: { caseId, shipping: { outboundCents: 0, returnCents: 0, otherCents: 0 } } }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+      create({ data: { caseId, shipping: { outboundCents: 0, returnCents: 0, otherCents: 0 }, shippingOffer } }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "logistics"] });
+    },
   });
   const accepting = useMutation({
     mutationFn: (proposalId: string) => accept({ data: proposalId }),
@@ -747,13 +752,26 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
 
   return (
     <section className="rounded-lg border border-border bg-card p-5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Proposition commerciale
         </h2>
-        <Button size="sm" variant="outline" disabled={creating.isPending} onClick={() => creating.mutate()}>
-          {(proposals ?? []).length === 0 ? "Créer la proposition" : "Nouvelle version"}
-        </Button>
+        <div className="flex flex-wrap items-center gap-2">
+          <label className="text-xs">
+            Transport{" "}
+            <select
+              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+              value={shippingOffer}
+              onChange={(event) => setShippingOffer(event.target.value as typeof shippingOffer)}
+            >
+              <option value="manual">Sans forfait (traitement manuel)</option>
+              <option value="book_round_trip_fr">Transport aller-retour — 15 € TTC</option>
+            </select>
+          </label>
+          <Button size="sm" variant="outline" disabled={creating.isPending} onClick={() => creating.mutate()}>
+            {(proposals ?? []).length === 0 ? "Créer la proposition" : "Nouvelle version"}
+          </Button>
+        </div>
       </div>
       {isPending && <p className="mt-2 text-xs text-muted-foreground">Chargement…</p>}
       {creating.error && (
@@ -773,6 +791,7 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
                 <p>
                   v{proposal.version} · {PROPOSAL_STATUS_LABELS[proposal.status] ?? proposal.status} ·{" "}
                   {formatEuros(proposal.customerServicePriceCents)}
+                  {proposal.shippingOfferKind === "book_round_trip_fr" && " · + Transport aller-retour — 15 € TTC (12,50 € HT)"}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Rémunération atelier {formatEuros(proposal.binderPayoutCents)} · plancher :{" "}
@@ -956,6 +975,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
 
         {data.case.pricing_status === "validated" && (
           <>
+            <OperatorLogisticsPanel caseId={caseId} />
             <CommercialProposalPanel caseId={caseId} />
             <PreflightPanel caseId={caseId} />
           </>

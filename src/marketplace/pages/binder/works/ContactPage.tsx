@@ -52,7 +52,7 @@ export function ContactPage({ contactId }: { contactId: string }) {
           {contact.archived && <span className="ml-2 text-base font-normal text-muted-foreground">(archivé)</span>}
         </h1>
         {contact.origin === "ma_reliure" && (
-          <p className="text-sm text-muted-foreground">Contact issu d'un projet apporté par Ma Reliure.</p>
+          <p className="text-sm text-muted-foreground">Contact issu d'un projet apporté par {contact.platformBrand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"}.</p>
         )}
       </header>
 

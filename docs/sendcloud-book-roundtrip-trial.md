@@ -1,6 +1,6 @@
 # Fiche d'essai Sendcloud — livre courant, France métropolitaine
 
-Préparation du 28 septembre 2026. **Aucune étiquette créée, aucun coût engagé, aucune API branchée.** Le compte Sendcloud n'est pas connecté dans la session accessible : arrivée sur l'écran de connexion. Aucun tarif de compte, contrat transporteur ni certificat de couverture consulté.
+Préparation du 28 septembre 2026. **Aucune étiquette créée, aucun coût engagé, aucune API branchée.** Mise à jour du 1er octobre : le compte est désormais accessible en lecture seule ; son état et les limites du relevé figurent dans `docs/book-roundtrip-shipping.md`. Aucun tarif de compte ni certificat de couverture applicable n'est confirmé.
 
 ## Organisation proposée pour l'essai, à valider avant achat
 

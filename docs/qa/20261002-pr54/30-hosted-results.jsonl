@@ -1,0 +1,30 @@
+{"n": 1, "pass": true, "expected": "true", "observed": "true", "scenario": "État de départ K1 : deux étiquettes manuelles confirmées"}
+{"n": 2, "pass": true, "expected": "logistics_plan_locked", "observed": "logistics_plan_locked", "scenario": "K1 accepté : plan logistique figé"}
+{"n": 3, "pass": true, "expected": "immutable", "observed": "marketplace_commercial_proposals is immutable once accepted (proposal 31c8eeb4-19f2-4daf-ad21-892b8fe4aec2)", "scenario": "K1 accepté : produit transport de la proposition immuable"}
+{"n": 4, "pass": true, "expected": "logistics_plan_locked", "observed": "logistics_plan_locked", "scenario": "K1 accepté : accord de réception de l'atelier figé"}
+{"n": 5, "pass": true, "expected": "ok", "observed": "ok", "scenario": "K3 non accepté : plan encore modifiable (nouvelle version)"}
+{"n": 6, "pass": true, "expected": "2/aucun", "observed": "2/aucun", "scenario": "K3 : la modification crée la version 2 et annule l'accord atelier"}
+{"n": 7, "pass": true, "expected": "brand_unsupported", "observed": "round_trip_not_eligible:brand_unsupported", "scenario": "K4 Fine Bindery : forfait refusé (pas d'ouvrage atelier importable)"}
+{"n": 8, "pass": true, "expected": "round_trip_offer_required", "observed": "round_trip_offer_required", "scenario": "K2 sans forfait : aucune étiquette possible"}
+{"n": 9, "pass": true, "expected": "automation_closed", "observed": "automation_closed", "scenario": "Verrou fermé : achat automatique refusé"}
+{"n": 10, "pass": true, "expected": "admin_required", "observed": "admin_required", "scenario": "Ouverture par un atelier refusée"}
+{"n": 11, "pass": true, "expected": "evidence_missing", "observed": "evidence_missing:coverage_terms", "scenario": "Ouverture sans preuves refusée"}
+{"n": 12, "pass": true, "expected": "ok", "observed": "ok", "scenario": "Ouverture justifiée (annulée en fin de recette)"}
+{"n": 13, "pass": true, "expected": "round_trip_offer_required", "observed": "round_trip_offer_required", "scenario": "Verrou ouvert sans tarif revu : achat automatique toujours refusé"}
+{"n": 14, "pass": true, "expected": "ok", "observed": "ok", "scenario": "Fermeture immédiate"}
+{"n": 15, "pass": true, "expected": "existing", "observed": "existing", "scenario": "Re-réservation après confirmation : étiquette existante, aucun nouvel achat"}
+{"n": 16, "pass": true, "expected": "cancellation_reference_required", "observed": "cancellation_reference_required", "scenario": "Annulation sans référence refusée"}
+{"n": 17, "pass": true, "expected": "ok", "observed": "ok", "scenario": "Annulation constatée avec référence"}
+{"n": 18, "pass": true, "expected": "null", "observed": "null", "scenario": "Annulation : aucun remboursement présumé"}
+{"n": 19, "pass": true, "expected": "replacement_confirmation_required", "observed": "replacement_confirmation_required", "scenario": "Remplacement non confirmé : refusé"}
+{"n": 20, "pass": true, "expected": "claim", "observed": "claim", "scenario": "Remplacement confirmé : nouvelle réservation"}
+{"n": 21, "pass": true, "expected": "label_object_missing", "observed": "label_object_missing", "scenario": "Confirmation sans PDF privé déposé refusée"}
+{"n": 22, "pass": true, "expected": "deficit_acknowledgement_required", "observed": "deficit_acknowledgement_required", "scenario": "Coût total > 15 € TTC sans reconnaissance du déficit : refusé"}
+{"n": 23, "pass": true, "expected": "169/13500", "observed": "169/13500", "scenario": "Déficit reconnu et consigné, prix client inchangé"}
+{"n": 24, "pass": true, "expected": "ok", "observed": "ok", "scenario": "Suivi transporteur enregistré"}
+{"n": 25, "pass": true, "expected": "duplicate", "observed": "duplicate", "scenario": "Même événement rejoué : dédupliqué"}
+{"n": 26, "pass": true, "expected": "private_details_refused", "observed": "private_details_refused", "scenario": "Détail privé dans le journal : refusé"}
+{"n": 27, "pass": true, "expected": "ok", "observed": "ok", "scenario": "Frais réels constatés (cost_adjusted)"}
+{"n": 28, "pass": true, "expected": "selected_workshop_required", "observed": "selected_workshop_required", "scenario": "Atelier non retenu : retour prêt refusé"}
+{"n": 29, "pass": true, "expected": "active_membership_required", "observed": "active_membership_required", "scenario": "Membre d'un autre atelier sur l'atelier retenu : refusé"}
+{"n": 30, "pass": true, "expected": "false", "observed": "false", "scenario": "Rôles navigateur : aucun accès aux plans, étiquettes, verrou"}

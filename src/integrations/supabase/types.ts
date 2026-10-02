@@ -3110,6 +3110,7 @@ export type Database = {
           shipping_margin_cents: number
           shipping_other_cents: number
           shipping_outbound_cents: number
+          shipping_offer_kind: string
           shipping_return_cents: number
           shipping_total_cents: number
           status: string
@@ -3170,6 +3171,7 @@ export type Database = {
           shipping_margin_cents?: number
           shipping_other_cents?: number
           shipping_outbound_cents?: number
+          shipping_offer_kind?: string
           shipping_return_cents?: number
           shipping_total_cents?: number
           status?: string
@@ -3230,6 +3232,7 @@ export type Database = {
           shipping_margin_cents?: number
           shipping_other_cents?: number
           shipping_outbound_cents?: number
+          shipping_offer_kind?: string
           shipping_return_cents?: number
           shipping_total_cents?: number
           status?: string

@@ -1,0 +1,12 @@
+{
+  "path": "fbf31022-15f1-41aa-a5bc-29ce4773945d/label.pdf",
+  "results": {
+    "upload service": 200,
+    "refus non-PDF / écrasement": 400,
+    "lecture publique": 400,
+    "lecture anonyme": 400,
+    "listing anonyme": "200 []",
+    "lien signé immédiat": "200 PDF",
+    "lien signé après 70 s": 400
+  }
+}

@@ -23,6 +23,8 @@ export interface ContactView {
   country: string | null;
   notes: string | null;
   origin: ContactOrigin;
+  /** Marque du dossier d'origine d'un contact « plateforme ». */
+  platformBrand?: "MA_RELIURE" | "FINE_BINDERY" | null;
   archived: boolean;
 }
 
@@ -49,6 +51,8 @@ export interface WorkView {
   status: WorkStatus;
   source: WorkSource;
   caseId?: string | null;
+  /** Marque du dossier d'origine quand l'ouvrage vient de la plateforme (Ma Reliure ou Fine Bindery). */
+  platformBrand?: "MA_RELIURE" | "FINE_BINDERY" | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -67,6 +71,8 @@ export interface WorkSummary {
   status: WorkStatus;
   source: WorkSource;
   caseId?: string | null;
+  /** Marque du dossier d'origine quand l'ouvrage vient de la plateforme (Ma Reliure ou Fine Bindery). */
+  platformBrand?: "MA_RELIURE" | "FINE_BINDERY" | null;
   quoteCount: number;
   createdAt: string;
   updatedAt?: string;

@@ -43,6 +43,7 @@ import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { Button } from "@/components/ui/button";
 import { CoverPhoto, CustomerPhotoGallery } from "./CustomerPhotoGallery";
 import { PortalDetailSkeleton, PortalError, StatusBadge } from "./CustomerPortalUi";
+import { CustomerLogisticsPanel, LogisticsActionBanner } from "./CustomerLogisticsPanel";
 
 const CARD = "rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-5 sm:p-6";
 
@@ -308,7 +309,14 @@ function ProposalCard({
         <dl className="mt-4">
           <Row label={copy.proposalService} value={fmt(proposal.serviceCents)} />
           {proposal.shippingCents > 0 && (
-            <Row label={copy.proposalShipping} value={fmt(proposal.shippingCents)} />
+            <Row
+              label={proposal.shippingOfferKind === "book_round_trip_fr"
+                ? (locale === "en-US" ? "Round-trip shipping" : "Transport aller-retour")
+                : copy.proposalShipping}
+              value={proposal.shippingOfferKind === "book_round_trip_fr" && showTax && proposal.vatRateBps === 2000
+                ? `${fmt(proposal.shippingCents)} ${locale === "en-US" ? "excl. tax" : "HT"} · ${fmt(1500)} ${locale === "en-US" ? "incl. tax" : "TTC"}`
+                : fmt(proposal.shippingCents)}
+            />
           )}
           {showTax ? (
             <>
@@ -415,6 +423,7 @@ export function CustomerCasePage({
   if (!data) return null;
 
   const { view, proposal, selectedBinder } = data;
+  const shippingJourney = data.shippingJourney ?? [];
   const facts: CustomerCaseFacts = {
     status: data.case.status,
     hasPrice: data.case.customerPriceCents !== null,
@@ -483,6 +492,8 @@ export function CustomerCasePage({
         showMessageLink={status.key !== "cancelled"}
       />
 
+      {status.key !== "cancelled" && <LogisticsActionBanner caseId={caseId} locale={locale} />}
+
       {/* Une confirmation attendue est une action : elle passe avant le reste. */}
       {decisionsOpen && decisions}
 
@@ -501,6 +512,8 @@ export function CustomerCasePage({
         copy={copy}
         locale={locale}
       />
+
+      {status.key !== "cancelled" && <CustomerLogisticsPanel caseId={caseId} locale={locale} />}
 
       <section className={CARD}>
         <SectionTitle>{copy.summary}</SectionTitle>
@@ -559,6 +572,30 @@ export function CustomerCasePage({
               <p className="mt-4 text-sm leading-6 text-[#4b3a2c]">{selectedBinder.bio}</p>
             )}
           </div>
+        </section>
+      )}
+
+      {shippingJourney.length > 0 && (
+        <section aria-labelledby="shipping-history-title" className={CARD}>
+          <h2 id="shipping-history-title" className="font-serif text-2xl text-[#241a12]">
+            {en ? "Book delivery" : "Acheminement du livre"}
+          </h2>
+          <ol className="mt-4 space-y-3">
+            {shippingJourney.map((step, index) => (
+              <li key={`${step.kind}-${step.at}-${index}`} className="border-l-2 border-[#a98c55] pl-4 text-sm text-[#4b3a2c]">
+                <p className="font-medium text-[#241a12]">{{
+                  outbound: en ? "On its way to the workshop" : "En route vers l’atelier",
+                  carrier_delivered: en ? "Delivered according to the carrier" : "Livré selon le transporteur",
+                  received: en ? "Physically received by the workshop" : "Réception physique confirmée par l’atelier",
+                  incident: en ? "Transport incident reported" : "Incident signalé",
+                  return: en ? "On its way back" : "En route vers vous",
+                  completed: en ? "Final delivery declared by the workshop" : "Livraison finale déclarée par l’atelier",
+                }[step.kind]}</p>
+                {step.carrier && step.tracking && <p>{step.carrier} · {step.tracking}</p>}
+                <p>{formatCustomerDate(step.at, locale)}</p>
+              </li>
+            ))}
+          </ol>
         </section>
       )}
 

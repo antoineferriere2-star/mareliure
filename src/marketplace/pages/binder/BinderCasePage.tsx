@@ -18,6 +18,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BinderPageHeader } from "./BinderPageUi";
 import { WORK_KEY, WORKS_KEY } from "./works/workKeys";
+import { WorkshopReceptionPanel } from "./works/RoundTripWorkshopPanels";
 import { sourceLabel } from "@/marketplace/binders/fineBinderyProfile";
 
 const DECLINE_REASONS = [
@@ -204,6 +205,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
             {!offer && "Aucune offre active pour ce projet."}
           </section>
         )}
+        <WorkshopReceptionPanel caseId={caseId} />
       </aside>
     </div>
     </div>

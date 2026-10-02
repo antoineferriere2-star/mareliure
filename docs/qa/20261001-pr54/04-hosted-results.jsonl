@@ -1,0 +1,29 @@
+{"n": 1, "pass": true, "expected": "immutable once accepted", "observed": "marketplace_commercial_proposals is immutable once accepted (proposal a4fd1597-0ebb-4aec-8", "scenario": "Proposition acceptée historique : offre impossible (immuable)"}
+{"n": 2, "pass": true, "expected": "round_trip_offer_required", "observed": "round_trip_offer_required", "scenario": "Proposition historique : pas d'offre aller-retour"}
+{"n": 3, "pass": true, "expected": "book_round_trip_fr/accepted", "observed": "book_round_trip_fr/accepted", "scenario": "Nouvelle proposition acceptée avec l'offre"}
+{"n": 4, "pass": true, "expected": "platform_payment_required", "observed": "platform_payment_required", "scenario": "Sans paiement plateforme confirmé : aucune réservation"}
+{"n": 5, "pass": true, "expected": "platform_payment_required", "observed": "platform_payment_required", "scenario": "Paiement incomplet : aucune réservation"}
+{"n": 6, "pass": true, "expected": "accepted_workshop_required", "observed": "accepted_workshop_required", "scenario": "Atelier sélectionné non acceptant : aucune réservation"}
+{"n": 7, "pass": true, "expected": "current_rate_approval_required", "observed": "current_rate_approval_required", "scenario": "Sans tarif revu : aucune réservation"}
+{"n": 8, "pass": true, "expected": "round_trip_no_automatic_deficit", "observed": "new row for relation \"marketplace_round_trip_rate_approvals\" violates check constraint \"ro", "scenario": "Tarif au-delà de 15 € refusé (contrainte)"}
+{"n": 9, "pass": true, "expected": "address_changed_review_required", "observed": "address_changed_review_required", "scenario": "Adresse modifiée : revue exigée"}
+{"n": 10, "pass": true, "expected": "claim", "observed": "claim", "scenario": "Réservation aller"}
+{"n": 11, "pass": true, "expected": "review_required", "observed": "review_required", "scenario": "Seconde demande : revue, jamais un second achat"}
+{"n": 12, "pass": true, "expected": "1", "observed": "1", "scenario": "Une seule ligne pour l'aller"}
+{"n": 13, "pass": true, "expected": "claimed", "observed": "claimed", "scenario": "Tentative enregistrée"}
+{"n": 14, "pass": true, "expected": "ambiguous", "observed": "ambiguous", "scenario": "Réponse perdue : ambigu"}
+{"n": 15, "pass": true, "expected": "label_transition_invalid", "observed": "label_transition_invalid:ambiguous:purchase_failed", "scenario": "Échec définitif refusé après ambiguïté"}
+{"n": 16, "pass": true, "expected": "private_details_refused", "observed": "private_details_refused", "scenario": "Détails privés refusés"}
+{"n": 17, "pass": true, "expected": "confirmed/true", "observed": "confirmed/true", "scenario": "Étiquette confirmée, surcoût signalé"}
+{"n": 18, "pass": true, "expected": "4f9f0e78-3518-4edd-9919-04adbc7ebc26/label.pdf", "observed": "4f9f0e78-3518-4edd-9919-04adbc7ebc26/label.pdf", "scenario": "Chemin privé contrôlé"}
+{"n": 19, "pass": true, "expected": "applied/duplicate", "observed": "applied/duplicate", "scenario": "Suivi transporteur dédupliqué"}
+{"n": 20, "pass": true, "expected": "return_not_ready", "observed": "return_not_ready", "scenario": "Retour avant réception physique refusé"}
+{"n": 21, "pass": true, "expected": "physical_receipt_required", "observed": "physical_receipt_required", "scenario": "Livraison transporteur ≠ réception : retour refusé"}
+{"n": 22, "pass": true, "expected": "ok", "observed": "ok", "scenario": "Réception physique confirmée par l'atelier"}
+{"n": 23, "pass": true, "expected": "claim", "observed": "claim", "scenario": "Réservation retour"}
+{"n": 24, "pass": true, "expected": "cancellation_reference_required", "observed": "cancellation_reference_required", "scenario": "Annulation sans référence refusée"}
+{"n": 25, "pass": true, "expected": "cancelled/null", "observed": "cancelled/null", "scenario": "Annulation enregistrée, aucun remboursement présumé"}
+{"n": 26, "pass": true, "expected": "request_started,response_ambiguous,label_confirmed,tracking_update,cancelled", "observed": "request_started,response_ambiguous,label_confirmed,tracking_update,cancelled", "scenario": "Journal ajouté seulement"}
+{"n": 27, "pass": true, "expected": "permission denied", "observed": "permission denied for function marketplace_reserve_round_trip_label", "scenario": "Navigateur : réservation refusée"}
+{"n": 28, "pass": true, "expected": "permission denied", "observed": "permission denied for function marketplace_round_trip_label_transition", "scenario": "Navigateur : transition refusée"}
+{"n": 29, "pass": true, "expected": "permission denied", "observed": "permission denied for table marketplace_round_trip_label_jobs", "scenario": "Navigateur : lecture des réservations refusée"}

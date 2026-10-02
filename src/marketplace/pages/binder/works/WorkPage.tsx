@@ -15,12 +15,13 @@ import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
 import { formatWeight, formatWorkDimensions } from "@/marketplace/works/workViews";
 import { WORK_KEY, WORKS_KEY } from "./workKeys";
 import { LogisticsPanel } from "./LogisticsPanel";
+import { WorkshopRoundTripPanel } from "./RoundTripWorkshopPanels";
 
 /** La provenance d'un ouvrage, dite sans ambiguïté : les deux voies ne se confondent jamais. */
-export function SourceBadge({ source }: { source: "mon_client" | "ma_reliure" }) {
+export function SourceBadge({ source, brand }: { source: "mon_client" | "ma_reliure"; brand?: "MA_RELIURE" | "FINE_BINDERY" | null }) {
   return source === "ma_reliure" ? (
     <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-      Projet apporté par Ma Reliure
+      Projet apporté par {brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"}
     </span>
   ) : (
     <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
@@ -113,7 +114,7 @@ export function WorkPage({ workId }: { workId: string }) {
           )}
           {work.status === "archived" && <span>· archivé</span>}
         </div>
-        <SourceBadge source={work.source} />
+        <SourceBadge source={work.source} brand={work.platformBrand} />
       </header>
 
       <div className="flex flex-wrap gap-2">
@@ -149,6 +150,7 @@ export function WorkPage({ workId }: { workId: string }) {
         )}
       </section>
 
+      {work.caseId && <WorkshopRoundTripPanel caseId={work.caseId} />}
       <LogisticsPanel workId={workId} />
 
       <section aria-labelledby="work-quotes" className="space-y-3">

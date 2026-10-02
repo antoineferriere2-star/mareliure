@@ -1,0 +1,60 @@
+{
+  "engine": "PostgreSQL 17.11 on x86_64-windows, compiled by msvc-19.44.35228, 64-bit",
+  "results": [
+    {
+      "label": "schéma synthétique",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "label": "migration 20261001160000_book_round_trip_shipping",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "label": "migration 20261002090000_book_round_trip_journey",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "label": "plan synthétique",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "label": "Course plan/accord : l'accord porte sur une version obsolète et ne s'applique pas",
+      "pass": true,
+      "detail": "2/none | B: "
+    },
+    {
+      "label": "dossier payé, reçu, retour prêt",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "label": "Réservations manuelles simultanées : la seconde attend puis reprend la même",
+      "pass": true,
+      "detail": "jobs=1"
+    },
+    {
+      "label": "Confirmations simultanées : une appliquée, l'autre refusée sans doublon",
+      "pass": true,
+      "detail": "events=1"
+    },
+    {
+      "label": "verrou ouvert et tarif revu synthétique",
+      "pass": true,
+      "detail": ""
+    },
+    {
+      "label": "Réservations automatiques simultanées : une réservation, la seconde demande une revue",
+      "pass": true,
+      "detail": "A=claim B=review_required jobs=1"
+    },
+    {
+      "label": "Verrou refermé : plus aucune réservation automatique",
+      "pass": true,
+      "detail": ""
+    }
+  ]
+}
