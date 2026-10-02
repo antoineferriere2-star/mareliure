@@ -13,14 +13,14 @@ Branche `feat/book-roundtrip-shipping` (PR #54, brouillon). État au 2 octobre 2
 | Retour | Reconfirme son adresse de retour quand l'atelier a terminé. Voit le suivi retour. | Déclare « travaux terminés, retour prêt » avec le colis retour mesuré ; télécharge l'étiquette retour ; consigne « retour » puis la remise finale. | Dépose l'étiquette retour (possible seulement après retour prêt **et** adresse reconfirmée). |
 | Clôture | « L'atelier a déclaré la remise de votre livre. » | Remise finale avec référence de preuve. | Frais réels consignés ; déficit éventuel visible. |
 
-Fine Bindery : l'espace client et l'espace atelier sont traduits, mais **l'expédition organisée n'est pas proposée** sur un dossier Fine Bindery (un dossier Fine Bindery ne devient pas un ouvrage atelier : `marketplace_binder_import_case` est limité à Ma Reliure). Restent la remise en main propre et le transport par le client.
+Fine Bindery : même parcours que Ma Reliure (espace client en anglais). Depuis `20261002090000`, un dossier Fine Bindery retenu devient une fiche ouvrage atelier (`marketplace_binder_import_case` accepte les deux marques ; la provenance stockée reste « plateforme » `ma_reliure`, l'écran affiche la marque réelle). Hors France métropolitaine (Belgique, etc.) : pas de forfait, devis distinct annoncé au client, traitement manuel.
 
 Dossiers historiques déjà acceptés sans plan : aucun changement pour le client ; leur suivi reste le journal atelier existant.
 
 ## 2. Ce qui rend le forfait proposable
 
 Calcul en base (`marketplace_round_trip_plan_block`, jumeau TypeScript `roundTripPlanBlock`), dans cet ordre :
-1. dossier Ma Reliure ; 2. mode « expédition organisée » ; 3. livre courant, valeur déclarée < 100 € ; 4. adresses client (et retour) en France métropolitaine hors Corse, Monaco et outre-mer ; 5. colis ≤ 500 g et 35 × 25 × 8 cm (dimensions comparées triées) ; 6. accord de réception de l'atelier **retenu**, pour la **version courante** du plan, adresse de réception en métropole.
+1. dossier Ma Reliure ou Fine Bindery ; 2. mode « expédition organisée » ; 3. livre courant, valeur déclarée < 100 € ; 4. adresses client (et retour) en France métropolitaine hors Corse, Monaco et outre-mer ; 5. colis ≤ 500 g et 35 × 25 × 8 cm (dimensions comparées triées) ; 6. accord de réception de l'atelier **retenu**, pour la **version courante** du plan, adresse de réception en métropole.
 
 Ces plafonds sont une présélection métier, **jamais une garantie du transporteur ni une assurance**. Hors périmètre : traitement adapté (devis distinct, aucune ligne à 15 €, aucun supplément ajouté en silence).
 
@@ -75,7 +75,25 @@ Recette du forfait : 15 € TTC = 12,50 € HT. Avec emballage retour (~1 € HT
 4. Couverture d'un livre confié : conditions écrites Mondial Relay/Sendcloud à obtenir ; la protection d'envoi Sendcloud (XCover) n'est pas souscrite et ses exclusions s'appliquent.
 5. Recette API réelle : nécessite une étiquette facturable (voir § 7).
 
-## 6. Publication (non autorisée à ce jour)
+## 5 bis. Conditions vérifiées le 2 octobre 2026 (sources publiques Sendcloud)
+
+- **Indemnisation Mondial Relay** : 25 € par colis, port compris, **plafonnée à la valeur d'une facture de marchandise au nom de l'expéditeur** ; retard non indemnisé ; emballage inadéquat et marchandises interdites exclus ; perte : enquête sous 30 jours ; avarie en France : réclamation sous 3 jours ouvrés avec photos ([guide Sendcloud](https://www.sendcloud.com/blog/mondial-relay-claims-guide/)). Un livre **confié pour travaux** n'a pas de facture de vente : cette indemnisation **ne couvre pas** sa valeur et n'est jamais présentée comme une assurance du livre. Les compléments payants (jusqu'à 500 €) et la protection Sendcloud (XCover : antiquités, œuvres d'art, manuscrits exclus) restent non souscrits.
+- **TVA** : Sendcloud n'applique pas d'autoliquidation aux entreprises françaises ; ses factures portent la TVA ([aide Sendcloud](https://support.sendcloud.com/hc/en-us/articles/360025144311-Can-I-get-a-VAT-free-invoice)). Coût retenu : 9,08 € HT, soit ≈ 10,90 € TTC, TVA récupérable par la plateforme assujettie.
+- **Webhook** : pour une intégration « Sendcloud API », la signature `Sendcloud-Signature` (HMAC-SHA256) utilise la **clé secrète de l'intégration**, ou la « Webhook Signature Key » si elle est définie ([portail développeur](https://sendcloud.dev/api/v2/webhooks)).
+
+## 5 ter. Secrets à poser par l'opérateur (jamais dans le chat, les journaux ni Git)
+
+Depuis le dépôt (`D:CodexProjectsmareliure-roundtrip` ou tout clone à jour), Worker de production `mareliure` :
+
+```powershell
+npx wrangler secret put SENDCLOUD_PUBLIC_KEY --name mareliure
+npx wrangler secret put SENDCLOUD_SECRET_KEY --name mareliure
+npx wrangler secret put SENDCLOUD_WEBHOOK_SECRET --name mareliure
+```
+
+Chaque commande demande la valeur de façon masquée. `SENDCLOUD_WEBHOOK_SECRET` = la clé secrète de l'intégration, ou la Webhook Signature Key si une telle clé est configurée dans Sendcloud (Réglages → Intégrations → « mareliure » → Configurer). URL du webhook à saisir au même endroit : `https://mareliure.fr/api/marketplace/sendcloud-webhook` (« Webhook feedback enabled »). Un `secret put` crée une nouvelle version du Worker avec le même code : à faire **après** la publication de #54.
+
+## 6. Publication
 
 Production : 95 migrations (dernière `20261001150000`). À appliquer dans l'ordre, en une transaction chacune, après sauvegarde : `20261001160000_book_round_trip_shipping` puis `20261002090000_book_round_trip_journey` (97). Contrôles post-application : 97 migrations ; propositions existantes inchangées hors colonnes ajoutées (toutes `manual`, `logistics_plan_version` nulle) ; verrou d'automatisation **fermé** ; bucket `round-trip-labels-private` privé et politique RESTRICTIVE ; aucun privilège `anon`/`authenticated` sur les nouvelles tables et fonctions. Puis déploiement du Worker depuis `main` (secrets conservés, `--keep-vars`, plafond CPU 1 000 ms), smoke tests : `/mes-livres/:id` d'un dossier historique (aucun panneau), un dossier sans plan (formulaire), `/api/marketplace/sendcloud-webhook` → 404 sans clés.
 
