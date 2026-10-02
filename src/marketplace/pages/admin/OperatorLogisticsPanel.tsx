@@ -18,7 +18,7 @@ import { formatEuros } from "@/marketplace/pricing/money";
 
 const BLOCKS: Record<string, string> = {
   logistics_plan_required: "Aucun plan logistique : le client n'a pas encore choisi.",
-  brand_unsupported: "Dossier Fine Bindery : pas d'ouvrage atelier importable, forfait indisponible.",
+  brand_unsupported: "Marque inconnue : forfait indisponible.",
   mode_not_organized: "Le client n'a pas choisi l'expédition organisée.",
   valuable_book: "Livre ancien, unique ou valeur ≥ 100 € : traitement adapté.",
   workshop_acceptance_required: "Accord de réception de l'atelier retenu manquant pour cette version.",

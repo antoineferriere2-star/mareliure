@@ -146,7 +146,7 @@ function PlanForm({ view, caseId, copy, onDone, onCancel }: {
   const plan = view.plan;
   const save = useServerFn(saveMyCaseLogistics);
   const cache = useQueryClient();
-  const roundTripOffered = view.brand === "MA_RELIURE";
+  const roundTripOffered = view.brand === "MA_RELIURE" || view.brand === "FINE_BINDERY";
   const modes = LOGISTICS_MODES.filter((m) => roundTripOffered || m !== "organized_round_trip");
   const [mode, setMode] = useState<LogisticsMode>(plan?.mode ?? (roundTripOffered ? "organized_round_trip" : "hand_delivery"));
   const [contact, setContact] = useState<AddressDraft>(toDraft(plan?.contact));

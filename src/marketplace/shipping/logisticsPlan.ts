@@ -79,7 +79,7 @@ export function parcelWithinRoundTripLimits(parcel: Parcel | null): boolean {
 
 /** Jumeau de `marketplace_round_trip_plan_block` : `null` = l'offre 15 € TTC peut être proposée. */
 export function roundTripPlanBlock(plan: LogisticsPlan, brand: string, selectedBinderId: string | null): RoundTripBlock | null {
-  if (brand !== "MA_RELIURE") return "brand_unsupported";
+  if (brand !== "MA_RELIURE" && brand !== "FINE_BINDERY") return "brand_unsupported";
   if (plan.mode !== "organized_round_trip") return "mode_not_organized";
   if (plan.bookKind !== "ordinary" || plan.declaredValueCents >= ROUND_TRIP_MAX_DECLARED_VALUE_CENTS) return "valuable_book";
   // Causes propres à l'envoi d'abord : le client doit les lire avant toute attente de l'atelier.

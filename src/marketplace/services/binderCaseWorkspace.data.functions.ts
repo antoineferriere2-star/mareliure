@@ -6,11 +6,12 @@ import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { requireLeadApprovedBinderId } from "./binderQuotes.server";
 import { buildCaseView, loadCaseContext } from "./caseRepository.server";
+import { isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
 
 const input = z.object({ caseId: z.string().uuid() }).strict();
 
 /**
- * Only a selected workshop may import a Ma Reliure dossier. No contact, source, title or
+ * Only a selected workshop may import a Ma Reliure or Fine Bindery dossier. No contact, source, title or
  * workshop identity is accepted from the browser. The database repeats the selected-match
  * check and creates both rows atomically; a retry returns the same work.
  */
@@ -21,7 +22,7 @@ export const ensureMyCaseWork = createServerFn({ method: "POST" })
     const sb = await admin();
     const binderId = await requireLeadApprovedBinderId(sb, context.userId);
     const caseContext = await loadCaseContext(sb, data.caseId);
-    if (!caseContext || caseContext.row.brand !== "MA_RELIURE" || caseContext.selectedBinderId !== binderId) {
+    if (!caseContext || !isMarketplaceBrand(caseContext.row.brand) || caseContext.selectedBinderId !== binderId) {
       fail(404, "Dossier introuvable.");
     }
     const view = await buildCaseView(sb, caseContext, "assigned");

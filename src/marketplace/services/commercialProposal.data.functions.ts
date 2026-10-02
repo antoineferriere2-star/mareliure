@@ -72,7 +72,7 @@ const createInput = z.object({
 
 const ROUND_TRIP_REFUSALS: Record<string, string> = {
   logistics_plan_required: "Le client n'a pas encore choisi l'acheminement de son livre.",
-  brand_unsupported: "Le transport aller-retour n'est proposé que sur les dossiers Ma Reliure.",
+  brand_unsupported: "Le transport aller-retour n'est proposé que sur les dossiers Ma Reliure et Fine Bindery.",
   mode_not_organized: "Le client n'a pas choisi l'expédition organisée.",
   valuable_book: "Livre ancien, unique ou de valeur déclarée ≥ 100 € : traitement adapté, pas de forfait.",
   workshop_acceptance_required: "L'atelier retenu n'a pas accepté la réception pour la version actuelle du plan.",

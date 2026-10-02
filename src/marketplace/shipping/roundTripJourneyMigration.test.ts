@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import type { PGlite } from "@electric-sql/pglite";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
@@ -10,7 +11,7 @@ import {
 // La migration 20261002090000 sur PostgreSQL réel (PGlite) : plan logistique, offre liée à sa
 // version, verrous, réservation manuelle, retour et verrou d'automatisation. Aucune étiquette achetée.
 let db: PGlite;
-afterEach(async () => { await db?.close(); });
+afterEach(async () => { if (db && !db.closed) await db.close(); });
 
 const plan = async () => (await db.query<Record<string, unknown>>("SELECT * FROM marketplace_case_logistics_plans WHERE case_id=$1", [RT.case])).rows[0];
 const manual = (direction: string, actor = RT.admin, replace = false) =>
@@ -69,7 +70,7 @@ describe("offre « Transport aller-retour — 15 € TTC »", () => {
     await expect(insertProposal(db, "book_round_trip_fr")).rejects.toThrow(`round_trip_not_eligible:${reason}`);
   });
 
-  it("exige un plan, l'accord de l'atelier retenu sur la version courante et un dossier Ma Reliure", async () => {
+  it("exige un plan et l'accord de l'atelier retenu sur la version courante, sur les deux marques", async () => {
     db = await roundTripSchema();
     await expect(insertProposal(db, "book_round_trip_fr")).rejects.toThrow("logistics_plan_required");
     await insertEligiblePlan(db);
@@ -77,9 +78,10 @@ describe("offre « Transport aller-retour — 15 € TTC »", () => {
     await acceptPlanByWorkshop(db, RT.otherBinder, RT.outsider);
     await expect(insertProposal(db, "book_round_trip_fr")).rejects.toThrow("workshop_acceptance_required");
     await acceptPlanByWorkshop(db);
-    await db.query("UPDATE marketplace_cases SET brand='FINE_BINDERY'");
+    await db.query("UPDATE marketplace_cases SET brand='AUTRE'");
     await expect(insertProposal(db, "book_round_trip_fr")).rejects.toThrow("brand_unsupported");
-    await db.query("UPDATE marketplace_cases SET brand='MA_RELIURE'");
+    // Fine Bindery : même parcours dès que le dossier est en France métropolitaine.
+    await db.query("UPDATE marketplace_cases SET brand='FINE_BINDERY'");
     await insertProposal(db, "book_round_trip_fr");
     expect((await db.query("SELECT shipping_offer_kind, logistics_plan_version FROM marketplace_commercial_proposals")).rows)
       .toEqual([{ shipping_offer_kind: "book_round_trip_fr", logistics_plan_version: 1 }]);
@@ -215,6 +217,16 @@ describe("retour vers le client", () => {
     await expect(db.query("SELECT marketplace_reserve_round_trip_label($1,'return',$2,$3)", [RT.case, "a".repeat(64), "b".repeat(64)]))
       .rejects.toThrow("return_parcel_review_required");
     expect((await manual("return")).outcome).toBe("claim");
+  });
+});
+
+describe("Fine Bindery", () => {
+  it("l'import d'un dossier retenu en ouvrage atelier accepte les deux marques", async () => {
+    const sql = readFileSync(new URL("../../../supabase/migrations/20261002090000_book_round_trip_journey.sql", import.meta.url), "utf8");
+    const fn = sql.slice(sql.indexOf("CREATE OR REPLACE FUNCTION public.marketplace_binder_import_case("));
+    expect(fn).toContain("c.brand IN ('MA_RELIURE', 'FINE_BINDERY')");
+    expect(fn).toContain("m.state = 'selected'");
+    expect(fn).not.toMatch(/SECURITYs+DEFINER/i);
   });
 });
 
