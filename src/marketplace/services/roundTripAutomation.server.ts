@@ -12,7 +12,7 @@ import type { Supa } from "@/build/services/adminAuth.server";
 import { effectiveReturnAddress, logisticsErrorCode, planFromRow, type PostalAddress } from "@/marketplace/shipping/logisticsPlan";
 import { purchaseLeg, type LegResult } from "@/marketplace/shipping/labelOrchestrator";
 import type { LabelDirection, LabelProvider, LabelRequest, PostalParty } from "@/marketplace/shipping/labelProvider";
-import { createSendcloudProvider } from "@/marketplace/shipping/sendcloudProvider.server";
+import { createSendcloudProvider, fetchSendcloudShippingOptions } from "@/marketplace/shipping/sendcloudProvider.server";
 import { supabaseLabelStore } from "@/marketplace/shipping/roundTripLabelStore.server";
 import { LogisticsError, automationState } from "./caseLogistics.server";
 import { loadAcceptedCommercialProposal } from "./commercialProposalRepository.server";
@@ -109,4 +109,28 @@ export async function purchaseAutomatically(sb: Supa, caseId: string, direction:
     parcel: { weightGrams: parcel.weightGrams, dimensionsMm: [parcel.lengthMm, parcel.widthMm, parcel.heightMm] },
   });
   return purchaseLeg(provider, supabaseLabelStore(sb), outcome.id, request);
+}
+
+/**
+ * Méthodes et prix réellement proposés par le compte Sendcloud pour les deux trajets d'un dossier
+ * (codes postaux et mesures du plan seulement). Lecture seule : sert à choisir les codes du tarif revu
+ * et à vérifier le coût complet avant toute ouverture.
+ */
+export async function roundTripShippingOptions(sb: Supa, caseId: string) {
+  const publicKey = process.env.SENDCLOUD_PUBLIC_KEY, secretKey = process.env.SENDCLOUD_SECRET_KEY;
+  if (!publicKey || !secretKey) throw new LogisticsError("provider_unavailable", 503);
+  const plan = await loadPlanRow(sb, caseId);
+  const back = effectiveReturnAddress(plan);
+  const reception = plan.workshop?.reception;
+  if (!plan.contact || !back || !reception || !plan.parcel) throw new LogisticsError("logistics_plan_required");
+  const dims = (p: { lengthMm: number; widthMm: number; heightMm: number }): [number, number, number] => [p.lengthMm, p.widthMm, p.heightMm];
+  const returnParcel = plan.returnReady?.parcel ?? plan.parcel;
+  const [outbound, back2] = await Promise.all([
+    fetchSendcloudShippingOptions({ publicKey, secretKey }, { fromCountry: plan.contact.countryCode, fromPostalCode: plan.contact.postalCode,
+      toCountry: reception.countryCode, toPostalCode: reception.postalCode, weightGrams: plan.parcel.weightGrams, dimensionsMm: dims(plan.parcel) }),
+    fetchSendcloudShippingOptions({ publicKey, secretKey }, { fromCountry: reception.countryCode, fromPostalCode: reception.postalCode,
+      toCountry: back.countryCode, toPostalCode: back.postalCode, weightGrams: returnParcel.weightGrams, dimensionsMm: dims(returnParcel) }),
+  ]);
+  if (outbound === "unavailable" || back2 === "unavailable") throw new LogisticsError("provider_unavailable", 503);
+  return { outbound, return: back2, queriedAt: new Date().toISOString() };
 }

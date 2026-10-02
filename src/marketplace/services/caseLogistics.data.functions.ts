@@ -15,7 +15,7 @@ import {
   LogisticsError, operatorConfirmManual, operatorLogistics, operatorRecordJobEvent, operatorSetAutomation,
   saveCustomerPlan, workshopLogistics,
 } from "./caseLogistics.server";
-import { purchaseAutomatically, recordRateApproval } from "./roundTripAutomation.server";
+import { purchaseAutomatically, recordRateApproval, roundTripShippingOptions } from "./roundTripAutomation.server";
 
 const caseId = z.string().uuid();
 const direction = z.enum(["outbound", "return"]);
@@ -203,4 +203,12 @@ export const purchaseRoundTripLabel = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     return guarded(async () => purchaseAutomatically(await admin(), data.caseId, data.direction));
+  });
+
+export const getRoundTripShippingOptions = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ caseId }).strict().parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    return guarded(async () => roundTripShippingOptions(await admin(), data.caseId));
   });
