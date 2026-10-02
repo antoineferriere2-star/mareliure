@@ -65,7 +65,7 @@ export const STEPS: readonly LandingStep[] = [
     index: "03",
     when: "Après votre accord",
     title: "Un artisan réalise le travail",
-    body: "L'atelier dont le savoir-faire correspond confirme au prix prévu. Le transport est convenu avec vous, projet par projet, en attendant un envoi organisé.",
+    body: "L'atelier dont le savoir-faire correspond confirme au prix prévu. Pour un livre courant en France métropolitaine, la proposition peut inclure l'aller-retour organisé, en ligne distincte ; sinon, le trajet est convenu avec vous.",
   },
 ];
 
