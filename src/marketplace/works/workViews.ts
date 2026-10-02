@@ -23,6 +23,8 @@ export interface ContactView {
   country: string | null;
   notes: string | null;
   origin: ContactOrigin;
+  /** Marque du dossier d'origine d'un contact « plateforme ». */
+  platformBrand?: "MA_RELIURE" | "FINE_BINDERY" | null;
   archived: boolean;
 }
 

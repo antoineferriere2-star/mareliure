@@ -40,6 +40,8 @@ const ERRORS: Record<string, string> = {
   logistics_plan_changed_review_required: "Le plan a changé depuis la proposition : revue nécessaire.",
   evidence_missing: "Chaque preuve d'ouverture doit être renseignée (8 caractères minimum).",
   invalid_input: "Saisie invalide ou transition impossible pour cette étiquette.",
+  label_reference_duplicate: "Cette référence d'achat est déjà enregistrée sur une autre étiquette : vérifiez la saisie (référence ou numéro de suivi).",
+  provider_unavailable: "Enregistrement non confirmé (stockage ou base indisponible). Réessayez : aucune étiquette n'est dupliquée.",
   accepted_workshop_required: "Aucun atelier retenu ayant accepté l'offre.",
 };
 const errorText = (e: unknown) => {

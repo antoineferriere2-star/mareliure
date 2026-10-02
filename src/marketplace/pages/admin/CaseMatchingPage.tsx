@@ -752,7 +752,7 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
 
   return (
     <section className="rounded-lg border border-border bg-card p-5">
-      <div className="flex items-center justify-between gap-3">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           Proposition commerciale
         </h2>

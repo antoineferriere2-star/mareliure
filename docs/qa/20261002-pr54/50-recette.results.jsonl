@@ -1,0 +1,101 @@
+{"at":"2026-10-02T13:03:21.042Z","scenario":"L1 client : forfait annoncé avec ses deux trajets","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:21.462Z","scenario":"L1 client : code postal invalide refusé, message lisible","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:23.418Z","scenario":"L1 client : plan enregistré, attente de l'atelier","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:23.422Z","scenario":"L1 client bureau : sans erreur ni débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:03:28.199Z","scenario":"L1 atelier : plan lisible","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:28.203Z","scenario":"L1 atelier : adresse et téléphone du client masqués","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:30.731Z","scenario":"L1 atelier : réception acceptée","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:36.715Z","scenario":"L1 opérateur : proposition avec ligne transport explicite","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:38.153Z","scenario":"L1 opérateur : TVA France 20 % validée","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:40.860Z","scenario":"L1 client : ligne « Transport aller-retour » avant l'accord","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:40.864Z","scenario":"L1 client : montant TTC du forfait affiché","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:41.714Z","scenario":"L1 client : plan figé pendant l'offre","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:44.657Z","scenario":"L1 client : acceptée, prochaine action paiement","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:44.666Z","scenario":"L1 client mobile : sans erreur ni débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:03:45.342Z","scenario":"L1 paiement Stripe simulé en base","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:51.945Z","scenario":"L1 opérateur : étiquette aller enregistrée","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:52.434Z","scenario":"L1 double clic : une seule réservation aller","pass":true,"detail":"réservations=1"}
+{"at":"2026-10-02T13:03:56.766Z","scenario":"L1 client : action « déposer le colis » en tête et dans la section","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:56.771Z","scenario":"L1 client : bandeau d'action en tête de page","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:56.775Z","scenario":"L1 client : conseils d'emballage","pass":true,"detail":""}
+{"at":"2026-10-02T13:03:57.783Z","scenario":"L1 client : étiquette aller par lien signé privé","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:04.586Z","scenario":"L1 atelier : fiche ouvrage avec transport aller-retour","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:04.592Z","scenario":"L1 atelier : provenance de la bonne marque","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:11.112Z","scenario":"L1 client : « livré » transporteur ≠ reçu","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:17.231Z","scenario":"L1 atelier mobile : retour non déclarable avant réception","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:20.545Z","scenario":"L1 atelier : photo privée jointe au constat","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:24.139Z","scenario":"L1 atelier : retour prêt, attente de l'adresse client","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:24.148Z","scenario":"L1 atelier mobile : sans débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:04:28.470Z","scenario":"L1 client : réception confirmée par l'atelier","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:28.477Z","scenario":"L1 client : incident signalé","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:28.481Z","scenario":"L1 client : aucune note, photo ni preuve de l'atelier exposée","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:30.412Z","scenario":"L1 client : adresse de retour confirmée","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:37.151Z","scenario":"L1 opérateur : étiquette retour, frais réels 9,38 € TTC","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:44.490Z","scenario":"L1 atelier : étiquette retour par lien signé privé","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:52.305Z","scenario":"L1 atelier : remise finale journalisée","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:56.584Z","scenario":"L1 client mobile : dossier clos","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:56.588Z","scenario":"L1 client mobile : remise déclarée par l'atelier dans l'historique","pass":true,"detail":""}
+{"at":"2026-10-02T13:04:56.592Z","scenario":"L1 client mobile : sans erreur ni débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:05:00.920Z","scenario":"L4 client : forfait annoncé avec ses deux trajets","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:01.335Z","scenario":"L4 client : code postal invalide refusé, message lisible","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:02.800Z","scenario":"L4 client : plan enregistré, attente de l'atelier","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:02.803Z","scenario":"L4 client bureau : sans erreur ni débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:05:07.296Z","scenario":"L4 atelier : plan lisible","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:07.300Z","scenario":"L4 atelier : adresse et téléphone du client masqués","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:09.786Z","scenario":"L4 atelier : réception acceptée","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:14.904Z","scenario":"L4 opérateur : proposition avec ligne transport explicite","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:15.820Z","scenario":"L4 opérateur : TVA France 20 % validée","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:18.425Z","scenario":"L4 client : ligne « Round-trip shipping » avant l'accord","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:18.429Z","scenario":"L4 client : montant TTC du forfait affiché","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:19.264Z","scenario":"L4 client : plan figé pendant l'offre","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:21.687Z","scenario":"L4 client : acceptée, prochaine action paiement","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:21.695Z","scenario":"L4 client mobile : sans erreur ni débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:05:22.409Z","scenario":"L4 paiement Stripe simulé en base","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:29.461Z","scenario":"L4 opérateur : étiquette aller enregistrée","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:29.939Z","scenario":"L4 double clic : une seule réservation aller","pass":true,"detail":"réservations=1"}
+{"at":"2026-10-02T13:05:34.179Z","scenario":"L4 client : action « déposer le colis » en tête et dans la section","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:34.182Z","scenario":"L4 client : bandeau d'action en tête de page","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:34.188Z","scenario":"L4 client : conseils d'emballage","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:35.182Z","scenario":"L4 client : étiquette aller par lien signé privé","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:40.768Z","scenario":"L4 atelier : fiche ouvrage avec transport aller-retour","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:40.772Z","scenario":"L4 atelier : provenance de la bonne marque","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:46.611Z","scenario":"L4 client : « livré » transporteur ≠ reçu","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:52.259Z","scenario":"L4 atelier mobile : retour non déclarable avant réception","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:54.513Z","scenario":"L4 atelier : photo privée jointe au constat","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:57.846Z","scenario":"L4 atelier : retour prêt, attente de l'adresse client","pass":true,"detail":""}
+{"at":"2026-10-02T13:05:57.854Z","scenario":"L4 atelier mobile : sans débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:06:02.401Z","scenario":"L4 client : réception confirmée par l'atelier","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:02.407Z","scenario":"L4 client : incident signalé","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:02.414Z","scenario":"L4 client : aucune note, photo ni preuve de l'atelier exposée","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:04.346Z","scenario":"L4 client : adresse de retour confirmée","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:11.543Z","scenario":"L4 opérateur : étiquette retour, frais réels 9,38 € TTC","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:20.301Z","scenario":"L4 atelier : étiquette retour par lien signé privé","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:27.921Z","scenario":"L4 atelier : remise finale journalisée","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:32.154Z","scenario":"L4 client mobile : dossier clos","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:32.159Z","scenario":"L4 client mobile : remise déclarée par l'atelier dans l'historique","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:32.162Z","scenario":"L4 client mobile : sans erreur ni débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:06:38.029Z","scenario":"L2 client mobile : main propre enregistrée","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:38.039Z","scenario":"L2 client mobile : sans erreur ni débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:06:42.259Z","scenario":"L2 atelier : plan lisible","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:42.265Z","scenario":"L2 atelier : adresse et téléphone du client masqués","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:44.786Z","scenario":"L2 atelier : réception acceptée","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:51.148Z","scenario":"L2 opérateur : TVA France 20 % validée","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:56.743Z","scenario":"L2 client : acceptée sans ligne transport","pass":true,"detail":""}
+{"at":"2026-10-02T13:06:56.748Z","scenario":"L2 client : aucune ligne transport","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:01.001Z","scenario":"L2 client : adresse de réception de l'atelier après accord","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:01.007Z","scenario":"L2 client : aucune étiquette en main propre","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:10.381Z","scenario":"L2 atelier : main propre journalisée jusqu'à la remise","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:14.047Z","scenario":"L2 client mobile : clôture visible","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:19.894Z","scenario":"L3 client : colis hors limites annoncé avant tout accord, aucun supplément","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:25.088Z","scenario":"L3 opérateur : forfait refusé, raison métier","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:30.893Z","scenario":"L5 client FB mobile : hors métropole, devis distinct annoncé","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:30.900Z","scenario":"L5 client FB mobile : sans erreur ni débordement","pass":true,"detail":"erreurs=0 débordement=0px "}
+{"at":"2026-10-02T13:07:35.285Z","scenario":"L5 atelier : plan lisible","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:35.289Z","scenario":"L5 atelier : adresse et téléphone du client masqués","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:37.789Z","scenario":"L5 atelier : réception acceptée","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:42.928Z","scenario":"L5 opérateur : forfait refusé hors métropole","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:45.986Z","scenario":"Autre atelier : ni plan, ni adresse, ni étiquette de L1","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:48.150Z","scenario":"Autre client : rien du dossier L1","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:53.108Z","scenario":"Opérateur : ouverture du verrou sans preuves refusée","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:53.661Z","scenario":"Verrou toujours fermé en base","pass":true,"detail":""}
+{"at":"2026-10-02T13:07:59.261Z","scenario":"Atelier, espace anglais : panneau aller-retour traduit","pass":true,"detail":""}

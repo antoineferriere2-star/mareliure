@@ -209,7 +209,7 @@ export const LOGISTICS_ERROR_CODES = [
   "admin_required", "automation_closed", "round_trip_offer_required", "logistics_plan_changed_review_required",
   "accepted_workshop_required", "selected_workshop_required", "active_membership_required",
   "return_requires_accepted_proposal", "evidence_missing", "label_pdf_invalid", "invalid_input",
-  "round_trip_not_eligible", "provider_unavailable", "not_found", "forbidden",
+  "round_trip_not_eligible", "provider_unavailable", "not_found", "forbidden", "label_reference_duplicate",
 ] as const;
 export type LogisticsErrorCode = (typeof LOGISTICS_ERROR_CODES)[number];
 

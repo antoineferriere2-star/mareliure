@@ -193,7 +193,7 @@ export async function getContact(sb: Supa, binderId: string, contactId: string):
   const quoteRows = quotes.data ?? [];
   const quotesByWork = countBy(quoteRows, (q) => q.work_id);
   return {
-    contact: contactView(row),
+    contact: { ...contactView(row), platformBrand: row.origin_case_id ? ((await caseBrands(sb, [row.origin_case_id])).get(row.origin_case_id) ?? null) : null },
     works: (works.data ?? []).map((w) => workSummary(w, row.name, quotesByWork.get(w.id) ?? 0)),
     quotes: quoteRows.map(quoteSummary),
     invoices: (invoices.data ?? []).map(invoiceSummary(await loadCredits(sb, binderId, invoices.data ?? []))),

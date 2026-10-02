@@ -32,3 +32,21 @@ Ce qui est **simulé** : le paiement Stripe (ligne `marketplace_commercial_propo
 
 ## Non couvert ici
 Fournisseur réel (achat, annulation, webhook Sendcloud) : voir `docs/book-roundtrip-operations.md` § 7. Production : aucune opération.
+
+## Recette finale sur build de production — 2 octobre 2026 (après-midi)
+
+Build de production (`vite build`) servi par `wrangler dev --local` (Wrangler 4.141.0), base qwf ; instance 8097 (Ma Reliure) et 8099 (`MARKETPLACE_BRAND_OVERRIDE=FINE_BINDERY`, espace client Fine Bindery en anglais). Dossiers fictifs `RL-QA-O1` à `O5` (`15-fixtures-o.*`, le script les désigne L1–L5) ; séries L, M, N : essais interrompus, conservés.
+
+`50-recette.cjs` / `50-recette.results.jsonl` : **101/101**. Chaque vérification attend son texte ; aucune absence n'est vérifiée avant un repère positif.
+- O1 Ma Reliure et O4 **Fine Bindery** : expédition organisée de bout en bout (adresse invalide refusée, accord atelier, proposition avec la ligne transport, plan figé, acceptation, paiement simulé, étiquette aller avec double soumission → une seule réservation, lien privé, emballage, « livré » ≠ reçu, réception avec écart, photo, incident sans exposition au client, retour prêt, adresse reconfirmée, étiquette retour, frais 9,38 € TTC, remise finale, clôture), bureau et mobile, sans erreur console ni débordement côté client et atelier.
+- O2 remise en main propre sans étiquette jusqu'à la clôture ; O3 colis hors limites (traitement adapté, forfait refusé avec motif) ; O5 Fine Bindery en Belgique (hors métropole : devis distinct, forfait refusé).
+- Accès : autre atelier et autre client sans aucune donnée ; ouverture du verrou sans preuves refusée, verrou resté fermé ; espace atelier anglais traduit.
+
+### Avertissement React
+« Can't perform a React state update on a component that hasn't mounted yet » : pile capturée (`coldwarn.cjs`), émis par `Transitioner.router.startTransition` de TanStack Router lors d'un premier chargement à froid du serveur de **développement**. Reproduit aussi sur `main` sans #54 (1 chargement sur 3) : antérieur et extérieur au parcours. Le build de production n'émet aucune erreur console (vérifié sur les pages client, atelier et opérateur, bureau et mobile).
+
+### Défaut trouvé et corrigé
+Référence d'achat (`provider_label_id`) déjà utilisée sur une autre étiquette : l'opérateur voyait « indisponible » et ne pouvait plus déposer de PDF corrigé. Désormais : message explicite (`label_reference_duplicate`), et un PDF déposé pour une réservation encore non confirmée peut être remplacé (`caseLogistics.manualLabel.test.ts`).
+
+### Provenance « ma_reliure »
+Valeur historique conservée pour « projet apporté par la plateforme ». Vérifié : paiement (circuit `review_required`, jamais client propre), règlement externe (`origin='mon_client'` seulement), fiche ouvrage, liste des ouvrages, fiche contact et fiche atelier côté administration affichent la marque réelle du dossier ; aucun e-mail ni document ne lit cette valeur.

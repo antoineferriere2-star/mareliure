@@ -74,14 +74,16 @@ export const getAdminWorkshopDetail = createServerFn({ method: "GET" })
       : { data: [], error: null };
     if (caseError) fail(500, "Les dossiers n'ont pas pu être chargés.");
     const marketplaceCaseIds = new Set((cases ?? []).filter((row) => row.brand === "MA_RELIURE").map((row) => row.id));
-    const platformWorks = (works.data ?? []).filter((work) => work.source === "ma_reliure" && work.case_id && marketplaceCaseIds.has(work.case_id));
+    // Ouvrages « plateforme » : dossiers Ma Reliure et Fine Bindery (la provenance stockée reste « ma_reliure »).
+    const brandOf = new Map((cases ?? []).map((row) => [row.id, row.brand] as const));
+    const platformWorks = (works.data ?? []).filter((work) => work.source === "ma_reliure" && work.case_id && (brandOf.get(work.case_id) === "MA_RELIURE" || brandOf.get(work.case_id) === "FINE_BINDERY"));
     const platformWorkIds = new Set(platformWorks.map((work) => work.id));
     const platformQuotes = (quotes.data ?? []).filter((quote) => quote.work_id && platformWorkIds.has(quote.work_id));
     const platformQuoteIds = new Set(platformQuotes.map((quote) => quote.id));
     return {
       binder: { id: binder.id, name: binder.workshop_name || binder.display_name, relieur: binder.display_name, city: binder.city, countryCode: binder.country_code, status: binder.status, publicProfileStatus: binder.public_profile_status, publicSlug: binder.personal_referral_slug, specialties: (skills.data ?? []).map((row) => row.skill_slug), portfolioCount: (portfolio.data ?? []).filter((row) => row.is_published).length, updatedAt: binder.updated_at },
       leads: (matches.data ?? []).filter((m) => marketplaceCaseIds.has(m.case_id)).map((match) => ({ ...match, reference: (cases ?? []).find((row) => row.id === match.case_id)?.reference ?? "", caseStatus: (cases ?? []).find((row) => row.id === match.case_id)?.status ?? "" })),
-      works: platformWorks.map((work) => ({ id: work.id, caseId: work.case_id, title: work.title, reference: work.reference, updatedAt: work.updated_at })),
+      works: platformWorks.map((work) => ({ id: work.id, caseId: work.case_id, brand: brandOf.get(work.case_id!) ?? null, title: work.title, reference: work.reference, updatedAt: work.updated_at })),
       quotes: platformQuotes.map((quote) => ({ id: quote.id, workId: quote.work_id, number: quote.quote_number, status: quote.status, totalTtcCents: quote.total_ttc_cents, createdAt: quote.created_at })),
       invoices: (invoices.data ?? []).filter((invoice) => platformQuoteIds.has(invoice.quote_id)).map((invoice) => ({ id: invoice.id, number: invoice.invoice_number, status: invoice.payment_status, createdAt: invoice.created_at })),
       privateCounts: {

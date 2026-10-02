@@ -6,9 +6,10 @@ const { chromium } = require("D:/CodexProjects/mareliure-audit53-fixes/node_modu
 const env = Object.fromEntries(fs.readFileSync("D:/CodexProjects/mareliure-roundtrip/.env", "utf8").split(/\r?\n/)
   .filter((l) => /^[A-Z_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1).replace(/^"|"$/g, "")]));
 if (!env.SUPABASE_URL.includes("qwfhebtxeubfmvvdsqdt") || env.RESEND_API_KEY) throw Error("recette qwf sans Resend requise");
-const BASE = "http://localhost:8095";
+const BASE = process.env.RECETTE_BASE || "http://localhost:8095";
+const FB_BASE = process.env.RECETTE_FB_BASE || "http://localhost:8096";
 const OUT = `${__dirname}/browser`; fs.mkdirSync(OUT, { recursive: true });
-const FX = Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync(`${__dirname}/11-fixtures-k.result.json`, "utf8"))).map(([k, v]) => [k.replace("RL-QA-K", "RL-QA-J"), v]));
+const FX = process.env.RECETTE_FIXTURES ? JSON.parse(fs.readFileSync(`${__dirname}/${process.env.RECETTE_FIXTURES}`, "utf8")) : Object.fromEntries(Object.entries(JSON.parse(fs.readFileSync(`${__dirname}/11-fixtures-k.result.json`, "utf8"))).map(([k, v]) => [k.replace("RL-QA-K", "RL-QA-J"), v]));
 const ACTORS = { customer: "733e639f-a971-4ffe-ad7d-6bf2f7d41468", fbCustomer: "0f1705b1-bf7e-4f2b-8fb4-2724af70941b",
   workshop: "fe4ef1b4-887b-47f8-b2b8-088e51f13ba5", draftWorkshop: "32db49b2-2cce-4db1-b382-136bb63d139c", admin: "33bc4a8e-2e59-4799-9ca6-59dacd635fb5" };
 const sessions = {};
@@ -25,6 +26,7 @@ async function session(userId) {
   return (sessions[userId] = s);
 }
 const results = [];
+async function expectText(p, scenario, text, timeout = 60000) { const ok = await has(p, text, timeout); record(scenario, ok, ok ? "" : `texte attendu absent : « ${text} »`); return ok; }
 function record(scenario, pass, detail = "") {
   results.push({ at: new Date().toISOString(), scenario, pass, detail });
   console.log(`${pass ? "✓" : "✗"} ${scenario}${detail ? " — " + detail : ""}`);
@@ -38,7 +40,7 @@ async function open(browser, actor, brand, mobile) {
     ["sb-qwfhebtxeubfmvvdsqdt-auth-token", JSON.stringify({ ...s, expires_at: Math.floor(Date.now() / 1000) + s.expires_in }), brand]);
   const p = await ctx.newPage(); p.setDefaultTimeout(60000);
   // Espace client : la marque vient du domaine ; en local, l'instance 8096 force Fine Bindery.
-  p.__base = brand === "FINE_BINDERY" && actor.toLowerCase().includes("customer") ? "http://localhost:8096" : BASE;
+  p.__base = brand === "FINE_BINDERY" && actor.toLowerCase().includes("customer") ? FB_BASE : BASE;
   const errors = []; p.on("pageerror", (e) => errors.push(String(e).slice(0, 200)));
   p.on("console", (m) => { if (m.type() === "error" && !/favicon|Failed to load resource/.test(m.text())) errors.push(m.text().slice(0, 200)); });
   return { ctx, p, errors };
@@ -68,4 +70,4 @@ async function editIfSaved(p, form, summary, button) {
   const b = p.getByRole("button", { name: button, exact: true });
   if (await b.count()) { await b.first().click(); await has(p, form, 30000); }
 }
-module.exports = { has, editIfSaved, chromium, BASE, OUT, FX, ACTORS, open, visit, state, shot, record, sql, sqlText, save, results };
+module.exports = { expectText, has, editIfSaved, chromium, BASE, OUT, FX, ACTORS, open, visit, state, shot, record, sql, sqlText, save, results };

@@ -380,7 +380,11 @@ export async function operatorConfirmManual(sb: Supa, actor: string, caseId: str
   if (reserved.outcome === "replacement_confirmation_required") refuse("replacement_confirmation_required");
   if (reserved.outcome !== "claim" || !reserved.id) refuse("round_trip_offer_required");
   const store = supabaseLabelStore(sb);
-  await store.savePrivateLabel(reserved.id!, pdf);
+  // Réservation manuelle encore « claimed » : l'étiquette n'est exposée à personne avant confirmation,
+  // un PDF corrigé remplace donc celui d'une tentative non confirmée (jamais après confirmation).
+  const uploaded = await sb.storage.from(ROUND_TRIP_LABELS_BUCKET)
+    .upload(`${reserved.id}/label.pdf`, pdf, { contentType: "application/pdf", upsert: true });
+  if (uploaded.error) refuse("provider_unavailable", 503);
   try {
     const result = await store.transition(reserved.id!, "label_confirmed", {
       provider: "manual", provider_label_id: details.providerReference, carrier: details.carrier,
@@ -391,6 +395,8 @@ export async function operatorConfirmManual(sb: Supa, actor: string, caseId: str
   } catch (error) {
     const message = error instanceof Error ? error.message : "";
     if (message.includes("label_transition_invalid:confirmed")) return { outcome: "existing", deficitTtcCents: null };
+    // La même référence d'achat ou le même suivi sur une autre étiquette : erreur de saisie, jamais un doublon accepté.
+    if (message.includes("provider_label_uidx") || message.includes("duplicate key")) refuse("label_reference_duplicate");
     const code = logisticsErrorCode(message.replace(/^label_transition_failed:/, ""));
     throw new LogisticsError(code ?? "provider_unavailable", code ? 409 : 503);
   }
