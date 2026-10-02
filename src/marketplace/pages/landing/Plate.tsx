@@ -70,7 +70,7 @@ export function Plate({
       {(number !== undefined || caption || credit) && (
         <figcaption className="mt-3 flex items-baseline gap-3">
           {number !== undefined && (
-            <span className="mr-folio shrink-0 text-[0.9375rem] text-mr-bordeaux">Pl. {number}</span>
+            <span className={`mr-folio shrink-0 text-[0.9375rem] ${mat === "ink" ? "text-mr-paper/80" : "text-mr-bordeaux"}`}>Pl. {number}</span>
           )}
           <span className="mr-meta">
             {caption}

@@ -1,6 +1,7 @@
 import { SectionHead, SectionRule, SHELL } from "@/marketplace/pages/landing/LandingChrome";
 import { Plate } from "@/marketplace/pages/landing/Plate";
 import { ActionLink } from "@/marketplace/pages/landing/actions";
+import { PHOTOS } from "@/marketplace/pages/landing/photos";
 import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
 import { FineBinderyFooter, FineBinderyHeader, FineBinderyIntakeCta } from "./FineBinderyChrome";
 import { FEATURED_WORKSHOP } from "./content";
@@ -19,14 +20,23 @@ type Copy = ReturnType<typeof fineBinderyCopy>;
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI"] as const;
 
+/** Description de la pièce du premier écran, dans la langue de la page. */
+const HERO_ALT: Record<FineBinderyLocale, string> = {
+  en: "A contemporary design binding in grey and aubergine leather mosaic, titled in gold and silver, on Baudelaire’s Le Spleen de Paris",
+  fr: "Une reliure de création en mosaïque de cuir gris et aubergine, titrée à l’or et à l’argent, sur Le Spleen de Paris de Baudelaire",
+  de: "Ein zeitgenössischer Künstlereinband aus grauem und auberginefarbenem Ledermosaik, in Gold und Silber betitelt, auf Baudelaires Le Spleen de Paris",
+  it: "Una legatura d’arte contemporanea in mosaico di pelle grigia e melanzana, titolata in oro e argento, su Le Spleen de Paris di Baudelaire",
+  es: "Una encuadernación artística contemporánea en mosaico de piel gris y berenjena, titulada en oro y plata, sobre Le Spleen de Paris de Baudelaire",
+};
+
 /**
  * L'accueil Fine Bindery — registre « cabinet » (docs/design/premium-art-direction.md).
  *
- * Le premier écran est sombre et purement typographique : c'est ce qui
- * distingue le cabinet du carnet de Ma Reliure, dont le héros est une
- * planche. Les photographies arrivent ensuite, aux disciplines et à
- * l'atelier. Rien d'inventé : un seul atelier réel, et le réseau dit qu'il
- * ouvre en France.
+ * Le premier écran est un cabinet sombre : le titre, et en regard une seule
+ * pièce — Le Spleen de Paris, reliure de création de l'atelier Ferrière,
+ * créditée (usage Fine Bindery autorisé le 2 octobre 2026). La notice du
+ * réseau suit en bas de l'écran, comme la fiche sous une vitrine. Rien
+ * d'inventé : un seul atelier réel, et le réseau dit qu'il ouvre en France.
  *
  * Tant que l'annuaire ne publie aucun atelier, l'action principale est de
  * présenter son projet ; parcourir l'annuaire reste l'alternative.
@@ -45,12 +55,12 @@ export function FineBinderyLandingPage({ locale = "en" }: { locale?: FineBindery
   </main><FineBinderyFooter locale={locale} /></div>;
 }
 
-/** Le cabinet : titre en grand sur brun, et la notice du réseau en regard, comme une fiche de catalogue. */
+/** Le cabinet : titre en grand sur brun, une pièce en regard, puis la notice du réseau. */
 function Hero({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
   const facts = copy.home.proof.split(" · ");
-  return <section className="bg-mr-umber text-mr-paper"><div className={`${SHELL} pt-16 pb-16 sm:pt-24 sm:pb-24 lg:pt-28 lg:pb-28`}>
-    <div className="grid gap-14 lg:grid-cols-12 lg:items-end lg:gap-16">
-      <div className="lg:col-span-8">
+  return <section className="bg-mr-umber text-mr-paper"><div className={`${SHELL} pt-14 pb-14 sm:pt-20 sm:pb-20 lg:pt-24 lg:pb-24`}>
+    <div className="grid gap-12 lg:grid-cols-12 lg:items-center lg:gap-16">
+      <div className="lg:col-span-7">
         <p className="mr-eyebrow text-mr-paper/80 [text-wrap:balance]">{copy.home.eyebrow}</p>
         <h1 className="mr-display mt-7 text-mr-paper">{copy.home.title}</h1>
         <p className="mr-lead mt-8 max-w-[36rem] text-mr-paper/85">{copy.home.lead}</p>
@@ -59,11 +69,14 @@ function Hero({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
           <ActionLink href={fineBinderyDirectoryPath(locale)} variant="secondary" onInk>{copy.home.discover}</ActionLink>
         </div>
       </div>
-      <ul className="lg:col-span-4">
-        <li aria-hidden="true"><span className="mr-filet text-mr-paper" /></li>
-        {facts.map((fact, index) => <li key={fact} className="flex items-baseline gap-4 border-b border-mr-paper/20 py-4"><span aria-hidden="true" className="mr-folio w-6 shrink-0 text-mr-paper/70">{ROMAN[index]}</span><span className="mr-small text-mr-paper/90">{fact}</span></li>)}
-      </ul>
+      <Plate className="lg:col-span-5" photo={PHOTOS.ferriereBaudelaire} sizes="(min-width: 1024px) 480px, 100vw" priority mat="ink" number={1}
+        alt={HERO_ALT[locale]}
+        caption="Le Spleen de Paris" credit={FERRIERE_SERVICE_PHOTO_CREDIT} />
     </div>
+    <ul className="mt-14 grid sm:grid-cols-3 sm:gap-8 lg:mt-20">
+      <li aria-hidden="true" className="sm:col-span-3"><span className="mr-filet text-mr-paper" /></li>
+      {facts.map((fact, index) => <li key={fact} className="flex items-baseline gap-4 border-b border-mr-paper/20 py-4 sm:border-b-0"><span aria-hidden="true" className="mr-folio w-6 shrink-0 text-mr-paper/70">{ROMAN[index]}</span><span className="mr-small text-mr-paper/90">{fact}</span></li>)}
+    </ul>
   </div></section>;
 }
 
@@ -72,7 +85,7 @@ function Disciplines({ copy }: { copy: Copy }) {
     <SectionHead folio="I" eyebrow={copy.home.offersEyebrow} title={copy.home.offersTitle} />
     <ul className="mt-12 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:mt-14 lg:grid-cols-4">{copy.home.offers.map((item, index) => {
       const photo = ferriereServicePhoto(FERRIERE_FINE_BINDERY_OFFER_KEYS[index]);
-      return <li key={item.title}><Plate photo={photo} sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw" ratio="landscape" alt="" number={index + 1} caption={item.title} /><p className="mr-body mt-3">{item.body}</p></li>;
+      return <li key={item.title}><Plate photo={photo} sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw" ratio="landscape" alt="" number={index + 2} caption={item.title} /><p className="mr-body mt-3">{item.body}</p></li>;
     })}</ul>
     <p className="mr-meta mt-10">{copy.home.photoCredit} · <a className="mr-link" href={FERRIERE_SERVICE_PHOTO_SOURCE}>{FERRIERE_SERVICE_PHOTO_CREDIT}</a></p>
   </div></section>;

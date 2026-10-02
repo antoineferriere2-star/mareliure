@@ -94,7 +94,7 @@ function metreHead() {
 
 const fineBinderyTitle = "Fine Bindery — Exceptional French Bookbinding";
 const fineBinderyDescription =
-  "The international concierge for exceptional French bookbinding. Entrust your book to selected independent workshops in France — Fine Bindery manages every step.";
+  "The European network for bookbinding and book conservation. Discover independent ateliers, present your project and work with the right one — opening in France.";
 
 function fineBinderyHead() {
   const canonical = MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY.seo.canonicalOrigin;
