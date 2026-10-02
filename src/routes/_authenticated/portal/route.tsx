@@ -14,6 +14,7 @@ import { useQuery } from "@tanstack/react-query";
 import { requireWorkspaceAccess } from "@/build/services/workspace.functions";
 import { listMyWorkspaces } from "@/build/services/portal.data.functions";
 import { ensureMyWorkspace } from "@/build/services/provisionWorkspace.functions";
+import { isHydrated, navigateBeforeHydration } from "@/lib/hydration";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   ssr: false,
@@ -33,6 +34,7 @@ export const Route = createFileRoute("/_authenticated/portal")({
         return { access };
       } catch (retryErr) {
         if (isRedirect(retryErr)) throw retryErr;
+        if (!isHydrated()) return navigateBeforeHydration("/auth");
         throw redirect({ to: "/auth" });
       }
     }

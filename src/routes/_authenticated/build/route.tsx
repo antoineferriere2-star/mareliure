@@ -1,4 +1,5 @@
 import { createFileRoute, Outlet, Link, redirect, useRouter, useNavigate } from "@tanstack/react-router";
+import { isHydrated, navigateBeforeHydration } from "@/lib/hydration";
 import { isRedirect } from "@tanstack/react-router";
 import { requireBuildAdmin } from "@/build/services/admin.functions";
 import { supabase } from "@/integrations/supabase/client";
@@ -25,6 +26,7 @@ export const Route = createFileRoute("/_authenticated/build")({
       return { admin };
     } catch (err) {
       if (isRedirect(err)) throw err;
+      if (!isHydrated()) return navigateBeforeHydration("/auth");
       throw redirect({ to: "/auth" });
     }
   },
