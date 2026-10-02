@@ -119,7 +119,7 @@ const fr: LogisticsCustomerCopy = {
   conditionsTitle: "Conditions du transport",
   conditions: [
     "Le forfait couvre les deux trajets, aller vers l'atelier et retour vers vous. Il n'inclut aucune assurance.",
-    "En cas de perte ou d'avarie, seule l'indemnisation du transporteur peut s'appliquer, dans ses conditions et plafonds, souvent très inférieurs à la valeur d'un livre.",
+    "En cas de perte ou d'avarie, seule l'indemnisation du transporteur peut s'appliquer : 25 € par colis au plus chez Mondial Relay, sur justificatif de valeur. Pour un livre confié pour travaux, aucune indemnisation n'est garantie.",
     "Les livres anciens, rares, uniques ou d'une valeur déclarée de 100 € ou plus ne voyagent pas par ce forfait : nous vous proposons une solution adaptée.",
     "La livraison annoncée par le transporteur ne vaut pas réception : l'atelier confirme lui-même la réception et l'état du livre.",
   ],
@@ -243,7 +243,7 @@ const en: LogisticsCustomerCopy = {
   conditionsTitle: "Shipping terms",
   conditions: [
     "The fee covers both journeys, to the workshop and back to you. No insurance is included.",
-    "If the parcel is lost or damaged, only the carrier's own compensation may apply, under its terms and limits, often far below a book's value.",
+    "If the parcel is lost or damaged, only the carrier's own compensation may apply: at most €25 per parcel with Mondial Relay, against proof of value. For a book entrusted for work, no compensation is guaranteed.",
     "Antiquarian, rare or unique books, or books declared at €100 or more, do not travel under this fee: we will suggest a suitable option.",
     "A carrier's delivery scan is not receipt: the workshop itself confirms receiving the book and its condition.",
   ],

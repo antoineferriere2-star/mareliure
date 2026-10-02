@@ -117,3 +117,71 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
     },
   };
 }
+
+/** Méthode d'expédition réellement proposée par le compte, pour un trajet donné. */
+export interface ShippingOptionView {
+  code: string;
+  name: string;
+  carrier: string;
+  firstMile: string | null;
+  lastMile: string | null;
+  returns: boolean;
+  servicePointRequired: boolean;
+  chargingType: string | null;
+  /** Prix total du devis Sendcloud (centimes) et sa devise ; la TVA n'est pas précisée par l'API. */
+  priceCents: number | null;
+  currency: string | null;
+}
+
+interface OptionJson {
+  code?: string; name?: string; carrier?: { code?: string; name?: string };
+  functionalities?: { first_mile?: string | null; last_mile?: string | null; returns?: boolean };
+  requirements?: { is_service_point_required?: boolean };
+  charging_type?: string | null;
+  quotes?: { price?: { total?: { value?: string | number; currency?: string } } }[];
+}
+
+/**
+ * `POST /fetch-shipping-options` (API v3) : lecture seule, aucune étiquette créée. Seuls pays, codes
+ * postaux, poids et dimensions partent chez Sendcloud — jamais un nom, une rue ou un téléphone.
+ */
+export async function fetchSendcloudShippingOptions(
+  options: { publicKey: string; secretKey: string; fetchImpl?: Fetch; timeoutMs?: number },
+  query: { fromCountry: string; fromPostalCode: string; toCountry: string; toPostalCode: string;
+    weightGrams: number; dimensionsMm: [number, number, number] },
+): Promise<ShippingOptionView[] | "unavailable"> {
+  if (!options.publicKey || !options.secretKey) return "unavailable";
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 20000);
+  try {
+    const [length, width, height] = query.dimensionsMm;
+    const response = await fetchImpl(`${BASE}/fetch-shipping-options`, {
+      method: "POST", signal: controller.signal,
+      headers: { Authorization: `Basic ${btoa(`${options.publicKey}:${options.secretKey}`)}`, Accept: "application/json", "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from_country_code: query.fromCountry, from_postal_code: query.fromPostalCode,
+        to_country_code: query.toCountry, to_postal_code: query.toPostalCode,
+        weight: { value: String(query.weightGrams), unit: "g" },
+        dimensions: { length: String(length), width: String(width), height: String(height), unit: "mm" },
+      }),
+    });
+    if (!response.ok) return "unavailable";
+    const body = (await response.json()) as { data?: OptionJson[] };
+    return (body.data ?? []).filter((o) => o.code).map((o) => {
+      const total = o.quotes?.[0]?.price?.total;
+      const value = total?.value === undefined ? null : Number(total.value);
+      return {
+        code: o.code!, name: o.name ?? o.code!, carrier: o.carrier?.name ?? o.carrier?.code ?? "",
+        firstMile: o.functionalities?.first_mile ?? null, lastMile: o.functionalities?.last_mile ?? null,
+        returns: Boolean(o.functionalities?.returns), servicePointRequired: Boolean(o.requirements?.is_service_point_required),
+        chargingType: o.charging_type ?? null,
+        priceCents: value === null || !Number.isFinite(value) ? null : Math.round(value * 100), currency: total?.currency ?? null,
+      };
+    });
+  } catch {
+    return "unavailable";
+  } finally {
+    clearTimeout(timer);
+  }
+}

@@ -58,3 +58,27 @@ describe("adaptateur Sendcloud v3 (non activé)", () => {
       expect(calls[1].url).toBe("https://panel.sendcloud.sc/api/v3/shipments/shp-1/cancel");
     });
 });
+
+describe("méthodes disponibles (fetch-shipping-options)", () => {
+  it("n'envoie que pays, codes postaux, poids et dimensions ; lit code, kilomètres, prix et facturation", async () => {
+    const { fetchSendcloudShippingOptions } = await import("./sendcloudProvider.server");
+    let sent: Record<string, unknown> = {};
+    const fetchImpl = (async (_url: string, init: RequestInit) => {
+      sent = JSON.parse(String(init.body));
+      return new Response(JSON.stringify({ data: [{ code: "mondial_relay:home/domestic", name: "Mondial Relay Home", carrier: { code: "mondial_relay", name: "Mondial Relay" },
+        functionalities: { first_mile: "dropoff", last_mile: "home_delivery", returns: false }, charging_type: "first_scan",
+        quotes: [{ price: { total: { value: "5.17", currency: "EUR" } } }] }] }), { status: 200 });
+    }) as unknown as typeof fetch;
+    const result = await fetchSendcloudShippingOptions({ publicKey: "p", secretKey: "s", fetchImpl },
+      { fromCountry: "FR", fromPostalCode: "75011", toCountry: "FR", toPostalCode: "69002", weightGrams: 480, dimensionsMm: [340, 240, 60] });
+    expect(Object.keys(sent).sort()).toEqual(["dimensions", "from_country_code", "from_postal_code", "to_country_code", "to_postal_code", "weight"]);
+    expect(result).toEqual([{ code: "mondial_relay:home/domestic", name: "Mondial Relay Home", carrier: "Mondial Relay", firstMile: "dropoff",
+      lastMile: "home_delivery", returns: false, servicePointRequired: false, chargingType: "first_scan", priceCents: 517, currency: "EUR" }]);
+  });
+  it("sans clés ou en cas de refus : indisponible, jamais une liste vide trompeuse", async () => {
+    const { fetchSendcloudShippingOptions } = await import("./sendcloudProvider.server");
+    const q = { fromCountry: "FR", fromPostalCode: "75011", toCountry: "FR", toPostalCode: "69002", weightGrams: 480, dimensionsMm: [340, 240, 60] as [number, number, number] };
+    expect(await fetchSendcloudShippingOptions({ publicKey: "", secretKey: "" }, q)).toBe("unavailable");
+    expect(await fetchSendcloudShippingOptions({ publicKey: "p", secretKey: "s", fetchImpl: (async () => new Response("", { status: 401 })) as unknown as typeof fetch }, q)).toBe("unavailable");
+  });
+});

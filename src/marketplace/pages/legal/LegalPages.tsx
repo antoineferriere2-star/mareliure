@@ -388,6 +388,14 @@ const SALES_TERMS_SECTIONS_FR: LegalSection[] = [
     ],
   },
   {
+    heading: "Transport aller-retour (option)",
+    body: [
+      "Pour un livre courant, d'une valeur déclarée inférieure à 100 €, emballé dans un colis de 500 g et 35 × 25 × 8 cm au plus, entre deux adresses de France métropolitaine (hors Corse), votre proposition peut inclure une ligne distincte « Transport aller-retour » de 15 € TTC. Elle couvre l'étiquette aller, que nous vous remettons, et l'étiquette retour, que nous remettons à l'atelier. Hors de ce cadre, le transport fait l'objet d'une proposition distincte, ou vous choisissez de l'organiser vous-même ou de remettre le livre en main propre.",
+      "Ce forfait n'inclut aucune assurance. En cas de perte ou d'avarie, seule l'indemnisation prévue par le transporteur peut s'appliquer : pour Mondial Relay, 25 € par colis au plus, port compris, sur justificatif de valeur. Pour un livre confié pour travaux, aucune indemnisation n'est garantie. Les livres anciens, rares, uniques ou de plus grande valeur ne voyagent pas par ce forfait.",
+      "La livraison annoncée par le transporteur ne vaut pas réception : l'atelier confirme lui-même la réception physique et l'état du livre, photos à l'appui. En cas d'incident, nous ouvrons la réclamation auprès du transporteur dans ses délais (avarie : 3 jours ouvrés après livraison ; perte : 30 jours) et vous tenons informé dans votre espace client.",
+    ],
+  },
+  {
     heading: "Garanties",
     body: [
       LEGAL_REVIEW_NOTE_FR +
@@ -745,6 +753,14 @@ const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
     heading: "Performance of the service",
     body: [
       "Fine Bindery arranges for your book to be collected and returned once the service is complete, as described in your customer space. Any delay is communicated to you as soon as it is known.",
+    ],
+  },
+  {
+    heading: "Round-trip shipping (option)",
+    body: [
+      "For an ordinary book with a declared value below €100, packed in a parcel of at most 500 g and 35 × 25 × 8 cm, between two addresses in mainland France (excluding Corsica), your proposal may include a separate \"Round-trip shipping\" line of €15 incl. VAT. It covers the outbound label, which we give you, and the return label, which we give the workshop. Otherwise shipping is quoted separately, or you arrange it yourself or hand the book over in person.",
+      "This fee includes no insurance. If the parcel is lost or damaged, only the carrier's own compensation may apply: for Mondial Relay, at most €25 per parcel including postage, against proof of value. For a book entrusted for work, no compensation is guaranteed. Antiquarian, rare, unique or more valuable books do not travel under this fee.",
+      "A carrier's delivery scan is not receipt: the workshop itself confirms physical receipt and the book's condition, with photographs. If something goes wrong, we file the claim with the carrier within its deadlines (damage: 3 working days after delivery; loss: 30 days) and keep you informed in your client area.",
     ],
   },
   {

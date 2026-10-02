@@ -8,7 +8,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
-  getOperatorCaseLogistics, getOperatorLabel, purchaseRoundTripLabel, recordLabelEvent, recordManualLabel,
+  getOperatorCaseLogistics, getOperatorLabel, getRoundTripShippingOptions, purchaseRoundTripLabel, recordLabelEvent, recordManualLabel,
   recordRoundTripRateApproval, setRoundTripAutomation,
 } from "@/marketplace/services/caseLogistics.data.functions";
 import type { OperatorLogisticsView } from "@/marketplace/services/caseLogistics.server";
@@ -90,6 +90,11 @@ function Body({ caseId, view }: { caseId: string; view: OperatorLogisticsView })
         Proposition : {view.offerKind === "book_round_trip_fr" ? "avec forfait aller-retour" : view.offerKind ? "sans forfait" : "aucune"} · {view.accepted ? "acceptée" : "non acceptée"} · {view.paid ? "payée (Stripe)" : "non payée"} · journal atelier : {view.journal.map((j) => j.kind).join(" → ") || "vide"}
       </p>
 
+      {organized && view.journal.some((j) => j.kind === "incident") && view.jobs.some((j) => j.status === "confirmed") && (
+        <p role="alert" className="rounded border border-amber-400 bg-amber-50 p-2 text-amber-900">
+          Incident consigné par l'atelier : ouvrir la réclamation auprès du transporteur dans ses délais (avarie : 3 jours ouvrés après livraison ; perte : enquête sous 30 jours), puis consigner la référence en note. Aucune indemnisation n'est garantie pour un livre confié.
+        </p>
+      )}
       {organized && (
         <>
           <p>Frais réellement facturés (étiquettes confirmées) : <strong>{formatEuros(charged)}</strong> TTC sur {formatEuros(ROUND_TRIP_TTC_CENTS)} encaissés
@@ -249,6 +254,7 @@ function Automation({ view, caseId }: { view: OperatorLogisticsView; caseId: str
         Achat automatique : {a.enabled ? "OUVERT" : "fermé"} · clés fournisseur {a.providerConfigured ? "présentes" : "absentes"}
       </summary>
       <p className="mt-2 text-xs text-muted-foreground">Fermé : seul le traitement manuel achète des étiquettes. Fermer est immédiat et toujours possible ; ouvrir exige les cinq preuves, tracées.</p>
+      {a.providerConfigured && view.plan?.mode === "organized_round_trip" && <ShippingOptions caseId={caseId} />}
       {a.enabled && view.offerKind === "book_round_trip_fr" && view.accepted && <RateApprovalForm caseId={caseId} />}
       {a.enabled ? (
         <Button size="sm" variant="destructive" className="mt-2" disabled={mutation.isPending} onClick={() => mutation.mutate(false)}>Fermer l'achat automatique</Button>
@@ -308,6 +314,28 @@ function RateApprovalForm({ caseId }: { caseId: string }) {
       {mutation.isError && <p className="text-xs text-destructive sm:col-span-2">{errorText(mutation.error)}</p>}
       {mutation.isSuccess && <p className="text-xs text-emerald-700 sm:col-span-2">Tarif revu enregistré.</p>}
       <Button size="sm" className="sm:col-span-2" disabled={mutation.isPending} onClick={() => mutation.mutate()}>Enregistrer le tarif revu</Button>
+    </div>
+  );
+}
+
+function ShippingOptions({ caseId }: { caseId: string }) {
+  const fetchOptions = useServerFn(getRoundTripShippingOptions);
+  const query = useMutation({ mutationFn: () => fetchOptions({ data: { caseId } }) });
+  const table = (title: string, rows: { code: string; name: string; carrier: string; firstMile: string | null; lastMile: string | null; priceCents: number | null; currency: string | null; chargingType: string | null; servicePointRequired: boolean }[]) => (
+    <div className="mt-2">
+      <p className="text-xs font-medium">{title}</p>
+      <ul className="mt-1 space-y-1 text-xs [overflow-wrap:anywhere]">
+        {rows.map((o) => <li key={o.code}><code>{o.code}</code> · {o.carrier} · {o.name} · {o.firstMile ?? "?"} → {o.lastMile ?? "?"}{o.servicePointRequired ? " · point relais requis" : ""} · {o.priceCents === null ? "prix non communiqué" : `${(o.priceCents / 100).toFixed(2)} ${o.currency ?? ""}`} · facturé {o.chargingType === "first_scan" ? "au premier scan" : o.chargingType === "label_creation" ? "à la création" : "?"}</li>)}
+        {!rows.length && <li>Aucune méthode proposée.</li>}
+      </ul>
+    </div>
+  );
+  return (
+    <div className="mt-2 rounded bg-muted/40 p-2">
+      <Button size="sm" variant="outline" disabled={query.isPending} onClick={() => query.mutate()}>Interroger les méthodes Sendcloud (lecture seule)</Button>
+      <p className="mt-1 text-xs text-muted-foreground">Codes postaux, poids et dimensions seulement ; aucune étiquette n'est créée. Prix du devis Sendcloud, TVA non précisée par l'API.</p>
+      {query.isError && <p className="text-xs text-destructive">{errorText(query.error)}</p>}
+      {query.data && <>{table("Aller (client → atelier)", query.data.outbound)}{table("Retour (atelier → client)", query.data.return)}</>}
     </div>
   );
 }
