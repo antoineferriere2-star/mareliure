@@ -1,9 +1,12 @@
 import type { PGlite } from "@electric-sql/pglite";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+// PostgreSQL réel (PGlite) : chaque test recrée la base ; la CI parallèle dépasse les 5 s par défaut.
+vi.setConfig({ testTimeout: 30_000 });
 import { cancelLeg, purchaseLeg, type LabelJobStore, type TransitionKind } from "./labelOrchestrator";
 import type { CancelOutcome, CreateOutcome, LabelProvider, LabelRequest, ProviderLabel } from "./labelProvider";
 import { handleSendcloudWebhook, verifySendcloudSignature } from "./sendcloudWebhook";
-import { reserveLeg, roundTripDb } from "./roundTripTestDb.fixture";
+import { putLabelObject, reserveLeg, roundTripDb } from "./roundTripTestDb.fixture";
 
 // L'orchestrateur sur la VRAIE machine d'états SQL ; fournisseur simulé qui compte les étiquettes
 // réellement créées. Aucun appel réseau, aucune étiquette achetée.
@@ -57,6 +60,7 @@ const store = (): LabelJobStore => ({
     if (failStorage) throw new Error("storage_unavailable");
     const existing = saved.get(`${id}/label.pdf`);
     if (existing && Buffer.compare(Buffer.from(existing), Buffer.from(pdf)) !== 0) throw new Error("label_object_conflict");
+    if (!existing) await putLabelObject(db, id);
     saved.set(`${id}/label.pdf`, pdf);
   },
 });

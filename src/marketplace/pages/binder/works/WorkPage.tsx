@@ -15,6 +15,7 @@ import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
 import { formatWeight, formatWorkDimensions } from "@/marketplace/works/workViews";
 import { WORK_KEY, WORKS_KEY } from "./workKeys";
 import { LogisticsPanel } from "./LogisticsPanel";
+import { WorkshopRoundTripPanel } from "./RoundTripWorkshopPanels";
 
 /** La provenance d'un ouvrage, dite sans ambiguïté : les deux voies ne se confondent jamais. */
 export function SourceBadge({ source }: { source: "mon_client" | "ma_reliure" }) {
@@ -149,6 +150,7 @@ export function WorkPage({ workId }: { workId: string }) {
         )}
       </section>
 
+      {work.caseId && <WorkshopRoundTripPanel caseId={work.caseId} />}
       <LogisticsPanel workId={workId} />
 
       <section aria-labelledby="work-quotes" className="space-y-3">

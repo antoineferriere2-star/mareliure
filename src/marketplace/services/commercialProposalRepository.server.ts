@@ -125,6 +125,7 @@ export async function insertCommercialProposal(
   snapshot: CommercialProposalSnapshot,
   version: number,
   createdBy: string | null,
+  shippingOfferKind: "manual" | "book_round_trip_fr" = "manual",
 ): Promise<CommercialProposalRow> {
   const { data, error } = await sb
     .from("marketplace_commercial_proposals")
@@ -179,6 +180,7 @@ export async function insertCommercialProposal(
       status: snapshot.status,
       notes: snapshot.notes,
       created_by: createdBy,
+      shipping_offer_kind: shippingOfferKind,
     })
     .select(COLUMNS)
     .single();

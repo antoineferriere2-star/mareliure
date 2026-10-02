@@ -75,6 +75,7 @@ import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
 import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
 import { Route as AuthenticatedPortalTeamRouteImport } from './routes/_authenticated/portal/team'
+import { Route as ApiMarketplaceSendcloudWebhookRouteImport } from './routes/api/marketplace/sendcloud-webhook'
 import { Route as ApiMarketplaceStripeHealthRouteImport } from './routes/api/marketplace/stripe-health'
 import { Route as ApiMarketplaceStripeWebhookRouteImport } from './routes/api/marketplace/stripe-webhook'
 import { Route as ApiPublicAnalyzeSiteRouteImport } from './routes/api/public/analyze-site'
@@ -486,6 +487,12 @@ const AuthenticatedPortalTeamRoute = AuthenticatedPortalTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedPortalRouteRoute,
 } as any)
+const ApiMarketplaceSendcloudWebhookRoute =
+  ApiMarketplaceSendcloudWebhookRouteImport.update({
+    id: '/api/marketplace/sendcloud-webhook',
+    path: '/api/marketplace/sendcloud-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMarketplaceStripeHealthRoute =
   ApiMarketplaceStripeHealthRouteImport.update({
     id: '/api/marketplace/stripe-health',
@@ -869,6 +876,7 @@ export interface FileRoutesByFullPath {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/sendcloud-webhook': typeof ApiMarketplaceSendcloudWebhookRoute
   '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
   '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
@@ -984,6 +992,7 @@ export interface FileRoutesByTo {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/sendcloud-webhook': typeof ApiMarketplaceSendcloudWebhookRoute
   '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
   '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
@@ -1108,6 +1117,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/_authenticated/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/sendcloud-webhook': typeof ApiMarketplaceSendcloudWebhookRoute
   '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
   '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
   '/api/public/analyze-site': typeof ApiPublicAnalyzeSiteRoute
@@ -1232,6 +1242,7 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/sendcloud-webhook'
     | '/api/marketplace/stripe-health'
     | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
@@ -1347,6 +1358,7 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/sendcloud-webhook'
     | '/api/marketplace/stripe-health'
     | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
@@ -1470,6 +1482,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/settings'
     | '/_authenticated/portal/setup'
     | '/_authenticated/portal/team'
+    | '/api/marketplace/sendcloud-webhook'
     | '/api/marketplace/stripe-health'
     | '/api/marketplace/stripe-webhook'
     | '/api/public/analyze-site'
@@ -1571,6 +1584,7 @@ export interface RootRouteChildren {
   MPublicTokenRoute: typeof MPublicTokenRoute
   ProjectSummaryAccessTokenRoute: typeof ProjectSummaryAccessTokenRoute
   LocaleIndexRoute: typeof LocaleIndexRoute
+  ApiMarketplaceSendcloudWebhookRoute: typeof ApiMarketplaceSendcloudWebhookRoute
   ApiMarketplaceStripeHealthRoute: typeof ApiMarketplaceStripeHealthRoute
   ApiMarketplaceStripeWebhookRoute: typeof ApiMarketplaceStripeWebhookRoute
   ApiPublicAnalyzeSiteRoute: typeof ApiPublicAnalyzeSiteRoute
@@ -2052,6 +2066,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/team'
       preLoaderRoute: typeof AuthenticatedPortalTeamRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/api/marketplace/sendcloud-webhook': {
+      id: '/api/marketplace/sendcloud-webhook'
+      path: '/api/marketplace/sendcloud-webhook'
+      fullPath: '/api/marketplace/sendcloud-webhook'
+      preLoaderRoute: typeof ApiMarketplaceSendcloudWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/marketplace/stripe-health': {
       id: '/api/marketplace/stripe-health'
@@ -2757,6 +2778,7 @@ const rootRouteChildren: RootRouteChildren = {
   MPublicTokenRoute: MPublicTokenRoute,
   ProjectSummaryAccessTokenRoute: ProjectSummaryAccessTokenRoute,
   LocaleIndexRoute: LocaleIndexRoute,
+  ApiMarketplaceSendcloudWebhookRoute: ApiMarketplaceSendcloudWebhookRoute,
   ApiMarketplaceStripeHealthRoute: ApiMarketplaceStripeHealthRoute,
   ApiMarketplaceStripeWebhookRoute: ApiMarketplaceStripeWebhookRoute,
   ApiPublicAnalyzeSiteRoute: ApiPublicAnalyzeSiteRoute,

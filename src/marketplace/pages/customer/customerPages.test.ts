@@ -47,6 +47,13 @@ vi.mock("@/marketplace/services/decisions.data.functions", () => ({
 }));
 vi.mock("@/marketplace/stripe/checkoutSession.server", () => ({ createCommercialCheckoutSession: vi.fn() }));
 vi.mock("@/marketplace/services/customerProposalAcceptance.data.functions", () => ({ acceptMyProposal: vi.fn() }));
+// Acheminement : dossier historique sans plan, le panneau reste masqué (couvert par la recette navigateur).
+vi.mock("@/marketplace/services/caseLogistics.data.functions", () => ({
+  getMyCaseLogistics: vi.fn(async () => ({ plan: null, locked: true, next: "choose_mode" })),
+  saveMyCaseLogistics: vi.fn(),
+  confirmMyReturnAddress: vi.fn(),
+  getMyOutboundLabel: vi.fn(),
+}));
 
 const { CustomerCaseListPage } = await import("./CustomerCaseListPage");
 const { CustomerCasePage } = await import("./CustomerCasePage");

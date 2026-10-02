@@ -1,0 +1,25 @@
+{"at":"2026-10-02T09:21:39.895Z","scenario":"MR bureau J1 : section acheminement et prochaine action","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:39.895Z","scenario":"MR bureau J1 : prix et deux trajets annoncés avant l'accord","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:39.895Z","scenario":"MR bureau J1 : conditions sans promesse d'assurance","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:40.334Z","scenario":"MR J1 : adresse invalide refusée avec un message compréhensible","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:41.792Z","scenario":"MR J1 : plan enregistré, en attente de l'accord atelier","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:41.792Z","scenario":"MR bureau J1 : aucun débordement, aucune erreur console","pass":false,"detail":"débordement 0px ; Can't perform a React state update on a component that hasn't mounted yet. This indicates that you have a side-effect in your render function that asynchronously tries to update the component. Move th"}
+{"at":"2026-10-02T09:21:47.109Z","scenario":"MR J3 : colis hors limites → traitement adapté annoncé, aucun supplément","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:51.428Z","scenario":"MR mobile J2 : aucun champ d'adresse ni de colis en main propre","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:51.575Z","scenario":"MR mobile J2 : remise en main propre enregistrée","pass":false,"detail":""}
+{"at":"2026-10-02T09:21:51.575Z","scenario":"MR mobile J2 : aucun débordement à 390 px","pass":true,"detail":"débordement 0px ; "}
+{"at":"2026-10-02T09:21:56.017Z","scenario":"FB mobile J4 : section en anglais, sans forfait organisé","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:56.017Z","scenario":"FB mobile J4 : l'expédition organisée n'est pas proposée","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:57.560Z","scenario":"FB mobile J4 : remise en main propre enregistrée, texte anglais","pass":true,"detail":""}
+{"at":"2026-10-02T09:21:57.560Z","scenario":"FB mobile J4 : aucun texte français dans la section, aucun débordement","pass":true,"detail":"débordement 0px ; "}
+{"at":"2026-10-02T09:22:05.836Z","scenario":"FB bureau J4 : section en anglais, sans forfait organisé","pass":true,"detail":""}
+{"at":"2026-10-02T09:22:05.836Z","scenario":"FB bureau J4 : l'expédition organisée n'est pas proposée","pass":true,"detail":""}
+{"at":"2026-10-02T09:22:05.836Z","scenario":"FB bureau J4 : aucun texte français dans la section, aucun débordement","pass":true,"detail":"débordement 0px ; "}
+{"at":"2026-10-02T09:22:11.701Z","scenario":"Autre atelier : ni plan ni adresse du dossier J1","pass":true,"detail":""}
+{"at":"2026-10-02T09:22:15.949Z","scenario":"Atelier RL-QA-J1 : plan visible sans l'adresse du client","pass":true,"detail":""}
+{"at":"2026-10-02T09:22:17.452Z","scenario":"Atelier bureau RL-QA-J1 : réception acceptée","pass":true,"detail":"débordement 0px ; "}
+{"at":"2026-10-02T09:22:21.408Z","scenario":"Atelier RL-QA-J3 : plan visible sans l'adresse du client","pass":true,"detail":""}
+{"at":"2026-10-02T09:22:22.910Z","scenario":"Atelier bureau RL-QA-J3 : réception acceptée","pass":true,"detail":"débordement 0px ; "}
+{"at":"2026-10-02T09:22:26.811Z","scenario":"Atelier RL-QA-J2 : plan visible sans l'adresse du client","pass":true,"detail":""}
+{"at":"2026-10-02T09:22:28.804Z","scenario":"Atelier mobile RL-QA-J2 : réception acceptée","pass":true,"detail":"débordement 0px ; "}
+{"at":"2026-10-02T09:22:32.636Z","scenario":"MR J1 : accord atelier visible, proposition attendue","pass":true,"detail":""}

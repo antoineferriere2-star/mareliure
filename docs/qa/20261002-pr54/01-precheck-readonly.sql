@@ -1,0 +1,11 @@
+SELECT jsonb_build_object('migrations',(SELECT count(*) FROM supabase_migrations.schema_migrations),
+ 'last',(SELECT max(version) FROM supabase_migrations.schema_migrations),
+ 'journey_absent',to_regclass('public.marketplace_case_logistics_plans') IS NULL AND NOT EXISTS (SELECT 1 FROM supabase_migrations.schema_migrations WHERE version='20261002090000'),
+ 'jobs',(SELECT count(*) FROM public.marketplace_round_trip_label_jobs),
+ 'rates',(SELECT count(*) FROM public.marketplace_round_trip_rate_approvals),
+ 'label_objects',(SELECT count(*) FROM storage.objects WHERE bucket_id='round-trip-labels-private'),
+ 'guards_absent',NOT EXISTS (SELECT 1 FROM pg_trigger WHERE tgname='publication_maintenance_v2'),
+ 'proposals',(SELECT count(*) FROM public.marketplace_commercial_proposals),
+ 'proposals_md5',(SELECT md5(string_agg(to_jsonb(p)::text,'|' ORDER BY id)) FROM public.marketplace_commercial_proposals p),
+ 'non_manual',(SELECT count(*) FROM public.marketplace_commercial_proposals WHERE shipping_offer_kind<>'manual'),
+ 'user_roles_cols',(SELECT string_agg(column_name,',') FROM information_schema.columns WHERE table_name='user_roles' AND table_schema='public'));

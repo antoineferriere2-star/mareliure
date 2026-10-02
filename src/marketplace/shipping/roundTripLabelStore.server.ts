@@ -8,12 +8,9 @@ import { isPdf } from "./labelProvider";
 
 export const ROUND_TRIP_LABELS_BUCKET = "round-trip-labels-private";
 
-/**
- * Décision commerciale du 1er octobre 2026 : traitement manuel. Aucun achat automatique tant que
- * tarif aller-retour complet, couverture des livres confiés, fiscalité et frais ne sont pas
- * confirmés. Changer cette valeur exige une décision explicite et une nouvelle recette.
- */
-export const ROUND_TRIP_AUTOMATION_ENABLED = false as const;
+// L'ouverture de l'achat automatique n'est plus une constante : table
+// `marketplace_round_trip_automation` (fermée par défaut, ouverture justifiée et tracée,
+// fermeture immédiate), plus les clés fournisseur présentes et un tarif revu par dossier.
 
 // Les tables de cette branche ne sont pas encore dans les types générés : frontière validée ici.
 type Untyped = SupabaseClient;

@@ -1,0 +1,8 @@
+{"at":"2026-10-02T09:43:11.838Z","scenario":"Opérateur : verrou fermé et clés fournisseur absentes affichés","pass":true,"detail":""}
+{"at":"2026-10-02T09:43:12.299Z","scenario":"Opérateur : ouverture sans preuves refusée avec un message clair","pass":true,"detail":""}
+{"at":"2026-10-02T09:43:12.821Z","scenario":"Verrou toujours fermé en base","pass":true,"detail":""}
+{"at":"2026-10-02T09:43:12.890Z","scenario":"Aucun bouton d'achat automatique tant que le verrou est fermé","pass":true,"detail":""}
+{"at":"2026-10-02T09:43:23.160Z","scenario":"Autre client : ni adresse, ni étiquette, ni suivi du dossier K1","pass":true,"detail":""}
+{"at":"2026-10-02T09:43:29.030Z","scenario":"Atelier, espace en anglais : panneau aller-retour traduit","pass":true,"detail":""}
+{"at":"2026-10-02T09:43:29.063Z","scenario":"Atelier anglais mobile : aucun débordement","pass":true,"detail":"débordement 0px"}
+{"at":"2026-10-02T09:43:32.993Z","scenario":"Client K3 : traitement adapté, pas de ligne transport ni supplément","pass":true,"detail":""}

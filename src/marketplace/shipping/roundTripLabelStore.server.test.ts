@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { ROUND_TRIP_AUTOMATION_ENABLED, supabaseLabelStore } from "./roundTripLabelStore.server";
+import { supabaseLabelStore } from "./roundTripLabelStore.server";
 
 const PDF = new TextEncoder().encode("%PDF-1.4 QA");
 function client(opts: { uploadError?: boolean; existing?: Uint8Array | null } = {}) {
@@ -11,9 +11,6 @@ function client(opts: { uploadError?: boolean; existing?: Uint8Array | null } = 
 }
 
 describe("magasin serveur des étiquettes", () => {
-  it("garde l'automatisation fermée (traitement manuel décidé)", () => {
-    expect(ROUND_TRIP_AUTOMATION_ENABLED).toBe(false);
-  });
   it("stocke l'étiquette en privé sans écrasement, au chemin contrôlé par la base", async () => {
     const c = client();
     await supabaseLabelStore(c.sb).savePrivateLabel("job-1", PDF);

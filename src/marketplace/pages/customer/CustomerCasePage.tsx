@@ -43,6 +43,7 @@ import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { Button } from "@/components/ui/button";
 import { CoverPhoto, CustomerPhotoGallery } from "./CustomerPhotoGallery";
 import { PortalDetailSkeleton, PortalError, StatusBadge } from "./CustomerPortalUi";
+import { CustomerLogisticsPanel, LogisticsActionBanner } from "./CustomerLogisticsPanel";
 
 const CARD = "rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-5 sm:p-6";
 
@@ -491,6 +492,8 @@ export function CustomerCasePage({
         showMessageLink={status.key !== "cancelled"}
       />
 
+      {status.key !== "cancelled" && <LogisticsActionBanner caseId={caseId} locale={locale} />}
+
       {/* Une confirmation attendue est une action : elle passe avant le reste. */}
       {decisionsOpen && decisions}
 
@@ -509,6 +512,8 @@ export function CustomerCasePage({
         copy={copy}
         locale={locale}
       />
+
+      {status.key !== "cancelled" && <CustomerLogisticsPanel caseId={caseId} locale={locale} />}
 
       <section className={CARD}>
         <SectionTitle>{copy.summary}</SectionTitle>

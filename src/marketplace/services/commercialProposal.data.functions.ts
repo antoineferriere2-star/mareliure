@@ -35,6 +35,7 @@ import {
 } from "@/marketplace/commercial/taxPolicy";
 import { getPaymentPreflight as loadPaymentPreflight } from "@/marketplace/stripe/paymentPreflight.server";
 import { loadCaseContext } from "./caseRepository.server";
+import { ROUND_TRIP_HT_CENTS, ROUND_TRIP_PRODUCT, logisticsErrorCode } from "@/marketplace/shipping/logisticsPlan";
 import { loadPricebook } from "./pricingRepository.server";
 import { assertProposalPriceCurrent } from "./pricingGuards.server";
 import {
@@ -61,7 +62,23 @@ const shippingInput = z
 const createInput = z.object({
   caseId: uuid,
   shipping: shippingInput,
+  /**
+   * Produit transport explicite. `book_round_trip_fr` ajoute la ligne « Transport aller-retour —
+   * 15 € TTC » (12,50 € HT) et lie la proposition à la version du plan logistique ; la base refuse
+   * si le plan n'est pas éligible. Jamais déduit d'un montant saisi.
+   */
+  shippingOffer: z.enum(["manual", ROUND_TRIP_PRODUCT]).default("manual"),
 });
+
+const ROUND_TRIP_REFUSALS: Record<string, string> = {
+  logistics_plan_required: "Le client n'a pas encore choisi l'acheminement de son livre.",
+  brand_unsupported: "Le transport aller-retour n'est proposé que sur les dossiers Ma Reliure.",
+  mode_not_organized: "Le client n'a pas choisi l'expédition organisée.",
+  valuable_book: "Livre ancien, unique ou de valeur déclarée ≥ 100 € : traitement adapté, pas de forfait.",
+  workshop_acceptance_required: "L'atelier retenu n'a pas accepté la réception pour la version actuelle du plan.",
+  outside_mainland: "Une adresse est hors France métropolitaine (Corse, outre-mer, étranger) : devis distinct.",
+  parcel_review: "Colis emballé au-delà de 500 g ou 35 × 25 × 8 cm : traitement adapté.",
+};
 
 /**
  * Construit et enregistre une nouvelle version de proposition à partir du
@@ -156,6 +173,10 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
       referenceCents: pricebookReferenceCents,
     });
 
+    const roundTrip = data.shippingOffer === ROUND_TRIP_PRODUCT;
+    // L'offre aller-retour est un forfait payé en une fois au circuit de revente : pas d'acompte.
+    if (roundTrip && pricingMode === "ESTIMATE_THEN_CONFIRM" && row.deposit_cents)
+      fail(409, "Le transport aller-retour n'est pas proposé avec un acompte : traitez le transport manuellement.");
     const deposit: DepositPolicyInput =
       pricingMode === "ESTIMATE_THEN_CONFIRM" && row.deposit_cents
         ? {
@@ -185,7 +206,7 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
       customerServicePriceCents: price.priceCents,
       estimateMinCents: pricingMode === "ESTIMATE_THEN_CONFIRM" ? row.pricing_low_estimate_cents : null,
       estimateMaxCents: pricingMode === "ESTIMATE_THEN_CONFIRM" ? row.pricing_high_estimate_cents : null,
-      shipping: data.shipping,
+      shipping: roundTrip ? { outboundCents: 0, returnCents: 0, otherCents: ROUND_TRIP_HT_CENTS } : data.shipping,
       taxPolicy: "MANUAL_TAX_REVIEW",
       customerVatRateBps: null,
       taxCountry: null,
@@ -207,7 +228,16 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
     });
 
     const version = await nextProposalVersion(sb, data.caseId);
-    const proposal = await insertCommercialProposal(sb, snapshot, version, context.userId);
+    let proposal: Awaited<ReturnType<typeof insertCommercialProposal>>;
+    try {
+      proposal = await insertCommercialProposal(sb, snapshot, version, context.userId, data.shippingOffer);
+    } catch (error) {
+      const message = String((error as { message?: string })?.message ?? "");
+      const code = logisticsErrorCode(message);
+      if (!code) throw error;
+      fail(409, ROUND_TRIP_REFUSALS[message.split(":")[1]?.trim() ?? ""] ?? ROUND_TRIP_REFUSALS[code] ??
+        "Le transport aller-retour ne peut pas être proposé pour ce dossier.");
+    }
 
     await sb.from("marketplace_events").insert({
       case_id: data.caseId,
@@ -351,6 +381,10 @@ export const validateCommercialProposalTax = createServerFn({ method: "POST" })
     const proposal = await loadCommercialProposalById(sb, data.proposalId);
     if (!proposal) fail(404, "Proposition introuvable.");
     if (proposal.acceptedAt) fail(409, "Cette proposition est déjà acceptée et donc immuable.");
+    // 15 € TTC n'existe qu'à la TVA française de 20 % : un autre régime exige une nouvelle version sans forfait.
+    if (proposal.shippingOfferKind === ROUND_TRIP_PRODUCT &&
+      (data.customerVatRateBps !== 2000 || data.taxCountry.trim().toUpperCase() !== "FR"))
+      fail(409, "Le transport aller-retour à 15 € TTC suppose la TVA française à 20 %. Créez une version sans forfait pour un autre régime.");
 
     const recomputed = recomputeProposalTax(
       {

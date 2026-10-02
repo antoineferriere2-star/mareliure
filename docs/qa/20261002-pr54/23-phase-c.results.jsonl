@@ -1,0 +1,26 @@
+{"at":"2026-10-02T09:27:33.349Z","scenario":"Opérateur K1 sans paiement constaté : aucune saisie d'étiquette","pass":true,"detail":""}
+{"at":"2026-10-02T09:27:35.189Z","scenario":"Paiements simulés en base (K1 forfait, K2 main propre)","pass":true,"detail":"{\"ref\": \"RL-QA-J1\", \"amount\": 13500} {\"ref\": \"RL-QA-J2\", \"amount\": 12000}"}
+{"at":"2026-10-02T09:31:16.861Z","scenario":"Paiements simulés en base (K1 forfait, K2 main propre)","pass":true,"detail":" "}
+{"at":"2026-10-02T09:33:56.854Z","scenario":"Paiements simulés en base (K1 forfait, K2 main propre)","pass":true,"detail":" "}
+{"at":"2026-10-02T09:34:01.468Z","scenario":"Opérateur K1 : étiquette aller enregistrée","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:01.924Z","scenario":"Double clic : une seule réservation aller, confirmée","pass":true,"detail":"{\"jobs\":1,\"confirmed\":1}"}
+{"at":"2026-10-02T09:34:07.108Z","scenario":"Client K1 mobile : prochaine action = déposer le colis","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:07.149Z","scenario":"Client K1 mobile : méthode, suivi et emballage affichés","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:08.041Z","scenario":"Client K1 : téléchargement de l'étiquette par lien signé privé","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:14.481Z","scenario":"Atelier K1 : fiche ouvrage ouverte avec transport aller-retour","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:14.486Z","scenario":"Atelier K1 : rappel que « livré » ne vaut pas réception","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:25.075Z","scenario":"Client K1 : livré selon le transporteur ≠ reçu (attente de l'atelier)","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:29.751Z","scenario":"Atelier K1 : retour non déclarable avant réception physique","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:40.109Z","scenario":"Atelier K1 : réception, photo privée et incident enregistrés","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:42.145Z","scenario":"Atelier K1 : retour déclaré prêt, adresse client attendue","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:45.485Z","scenario":"Client K1 : réception confirmée et incident signalé dans le suivi","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:45.489Z","scenario":"Client K1 : aucune note interne, photo ni preuve exposée","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:48.238Z","scenario":"Client K1 : adresse de retour confirmée","pass":true,"detail":""}
+{"at":"2026-10-02T09:34:59.669Z","scenario":"Opérateur K1 : étiquette retour enregistrée, frais réels 9,38 € TTC","pass":true,"detail":""}
+{"at":"2026-10-02T09:35:05.767Z","scenario":"Atelier K1 mobile : téléchargement de l'étiquette retour par lien signé","pass":true,"detail":""}
+{"at":"2026-10-02T09:35:15.116Z","scenario":"Atelier K1 mobile : retour et remise finale journalisés, sans débordement","pass":true,"detail":"débordement 0px ; "}
+{"at":"2026-10-02T09:35:19.201Z","scenario":"Client K1 mobile : dossier clos, remise déclarée par l'atelier","pass":true,"detail":""}
+{"at":"2026-10-02T09:35:19.211Z","scenario":"Client K1 mobile : aucun débordement ni erreur","pass":true,"detail":"débordement 0px ; "}
+{"at":"2026-10-02T09:35:25.975Z","scenario":"Client K2 : adresse de réception de l'atelier après accord, aucune étiquette","pass":true,"detail":""}
+{"at":"2026-10-02T09:35:43.443Z","scenario":"Atelier K2 : main propre journalisée sans étiquette","pass":true,"detail":""}
+{"at":"2026-10-02T09:35:47.101Z","scenario":"Client K2 : clôture visible","pass":true,"detail":""}
