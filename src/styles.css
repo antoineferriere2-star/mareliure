@@ -387,6 +387,11 @@
   /* Brun profond : sections sombres de Fine Bindery (jamais de noir pur). */
   --color-mr-umber: #2d241d;
 
+  /* --- Passe-partout ------------------------------------------------------
+     Le papier sur lequel une planche est posée, un cran sous la page : la
+     photographie, montrée entière, s'y détache sans ombre. */
+  --color-mr-mat: #ebe6dc;
+
   /* --- Rythme vertical ----------------------------------------------------
      Trois tailles de section, et rien entre les deux. Une échelle à trois
      crans se lit ; une valeur inventée par section ne se lit pas. */
@@ -521,6 +526,27 @@
     display: inline-block;
     padding-block: 0.375rem;
   }
+
+  /* --- Le double filet ----------------------------------------------------
+     Filet gras, filet maigre : l'ornement que pose le doreur au fer, et la
+     signature des deux sites. Il ouvre une section ; il ne la décore pas.
+     Deux bordures plutôt qu'une image : il suit la couleur héritée, donc
+     s'inverse seul sur l'encre. */
+  .mr-filet {
+    display: block;
+    height: 5px;
+    border-top: 2px solid color-mix(in oklab, currentColor 40%, transparent);
+    border-bottom: 1px solid color-mix(in oklab, currentColor 28%, transparent);
+  }
+
+  /* Folio de section : chiffre romain en serif, comme un chapitre. */
+  .mr-folio {
+    font-family: var(--font-editorial);
+    font-variation-settings: "opsz" 30;
+    font-size: 1.0625rem;
+    line-height: 1;
+    letter-spacing: 0.04em;
+  }
 }
 
 /* Animations : légères, et supprimées dès que le système le demande. */
@@ -549,6 +575,7 @@
   --color-mr-bordeaux: #8a5a36;
   --color-mr-bordeaux-soft: #a9774f;
   --color-mr-umber: #2d241d;
+  --color-mr-mat: #e6dfd2;
 }
 .fb-site .mr-display {
   max-width: 17ch;

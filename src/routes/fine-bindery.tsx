@@ -11,7 +11,7 @@ import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 
 const TITLE = "Fine Bindery — Exceptional French Bookbinding";
 const DESCRIPTION =
-  "The international concierge for exceptional French bookbinding. Entrust your book to selected independent workshops in France — Fine Bindery manages every step.";
+  "The European network for bookbinding and book conservation. Discover independent ateliers, present your project and work with the right one — opening in France.";
 
 export const Route = createFileRoute("/fine-bindery")({
   head: () => ({

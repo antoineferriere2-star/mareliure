@@ -33,14 +33,25 @@ export function SectionHead({
   title,
   lead,
   tone = "ink",
+  folio,
   className = "",
 }: {
   eyebrow: string;
   title: ReactNode;
   lead?: ReactNode;
   tone?: "ink" | "paper";
+  /** Chiffre romain du chapitre. Avec lui, la section s'ouvre sur le double filet, pleine largeur. */
+  folio?: string;
   className?: string;
 }) {
+  if (folio) {
+    return (
+      <div className={className}>
+        <SectionRule folio={folio} tone={tone} />
+        <SectionHead eyebrow={eyebrow} title={title} lead={lead} tone={tone} className="mt-8" />
+      </div>
+    );
+  }
   return (
     <div className={`max-w-[46rem] ${className}`}>
       <p className="mr-eyebrow">{eyebrow}</p>
@@ -48,6 +59,20 @@ export function SectionHead({
         {title}
       </h2>
       {lead && <p className="mr-lead mt-5">{lead}</p>}
+    </div>
+  );
+}
+
+/**
+ * L'ouverture d'un chapitre : le folio, puis le double filet du doreur sur
+ * toute la largeur. Décoratif pour un lecteur d'écran — le titre qui suit
+ * porte la structure.
+ */
+export function SectionRule({ folio, tone = "ink" }: { folio: string; tone?: "ink" | "paper" }) {
+  return (
+    <div aria-hidden="true" className="flex items-center gap-5">
+      <span className={`mr-folio ${tone === "paper" ? "text-mr-paper/80" : "text-mr-bordeaux"}`}>{folio}</span>
+      <span className="mr-filet flex-1" />
     </div>
   );
 }
@@ -266,7 +291,11 @@ const LEGAL_LINKS = [
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-mr-rule bg-mr-paper-warm">
+    <footer className="bg-mr-paper-warm">
+      {/* Le double filet ferme le livre comme il ouvre chaque chapitre. */}
+      <div className="mx-auto max-w-[80rem] px-5 sm:px-8">
+        <span aria-hidden="true" className="mr-filet text-mr-ink" />
+      </div>
       <div className="mx-auto max-w-[80rem] px-5 py-16 sm:px-8 sm:py-20">
         <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
           <div>

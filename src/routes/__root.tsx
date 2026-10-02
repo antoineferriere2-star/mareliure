@@ -77,7 +77,7 @@ const FINE_BINDERY_BRAND = {
   lang: "en",
   title: "Fine Bindery — Exceptional French Bookbinding",
   description:
-    "The international concierge for exceptional French bookbinding. Entrust your book to selected independent workshops in France.",
+    "The European network for bookbinding and book conservation. Discover independent ateliers, present your project and work with the right one — opening in France.",
   author: "Fine Bindery",
   // Même identité visuelle que Ma Reliure (tokens mr-*) — aucune icône propre
   // à Fine Bindery n'existe encore.

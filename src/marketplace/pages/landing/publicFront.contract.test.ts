@@ -157,3 +157,12 @@ describe("refonte des sites publics — captures produit et Fine Bindery", () =>
     expect(read("src/marketplace/pages/partners/PartnersLanding.tsx")).not.toMatch(/\bLeads?\b/);
   });
 });
+
+describe("le référencement public de Fine Bindery", () => {
+  it.each(["src/lib/structured-data.ts", "src/routes/index.tsx", "src/routes/__root.tsx", "src/routes/fine-bindery.tsx"])(
+    "%s décrit un réseau, plus une conciergerie",
+    (file) => {
+      expect(read(file)).not.toMatch(/international concierge|concierge for exceptional/i);
+    },
+  );
+});

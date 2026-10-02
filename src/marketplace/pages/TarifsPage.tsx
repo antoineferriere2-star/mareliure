@@ -137,12 +137,12 @@ export function TarifsPage() {
 
         <section aria-labelledby="construction-du-prix" className="bg-mr-paper-warm">
           <div className={`${SHELL} py-section-sm sm:py-section`}>
-            <SectionHead eyebrow="Votre prix, pas à pas" title={<span id="construction-du-prix">Un prix proposé, puis confirmé. Jamais imposé.</span>} />
+            <SectionHead folio="I" eyebrow="Votre prix, pas à pas" title={<span id="construction-du-prix">Un prix proposé, puis confirmé. Jamais imposé.</span>} />
             <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8 lg:mt-16 lg:gap-12">
               {STEPS.map((step, index) => (
-                <li key={step.title} className="border-t border-mr-rule-strong pt-5">
+                <li key={step.title}>
                   <p className="flex items-baseline gap-3">
-                    <span className="mr-meta tabular-nums">{String(index + 1).padStart(2, "0")}</span>
+                    <span className="mr-display text-[2.75rem] leading-none text-mr-bordeaux sm:text-[3.25rem]">{index + 1}</span>
                     <span className="text-[0.8125rem] font-semibold text-mr-bordeaux">{step.when}</span>
                   </p>
                   <h3 className="mr-title mt-4 text-[1.5rem] text-mr-ink sm:text-[1.625rem]">{step.title}</h3>
@@ -157,6 +157,7 @@ export function TarifsPage() {
           <div className={`${SHELL} py-section-sm sm:py-section`}>
             <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
               <SectionHead
+                folio="II"
                 eyebrow="Ce qui fait le prix"
                 title="Sept choses que nous regardons."
                 lead="Dans l’ordre où elles pèsent sur le temps de travail — pas dans l’ordre où on les remarque."
@@ -180,6 +181,7 @@ export function TarifsPage() {
         <section aria-labelledby="service-gallery-title" className="bg-mr-paper-warm">
           <div className={`${SHELL} py-section-sm sm:py-section`}>
             <SectionHead
+              folio="III"
               eyebrow="Les prestations en images"
               title={<span id="service-gallery-title">Un repère visuel pour chacun des 45 savoir-faire.</span>}
               lead="Certaines photographies montrent l’état reçu, d’autres le geste ou le résultat. Elles aident à nommer le travail ; l’intervention exacte se décide après examen du livre."
@@ -212,6 +214,7 @@ export function TarifsPage() {
                         return (
                           <li key={item.key}>
                             <figure>
+                              <div className="aspect-[4/3] bg-mr-mat p-[5%]">
                               <img
                                 src={photo.src}
                                 srcSet={photo.srcSet}
@@ -221,8 +224,9 @@ export function TarifsPage() {
                                 alt=""
                                 loading="lazy"
                                 decoding="async"
-                                className="aspect-[4/3] w-full bg-mr-ink/5 object-cover"
+                                className="h-full w-full object-contain"
                               />
+                              </div>
                               <figcaption className="pt-4">
                                 <h3 className="mr-heading text-mr-ink">{item.label}</h3>
                                 {item.hint && <p className="mr-small mt-1.5">{item.hint}</p>}
@@ -244,13 +248,19 @@ export function TarifsPage() {
 
         <section className={`${SHELL} py-section-sm sm:py-section`}>
           <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-            <SectionHead eyebrow="Ce que comprend le prix" title="Un prix pour tout le trajet du travail." className="lg:col-span-5" />
+            <SectionHead folio="IV" eyebrow="Ce que comprend le prix" title="Un prix pour tout le trajet du travail." className="lg:col-span-5" />
             <ul className="space-y-5 lg:col-span-7">
               {INCLUDED.map((item) => (
                 <li key={item} className="mr-body border-l-2 border-mr-bordeaux/70 pl-5 text-mr-ink">
                   {item}
                 </li>
               ))}
+              <li className="mr-body border-l-2 border-mr-rule-strong pl-5">
+                Le transport reste à part. Pour un livre courant, entre deux adresses de France
+                métropolitaine, la proposition peut inclure l’aller-retour organisé : une ligne
+                distincte de 15 € TTC. Les livres anciens, rares ou de valeur ne voyagent pas par ce
+                forfait ; leur trajet est convenu avec vous.
+              </li>
             </ul>
           </div>
         </section>
