@@ -34,6 +34,7 @@ export function Plate({
   priority = false,
   mat = "mat",
   tight = false,
+  numberLabel = "Pl.",
   className = "",
 }: {
   photo: PhotoSources;
@@ -50,6 +51,8 @@ export function Plate({
   mat?: "mat" | "ink";
   /** Vignette : passe-partout réduit, pour que l'image garde de la place. */
   tight?: boolean;
+  /** Abréviation de « planche » dans la langue de la page (Pl., Taf., Tav., Lám.). */
+  numberLabel?: string;
   className?: string;
 }) {
   const ground = mat === "ink" ? "bg-mr-paper/[0.07]" : "bg-mr-mat";
@@ -70,7 +73,7 @@ export function Plate({
       {(number !== undefined || caption || credit) && (
         <figcaption className="mt-3 flex items-baseline gap-3">
           {number !== undefined && (
-            <span className={`mr-folio shrink-0 text-[0.9375rem] ${mat === "ink" ? "text-mr-paper/80" : "text-mr-bordeaux"}`}>Pl. {number}</span>
+            <span className={`mr-folio shrink-0 text-[0.9375rem] ${mat === "ink" ? "text-mr-paper/80" : "text-mr-bordeaux"}`}>{numberLabel} {number}</span>
           )}
           <span className="mr-meta">
             {caption}

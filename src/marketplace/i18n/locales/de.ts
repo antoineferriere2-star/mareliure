@@ -19,7 +19,7 @@ export const de: FineBinderyPublicCopy = {
     discover: "Werkstätten entdecken",
     proof: "Unabhängige, vor der Veröffentlichung geprüfte Werkstätten · Ein Projekt, ein Gespräch · Start in Frankreich",
     offersEyebrow: "Fachgebiete", offersTitle: "Die Arbeit des Netzwerks.", photoCredit: "Fotografien", offers: [
-      { title: "Künstlerischer Einband", body: "Traditionelle und zeitgenössische Einbände aus Leder, Gewebe und ausgewählten Papieren." },
+      { title: "Handeinband", body: "Traditionelle und zeitgenössische Einbände aus Leder, Gewebe und ausgewählten Papieren." },
       { title: "Restaurierung und Konservierung", body: "Sorgfältige Arbeit an alten, wertvollen und persönlich bedeutsamen Büchern – mit Respekt vor ihrer Geschichte." },
       { title: "Neueinband für Sammler", body: "Eine geliebte oder gesuchte Ausgabe als Unikat." },
       { title: "Individuelle Anfertigungen", body: "Unikate, Familienbücher, Präsentationsexemplare, Kassetten und Schuber." },

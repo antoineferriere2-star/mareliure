@@ -20,6 +20,9 @@ type Copy = ReturnType<typeof fineBinderyCopy>;
 
 const ROMAN = ["I", "II", "III", "IV", "V", "VI"] as const;
 
+/** « Planche », abrégé comme dans un catalogue de chaque langue. */
+const PLATE_LABEL: Record<FineBinderyLocale, string> = { en: "Pl.", fr: "Pl.", de: "Taf.", it: "Tav.", es: "Lám." };
+
 /** Description de la pièce du premier écran, dans la langue de la page. */
 const HERO_ALT: Record<FineBinderyLocale, string> = {
   en: "A contemporary design binding in grey and aubergine leather mosaic, titled in gold and silver, on Baudelaire’s Le Spleen de Paris",
@@ -45,7 +48,7 @@ export function FineBinderyLandingPage({ locale = "en" }: { locale?: FineBindery
   const copy = fineBinderyCopy(locale); useFineBinderyDocumentLocale(locale); usePageViewTracking(ENGINE_LOCALE[locale]);
   return <div className="mr-site fb-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite"><FineBinderyHeader locale={locale} /><main id="top">
     <Hero copy={copy} locale={locale} />
-    <Disciplines copy={copy} />
+    <Disciplines copy={copy} locale={locale} />
     <Paths copy={copy} locale={locale} />
     <HowItWorks copy={copy} />
     <Workshops copy={copy} locale={locale} />
@@ -69,7 +72,7 @@ function Hero({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
           <ActionLink href={fineBinderyDirectoryPath(locale)} variant="secondary" onInk>{copy.home.discover}</ActionLink>
         </div>
       </div>
-      <Plate className="lg:col-span-5" photo={PHOTOS.ferriereBaudelaire} sizes="(min-width: 1024px) 480px, 100vw" priority mat="ink" number={1}
+      <Plate className="lg:col-span-5" photo={PHOTOS.ferriereBaudelaire} sizes="(min-width: 1024px) 480px, 100vw" priority mat="ink" number={1} numberLabel={PLATE_LABEL[locale]}
         alt={HERO_ALT[locale]}
         caption="Le Spleen de Paris" credit={FERRIERE_SERVICE_PHOTO_CREDIT} />
     </div>
@@ -80,12 +83,12 @@ function Hero({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
   </div></section>;
 }
 
-function Disciplines({ copy }: { copy: Copy }) {
+function Disciplines({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
   return <section id="offers" className="scroll-mt-32"><div className={`${SHELL} py-section-sm sm:py-section`}>
     <SectionHead folio="I" eyebrow={copy.home.offersEyebrow} title={copy.home.offersTitle} />
     <ul className="mt-12 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:mt-14 lg:grid-cols-4">{copy.home.offers.map((item, index) => {
       const photo = ferriereServicePhoto(FERRIERE_FINE_BINDERY_OFFER_KEYS[index]);
-      return <li key={item.title}><Plate photo={photo} sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw" ratio="landscape" alt="" number={index + 2} caption={item.title} /><p className="mr-body mt-3">{item.body}</p></li>;
+      return <li key={item.title}><Plate photo={photo} sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw" ratio="landscape" alt="" number={index + 2} numberLabel={PLATE_LABEL[locale]} caption={item.title} /><p className="mr-body mt-3">{item.body}</p></li>;
     })}</ul>
     <p className="mr-meta mt-10">{copy.home.photoCredit} · <a className="mr-link" href={FERRIERE_SERVICE_PHOTO_SOURCE}>{FERRIERE_SERVICE_PHOTO_CREDIT}</a></p>
   </div></section>;
