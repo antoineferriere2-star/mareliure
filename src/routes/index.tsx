@@ -26,9 +26,12 @@ const metreTitle = "Qualify Contractor Leads Before the First Call — Métré B
 const metreDescription =
   "Contractors lose the first call rediscovering the project. A guided intake collects scope, dimensions, photos and budget first. See a real brief.";
 
-const reliureTitle = "Ma Reliure — Reliure et restauration de livres";
+// Titre et description recomposés pour la recherche (octobre 2026) : les mots
+// que tape quelqu'un qui cherche — reliure, restauration, relieur — et ce qui
+// distingue le service, partout en France, prix annoncé avant engagement.
+const reliureTitle = "Reliure et restauration de livres par des artisans — Ma Reliure";
 const reliureDescription =
-  "Confiez votre livre à l'artisan adapté à votre projet de reliure, restauration ou transformation.";
+  "Réparation, restauration, reliure ou création : présentez votre livre en quelques minutes. Ma Reliure le confie à l'artisan relieur adapté, partout en France.";
 
 function maReliureHead() {
   return {
