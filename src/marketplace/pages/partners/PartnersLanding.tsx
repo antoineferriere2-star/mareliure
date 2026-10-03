@@ -38,7 +38,7 @@ export function PartnersLandingPage() {
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <LandingHeader workshop />
-      <main>
+      <main id="contenu">
         <Hero />
         <Overview />
         <Feature
@@ -605,7 +605,7 @@ function ApplicationForm() {
                 required
                 checked={consent}
                 onChange={(e) => setConsent(e.target.checked)}
-                className="mt-1"
+                className="mt-0.5 h-5 w-5 shrink-0 accent-mr-ink"
               />
               <span>
                 J'accepte que ces informations soient utilisées par Ma Reliure pour étudier ma

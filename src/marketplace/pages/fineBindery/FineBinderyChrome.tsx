@@ -3,6 +3,9 @@ import { FineBinderyLanguageSwitch } from "@/marketplace/i18n/FineBinderyLanguag
 import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
 import { fineBinderyDirectoryPath, fineBinderyHomePath, fineBinderyProjectPath, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 import { actionClass } from "@/marketplace/pages/landing/actions";
+import { SkipLink } from "@/marketplace/pages/landing/LandingChrome";
+
+const SKIP_LABEL: Record<FineBinderyLocale, string> = { en: "Skip to content", fr: "Aller au contenu", de: "Zum Inhalt springen", it: "Vai al contenuto", es: "Ir al contenido" };
 
 const BRAND = MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY;
 
@@ -25,6 +28,7 @@ export function FineBinderyHeader({ locale }: { locale: FineBinderyLocale }) {
   const copy = fineBinderyCopy(locale); const nav = navigation(locale);
   const link = "mr-tap mr-small text-mr-graphite underline-offset-[6px] hover:text-mr-ink hover:underline";
   return <header className="sticky top-0 z-40 border-b border-mr-rule/70 bg-mr-paper/95 backdrop-blur">
+    <SkipLink label={SKIP_LABEL[locale]} />
     <div className="mx-auto flex max-w-[80rem] items-center justify-between gap-5 px-5 py-3 sm:px-8 lg:py-4">
       <Wordmark locale={locale} />
       <nav aria-label="Fine Bindery" className="hidden lg:block"><ul className="flex items-center gap-7 xl:gap-8">{nav.map((item) => <li key={item.href}><a href={item.href} className={link}>{item.label}</a></li>)}</ul></nav>

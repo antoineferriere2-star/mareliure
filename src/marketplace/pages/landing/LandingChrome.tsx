@@ -15,6 +15,23 @@ import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
 import { actionClass } from "./actions";
 
 /**
+ * Le lien d'évitement : premier élément atteint au clavier, invisible tant
+ * qu'il n'a pas le focus. Il saute l'entête et sa navigation pour aller au
+ * <main id="contenu"> de la page — sans lui, chaque page imposait de traverser
+ * tout le menu à chaque visite (WCAG 2.4.1).
+ */
+export function SkipLink({ label }: { label: string }) {
+  return (
+    <a
+      href="#contenu"
+      className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-3 focus:z-50 focus:bg-mr-paper focus:px-4 focus:py-2.5 focus:text-[0.9375rem] focus:font-semibold focus:text-mr-ink"
+    >
+      {label}
+    </a>
+  );
+}
+
+/**
  * Un seul conteneur pour toutes les pages éditoriales. Les variations se
  * font en colonnes — jamais une seconde largeur ailleurs dans le produit.
  */
@@ -183,6 +200,7 @@ const HEADER_LINK =
 export function LandingHeader({ workshop = false }: { workshop?: boolean }) {
   return (
     <header className="sticky top-0 z-40 border-b border-mr-rule/70 bg-mr-paper">
+      <SkipLink label="Aller au contenu" />
       <div className="mx-auto flex max-w-[78rem] items-center justify-between gap-6 px-5 py-3 sm:px-8 lg:py-5">
         {/* Absolu pour la même raison que les ancres : depuis /tarifs, `#top`
             ne ramènerait pas à l'accueil, il ne ferait rien. */}

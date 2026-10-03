@@ -187,7 +187,7 @@ function InvitationPage() {
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <LandingHeader />
-      <main className="mx-auto w-full max-w-[32rem] flex-1 px-5 py-16 sm:px-8">
+      <main id="contenu" className="mx-auto w-full max-w-[32rem] flex-1 px-5 py-16 sm:px-8">
         <p className="mr-eyebrow">Atelier partenaire</p>
         <h1 className="mr-title mt-4 text-mr-ink">Activer mon accès</h1>
 

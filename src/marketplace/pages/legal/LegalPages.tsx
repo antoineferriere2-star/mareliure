@@ -99,7 +99,7 @@ function LegalLayout({
   return (
     <div className="mr-site min-h-screen bg-mr-paper text-mr-graphite">
       {brand === "FINE_BINDERY" ? <FineBinderyHeader locale="en" /> : <LandingHeader />}
-      <main className={`${SHELL} py-14 sm:py-20`}>
+      <main id="contenu" className={`${SHELL} py-14 sm:py-20`}>
         <p className="mr-eyebrow">{eyebrow}</p>
         <h1 className="mr-title mt-4 text-mr-ink">{title}</h1>
         <p className="mr-small mt-3">{updatedLabel}</p>
