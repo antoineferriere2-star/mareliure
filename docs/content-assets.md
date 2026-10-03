@@ -181,10 +181,13 @@ personne ; aucune autorisation de tiers n'est donc en jeu.
 | Fichier                            | Nature              | Contenu                                                                     | Où                                                          | Crédité    |
 | ---------------------------------- | ------------------- | --------------------------------------------------------------------------- | ----------------------------------------------------------- | ---------- |
 | `public/og/mareliure-1200x630.png` | Graphisme de marque | « Ma Reliure », filet bordeaux, promesse de l'accueil — Fraunces sur papier | Image de partage (Open Graph) de toutes les pages Ma Reliure | Sans objet |
+| `public/og/finebindery-1200x630.png` | Graphisme de marque | « Fine Bindery », double filet cognac, promesse de l'accueil — Fraunces sur brun | Image de partage par défaut des pages Fine Bindery | Sans objet |
 
 Composée le 24 septembre 2026 à partir de `public/fonts/fraunces-latin-var.woff2`
 et des tokens `mr-paper`, `mr-ink`, `mr-graphite` et `mr-bordeaux` de
-`styles.css`, puis examinée visuellement avant d'être ajoutée.
+`styles.css`, puis examinée visuellement avant d'être ajoutée. La carte Fine
+Bindery a été composée le 3 octobre 2026 de la même façon (jetons `.fb-site`,
+brun `mr-umber`, filet cognac) et relue avant ajout.
 
 ### Captures de l'espace atelier — données d'exemple
 
