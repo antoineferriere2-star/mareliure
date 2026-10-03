@@ -45,7 +45,7 @@ export const Route = createFileRoute("/tarifs")({
       EDITORIAL_FONT_PRELOAD,
     ],
     scripts: [
-      jsonLdScript(breadcrumbSchema([{ name: "Tarifs", path: "/tarifs" }], MARELIURE_SITE_URL)),
+      jsonLdScript(breadcrumbSchema([{ name: "Tarifs", path: "/tarifs" }], MARELIURE_SITE_URL, "Accueil")),
     ],
   }),
   component: TarifsPage,
