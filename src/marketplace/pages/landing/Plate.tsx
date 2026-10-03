@@ -45,7 +45,13 @@ export function Plate({
   caption?: ReactNode;
   credit?: ReactNode;
   ratio?: PlateRatio;
-  /** Le héros seul. */
+  /**
+   * Le héros seul : chargement immédiat mais en priorité basse. Le plus grand
+   * élément du premier écran est le titre, pas la planche. En priorité haute,
+   * et préchargée par React (qui précharge toute image non différée sauf en
+   * `fetchPriority="low"`), l'image disputait sur mobile la bande passante à la
+   * feuille de style dont dépend l'affichage du titre.
+   */
   priority?: boolean;
   /** `ink` : passe-partout posé sur une section sombre. */
   mat?: "mat" | "ink";
@@ -66,7 +72,7 @@ export function Plate({
           alt={alt}
           loading={priority ? "eager" : "lazy"}
           decoding={priority ? "sync" : "async"}
-          fetchPriority={priority ? "high" : undefined}
+          fetchPriority={priority ? "low" : undefined}
           className="h-full w-full object-contain"
         />
       </div>
