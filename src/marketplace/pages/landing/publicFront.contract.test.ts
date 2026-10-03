@@ -166,3 +166,11 @@ describe("le référencement public de Fine Bindery", () => {
     },
   );
 });
+
+describe("le sélecteur de langue de Fine Bindery", () => {
+  it("lit l'adresse dans le routeur, pas dans window : même lien au serveur et au navigateur", () => {
+    const source = read("src/marketplace/i18n/FineBinderyLanguageSwitch.tsx");
+    expect(source).toContain("useRouterState");
+    expect(source).not.toMatch(/window\.location/);
+  });
+});

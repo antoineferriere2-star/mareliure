@@ -1,4 +1,5 @@
 import { useEffect } from "react";
+import { useRouterState } from "@tanstack/react-router";
 import {
   FINE_BINDERY_LOCALES,
   FINE_BINDERY_LOCALE_STORAGE_KEY,
@@ -15,8 +16,12 @@ export function useFineBinderyDocumentLocale(locale: FineBinderyLocale) {
 }
 
 export function FineBinderyLanguageSwitch({ locale, label }: { locale: FineBinderyLocale; label: string }) {
-  const pathname = typeof window === "undefined" ? `/${locale}` : window.location.pathname;
-  const search = typeof window === "undefined" ? "" : window.location.search;
+  // L'adresse vient du routeur, identique au rendu serveur et dans le navigateur.
+  // L'adresse du navigateur côté client contre `/${locale}` côté serveur donnait deux
+  // liens différents (avertissement d'hydratation), et le HTML servi aux moteurs
+  // pointait chaque langue vers l'accueil au lieu de la page équivalente.
+  const { pathname, searchStr } = useRouterState({ select: (state) => state.location });
+  const search = searchStr;
   return (
     <nav aria-label={label} className="flex flex-wrap items-center gap-1 text-[0.68rem] font-semibold tracking-[0.08em]">
       {FINE_BINDERY_LOCALES.map((candidate) => (
