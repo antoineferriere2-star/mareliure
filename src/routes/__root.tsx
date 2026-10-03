@@ -72,6 +72,8 @@ const MARELIURE_BRAND = {
 };
 
 const MARELIURE_OG_IMAGE = `${MARELIURE_CANONICAL_HOME}og/mareliure-1200x630.png`;
+// Même principe pour Fine Bindery : carte typographique, sans photographie (docs/content-assets.md).
+const FINE_BINDERY_OG_IMAGE = "https://finebindery.com/og/finebindery-1200x630.png";
 
 const FINE_BINDERY_BRAND = {
   lang: "en",
@@ -196,6 +198,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
               { property: "og:image:height", content: "630" },
               { property: "og:image:alt", content: "Ma Reliure — reliure, restauration et création de livres par des artisans indépendants" },
               { name: "twitter:image", content: MARELIURE_OG_IMAGE },
+            ]
+          : []),
+        // Fine Bindery n'avait aucune image de partage. Une fiche d'atelier qui a
+        // sa propre photographie la déclare dans sa route, qui l'emporte (le
+        // HeadContent garde la balise la plus profonde pour un même attribut).
+        ...(loaderData?.marketplaceBrand === "FINE_BINDERY"
+          ? [
+              { property: "og:image", content: FINE_BINDERY_OG_IMAGE },
+              { property: "og:image:width", content: "1200" },
+              { property: "og:image:height", content: "630" },
+              { property: "og:image:alt", content: "Fine Bindery — the European network for bookbinding and book conservation" },
+              { name: "twitter:image", content: FINE_BINDERY_OG_IMAGE },
             ]
           : []),
         // La vérification Search Console appartient à metre-pro.com. La servir
