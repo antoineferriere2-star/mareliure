@@ -13,7 +13,7 @@
  */
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SHELL } from "@/marketplace/pages/landing/LandingChrome";
+import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SectionRule, SHELL } from "@/marketplace/pages/landing/LandingChrome";
 import { ActionLink, actionClass } from "@/marketplace/pages/landing/actions";
 import { ProductShot, type ProductShotKey } from "@/marketplace/pages/landing/ProductShot";
 import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
@@ -43,6 +43,7 @@ export function PartnersLandingPage() {
         <Overview />
         <Feature
           id="devis"
+          folio="I"
           eyebrow="Devis"
           title="Un devis prêt en quelques clics."
           lead="Ouvrez un devis, cochez ce que vous allez faire : vos prestations et vos prix sont déjà là, le total se construit sous vos yeux."
@@ -52,6 +53,7 @@ export function PartnersLandingPage() {
         />
         <Feature
           id="tarifs"
+          folio="II"
           eyebrow="Prestations & tarifs"
           title="Vos tarifs, à votre main."
           lead="Vous ne partez pas d'une page blanche, et vous n'héritez pas d'une grille imposée : ajustez ce qui ne vous ressemble pas, ajoutez ce qui vous est propre."
@@ -61,6 +63,7 @@ export function PartnersLandingPage() {
         />
         <Feature
           id="ouvrages"
+          folio="III"
           eyebrow="Ouvrages"
           title="L’ouvrage au centre."
           lead="Un livre, une fiche. Tout ce qui le concerne s'y rattache, du premier devis à la dernière facture."
@@ -112,9 +115,10 @@ function Hero() {
 
 function Overview() {
   return (
-    <section id="outil" className="scroll-mt-36 border-t border-mr-rule lg:scroll-mt-28">
-      <div className={`${SHELL} py-12 sm:py-14`}>
-        <ul className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10">
+    <section id="outil" className="scroll-mt-36 lg:scroll-mt-28">
+      <div className={`${SHELL} pb-12 sm:pb-14`}>
+        <span aria-hidden="true" className="mr-filet text-mr-ink" />
+        <ul className="mt-10 grid gap-8 sm:grid-cols-2 lg:grid-cols-4 lg:gap-10">
           {TOOL_OVERVIEW.map((item) => (
             <li key={item.anchor}>
               <a href={`#${item.anchor}`} className="group block">
@@ -132,6 +136,7 @@ function Overview() {
 /** Une fonction de l'outil : le texte d'un côté, sa capture réelle de l'autre. */
 function Feature({
   id,
+  folio,
   eyebrow,
   title,
   lead,
@@ -141,6 +146,7 @@ function Feature({
   tone = "paper",
 }: {
   id: string;
+  folio: string;
   eyebrow: string;
   title: string;
   lead: string;
@@ -152,7 +158,8 @@ function Feature({
   return (
     <section id={id} className={`scroll-mt-36 lg:scroll-mt-28 ${tone === "warm" ? "bg-mr-paper-warm" : ""}`}>
       <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+        <SectionRule folio={folio} />
+        <div className="mt-8 grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
           <div className={`lg:col-span-5 ${reverse ? "lg:order-2" : ""}`}>
             <SectionHead eyebrow={eyebrow} title={title} lead={lead} />
             <Points items={points} />
@@ -182,6 +189,7 @@ function Documents() {
     <section id="factures" className="scroll-mt-36 lg:scroll-mt-28">
       <div className={`${SHELL} py-section-sm sm:py-section`}>
         <SectionHead
+          folio="IV"
           eyebrow="Documents & factures"
           title="Des documents à votre nom, des factures en règle."
           lead="Le devis part au nom de votre atelier. Accepté, il devient une facture sans rien ressaisir ; la facture suit ensuite l'acompte, le paiement et, s'il le faut, l'avoir."
@@ -202,7 +210,8 @@ function Network() {
   return (
     <section className="bg-mr-paper-warm">
       <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <div className="grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
+        <SectionRule folio="V" />
+        <div className="mt-8 grid items-center gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
             <SectionHead
               eyebrow="Le réseau Ma Reliure"
@@ -224,8 +233,8 @@ function Network() {
           <h3 className="mr-eyebrow">Le parcours d’un projet</h3>
           <ol className="mt-6 grid gap-x-8 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
             {HOW_IT_WORKS_STEPS.map((step) => (
-              <li key={step.index} className="mr-body flex gap-4">
-                <span className="mr-meta tabular-nums">{step.index}</span>
+              <li key={step.index} className="mr-body flex items-baseline gap-4">
+                <span className="mr-display w-8 shrink-0 text-[1.75rem] leading-none text-mr-bordeaux">{Number(step.index)}</span>
                 <span className="text-mr-ink">{step.title}</span>
               </li>
             ))}
@@ -246,7 +255,8 @@ function Pricing() {
   return (
     <section id="tarif" className="scroll-mt-36 bg-mr-ink text-mr-paper lg:scroll-mt-28">
       <div className={`${SHELL} py-section sm:py-section-lg`}>
-        <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
+        <SectionRule folio="VI" tone="paper" />
+        <div className="mt-8 grid gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
             <p className="mr-eyebrow">Tarif</p>
             <h2 className="mr-title mt-4 text-mr-paper">Gratuit pour votre atelier.</h2>
@@ -300,7 +310,8 @@ function Faq() {
   return (
     <section>
       <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <div className="grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-16">
+        <SectionRule folio="VII" />
+        <div className="mt-8 grid gap-10 lg:grid-cols-12 lg:items-start lg:gap-16">
           <SectionHead eyebrow="Questions fréquentes" title="Avant de créer votre espace." className="lg:sticky lg:top-32 lg:col-span-4" />
           <div className="divide-y divide-mr-rule-strong border-y border-mr-rule-strong lg:col-span-8">
             {PARTNER_FAQ.map((item) => (
@@ -407,6 +418,7 @@ function ApplicationForm() {
     <section id="candidature" className="scroll-mt-36 lg:scroll-mt-28 bg-mr-paper-warm">
       <div className={`${SHELL} py-section-sm sm:py-section`}>
         <SectionHead
+          folio="VIII"
           eyebrow="Sans compte"
           title="Vous préférez d'abord nous présenter votre atelier ?"
           lead="Cette candidature reste possible si vous souhaitez être recontacté avant de créer votre espace. L'accès aux projets exige toujours une validation par Ma Reliure."
