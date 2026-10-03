@@ -1,6 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useEffect } from "react";
-import { BuildPublicHome } from "@/build/pages/public/BuildPublicHome";
+import { lazy, Suspense, useEffect } from "react";
 import { ReliureLanding } from "@/marketplace/pages/ReliureLanding";
 import { FineBinderyLandingPage } from "@/marketplace/pages/fineBindery/FineBinderyLanding";
 import { faqPageSchema, jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
@@ -144,6 +143,16 @@ export const Route = createFileRoute("/")({
 // fix, not something this code can control). Until then, catch a stray
 // unprocessed session token in the hash and hand it to /auth, which already
 // knows how to detect the session and route to /build or /portal.
+/**
+ * La page d'accueil Métré Build, chargée à la demande. Importée statiquement,
+ * elle et ses démos (icônes, Project Canvas, schéma de Playbook) restaient dans
+ * le paquet de l'accueil Ma Reliure : leurs effets de bord au chargement
+ * empêchaient l'élagage, même une fois la branche Métré repliée.
+ */
+const BuildPublicHome = lazy(() =>
+  import("@/build/pages/public/BuildPublicHome").then((module) => ({ default: module.BuildPublicHome })),
+);
+
 function HomeRoute() {
   const { brand } = Route.useLoaderData();
   useEffect(() => {
@@ -151,6 +160,6 @@ function HomeRoute() {
       window.location.replace(`/auth${window.location.hash}`);
     }
   }, []);
-  if (!isMaReliure) return <BuildPublicHome />;
+  if (!isMaReliure) return <Suspense fallback={null}><BuildPublicHome /></Suspense>;
   return brand === "FINE_BINDERY" ? <FineBinderyLandingPage /> : <ReliureLanding />;
 }

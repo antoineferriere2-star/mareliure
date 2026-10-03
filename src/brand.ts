@@ -34,7 +34,15 @@ function readBrand(): PublicBrand {
 
 export const PUBLIC_BRAND: PublicBrand = readBrand();
 
-export const isMaReliure = PUBLIC_BRAND === "mareliure";
+/**
+ * Comparée directement à `import.meta.env`, que Vite remplace par un littéral :
+ * `"mareliure" === "mareliure"` se replie à la compilation, et la branche que le
+ * déploiement ne prend pas disparaît du bundle. Dérivée de `PUBLIC_BRAND`
+ * (un appel de fonction), elle restait une valeur d'exécution : l'accueil Ma
+ * Reliure embarquait toute la page d'accueil Métré Build. Même résultat qu'avant
+ * pour toute valeur, inconnue comprise (repli sur Métré).
+ */
+export const isMaReliure = import.meta.env.VITE_PUBLIC_BRAND === "mareliure";
 
 /**
  * Total, and deliberately so: an unknown value falls back to Métré rather than

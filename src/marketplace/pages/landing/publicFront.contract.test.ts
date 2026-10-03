@@ -174,3 +174,15 @@ describe("le sélecteur de langue de Fine Bindery", () => {
     expect(source).not.toMatch(/window\.location/);
   });
 });
+
+describe("le poids des pages publiques", () => {
+  it("isMaReliure se replie à la compilation : comparée au littéral que Vite injecte", () => {
+    expect(read("src/brand.ts")).toContain('export const isMaReliure = import.meta.env.VITE_PUBLIC_BRAND === "mareliure";');
+  });
+
+  it("l'accueil Métré Build n'est jamais importé statiquement par la route racine", () => {
+    const route = read("src/routes/index.tsx");
+    expect(route).not.toMatch(/^import \{ BuildPublicHome \}/m);
+    expect(route).toContain('import("@/build/pages/public/BuildPublicHome")');
+  });
+});
