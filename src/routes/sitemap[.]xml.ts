@@ -48,8 +48,9 @@ const MARELIURE_ENTRIES: SitemapEntry[] = [
   { path: "/conditions", changefreq: "yearly", priority: "0.3" },
 ];
 
+// La racine sert l'accueil anglais, identique à /en : elle n'est pas listée
+// et déclare /en pour adresse canonique (routes/index.tsx).
 const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
-  { path: "/", changefreq: "weekly", priority: "1.0" },
   ...(["en", "fr", "de", "it", "es"] as const).flatMap((locale) => [
     { path: `/${locale}`, changefreq: "weekly" as const, priority: locale === "en" ? "1.0" : "0.9" },
     { path: `/${locale}/professionals`, changefreq: "weekly" as const, priority: "0.9" },
