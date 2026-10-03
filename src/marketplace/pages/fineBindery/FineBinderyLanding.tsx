@@ -46,7 +46,7 @@ const HERO_ALT: Record<FineBinderyLocale, string> = {
  */
 export function FineBinderyLandingPage({ locale = "en" }: { locale?: FineBinderyLocale }) {
   const copy = fineBinderyCopy(locale); useFineBinderyDocumentLocale(locale); usePageViewTracking(ENGINE_LOCALE[locale]);
-  return <div className="mr-site fb-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite"><FineBinderyHeader locale={locale} /><main id="top">
+  return <div className="mr-site fb-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite"><FineBinderyHeader locale={locale} /><main id="contenu">
     <Hero copy={copy} locale={locale} />
     <Disciplines copy={copy} locale={locale} />
     <Paths copy={copy} locale={locale} />

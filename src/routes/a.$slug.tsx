@@ -64,7 +64,7 @@ function ReferralRedirectPage() {
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <LandingHeader />
-      <main className="mx-auto max-w-xl flex-1 px-5 py-20 text-center">
+      <main id="contenu" className="mx-auto max-w-xl flex-1 px-5 py-20 text-center">
         <h1 className="mr-title text-mr-ink">Cet atelier est introuvable</h1>
         <p className="mr-lead mt-4">
           Ce lien ne correspond à aucun atelier partenaire actif de Ma Reliure. Vous pouvez tout de

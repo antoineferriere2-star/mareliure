@@ -11,7 +11,7 @@ type DirectoryProfile = { slug: string; path: string; workshopName: string; prof
 type PublicProfile = Awaited<ReturnType<typeof import("@/marketplace/services/fineBinderyProfile.data.functions").getPublicFineBinderyProfile>>;
 
 function FineBinderyPage({ locale, children }: { locale: FineBinderyLocale; children: ReactNode }) {
-  return <div className="mr-site fb-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite"><FineBinderyHeader locale={locale} /><main className="flex-1">{children}</main><FineBinderyFooter locale={locale} /></div>;
+  return <div className="mr-site fb-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite"><FineBinderyHeader locale={locale} /><main id="contenu" className="flex-1">{children}</main><FineBinderyFooter locale={locale} /></div>;
 }
 
 /** Monogramme quand l'atelier n'a pas encore de photographie : jamais d'image inventée. */

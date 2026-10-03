@@ -427,7 +427,7 @@ export function ReliureLanding() {
   return (
     <div id="top" className="mr-site min-h-screen bg-mr-paper text-mr-graphite">
       <LandingHeader />
-      <main>
+      <main id="contenu">
         <Hero />
         <Proofs />
         <HowItWorks />

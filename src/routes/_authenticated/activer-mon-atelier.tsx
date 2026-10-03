@@ -78,7 +78,7 @@ function ActivateMyWorkshop() {
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <LandingHeader />
-      <main className="mx-auto w-full max-w-[36rem] flex-1 px-5 py-14 sm:px-8 sm:py-20">
+      <main id="contenu" className="mx-auto w-full max-w-[36rem] flex-1 px-5 py-14 sm:px-8 sm:py-20">
         <p className="mr-eyebrow">Votre atelier</p>
         <h1 className="mr-title mt-4 text-mr-ink">Mon espace atelier</h1>
         <p className="mr-lead mt-6">

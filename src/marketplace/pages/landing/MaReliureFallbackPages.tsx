@@ -14,7 +14,7 @@ function FallbackShell({ eyebrow, title, lead, children }: { eyebrow: string; ti
   return (
     <div id="top" className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <LandingHeader />
-      <main className={`${SHELL} flex-1 py-20 sm:py-28`}>
+      <main id="contenu" className={`${SHELL} flex-1 py-20 sm:py-28`}>
         <div className="max-w-[40rem]">
           <p className="mr-eyebrow">{eyebrow}</p>
           <h1 className="mr-title mt-4 text-mr-ink">{title}</h1>

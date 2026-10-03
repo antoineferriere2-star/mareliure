@@ -115,7 +115,7 @@ export function TarifsPage() {
   return (
     <div className="mr-site min-h-screen bg-mr-paper text-mr-graphite">
       <LandingHeader />
-      <main>
+      <main id="contenu">
         <section className={`${SHELL} pt-14 pb-16 sm:pt-20 sm:pb-20 lg:pt-24`}>
           <div className="max-w-[46rem]">
             <p className="mr-eyebrow">Tarifs</p>
