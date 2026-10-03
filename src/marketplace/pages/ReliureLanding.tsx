@@ -33,6 +33,7 @@ import {
   STEPS,
 } from "./landing/content";
 import { PHOTOS } from "./landing/photos";
+import { CRAFT_PAGES } from "./crafts/craftPages";
 import {
   FERRIERE_EDITORIAL_CRAFT_KEYS,
   FERRIERE_SERVICE_PHOTO_CREDIT,
@@ -177,7 +178,10 @@ function Crafts() {
               </span>
               <div>
                 <h3 className="font-editorial text-[1.75rem] leading-tight text-mr-ink [font-variation-settings:'opsz'_72] sm:text-[2rem]">
-                  {craft.title}
+                  {/* Chaque besoin a sa page : c'est elle que trouvent les moteurs. */}
+                  <a href={CRAFT_PAGES[index].path} className="underline-offset-[6px] decoration-1 hover:underline">
+                    {craft.title}
+                  </a>
                 </h3>
                 <p className="mr-body mt-2">{craft.body}</p>
               </div>

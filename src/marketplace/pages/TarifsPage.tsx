@@ -21,6 +21,7 @@
  * page utilisait `font-serif`, soit la serif du système d'exploitation — un
  * Georgia gras qui n'apparaissait nulle part ailleurs sur le site.
  */
+import { PRICE_FACTOR_DETAILS } from "./pricing/priceFactors";
 import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SHELL } from "./landing/LandingChrome";
 import { WORK_FAMILIES, workItemsByFamily } from "@/marketplace/pricing/catalog";
 import {
@@ -62,47 +63,6 @@ const STEPS: readonly Step[] = [
   },
 ];
 
-interface Factor {
-  title: string;
-  body: string;
-}
-
-/**
- * Les sept facteurs, dans l'ordre où ils pèsent réellement sur le temps de
- * travail — pas dans l'ordre où un client les remarque. L'état passe donc
- * avant la matière, ce qui est contre-intuitif et vrai : reprendre une couture
- * coûte plus cher que choisir un beau cuir.
- */
-const FACTORS: readonly Factor[] = [
-  {
-    title: "L’état du livre",
-    body: "Le premier facteur, et de loin. Un dos fendu, des cahiers désolidarisés ou des plats détachés demandent de démonter l’ouvrage avant de commencer. Un livre complet et solide qu’on habille coûte moins cher qu’un livre en morceaux qu’on remet debout.",
-  },
-  {
-    title: "La structure à refaire",
-    body: "Recoudre l’ensemble des cahiers n’a rien à voir avec en reprendre trois. C’est le travail le plus long d’un atelier, et le moins visible une fois le livre fermé.",
-  },
-  {
-    title: "Le format",
-    body: "Un in-folio ne se manipule pas comme un livre de poche : plus de matière, d’autres outils, et souvent une presse qui n’accepte qu’un ouvrage à la fois.",
-  },
-  {
-    title: "Les matières",
-    body: "Toile, papier décoré, demi-cuir, plein cuir : le coût de la matière compte, mais c’est surtout le temps de parage et de couvrure qui change d’une matière à l’autre.",
-  },
-  {
-    title: "La dorure",
-    body: "Un titre au dos, des filets, un décor composé : la dorure se compte au fer et à la ligne, posée à la main, à chaud, sans droit à l’erreur.",
-  },
-  {
-    title: "Les finitions",
-    body: "Nerfs, gardes décorées, tranches, signet, étui. Ce sont des choix, pas des obligations — et c’est là que le budget se pilote le plus facilement.",
-  },
-  {
-    title: "La restauration",
-    body: "Restaurer n’est pas relier. Un ouvrage ancien, un manuscrit ou une reliure d’époque se regardent avant de se chiffrer : le travail se décide pièce en main.",
-  },
-];
 
 const INCLUDED: readonly string[] = [
   "Le travail de l’atelier, en entier : un seul prix, arrêté avant que le livre parte.",
@@ -164,7 +124,7 @@ export function TarifsPage() {
                 className="lg:sticky lg:top-32 lg:col-span-4 lg:self-start"
               />
               <dl className="grid gap-x-10 gap-y-9 sm:grid-cols-2 lg:col-span-8">
-                {FACTORS.map((factor, index) => (
+                {PRICE_FACTOR_DETAILS.map((factor, index) => (
                   <div key={factor.title} className="border-t border-mr-rule pt-5">
                     <dt className="flex items-baseline gap-3">
                       <span className="mr-meta tabular-nums">{String(index + 1).padStart(2, "0")}</span>

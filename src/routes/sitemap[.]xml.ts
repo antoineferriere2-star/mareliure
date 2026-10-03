@@ -41,6 +41,13 @@ const METRE_ENTRIES: SitemapEntry[] = [
 const MARELIURE_ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/tarifs", changefreq: "monthly", priority: "0.8" },
+  // Les pages par besoin (pages/crafts/craftPages.ts).
+  { path: "/reparation-de-livres", changefreq: "monthly", priority: "0.8" },
+  { path: "/restauration-de-livres-anciens", changefreq: "monthly", priority: "0.8" },
+  { path: "/reliure-de-livres", changefreq: "monthly", priority: "0.8" },
+  { path: "/dorure-et-finitions", changefreq: "monthly", priority: "0.8" },
+  { path: "/reliure-de-creation", changefreq: "monthly", priority: "0.8" },
+  { path: "/etuis-et-boites", changefreq: "monthly", priority: "0.8" },
   { path: "/partenaires-relieurs", changefreq: "monthly", priority: "0.7" },
   { path: "/candidature-atelier", changefreq: "monthly", priority: "0.6" },
   { path: "/mentions-legales", changefreq: "yearly", priority: "0.3" },

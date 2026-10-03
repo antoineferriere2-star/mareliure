@@ -284,12 +284,14 @@ const SERVICE_LINKS = [
   { href: "/partenaires-relieurs", label: "Pour les relieurs" },
 ] as const;
 
+/** Les pages par besoin (pages/crafts) : la liste du pied de page y mène. */
 const PRESTATIONS = [
-  "Réparation",
-  "Restauration",
-  "Reliure",
-  "Dorure",
-  "Protection sur mesure",
+  { href: "/reparation-de-livres", label: "Réparation" },
+  { href: "/restauration-de-livres-anciens", label: "Restauration" },
+  { href: "/reliure-de-livres", label: "Reliure" },
+  { href: "/dorure-et-finitions", label: "Dorure et finitions" },
+  { href: "/reliure-de-creation", label: "Reliure de création" },
+  { href: "/etuis-et-boites", label: "Étuis et boîtes" },
 ] as const;
 
 /**
@@ -327,8 +329,12 @@ export function LandingFooter() {
           <div>
             <p className="mr-eyebrow text-mr-graphite">Prestations</p>
             <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
-              {PRESTATIONS.map((label) => (
-                <li key={label}>{label}</li>
+              {PRESTATIONS.map((item) => (
+                <li key={item.href}>
+                  <a href={item.href} className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline">
+                    {item.label}
+                  </a>
+                </li>
               ))}
             </ul>
           </div>
