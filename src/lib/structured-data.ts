@@ -53,11 +53,12 @@ export const websiteSchema = {
  * new caller on another domain (Ma Reliure, Fine Bindery) must pass its own
  * explicitly rather than silently inherit metre-pro.com's.
  */
-export function breadcrumbSchema(items: { name: string; path: string }[], baseUrl: string = SITE_URL) {
+/** `homeName` : le premier maillon dans la langue du site — « Accueil » sur Ma Reliure. */
+export function breadcrumbSchema(items: { name: string; path: string }[], baseUrl: string = SITE_URL, homeName = "Home") {
   return {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    itemListElement: [{ name: "Home", path: "/" }, ...items].map((item, index) => ({
+    itemListElement: [{ name: homeName, path: "/" }, ...items].map((item, index) => ({
       "@type": "ListItem",
       position: index + 1,
       name: item.name,
@@ -174,6 +175,7 @@ export const fineBinderyWebsiteSchema = {
   "@id": FINE_BINDERY_WEBSITE_ID,
   name: "Fine Bindery",
   url: `${FINE_BINDERY_SITE_URL}/`,
-  inLanguage: "en-US",
+  // Le site est publié dans ces cinq langues, chacune à sa propre adresse.
+  inLanguage: ["en", "fr", "de", "it", "es"],
   publisher: { "@id": FINE_BINDERY_ORGANIZATION_ID },
 } as const;

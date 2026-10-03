@@ -3,7 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { PartnersLandingPage } from "@/marketplace/pages/partners/PartnersLanding";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
-import { breadcrumbSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/structured-data";
+import { breadcrumbSchema, faqPageSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/structured-data";
+import { PARTNER_FAQ } from "@/marketplace/pages/landing/partnersContent";
 
 const TITLE = "Ma Reliure pour les relieurs — Devis, ouvrages et facturation";
 const DESCRIPTION =
@@ -29,8 +30,11 @@ export const Route = createFileRoute("/partenaires-relieurs")({
         breadcrumbSchema(
           [{ name: "Pour les relieurs", path: "/partenaires-relieurs" }],
           MARELIURE_SITE_URL,
+          "Accueil",
         ),
       ),
+      // Les questions affichées par la page, depuis le même tableau.
+      jsonLdScript(faqPageSchema(PARTNER_FAQ)),
     ],
   }),
   component: PartnersLandingPage,

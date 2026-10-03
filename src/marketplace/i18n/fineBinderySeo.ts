@@ -1,3 +1,4 @@
+import { faqPageSchema, jsonLdScript } from "@/lib/structured-data";
 import { fineBinderyCopy } from "./fineBinderyCopy";
 import { fineBinderyAlternates, HTML_LOCALE, type FineBinderyLocale } from "./fineBinderyLocale";
 
@@ -22,14 +23,20 @@ export function fineBinderyLocalizedHead(locale: FineBinderyLocale, options: { t
   };
 }
 
+/** L'accueil affiche ses questions fréquentes : le balisage reprend le même tableau, dans la langue de la page. */
 export function fineBinderyHomeHead(locale: FineBinderyLocale) {
   const copy = fineBinderyCopy(locale);
-  return fineBinderyLocalizedHead(locale, { title: copy.seo.homeTitle, description: copy.seo.homeDescription });
+  return { ...fineBinderyLocalizedHead(locale, { title: copy.seo.homeTitle, description: copy.seo.homeDescription }), scripts: [jsonLdScript(faqPageSchema(copy.home.faq))] };
 }
 
+/** Fil d'Ariane localisé : l'accueil de la langue, puis l'annuaire. */
 export function fineBinderyDirectoryHead(locale: FineBinderyLocale) {
   const copy = fineBinderyCopy(locale);
-  return fineBinderyLocalizedHead(locale, { title: copy.seo.directoryTitle, description: copy.seo.directoryDescription, pathWithoutLocale: "professionals" });
+  const breadcrumb = { "@context": "https://schema.org", "@type": "BreadcrumbList", itemListElement: [
+    { "@type": "ListItem", position: 1, name: "Fine Bindery", item: `https://finebindery.com/${locale}` },
+    { "@type": "ListItem", position: 2, name: copy.nav.workshops, item: `https://finebindery.com/${locale}/professionals` },
+  ] };
+  return { ...fineBinderyLocalizedHead(locale, { title: copy.seo.directoryTitle, description: copy.seo.directoryDescription, pathWithoutLocale: "professionals" }), scripts: [jsonLdScript(breadcrumb)] };
 }
 
 export function fineBinderyDocumentLanguage(locale: FineBinderyLocale): string { return HTML_LOCALE[locale]; }
