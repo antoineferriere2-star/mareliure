@@ -95,8 +95,14 @@ const fineBinderyTitle = "Fine Bindery — Exceptional French Bookbinding";
 const fineBinderyDescription =
   "The European network for bookbinding and book conservation. Discover independent ateliers, present your project and work with the right one — opening in France.";
 
+/**
+ * La racine de finebindery.com affiche l'accueil anglais, mot pour mot celui de
+ * /en. Deux adresses indexables pour une même page se faisaient concurrence :
+ * la racine déclare donc /en pour adresse canonique (c'est aussi le x-default
+ * des versions de langue) et ne figure plus au plan du site.
+ */
 function fineBinderyHead() {
-  const canonical = MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY.seo.canonicalOrigin;
+  const canonical = `${MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY.seo.canonicalOrigin}/en`;
   return {
     meta: [
       { title: fineBinderyTitle },
