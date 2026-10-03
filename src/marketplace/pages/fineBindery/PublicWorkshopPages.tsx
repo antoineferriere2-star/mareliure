@@ -5,7 +5,7 @@ import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
 import { countryName, languageName, specialtyName, techniqueName } from "@/marketplace/i18n/fineBinderyGlossary";
 import { fineBinderyDirectoryPath, fineBinderyProfilePath, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 import { useFineBinderyDocumentLocale } from "@/marketplace/i18n/FineBinderyLanguageSwitch";
-import { SHELL } from "@/marketplace/pages/landing/LandingChrome";
+import { SectionHead, SectionRule, SHELL } from "@/marketplace/pages/landing/LandingChrome";
 
 type DirectoryProfile = { slug: string; path: string; workshopName: string; professionalName: string; city: string; countryCode: string; bio: string; languages: string[]; skills: { slug: string; label: string; labelEn: string }[]; imageUrl: string | null };
 type PublicProfile = Awaited<ReturnType<typeof import("@/marketplace/services/fineBinderyProfile.data.functions").getPublicFineBinderyProfile>>;
@@ -94,30 +94,30 @@ export function FineBinderyWorkshopPage({ profile, locale }: { profile: NonNulla
       <div className="lg:col-span-6">{profile.workshopPhotoUrl ? <img src={profile.workshopPhotoUrl} alt={profile.workshopName} width={1200} height={900} fetchPriority="high" className="aspect-[4/3] w-full bg-mr-paper-deep object-cover" /> : <Monogram name={profile.workshopName} large />}</div>
     </section>
 
-    <section className="border-t border-mr-rule"><div className={`${SHELL} grid gap-8 py-section-sm sm:py-section lg:grid-cols-12 lg:gap-14`}>
+    <section><div className={`${SHELL} pb-section-sm sm:pb-section`}><SectionRule folio="I" /><div className="mt-8 grid gap-8 lg:grid-cols-12 lg:gap-14">
       <div className="lg:col-span-4"><h2 className="mr-eyebrow">{copy.profile.about}</h2></div>
       <div className="lg:col-span-8"><p className="mr-lead whitespace-pre-line text-mr-ink">{profile.bio}</p>{locale !== "fr" && <p className="mr-meta mt-4 italic">{copy.common.originalText}</p>}
         {(profile.training || profile.philosophy) && <div className="mt-12 grid gap-10 sm:grid-cols-2">{profile.training && <Info title={copy.profile.training}>{profile.training}</Info>}{profile.philosophy && <Info title={copy.profile.approach}>{profile.philosophy}</Info>}</div>}
       </div>
-    </div></section>
+    </div></div></section>
 
     {profile.portfolio.length > 0 && <section className="bg-mr-paper-warm"><div className={`${SHELL} py-section-sm sm:py-section`}>
-      <p className="mr-eyebrow">{copy.profile.portfolio}</p><h2 className="mr-title mt-4 text-mr-ink">{copy.profile.work}</h2>
+      <SectionHead folio="II" eyebrow={copy.profile.portfolio} title={copy.profile.work} />
       <div className="mt-12 grid gap-x-10 gap-y-14 md:grid-cols-2">{profile.portfolio.map((item) => <article key={item.id}>
         <div className={`grid gap-2 ${item.beforePhotoUrl && item.afterPhotoUrl ? "grid-cols-2" : "grid-cols-1"}`}>
-          {item.beforePhotoUrl && <figure><img src={item.beforePhotoUrl} alt={`${item.title} — ${copy.profile.before}`} width={800} height={600} loading="lazy" decoding="async" className="aspect-[4/3] w-full bg-mr-paper-deep object-cover" /><figcaption className="mr-meta mt-2">{copy.profile.before}</figcaption></figure>}
-          {item.afterPhotoUrl && <figure><img src={item.afterPhotoUrl} alt={item.beforePhotoUrl ? `${item.title} — ${copy.profile.after}` : item.title} width={800} height={600} loading="lazy" decoding="async" className="aspect-[4/3] w-full bg-mr-paper-deep object-cover" />{item.beforePhotoUrl && <figcaption className="mr-meta mt-2">{copy.profile.after}</figcaption>}</figure>}
+          {item.beforePhotoUrl && <figure><img src={item.beforePhotoUrl} alt={`${item.title} — ${copy.profile.before}`} width={800} height={600} loading="lazy" decoding="async" className="aspect-[4/3] w-full bg-mr-mat object-contain p-[5%]" /><figcaption className="mr-meta mt-2">{copy.profile.before}</figcaption></figure>}
+          {item.afterPhotoUrl && <figure><img src={item.afterPhotoUrl} alt={item.beforePhotoUrl ? `${item.title} — ${copy.profile.after}` : item.title} width={800} height={600} loading="lazy" decoding="async" className="aspect-[4/3] w-full bg-mr-mat object-contain p-[5%]" />{item.beforePhotoUrl && <figcaption className="mr-meta mt-2">{copy.profile.after}</figcaption>}</figure>}
         </div>
         <h3 className="mr-heading mt-5 text-mr-ink">{item.title}{item.year ? ` · ${item.year}` : ""}</h3>
         {item.description && <p className="mr-body mt-2">{item.description}</p>}
       </article>)}</div>
     </div></section>}
 
-    <section className={profile.portfolio.length > 0 ? "" : "border-t border-mr-rule"}><div className={`${SHELL} grid gap-10 py-section-sm sm:grid-cols-3 sm:py-section`}>
+    <section><div className={`${SHELL} py-section-sm sm:py-section`}><SectionRule folio={profile.portfolio.length > 0 ? "III" : "II"} /><div className="mt-8 grid gap-10 sm:grid-cols-3">
       <Info title={copy.profile.techniques}>{[...techniques, ...materials].join(" · ") || copy.profile.according}</Info>
       <Info title={copy.profile.languages}>{profile.languages.map((code) => languageName(code, locale)).join(" · ")}</Info>
       <Info title={copy.profile.location}>{place}</Info>
-    </div></section>
+    </div></div></section>
 
     <section className="bg-mr-umber text-mr-paper"><div className={`${SHELL} py-section-sm text-center sm:py-section`}>
       <p className="mr-eyebrow">{copy.profile.finalEyebrow}</p>

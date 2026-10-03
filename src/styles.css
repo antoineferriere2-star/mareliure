@@ -777,3 +777,57 @@
 .brand-mareliure .metre-frame::after {
   content: none;
 }
+
+/* ===========================================================================
+   Le tunnel Fine Bindery — même runtime, palette du cabinet
+   ===========================================================================
+
+   La page /{locale}/project de Fine Bindery reprenait l'ivoire et le bordeaux
+   de Ma Reliure : le visiteur passait d'un site cognac à un tunnel bordeaux.
+   Le runtime ne change pas ; la route pose `.fb-intake` autour de lui et ces
+   variables redisent, rôle pour rôle, ce que valent les surfaces et l'accent
+   sur ce site. Spécificité supérieure à `.brand-mareliure .intake-surface`,
+   donc sans `!important`. */
+.brand-mareliure .fb-intake {
+  --intake-surface: #ece6da;
+  --intake-panel: #f6f2ea;
+  --intake-ink: #1d1c19;
+  --intake-muted: #67625a;
+  --intake-rule: #d9d1c3;
+  --metre-accent: #8a5a36;
+  --metre-accent-soft: color-mix(in oklab, #8a5a36 10%, white);
+}
+
+.brand-mareliure .fb-intake .intake-surface {
+  --color-white: #f6f2ea;
+  --color-stone-50: #f3eee5;
+  --color-stone-100: #ece6da;
+  --color-stone-200: #e0d8c9;
+  --color-stone-300: #d9d1c3;
+  --color-stone-500: #67625a;
+  --color-stone-700: #3b3934;
+  --color-stone-950: #1d1c19;
+
+  --color-emerald-50: #f7efe8;
+  --color-emerald-100: #efdfd1;
+  --color-emerald-200: #e0c3aa;
+  --color-emerald-300: #cba07f;
+  --color-emerald-500: #a9774f;
+  --color-emerald-600: #96673f;
+  --color-emerald-700: #8a5a36;
+  --color-emerald-800: #714a2c;
+  --color-emerald-900: #5a3b23;
+  --color-emerald-950: #422b19;
+
+  --background: #f6f2ea;
+  --foreground: #1d1c19;
+  --primary: #1d1c19;
+  --primary-foreground: #f6f2ea;
+  --secondary: #ece6da;
+  --muted: #ece6da;
+  --muted-foreground: #67625a;
+  --accent: #e0d8c9;
+  --border: #d9d1c3;
+  --input: #d9d1c3;
+  --ring: #8a5a36;
+}
