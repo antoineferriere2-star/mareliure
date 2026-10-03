@@ -1,5 +1,5 @@
 export const DE_FINE_BINDERY_BOOK_DETAILS: Record<string, string> = {
-  "Réparer un livre abîmé et créer une édition unique ne demandent ni les mêmes informations, ni les mêmes savoir-faire.": "Ein beschädigtes Buch zu reparieren und eine einmalige Ausgabe zu schaffen erfordert unterschiedliche Angaben und Fertigkeiten.",
+  "Réparer un livre abîmé et créer une édition unique ne demandent ni les mêmes informations, ni les mêmes savoir-faire.": "Ein beschädigtes Buch zu reparieren und eine einmalige Ausgabe zu schaffen, erfordern unterschiedliche Angaben und Fertigkeiten.",
   Réparation: "Reparatur",
   "Le livre est fatigué et vous voulez pouvoir le manipuler à nouveau.": "Das Buch ist abgenutzt und soll wieder sicher benutzt werden können.",
   Restauration: "Restaurierung",

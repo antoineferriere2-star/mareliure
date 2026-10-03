@@ -37,3 +37,12 @@ describe("données structurées des sites publics", () => {
     expect(crumbs.itemListElement[1]).toMatchObject({ name: fineBinderyCopy(locale).nav.workshops, item: `https://finebindery.com/${locale}/professionals` });
   });
 });
+
+describe("le paquet principal des pages publiques", () => {
+  it("n'importe le client Supabase qu'à la demande (attacheur de jeton et garde d'authentification)", () => {
+    expect(read("src/start.ts")).toContain("attachSupabaseAuthLazily");
+    expect(read("src/start.ts")).not.toContain('from "@/integrations/supabase/auth-attacher"');
+    expect(read("src/integrations/supabase/lazy-auth-attacher.ts")).toContain('await import("./client")');
+    expect(read("src/routes/_authenticated/route.tsx")).not.toMatch(/^import \{ supabase \}/m);
+  });
+});
