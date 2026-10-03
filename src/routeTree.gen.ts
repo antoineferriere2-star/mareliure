@@ -18,6 +18,8 @@ import { Route as ConditionsGeneralesDeVenteRouteImport } from './routes/conditi
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
+import { Route as DorureEtFinitionsRouteImport } from './routes/dorure-et-finitions'
+import { Route as EtuisEtBoitesRouteImport } from './routes/etuis-et-boites'
 import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
 import { Route as FineBinderyRouteImport } from './routes/fine-bindery'
 import { Route as FreeInquiryAuditRouteImport } from './routes/free-inquiry-audit'
@@ -31,6 +33,10 @@ import { Route as PrivacyPolicyRouteImport } from './routes/privacy-policy'
 import { Route as PrivateBetaRouteImport } from './routes/private-beta'
 import { Route as ProfessionnelsRouteImport } from './routes/professionnels'
 import { Route as ReliureRouteImport } from './routes/reliure'
+import { Route as ReliureDeCreationRouteImport } from './routes/reliure-de-creation'
+import { Route as ReliureDeLivresRouteImport } from './routes/reliure-de-livres'
+import { Route as ReparationDeLivresRouteImport } from './routes/reparation-de-livres'
+import { Route as RestaurationDeLivresAnciensRouteImport } from './routes/restauration-de-livres-anciens'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as TarifsRouteImport } from './routes/tarifs'
@@ -177,6 +183,16 @@ const DeckBuildersRoute = DeckBuildersRouteImport.update({
   path: '/deck-builders',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DorureEtFinitionsRoute = DorureEtFinitionsRouteImport.update({
+  id: '/dorure-et-finitions',
+  path: '/dorure-et-finitions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const EtuisEtBoitesRoute = EtuisEtBoitesRouteImport.update({
+  id: '/etuis-et-boites',
+  path: '/etuis-et-boites',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ExampleProjectBriefRoute = ExampleProjectBriefRouteImport.update({
   id: '/example-project-brief',
   path: '/example-project-brief',
@@ -242,6 +258,27 @@ const ReliureRoute = ReliureRouteImport.update({
   path: '/reliure',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ReliureDeCreationRoute = ReliureDeCreationRouteImport.update({
+  id: '/reliure-de-creation',
+  path: '/reliure-de-creation',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReliureDeLivresRoute = ReliureDeLivresRouteImport.update({
+  id: '/reliure-de-livres',
+  path: '/reliure-de-livres',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ReparationDeLivresRoute = ReparationDeLivresRouteImport.update({
+  id: '/reparation-de-livres',
+  path: '/reparation-de-livres',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RestaurationDeLivresAnciensRoute =
+  RestaurationDeLivresAnciensRouteImport.update({
+    id: '/restauration-de-livres-anciens',
+    path: '/restauration-de-livres-anciens',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
   id: '/robots.txt',
   path: '/robots.txt',
@@ -825,6 +862,8 @@ export interface FileRoutesByFullPath {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
+  '/dorure-et-finitions': typeof DorureEtFinitionsRoute
+  '/etuis-et-boites': typeof EtuisEtBoitesRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
   '/fine-bindery': typeof FineBinderyRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
@@ -838,6 +877,10 @@ export interface FileRoutesByFullPath {
   '/private-beta': typeof PrivateBetaRoute
   '/professionnels': typeof ProfessionnelsRoute
   '/reliure': typeof ReliureRoute
+  '/reliure-de-creation': typeof ReliureDeCreationRoute
+  '/reliure-de-livres': typeof ReliureDeLivresRoute
+  '/reparation-de-livres': typeof ReparationDeLivresRoute
+  '/restauration-de-livres-anciens': typeof RestaurationDeLivresAnciensRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
@@ -948,6 +991,8 @@ export interface FileRoutesByTo {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
+  '/dorure-et-finitions': typeof DorureEtFinitionsRoute
+  '/etuis-et-boites': typeof EtuisEtBoitesRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
   '/fine-bindery': typeof FineBinderyRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
@@ -961,6 +1006,10 @@ export interface FileRoutesByTo {
   '/private-beta': typeof PrivateBetaRoute
   '/professionnels': typeof ProfessionnelsRoute
   '/reliure': typeof ReliureRoute
+  '/reliure-de-creation': typeof ReliureDeCreationRoute
+  '/reliure-de-livres': typeof ReliureDeLivresRoute
+  '/reparation-de-livres': typeof ReparationDeLivresRoute
+  '/restauration-de-livres-anciens': typeof RestaurationDeLivresAnciensRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
@@ -1066,6 +1115,8 @@ export interface FileRoutesById {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
+  '/dorure-et-finitions': typeof DorureEtFinitionsRoute
+  '/etuis-et-boites': typeof EtuisEtBoitesRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
   '/fine-bindery': typeof FineBinderyRoute
   '/free-inquiry-audit': typeof FreeInquiryAuditRoute
@@ -1079,6 +1130,10 @@ export interface FileRoutesById {
   '/private-beta': typeof PrivateBetaRoute
   '/professionnels': typeof ProfessionnelsRoute
   '/reliure': typeof ReliureRoute
+  '/reliure-de-creation': typeof ReliureDeCreationRoute
+  '/reliure-de-livres': typeof ReliureDeLivresRoute
+  '/reparation-de-livres': typeof ReparationDeLivresRoute
+  '/restauration-de-livres-anciens': typeof RestaurationDeLivresAnciensRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/tarifs': typeof TarifsRoute
@@ -1191,6 +1246,8 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
+    | '/dorure-et-finitions'
+    | '/etuis-et-boites'
     | '/example-project-brief'
     | '/fine-bindery'
     | '/free-inquiry-audit'
@@ -1204,6 +1261,10 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/professionnels'
     | '/reliure'
+    | '/reliure-de-creation'
+    | '/reliure-de-livres'
+    | '/reparation-de-livres'
+    | '/restauration-de-livres-anciens'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/tarifs'
@@ -1314,6 +1375,8 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
+    | '/dorure-et-finitions'
+    | '/etuis-et-boites'
     | '/example-project-brief'
     | '/fine-bindery'
     | '/free-inquiry-audit'
@@ -1327,6 +1390,10 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/professionnels'
     | '/reliure'
+    | '/reliure-de-creation'
+    | '/reliure-de-livres'
+    | '/reparation-de-livres'
+    | '/restauration-de-livres-anciens'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/tarifs'
@@ -1431,6 +1498,8 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
+    | '/dorure-et-finitions'
+    | '/etuis-et-boites'
     | '/example-project-brief'
     | '/fine-bindery'
     | '/free-inquiry-audit'
@@ -1444,6 +1513,10 @@ export interface FileRouteTypes {
     | '/private-beta'
     | '/professionnels'
     | '/reliure'
+    | '/reliure-de-creation'
+    | '/reliure-de-livres'
+    | '/reparation-de-livres'
+    | '/restauration-de-livres-anciens'
     | '/robots.txt'
     | '/sitemap.xml'
     | '/tarifs'
@@ -1556,6 +1629,8 @@ export interface RootRouteChildren {
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
   DeckBuildersRoute: typeof DeckBuildersRoute
+  DorureEtFinitionsRoute: typeof DorureEtFinitionsRoute
+  EtuisEtBoitesRoute: typeof EtuisEtBoitesRoute
   ExampleProjectBriefRoute: typeof ExampleProjectBriefRoute
   FineBinderyRoute: typeof FineBinderyRoute
   FreeInquiryAuditRoute: typeof FreeInquiryAuditRoute
@@ -1569,6 +1644,10 @@ export interface RootRouteChildren {
   PrivateBetaRoute: typeof PrivateBetaRoute
   ProfessionnelsRoute: typeof ProfessionnelsRoute
   ReliureRoute: typeof ReliureRoute
+  ReliureDeCreationRoute: typeof ReliureDeCreationRoute
+  ReliureDeLivresRoute: typeof ReliureDeLivresRoute
+  ReparationDeLivresRoute: typeof ReparationDeLivresRoute
+  RestaurationDeLivresAnciensRoute: typeof RestaurationDeLivresAnciensRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TarifsRoute: typeof TarifsRoute
@@ -1668,6 +1747,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DeckBuildersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/dorure-et-finitions': {
+      id: '/dorure-et-finitions'
+      path: '/dorure-et-finitions'
+      fullPath: '/dorure-et-finitions'
+      preLoaderRoute: typeof DorureEtFinitionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/etuis-et-boites': {
+      id: '/etuis-et-boites'
+      path: '/etuis-et-boites'
+      fullPath: '/etuis-et-boites'
+      preLoaderRoute: typeof EtuisEtBoitesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/example-project-brief': {
       id: '/example-project-brief'
       path: '/example-project-brief'
@@ -1757,6 +1850,34 @@ declare module '@tanstack/react-router' {
       path: '/reliure'
       fullPath: '/reliure'
       preLoaderRoute: typeof ReliureRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reliure-de-creation': {
+      id: '/reliure-de-creation'
+      path: '/reliure-de-creation'
+      fullPath: '/reliure-de-creation'
+      preLoaderRoute: typeof ReliureDeCreationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reliure-de-livres': {
+      id: '/reliure-de-livres'
+      path: '/reliure-de-livres'
+      fullPath: '/reliure-de-livres'
+      preLoaderRoute: typeof ReliureDeLivresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/reparation-de-livres': {
+      id: '/reparation-de-livres'
+      path: '/reparation-de-livres'
+      fullPath: '/reparation-de-livres'
+      preLoaderRoute: typeof ReparationDeLivresRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/restauration-de-livres-anciens': {
+      id: '/restauration-de-livres-anciens'
+      path: '/restauration-de-livres-anciens'
+      fullPath: '/restauration-de-livres-anciens'
+      preLoaderRoute: typeof RestaurationDeLivresAnciensRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/robots.txt': {
@@ -2750,6 +2871,8 @@ const rootRouteChildren: RootRouteChildren = {
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
   DeckBuildersRoute: DeckBuildersRoute,
+  DorureEtFinitionsRoute: DorureEtFinitionsRoute,
+  EtuisEtBoitesRoute: EtuisEtBoitesRoute,
   ExampleProjectBriefRoute: ExampleProjectBriefRoute,
   FineBinderyRoute: FineBinderyRoute,
   FreeInquiryAuditRoute: FreeInquiryAuditRoute,
@@ -2763,6 +2886,10 @@ const rootRouteChildren: RootRouteChildren = {
   PrivateBetaRoute: PrivateBetaRoute,
   ProfessionnelsRoute: ProfessionnelsRoute,
   ReliureRoute: ReliureRoute,
+  ReliureDeCreationRoute: ReliureDeCreationRoute,
+  ReliureDeLivresRoute: ReliureDeLivresRoute,
+  ReparationDeLivresRoute: ReparationDeLivresRoute,
+  RestaurationDeLivresAnciensRoute: RestaurationDeLivresAnciensRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TarifsRoute: TarifsRoute,

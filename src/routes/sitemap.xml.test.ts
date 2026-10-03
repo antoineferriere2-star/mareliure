@@ -33,6 +33,12 @@ describe("sitemapFor", () => {
     expect(entries.map((e) => e.path)).toEqual([
       "/",
       "/tarifs",
+      "/reparation-de-livres",
+      "/restauration-de-livres-anciens",
+      "/reliure-de-livres",
+      "/dorure-et-finitions",
+      "/reliure-de-creation",
+      "/etuis-et-boites",
       "/partenaires-relieurs",
       "/candidature-atelier",
       "/mentions-legales",

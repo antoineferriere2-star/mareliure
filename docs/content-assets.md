@@ -168,6 +168,12 @@ que l'autorisation couvre **toutes les photographies de l'atelier Ferrière**
 — les neuf pièces et les 45 prestations ci-dessus — sur les deux sites,
 mareliure.fr et finebindery.com, dans toutes leurs langues.
 
+Les six pages par besoin de Ma Reliure (`/reparation-de-livres`,
+`/restauration-de-livres-anciens`, `/reliure-de-livres`, `/dorure-et-finitions`,
+`/reliure-de-creation`, `/etuis-et-boites`, octobre 2026) reprennent ces mêmes
+photographies, créditées sur chaque page avec la mention qu'elles ne sont pas
+des projets passés par Ma Reliure.
+
 Rien d'autre ne change : chaque usage porte le crédit « Atelier Reliure
 Dorure Ferrière, Orléans », et aucune de ces pièces n'est présentée comme un
 projet passé par Ma Reliure ou Fine Bindery.
