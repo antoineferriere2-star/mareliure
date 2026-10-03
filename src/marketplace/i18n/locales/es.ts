@@ -31,7 +31,7 @@ export const es: FineBinderyPublicCopy = {
     howEyebrow: "Cómo avanza un proyecto", howTitle: "De la primera fotografía al regreso del libro.", steps: ["Presenta tu libro", "Recibe una propuesta", "El taller adecuado confirma", "Tu libro viaja al taller", "Sigue el trabajo", "Tu libro vuelve a casa"],
     workshopsEyebrow: "Detrás de cada libro, un taller", workshopsTitle: "Encuadernadores, restauradores y doradores independientes.", workshopsLead: "Cada taller se revisa antes de publicar su página: su oficio, su trayectoria y el trabajo que desea recibir.", selected: "Revisado y publicado por Fine Bindery.", discoverWorkshops: "Descubre los talleres publicados",
     networkNote: "La red abre con talleres en Francia y acogerá a encuadernadores y restauradores de toda Europa.",
-    trustEyebrow: "Tu libro viaja", trustTitle: "Tu libro viaja. Su historia no se pierde.", trust: ["Estado documentado", "Un solo interlocutor", "Talleres revisados", "Un trayecto seguido"],
+    trustEyebrow: "Tu libro viaja", trustTitle: "Tu libro viaja. Su historia no se pierde.", trust: ["Estado documentado", "Un solo interlocutor", "Talleres revisados", "Un trayecto acompañado"],
     shippingEyebrow: "Envío", shippingTitle: "Un trayecto adaptado al libro.", shippingLead: "El trayecto se organiza según la naturaleza y el valor del libro, y se presupuesta aparte del trabajo.",
     faqEyebrow: "Tus preguntas", faqTitle: "Antes de empezar.", faq: [
       { question: "¿Puedo contactar directamente con un taller?", answer: "Sí. Un proyecto presentado desde la página de un taller llega directamente a ese taller." },

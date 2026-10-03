@@ -31,7 +31,7 @@ export const it: FineBinderyPublicCopy = {
     howEyebrow: "Come si svolge un progetto", howTitle: "Dalla prima fotografia al ritorno del libro.", steps: ["Presenta il tuo libro", "Ricevi una proposta", "Il laboratorio giusto conferma", "Il libro raggiunge il laboratorio", "Segui il lavoro", "Il libro torna a casa"],
     workshopsEyebrow: "Dietro ogni libro, un laboratorio", workshopsTitle: "Legatori, restauratori e doratori indipendenti.", workshopsLead: "Ogni laboratorio viene verificato prima della pubblicazione della sua pagina: competenze, esperienza e lavori che desidera ricevere.", selected: "Verificato e pubblicato da Fine Bindery.", discoverWorkshops: "Scopri i laboratori pubblicati",
     networkNote: "La rete apre con laboratori in Francia e accoglierà legatori e restauratori di tutta Europa.",
-    trustEyebrow: "Il tuo libro viaggia", trustTitle: "Il tuo libro viaggia. La sua storia non si perde.", trust: ["Stato documentato", "Un solo interlocutore", "Laboratori verificati", "Un viaggio seguito"],
+    trustEyebrow: "Il tuo libro viaggia", trustTitle: "Il tuo libro viaggia. La sua storia non si perde.", trust: ["Stato documentato", "Un solo interlocutore", "Laboratori verificati", "Un viaggio accompagnato"],
     shippingEyebrow: "Spedizione", shippingTitle: "Un viaggio adatto al libro.", shippingLead: "Il viaggio è organizzato secondo la natura e il valore del libro, e preventivato a parte rispetto al lavoro.",
     faqEyebrow: "Le tue domande", faqTitle: "Prima di iniziare.", faq: [
       { question: "Posso contattare direttamente un laboratorio?", answer: "Sì. Un progetto presentato dalla pagina di un laboratorio arriva direttamente a quel laboratorio." },
