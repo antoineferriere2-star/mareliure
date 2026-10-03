@@ -65,6 +65,11 @@ export function fineBinderyLanguageHref(pathname: string, search: string, locale
     params.set("locale", locale);
     return `/auth?${params.toString()}`;
   }
+  // Une page sans version de langue (/legal-notice, /terms-of-sale…) : préfixer
+  // son adresse menait à /fr/legal-notice, qui n'existe pas (« Atelier
+  // introuvable »). Changer de langue y ramène à l'accueil de la langue choisie.
+  const first = pathname.split("/").filter(Boolean)[0];
+  if (first && !isFineBinderyLocale(first)) return `/${locale}`;
   return `${replaceFineBinderyLocale(pathname, locale)}${search}`;
 }
 

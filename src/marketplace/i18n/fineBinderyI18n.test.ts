@@ -19,6 +19,10 @@ describe("FineBindery European i18n", () => {
       expect(target.searchParams.getAll("locale")).toHaveLength(1);
     }
     expect(fineBinderyLanguageHref("/de/project", "?ref=atelier-martin", "it")).toBe("/it/project?ref=atelier-martin");
+    // Pages sans version de langue : l'accueil de la langue, jamais /fr/legal-notice.
+    expect(fineBinderyLanguageHref("/legal-notice", "", "fr")).toBe("/fr");
+    expect(fineBinderyLanguageHref("/terms-of-sale", "", "de")).toBe("/de");
+    expect(fineBinderyLanguageHref("/", "", "es")).toBe("/es");
   });
   it("formats EUR with the active regional convention", () => {
     expect(formatFineBinderyMoney(123450, "de")).toContain("1.234,50");

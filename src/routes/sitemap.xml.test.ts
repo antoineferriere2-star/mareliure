@@ -38,6 +38,7 @@ describe("sitemapFor", () => {
       "/mentions-legales",
       "/confidentialite",
       "/conditions",
+      "/conditions-generales-de-vente",
     ]);
   });
 
@@ -53,6 +54,7 @@ describe("sitemapFor", () => {
       "/legal-notice",
       "/privacy-policy",
       "/terms-of-use",
+      "/terms-of-sale",
     ]);
   });
 
