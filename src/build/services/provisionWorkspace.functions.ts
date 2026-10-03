@@ -13,11 +13,15 @@ import {
 } from "./provisionWorkspace";
 import { logOperationalError } from "./operationalLog.server";
 import { fail } from "./serverError";
+import { isMaReliure } from "@/brand";
 
 export const ensureMyWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => provisionInputSchema.parse(data ?? {}))
   .handler(async ({ context, data }) => {
+    // Les espaces client Métré n'existent pas sur le déploiement Ma Reliure :
+    // refus côté serveur, quelle que soit la page qui appelle.
+    if (isMaReliure) fail(404, "Workspace provisioning is not available on this deployment.");
     const { supabase, userId, claims } = context;
     const email = (claims.email as string | undefined) ?? null;
     // Company typed at sign-up is kept in the user's metadata: when the

@@ -15,10 +15,15 @@ import { requireWorkspaceAccess } from "@/build/services/workspace.functions";
 import { listMyWorkspaces } from "@/build/services/portal.data.functions";
 import { ensureMyWorkspace } from "@/build/services/provisionWorkspace.functions";
 import { isHydrated, navigateBeforeHydration } from "@/lib/hydration";
+import { metreOnly } from "@/lib/metreOnlyRoute";
 
 export const Route = createFileRoute("/_authenticated/portal")({
   ssr: false,
   beforeLoad: async () => {
+    // L'Espace Client de Métré Build. Sur mareliure.fr / finebindery.com aucun
+    // parcours n'y mène (les clients ont /mes-livres) ; tapée à la main, l'adresse
+    // affichait l'en-tête Métré et provisionnait un espace Métré. Introuvable.
+    metreOnly();
     try {
       const access = await requireWorkspaceAccess();
       return { access };
