@@ -20,6 +20,8 @@ import {
 } from "@/marketplace/pricing/rateCard";
 import type { PriceProvenance, RateSource } from "@/marketplace/pricing/provenance";
 import type { PricebookEntry, PricingMethod } from "@/marketplace/pricing/pricebook";
+import { BASE_PRICE_REFERENCE_VERSION } from "@/marketplace/pricing/basePrices";
+import type { BasePriceReference } from "@/marketplace/pricing/basePriceSuggestion";
 
 /**
  * Le jeu d'essai n'anime une base que si on le demande explicitement.
@@ -184,3 +186,30 @@ export async function loadPricebook(sb: Supa, publishedOnly = true): Promise<Pri
 
 export const ALL_SIZE_CLASSES = SIZE_CLASSES;
 export const ALL_COMPLEXITY_CLASSES = COMPLEXITY_CLASSES;
+
+/**
+ * Les tarifs de base Ma Reliure, pour la suggestion de repli
+ * (`suggestFromBasePrices`). Brouillons compris — décision du 4 octobre 2026 :
+ * ils pré-remplissent un prix que l'humain confirme ; les tarifs retirés,
+ * jamais. Pour une même prestation, la version la plus récente l'emporte.
+ */
+export async function loadBasePriceReferences(sb: Supa): Promise<BasePriceReference[]> {
+  const { data: rows } = await sb
+    .from("marketplace_reference_default_prices")
+    .select("pricing_key, default_unit_price_cents, pricing_mode, unit, status, version")
+    .eq("reference_version", BASE_PRICE_REFERENCE_VERSION)
+    .in("status", ["draft", "published"])
+    .order("version", { ascending: false });
+  const latest = new Map<string, BasePriceReference>();
+  for (const row of rows ?? []) {
+    const key = row.pricing_key as string;
+    if (latest.has(key)) continue;
+    latest.set(key, {
+      pricingKey: key,
+      defaultUnitPriceCents: row.default_unit_price_cents as number | null,
+      pricingMode: row.pricing_mode as string,
+      unit: (row.unit as string | null) ?? null,
+    });
+  }
+  return [...latest.values()];
+}

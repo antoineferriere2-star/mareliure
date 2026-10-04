@@ -45,6 +45,8 @@ import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
+import { BASE_PRICE_NOTE } from "@/marketplace/pricing/basePriceSuggestion";
+import { sendPriceToCustomer, type SendPriceResult } from "@/marketplace/services/sendPriceToCustomer.data.functions";
 import { workItemLabel } from "@/marketplace/pricing/catalog";
 import { CONFIDENCE_LABELS, type PricingConfidence } from "@/marketplace/pricing/confidence";
 import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
@@ -61,10 +63,16 @@ function toCents(euros: string): number {
 
 function PricingPanel({
   caseId,
+  brand,
   row,
   refresh,
+  onSent,
 }: {
   caseId: string;
+  /** L'envoi en un clic est réservé aux demandes directes Ma Reliure. */
+  brand: string;
+  /** Le panneau se remonte quand le prix passe à « validé » : le compte rendu d'envoi est gardé par la page. */
+  onSent: (result: SendPriceResult) => void;
   row: {
     manual_review_required: boolean;
     pricing_status: string;
@@ -85,6 +93,8 @@ function PricingPanel({
   const generate = useServerFn(generateMarketplacePricing);
   const save = useServerFn(saveMarketplacePricing);
   const validate = useServerFn(validateMarketplacePricing);
+  const sendToCustomer = useServerFn(sendPriceToCustomer);
+  const [sendShipping, setSendShipping] = useState<"manual" | "book_round_trip_fr">("manual");
   const initialCustomer = row.customer_price_cents ?? row.suggested_customer_price_cents;
   const initialPayout = row.binder_payout_cents ?? row.suggested_binder_payout_cents;
   const [customer, setCustomer] = useState(initialCustomer ? String(initialCustomer / 100) : "");
@@ -114,6 +124,16 @@ function PricingPanel({
     mutationFn: () => validate({ data: payload }),
     onSuccess: refresh,
   });
+  const sending = useMutation({
+    mutationFn: () => sendToCustomer({ data: { ...payload, shippingOffer: sendShipping } }),
+    onSuccess: (result) => {
+      onSent(result);
+      return refresh();
+    },
+  });
+  const fromBasePrices = (row.pricing_components ?? []).some((component) =>
+    (component.approximationNote ?? "").startsWith(BASE_PRICE_NOTE),
+  );
 
   return (
     <section className="rounded-lg border border-border bg-card p-5">
@@ -184,6 +204,15 @@ function PricingPanel({
               )}
           </div>
         )
+      )}
+      {fromBasePrices && row.pricing_status !== "validated" && (
+        <div className="mt-3 rounded-md border border-amber-300 bg-amber-50 p-3">
+          <p className="text-sm font-medium text-amber-900">Suggestion issue des tarifs de base, non validés.</p>
+          <p className="mt-1 text-xs leading-5 text-amber-800">
+            Aucun atelier ni barème publié ne couvre ce dossier : les montants viennent des tarifs de base Ma Reliure
+            (brouillon). Vérifiez-les, corrigez-les si besoin, puis validez.
+          </p>
+        </div>
       )}
       <div className="mt-4 grid grid-cols-2 gap-3">
         <div>
@@ -258,9 +287,38 @@ function PricingPanel({
           </Button>
         )}
       </div>
-      {(generation.error || saving.error || validation.error) && (
+      {brand === "MA_RELIURE" && row.pricing_status !== "validated" && (
+        <div className="mt-5 border-t border-border pt-4">
+          <p className="text-sm font-medium">Envoyer au client en un clic</p>
+          <p className="mt-1 text-xs leading-5 text-muted-foreground">
+            Valide le prix, crée la proposition, applique la TVA française (20 %) pour un client particulier en France,
+            la rend payable par carte et envoie au client un e-mail avec le lien vers son espace. Client professionnel,
+            hors France ou acompte : utilisez les étapes manuelles.
+          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <label className="text-xs">
+              Transport{" "}
+              <select
+                className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                value={sendShipping}
+                onChange={(event) => setSendShipping(event.target.value as typeof sendShipping)}
+              >
+                <option value="manual">Sans forfait (traitement manuel)</option>
+                <option value="book_round_trip_fr">Transport aller-retour — 15 € TTC</option>
+              </select>
+            </label>
+            <Button
+              disabled={!result.valid || sending.isPending || row.manual_review_required}
+              onClick={() => sending.mutate()}
+            >
+              {sending.isPending ? "Envoi…" : "Valider et envoyer au client"}
+            </Button>
+          </div>
+        </div>
+      )}
+      {(generation.error || saving.error || validation.error || sending.error) && (
         <p className="mt-3 text-sm text-destructive">
-          {(generation.error ?? saving.error ?? (validation.error as Error)).message}
+          {(generation.error ?? saving.error ?? validation.error ?? (sending.error as Error)).message}
         </p>
       )}
     </section>
@@ -865,6 +923,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
   const queryClient = useQueryClient();
   const [selected, setSelected] = useState<string[]>([]);
   const [problem, setProblem] = useState<string | null>(null);
+  const [sentNotice, setSentNotice] = useState<SendPriceResult | null>(null);
 
   const queryKey = ["marketplace", "case", caseId] as const;
   const { data, isPending, error } = useQuery({
@@ -964,9 +1023,29 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
           )}
         </section>
 
+        {sentNotice && (
+          <section role="status" className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
+            <p className="font-medium">
+              Proposition envoyée au client
+              {sentNotice.totalTtcCents !== null ? ` — ${formatEuros(sentNotice.totalTtcCents)} TTC` : ""}.
+            </p>
+            <p className="mt-1">
+              {sentNotice.email.sent
+                ? sentNotice.email.to === "account"
+                  ? "Le client a reçu un e-mail avec le lien vers son dossier ; il peut payer par carte."
+                  : "Le client a reçu un e-mail à l'adresse saisie lors de sa demande ; en se connectant avec elle, il retrouvera son dossier et pourra payer."
+                : sentNotice.email.reason === "no_address"
+                  ? "Aucune adresse e-mail connue pour ce client : prévenez-le vous-même."
+                  : "L'e-mail n'a pas pu partir : prévenez le client vous-même."}
+            </p>
+          </section>
+        )}
+
         <PricingPanel
           key={`${data.case.pricing_status}-${data.case.pricing_generated_at ?? "new"}`}
           caseId={caseId}
+          brand={data.case.brand}
+          onSent={setSentNotice}
           row={data.case}
           refresh={() => queryClient.invalidateQueries({ queryKey })}
         />
