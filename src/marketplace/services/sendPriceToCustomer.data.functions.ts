@@ -143,6 +143,21 @@ export const sendPriceToCustomer = createServerFn({ method: "POST" })
       }
     }
 
+    // L'e-mail n'est pas parti : l'équipe est prévenue, en plus du message à l'écran.
+    if (!email.sent) {
+      const { caseReference, notifyAdmin } = await import("@/marketplace/notifications/adminAlerts.server");
+      const { reference } = await caseReference(sb, data.caseId);
+      await notifyAdmin({
+        caseId: data.caseId,
+        heading: `E-mail de prix non parti — ${reference}`,
+        intro:
+          email.reason === "no_address"
+            ? `La proposition du dossier ${reference} est payable, mais aucune adresse e-mail n'est connue pour ce client. Prévenez-le vous-même.`
+            : `La proposition du dossier ${reference} est payable, mais l'e-mail au client n'a pas pu partir. Prévenez-le vous-même.`,
+        idempotencyKey: `price-email-failed-${proposal.id}`,
+      });
+    }
+
     await sb.from("marketplace_events").insert({
       case_id: data.caseId,
       actor_user_id: context.userId,

@@ -49,7 +49,7 @@ type Outcome = { ok: true } | { ok: false; reason: string; detail: string };
  * été enregistré par une tentative précédente qui s'est arrêtée avant d'écrire le journal, ou si
  * l'autre événement du même paiement (session + PaymentIntent) est arrivé le premier.
  */
-async function ensurePaymentJournal(sb: Supa, input: { caseId: string; proposalId: string; paymentIntentId: string }) {
+async function ensurePaymentJournal(sb: Supa, input: { caseId: string; proposalId: string; paymentIntentId: string }): Promise<boolean> {
   const existing = await sb
     .from("marketplace_events")
     .select("id")
@@ -58,13 +58,15 @@ async function ensurePaymentJournal(sb: Supa, input: { caseId: string; proposalI
     .contains("metadata", { payment_intent_id: input.paymentIntentId })
     .limit(1);
   if (existing.error) throw existing.error;
-  if ((existing.data ?? []).length > 0) return;
+  if ((existing.data ?? []).length > 0) return false;
   const { error } = await sb.from("marketplace_events").insert({
     case_id: input.caseId,
     event_type: "CUSTOMER_PAYMENT_SUCCEEDED",
     metadata: { proposal_id: input.proposalId, payment_intent_id: input.paymentIntentId },
   });
   if (error && error.code !== "23505") throw error;
+  // `true` seulement pour l'écriture qui a créé le journal : c'est elle, et elle seule, qui prévient l'équipe.
+  return !error;
 }
 
 async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): Promise<Outcome> {
@@ -97,11 +99,23 @@ async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): 
         return { ok: false, reason: "duplicate_payment", detail: `concurrent payment recorded before ${action.evidence.paymentIntentId}` };
       }
     }
-    await ensurePaymentJournal(sb, {
+    const journalCreated = await ensurePaymentJournal(sb, {
       caseId: action.caseId,
       proposalId: action.proposalId,
       paymentIntentId: action.evidence.paymentIntentId,
     });
+    // Alerte « paiement reçu » (4 octobre 2026) : une fois par paiement, jamais bloquante.
+    if (journalCreated) {
+      const { caseReference, formatEurosForAlert, notifyAdmin } = await import("@/marketplace/notifications/adminAlerts.server");
+      const { reference } = await caseReference(sb, action.caseId);
+      const amount = formatEurosForAlert(verdict.amountDue.amountCents);
+      await notifyAdmin({
+        caseId: action.caseId,
+        heading: `Paiement reçu — ${reference}`,
+        intro: `Le client a réglé ${amount ?? "sa commande"} pour le dossier ${reference}. Le paiement est confirmé par Stripe : le dossier peut être lancé.`,
+        idempotencyKey: `payment-received-${action.evidence.paymentIntentId}`,
+      });
+    }
     return { ok: true };
   }
 

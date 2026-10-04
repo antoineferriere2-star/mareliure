@@ -5,6 +5,7 @@ import { isMaReliure } from "@/brand";
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { TEMPLATES } from "./registry";
 import { sendResendEmail } from "./resend";
+import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
 
 // Server-only: reads RESEND_API_KEY or LOVABLE_API_KEY. Never import from
 // client components.
@@ -126,7 +127,10 @@ export async function sendTemplateEmail(
         subject,
         html,
         text,
-        replyTo: options.replyTo,
+        // L'expéditeur est noreply@ : sans adresse de réponse, un client qui
+        // répond à « Le prix de votre projet est prêt » écrivait dans le vide.
+        // Les réponses arrivent à l'adresse de contact (4 octobre 2026).
+        replyTo: options.replyTo ?? MARELIURE_CONTACT_EMAIL,
         idempotencyKey,
         tag: templateName,
       },
