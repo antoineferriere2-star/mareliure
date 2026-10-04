@@ -129,6 +129,17 @@ vi.mock("@/marketplace/services/commercialPaymentRepository.server", () => ({
     return "marked";
   },
 }));
+// Alerte « paiement reçu » (4 octobre 2026) : interceptée, jamais envoyée.
+const adminAlerts = vi.hoisted(() => ({ sent: [] as { heading: string; idempotencyKey: string }[] }));
+vi.mock("@/marketplace/notifications/adminAlerts.server", () => ({
+  caseReference: async () => ({ reference: "RL-TEST", brand: "MA_RELIURE" }),
+  formatEurosForAlert: (cents: number) => `${cents / 100} €`,
+  notifyAdmin: async (alert: { heading: string; idempotencyKey: string }) => {
+    adminAlerts.sent.push(alert);
+    return true;
+  },
+}));
+
 vi.mock("@/marketplace/services/stripeWebhookLog.server", () => ({
   // Modèle de `marketplace_claim_webhook_event`
   claimWebhookEvent: async (_sb: unknown, event: { id: string }) => {
@@ -211,6 +222,7 @@ const paid = () => Boolean(db.payment?.paidAt);
 const paymentJournal = () => db.journal.filter((j) => j.event_type === "CUSTOMER_PAYMENT_SUCCEEDED");
 
 beforeEach(() => {
+  adminAlerts.sent = [];
   db.events.clear();
   db.journal = [];
   db.logged = [];
@@ -247,6 +259,7 @@ describe("P1-2 — un paiement n'est marqué qu'une fois vérifié", () => {
     expect(db.payment).toMatchObject({ stripePaymentIntentId: "pi_1", amountPaidCents: 60_000, currency: "eur" });
     expect(paymentJournal()).toHaveLength(1);
     expect(db.events.get(event.id)).toMatchObject({ status: "processed", attempts: 1 });
+    expect(adminAlerts.sent).toEqual([expect.objectContaining({ heading: "Paiement reçu — RL-TEST", idempotencyKey: "payment-received-pi_1" })]);
   });
 
   it("payment_status « unpaid » (paiement asynchrone en attente) → PAS payé, journalisé en attente", async () => {
@@ -316,6 +329,7 @@ describe("P1-2 — un paiement n'est marqué qu'une fois vérifié", () => {
     expect(res).toEqual({ status: 200, body: { ok: true } });
     expect(db.payment).toEqual(first); // rien réécrit : même paid_at, même PaymentIntent
     expect(paymentJournal()).toHaveLength(1);
+    expect(adminAlerts.sent).toHaveLength(1); // une seule alerte pour un seul paiement
   });
 
   it("un événement PaymentIntent au mauvais montant n'est pas cru non plus", async () => {

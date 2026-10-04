@@ -61,7 +61,18 @@ describe("sendTemplateEmail on Ma Reliure", () => {
     expect(body.to).toEqual(["lecteur@example.test"]);
     expect(body.subject).toBe("Le récapitulatif de votre projet — Ma Reliure");
     expect(body.tags).toEqual([{ name: "template", value: "visitor-summary" }]);
+    // Les réponses ne se perdent plus dans noreply@ : elles vont à l'adresse de contact.
+    expect(body.reply_to).toBe("contact@oppe.fr");
     expect(sendLovableEmail).not.toHaveBeenCalled();
+  });
+
+  it("garde une adresse de réponse explicite quand l'appelant en donne une", async () => {
+    vi.stubEnv("RESEND_API_KEY", FAKE_RESEND_KEY);
+    const fetchMock = vi.fn().mockResolvedValue(jsonResponse(200, { id: "email_2" }));
+    vi.stubGlobal("fetch", fetchMock);
+    await sendTemplateEmail("visitor-summary", "lecteur@example.test", { ...options, replyTo: "atelier@example.test" });
+    const body = JSON.parse(String((fetchMock.mock.calls[0] as [string, RequestInit])[1].body)) as Record<string, unknown>;
+    expect(body.reply_to).toBe("atelier@example.test");
   });
 
   it("refuses to send without RESEND_API_KEY, and never falls back to Lovable", async () => {
