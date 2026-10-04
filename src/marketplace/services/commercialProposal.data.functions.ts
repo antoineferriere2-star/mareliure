@@ -51,6 +51,10 @@ import {
 
 const uuid = z.string().uuid();
 
+/** Ce que les fonctions « cœur » lisent du contexte authentifié : de quoi vérifier le rôle admin et tracer l'auteur. */
+export type AdminCallContext = { supabase: Parameters<typeof assertAdmin>[0]; userId: string };
+
+
 const shippingInput = z
   .object({
     outboundCents: z.number().int().min(0).default(0),
@@ -94,10 +98,7 @@ const ROUND_TRIP_REFUSALS: Record<string, string> = {
  * proposition enregistrée, elle ne bougera plus, quoi qu'il arrive ensuite
  * à la politique.
  */
-export const createCommercialProposal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => createInput.parse(data))
-  .handler(async ({ context, data }) => {
+export async function createCommercialProposalCore(context: AdminCallContext, data: z.infer<typeof createInput>) {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const caseContext = await loadCaseContext(sb, data.caseId);
@@ -257,7 +258,12 @@ export const createCommercialProposal = createServerFn({ method: "POST" })
     });
 
     return proposal;
-  });
+}
+
+export const createCommercialProposal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => createInput.parse(data))
+  .handler(async ({ context, data }) => createCommercialProposalCore(context, data));
 
 export const listCaseCommercialProposals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -274,10 +280,7 @@ export const listCaseCommercialProposals = createServerFn({ method: "GET" })
  * refuse tout UPDATE ultérieur). Réservé à l'admin dans cette phase : aucun
  * parcours client ne déclenche encore cette acceptation lui-même.
  */
-export const acceptCommercialProposal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
-  .handler(async ({ context, data: proposalId }) => {
+export async function acceptCommercialProposalCore(context: AdminCallContext, proposalId: string) {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
 
@@ -312,7 +315,12 @@ export const acceptCommercialProposal = createServerFn({ method: "POST" })
     });
 
     return accepted;
-  });
+}
+
+export const acceptCommercialProposal = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => uuid.parse(data))
+  .handler(async ({ context, data }) => acceptCommercialProposalCore(context, data));
 
 export const getAcceptedCommercialProposal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -446,10 +454,7 @@ const applyAutomaticFranceTaxInput = z.object({
  * porte séparée, volontairement étroite, qui ne peut matériellement pas
  * s'appliquer à un dossier international.
  */
-export const applyAutomaticFranceTaxPolicy = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => applyAutomaticFranceTaxInput.parse(data))
-  .handler(async ({ context, data }) => {
+export async function applyAutomaticFranceTaxPolicyCore(context: AdminCallContext, data: z.infer<typeof applyAutomaticFranceTaxInput>) {
     await assertAdmin(context.supabase, context.userId);
 
     const automatic = resolveAutomaticTaxPolicy(data.billingCountry);
@@ -509,7 +514,12 @@ export const applyAutomaticFranceTaxPolicy = createServerFn({ method: "POST" })
     });
 
     return updated;
-  });
+}
+
+export const applyAutomaticFranceTaxPolicy = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => applyAutomaticFranceTaxInput.parse(data))
+  .handler(async ({ context, data }) => applyAutomaticFranceTaxPolicyCore(context, data));
 
 /**
  * La porte de sortie que l'admin garde toujours (§2, §8 du brief du

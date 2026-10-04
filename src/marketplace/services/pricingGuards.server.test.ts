@@ -111,10 +111,14 @@ describe("assertProposalPriceCurrent — jamais d'acceptation d'une proposition 
 
 describe("chaque chemin d'écriture de prix appelle le garde AVANT d'écrire", () => {
   const src = readFileSync(new URL("./marketplace.data.functions.ts", import.meta.url), "utf8");
+  // La logique d'une server function peut vivre dans sa fonction « cœur »
+  // (`<nom>Core`, réutilisée par « Valider et envoyer au client ») : on lit les deux.
   const handler = (exportName: string) => {
-    const start = src.indexOf(`export const ${exportName} =`);
-    expect(start, exportName).toBeGreaterThan(-1);
-    const next = src.indexOf("\nexport const ", start + 10);
+    const exported = src.indexOf(`export const ${exportName} =`);
+    expect(exported, exportName).toBeGreaterThan(-1);
+    const core = src.indexOf(`export async function ${exportName}Core(`);
+    const start = core > -1 && core < exported ? core : exported;
+    const next = src.indexOf("\nexport const ", exported + 10);
     return src.slice(start, next === -1 ? undefined : next);
   };
 
@@ -136,7 +140,7 @@ describe("chaque chemin d'écriture de prix appelle le garde AVANT d'écrire", (
 
 describe("la proposition se construit sur le prix validé, jamais sur la sortie brute du moteur", () => {
   const src = readFileSync(new URL("./commercialProposal.data.functions.ts", import.meta.url), "utf8");
-  const create = src.slice(src.indexOf("export const createCommercialProposal"), src.indexOf("export const listCaseCommercialProposals"));
+  const create = src.slice(src.indexOf("export async function createCommercialProposalCore("), src.indexOf("export const listCaseCommercialProposals"));
 
   it("createCommercialProposal ne lit plus service_price_cents", () => {
     expect(create).not.toMatch(/row\.service_price_cents/);
@@ -150,7 +154,7 @@ describe("la proposition se construit sur le prix validé, jamais sur la sortie 
   });
 
   it("l'acceptation par l'admin refuse une proposition périmée avant d'écrire", () => {
-    const accept = src.slice(src.indexOf("export const acceptCommercialProposal"), src.indexOf("export const getAcceptedCommercialProposal"));
+    const accept = src.slice(src.indexOf("export async function acceptCommercialProposalCore("), src.indexOf("export const getAcceptedCommercialProposal"));
     expect(accept).toMatch(/assertProposalPriceCurrent\(sb, proposalId\)/);
     expect(accept.indexOf("assertProposalPriceCurrent(")).toBeLessThan(accept.indexOf("acceptCommercialProposalRow(sb"));
   });

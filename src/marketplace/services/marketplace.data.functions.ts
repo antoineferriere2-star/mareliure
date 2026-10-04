@@ -50,7 +50,7 @@ import {
   resolveCaseByAccessToken,
   signFirstCasePhoto,
 } from "./caseRepository.server";
-import { loadAggregates, loadPricebook } from "./pricingRepository.server";
+import { loadAggregates, loadBasePriceReferences, loadPricebook } from "./pricingRepository.server";
 import { assertPricingOpen } from "./pricingGuards.server";
 import {
   acceptBinderInvitation as acceptBinderInvitationForUser,
@@ -64,6 +64,11 @@ import { createPendingBinderWorkspace } from "./binderSelfRegistration.server";
 import { isValidReferralSlug } from "@/marketplace/binders/referral";
 import { unreadCountsByCase } from "./messaging.data.functions";
 import { MESSAGE_AUDIENCES, readableAudiences } from "@/marketplace/messaging/audience";
+import { suggestFromBasePrices } from "@/marketplace/pricing/basePriceSuggestion";
+
+
+/** Ce que les fonctions « cœur » lisent du contexte authentifié : de quoi vérifier le rôle admin et tracer l'auteur. */
+export type AdminCallContext = { supabase: Parameters<typeof assertAdmin>[0]; userId: string };
 
 const BINDER_LIST_COLUMNS =
   "id, user_id, display_name, workshop_name, city, postal_code, bio, years_experience, training, avatar_path, status, capacity_slots, accepted_project_types, min_project_cents, max_project_cents, response_rate, rating_avg, rating_count, is_demo";
@@ -410,10 +415,18 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
     // relieurs. Sans référentiel, il n'invente rien : il rend `manual_review`,
     // et c'est cet état-là qu'on enregistre. Le moteur ne connaît aucune
     // marque — le multiplicateur s'applique après, jamais dans le Pricebook.
-    const suggestion = suggestManagedPrice(caseContext.profile, {
+    const engineSuggestion = suggestManagedPrice(caseContext.profile, {
       aggregates: await loadAggregates(sb),
       pricebookEntries: await loadPricebook(sb),
     });
+    // Repli du 4 octobre 2026 : sans référence de marché, les tarifs de base
+    // Ma Reliure (brouillons) pré-remplissent une suggestion à confiance
+    // faible, que l'administration confirme ou corrige — jamais un envoi.
+    const baseSuggestion =
+      engineSuggestion.status === "manual_review"
+        ? suggestFromBasePrices(engineSuggestion, await loadBasePriceReferences(sb))
+        : null;
+    const suggestion = baseSuggestion ?? engineSuggestion;
     const abstained = suggestion.status === "manual_review";
     const brand = isMarketplaceBrand(caseContext.row.brand) ? caseContext.row.brand : "MA_RELIURE";
 
@@ -453,7 +466,9 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
     // l'estimation basse déjà ajustée à la marque : un client Fine Bindery ne
     // doit pas voir un acompte calé sur le prix Ma Reliure. Ailleurs il reste
     // NULL, pas zéro.
-    const mode = pricingModeFor(suggestion);
+    // Un prix pré-rempli par les tarifs de base devient, une fois confirmé,
+    // un prix arrêté par un humain : le même mode qu'une saisie manuelle.
+    const mode = baseSuggestion ? "MANUAL_STUDY" : pricingModeFor(suggestion);
     const depositCents =
       mode === "ESTIMATE_THEN_CONFIRM" && brandLowEstimate !== null
         ? depositCentsFor(brandLowEstimate, PRICING_POLICY)
@@ -509,6 +524,7 @@ export const generateMarketplacePricing = createServerFn({ method: "POST" })
         reference_count: suggestion.referenceCount,
         work_items: suggestion.workItemKeys,
         factors: suggestion.factors,
+        source: baseSuggestion ? "base_prices" : "engine",
         rule_version: suggestion.ruleVersion,
       },
     });
@@ -553,10 +569,7 @@ export const saveMarketplacePricing = createServerFn({ method: "POST" })
     return validation;
   });
 
-export const validateMarketplacePricing = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => managedPriceInput.parse(data))
-  .handler(async ({ context, data }) => {
+export async function validateMarketplacePricingCore(context: AdminCallContext, data: z.infer<typeof managedPriceInput>) {
     await assertAdmin(context.supabase, context.userId);
     const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
     if (!validation.valid) fail(422, validation.errors.join(" "));
@@ -594,7 +607,12 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
     }
 
     return { case: result, validation };
-  });
+}
+
+export const validateMarketplacePricing = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => managedPriceInput.parse(data))
+  .handler(async ({ context, data }) => validateMarketplacePricingCore(context, data));
 
 export const sendCaseToBinders = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
