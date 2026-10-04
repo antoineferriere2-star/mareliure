@@ -70,14 +70,22 @@ const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
 ];
 
 /**
- * One lastmod for the whole file, resolved at request time.
+ * One lastmod for the whole file: the build date.
  *
  * A per-page date would be a lie: nothing in the build tracks when each
  * marketing page last changed, and inventing one per URL is exactly the
  * signal crawlers learn to ignore. The build date is true and useful — it is
  * the last moment any of these pages could have changed.
  */
-const LAST_MODIFIED = new Date().toISOString().slice(0, 10);
+//
+// Écrite au moment de la construction (vite.config.ts) : dans un Worker, l'horloge
+// vaut 0 tant qu'aucune requête n'est en cours, et `new Date()` évalué au chargement
+// du module donnait 1970-01-01 sur toutes les URL (constaté le 4 octobre 2026).
+const BUILD_DATE = import.meta.env.VITE_BUILD_DATE as string | undefined;
+export const LAST_MODIFIED =
+  BUILD_DATE && /^\d{4}-\d{2}-\d{2}$/.test(BUILD_DATE) && BUILD_DATE > "2026-01-01"
+    ? BUILD_DATE
+    : new Date().toISOString().slice(0, 10);
 
 export function sitemapFor(host: string | null): { baseUrl: string; entries: SitemapEntry[] } {
   if (!isMaReliure) return { baseUrl: "https://metre-pro.com", entries: METRE_ENTRIES };

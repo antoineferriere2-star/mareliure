@@ -71,6 +71,9 @@ export default defineConfig({
     define: {
       "import.meta.env.VITE_SUPABASE_URL": JSON.stringify(SUPABASE_URL),
       "import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY": JSON.stringify(SUPABASE_PUBLISHABLE_KEY),
+      // Date de construction (AAAA-MM-JJ) pour le <lastmod> du plan du site : un Worker
+      // fige son horloge à 0 hors requête, et la date calculée au chargement valait 1970-01-01.
+      "import.meta.env.VITE_BUILD_DATE": JSON.stringify(new Date().toISOString().slice(0, 10)),
     },
   },
   tanstackStart: {
