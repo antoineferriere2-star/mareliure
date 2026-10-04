@@ -100,6 +100,9 @@ describe("statuts client", () => {
     expect(customerStatusKey(facts({ status: "matching", hasPrice: true, proposalAccepted: true, paymentEligible: true }))).toBe("payment_due");
     expect(customerStatusKey(facts({ status: "binder_selected", paid: true }))).toBe("paid");
     expect(customerStatusKey(facts({ status: "binder_selected" }))).toBe("workshop_selected");
+    // Atelier déjà retenu (aller-retour) et proposition à accepter : c'est l'action du client.
+    expect(customerStatusKey(facts({ status: "binder_selected", hasPrice: true, proposalAcceptable: true }))).toBe("proposal_ready");
+    expect(customerNextStep(facts({ status: "binder_selected", hasPrice: true, proposalAcceptable: true }), "fr-FR").action).toBe("accept");
     expect(customerStatusKey(facts({ status: "in_progress", paid: true }))).toBe("in_progress");
     expect(customerStatusKey(facts({ status: "shipping_to_customer" }))).toBe("returning");
     expect(customerStatusKey(facts({ status: "completed", paid: true }))).toBe("completed");

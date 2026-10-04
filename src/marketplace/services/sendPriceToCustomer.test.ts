@@ -5,6 +5,23 @@ import { priceReadyEmailContent } from "./sendPriceToCustomer.data.functions";
 
 const source = readFileSync(resolve(process.cwd(), "src/marketplace/services/sendPriceToCustomer.data.functions.ts"), "utf8");
 
+describe("« Envoyer au client » (proposition construite à la main)", () => {
+  it("annonce une proposition à accepter, puis à régler", async () => {
+    const { proposalReadyEmailContent } = await import("./sendPriceToCustomer.data.functions");
+    const c = proposalReadyEmailContent(13500);
+    expect(c.heading).toBe("Votre proposition est prête");
+    expect(c.intro).toMatch(/135,00\s€ TTC/);
+    expect(c.intro).toContain("acceptez-la");
+  });
+
+  it("n'accepte jamais la proposition à la place du client", () => {
+    const fn = source.slice(source.indexOf("export const sendProposalToCustomer"));
+    expect(fn).not.toContain("acceptCommercialProposalCore");
+    expect(fn).toContain("applyAutomaticFranceTaxPolicyCore");
+    expect(fn.indexOf('row.brand !== "MA_RELIURE"')).toBeLessThan(fn.indexOf("applyAutomaticFranceTaxPolicyCore(ctx"));
+  });
+});
+
 describe("« Valider et envoyer au client »", () => {
   it("annonce le montant TTC et le chemin vers le paiement", () => {
     const content = priceReadyEmailContent(20400);
@@ -29,6 +46,8 @@ describe("« Valider et envoyer au client »", () => {
   });
 
   it("n'envoie jamais deux fois le même prix (clé d'idempotence par proposition)", () => {
-    expect(source).toContain("idempotencyKey: `price-ready-${proposal.id}`");
+    expect(source).toContain("emailKey: `price-ready-${proposal.id}`");
+    expect(source).toContain("emailKey: `proposal-ready-${proposal.id}`");
+    expect(source).toContain("idempotencyKey: input.emailKey");
   });
 });

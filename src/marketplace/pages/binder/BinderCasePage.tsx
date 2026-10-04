@@ -94,7 +94,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   const nextAction = data.canRespond ? "Accepter ou refuser la proposition" : isSelected ? "Créer ou poursuivre le devis" : offer?.state === "accepted" ? "Attendre la décision de Ma Reliure" : "Consulter le dossier";
   return (
     <div className="space-y-8">
-    <Link to="/atelier/leads" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#5f1b27] underline underline-offset-4">← Tous les leads</Link>
+    <Link to="/atelier/leads" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#5f1b27] underline underline-offset-4">← Tous les projets</Link>
     <BinderPageHeader eyebrow={`${data.view.reference} · ${sourceLabel(data.acquisitionOrigin)}${data.preferredLanguage ? ` · ${data.preferredLanguage.toUpperCase()}` : ""}`} title={data.view.title} description="Le contexte du projet, la décision attendue et les échanges au même endroit." action={isSelected ? <button type="button" className="min-h-11 rounded-sm bg-[#241a12] px-5 text-sm font-semibold text-white disabled:opacity-50" disabled={createFromCase.isPending || works.isPending} onClick={() => createFromCase.mutate()}>{createFromCase.isPending ? "Ouverture du devis…" : "Créer un devis"}</button> : undefined} />
     <section aria-label="Synthèse du dossier" className="grid divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8] sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
       <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Qui</p><p className="mt-1 text-sm font-semibold">{data.view.contact?.name ?? "Client transmis par Ma Reliure"}</p></div>
