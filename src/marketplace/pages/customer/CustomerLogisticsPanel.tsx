@@ -33,6 +33,17 @@ function useCustomerLogistics(caseId: string) {
 /** Étapes où le client doit agir lui-même : elles remontent en tête de page. */
 const CUSTOMER_ACTIONS = new Set(["choose_mode", "drop_parcel", "send_or_bring", "confirm_return_address"]);
 
+/**
+ * Le client a-t-il, maintenant, quelque chose à faire pour l'acheminement ?
+ * Même règle que le bandeau ci-dessous : la carte « Prochaine étape » s'en
+ * sert pour ne pas affirmer « Aucune action requise » au-dessus d'un bandeau
+ * qui demande de choisir le mode d'acheminement (recette du 4 octobre 2026).
+ */
+export function useLogisticsCustomerAction(caseId: string): boolean {
+  const { data } = useCustomerLogistics(caseId);
+  return !!data && !(!data.plan && data.locked) && CUSTOMER_ACTIONS.has(data.next);
+}
+
 export function LogisticsActionBanner({ caseId, locale }: { caseId: string; locale: CustomerLocale }) {
   const copy = logisticsCustomerCopy(locale);
   const { data } = useCustomerLogistics(caseId);

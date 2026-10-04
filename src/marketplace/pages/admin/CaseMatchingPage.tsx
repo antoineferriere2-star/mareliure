@@ -46,7 +46,11 @@ import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace
 import { formatEuros } from "@/marketplace/pricing/money";
 import { validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
 import { BASE_PRICE_NOTE } from "@/marketplace/pricing/basePriceSuggestion";
-import { sendPriceToCustomer, type SendPriceResult } from "@/marketplace/services/sendPriceToCustomer.data.functions";
+import {
+  sendPriceToCustomer,
+  sendProposalToCustomer,
+  type SendPriceResult,
+} from "@/marketplace/services/sendPriceToCustomer.data.functions";
 import { workItemLabel } from "@/marketplace/pricing/catalog";
 import { CONFIDENCE_LABELS, type PricingConfidence } from "@/marketplace/pricing/confidence";
 import type { PricingComponent } from "@/marketplace/pricing/pricing.types";
@@ -772,11 +776,12 @@ const TAX_VALIDATION_SOURCE_LABELS: Record<string, string> = {
   FR_STANDARD_VAT_20: "Automatique — TVA France standard 20 %",
 };
 
-function CommercialProposalPanel({ caseId }: { caseId: string }) {
+function CommercialProposalPanel({ caseId, brand }: { caseId: string; brand: string }) {
   const list = useServerFn(listCaseCommercialProposals);
   const create = useServerFn(createCommercialProposal);
   const accept = useServerFn(acceptCommercialProposal);
   const resetTax = useServerFn(resetProposalTaxToManualReview);
+  const sendProposal = useServerFn(sendProposalToCustomer);
   const queryClient = useQueryClient();
   const queryKey = ["marketplace", "case", caseId, "commercial-proposals"] as const;
 
@@ -800,6 +805,15 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
   });
   const resetting = useMutation({
     mutationFn: (proposalId: string) => resetTax({ data: proposalId }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey });
+      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
+    },
+  });
+
+  // « Envoyer au client » : TVA automatique si besoin, puis e-mail ; le client accepte lui-même.
+  const sendingProposal = useMutation({
+    mutationFn: (proposalId: string) => sendProposal({ data: { proposalId } }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey });
       queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
@@ -841,6 +855,22 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
       {resetting.error && (
         <p className="mt-2 text-xs text-destructive">{(resetting.error as Error).message}</p>
       )}
+      {sendingProposal.error && (
+        <p className="mt-2 text-xs text-destructive">{(sendingProposal.error as Error).message}</p>
+      )}
+      {sendingProposal.data && (
+        <p role="status" className="mt-2 rounded-md border border-emerald-300 bg-emerald-50 p-2 text-xs leading-5 text-emerald-900">
+          Proposition envoyée
+          {sendingProposal.data.totalTtcCents !== null ? ` (${formatEuros(sendingProposal.data.totalTtcCents)} TTC)` : ""}.{" "}
+          {sendingProposal.data.email.sent
+            ? sendingProposal.data.email.to === "account"
+              ? "Le client a reçu un e-mail : il accepte la proposition dans son espace, puis paie."
+              : "Le client a reçu un e-mail à l'adresse de sa demande ; en se connectant avec elle, il retrouvera la proposition."
+            : sendingProposal.data.email.reason === "no_address"
+              ? "Aucune adresse e-mail connue : prévenez le client vous-même."
+              : "L'e-mail n'a pas pu partir : prévenez le client vous-même."}
+        </p>
+      )}
       <ul className="mt-3 space-y-2 text-sm">
         {(proposals ?? []).map((proposal) => (
           <li key={proposal.id} className="rounded-md border border-border p-2">
@@ -880,6 +910,16 @@ function CommercialProposalPanel({ caseId }: { caseId: string }) {
                 </p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
+                {brand === "MA_RELIURE" && proposal.status === "proposed" && !hasAccepted && (
+                  <Button
+                    size="sm"
+                    disabled={sendingProposal.isPending}
+                    onClick={() => sendingProposal.mutate(proposal.id)}
+                    title="Applique la TVA France 20 % si besoin (particulier en France), puis envoie l'e-mail « Votre proposition est prête »."
+                  >
+                    {sendingProposal.isPending ? "Envoi…" : "Envoyer au client"}
+                  </Button>
+                )}
                 {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (
                   <Button
                     size="sm"
@@ -1055,7 +1095,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
         {data.case.pricing_status === "validated" && (
           <>
             <OperatorLogisticsPanel caseId={caseId} />
-            <CommercialProposalPanel caseId={caseId} />
+            <CommercialProposalPanel caseId={caseId} brand={data.case.brand} />
             <PreflightPanel caseId={caseId} />
           </>
         )}

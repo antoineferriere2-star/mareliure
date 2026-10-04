@@ -131,6 +131,11 @@ export function customerStatusKey(facts: CustomerCaseFacts): CustomerStatusKey {
   if (status === "shipping_to_binder") return "travelling";
   if (facts.paid || status === "paid") return "paid";
   if (facts.paymentEligible) return "payment_due";
+  // Une proposition que le client peut accepter est son action, même atelier déjà
+  // retenu (parcours aller-retour : l'atelier est choisi avant la proposition).
+  // Avant ce garde, il lisait « Aucune action requise » au-dessus du bouton
+  // « Accepter » (recette du 4 octobre 2026).
+  if (facts.proposalAcceptable) return "proposal_ready";
   if (status === "binder_selected" || status === "awaiting_payment") return "workshop_selected";
   if (facts.hasPrice || facts.proposalAccepted) return "proposal_ready";
   if (status === "under_review") return "received";

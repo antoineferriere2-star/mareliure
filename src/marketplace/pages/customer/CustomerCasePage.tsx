@@ -43,7 +43,7 @@ import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { Button } from "@/components/ui/button";
 import { CoverPhoto, CustomerPhotoGallery } from "./CustomerPhotoGallery";
 import { PortalDetailSkeleton, PortalError, StatusBadge } from "./CustomerPortalUi";
-import { CustomerLogisticsPanel, LogisticsActionBanner } from "./CustomerLogisticsPanel";
+import { CustomerLogisticsPanel, LogisticsActionBanner, useLogisticsCustomerAction } from "./CustomerLogisticsPanel";
 
 const CARD = "rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-5 sm:p-6";
 
@@ -165,6 +165,7 @@ function NextStepCard({
   canPay,
   conciergeChannel,
   showMessageLink,
+  logisticsActionPending,
 }: {
   next: NextStep;
   copy: CustomerCopy;
@@ -175,6 +176,8 @@ function NextStepCard({
   /** Fine Bindery : le client écrit à son concierge, jamais à l'atelier. */
   conciergeChannel: boolean;
   showMessageLink: boolean;
+  /** Une action d'acheminement attend le client : « Aucune action requise » serait faux. */
+  logisticsActionPending: boolean;
 }) {
   const anchor = next.action === "decision" ? "#decisions" : next.action === "proposal" ? "#proposal" : null;
   const sectionRef = useRef<HTMLElement>(null);
@@ -201,7 +204,9 @@ function NextStepCard({
         {copy.nextStep}
       </h2>
       <p className="mt-2 font-serif text-xl leading-snug text-[#241a12]">{next.text}</p>
-      {next.hint && <p className="mt-2 text-sm text-[#6b5847]">{next.hint}</p>}
+      {next.hint && !(logisticsActionPending && next.action === null) && (
+        <p className="mt-2 text-sm text-[#6b5847]">{next.hint}</p>
+      )}
       {next.action === "accept" && proposal && total !== null && (
         <p className="mt-2 text-sm text-[#4b3a2c]">
           {copy.acceptSummary(formatEuros(total, locale), proposal.totalTtcCents !== null)}
@@ -292,6 +297,11 @@ function ProposalCard({
       ? `${fmt(proposal.estimateMinCents)} – ${fmt(proposal.estimateMaxCents)}`
       : null;
 
+  // « 100,00 € HT · 120,00 € TTC » quand la TVA s'applique ; le montant seul sinon.
+  const withTtc = (cents: number) =>
+    proposal && showTax && proposal.vatRateBps !== null
+      ? `${fmt(cents)} ${locale === "en-US" ? "excl. tax" : "HT"} · ${fmt(Math.round((cents * (10_000 + proposal.vatRateBps)) / 10_000))} ${locale === "en-US" ? "incl. tax" : "TTC"}`
+      : fmt(cents);
   return (
     <section id="proposal" aria-labelledby="proposal-title" className={`${CARD} scroll-mt-6`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -307,7 +317,9 @@ function ProposalCard({
 
       {proposal ? (
         <dl className="mt-4">
-          <Row label={copy.proposalService} value={fmt(proposal.serviceCents)} />
+          {/* Un particulier lit d'abord le TTC (recette du 4 octobre 2026) : chaque ligne
+              soumise à TVA porte ses deux montants, comme la ligne transport. */}
+          <Row label={copy.proposalService} value={withTtc(proposal.serviceCents)} />
           {proposal.shippingCents > 0 && (
             <Row
               label={proposal.shippingOfferKind === "book_round_trip_fr"
@@ -315,7 +327,7 @@ function ProposalCard({
                 : copy.proposalShipping}
               value={proposal.shippingOfferKind === "book_round_trip_fr" && showTax && proposal.vatRateBps === 2000
                 ? `${fmt(proposal.shippingCents)} ${locale === "en-US" ? "excl. tax" : "HT"} · ${fmt(1500)} ${locale === "en-US" ? "incl. tax" : "TTC"}`
-                : fmt(proposal.shippingCents)}
+                : withTtc(proposal.shippingCents)}
             />
           )}
           {showTax ? (
@@ -384,6 +396,8 @@ export function CustomerCasePage({
   const en = locale === "en-US";
   const copy = customerCopy(locale);
   const fetchCase = useServerFn(getMyCustomerCase);
+  // Avant tout retour anticipé : un hook ne s'appelle jamais conditionnellement.
+  const logisticsActionPending = useLogisticsCustomerAction(caseId);
   const { data, isPending, error, refetch, isFetching } = useQuery({
     queryKey: ["marketplace", "customer", "case", caseId] as const,
     queryFn: () => fetchCase({ data: { caseId } }),
@@ -490,6 +504,7 @@ export function CustomerCasePage({
         canPay={data.case.paymentEligible}
         conciergeChannel={conciergeChannel}
         showMessageLink={status.key !== "cancelled"}
+        logisticsActionPending={logisticsActionPending}
       />
 
       {status.key !== "cancelled" && <LogisticsActionBanner caseId={caseId} locale={locale} />}
