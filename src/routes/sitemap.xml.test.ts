@@ -1,4 +1,6 @@
 import { describe, expect, it, vi, beforeEach, afterEach } from "vitest";
+import { readFileSync } from "node:fs";
+import { join } from "node:path";
 
 // La résolution HTTP réelle (fetch /sitemap.xml) dépend de la façon dont
 // Nitro propage process.env aux routes server.handlers en dev — repli
@@ -71,5 +73,21 @@ describe("sitemapFor", () => {
   it("respecte MARKETPLACE_BRAND_OVERRIDE, comme le reste de la résolution de marque", () => {
     vi.stubEnv("MARKETPLACE_BRAND_OVERRIDE", "FINE_BINDERY");
     expect(sitemapFor("localhost:8080").baseUrl).toBe("https://finebindery.com");
+  });
+});
+
+describe("la date des plans du site", () => {
+  it("n'est jamais l'époque Unix (horloge d'un Worker figée hors requête)", async () => {
+    const { LAST_MODIFIED } = await import("./sitemap[.]xml");
+    expect(LAST_MODIFIED).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(LAST_MODIFIED > "2026-01-01").toBe(true);
+  });
+});
+
+describe("la date de construction", () => {
+  it("est injectée par Vite et reconnue par le contrôle de format du plan du site", () => {
+    const source = readFileSync(join(process.cwd(), "src/routes/sitemap[.]xml.ts"), "utf8");
+    expect(source).toContain(String.raw`/^\d{4}-\d{2}-\d{2}$/.test(BUILD_DATE)`);
+    expect(readFileSync(join(process.cwd(), "vite.config.ts"), "utf8")).toContain('"import.meta.env.VITE_BUILD_DATE"');
   });
 });
