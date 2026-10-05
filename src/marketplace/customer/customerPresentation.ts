@@ -558,6 +558,13 @@ export interface CustomerCopy {
   termsConsent: string;
   termsLinkLabel: string;
   termsHref: string;
+  billingTitle: string;
+  billingName: string;
+  billingAddress: string;
+  billingPostalCode: string;
+  billingCity: string;
+  billingCountry: string;
+  billingDefaultCountry: string;
   acceptBusy: string;
   acceptError: string;
   acceptedNotice: string;
@@ -673,6 +680,13 @@ const FR: CustomerCopy = {
   termsConsent: "J'accepte ce devis et les conditions générales de vente d'OPPE SAS, qui vend la prestation sous la marque Ma Reliure.",
   termsLinkLabel: "Lire les conditions générales de vente",
   termsHref: "/conditions-generales-de-vente",
+  billingTitle: "Coordonnées de facturation",
+  billingName: "Nom et prénom",
+  billingAddress: "Adresse",
+  billingPostalCode: "Code postal",
+  billingCity: "Ville",
+  billingCountry: "Pays (code à deux lettres)",
+  billingDefaultCountry: "FR",
   acceptBusy: "Enregistrement…",
   acceptError: "Nous n'avons pas pu enregistrer votre acceptation. Réessayez.",
   acceptedNotice: "Proposition acceptée. Vous pouvez maintenant payer.",
@@ -785,6 +799,13 @@ const EN: CustomerCopy = {
   termsConsent: "I accept this quote and the terms of sale of OPPE SAS, which sells the service under the Fine Bindery brand.",
   termsLinkLabel: "Read the terms of sale",
   termsHref: "/terms-of-sale",
+  billingTitle: "Billing details",
+  billingName: "Full name",
+  billingAddress: "Address",
+  billingPostalCode: "Postcode",
+  billingCity: "City",
+  billingCountry: "Country (two-letter code)",
+  billingDefaultCountry: "",
   acceptBusy: "Saving…",
   acceptError: "We couldn't record your acceptance. Please try again.",
   acceptedNotice: "Proposal accepted. You can now pay securely.",

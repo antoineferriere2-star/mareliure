@@ -22,6 +22,7 @@ const MESSAGES: Record<CustomerAcceptanceErrorCode, string> = {
   proposal_not_found: "Cette proposition est introuvable.",
   proposal_changed: "Cette proposition a été mise à jour. Consultez la nouvelle version.",
   not_acceptable: "Cette proposition ne peut pas être acceptée pour le moment.",
+  billing_country_mismatch: "Le pays de facturation ne correspond pas à celui du devis. Écrivez-nous : nous l'ajusterons avant que vous l'acceptiez.",
   accept_failed: "L'acceptation n'a pas pu être enregistrée.",
 };
 

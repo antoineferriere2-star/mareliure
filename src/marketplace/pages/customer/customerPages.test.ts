@@ -47,6 +47,7 @@ vi.mock("@/marketplace/services/decisions.data.functions", () => ({
 }));
 vi.mock("@/marketplace/stripe/checkoutSession.server", () => ({ createCommercialCheckoutSession: vi.fn() }));
 vi.mock("@/marketplace/services/customerProposalAcceptance.data.functions", () => ({ acceptMyProposal: vi.fn() }));
+vi.mock("@/marketplace/services/oppeBilling.data.functions", () => ({ getMyOppeDocuments: vi.fn(), downloadMyOppeDocument: vi.fn() }));
 // Acheminement : dossier historique sans plan, le panneau reste masqué (couvert par la recette navigateur).
 vi.mock("@/marketplace/services/caseLogistics.data.functions", () => ({
   getMyCaseLogistics: vi.fn(async () => ({ plan: null, locked: true, next: "choose_mode" })),
@@ -562,9 +563,9 @@ describe("acceptation de la proposition", () => {
     const source = stripComments(
       readFileSync(resolve(process.cwd(), "src/marketplace/pages/customer/CustomerCasePage.tsx"), "utf8"),
     );
-    expect(source).toContain("accept({ data: { caseId, proposalId, termsAccepted: true } })");
+    expect(source).toContain("accept({ data: { caseId, proposalId, termsAccepted: true, billing:");
     // La case des conditions générales doit être cochée avant que le bouton ne s'active.
-    expect(source).toContain("disabled={mutation.isPending || !consent}");
+    expect(source).toContain("disabled={mutation.isPending || !consent || !billingComplete}");
     expect(source).not.toMatch(/accept\(\{[^)]*(amount|cents|total|price|status)/i);
     // L'identifiant vient de la vue serveur ; il est bien dans la donnée de test.
     expect(PROPOSAL_ID).toMatch(/^[0-9a-f-]{36}$/);

@@ -22,6 +22,17 @@ import type {
 
 type Supa = SupabaseClient<Database>;
 
+export interface BillingDetailsInput {
+  name: string;
+  businessName?: string | null;
+  vatNumber?: string | null;
+  addressLine1: string;
+  addressLine2?: string | null;
+  postalCode: string;
+  city: string;
+  country: string;
+}
+
 export interface CommercialProposalRow extends CommercialProposalSnapshot {
   paymentCircuit: string;
   shippingOfferKind: "manual" | "book_round_trip_fr";
@@ -379,15 +390,24 @@ export async function resetProposalTaxToManualReview(
  */
 export async function acceptCommercialProposalAsCustomer(
   sb: Supa,
-  input: { proposalId: string; customerUserId: string; termsVersion: string; snapshotSha256: string; ipAddress: string | null; userAgent: string | null },
+  input: {
+    proposalId: string; customerUserId: string; termsVersion: string; snapshotSha256: string; ipAddress: string | null; userAgent: string | null;
+    /** Coordonnées de facturation saisies par le client, figées avec son acceptation. */
+    billing: BillingDetailsInput;
+  },
 ): Promise<"accepted" | "already_accepted"> {
-  const { data, error } = await sb.rpc("marketplace_accept_proposal_as_customer", {
+  const { data, error } = await sb.rpc("marketplace_accept_proposal_as_customer_v2", {
     p_proposal_id: input.proposalId,
     p_customer_user_id: input.customerUserId,
     p_terms_version: input.termsVersion,
     p_snapshot_sha256: input.snapshotSha256,
     p_ip_address: input.ipAddress ?? "",
     p_user_agent: input.userAgent ?? "",
+    p_billing: {
+      name: input.billing.name, business_name: input.billing.businessName ?? null, vat_number: input.billing.vatNumber ?? null,
+      address_line1: input.billing.addressLine1, address_line2: input.billing.addressLine2 ?? null,
+      postal_code: input.billing.postalCode, city: input.billing.city, country: input.billing.country,
+    } as never,
   });
   if (error) throw error;
   return data === "already_accepted" ? "already_accepted" : "accepted";

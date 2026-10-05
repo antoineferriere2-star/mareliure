@@ -47,6 +47,19 @@ export const acceptProposalInput = z
     proposalId: z.string().uuid(),
     /** Case cochée par le client : il accepte le devis et les conditions générales de vente. */
     termsAccepted: z.literal(true),
+    /** Coordonnées de facturation : elles figurent sur la facture émise au paiement. */
+    billing: z
+      .object({
+        name: z.string().trim().min(1).max(200),
+        businessName: z.string().trim().max(200).nullable().optional(),
+        vatNumber: z.string().trim().max(20).nullable().optional(),
+        addressLine1: z.string().trim().min(1).max(200),
+        addressLine2: z.string().trim().max(200).nullable().optional(),
+        postalCode: z.string().trim().min(1).max(20),
+        city: z.string().trim().min(1).max(100),
+        country: z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/),
+      })
+      .strict(),
   })
   .strict();
 
@@ -58,6 +71,7 @@ export type CustomerAcceptanceErrorCode =
   | "proposal_not_found"
   | "proposal_changed"
   | "not_acceptable"
+  | "billing_country_mismatch"
   | "accept_failed";
 
 const STATUS_BY_CODE: Record<CustomerAcceptanceErrorCode, number> = {
@@ -66,6 +80,7 @@ const STATUS_BY_CODE: Record<CustomerAcceptanceErrorCode, number> = {
   proposal_not_found: 404,
   proposal_changed: 409,
   not_acceptable: 409,
+  billing_country_mismatch: 409,
   accept_failed: 500,
 };
 
@@ -159,8 +174,12 @@ export async function acceptProposalForCustomer(
       snapshotSha256: await acceptanceSnapshotSha256(proposal),
       ipAddress: input.ipAddress ?? null,
       userAgent: input.userAgent ?? null,
+      billing: input.billing,
     });
-  } catch {
+  } catch (err) {
+    // Le pays saisi ne correspond pas à celui sur lequel la fiscalité du devis a été validée.
+    if (String((err as { message?: string })?.message ?? "").includes("billing_country_mismatch"))
+      throw new CustomerAcceptanceError("billing_country_mismatch");
     // Une acceptation concurrente de cette même proposition (deux onglets) a pu
     // passer entre notre lecture et notre écriture : c'est un succès, pas un échec.
     const now = await loadAcceptedCommercialProposal(sb, input.caseId);
