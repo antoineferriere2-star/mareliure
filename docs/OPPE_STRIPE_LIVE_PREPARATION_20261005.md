@@ -31,23 +31,26 @@ Vérification locale de la passation : TypeScript sans erreur. La suite de 3 498
 
 Retour arrière de cette seule configuration : Worker `cbd5667f-3585-495a-addd-895842adf7c7`, même code, sans le secret C. Ne pas retirer le secret après ouverture de C sans maintenir le traitement et la reprise des événements.
 
-## Identité publique : anomalie vérifiée, correction en attente
+Dernière vérification locale après correction de l’identité : **277 fichiers, 3 498 tests réussis**, avec deux workers et délai de 60 secondes ; TypeScript sans erreur. Aucun code applicatif modifié.
 
-La relecture live confirme des résidus Securicom/BTP :
+## Identité publique corrigée et relue
 
-- Descripteur et préfixe : `SECURICOM`.
-- E-mail de support : `contact@securicom.shop`.
-- Description : « Plateforme de mise en relation entre professionnels du btp ».
-- Site : `https://www.oppe.fr`, URL de support absente ; MCC `5734`.
+Identité publique corrigée dans le Dashboard et relue par l’API : nom Ma Reliure / Fine Bindery, descripteur `OPPE RELIURE`, préfixe `OPPE`, support `contact@oppe.fr`, site et URL de support `https://mareliure.fr`, description reliure/restauration et outil atelier. Le MCC `5734` reste inchangé et à qualifier auprès de Stripe.
 
-Le dossier historique contient les valeurs convenues avec l’utilisateur : support `contact@oppe.fr`, site et URL de support `https://mareliure.fr`, identité OPPE et description reliure/restauration. Le descripteur long doit satisfaire les contraintes Stripe ; si `OPPE` seul est refusé, utiliser une formulation explicite conforme telle que `OPPE RELIURE`, avec préfixe `OPPE`. Ne pas déclarer le MCC approprié sans validation de l’activité auprès de Stripe.
+Description enregistrée : « OPPE SAS vend des prestations de reliure et de restauration de livres sous les marques Ma Reliure et Fine Bindery, réalisées par des ateliers partenaires ; le client est débité lors du paiement du devis accepté. OPPE propose aussi aux ateliers un outil de devis, facturation et vitrine professionnelle par abonnement mensuel. »
 
-Le connecteur donne accès en lecture à ces champs, mais ne propose pas leur écriture. Le [Dashboard du compte](https://dashboard.stripe.com/acct_1UGI34K0Q47WbZPf/settings/public) a été ouvert ; la session du navigateur n’est pas authentifiée. Une connexion utilisateur est demandée pour appliquer puis relire la correction. **Aucune correction d’identité publique n’est attestée.**
+Aucune identité légale, pièce personnelle ni coordonnée bancaire modifiée. Reçu privé `stripe-live-identity-corrected-20261005.json`, capture `stripe-public-identity-corrected.jpg`.
+
+## Connect : configuration test vérifiée, vérification live requise
+
+Connect test préparé sur `acct_1UGISJKB3EBc6Slh` : compte fictif français `acct_1UNGxgKB3EtvZpEO` généré par Stripe, objet Accounts v2, Dashboard `full`, responsabilités frais/pertes/exigences collectées par Stripe relues par l’API. Démonstration automatique de paiement direct réussie : `pi_3UNH3cKB3EtvZpEO1rml1DuM`, 100 € fictifs, 3 € de frais plateforme, 3,40 € de frais Stripe, 93,60 € nets. Les capacités restent restreintes ; cette démonstration ne constitue pas une recette de l’application. Au retour live, la confirmation d’intégration est bloquée sur une vérification personnelle Stripe Identity : pièce d’identité avec photo et selfie du titulaire, traitement biométrique. L’écran est prêt ; aucun consentement ni image personnelle transmis par l’agent. Activation Connect live non attestée, aucun compte atelier live créé. Adapter le socle applicatif Accounts v1 à v2 et effectuer la recette complète avant ouverture.
+
+Les trois étapes test du guide Stripe sont terminées. L’atelier test conserve les exigences non satisfaites ; ne pas inventer son KYC. Les frais Stripe de 3,20 € affichés avant création étaient illustratifs : le reçu réel retourne 3,40 €. Ne pas créer de fausse facture ou de faux client live pour cocher le guide. Reçu privé `stripe-connect-test-fixture-20261005.json`, captures `stripe-connect-test-payment.jpg` et `stripe-connect-live-identity-required.jpg`. Reprendre dans le [Dashboard Connect live](https://dashboard.stripe.com/acct_1UGI34K0Q47WbZPf/connect/onboarding).
 
 ## Conditions restantes
 
 - Stripe Tax : `status=active`, siège français existant et catégorie par défaut `txcd_10202000`, mais **zéro immatriculation fiscale enregistrée**. Aucun réglage fiscal modifié. L’expert-comptable doit décider des obligations, catégories et immatriculations applicables ; ne pas confondre statut actif avec collecte effective. `WORKSHOP_SUBSCRIPTION_TAX_APPROVED` reste absent. [Documentation officielle](https://docs.stripe.com/billing/taxes/collect-taxes).
 - Juridique : validation des conditions, médiation et autres clauses toujours non obtenue ; liens juridiques du portail à poser après validation. Le portail est configuré, son parcours hébergé n’est pas encore éprouvé.
-- Connect : aucun compte atelier live présent. La création du webhook et la capacité `transfers` de la plateforme ne prouvent pas l’achèvement de l’onboarding Connect live. L’opération `EnableConnect` du connecteur ne prend en charge que les sandboxes autonomes ; elle ne peut pas activer ce compte live. Vérifier/achever l’activation dans le [Dashboard Connect](https://dashboard.stripe.com/acct_1UGI34K0Q47WbZPf/connect). Le socle C publié utilise Accounts v1 ; les guides actuels orientent les nouvelles intégrations vers Accounts v2. Cette adaptation et la recette complète restent à achever avant ouverture. [Guide officiel SaaS](https://docs.stripe.com/connect/saas).
+- Connect : vérification personnelle du titulaire requise avant confirmation live ; webhook et démonstration test ne prouvent pas l’activation live. Le socle publié utilise Accounts v1 alors que le compte généré par Stripe est Accounts v2. Adapter création, onboarding, capacités et événements, puis recette applicative complète avant ouverture. [Guide officiel SaaS](https://docs.stripe.com/connect/saas).
 - C : reprise d’un Checkout complété en échec, succès/refus/asynchrone, avoirs/remboursements, litiges, reçus, e-mails et frais réels à éprouver. Aucun atelier réel ni données KYC inventés.
 - Sendcloud : secrets et test physique réel toujours manquants. Premier paiement réel puis remboursement non effectués. Offre internationale toujours à définir avec des tarifs réels.
