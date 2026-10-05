@@ -58,7 +58,7 @@ Elles ajoutent les tables B/C et les gardes sans modifier les factures, devis ou
 Procédure : CI verte, fusion, sauvegarde fraîche et empreintes, restauration PostgreSQL 17, répétition, application transactionnelle avec garde de dérive, build vérifié, upload/déploiement Worker, smoke et journal.
 Retour arrière : fermer B/C, rétablir le Worker précédent compatible **avec plusieurs avoirs**, continuer les webhooks et ne jamais supprimer des documents. Après émission d'avoirs partiels, un ancien Worker supposant un seul avoir par facture ne constitue plus un retour arrière complet.
 
-Accès live : clé absente des fichiers locaux ; intégration Stripe proposée mais non connectée au moment de la préparation. Secrets Sendcloud absents. Identité publique Stripe live, produit live, Connect live et test réel transport restent non vérifiés.
+Suite live du 5 octobre : intégration Stripe connectée au compte dédié, produit/prix B et portail créés, webhooks abonnement et Connect configurés, secret Connect déployé. [Reçu et limites](OPPE_STRIPE_LIVE_PREPARATION_20261005.md). Identité publique Securicom/BTP relue, correction encore en attente du Dashboard ; zéro immatriculation Stripe Tax ; activation Connect live et recette complète non attestées. Secrets Sendcloud et test réel transport restent manquants.
 Validation expert-comptable de la TVA et revue juridique non obtenues. Premier paiement réel faible montant et remboursement non effectués.
 
 ## Vérifications avant PR

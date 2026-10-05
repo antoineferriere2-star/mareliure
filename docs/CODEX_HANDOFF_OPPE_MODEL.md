@@ -1,11 +1,11 @@
 # Passation Codex — modèle Oppe, après publication du lot 6
 
-Mise à jour du 5 octobre 2026. Le [journal du lot 6](OPPE_LOT6_PUBLICATION_20261005.md) atteste les résultats ; le [dossier technique B/C](OPPE_BC_COMPLETION.md) précise les limites. Cette version remplace l’état de reprise du lot 5. Son historique reste accessible dans Git.
+Mise à jour du 5 octobre 2026. Le [journal du lot 6](OPPE_LOT6_PUBLICATION_20261005.md) atteste les résultats ; le [dossier technique B/C](OPPE_BC_COMPLETION.md) précise les limites. La [préparation Stripe live](OPPE_STRIPE_LIVE_PREPARATION_20261005.md) donne les identifiants créés et les blocages constatés. Cette version remplace l’état de reprise du lot 5. Son historique reste accessible dans Git.
 
 ## Production vérifiée
 
 - PR #78 à #86 fusionnées. Code applicatif publié : `13f18d6`.
-- Worker Ma Reliure/Fine Bindery : `cbd5667f-3585-495a-addd-895842adf7c7`, à 100 %, déployé le 5 octobre à 17:18:25 UTC.
+- Worker Ma Reliure/Fine Bindery : `8f9d80ce-82a3-4848-8e9a-0bc1edc383ae`, à 100 %, déployé le 5 octobre à 18:10:10 UTC. Même code que le lot 6 ; ajout du seul secret de signature Connect, 16 liaisons au total.
 - Base : **107 migrations**, dernière `20261006140000`.
 - Quatre ateliers historiques gratuits ; abonnement et encaissement en ligne fermés en base et dans les annonces publiques.
 - CI main verte, 3 498 tests et 19 contrôles de publication. Smoke final : 28 contrôles réussis ; webhooks sans signature en 400 et HTTP vers HTTPS en 301.
@@ -26,15 +26,15 @@ Mise à jour du 5 octobre 2026. Le [journal du lot 6](OPPE_LOT6_PUBLICATION_2026
 
 ## Travail restant, dans l’ordre
 
-1. Connecter Stripe live : intégration proposée dans Codex, toujours non installée au dernier contrôle ; pas de clé live locale. Vérifier le descripteur de relevé, l’e-mail de support et la description publique du compte dédié.
+1. Stripe est connecté au compte live dédié `acct_1UGI34K0Q47WbZPf`. L’identité publique a été relue : descripteurs `SECURICOM`, support `contact@securicom.shop` et description BTP toujours présents. Corriger ces champs dans le Dashboard ; le connecteur ne propose aucune opération d’écriture correspondante et le navigateur attend une connexion utilisateur. Voir le dossier Stripe pour les valeurs déjà convenues.
 2. Obtenir les décisions fiscales de l’expert-comptable et la revue juridique des clauses marquées. Ne pas présenter une validation comme acquise sans sa preuve.
-3. B : produit/prix live 15 € HT/mois, Stripe Tax et portail, configuration fiscale approuvée, recette hébergée Checkout → paiement → facture/reçu/e-mail → résiliation, puis cohérence de l’indicateur en base et de l’offre publique.
-4. C : Connect live, compte atelier français, secret `STRIPE_CONNECT_WEBHOOK_SECRET` et événements des comptes connectés. Achever la reprise après échec, puis recette succès/refus/asynchrone, remboursement partiel/total, litige, frais et e-mails avant ouverture.
+3. B : produit/prix et portail live créés, événements abonnement activés. Stripe Tax a un statut actif mais aucune immatriculation enregistrée ; catégorie fiscale du produit non choisie et approbation fiscale non obtenue. Après décision comptable : configuration Tax, liens juridiques du portail et recette hébergée Checkout → paiement → facture/reçu/e-mail → résiliation, puis cohérence de l’indicateur en base et de l’offre publique.
+4. C : webhook des comptes connectés créé et secret `STRIPE_CONNECT_WEBHOOK_SECRET` déployé et vérifié. Activation de la plateforme live dans le Dashboard et configuration d’un atelier français restent non attestées. Revoir Accounts v2 pour cette nouvelle intégration, achever la reprise après échec, puis recette succès/refus/asynchrone, remboursement partiel/total, litige, frais et e-mails avant ouverture.
 5. Sendcloud : secrets, données de colis et couverture admissible, test physique réel aller-retour. Aucun tarif international inventé.
 6. Premier paiement réel de faible montant puis remboursement. **Aucun débit réel réalisé par le lot 6.**
 7. Offre internationale : pays, devises, transporteur, tarif réel, couverture, douanes et fiscalité à décider avant construction/ouverture.
 
-Le catalogue Stripe test existe : lookup `oppe_workshop_monthly_15_eur_v1`, prix `price_1UNEP3KB3EBc6SlhrtzPgl4e`. Le script `scripts/setupWorkshopStripeProducts.ts --live` refuse une clé test ou le mauvais compte ; il ne constitue pas une autorisation fiscale et ne doit pas ouvrir B automatiquement.
+Catalogue B : lookup `oppe_workshop_monthly_15_eur_v1`, prix test `price_1UNEP3KB3EBc6SlhrtzPgl4e`, prix live `price_1UNGCtK0Q47WbZPfij57EdX6` (1 500 centimes EUR, mensuel, TVA exclue). Portail live par défaut `bpc_1UNGGgK0Q47WbZPfn3zFcKbl`, résiliation à échéance. Le script `scripts/setupWorkshopStripeProducts.ts --live` refuse une clé test ou le mauvais compte ; il ne constitue pas une autorisation fiscale et ne doit pas ouvrir B automatiquement.
 
 ## Méthode de reprise
 
