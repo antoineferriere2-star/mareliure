@@ -4,7 +4,7 @@
 
 Le propriétaire a demandé de poursuivre tous les chantiers à la suite de la passation.
 Branche : `feat/oppe-b-c-completion`, base `43f9110` (PR #85 fusionnée).
-La production de référence reste le Worker `b812e4cc` et 102 migrations tant que le journal de publication n'atteste pas le déploiement de cette suite.
+Suite publiée : code applicatif `13f18d6`, Worker `cbd5667f`, 107 migrations. Voir [le journal de publication attesté](OPPE_LOT6_PUBLICATION_20261005.md).
 
 Cette suite ajoute B, la vitrine commune, les avoirs partiels B, le socle C, le rattachement des transports clients propres, la documentation et les conditions ateliers.
 **Les services payants B/C restent fermés**. La présence du code ne constitue ni une validation fiscale ou juridique, ni une recette Stripe live.
