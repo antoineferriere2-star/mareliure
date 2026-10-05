@@ -7,6 +7,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { Button } from "@/components/ui/button";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { ORDER_STATUS_LABELS } from "@/marketplace/orders/orderStatus";
+import { SupplierInvoicePanel } from "./SupplierInvoicePanel";
 import { advanceMyOppeOrder, getMyOppeOrder } from "@/marketplace/services/oppeOrders.data.functions";
 
 export function WorkshopOrderProgress({ caseId }: { caseId: string }) {
@@ -21,6 +22,7 @@ export function WorkshopOrderProgress({ caseId }: { caseId: string }) {
   });
   if (!order) return null;
   return (
+    <>
     <section className="rounded-lg border border-border bg-card p-5 text-sm">
       <h2 className="font-serif text-lg">Commande</h2>
       <p className="mt-2">
@@ -41,5 +43,7 @@ export function WorkshopOrderProgress({ caseId }: { caseId: string }) {
       )}
       {advancing.error && <p className="mt-2 text-destructive">{(advancing.error as Error).message}</p>}
     </section>
+    {order.status === "completed" && <SupplierInvoicePanel caseId={caseId} payoutCents={order.payoutCents} />}
+    </>
   );
 }
