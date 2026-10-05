@@ -41,6 +41,7 @@ export const en: FineBinderyPublicCopy = {
     shippingEyebrow: "Shipping", shippingTitle: "A journey adapted to the book.", shippingLead: "The journey is organised according to the nature and value of the book, and quoted separately from the work itself.",
     faqEyebrow: "Questions, answered", faqTitle: "Before you start.", faq: [
       { question: "Can I contact an atelier directly?", answer: "Yes. A project presented from an atelier’s page reaches that atelier directly." },
+      { question: "Who sells to me and who invoices me?", answer: "It depends on how you start. A project presented from an atelier’s page makes that atelier your seller: it sends its own quote and invoices you. A project presented to Fine Bindery is sold by OPPE SAS under the Fine Bindery brand, which chooses the atelier, issues the quote and the invoice, and takes payment; the atelier then invoices OPPE SAS, never you." },
       { question: "How are ateliers chosen for the network?", answer: "Fine Bindery reviews each atelier before publishing its page: its skills, its experience and the kind of work it wishes to receive. There is no ranking and no paid placement." },
       { question: "Do I need to speak French?", answer: "No. Each atelier lists the languages it speaks, and Fine Bindery remains your point of contact when you present a project to us." },
       { question: "Is shipping included?", answer: "No. Shipping is quoted separately, according to destination, value and the level of care the book requires." },

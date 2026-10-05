@@ -62,6 +62,8 @@ export interface PartnerBenefit {
   body: string;
 }
 
+import { PLATFORM_FEE_LABEL, SUBSCRIPTION_LABEL, WORKSHOP_OFFER } from "@/marketplace/offer/workshopOffer";
+
 /** Le réseau : ce que Ma Reliure apporte en plus de l'outil. */
 export const BENEFITS: PartnerBenefit[] = [
   {
@@ -78,7 +80,11 @@ export const BENEFITS: PartnerBenefit[] = [
   },
   {
     title: "Vos clients restent les vôtres",
-    body: "Un client que vous invitez avec votre lien personnel reste affecté à votre atelier, jamais mis en concurrence.",
+    body: "Un client que vous invitez avec votre lien personnel, ou qui vous trouve par votre page vitrine, reste votre client : vous lui faites votre devis et votre facture.",
+  },
+  {
+    title: "Aucun volume garanti",
+    body: "L'abonnement donne l'outil et la page vitrine. Il ne garantit aucune commande venant du réseau Ma Reliure.",
   },
 ];
 
@@ -87,17 +93,19 @@ export interface PartnerStep {
   title: string;
 }
 
+/** Un projet confié par Ma Reliure : Oppe vend et facture le client ; l'atelier facture Oppe. */
 export const HOW_IT_WORKS_STEPS: PartnerStep[] = [
-  { index: "01", title: "Le client présente son livre" },
-  { index: "02", title: "Ma Reliure étudie la demande et fixe le prix" },
-  { index: "03", title: "Nous vous proposons le projet" },
-  { index: "04", title: "Le livre rejoint votre atelier" },
-  { index: "05", title: "Vous échangez avec le client dans Ma Reliure" },
-  { index: "06", title: "Le livre retourne chez son propriétaire" },
+  { index: "01", title: "Le client présente son livre à Ma Reliure" },
+  { index: "02", title: "Ma Reliure étudie la demande, fixe le prix et vous annonce votre rémunération" },
+  { index: "03", title: "Vous acceptez la prestation, la rémunération et votre délai" },
+  { index: "04", title: "Ma Reliure vend le projet au client, qui l'accepte et règle" },
+  { index: "05", title: "Le livre rejoint votre atelier" },
+  { index: "06", title: "Vous réalisez le travail, puis vous facturez Oppe" },
+  { index: "07", title: "Oppe vous règle par virement sous 30 jours ; le livre retourne chez son propriétaire" },
 ];
 
-/** Ce que comprend l'espace atelier gratuit. */
-export const FREE_INCLUDES: readonly string[] = ["Clients", "Ouvrages", "Devis", "Factures", "Prestations et tarifs", "Messages"];
+/** Ce que comprend l'abonnement atelier. */
+export const FREE_INCLUDES: readonly string[] = ["Clients", "Ouvrages", "Devis", "Factures et avoirs", "Prestations et tarifs", "Messages", "Page vitrine"];
 
 export interface PartnerFaqItem {
   question: string;
@@ -106,9 +114,19 @@ export interface PartnerFaqItem {
 
 export const PARTNER_FAQ: PartnerFaqItem[] = [
   {
-    question: "L'outil est-il vraiment gratuit ?",
+    question: "Combien coûte l'outil ?",
     answer:
-      "Oui : 0 € par mois, sans engagement. Devis, factures, ouvrages, clients, prestations et messages sont inclus. Le paiement en ligne est en préparation : le modèle envisagé prévoit 3 % de rémunération plateforme sur l’encaissement, avec les frais de traitement Stripe identifiés séparément. Un paiement direct (virement, chèque, espèces) ne crée pas de commission de paiement plateforme.",
+      `Pour un nouvel atelier : ${SUBSCRIPTION_LABEL}, page vitrine incluse, sans engagement. Devis, factures et avoirs, ouvrages, clients, prestations et messages sont inclus. ${WORKSHOP_OFFER.subscriptionOpen ? "L'abonnement est ouvert." : "L'abonnement n'est pas encore ouvert : d'ici là, l'espace reste sans frais."} Les ateliers déjà inscrits gardent la gratuité tant qu'ils n'ont pas accepté expressément le nouvel abonnement. L'abonnement ne garantit aucune commande venant du réseau Ma Reliure.`,
+  },
+  {
+    question: "Et pour le paiement en ligne de mes clients ?",
+    answer:
+      `Facultatif : votre client règle votre devis ou votre facture par carte, vous restez le vendeur et vous facturez votre client. Oppe prélève ${PLATFORM_FEE_LABEL} du montant TTC encaissé en ligne ; les frais de traitement Stripe sont distincts et à votre charge. ${WORKSHOP_OFFER.onlinePaymentOpen ? "" : "Ce service n'est pas encore ouvert : il le sera dès que votre compte de paiement sera configuré. "}Un paiement direct (virement, chèque, espèces) ne coûte rien.`,
+  },
+  {
+    question: "Qui vend, qui facture, qui me paie quand Ma Reliure me confie un projet ?",
+    answer:
+      "Oppe vend la prestation au client sous la marque Ma Reliure, choisit l'atelier, émet le devis et la facture au client, et encaisse. Vous n'émettez ni devis ni facture au client : vous facturez Oppe la rémunération que vous avez acceptée, depuis l'outil ou en déposant votre facture. Oppe vous règle par virement sous 30 jours à compter de l'émission d'une facture conforme.",
   },
   {
     question: "Puis-je utiliser l'outil sans recevoir de projets Ma Reliure ?",
@@ -123,7 +141,7 @@ export const PARTNER_FAQ: PartnerFaqItem[] = [
   {
     question: "Qui fixe les prix ?",
     answer:
-      "Pour vos propres clients, vous : vos tarifs sont les vôtres. Pour un projet confié par Ma Reliure, Ma Reliure fixe le prix présenté au client et vous annonce votre rémunération avant que vous acceptiez.",
+      "Pour vos propres clients, vous : vos tarifs sont les vôtres. Pour un projet confié par Ma Reliure, Oppe fixe le prix de vente au client ; vous ne le voyez pas, vous voyez votre rémunération, que vous acceptez avec la prestation et votre délai avant tout engagement.",
   },
   {
     question: "Puis-je utiliser Ma Reliure avec un client que j'ai trouvé moi-même ?",
