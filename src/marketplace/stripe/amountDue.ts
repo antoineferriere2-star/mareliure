@@ -29,6 +29,8 @@ export interface AmountDueInput {
   customerServicePriceCents: number;
   shippingTotalCents: number;
   customerVatRateBps: number | null;
+  /** Devis Oppe : taux de la ligne de transport (la ligne de prestation suit `customerVatRateBps`). Absent : un seul taux. */
+  shippingVatRateBps?: number | null;
   customerVatAmountCents: number | null;
   customerTotalHtCents: number;
   /** `null` tant que la TVA n'est pas résolue. */
@@ -82,14 +84,18 @@ export function resolveAmountDue(input: AmountDueInput): AmountDueResult {
   // d'arrondi ailleurs, ne doit jamais devenir un montant encaissé.
   const ht = input.customerServicePriceCents + input.shippingTotalCents;
   if (ht !== input.customerTotalHtCents) return block("amount_inconsistent", "ht_total");
-  const vat = vatOf(ht, rate);
+  const perLine = input.shippingVatRateBps !== undefined && input.shippingVatRateBps !== null;
+  const shippingRate = perLine ? (input.shippingVatRateBps as number) : rate;
+  if (perLine && (!Number.isSafeInteger(shippingRate) || shippingRate < 0)) return block("amount_inconsistent", "vat_fields");
+  // Un seul taux : la TVA se calcule sur le HT total (historique). Par ligne : chaque ligne est arrondie seule.
+  const vat = perLine ? vatOf(input.customerServicePriceCents, rate) + vatOf(input.shippingTotalCents, shippingRate) : vatOf(ht, rate);
   if (vat !== input.customerVatAmountCents) return block("amount_inconsistent", "vat_amount");
   if (ht + vat !== input.customerTotalTtcCents) return block("amount_inconsistent", "ttc_total");
   if (input.customerTotalTtcCents <= 0) return block("nothing_due", "zero_total");
 
   // Répartition de la TVA sur les deux lignes de sorte que leur somme soit EXACTEMENT le TTC :
   // la TVA du transport est arrondie seule, celle du service est le reste.
-  const shippingVat = vatOf(input.shippingTotalCents, rate);
+  const shippingVat = vatOf(input.shippingTotalCents, shippingRate);
   const serviceVat = vat - shippingVat;
   return {
     ok: true,

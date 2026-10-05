@@ -6,13 +6,13 @@
  * enchaîne alors, chacun par sa fonction « cœur » :
  *
  *   1. figer le devis Oppe (brouillon lié à l'accord atelier, transport au choix) ;
- *   2. appliquer la fiscalité automatique quand elle existe (particulier en France, Ma Reliure) ;
+ *   2. contrôler que la fiscalité (qualification de la prestation, taux de chaque ligne) est validée ;
  *   3. l'envoyer : il devient visible dans l'espace du client, qui l'accepte lui-même — case des
  *      conditions générales cochée — puis le règle. Rien n'est jamais accepté à sa place.
  *
- * Un devis dont la fiscalité doit être validée par un humain (Fine Bindery, client
- * professionnel, hors France) reste en brouillon : l'administration valide la fiscalité puis
- * l'envoie avec « Envoyer au client ».
+ * Tant que l'administration n'a pas validé la fiscalité, le devis reste en brouillon : elle la
+ * valide dans le panneau du devis, puis l'envoie avec « Envoyer au client ». Aucun taux unique
+ * n'est présumé, ni pour Oppe ni pour un atelier.
  */
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -22,7 +22,7 @@ import { fail } from "@/build/services/serverError";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 import { ROUND_TRIP_PRODUCT } from "@/marketplace/shipping/logisticsPlan";
 import { MARKETPLACE_BRAND_CONFIGS, isMarketplaceBrand, type MarketplaceBrand } from "@/marketplace/brand/brandConfig";
-import { applyAutomaticFranceTaxPolicyCore, createCommercialProposalCore } from "./commercialProposal.data.functions";
+import { createCommercialProposalCore } from "./commercialProposal.data.functions";
 import { loadCommercialProposalById, markCommercialProposalSent } from "./commercialProposalRepository.server";
 
 const sendInput = z.object({
@@ -137,8 +137,7 @@ async function notifyCustomerOfProposal(
 }
 
 /**
- * Rend visible un devis brouillon dont la fiscalité est validée, puis prévient le client.
- * Ma Reliure : la TVA française automatique est appliquée si elle ne l'est pas encore.
+ * Rend visible un devis brouillon dont la fiscalité est validée par l'administration, puis prévient le client.
  */
 async function sendDraft(
   sb: Supa,
@@ -149,16 +148,7 @@ async function sendDraft(
   let proposal = await loadCommercialProposalById(sb, proposalId);
   if (!proposal) fail(404, "Devis introuvable.");
   if (proposal.acceptedAt) fail(409, "Ce devis est déjà accepté : le client peut le régler depuis son espace.");
-  if (!proposal.taxValidatedAt && row.brand === "MA_RELIURE") {
-    await applyAutomaticFranceTaxPolicyCore(ctx, {
-      proposalId,
-      billingCountry: "FR",
-      customerType: "CUSTOMER",
-      businessName: null,
-      businessVatNumber: null,
-    });
-    proposal = await loadCommercialProposalById(sb, proposalId);
-  }
+  // Aucun taux n'est appliqué en silence : un devis Oppe sans validation fiscale reste en brouillon.
   if (!proposal?.taxValidatedAt) {
     return { proposalId, totalTtcCents: null, email: { sent: false, reason: "tax_review_required" } };
   }

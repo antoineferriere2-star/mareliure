@@ -343,6 +343,13 @@ function ProposalCard({
     proposal && showTax && proposal.vatRateBps !== null
       ? `${fmt(cents)} ${locale === "en-US" ? "excl. tax" : "HT"} · ${fmt(Math.round((cents * (10_000 + proposal.vatRateBps)) / 10_000))} ${locale === "en-US" ? "incl. tax" : "TTC"}`
       : fmt(cents);
+  // Taux distinct sur la ligne de transport (devis Oppe) : chaque ligne porte son propre taux.
+  const shippingRateBps = proposal?.shippingVatRateBps ?? proposal?.vatRateBps ?? null;
+  const shippingWithTtc = (cents: number) =>
+    proposal && showTax && shippingRateBps !== null
+      ? `${fmt(cents)} ${locale === "en-US" ? "excl. tax" : "HT"} · ${fmt(Math.round((cents * (10_000 + shippingRateBps)) / 10_000))} ${locale === "en-US" ? "incl. tax" : "TTC"}`
+      : fmt(cents);
+  const mixedRates = proposal?.shippingVatRateBps !== null && proposal?.shippingVatRateBps !== undefined;
   return (
     <section id="proposal" aria-labelledby="proposal-title" className={`${CARD} scroll-mt-6`}>
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -366,16 +373,16 @@ function ProposalCard({
               label={proposal.shippingOfferKind === "book_round_trip_fr"
                 ? (locale === "en-US" ? "Round-trip shipping" : "Transport aller-retour")
                 : copy.proposalShipping}
-              value={proposal.shippingOfferKind === "book_round_trip_fr" && showTax && proposal.vatRateBps === 2000
+              value={proposal.shippingOfferKind === "book_round_trip_fr" && showTax && shippingRateBps === 2000
                 ? `${fmt(proposal.shippingCents)} ${locale === "en-US" ? "excl. tax" : "HT"} · ${fmt(1500)} ${locale === "en-US" ? "incl. tax" : "TTC"}`
-                : withTtc(proposal.shippingCents)}
+                : shippingWithTtc(proposal.shippingCents)}
             />
           )}
           {showTax ? (
             <>
               <Row label={copy.proposalTotalHt} value={fmt(proposal.totalHtCents)} />
               <Row
-                label={copy.proposalVat(vatRateLabel(proposal.vatRateBps, locale))}
+                label={copy.proposalVat(mixedRates ? null : vatRateLabel(proposal.vatRateBps, locale))}
                 value={fmt(proposal.vatCents ?? 0)}
               />
               <Row label={copy.proposalTotalTtc} value={fmt(proposal.totalTtcCents ?? 0)} strong />

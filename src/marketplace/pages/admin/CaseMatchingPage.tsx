@@ -6,6 +6,8 @@
  * box. The admin decides, which is the whole point of a concierge MVP — and of
  * the CLAUDE.md rule that the system proposes and the human disposes.
  */
+import { OppeTaxForm } from "./OppeTaxForm";
+import { TAX_MATRIX, type ServiceTaxCategory } from "@/marketplace/commercial/taxMatrix";
 import { SupplierInvoicesPanel } from "./SupplierInvoicesPanel";
 import { OppeBillingPanel } from "./OppeBillingPanel";
 import { OppeOrderPanel } from "./OppeOrderPanel";
@@ -895,7 +897,10 @@ function CommercialProposalPanel({ caseId, onSent }: { caseId: string; onSent: (
                         proposal.taxValidationSource
                       }`
                     : "à valider"}
+                  {proposal.serviceTaxCategory ? ` · ${TAX_MATRIX[proposal.serviceTaxCategory as ServiceTaxCategory]?.label ?? proposal.serviceTaxCategory}` : ""}
+                  {proposal.shippingVatRateBps !== null ? ` · transport ${(proposal.shippingVatRateBps / 100).toFixed(1)} %` : ""}
                 </p>
+                {proposal.taxJustification && <p className="mt-1 text-xs text-muted-foreground">Justification : {proposal.taxJustification}</p>}
                 <p className="mt-1 text-xs text-muted-foreground">
                   Client :{" "}
                   {proposal.customerType === "BUSINESS"
@@ -924,7 +929,11 @@ function CommercialProposalPanel({ caseId, onSent }: { caseId: string; onSent: (
               </div>
             </div>
             {(proposal.status === "draft" || proposal.status === "proposed") && !hasAccepted && !proposal.taxValidatedAt && (
-              <TaxValidationForm proposal={proposal} caseId={caseId} />
+              proposal.contractVersion ? (
+                <OppeTaxForm proposal={proposal} caseId={caseId} defaultCountry="FR" />
+              ) : (
+                <TaxValidationForm proposal={proposal} caseId={caseId} />
+              )
             )}
           </li>
         ))}

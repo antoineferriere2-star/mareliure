@@ -24,6 +24,7 @@ export interface CustomerProposalSource {
   shippingOfferKind?: "manual" | "book_round_trip_fr";
   customerTotalHtCents: number;
   customerVatRateBps: number | null;
+  shippingVatRateBps?: number | null;
   customerVatAmountCents: number | null;
   customerTotalTtcCents: number | null;
   estimateMinCents: number | null;
@@ -47,6 +48,8 @@ export interface CustomerProposalView {
   totalHtCents: number;
   /** `null` tant que la fiscalité n'est pas déterminée : jamais un taux deviné. */
   vatRateBps: number | null;
+  /** Taux de la ligne de transport quand il diffère de celui de la prestation ; `null` sinon. */
+  shippingVatRateBps: number | null;
   vatCents: number | null;
   totalTtcCents: number | null;
   estimateMinCents: number | null;
@@ -65,6 +68,10 @@ export function toCustomerProposalView(source: CustomerProposalSource): Customer
     shippingOfferKind: source.shippingOfferKind ?? "manual",
     totalHtCents: source.customerTotalHtCents,
     vatRateBps: source.customerVatRateBps,
+    shippingVatRateBps:
+      source.shippingVatRateBps !== undefined && source.shippingVatRateBps !== null && source.shippingVatRateBps !== source.customerVatRateBps
+        ? source.shippingVatRateBps
+        : null,
     vatCents: source.customerVatAmountCents,
     totalTtcCents: source.customerTotalTtcCents,
     estimateMinCents: source.estimateMinCents,

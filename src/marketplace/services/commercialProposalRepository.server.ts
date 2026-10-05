@@ -52,10 +52,14 @@ export interface CommercialProposalRow extends CommercialProposalSnapshot {
   workshopLeadTimeDays: number | null;
   priceDerogationReason: string | null;
   sentAt: string | null;
+  /** Devis Oppe : taux de la ligne de transport (le taux de la prestation est `customerVatRateBps`). */
+  shippingVatRateBps: number | null;
+  serviceTaxCategory: string | null;
+  taxJustification: string | null;
 }
 
 const COLUMNS =
-  "payment_circuit, shipping_offer_kind, id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, tax_country, tax_basis, tax_validation_source, tax_validated_at, tax_validated_by, customer_type, business_name, business_vat_number, business_vat_validation_status, billing_country, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at, contract_version, workshop_binder_id, workshop_offer_id, workshop_service_description, workshop_lead_time_days, price_derogation_reason, sent_at";
+  "payment_circuit, shipping_offer_kind, id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, tax_country, tax_basis, tax_validation_source, tax_validated_at, tax_validated_by, customer_type, business_name, business_vat_number, business_vat_validation_status, billing_country, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at, contract_version, workshop_binder_id, workshop_offer_id, workshop_service_description, workshop_lead_time_days, price_derogation_reason, sent_at, shipping_vat_rate_bps, service_tax_category, tax_justification";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toRow(row: any): CommercialProposalRow {
@@ -125,6 +129,9 @@ function toRow(row: any): CommercialProposalRow {
     workshopLeadTimeDays: row.workshop_lead_time_days ?? null,
     priceDerogationReason: row.price_derogation_reason ?? null,
     sentAt: row.sent_at ?? null,
+    shippingVatRateBps: row.shipping_vat_rate_bps ?? null,
+    serviceTaxCategory: row.service_tax_category ?? null,
+    taxJustification: row.tax_justification ?? null,
   };
 }
 
@@ -288,6 +295,10 @@ export interface TaxValidationUpdate {
   businessVatNumber: string | null;
   businessVatValidationStatus: BusinessVatValidationStatus | null;
   billingCountry: string | null;
+  /** Devis Oppe : qualification de la prestation, taux de transport, justification (SQL les exige). */
+  shippingVatRateBps?: number | null;
+  serviceTaxCategory?: string | null;
+  taxJustification?: string | null;
 }
 
 /**
@@ -322,6 +333,9 @@ export async function updateProposalTaxValidation(
       business_vat_number: update.businessVatNumber,
       business_vat_validation_status: update.businessVatValidationStatus,
       billing_country: update.billingCountry,
+      shipping_vat_rate_bps: update.shippingVatRateBps ?? null,
+      service_tax_category: update.serviceTaxCategory ?? null,
+      tax_justification: update.taxJustification ?? null,
     })
     .eq("id", proposalId)
     .is("accepted_at", null)
@@ -355,6 +369,9 @@ export async function resetProposalTaxToManualReview(
       tax_validation_source: null,
       tax_validated_by: null,
       tax_validated_at: null,
+      shipping_vat_rate_bps: null,
+      service_tax_category: null,
+      tax_justification: null,
     })
     .eq("id", proposalId)
     .is("accepted_at", null)

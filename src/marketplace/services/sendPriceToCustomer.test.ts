@@ -23,12 +23,12 @@ describe("« Créer et envoyer le devis au client » (modèle Oppe)", () => {
     expect(proposalSource).not.toContain("export const acceptCommercialProposal");
   });
 
-  it("crée, applique la fiscalité automatique quand elle existe, puis envoie — dans cet ordre", () => {
+  it("crée, contrôle la validation fiscale, puis envoie — sans jamais appliquer un taux en silence", () => {
     const order = ["createCommercialProposalCore(ctx", "return sendDraft(sb, ctx"];
     const positions = order.map((needle) => source.indexOf(needle));
     expect(positions.every((p) => p > 0)).toBe(true);
+    expect(source).not.toContain("applyAutomaticFranceTaxPolicyCore");
     const draft = source.slice(source.indexOf("async function sendDraft"));
-    expect(draft.indexOf("applyAutomaticFranceTaxPolicyCore(ctx")).toBeLessThan(draft.indexOf("markCommercialProposalSent(sb"));
     expect(draft.indexOf('reason: "tax_review_required"')).toBeLessThan(draft.indexOf("markCommercialProposalSent(sb"));
   });
 

@@ -79,6 +79,7 @@ describe("vue client d'une proposition", () => {
         "serviceCents",
         "shippingCents",
         "shippingOfferKind",
+        "shippingVatRateBps",
         "totalHtCents",
         "totalTtcCents",
         "vatCents",
@@ -181,5 +182,16 @@ describe("les server functions de l'espace client", () => {
     expect(customerSection).toContain('.eq("customer_user_id", context.userId)');
     expect(customerSection).toContain("canViewCase(viewer, facts)");
     expect(customerSection).toContain("caseDisclosure(viewer, facts)");
+  });
+});
+
+describe("taux par ligne (devis Oppe)", () => {
+  it("n'expose le taux du transport que lorsqu'il diffère de celui de la prestation", () => {
+    const base = { id: "p", pricingMode: "FIXED_PRICE", currency: "EUR", customerServicePriceCents: 20000, shippingTotalCents: 1250,
+      customerTotalHtCents: 21250, customerVatRateBps: 550, customerVatAmountCents: 1350, customerTotalTtcCents: 22600,
+      estimateMinCents: null, estimateMaxCents: null, createdAt: "2026-10-05", acceptedAt: null } as const;
+    expect(toCustomerProposalView({ ...base, shippingVatRateBps: 2000 }).shippingVatRateBps).toBe(2000);
+    expect(toCustomerProposalView({ ...base, shippingVatRateBps: 550 }).shippingVatRateBps).toBeNull();
+    expect(toCustomerProposalView({ ...base }).shippingVatRateBps).toBeNull();
   });
 });
