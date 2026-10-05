@@ -23,10 +23,19 @@ const KNOWN_APEX_HOSTS = new Set(
 );
 
 /**
- * `null` quand aucune redirection n'est due — hôte déjà canonique, hôte
- * inconnu, ou pas de sous-domaine `www.` du tout.
+ * L'adresse canonique d'une requête marketplace : `https://` et sans `www.`,
+ * en un seul saut.
+ *
+ * Le schéma compte autant que l'hôte : `http://mareliure.fr` répondait 200 avec
+ * la page entière (constaté le 5 octobre 2026), un double de chaque URL que le
+ * `<link rel="canonical">` désigne en `https://`. Cloudflare transmet au Worker
+ * le schéma vu par le visiteur, d'où la redirection ici plutôt qu'un réglage de
+ * zone qui vivrait hors du dépôt.
+ *
+ * `null` quand aucune redirection n'est due — URL déjà canonique, hôte inconnu
+ * (localhost, prévisualisation, Host falsifié).
  */
-export function wwwToApexRedirectUrl(requestUrl: string): string | null {
+export function canonicalRedirectUrl(requestUrl: string): string | null {
   let url: URL;
   try {
     url = new URL(requestUrl);
@@ -34,9 +43,11 @@ export function wwwToApexRedirectUrl(requestUrl: string): string | null {
     return null;
   }
   const host = url.hostname.toLowerCase();
-  if (!host.startsWith("www.")) return null;
-  const apex = host.slice(4);
+  const apex = host.startsWith("www.") ? host.slice(4) : host;
   if (!KNOWN_APEX_HOSTS.has(apex)) return null;
+  if (host === apex && url.protocol === "https:") return null;
+  url.protocol = "https:";
   url.hostname = apex;
+  url.port = "";
   return url.toString();
 }
