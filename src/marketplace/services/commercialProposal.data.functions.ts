@@ -36,6 +36,7 @@ import {
 import { getPaymentPreflight as loadPaymentPreflight } from "@/marketplace/stripe/paymentPreflight.server";
 import { loadCaseContext } from "./caseRepository.server";
 import { ROUND_TRIP_HT_CENTS, ROUND_TRIP_PRODUCT, logisticsErrorCode } from "@/marketplace/shipping/logisticsPlan";
+import { CIRCUIT_REFUSALS, circuitRefusal, commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
 import { loadPricebook } from "./pricingRepository.server";
 import { assertProposalPriceCurrent } from "./pricingGuards.server";
 import {
@@ -104,6 +105,9 @@ export async function createCommercialProposalCore(context: AdminCallContext, da
     const caseContext = await loadCaseContext(sb, data.caseId);
     if (!caseContext) fail(404, "Dossier introuvable");
     const row = caseContext.row;
+    // Le client propre d'un atelier achète à l'atelier, jamais à Oppe (garde SQL identique).
+    if (commercialOriginOf(row.acquisition_origin) === "workshop_client")
+      fail(409, CIRCUIT_REFUSALS.oppe_sale_forbidden_on_workshop_client);
 
     // Une proposition acceptée fige le dossier : une évolution commerciale n'est jamais un simple
     // « nouvelle version » silencieuse sur une commande déjà acceptée (P1-5).
@@ -234,6 +238,8 @@ export async function createCommercialProposalCore(context: AdminCallContext, da
       proposal = await insertCommercialProposal(sb, snapshot, version, context.userId, data.shippingOffer);
     } catch (error) {
       const message = String((error as { message?: string })?.message ?? "");
+      const refusal = circuitRefusal(message);
+      if (refusal) fail(409, refusal);
       const code = logisticsErrorCode(message);
       if (!code) throw error;
       fail(409, ROUND_TRIP_REFUSALS[message.split(":")[1]?.trim() ?? ""] ?? ROUND_TRIP_REFUSALS[code] ??

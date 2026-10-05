@@ -62,6 +62,7 @@ import {
 import { QUOTE_OPERATION_PHOTO_MIME_TYPES } from "@/marketplace/quotes/quotePhotos";
 import { DOCUMENT_LOGO_MIME_TYPES } from "@/marketplace/quotes/documentBranding";
 import { invoiceDraftInput } from "@/marketplace/invoices/invoiceCompliance";
+import { circuitRefusal } from "@/marketplace/cases/commercialOrigin";
 
 const MESSAGES: Record<BinderQuotesErrorCode, string> = {
   no_binder: "Aucun atelier n'est associé à ce compte.",
@@ -87,6 +88,9 @@ async function run<T>(userId: string, work: (binderId: string, sb: Awaited<Retur
       const message = err.code === "profile_incomplete" ? `profile_incomplete:${err.missing.join("|")}` : MESSAGES[err.code];
       fail(err.status, message);
     }
+    // Les gardes SQL de circuit (projet Oppe, client propre) arrivent en message PostgreSQL.
+    const refusal = circuitRefusal((err as { message?: string } | null)?.message);
+    if (refusal) fail(409, refusal);
     throw err;
   }
 }

@@ -5,9 +5,9 @@
 import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
 import { formatDimensions } from "@/marketplace/quotes/quoteLines";
 
-export type WorkSource = "mon_client" | "ma_reliure";
+export type WorkSource = "mon_client" | "ma_reliure" | "workshop_platform";
 export type WorkStatus = "active" | "archived";
-export type ContactOrigin = "mon_client" | "ma_reliure";
+export type ContactOrigin = "mon_client" | "ma_reliure" | "workshop_platform";
 
 export interface ContactView {
   id: string;
