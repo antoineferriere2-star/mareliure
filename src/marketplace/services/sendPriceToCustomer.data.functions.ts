@@ -145,7 +145,7 @@ async function sendDraft(
   row: CaseRowForSend,
   proposalId: string,
 ): Promise<SendPriceResult> {
-  let proposal = await loadCommercialProposalById(sb, proposalId);
+  const proposal = await loadCommercialProposalById(sb, proposalId);
   if (!proposal) fail(404, "Devis introuvable.");
   if (proposal.acceptedAt) fail(409, "Ce devis est déjà accepté : le client peut le régler depuis son espace.");
   // Aucun taux n'est appliqué en silence : un devis Oppe sans validation fiscale reste en brouillon.
