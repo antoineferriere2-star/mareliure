@@ -1,4 +1,4 @@
-/** Présentation publique de l’outil gratuit pour les ateliers de reliure. */
+/** Présentation publique de l’outil et de la page vitrine pour les ateliers de reliure. */
 import { createFileRoute } from "@tanstack/react-router";
 import { PartnersLandingPage } from "@/marketplace/pages/partners/PartnersLanding";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
@@ -8,7 +8,7 @@ import { PARTNER_FAQ } from "@/marketplace/pages/landing/partnersContent";
 
 const TITLE = "Ma Reliure pour les relieurs — Devis, ouvrages et facturation";
 const DESCRIPTION =
-  "Créez vos devis, gérez vos ouvrages, clients et factures avec Ma Reliure. Outil gratuit pour les relieurs et restaurateurs. Paiement en ligne facultatif.";
+  "Devis, ouvrages, clients, factures et page vitrine pour les relieurs et restaurateurs : 15 € HT par mois pour les nouveaux ateliers. Paiement en ligne facultatif.";
 
 export const Route = createFileRoute("/partenaires-relieurs")({
   head: () => ({

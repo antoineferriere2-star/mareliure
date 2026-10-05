@@ -35,6 +35,7 @@ export const es: FineBinderyPublicCopy = {
     shippingEyebrow: "Envío", shippingTitle: "Un trayecto adaptado al libro.", shippingLead: "El trayecto se organiza según la naturaleza y el valor del libro, y se presupuesta aparte del trabajo.",
     faqEyebrow: "Tus preguntas", faqTitle: "Antes de empezar.", faq: [
       { question: "¿Puedo contactar directamente con un taller?", answer: "Sí. Un proyecto presentado desde la página de un taller llega directamente a ese taller." },
+      { question: "¿Quién me vende el servicio y quién me factura?", answer: "Depende de cómo empiece. Un proyecto presentado desde la página de un taller convierte a ese taller en su vendedor: le envía su propio presupuesto y le factura. Un proyecto presentado a Fine Bindery lo vende OPPE SAS bajo la marca Fine Bindery, que elige el taller, emite el presupuesto y la factura y cobra; el taller factura entonces a OPPE SAS, nunca a usted." },
       { question: "¿Cómo se eligen los talleres?", answer: "Fine Bindery revisa cada taller antes de publicar su página: su oficio, su trayectoria y el tipo de trabajo que desea recibir. No hay clasificaciones ni posiciones de pago." },
       { question: "¿Tengo que hablar el idioma del taller?", answer: "No. Cada taller indica los idiomas que habla, y Fine Bindery sigue siendo tu interlocutor cuando nos presentas un proyecto." },
       { question: "¿El envío está incluido?", answer: "No. Se presupuesta aparte, según el destino, el valor y el cuidado que requiere el libro." },

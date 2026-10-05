@@ -357,7 +357,7 @@ const SALES_TERMS_SECTIONS_FR: LegalSection[] = [
     heading: "Les parties au contrat",
     body: [
       `Votre contrat de vente se forme avec ${MARELIURE_PUBLISHER.name} ("Ma Reliure"), qui vend la prestation et reste votre interlocuteur pour la commande, le paiement, le suivi et le service après-vente.`,
-      "L'atelier artisanal qui réalise le travail sur votre livre est un partenaire d'exécution indépendant, sélectionné par Ma Reliure pour son savoir-faire. Il n'est pas partie à votre contrat de vente : vous ne le payez pas directement, et c'est Ma Reliure qui reste responsable envers vous de la bonne exécution de la prestation vendue.",
+      "Ma Reliure choisit l'atelier artisanal qui réalise le travail sur votre livre : vous ne le choisissez pas lors de votre commande, et l'atelier retenu vous est présenté dans votre espace client. Cet atelier est un partenaire d'exécution indépendant, sélectionné pour son savoir-faire. Il n'est pas partie à votre contrat de vente : vous ne le payez pas directement, et c'est Ma Reliure qui reste responsable envers vous de la bonne exécution de la prestation vendue.",
     ],
   },
   {
@@ -368,9 +368,17 @@ const SALES_TERMS_SECTIONS_FR: LegalSection[] = [
     ],
   },
   {
-    heading: "Commande et formation du contrat",
+    heading: "Commande, acceptation du devis et formation du contrat",
     body: [
-      "Le contrat de vente est formé au moment où vous validez le paiement de votre commande. Vous recevez une confirmation de commande par e-mail.",
+      "Le devis que Ma Reliure vous adresse est établi sous la marque Ma Reliure ; il reprend la prestation, le prix toutes taxes comprises et le délai annoncé. Vous l'acceptez expressément, en cochant l'acceptation du devis et des présentes conditions, avant de payer. Cette acceptation est enregistrée avec la version des conditions affichée.",
+      "Le contrat de vente est formé lorsque vous avez accepté le devis et validé le paiement de votre commande. Vous recevez une confirmation de commande par e-mail.",
+    ],
+  },
+  {
+    heading: "Facturation",
+    body: [
+      "La facture de votre commande est émise par " + MARELIURE_PUBLISHER.name + " sous la marque Ma Reliure, à l'adresse de facturation que vous indiquez en acceptant le devis. Elle est disponible dans votre espace client. En cas de remboursement, un avoir est émis.",
+      "L'atelier qui réalise le travail ne vous facture rien : il facture " + MARELIURE_PUBLISHER.name + ".",
     ],
   },
   {
@@ -725,7 +733,7 @@ const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
     heading: "The parties to the contract",
     body: [
       `Your sales contract is formed with ${MARELIURE_PUBLISHER.name} ("Fine Bindery"), which sells the service and remains your point of contact for ordering, payment, follow-up and after-sales support.`,
-      "The craft workshop that carries out the work on your book is an independent execution partner, selected by Fine Bindery for its skills. It is not a party to your sales contract: you do not pay it directly, and Fine Bindery remains responsible to you for the proper execution of the service sold.",
+      "Fine Bindery chooses the craft workshop that carries out the work on your book: you do not choose it when you order, and the workshop selected is shown in your customer space. It is an independent execution partner, selected for its skills. It is not a party to your sales contract: you do not pay it directly, and Fine Bindery remains responsible to you for the proper execution of the service sold.",
     ],
   },
   {
@@ -736,9 +744,17 @@ const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
     ],
   },
   {
-    heading: "Ordering and formation of the contract",
+    heading: "Ordering, quote acceptance and formation of the contract",
     body: [
-      "The sales contract is formed when you complete payment for your order. You receive an order confirmation by email.",
+      "The quote Fine Bindery sends you is issued under the Fine Bindery brand; it states the service, the price including tax and the announced lead time. You accept it expressly, by ticking the acceptance of the quote and of these terms, before paying. This acceptance is recorded with the version of the terms displayed.",
+      "The sales contract is formed once you have accepted the quote and completed payment for your order. You receive an order confirmation by email.",
+    ],
+  },
+  {
+    heading: "Invoicing",
+    body: [
+      "The invoice for your order is issued by " + MARELIURE_PUBLISHER.name + " under the Fine Bindery brand, to the billing address you give when accepting the quote. It is available in your customer space. If a refund is made, a credit note is issued.",
+      "The workshop carrying out the work does not invoice you: it invoices " + MARELIURE_PUBLISHER.name + ".",
     ],
   },
   {

@@ -11,6 +11,7 @@
  * aucun logo, parce qu'aucun n'est réel au lancement. Ce qui n'existe pas
  * encore (le paiement en ligne des factures de l'atelier) est écrit comme tel.
  */
+import { PLATFORM_FEE_LABEL, SUBSCRIPTION_LABEL, WORKSHOP_OFFER, formatHtPrice } from "@/marketplace/offer/workshopOffer";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SectionRule, SHELL } from "@/marketplace/pages/landing/LandingChrome";
@@ -94,7 +95,7 @@ function Hero() {
           </h1>
           <p className="mr-lead mt-7 max-w-[34rem]">
             L’espace atelier de Ma Reliure réunit ce qui encombre les soirées : devis, tarifs,
-            fiches ouvrage et factures. Gratuit, et à votre nom.
+            fiches ouvrage, factures et page vitrine. À votre nom, pour vos propres clients.
           </p>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <ActionLink href={CREATE_WORKSHOP}>Créer mon espace atelier</ActionLink>
@@ -103,8 +104,8 @@ function Hero() {
             </ActionLink>
           </div>
           <p className="mr-small mt-8 max-w-[34rem]">
-            0 € par mois <span aria-hidden="true">·</span> Vos clients restent les vôtres{" "}
-            <span aria-hidden="true">·</span> Des projets Ma Reliure en plus
+            {SUBSCRIPTION_LABEL} <span aria-hidden="true">·</span> Vos clients restent les vôtres{" "}
+            <span aria-hidden="true">·</span> Aucun volume de commandes garanti
           </p>
         </div>
         <ProductShot shot="aujourdhui" priority className="lg:col-span-7" sizes="(min-width: 1024px) 720px, 100vw" />
@@ -259,10 +260,16 @@ function Pricing() {
         <div className="mt-8 grid gap-12 lg:grid-cols-12 lg:gap-16">
           <div className="lg:col-span-5">
             <p className="mr-eyebrow">Tarif</p>
-            <h2 className="mr-title mt-4 text-mr-paper">Gratuit pour votre atelier.</h2>
+            <h2 className="mr-title mt-4 text-mr-paper">Un abonnement simple, page vitrine incluse.</h2>
             <p className="mt-8 flex items-baseline gap-3">
-              <span className="font-editorial text-[4.5rem] leading-none tracking-[-0.03em] sm:text-[5.5rem]">0 €</span>
-              <span className="mr-lead">par mois, sans engagement</span>
+              <span className="font-editorial text-[4.5rem] leading-none tracking-[-0.03em] sm:text-[5.5rem]">{formatHtPrice(WORKSHOP_OFFER.subscriptionHtCents).replace(" HT", "")}</span>
+              <span className="mr-lead">HT par mois, sans engagement</span>
+            </p>
+            <p className="mr-small mt-4 max-w-[28rem]">
+              {WORKSHOP_OFFER.subscriptionOpen
+                ? "Pour les nouveaux ateliers."
+                : "L'abonnement n'est pas encore ouvert : d'ici là, la création d'un espace atelier reste sans frais."}{" "}
+              Les ateliers déjà inscrits gardent la gratuité tant qu'ils n'ont pas accepté expressément la transition.
             </p>
             <div className="mt-10">
               <ActionLink href={CREATE_WORKSHOP} onInk>
@@ -281,8 +288,13 @@ function Pricing() {
             </ul>
             <dl className="mt-12 divide-y divide-mr-paper/20 border-y border-mr-paper/20">
               <PriceRow term="Paiement direct" detail="Virement, chèque, espèces : vous encaissez comme aujourd’hui." value="0 €" />
-              <PriceRow term="Paiement en ligne" detail="Facultatif, en préparation : votre client paie sa facture par carte." value="3 %" note="modèle envisagé, hors frais Stripe à préciser" />
-              <PriceRow term="Projets Ma Reliure" detail="Votre rémunération est annoncée avant que vous acceptiez le projet." value="Annoncée" />
+              <PriceRow
+                term="Paiement en ligne"
+                detail={`Facultatif : votre client paie votre devis ou votre facture par carte, vous restez le vendeur. ${WORKSHOP_OFFER.onlinePaymentOpen ? "" : "Pas encore ouvert."}`}
+                value={PLATFORM_FEE_LABEL}
+                note="du TTC encaissé en ligne ; frais Stripe en plus, à votre charge"
+              />
+              <PriceRow term="Projets confiés par Ma Reliure" detail="Oppe vend et facture le client ; vous facturez Oppe la rémunération annoncée, réglée sous 30 jours." value="Annoncée" />
             </dl>
           </div>
         </div>

@@ -35,6 +35,7 @@ export const it: FineBinderyPublicCopy = {
     shippingEyebrow: "Spedizione", shippingTitle: "Un viaggio adatto al libro.", shippingLead: "Il viaggio è organizzato secondo la natura e il valore del libro, e preventivato a parte rispetto al lavoro.",
     faqEyebrow: "Le tue domande", faqTitle: "Prima di iniziare.", faq: [
       { question: "Posso contattare direttamente un laboratorio?", answer: "Sì. Un progetto presentato dalla pagina di un laboratorio arriva direttamente a quel laboratorio." },
+      { question: "Chi mi vende il servizio e chi mi fattura?", answer: "Dipende da come iniziate. Un progetto presentato dalla pagina di un laboratorio rende quel laboratorio il vostro venditore: invia il proprio preventivo e vi fattura. Un progetto presentato a Fine Bindery è venduto da OPPE SAS con il marchio Fine Bindery, che sceglie il laboratorio, emette preventivo e fattura e incassa; il laboratorio fattura poi OPPE SAS, mai voi." },
       { question: "Come vengono scelti i laboratori?", answer: "Fine Bindery verifica ogni laboratorio prima di pubblicarne la pagina: competenze, esperienza e tipo di lavori che desidera ricevere. Non ci sono classifiche né posizionamenti a pagamento." },
       { question: "Devo parlare la lingua del laboratorio?", answer: "No. Ogni laboratorio indica le lingue che parla, e Fine Bindery resta il tuo interlocutore quando ci presenti un progetto." },
       { question: "La spedizione è inclusa?", answer: "No. Viene preventivata a parte, secondo destinazione, valore e cura richiesta." },
