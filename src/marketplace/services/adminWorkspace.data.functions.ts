@@ -87,7 +87,7 @@ export const getAdminWorkshopDetail = createServerFn({ method: "GET" })
       quotes: platformQuotes.map((quote) => ({ id: quote.id, workId: quote.work_id, number: quote.quote_number, status: quote.status, totalTtcCents: quote.total_ttc_cents, createdAt: quote.created_at })),
       invoices: (invoices.data ?? []).filter((invoice) => platformQuoteIds.has(invoice.quote_id)).map((invoice) => ({ id: invoice.id, number: invoice.invoice_number, status: invoice.payment_status, createdAt: invoice.created_at })),
       privateCounts: {
-        works: (works.data ?? []).filter((work) => work.source === "mon_client").length,
+        works: (works.data ?? []).filter((work) => work.source !== "ma_reliure").length,
         quotes: (quotes.data ?? []).length - platformQuotes.length,
         invoices: (invoices.data ?? []).filter((invoice) => !platformQuoteIds.has(invoice.quote_id)).length,
       },

@@ -12,20 +12,20 @@ import { CARD, ErrorNote, PAYMENT_LABELS, PRIMARY_BUTTON, QuoteStatusBadge, SECO
 import { euros, formatDateLong } from "@/marketplace/quotes/quoteFormat";
 import { isQuoteStatus } from "@/marketplace/quotes/quoteStatus";
 import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
-import { formatWeight, formatWorkDimensions } from "@/marketplace/works/workViews";
+import { formatWeight, formatWorkDimensions, type WorkSource } from "@/marketplace/works/workViews";
 import { WORK_KEY, WORKS_KEY } from "./workKeys";
 import { LogisticsPanel } from "./LogisticsPanel";
 import { WorkshopRoundTripPanel } from "./RoundTripWorkshopPanels";
 
 /** La provenance d'un ouvrage, dite sans ambiguïté : les deux voies ne se confondent jamais. */
-export function SourceBadge({ source, brand }: { source: "mon_client" | "ma_reliure"; brand?: "MA_RELIURE" | "FINE_BINDERY" | null }) {
+export function SourceBadge({ source, brand }: { source: WorkSource; brand?: "MA_RELIURE" | "FINE_BINDERY" | null }) {
   return source === "ma_reliure" ? (
     <span className="inline-flex items-center rounded-full border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-900">
-      Projet apporté par {brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"}
+      Projet Oppe · {brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"} · vous facturez Oppe
     </span>
   ) : (
     <span className="inline-flex items-center rounded-full border border-emerald-300 bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-900">
-      Mon client · Aucune commission Ma Reliure
+      Mon client{source === "workshop_platform" ? " · via mon lien ou ma vitrine" : ""} · vous vendez et facturez
     </span>
   );
 }
@@ -118,7 +118,7 @@ export function WorkPage({ workId }: { workId: string }) {
       </header>
 
       <div className="flex flex-wrap gap-2">
-        {work.status === "active" && (
+        {work.status === "active" && work.source !== "ma_reliure" && (
           <Link to="/atelier/devis/nouveau" search={{ workId: work.id }} className={PRIMARY_BUTTON}>
             Créer un devis
           </Link>

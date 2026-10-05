@@ -40,6 +40,13 @@ import { CASE_ANSWER_KEYS } from "@/marketplace/cases/caseProfile";
 import { customerJourney } from "@/marketplace/shipping/customerJourney";
 
 /** zod needs a literal tuple; WORK_FAMILIES stays the one place the list is written. */
+/**
+ * Ce qu'un atelier lit de son offre : sa rémunération, son délai, son état. Jamais le prix de
+ * vente au client ni la marge d'Oppe — ni à l'écran, ni dans la réponse du serveur.
+ */
+export const BINDER_OFFER_COLUMNS =
+  "state, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail";
+
 const WORK_FAMILY_KEYS = WORK_FAMILIES.map((f) => f.key) as [WorkFamilyKey, ...WorkFamilyKey[]];
 import {
   assignCaseOwner,
@@ -1228,7 +1235,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     const { data: offers } = await sb
       .from("marketplace_quotes")
       .select(
-        "case_id, binder_id, state, customer_price_cents, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail",
+        `case_id, binder_id, ${BINDER_OFFER_COLUMNS}`,
       )
       .in("case_id", caseIds)
       .eq("binder_id", binder!.id);
@@ -1303,7 +1310,7 @@ export const getBinderCase = createServerFn({ method: "GET" })
     const { data: offer } = await sb
       .from("marketplace_quotes")
       .select(
-        "state, customer_price_cents, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail",
+        BINDER_OFFER_COLUMNS,
       )
       .eq("case_id", data.caseId)
       .eq("binder_id", binder!.id)
@@ -1313,6 +1320,7 @@ export const getBinderCase = createServerFn({ method: "GET" })
       view,
       offer: offer ?? null,
       caseStatus: caseContext.row.status,
+      brand: caseContext.row.brand,
       acquisitionOrigin: caseContext.row.acquisition_origin,
       preferredLanguage: caseContext.row.preferred_language,
       submissionLocale: caseContext.row.submission_locale,

@@ -2863,6 +2863,7 @@ export type Database = {
           brand_multiplier_bps: number | null
           claim_method: string | null
           claimed_at: string | null
+          commercial_origin: string | null
           created_at: string
           customer_price_cents: number | null
           customer_user_id: string | null
@@ -2911,6 +2912,7 @@ export type Database = {
           brand_multiplier_bps?: number | null
           claim_method?: string | null
           claimed_at?: string | null
+          commercial_origin?: never
           created_at?: string
           customer_price_cents?: number | null
           customer_user_id?: string | null
@@ -2959,6 +2961,7 @@ export type Database = {
           brand_multiplier_bps?: number | null
           claim_method?: string | null
           claimed_at?: string | null
+          commercial_origin?: never
           created_at?: string
           customer_price_cents?: number | null
           customer_user_id?: string | null

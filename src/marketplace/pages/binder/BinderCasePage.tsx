@@ -20,6 +20,7 @@ import { BinderPageHeader } from "./BinderPageUi";
 import { WORK_KEY, WORKS_KEY } from "./works/workKeys";
 import { WorkshopReceptionPanel } from "./works/RoundTripWorkshopPanels";
 import { sourceLabel } from "@/marketplace/binders/fineBinderyProfile";
+import { circuitRefusal, commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
 
 const DECLINE_REASONS = [
   ["payout_insufficient", "Rémunération insuffisante"],
@@ -44,9 +45,11 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
     mutationFn: () => ensureWork({ data: { caseId } }),
     onSuccess: ({ workId }) => {
       void queryClient.invalidateQueries({ queryKey: WORKS_KEY });
-      void navigate({ to: "/atelier/devis/nouveau", search: { workId } });
+      // Projet Oppe : la fiche ouvrage sert au suivi, jamais à un devis au client final.
+      if (commercialOriginOf(data?.acquisitionOrigin) === "oppe") void navigate({ to: "/atelier/ouvrages/$workId", params: { workId } });
+      else void navigate({ to: "/atelier/devis/nouveau", search: { workId } });
     },
-    onError: (err: Error) => setProblem(err.message),
+    onError: (err: Error) => setProblem(circuitRefusal(err.message) ?? err.message),
   });
   const queryKey = ["marketplace", "binder", "case", caseId] as const;
   const [reasonCode, setReasonCode] = useState<(typeof DECLINE_REASONS)[number][0]>("no_capacity");
@@ -91,11 +94,15 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   // canAccessConversation (côté serveur) refuserait de toute façon.
   const isSelected = offer?.state === "selected";
   const offerLabel = offer?.state === "offered" || offer?.state === "invited" ? "À examiner" : offer?.state === "accepted" ? "Disponibilité confirmée" : offer?.state === "selected" ? "Atelier retenu" : offer?.state === "declined" ? "Refusé" : offer?.state === "cancelled" ? "Clôturé" : "En attente";
-  const nextAction = data.canRespond ? "Accepter ou refuser la proposition" : isSelected ? "Créer ou poursuivre le devis" : offer?.state === "accepted" ? "Attendre la décision de Ma Reliure" : "Consulter le dossier";
+  const oppeOrder = commercialOriginOf(data.acquisitionOrigin) === "oppe";
+  const nextAction = data.canRespond ? "Accepter ou refuser la proposition" : isSelected ? (oppeOrder ? "Suivre la réalisation" : "Créer ou poursuivre le devis") : offer?.state === "accepted" ? "Attendre la décision d'Oppe" : "Consulter le dossier";
+  const headerAction = !isSelected ? undefined : oppeOrder
+    ? (linked ? undefined : <button type="button" className="min-h-11 rounded-sm bg-[#241a12] px-5 text-sm font-semibold text-white disabled:opacity-50" disabled={createFromCase.isPending || works.isPending} onClick={() => createFromCase.mutate()}>{createFromCase.isPending ? "Ouverture…" : "Créer la fiche ouvrage"}</button>)
+    : <button type="button" className="min-h-11 rounded-sm bg-[#241a12] px-5 text-sm font-semibold text-white disabled:opacity-50" disabled={createFromCase.isPending || works.isPending} onClick={() => createFromCase.mutate()}>{createFromCase.isPending ? "Ouverture du devis…" : "Créer un devis"}</button>;
   return (
     <div className="space-y-8">
     <Link to="/atelier/leads" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#5f1b27] underline underline-offset-4">← Tous les projets</Link>
-    <BinderPageHeader eyebrow={`${data.view.reference} · ${sourceLabel(data.acquisitionOrigin)}${data.preferredLanguage ? ` · ${data.preferredLanguage.toUpperCase()}` : ""}`} title={data.view.title} description="Le contexte du projet, la décision attendue et les échanges au même endroit." action={isSelected ? <button type="button" className="min-h-11 rounded-sm bg-[#241a12] px-5 text-sm font-semibold text-white disabled:opacity-50" disabled={createFromCase.isPending || works.isPending} onClick={() => createFromCase.mutate()}>{createFromCase.isPending ? "Ouverture du devis…" : "Créer un devis"}</button> : undefined} />
+    <BinderPageHeader eyebrow={`${data.view.reference} · ${sourceLabel(data.acquisitionOrigin)}${data.preferredLanguage ? ` · ${data.preferredLanguage.toUpperCase()}` : ""}`} title={data.view.title} description="Le contexte du projet, la décision attendue et les échanges au même endroit." action={headerAction} />
     <section aria-label="Synthèse du dossier" className="grid divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8] sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
       <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Qui</p><p className="mt-1 text-sm font-semibold">{data.view.contact?.name ?? "Client transmis par Ma Reliure"}</p></div>
       <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Quoi</p><p className="mt-1 text-sm font-semibold">{data.view.title}</p></div>
@@ -104,7 +111,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
     </section>
     <nav aria-label="Sections du dossier" className="flex flex-wrap gap-x-4 gap-y-2 text-sm">
       <a href="#apercu" className="underline">Aperçu</a>
-      {isSelected && <><a href="#ouvrage" className="underline">Ouvrage</a><a href="#devis" className="underline">Devis</a><a href="#messages" className="underline">Messages</a></>}
+      {isSelected && <><a href="#ouvrage" className="underline">Ouvrage</a><a href="#devis" className="underline">{oppeOrder ? "Facturation" : "Devis"}</a><a href="#messages" className="underline">Messages</a></>}
     </nav>
     <div id="apercu" className="scroll-mt-6">
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
@@ -213,12 +220,19 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
       <>
         <section id="ouvrage" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
           <h2 className="font-serif text-lg">Ouvrage</h2>
-          {linked ? <Link to="/atelier/ouvrages/$workId" params={{ workId: linked.id }} className="mt-2 inline-flex min-h-11 items-center underline">{linked.title} · {linked.reference}</Link> : <p className="mt-2 text-sm text-muted-foreground">La fiche ouvrage sera créée lors du premier devis.</p>}
+          {linked ? <Link to="/atelier/ouvrages/$workId" params={{ workId: linked.id }} className="mt-2 inline-flex min-h-11 items-center underline">{linked.title} · {linked.reference}</Link> : <p className="mt-2 text-sm text-muted-foreground">{oppeOrder ? "Créez la fiche ouvrage pour suivre la réception et le retour du livre." : "La fiche ouvrage sera créée lors du premier devis."}</p>}
         </section>
+        {oppeOrder ? (
+        <section id="devis" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
+          <h2 className="font-serif text-lg">Facturation</h2>
+          <p className="mt-2 text-sm leading-6 text-muted-foreground">Ce projet est vendu par Oppe sous la marque {data.brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"}. Vous n'émettez ni devis ni facture au client : vous facturez à Oppe la rémunération et le délai que vous avez acceptés.</p>
+        </section>
+        ) : (
         <section id="devis" className="scroll-mt-6 rounded-lg border border-border bg-card p-5">
           <h2 className="font-serif text-lg">Devis</h2>
           {linkedWork.data?.quotes.length ? <ul className="mt-2 space-y-2">{linkedWork.data.quotes.map((quote) => <li key={quote.id}><Link to="/atelier/devis/$quoteId" params={{ quoteId: quote.id }} className="inline-flex min-h-11 items-center underline">{quote.number} · {quote.status}</Link></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">Aucun devis lié à ce dossier.</p>}
         </section>
+        )}
         <DecisionsPanel caseId={caseId} role="binder" />
         <ConversationPanel caseId={caseId} viewerRole="binder" />
       </>

@@ -6,6 +6,7 @@
  * box. The admin decides, which is the whole point of a concierge MVP — and of
  * the CLAUDE.md rule that the system proposes and the human disposes.
  */
+import { commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
 import { OperatorLogisticsPanel } from "./OperatorLogisticsPanel";
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -1033,6 +1034,13 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
               ? CASE_STATUS_LABELS[data.case.status]
               : data.case.status}
           </p>
+          {commercialOriginOf(data.case.acquisition_origin) === "workshop_client" ? (
+            <p className="mt-3 rounded-md border border-emerald-700/30 bg-emerald-50 p-3 text-sm leading-6 text-emerald-900">
+              Client propre de l'atelier (lien personnel ou vitrine) : l'atelier vend et facture. Aucune proposition Oppe n'est possible.
+            </p>
+          ) : (
+            <p className="mt-3 text-sm text-muted-foreground">Projet Oppe : Oppe vend, choisit l'atelier et facture le client.</p>
+          )}
           {held && (
             <div className="mt-4 rounded-md border border-amber-600/30 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
               <p className="font-medium">Revue manuelle requise</p>

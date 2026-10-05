@@ -89,7 +89,7 @@ export function WorksPage() {
                       </span>
                       <span className="mt-0.5 block text-xs text-muted-foreground">
                         {w.quoteCount} devis
-                        {w.source === "ma_reliure" ? ` · Source : ${w.platformBrand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"}` : " · Source : Mon client"}
+                        {w.source === "ma_reliure" ? ` · Projet Oppe · ${w.platformBrand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"}` : w.source === "workshop_platform" ? " · Mon client · via mon lien ou ma vitrine" : " · Mon client"}
                         {w.status === "archived" ? " · archivé" : ""}
                         {` · Activité ${new Date(w.updatedAt ?? w.createdAt).toLocaleDateString("fr-FR")}`}
                       </span>

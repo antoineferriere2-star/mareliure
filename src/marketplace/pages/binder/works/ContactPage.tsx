@@ -52,7 +52,10 @@ export function ContactPage({ contactId }: { contactId: string }) {
           {contact.archived && <span className="ml-2 text-base font-normal text-muted-foreground">(archivé)</span>}
         </h1>
         {contact.origin === "ma_reliure" && (
-          <p className="text-sm text-muted-foreground">Contact issu d'un projet apporté par {contact.platformBrand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"}.</p>
+          <p className="text-sm text-muted-foreground">Client d'Oppe pour un projet {contact.platformBrand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"} : vous réalisez le travail, Oppe vend et facture.</p>
+        )}
+        {contact.origin === "workshop_platform" && (
+          <p className="text-sm text-muted-foreground">Votre client, arrivé par votre lien ou votre vitrine. Vous restez son vendeur.</p>
         )}
       </header>
 
