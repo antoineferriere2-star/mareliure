@@ -94,6 +94,9 @@ RETURNS boolean LANGUAGE sql STABLE SET search_path = public AS $$
     WHERE p_client IS NOT NULL AND c.id = p_client AND c.binder_id = p_binder AND c.origin = 'ma_reliure'
   );
 $$;
+REVOKE ALL ON FUNCTION public.marketplace_binder_document_is_oppe_order(uuid, uuid, uuid) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.marketplace_binder_document_is_oppe_order(uuid, uuid, uuid) TO service_role;
+
 CREATE FUNCTION public.marketplace_guard_binder_quote_circuit() RETURNS trigger
 LANGUAGE plpgsql SET search_path = public AS $$
 BEGIN
@@ -269,6 +272,12 @@ BEGIN
     'seller','oppe');
   RETURN NEW;
 END $$;
+
+-- Fonctions de trigger : aucune exécution directe depuis l'API.
+REVOKE ALL ON FUNCTION public.marketplace_lock_commercial_origin(), public.marketplace_guard_oppe_sale_origin(),
+  public.marketplace_freeze_binder_provenance(), public.marketplace_guard_binder_quote_circuit(),
+  public.marketplace_guard_binder_invoice_circuit(), public.marketplace_guard_retired_circuits()
+  FROM PUBLIC, anon, authenticated;
 
 -- Retour arrière (aucune donnée n'est réécrite par cette migration) :
 --   DROP TRIGGER a_marketplace_guard_retired_circuits, a_marketplace_guard_binder_invoice_circuit,

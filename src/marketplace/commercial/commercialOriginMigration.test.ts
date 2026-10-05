@@ -136,6 +136,15 @@ describe("documents de l'atelier", () => {
   });
 });
 
+describe("droits", () => {
+  it("n'ouvre aucune nouvelle fonction à l'API publique", async () => {
+    const { rows } = await db.query<{ anon: boolean; auth: boolean; service: boolean }>(
+      "SELECT has_function_privilege('anon','marketplace_binder_document_is_oppe_order(uuid,uuid,uuid)','EXECUTE') AS anon, has_function_privilege('authenticated','marketplace_binder_document_is_oppe_order(uuid,uuid,uuid)','EXECUTE') AS auth, has_function_privilege('service_role','marketplace_binder_document_is_oppe_order(uuid,uuid,uuid)','EXECUTE') AS service",
+    );
+    expect(rows).toEqual([{ anon: false, auth: false, service: true }]);
+  });
+});
+
 describe("circuits de paiement", () => {
   it("n'ouvre plus la commission de 25 % ni la conciergerie, même par écriture directe", async () => {
     await expect(db.exec(`UPDATE marketplace_case_payment_circuits SET circuit='network_sale' WHERE case_id='${OWN_CASE}'`))
