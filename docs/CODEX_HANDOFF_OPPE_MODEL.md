@@ -6,8 +6,8 @@ l'existant. Audit de départ : « Audit modèle Oppe » du 5 octobre 2026.
 
 ## 1. État de la production (vérifié le 5 octobre 2026, 14:47 UTC)
 
-- `main` = `77af584` ; Worker `mareliure` = `b812e4cc-a6ea-4050-81a8-508044caed0c` (retour arrière : `294765f8` n'est plus
-  compatible avec la base 102 — voir « Retour arrière » ci-dessous).
+- `main` = `77af584` ; Worker `mareliure` = `b812e4cc-a6ea-4050-81a8-508044caed0c` (retour arrière : `f1f36d4b`,
+  Worker du lot « contenus » ; voir « Retour arrière » ci-dessous).
 - Base de production : **102 migrations**, dernière `20261005210000_oppe_tax_qualification`.
 - Webhooks Stripe (2 routes) répondent 400 sans signature ; http → https en 301 ; smoke vert.
 
