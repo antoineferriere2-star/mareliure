@@ -41,7 +41,7 @@ Description enregistrée : « OPPE SAS vend des prestations de reliure et de res
 
 Aucune identité légale, pièce personnelle ni coordonnée bancaire modifiée. Reçu privé `stripe-live-identity-corrected-20261005.json`, capture `stripe-public-identity-corrected.jpg`.
 
-L’ancien logo WooPayments, constaté dans l’aperçu Checkout, a également été retiré des surfaces hébergées. La relecture API confirme `logo=null`, `icon=null`, `use_logo_instead_of_icon=false` : l’identité textuelle Ma Reliure / Fine Bindery remplace ce logo tiers, sans inventer de nouveau visuel. Couleurs principales existantes conservées ; contraste recalculé selon la contrainte Stripe et couleurs Checkout spécifiques conservées. Reçu privé `stripe-live-brand-corrected-20261005.json`, capture `stripe-brand-corrected.jpg`.
+L’ancien logo WooPayments, constaté dans l’aperçu Checkout, a également été retiré des surfaces hébergées. La relecture API confirme `logo=null`, `icon=null`, `use_logo_instead_of_icon=false` : le nom commercial corrigé Ma Reliure / Fine Bindery est conservé, sans inventer de nouveau visuel. Couleurs principales existantes conservées ; contraste recalculé selon la contrainte Stripe ; couleurs de marque activées pour Checkout, paramètres de couleurs spécifiques conservés. Reçu privé `stripe-live-brand-corrected-20261005.json`, capture `stripe-brand-corrected.jpg`.
 
 ## Connect : configuration test vérifiée, vérification live requise
 
