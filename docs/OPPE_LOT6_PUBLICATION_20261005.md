@@ -41,9 +41,9 @@ Fermer B/C, garder les documents et les webhooks. **Après émission d’avoirs 
 
 ## Travail restant avant les ouvertures
 
-1. Accès Stripe live : intégration proposée mais toujours non installée au dernier contrôle ; aucune clé live locale. Identité publique du compte live, catalogue B live et activation/configuration Connect live non vérifiés.
-2. Validation de l’expert-comptable sur la TVA et revue juridique des clauses : non obtenues. Configuration Stripe Tax et portail B, puis recette hébergée Checkout, facture, e-mail et résiliation.
-3. Connect C : poser `STRIPE_CONNECT_WEBHOOK_SECRET`, configurer les événements sur les comptes connectés, terminer la configuration d’un atelier français et éprouver succès/refus/asynchrone, remboursement partiel/total, litige, e-mails et frais réels. Un Checkout complété en échec nécessite encore une reprise d’exploitation avant nouvelle tentative ; cette limite interdit de présenter C comme entièrement prêt.
+1. Suite Stripe live : intégration maintenant connectée, identité publique relue et anomalies Securicom/BTP confirmées ; correction en attente de connexion au Dashboard. Catalogue B et portail live créés, événements abonnement ajoutés, webhook Connect créé et secret déployé. Nouveau Worker `8f9d80ce-82a3-4848-8e9a-0bc1edc383ae`, même code, 16 liaisons, 12 contrôles HTTP réussis et B/C toujours fermés. Voir [le reçu Stripe live](OPPE_STRIPE_LIVE_PREPARATION_20261005.md).
+2. Validation de l’expert-comptable sur la TVA et revue juridique des clauses : non obtenues. Stripe Tax actif mais aucune immatriculation enregistrée ; compléter sur décision comptable, puis recette hébergée Checkout, portail, facture, e-mail et résiliation.
+3. Connect C : secret et événements configurés ; activation de la plateforme live non attestée. Revoir Accounts v2 pour cette nouvelle intégration, terminer la configuration d’un atelier français et éprouver succès/refus/asynchrone, remboursement partiel/total, litige, e-mails et frais réels. Un Checkout complété en échec nécessite encore une reprise d’exploitation avant nouvelle tentative ; cette limite interdit de présenter C comme entièrement prêt.
 4. Secrets Sendcloud, conditions de couverture et test physique réel d’aller-retour : non effectués.
 5. Premier paiement réel de faible montant et remboursement : non effectués ; aucun débit réel par ce chantier.
 6. Offre internationale : tarifs, pays, devises, transport, couverture, douanes et fiscalité à établir avec des données réelles avant ouverture. Aucun forfait international inventé.
