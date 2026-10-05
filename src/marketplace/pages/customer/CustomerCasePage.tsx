@@ -12,6 +12,7 @@
  * proposition en liste blanche, un `CaseView` déjà filtré) et cet écran les met
  * en page. Aucun message d'erreur du serveur n'est affiché.
  */
+import { ORDER_STAGE_LABELS } from "@/marketplace/orders/orderStatus";
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -114,13 +115,14 @@ function AcceptButton({
   const accept = useServerFn(acceptMyProposal);
   const queryClient = useQueryClient();
   const [failed, setFailed] = useState(false);
+  const [consent, setConsent] = useState(false);
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ["marketplace", "customer", "case", caseId] }),
       queryClient.invalidateQueries({ queryKey: ["marketplace", "customer", "cases"] }),
     ]);
   const mutation = useMutation({
-    mutationFn: () => accept({ data: { caseId, proposalId } }),
+    mutationFn: () => accept({ data: { caseId, proposalId, termsAccepted: true } }),
     onSuccess: async () => {
       setFailed(false);
       await refresh();
@@ -134,11 +136,25 @@ function AcceptButton({
 
   return (
     <div>
+      <label className="mb-3 flex items-start gap-3 text-sm leading-6">
+        <input
+          type="checkbox"
+          className="mt-1 h-4 w-4 shrink-0"
+          checked={consent}
+          onChange={(event) => setConsent(event.target.checked)}
+        />
+        <span>
+          {copy.termsConsent}{" "}
+          <a href={copy.termsHref} target="_blank" rel="noreferrer" className="underline">
+            {copy.termsLinkLabel}
+          </a>
+        </span>
+      </label>
       <Button
         size="lg"
         data-primary-action=""
         className="h-11 w-full sm:w-auto"
-        disabled={mutation.isPending}
+        disabled={mutation.isPending || !consent}
         onClick={() => {
           setFailed(false);
           mutation.mutate();
@@ -492,6 +508,12 @@ export function CustomerCasePage({
           <div className="mt-3">
             <StatusBadge status={status} />
           </div>
+          {data.case.orderStatus && (
+            <p className="mt-2 text-sm text-[#4b3a2c]">
+              {locale.startsWith("en") ? "Order: " : "Commande : "}
+              {ORDER_STAGE_LABELS[data.case.orderStatus][locale.startsWith("en") ? "en" : "fr"]}
+            </p>
+          )}
         </div>
       </header>
 

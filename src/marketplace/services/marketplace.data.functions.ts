@@ -27,7 +27,7 @@ import {
 import { triageMessages } from "@/marketplace/cases/triage";
 import { disclosedSummary, type CaseLocale } from "@/marketplace/cases/dossierProjection";
 import type { ProjectBrief } from "@/build/schema/brief";
-import { suggestManagedPrice, validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
+import { suggestManagedPrice, validateManagedPrice, targetServicePriceCents, hasDerogation } from "@/marketplace/pricing/pricing.engine";
 import { PRICING_POLICY } from "@/marketplace/pricing/pricing.rules";
 import { depositCentsFor, pricingModeFor } from "@/marketplace/pricing/pricingMode";
 import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
@@ -45,7 +45,7 @@ import { customerJourney } from "@/marketplace/shipping/customerJourney";
  * vente au client ni la marge d'Oppe — ni à l'écran, ni dans la réponse du serveur.
  */
 export const BINDER_OFFER_COLUMNS =
-  "state, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail";
+  "state, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, decline_reason_code, decline_reason_detail, service_description, lead_time_days";
 
 const WORK_FAMILY_KEYS = WORK_FAMILIES.map((f) => f.key) as [WorkFamilyKey, ...WorkFamilyKey[]];
 import {
@@ -543,6 +543,8 @@ const managedPriceInput = z.object({
   customerPriceCents: z.number().int().positive(),
   binderPayoutCents: z.number().int().positive(),
   priceIncludes: z.array(z.string().trim().min(1).max(160)).max(20).default([]),
+  /** Motif d'un prix sous la marge cible de 25 % (geste commercial, cas particulier) : tracé. */
+  derogationReason: z.string().trim().max(500).nullable().default(null),
 });
 
 export const saveMarketplacePricing = createServerFn({ method: "POST" })
@@ -550,7 +552,7 @@ export const saveMarketplacePricing = createServerFn({ method: "POST" })
   .inputValidator((data: unknown) => managedPriceInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
-    const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
+    const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents, PRICING_POLICY, data.derogationReason);
     if (!validation.valid) fail(422, validation.errors.join(" "));
     const sb = await admin();
     await assertPricingOpen(sb, data.caseId);
@@ -578,8 +580,13 @@ export const saveMarketplacePricing = createServerFn({ method: "POST" })
 
 export async function validateMarketplacePricingCore(context: AdminCallContext, data: z.infer<typeof managedPriceInput>) {
     await assertAdmin(context.supabase, context.userId);
-    const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents);
+    const derogation = hasDerogation(data.derogationReason) ? data.derogationReason!.trim() : null;
+    const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents, PRICING_POLICY, derogation);
     if (!validation.valid) fail(422, validation.errors.join(" "));
+    // Un prix différent du prix cible (au-delà de l'arrondi) est une dérogation : toujours motivée.
+    const target = targetServicePriceCents(data.binderPayoutCents);
+    if (data.customerPriceCents !== target && !derogation)
+      fail(422, `Le prix cible pour cette rémunération est ${(target / 100).toFixed(2)} € HT (marge de 25 %). Appliquez-le ou motivez la dérogation.`);
     const sb = await admin();
     await assertPricingOpen(sb, data.caseId);
     const { data: result, error } = await sb.rpc("marketplace_validate_pricing", {
@@ -587,11 +594,26 @@ export async function validateMarketplacePricingCore(context: AdminCallContext, 
       p_customer_price_cents: data.customerPriceCents,
       p_binder_payout_cents: data.binderPayoutCents,
       p_price_includes: data.priceIncludes,
-      p_minimum_margin_bps: PRICING_POLICY.minimumMarginBps,
-      p_minimum_margin_cents: PRICING_POLICY.minimumMarginCents,
+      // Une dérogation motivée lève le plancher de marge en base ; elle est tracée ci-dessous.
+      p_minimum_margin_bps: derogation ? 0 : PRICING_POLICY.minimumMarginBps,
+      p_minimum_margin_cents: derogation ? 0 : PRICING_POLICY.minimumMarginCents,
       p_actor_user_id: context.userId,
     });
     if (error) fail(409, error.message);
+    {
+      const { error: derogationError } = await sb
+        .from("marketplace_cases")
+        .update({ pricing_derogation_reason: derogation })
+        .eq("id", data.caseId);
+      if (derogationError) fail(500, derogationError.message);
+      if (derogation)
+        await sb.from("marketplace_events").insert({
+          case_id: data.caseId,
+          actor_user_id: context.userId,
+          event_type: "pricing_derogation",
+          metadata: { reason: derogation, customer_price_cents: data.customerPriceCents, target_price_cents: target },
+        });
+    }
 
     // `marketplace_validate_pricing` recopie le prix validé dans service_price_cents (une seule
     // vérité de prix, P1-4) mais ne touche jamais pricing_mode / brand_multiplier_bps /
@@ -628,6 +650,8 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
       .object({
         caseId: z.string().uuid(),
         binderIds: z.array(z.string().uuid()).min(1).max(MAX_BINDERS_PER_CASE),
+        /** Ce que l'atelier s'engage à réaliser : figé avec sa rémunération et son délai. */
+        serviceDescription: z.string().trim().min(10).max(2000),
       })
       .parse(data),
   )
@@ -754,13 +778,15 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
       decision.binderIds.map((binderId) => ({
         case_id: data.caseId,
         binder_id: binderId,
-        description: "Offre Ma Reliure",
-        amount_cents: caseContext.row.customer_price_cents!,
+        description: "Offre Oppe",
+        // Le prix de vente au client n'est jamais transmis à l'atelier : seule sa rémunération.
+        amount_cents: payoutByBinder.get(binderId)!.payoutCents,
         currency: MARKETPLACE_CURRENCY,
         lead_time_weeks: null,
         state: "offered",
-        customer_price_cents: caseContext.row.customer_price_cents,
+        customer_price_cents: null,
         binder_payout_cents: payoutByBinder.get(binderId)!.payoutCents,
+        service_description: data.serviceDescription,
         offered_at: offeredAt,
       })),
     );
@@ -1343,6 +1369,8 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
          * entretien. Elle n'a de sens qu'après un refus pour rémunération.
          */
         minimumRequiredPayoutCents: z.number().int().positive().optional().nullable(),
+        /** Délai de réalisation, en jours, auquel l'atelier s'engage en acceptant. */
+        leadTimeDays: z.number().int().min(1).max(365).optional().nullable(),
       })
       .superRefine((value, ctx) => {
         if (!value.accept && !value.reasonCode)
@@ -1357,6 +1385,17 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
     if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux projets.");
+    if (data.accept) {
+      if (!data.leadTimeDays) fail(422, "Indiquez le délai de réalisation que vous vous engagez à tenir.");
+      const { data: accepted, error: acceptError } = await sb.rpc("marketplace_accept_workshop_offer", {
+        p_case_id: data.caseId,
+        p_binder_id: binder!.id,
+        p_lead_time_days: data.leadTimeDays!,
+        p_actor_user_id: context.userId,
+      });
+      if (acceptError) fail(409, acceptError.message);
+      return accepted;
+    }
     const { data: result, error } = await sb.rpc("marketplace_respond_to_offer", {
       p_case_id: data.caseId,
       p_binder_id: binder!.id,
@@ -1568,6 +1607,12 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     const intentLine = caseContext.brief.confirmedInformation.find(
       (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
     );
+    // La commande payée a son propre cycle (réalisation, fin, annulation) : son statut, rien d'autre.
+    const { data: oppeOrder } = await sb
+      .from("marketplace_oppe_orders")
+      .select("status")
+      .eq("case_id", data.caseId)
+      .maybeSingle();
     const { count: openDecisions } = await sb
       .from("marketplace_decisions")
       .select("id", { count: "exact", head: true })
@@ -1590,6 +1635,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
         paymentEligible: commerce.paymentEligible,
         canAcceptProposal: commerce.canAccept,
         paidAt: commerce.paidAt,
+        orderStatus: (oppeOrder?.status ?? null) as "paid" | "in_production" | "completed" | "cancelled" | null,
         openDecisions: openDecisions ?? 0,
         // `concierge` : le client n'écrit jamais à l'atelier (Fine Bindery).
         messagingChannel: marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging

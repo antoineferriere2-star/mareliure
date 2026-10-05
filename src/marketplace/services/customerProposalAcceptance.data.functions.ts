@@ -5,6 +5,7 @@
  * traduit une erreur en réponse — jamais le détail interne au navigateur.
  */
 import { createServerFn } from "@tanstack/react-start";
+import { getRequest } from "@tanstack/react-start/server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
@@ -30,7 +31,13 @@ export const acceptMyProposal = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     const sb = await admin();
     try {
-      const result = await acceptProposalForCustomer(sb, { ...data, userId: context.userId });
+      const request = getRequest();
+      const result = await acceptProposalForCustomer(sb, {
+        ...data,
+        userId: context.userId,
+        ipAddress: request.headers.get("cf-connecting-ip"),
+        userAgent: request.headers.get("user-agent"),
+      });
       // Deux faits, rien d'autre : ni prix ni ligne de proposition. Le navigateur
       // relit le dossier pour afficher l'état recalculé.
       return { outcome: result.outcome, paymentEligible: result.commerce.paymentEligible };

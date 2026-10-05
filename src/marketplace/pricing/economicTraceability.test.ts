@@ -19,6 +19,9 @@ import { buildCommercialProposalSnapshot } from "@/marketplace/commercial/commer
  * les chiffres ronds de l'énoncé, pas le comportement d'arrondi de
  * production (déjà couvert par pricebook.test.ts).
  */
+/** L'ancienne politique Fine Bindery (×1,30, §13), figée sur les propositions qui l'ont appliquée. */
+const LEGACY_FINE_BINDERY_POLICY = { serviceMultiplierBps: 13_000, minimumServicePriceCents: null };
+
 describe("traçabilité économique — Pricebook → marque → garde-fous → prix client", () => {
   const ROUNDING = 100; // 1 €
 
@@ -39,7 +42,13 @@ describe("traçabilité économique — Pricebook → marque → garde-fous → 
     expect(brandPrice.servicePriceCents - 37_500).toBe(12_500); // marge brute 125 €
   });
 
-  it("Fine Bindery : même Pricebook, ×1,30 appliqué après le MAX, marge brute 275 €", () => {
+  it("modèle Oppe (v6) : Fine Bindery suit la même marge de 25 % que Ma Reliure", () => {
+    const brandPrice = applyBrandServicePricing(50_000, "FINE_BINDERY", ROUNDING);
+    expect(brandPrice.brandMultiplierBps).toBe(10_000);
+    expect(brandPrice.servicePriceCents).toBe(50_000);
+  });
+
+  it("historique : Fine Bindery, même Pricebook, ×1,30 appliqué après le MAX, marge brute 275 €", () => {
     const floors = resolveServicePriceFloors({
       binderPayoutCents: 37_500,
       targetMarginBps: 2_500,
@@ -49,7 +58,7 @@ describe("traçabilité économique — Pricebook → marque → garde-fous → 
     });
     // Le ×1,30 de Fine Bindery s'applique au prix Ma Reliure déjà plafonné
     // (50 000), jamais à la rémunération atelier — brandPricing.ts, inchangé.
-    const brandPrice = applyBrandServicePricing(floors.priceCents, "FINE_BINDERY", ROUNDING);
+    const brandPrice = applyBrandServicePricing(floors.priceCents, "FINE_BINDERY", ROUNDING, LEGACY_FINE_BINDERY_POLICY);
     expect(brandPrice.brandMultiplierBps).toBe(13_000);
     expect(brandPrice.servicePriceCents).toBe(65_000); // 500 € × 1,30
     expect(brandPrice.servicePriceCents - 37_500).toBe(27_500); // marge brute 275 €
@@ -67,6 +76,7 @@ describe("traçabilité économique — Pricebook → marque → garde-fous → 
       acceptedFloors.priceCents,
       "FINE_BINDERY",
       ROUNDING,
+      LEGACY_FINE_BINDERY_POLICY,
     );
     const accepted = buildCommercialProposalSnapshot({
       caseId: "11111111-1111-1111-1111-111111111111",

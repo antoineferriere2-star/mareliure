@@ -130,8 +130,9 @@ export const MARKETPLACE_BRAND_CONFIGS: Readonly<Record<MarketplaceBrand, Market
     defaultLocale: "en-US",
     international: true,
     pricingPolicy: {
-      // §13 : prix de référence Ma Reliure + 30 %, hors transport.
-      serviceMultiplierBps: 13_000,
+      // Modèle Oppe du 5 octobre 2026 : même marge cible de 25 % sur les deux marques.
+      // L'ancien ×1,30 (§13) reste figé sur les propositions qui l'ont appliqué.
+      serviceMultiplierBps: 10_000,
       minimumServicePriceCents: null,
     },
     messaging: {

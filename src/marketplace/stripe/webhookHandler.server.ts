@@ -104,6 +104,13 @@ async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): 
       proposalId: action.proposalId,
       paymentIntentId: action.evidence.paymentIntentId,
     });
+    // La commande Oppe s'ouvre une seule fois, quel que soit l'événement qui confirme le paiement.
+    try {
+      const { onOppePaymentConfirmed } = await import("@/marketplace/orders/oppeOrderFulfilment.server");
+      await onOppePaymentConfirmed(sb, { caseId: action.caseId, proposalId: action.proposalId, paymentIntentId: action.evidence.paymentIntentId });
+    } catch (err) {
+      return { ok: false, reason: "fulfilment_failed", detail: err instanceof Error ? err.message : String(err) };
+    }
     // Alerte « paiement reçu » (4 octobre 2026) : une fois par paiement, jamais bloquante.
     if (journalCreated) {
       const { caseReference, formatEurosForAlert, notifyAdmin } = await import("@/marketplace/notifications/adminAlerts.server");

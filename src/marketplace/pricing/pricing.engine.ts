@@ -37,10 +37,24 @@ import type { RateAggregate } from "./rateCard";
 import { resolveWork } from "./workResolver";
 import type { CaseProfile } from "@/marketplace/cases/caseProfile";
 
+/** Longueur minimale d'un motif de dérogation : une phrase, pas un mot. */
+export const MIN_DEROGATION_REASON_LENGTH = 12;
+
+/** Le prix de vente HT qui donne exactement la marge cible, arrondi vers le haut. */
+export function targetServicePriceCents(binderPayoutCents: number, policy: PricingPolicy = PRICING_POLICY): number {
+  const raw = Math.ceil((binderPayoutCents * 10_000) / (10_000 - policy.targetMarginBps));
+  return Math.ceil(raw / policy.roundingIncrementCents) * policy.roundingIncrementCents;
+}
+
+export function hasDerogation(reason: string | null | undefined): boolean {
+  return (reason ?? "").trim().length >= MIN_DEROGATION_REASON_LENGTH;
+}
+
 export function validateManagedPrice(
   customerPriceCents: number,
   binderPayoutCents: number,
   policy: PricingPolicy = PRICING_POLICY,
+  derogationReason: string | null = null,
 ): PricingValidation {
   const errors: string[] = [];
   if (!Number.isInteger(customerPriceCents) || customerPriceCents <= 0)
@@ -55,8 +69,8 @@ export function validateManagedPrice(
     policy.minimumMarginCents,
     Math.ceil((customerPriceCents * policy.minimumMarginBps) / 10_000),
   );
-  if (marginCents < minimumMarginCents)
-    errors.push("La marge est inférieure au minimum configuré.");
+  if (marginCents < minimumMarginCents && !hasDerogation(derogationReason))
+    errors.push("La marge est inférieure à 25 % du prix de vente HT : appliquez le prix cible ou motivez une dérogation.");
 
   return { valid: errors.length === 0, marginCents, marginBps, minimumMarginCents, errors };
 }
@@ -217,7 +231,7 @@ export function suggestManagedPrice(
     targetMarginBps: policy.targetMarginBps,
     minimumContributionCents: policy.minimumContributionCents,
     roundingIncrementCents: policy.roundingIncrementCents,
-    referenceCents: pricebookMatch?.referenceCents ?? null,
+    referenceCents: policy.pricebookBindsPrice ? (pricebookMatch?.referenceCents ?? null) : null,
   });
   const customerPrice = floors.priceCents;
   const validation = validateManagedPrice(customerPrice, payout, policy);
@@ -242,7 +256,7 @@ export function suggestManagedPrice(
     }).priceCents,
     marginCents: validation.marginCents,
     marginBps: validation.marginBps,
-    pricebookReferenceCents: floors.referenceCents,
+    pricebookReferenceCents: pricebookMatch?.referenceCents ?? null,
     marginFloorCents: floors.marginFloorCents,
     contributionFloorCents: floors.contributionFloorCents,
     priceBoundBy: floors.boundBy,

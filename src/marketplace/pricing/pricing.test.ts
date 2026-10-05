@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildCaseProfile } from "@/marketplace/cases/caseProfile";
-import { suggestManagedPrice, validateManagedPrice } from "./pricing.engine";
+import { suggestManagedPrice, targetServicePriceCents, validateManagedPrice } from "./pricing.engine";
 import { aggregateRates } from "./rateCard";
 import { asVerified, TEST_RATES } from "./testReferences.fixture";
 import type { ReferenceLookup } from "./pricing.types";
@@ -69,8 +69,9 @@ describe("le moteur tarifaire", () => {
     expect(result.status).toBe("suggested");
     expect(result.workItemKeys).toEqual(["demi_cuir", "recouture_complete", "dorure_titrage"]);
     expect(result.suggestedBinderPayoutCents).toBe(47_500);
-    expect(result.suggestedCustomerPriceCents).toBe(58_000);
-    expect(result.marginCents).toBe(10_500);
+    // Modèle Oppe (v6) : 475 € / (1 − 25 %) = 633,33 € → 634 € à l'euro supérieur.
+    expect(result.suggestedCustomerPriceCents).toBe(63_400);
+    expect(result.marginCents).toBe(15_900);
     expect(result.components.map((c) => c.referencePayoutCents)).toEqual([35_000, 8_000, 4_500]);
   });
 
@@ -106,8 +107,8 @@ describe("le moteur tarifaire", () => {
       notes: null,
     });
 
-    // Somme des trois entrées = 70 000, au-dessus des 58 000 du plancher de
-    // marge : la référence doit gagner le MAX.
+    // Somme des trois entrées = 70 000. Depuis le modèle Oppe (v6), la référence reste un repère
+    // affiché : elle ne relève plus le prix, fixé par la marge cible sur la rémunération.
     const withPricebook = suggestManagedPrice(profile, {
       ...testReferences(),
       pricebookEntries: [
@@ -117,8 +118,8 @@ describe("le moteur tarifaire", () => {
       ],
     });
     expect(withPricebook.pricebookReferenceCents).toBe(70_000);
-    expect(withPricebook.priceBoundBy).toBe("reference");
-    expect(withPricebook.suggestedCustomerPriceCents).toBe(70_000);
+    expect(withPricebook.priceBoundBy).toBe("margin_floor");
+    expect(withPricebook.suggestedCustomerPriceCents).toBe(63_400);
 
     // Un seul travail non couvert dans le Pricebook : jamais une somme
     // partielle — la référence disparaît, les planchers seuls décident,
@@ -128,7 +129,7 @@ describe("le moteur tarifaire", () => {
       pricebookEntries: [pricebookEntry("demi_cuir", 45_000)],
     });
     expect(partiallyMissing.pricebookReferenceCents).toBeNull();
-    expect(partiallyMissing.suggestedCustomerPriceCents).toBe(58_000);
+    expect(partiallyMissing.suggestedCustomerPriceCents).toBe(63_400);
   });
 
   it("explique chaque ligne du calcul, avec le nombre d'ateliers derrière", () => {
@@ -162,10 +163,9 @@ describe("le moteur tarifaire", () => {
     });
     const result = suggestManagedPrice(profile, testReferences());
 
-    // 300 € de plancher terrain + 80 € de contribution minimale (politique du
-    // 16 septembre 2026) l'emporte désormais sur le plancher de marge seul.
-    expect(result.lowEstimateCents).toBe(38_000);
-    expect(result.highEstimateCents).toBe(58_000); // 470 € de plafond terrain
+    // 300 € et 470 € d'extrêmes terrain, à 25 % de marge sur le prix de vente.
+    expect(result.lowEstimateCents).toBe(40_000);
+    expect(result.highEstimateCents).toBe(62_700);
     expect(result.lowEstimateCents!).toBeLessThan(result.suggestedCustomerPriceCents!);
     expect(result.highEstimateCents!).toBeGreaterThan(result.suggestedCustomerPriceCents!);
   });
@@ -232,6 +232,22 @@ describe("le moteur tarifaire", () => {
   it("refuse une répartition inversée et une marge sous la politique", () => {
     expect(validateManagedPrice(40_000, 41_000).valid).toBe(false);
     expect(validateManagedPrice(40_000, 39_000).valid).toBe(false);
-    expect(validateManagedPrice(49_000, 40_000).valid).toBe(true);
+    expect(validateManagedPrice(53_300, 40_000).valid).toBe(false); // 24,95 %
+    expect(validateManagedPrice(53_400, 40_000).valid).toBe(true); // 25,09 %
+  });
+
+  it("applique une marge sur vente, jamais une majoration du coût (150 € → 200 €)", () => {
+    expect(targetServicePriceCents(15_000)).toBe(20_000);
+    expect(validateManagedPrice(20_000, 15_000)).toMatchObject({ valid: true, marginCents: 5_000, marginBps: 2_500 });
+    // 150 € majorés de 25 % = 187,50 € : marge de 20 % seulement, refusée.
+    expect(validateManagedPrice(18_750, 15_000).valid).toBe(false);
+    // Arrondi à l'euro supérieur, jamais en dessous de la marge cible.
+    expect(targetServicePriceCents(15_100)).toBe(20_200);
+  });
+
+  it("n'accepte un prix sous la marge cible qu'avec une dérogation motivée", () => {
+    expect(validateManagedPrice(19_000, 15_000, undefined, "geste").valid).toBe(false);
+    expect(validateManagedPrice(19_000, 15_000, undefined, "Geste commercial validé : client fidèle").valid).toBe(true);
+    expect(validateManagedPrice(14_000, 15_000, undefined, "Geste commercial validé : client fidèle").valid).toBe(false);
   });
 });

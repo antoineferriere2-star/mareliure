@@ -1,11 +1,11 @@
 /**
  * Un client accepte la proposition qu'on lui présente.
  *
- * C'est la même écriture que l'acceptation admin (`acceptCommercialProposal`,
- * dans le dépôt de propositions) — celle qui pose `accepted_at` et rend la ligne
- * immuable par trigger. Ce fichier ne change ni cette écriture ni aucune de ses
- * garanties : il ajoute seulement, devant elle, ce qui fait qu'un client peut
- * la déclencher pour SON dossier et rien d'autre.
+ * Depuis le modèle Oppe (5 octobre 2026), c'est la SEULE voie d'acceptation : la fonction SQL
+ * `marketplace_accept_proposal_as_customer` pose `accepted_at` avec la preuve (conditions
+ * acceptées, empreinte du devis, adresse IP, navigateur), et un trigger refuse toute autre
+ * écriture d'acceptation. Ce fichier ajoute devant elle ce qui fait qu'un client peut la
+ * déclencher pour SON dossier et rien d'autre.
  *
  * Ce que le navigateur envoie : un `caseId` et le `proposalId` qu'il a sous les
  * yeux. Jamais un montant, une taxe, un statut. Le serveur recharge tout, dans
@@ -29,19 +29,25 @@ import { proposalCarriesCurrentPrice } from "@/marketplace/commercial/authoritat
 import { canViewCase } from "@/marketplace/permissions";
 import { loadCaseContext } from "@/marketplace/services/caseRepository.server";
 import {
-  acceptCommercialProposal,
+  acceptCommercialProposalAsCustomer,
   loadAcceptedCommercialProposal,
   loadCommercialProposalById,
   loadLatestCommercialProposal,
 } from "@/marketplace/services/commercialProposalRepository.server";
 import { loadCustomerCommerce, type CustomerCommerce } from "@/marketplace/services/customerCommerce.server";
+import { SALES_TERMS_VERSION, acceptanceSnapshotSha256 } from "@/marketplace/commercial/acceptanceProof";
 
 /**
  * `.strict()` : un champ en plus — un `amountCents`, un `status` — est refusé
  * plutôt qu'ignoré en silence. Le contrat est : deux identifiants, rien d'autre.
  */
 export const acceptProposalInput = z
-  .object({ caseId: z.string().uuid(), proposalId: z.string().uuid() })
+  .object({
+    caseId: z.string().uuid(),
+    proposalId: z.string().uuid(),
+    /** Case cochée par le client : il accepte le devis et les conditions générales de vente. */
+    termsAccepted: z.literal(true),
+  })
   .strict();
 
 export type AcceptProposalInput = z.infer<typeof acceptProposalInput>;
@@ -82,7 +88,7 @@ export interface AcceptProposalResult {
 
 export async function acceptProposalForCustomer(
   sb: Supa,
-  input: AcceptProposalInput & { userId: string },
+  input: AcceptProposalInput & { userId: string; ipAddress?: string | null; userAgent?: string | null },
 ): Promise<AcceptProposalResult> {
   const caseContext = await loadCaseContext(sb, input.caseId);
   if (!caseContext) throw new CustomerAcceptanceError("case_not_found");
@@ -144,9 +150,16 @@ export async function acceptProposalForCustomer(
   });
   if (!verdict.acceptable) throw new CustomerAcceptanceError("not_acceptable");
 
-  let done;
+  let outcome: "accepted" | "already_accepted";
   try {
-    done = await acceptCommercialProposal(sb, proposal.id);
+    outcome = await acceptCommercialProposalAsCustomer(sb, {
+      proposalId: proposal.id,
+      customerUserId: input.userId,
+      termsVersion: SALES_TERMS_VERSION,
+      snapshotSha256: await acceptanceSnapshotSha256(proposal),
+      ipAddress: input.ipAddress ?? null,
+      userAgent: input.userAgent ?? null,
+    });
   } catch {
     // Une acceptation concurrente de cette même proposition (deux onglets) a pu
     // passer entre notre lecture et notre écriture : c'est un succès, pas un échec.
@@ -155,17 +168,7 @@ export async function acceptProposalForCustomer(
     throw new CustomerAcceptanceError(now ? "proposal_changed" : "accept_failed");
   }
 
-  await sb.from("marketplace_events").insert({
-    case_id: done.caseId,
-    actor_user_id: input.userId,
-    event_type: "commercial_proposal_accepted",
-    metadata: {
-      proposal_id: done.id,
-      version: done.version,
-      brand: done.brand,
-      accepted_by: "customer",
-    },
-  });
+  if (outcome === "already_accepted") return alreadyAccepted();
 
   return {
     outcome: "accepted",

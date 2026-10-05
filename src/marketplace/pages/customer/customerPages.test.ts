@@ -205,7 +205,7 @@ describe("détail : ce que le client lit", () => {
     expect(html).toContain('href="#proposal"');
     expect(html).toContain("Le paiement sera disponible après validation de votre proposition.");
     expect(html).not.toContain(">Payer<");
-    expect(html).not.toContain("Accepter la proposition");
+    expect(html).not.toContain("Accepter le devis");
   });
 
   it("D — proposition confirmée mais paiement impossible : HT seulement, jamais un bouton désactivé", () => {
@@ -488,14 +488,14 @@ describe("paiement : conditions du bouton", () => {
 });
 
 describe("acceptation de la proposition", () => {
-  it("Ma Reliure — proposition non acceptée : « Accepter la proposition » est l'action principale, pas « Payer »", () => {
+  it("Ma Reliure — proposition non acceptée : « Accepter le devis » est l'action principale, pas « Payer »", () => {
     const html = detail("MA_RELIURE", "C");
-    expect(count(html, ">Accepter la proposition<")).toBe(1);
+    expect(count(html, ">Accepter le devis<")).toBe(1);
     expect(html).not.toContain(">Payer<");
     expect(html).toContain("Proposition disponible");
     // Le bouton est dans « Prochaine étape », avant la proposition détaillée.
-    expect(html.indexOf('id="next-step-title"')).toBeLessThan(html.indexOf(">Accepter la proposition<"));
-    expect(html.indexOf(">Accepter la proposition<")).toBeLessThan(html.indexOf('id="proposal-title"'));
+    expect(html.indexOf('id="next-step-title"')).toBeLessThan(html.indexOf(">Accepter le devis<"));
+    expect(html.indexOf(">Accepter le devis<")).toBeLessThan(html.indexOf('id="proposal-title"'));
     // Le client voit ce qu'il accepte, et pourquoi le paiement n'est pas encore offert.
     expect(html).toContain("En acceptant, vous confirmez le total de 478,80");
     expect(html).toContain("TTC indiqué ci-dessous");
@@ -511,14 +511,14 @@ describe("acceptation de la proposition", () => {
   it("Ma Reliure — proposition acceptée et payable : « Payer » remplace « Accepter »", () => {
     const html = detail("MA_RELIURE", "E");
     expect(count(html, ">Payer<")).toBe(1);
-    expect(html).not.toContain("Accepter la proposition");
+    expect(html).not.toContain("Accepter le devis");
     expect(html).toContain("Proposition acceptée le 14 septembre 2026.");
     expect(html).toContain("Paiement attendu");
   });
 
-  it("Fine Bindery — Accept proposal, puis Pay securely, en anglais seulement", () => {
+  it("Fine Bindery — Accept the quote, puis Pay securely, en anglais seulement", () => {
     const open = detail("FINE_BINDERY", "C");
-    expect(count(open, ">Accept proposal<")).toBe(1);
+    expect(count(open, ">Accept the quote<")).toBe(1);
     expect(open).not.toContain(">Pay securely<");
     expect(open).toContain("By accepting, you confirm the total of");
     expect(open).toContain("incl. tax shown below.");
@@ -526,7 +526,7 @@ describe("acceptation de la proposition", () => {
 
     const accepted = detail("FINE_BINDERY", "E");
     expect(count(accepted, ">Pay securely<")).toBe(1);
-    expect(accepted).not.toContain("Accept proposal");
+    expect(accepted).not.toContain("Accept the quote");
     expect(accepted).toContain("Proposal accepted on September 14, 2026.");
   });
 
@@ -534,7 +534,7 @@ describe("acceptation de la proposition", () => {
     for (const brand of BRANDS) {
       for (const scenario of SCENARIOS) {
         const html = detail(brand, scenario);
-        const accept = brand === "MA_RELIURE" ? "Accepter la proposition" : "Accept proposal";
+        const accept = brand === "MA_RELIURE" ? "Accepter le devis" : "Accept the quote";
         const pay = brand === "MA_RELIURE" ? ">Payer<" : ">Pay securely<";
         expect(html.includes(accept) && html.includes(pay), `${brand}/${scenario}`).toBe(false);
       }
@@ -545,7 +545,7 @@ describe("acceptation de la proposition", () => {
     for (const brand of BRANDS) {
       for (const scenario of ["A", "D", "F", "G", "H", "I"]) {
         const html = detail(brand, scenario);
-        expect(html, `${brand}/${scenario}`).not.toMatch(/Accepter la proposition|Accept proposal/);
+        expect(html, `${brand}/${scenario}`).not.toMatch(/Accepter le devis|Accept proposal/);
       }
     }
   });
@@ -554,15 +554,17 @@ describe("acceptation de la proposition", () => {
     const html = detail("MA_RELIURE", "C", { caseFacts: { openDecisions: 1 } });
     expect(html).toContain("En attente de votre confirmation");
     expect(html).toContain(">Répondre<");
-    expect(count(html, ">Accepter la proposition<")).toBe(1);
-    expect(html.indexOf(">Accepter la proposition<")).toBeGreaterThan(html.indexOf('id="proposal-title"'));
+    expect(count(html, ">Accepter le devis<")).toBe(1);
+    expect(html.indexOf(">Accepter le devis<")).toBeGreaterThan(html.indexOf('id="proposal-title"'));
   });
 
-  it("le navigateur n'envoie que deux identifiants : le dossier et la proposition qu'il a sous les yeux", () => {
+  it("le navigateur n'envoie que le dossier, la proposition qu'il a sous les yeux et son accord des conditions", () => {
     const source = stripComments(
       readFileSync(resolve(process.cwd(), "src/marketplace/pages/customer/CustomerCasePage.tsx"), "utf8"),
     );
-    expect(source).toContain("accept({ data: { caseId, proposalId } })");
+    expect(source).toContain("accept({ data: { caseId, proposalId, termsAccepted: true } })");
+    // La case des conditions générales doit être cochée avant que le bouton ne s'active.
+    expect(source).toContain("disabled={mutation.isPending || !consent}");
     expect(source).not.toMatch(/accept\(\{[^)]*(amount|cents|total|price|status)/i);
     // L'identifiant vient de la vue serveur ; il est bien dans la donnée de test.
     expect(PROPOSAL_ID).toMatch(/^[0-9a-f-]{36}$/);

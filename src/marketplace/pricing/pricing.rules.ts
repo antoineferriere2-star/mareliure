@@ -18,22 +18,28 @@
  */
 import type { PricingPolicy } from "./pricing.types";
 
+/**
+ * Modèle Oppe du 5 octobre 2026 (activité A) : marge brute cible de 25 % du prix de vente HT
+ * de la prestation, transport exclu. Une marge sur vente, pas une majoration du coût :
+ * rémunération atelier 150 € HT → prix de vente 200 € HT (150 / (1 − 0,25)).
+ *
+ * Remplace pour les nouvelles propositions les règles contradictoires de la v5 (marge cible
+ * 18 %, minimum 15 %, plancher de contribution 80 € HT, arrondi à 10 €, coefficient Fine
+ * Bindery ×1,30). Les propositions figées gardent la version sous laquelle elles l'ont été.
+ *
+ * Seul écart permis sans dérogation : l'arrondi à l'euro supérieur, qui ne peut que relever la
+ * marge de moins d'un euro. Tout autre prix exige une dérogation motivée.
+ */
 export const PRICING_POLICY: PricingPolicy = {
   // La version change dès que la politique change : un dossier chiffré hier
   // doit pouvoir dire sous quelle règle il l'a été.
-  version: "bookbinding-2026-09-16-v5",
-  targetMarginBps: 1_800,
-  minimumMarginBps: 1_500,
-  minimumMarginCents: 2_000,
-  // Décision commerciale du 16 septembre 2026 : 80 € HT, la même valeur
-  // absolue pour les deux marques (Fine Bindery n'a pas son propre plancher
-  // — son ×1,30 s'applique au-dessus d'un prix Ma Reliure déjà plafonné par
-  // celui-ci, voir brandPricing.ts, et donne presque toujours un prix
-  // supérieur au plancher lui-même). Configurable ici, jamais en dur dans
-  // resolveServicePriceFloors ; jamais confondu avec le plancher de marge
-  // (minimumMarginCents) — voir pricing.types.ts.
-  minimumContributionCents: 8_000,
-  roundingIncrementCents: 1_000,
+  version: "oppe-a-2026-10-05-v6",
+  targetMarginBps: 2_500,
+  minimumMarginBps: 2_500,
+  minimumMarginCents: 0,
+  minimumContributionCents: 0,
+  roundingIncrementCents: 100,
+  pricebookBindsPrice: false,
   // §25 : 20 % ou 50 €, le plus élevé des deux — jamais un montant fixe.
   depositPercentageBps: 2_000,
   depositMinimumCents: 5_000,

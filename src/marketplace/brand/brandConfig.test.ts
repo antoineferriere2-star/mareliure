@@ -52,9 +52,9 @@ describe("MARKETPLACE_BRAND_CONFIGS — la politique par marque", () => {
     expect(config.defaultLocale).toBe("fr-FR");
   });
 
-  it("gives Fine Bindery the +30% multiplier, no direct messaging, and a concierge", () => {
+  it("gives Fine Bindery the same 25% margin as Ma Reliure (Oppe model), no direct messaging, and a concierge", () => {
     const config = MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY;
-    expect(config.pricingPolicy.serviceMultiplierBps).toBe(13_000);
+    expect(config.pricingPolicy.serviceMultiplierBps).toBe(10_000);
     expect(config.messaging.customerWorkshopDirectMessaging).toBe(false);
     expect(config.conciergeRequired).toBe(true);
     expect(config.international).toBe(true);

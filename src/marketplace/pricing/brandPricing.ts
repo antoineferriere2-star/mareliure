@@ -50,8 +50,8 @@ export function applyBrandServicePricing(
   baseServicePriceCents: number,
   brand: MarketplaceBrand,
   roundingIncrementCents: number,
+  policy = MARKETPLACE_BRAND_CONFIGS[brand].pricingPolicy,
 ): BrandServicePrice {
-  const policy = MARKETPLACE_BRAND_CONFIGS[brand].pricingPolicy;
 
   const raw = (baseServicePriceCents * policy.serviceMultiplierBps) / 10_000;
   // Toujours arrondi vers le haut, jamais en faveur du prix affiché — même

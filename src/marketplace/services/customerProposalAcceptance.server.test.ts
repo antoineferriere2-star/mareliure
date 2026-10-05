@@ -52,6 +52,7 @@ const store = vi.hoisted(() => ({
   },
   paidAt: null as string | null,
   acceptShouldThrow: null as null | Error,
+  lastAccept: null as null | { proposalId: string; customerUserId: string; termsVersion: string; snapshotSha256: string },
   calls: { accept: 0, byId: 0, accepted: 0, latest: 0, case: 0 },
 }));
 
@@ -79,15 +80,18 @@ vi.mock("@/marketplace/services/commercialProposalRepository.server", () => ({
       [...store.proposals].filter((p) => p.caseId === caseId).sort((a, b) => b.version - a.version)[0] ?? null
     );
   }),
-  acceptCommercialProposal: vi.fn(async (_sb: unknown, id: string) => {
+  // La fonction SQL marketplace_accept_proposal_as_customer, simulée : elle seule écrit
+  // l'acceptation, sa preuve et l'événement (testés en SQL sur la copie restaurée).
+  acceptCommercialProposalAsCustomer: vi.fn(async (_sb: unknown, input: { proposalId: string; customerUserId: string; termsVersion: string; snapshotSha256: string }) => {
     store.calls.accept += 1;
+    store.lastAccept = input;
     if (store.acceptShouldThrow) throw store.acceptShouldThrow;
-    const row = store.proposals.find((p) => p.id === id);
+    const row = store.proposals.find((p) => p.id === input.proposalId);
     if (!row) throw new Error("proposal_not_found");
-    if (row.acceptedAt) throw new Error("proposal_already_accepted");
+    if (row.acceptedAt) return "already_accepted";
     row.status = "accepted";
     row.acceptedAt = "2026-09-19T10:00:00.000Z";
-    return row;
+    return "accepted";
   }),
 }));
 
@@ -160,6 +164,7 @@ function fakeSb() {
 const owner = (over: Partial<{ caseId: string; proposalId: string; userId: string }> = {}) => ({
   caseId: CASE_ID,
   proposalId: P1,
+  termsAccepted: true as const,
   userId: OWNER,
   ...over,
 });
@@ -184,11 +189,12 @@ beforeEach(() => {
   };
   store.paidAt = null;
   store.acceptShouldThrow = null;
+  store.lastAccept = null;
   store.calls = { accept: 0, byId: 0, accepted: 0, latest: 0, case: 0 };
 });
 
 describe("le propriétaire accepte sa proposition", () => {
-  it("écrit l'acceptation une fois, avec un horodatage, et trace l'événement", async () => {
+  it("écrit l'acceptation une fois, par la fonction SQL réservée au client, avec sa preuve", async () => {
     const { sb, events } = fakeSb();
     const result = await acceptProposalForCustomer(sb, owner());
 
@@ -196,13 +202,15 @@ describe("le propriétaire accepte sa proposition", () => {
     expect(store.calls.accept).toBe(1);
     expect(store.proposals[0].status).toBe("accepted");
     expect(store.proposals[0].acceptedAt).toBe("2026-09-19T10:00:00.000Z");
-    expect(events).toHaveLength(1);
-    expect(events[0]).toMatchObject({
-      case_id: CASE_ID,
-      actor_user_id: OWNER,
-      event_type: "commercial_proposal_accepted",
-      metadata: { proposal_id: P1, version: 1, accepted_by: "customer" },
-    });
+    expect(store.lastAccept).toMatchObject({ proposalId: P1, customerUserId: OWNER, termsVersion: "cgv-oppe-2026-10-05" });
+    expect(store.lastAccept?.snapshotSha256).toMatch(/^[0-9a-f]{64}$/);
+    // L'événement est écrit par la fonction SQL, dans la même transaction : jamais deux fois.
+    expect(events).toHaveLength(0);
+  });
+
+  it("refuse une acceptation sans la case des conditions générales", () => {
+    expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1 }).success).toBe(false);
+    expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1, termsAccepted: false }).success).toBe(false);
   });
 
   it("RECALCULE la possibilité de payer après l'acceptation (checkoutEligibility), sans la supposer", async () => {
@@ -253,7 +261,7 @@ describe("idempotence", () => {
     expect(second.outcome).toBe("already_accepted");
     expect(second.commerce.paymentEligible).toBe(true);
     expect(store.calls.accept).toBe(1);
-    expect(events).toHaveLength(1);
+    expect(events).toHaveLength(0);
     expect(store.proposals[0].acceptedAt).toBe("2026-09-19T10:00:00.000Z");
   });
 
@@ -431,10 +439,10 @@ describe("ce que le client voit d'une proposition avant de l'accepter", () => {
 
 describe("le contrat : deux identifiants, jamais un montant", () => {
   it("l'entrée est exactement { caseId, proposalId } — et refuse tout champ en plus", () => {
-    expect(Object.keys(acceptProposalInput.shape).sort()).toEqual(["caseId", "proposalId"]);
-    expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1 }).success).toBe(true);
+    expect(Object.keys(acceptProposalInput.shape).sort()).toEqual(["caseId", "proposalId", "termsAccepted"]);
+    expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1, termsAccepted: true }).success).toBe(true);
     for (const extra of ["amountCents", "totalCents", "price", "status", "taxRate", "binderPayoutCents"]) {
-      expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1, [extra]: 1 }).success, extra).toBe(false);
+      expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1, termsAccepted: true, [extra]: 1 }).success, extra).toBe(false);
     }
     expect(acceptProposalInput.safeParse({ caseId: "not-a-uuid", proposalId: P1 }).success).toBe(false);
     expect(acceptProposalInput.safeParse({ caseId: CASE_ID }).success).toBe(false);
@@ -454,7 +462,7 @@ describe("le contrat : deux identifiants, jamais un montant", () => {
   });
 
   it("le serveur recharge : dossier, propriétaire, proposition, dernière version, règle — puis écrit", () => {
-    const order = ["loadCaseContext(", "canViewCase(", "loadAcceptedCommercialProposal(", "loadCommercialProposalById(", "loadLatestCommercialProposal(", "customerAcceptance(", "acceptCommercialProposal("];
+    const order = ["loadCaseContext(", "canViewCase(", "loadAcceptedCommercialProposal(", "loadCommercialProposalById(", "loadLatestCommercialProposal(", "customerAcceptance(", "acceptCommercialProposalAsCustomer("];
     let last = -1;
     for (const marker of order) {
       const at = service.indexOf(marker, last + 1);
@@ -463,9 +471,10 @@ describe("le contrat : deux identifiants, jamais un montant", () => {
     }
   });
 
-  it("n'écrit aucune ligne de proposition lui-même : il délègue à la même écriture que l'admin", () => {
+  it("n'écrit aucune ligne de proposition lui-même : il délègue à la fonction SQL réservée au client", () => {
     expect(service).not.toMatch(/\.update\(|\.upsert\(|\.delete\(/);
-    expect(service).toContain("acceptCommercialProposal(sb, proposal.id)");
+    expect(service).toContain("acceptCommercialProposalAsCustomer(sb, {");
+    expect(service).toContain("termsVersion: SALES_TERMS_VERSION");
   });
 
   it("l'action est authentifiée, valide son entrée, et ne renvoie que deux faits", () => {

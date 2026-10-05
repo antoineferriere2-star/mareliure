@@ -15,8 +15,10 @@ describe("la suggestion « tarifs de base »", () => {
     const s = suggestFromBasePrices(work(["reparation_dos"]), refs)!;
     expect(s.suggestedBinderPayoutCents).toBe(9000);
     // Contribution minimale (80 €) au-dessus de la rémunération, arrondie à 10 € : 170 €.
-    expect(s.suggestedCustomerPriceCents).toBe(9000 + PRICING_POLICY.minimumContributionCents);
-    expect(s.priceBoundBy).toBe("contribution_floor");
+    // 90 € / (1 − 25 %) = 120 € : la marge cible fixe le prix (v6), plus de plancher de 80 €.
+    expect(s.suggestedCustomerPriceCents).toBe(12_000);
+    expect(s.priceBoundBy).toBe("margin_floor");
+    expect(PRICING_POLICY.minimumContributionCents).toBe(0);
     expect(validateManagedPrice(s.suggestedCustomerPriceCents!, s.suggestedBinderPayoutCents!).valid).toBe(true);
   });
 

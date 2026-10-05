@@ -43,6 +43,7 @@ export interface CaseRow {
   status: string;
   brand: string;
   acquisition_origin: string;
+  pricing_derogation_reason?: string | null;
   preferred_language: string | null;
   submission_locale: string | null;
   referred_binder_id: string | null;
@@ -135,7 +136,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
   const { data: row, error } = await sb
     .from("marketplace_cases")
     .select(
-      "id, dossier_id, reference, status, brand, acquisition_origin, preferred_language, submission_locale, referred_binder_id, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, pricing_pricebook_reference_cents, pricing_price_bound_by, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at, pricing_mode, deposit_cents, base_service_price_cents, brand_multiplier_bps, service_price_cents, tax_status",
+      "id, dossier_id, reference, status, brand, acquisition_origin, preferred_language, submission_locale, referred_binder_id, manual_review_required, heritage_flag, declared_value_band, triage_flags, triaged_at, admin_notes, customer_user_id, claimed_at, claim_method, pricing_status, suggested_customer_price_cents, suggested_binder_payout_cents, customer_price_cents, binder_payout_cents, pricing_currency, pricing_confidence, pricing_reason_codes, pricing_components, pricing_low_estimate_cents, pricing_high_estimate_cents, pricing_reference_count, pricing_rule_version, pricing_pricebook_reference_cents, pricing_price_bound_by, price_includes, pricing_generated_at, pricing_validated_at, pricing_validated_by, created_at, pricing_mode, deposit_cents, base_service_price_cents, brand_multiplier_bps, service_price_cents, tax_status, pricing_derogation_reason",
     )
     .eq("id", caseId)
     .maybeSingle();
