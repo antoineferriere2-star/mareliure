@@ -11,7 +11,7 @@ import type { CreditNoteDocumentView, DocumentItemView, DocumentView } from "@/m
 import type { VatGroup } from "@/marketplace/quotes/quoteCalc";
 
 const BLOCK = "format-principal";
-const itemView = (key: string, position: number, label: string, quantity: number, unitHtCents: number, vatRateBps: number | null, totalHtCents: number): DocumentItemView => ({
+export const itemView = (key: string, position: number, label: string, quantity: number, unitHtCents: number, vatRateBps: number | null, totalHtCents: number): DocumentItemView => ({
   position, lineKey: key, blockKey: BLOCK, serviceId: null, label, description: null, unit: null, quantity,
   unitPriceCents: unitHtCents, catalogPriceCents: null, vatRateBps: vatRateBps ?? 0, totalHtCents, photos: [],
 });
@@ -138,7 +138,7 @@ function issuerOf(seller: OppeSellerSnapshot): DocumentView["issuer"] {
   };
 }
 
-const vatGroups = (breakdown: OppeInvoiceRecord["vat_breakdown"]): VatGroup[] =>
+export const vatGroups = (breakdown: OppeInvoiceRecord["vat_breakdown"]): VatGroup[] =>
   breakdown.map((group) => ({ vatRateBps: group.rate_bps ?? 0, baseHtCents: group.base_ht_cents, vatCents: group.vat_cents }));
 
 /** La facture Oppe, mise au format que sait imprimer le générateur PDF des documents. */

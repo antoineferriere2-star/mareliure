@@ -6,6 +6,7 @@
  * box. The admin decides, which is the whole point of a concierge MVP — and of
  * the CLAUDE.md rule that the system proposes and the human disposes.
  */
+import { SupplierInvoicesPanel } from "./SupplierInvoicesPanel";
 import { OppeBillingPanel } from "./OppeBillingPanel";
 import { OppeOrderPanel } from "./OppeOrderPanel";
 import { commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
@@ -1076,6 +1077,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
             <OperatorLogisticsPanel caseId={caseId} />
             <CommercialProposalPanel caseId={caseId} onSent={setSentNotice} />
             <OppeBillingPanel caseId={caseId} />
+            <SupplierInvoicesPanel caseId={caseId} />
             <OppeOrderPanel
               caseId={caseId}
               candidates={data.candidates.map((c) => ({ id: c.id, name: c.workshopName ?? c.displayName }))}

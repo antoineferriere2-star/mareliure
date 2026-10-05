@@ -3848,6 +3848,108 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_oppe_supplier_invoices: {
+        Row: {
+          amount_ht_cents: number
+          amount_ttc_cents: number
+          assignment_id: string
+          binder_id: string
+          case_id: string
+          created_at: string
+          document_path: string
+          due_date: string
+          id: string
+          invoice_number: string
+          issue_date: string
+          review_reason: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          source: string
+          status: string
+          submitted_by: string | null
+          vat_cents: number
+          vat_mention: string | null
+          vat_rate_bps: number | null
+          vat_regime: string
+        }
+        Insert: {
+          amount_ht_cents: number
+          amount_ttc_cents: number
+          assignment_id: string
+          binder_id: string
+          case_id: string
+          created_at?: string
+          document_path: string
+          due_date: string
+          id?: string
+          invoice_number: string
+          issue_date: string
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source: string
+          status?: string
+          submitted_by?: string | null
+          vat_cents: number
+          vat_mention?: string | null
+          vat_rate_bps?: number | null
+          vat_regime: string
+        }
+        Update: {
+          amount_ht_cents?: number
+          amount_ttc_cents?: number
+          assignment_id?: string
+          binder_id?: string
+          case_id?: string
+          created_at?: string
+          document_path?: string
+          due_date?: string
+          id?: string
+          invoice_number?: string
+          issue_date?: string
+          review_reason?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          source?: string
+          status?: string
+          submitted_by?: string | null
+          vat_cents?: number
+          vat_mention?: string | null
+          vat_rate_bps?: number | null
+          vat_regime?: string
+        }
+        Relationships: []
+      }
+      marketplace_oppe_supplier_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          id: string
+          invoice_id: string
+          paid_on: string
+          recorded_by: string
+          reference: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          id?: string
+          invoice_id: string
+          paid_on: string
+          recorded_by: string
+          reference: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          id?: string
+          invoice_id?: string
+          paid_on?: string
+          recorded_by?: string
+          reference?: string
+        }
+        Relationships: []
+      }
       marketplace_pricebook: {
         Row: {
           complexity_class: string
@@ -4619,6 +4721,25 @@ export type Database = {
         }
         Returns: string
       }
+      marketplace_record_supplier_payment: {
+        Args: {
+          p_invoice: string
+          p_paid_on: string
+          p_amount: number
+          p_reference: string
+          p_actor: string
+        }
+        Returns: string
+      }
+      marketplace_review_supplier_invoice: {
+        Args: {
+          p_invoice: string
+          p_decision: string
+          p_reason: string
+          p_actor: string
+        }
+        Returns: string
+      }
       marketplace_seller_entity: {
         Args: { p_issuer: Json }
         Returns: string
@@ -4843,6 +4964,21 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      marketplace_submit_supplier_invoice: {
+        Args: {
+          p_case: string
+          p_binder: string
+          p_source: string
+          p_number: string
+          p_issue_date: string
+          p_vat_regime: string
+          p_vat_rate_bps: number
+          p_vat_mention: string
+          p_document_path: string
+          p_actor: string
+        }
+        Returns: string
       }
       marketplace_validate_pricing: {
         Args: {
