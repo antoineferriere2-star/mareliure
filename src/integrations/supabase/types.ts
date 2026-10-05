@@ -4883,6 +4883,15 @@ export type Database = {
         }
         Returns: string
       }
+      marketplace_binder_create_legacy_full_credit_note: {
+        Args: {
+          p_binder_id: string
+          p_invoice_id: string
+          p_issue_date: string
+          p_reason: string
+        }
+        Returns: string
+      }
       marketplace_binder_create_partial_credit_note: {
         Args: {
           p_binder_id: string
@@ -4900,6 +4909,13 @@ export type Database = {
           p_invoice_id: string
         }
         Returns: { position: number; remaining_ht_cents: number }[]
+      }
+      marketplace_binder_credit_tax_groups: {
+        Args: {
+          p_binder_id: string
+          p_invoice_id: string
+        }
+        Returns: Json
       }
       marketplace_issue_oppe_credit_note: {
         Args: {

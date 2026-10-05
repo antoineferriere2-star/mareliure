@@ -3521,4 +3521,3 @@ Le working tree contenait le travail non commité d'un autre agent
 ## Latest handoff
 
 Codex — 5 octobre 2026 : suite du modèle Oppe autorisée par le propriétaire sur feat/oppe-b-c-completion, base 43f9110. B (abonnement), vitrine commune, avoirs partiels, socle Connect C, rattachement transport des clients propres et documentation/conditions ateliers préparés. Voir [OPPE_BC_COMPLETION.md](OPPE_BC_COMPLETION.md) pour les preuves de recette, les limites et les indicateurs d'ouverture. B/C payants restent fermés ; les validations fiscale/juridique et les accès live/Sendcloud ne sont pas obtenus par ce chantier. Le journal de publication reste l'attestation de ce qui est réellement en production.
-

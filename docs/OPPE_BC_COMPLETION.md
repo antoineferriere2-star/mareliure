@@ -53,7 +53,7 @@ Le forfait Oppe 15 € TTC reste limité à sa qualification française existant
 
 ## Publication et dépendances externes
 
-Migrations dans l'ordre : `20261006100000`, `20261006110000`, `20261006120000`, `20261006130000`.
+Migrations dans l'ordre : `20261006100000`, `20261006110000`, `20261006120000`, `20261006130000`, `20261006140000`.
 Elles ajoutent les tables B/C et les gardes sans modifier les factures, devis ou paiements historiques.
 Procédure : CI verte, fusion, sauvegarde fraîche et empreintes, restauration PostgreSQL 17, répétition, application transactionnelle avec garde de dérive, build vérifié, upload/déploiement Worker, smoke et journal.
 Retour arrière : fermer B/C, rétablir le Worker précédent compatible **avec plusieurs avoirs**, continuer les webhooks et ne jamais supprimer des documents. Après émission d'avoirs partiels, un ancien Worker supposant un seul avoir par facture ne constitue plus un retour arrière complet.
@@ -65,6 +65,8 @@ Validation expert-comptable de la TVA et revue juridique non obtenues. Premier p
 
 - 3 494 tests réussis sur la suite complète ; contrôle supplémentaire du montant réellement encaissé ajouté et testé (9 tests Connect). TypeScript sans erreur ; lint sans erreur, 19 avertissements existants.
 - Build Cloudflare réussi ; 19 contrôles de publication réussis.
-- Sauvegarde complète de production vérifiée, restauration PostgreSQL 17 puis quatre migrations répétées : empreintes des douze tables historiques conservées.
-- qwf : sauvegarde vérifiée puis transaction confirmée, 107 migrations ; B/C fermés. Interface : gratuité historique, fermeture B/C et aperçu privé vérifiés avec compte fictif, sans erreur JavaScript.
+- Sauvegarde complète de production vérifiée, restauration PostgreSQL 17 puis cinq migrations répétées : empreintes des douze tables historiques conservées.
+- qwf : sauvegarde vérifiée puis transaction confirmée, 108 migrations ; B/C fermés. Interface : gratuité historique, fermeture B/C et aperçu privé vérifiés avec compte fictif, sans erreur JavaScript.
 - Création des comptes Connect limitée à la France ; offre internationale toujours fermée.
+
+La recette a ajouté une correction de compatibilité : taux effectif nul en franchise, y compris les anciens documents sans ventilation. Les anciennes factures assujetties sans ventilation gardent la lecture et l’avoir complet original ; un avoir partiel exige une ventilation fiable. Neuf tests PostgreSQL couvrent ces cas et les circuits B/C.

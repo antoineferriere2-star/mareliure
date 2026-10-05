@@ -13,7 +13,7 @@ beforeAll(async () => {
  CREATE TABLE marketplace_binder_portfolio(binder_id uuid,is_published boolean);
  CREATE TABLE marketplace_binder_works(id uuid PRIMARY KEY,binder_id uuid,source text);
  CREATE TABLE marketplace_binder_quotes(id uuid PRIMARY KEY,binder_id uuid,work_id uuid);
- CREATE TABLE marketplace_binder_invoices(id uuid PRIMARY KEY,binder_id uuid,quote_id uuid,status text,deposit_cents integer DEFAULT 0,
+ CREATE TABLE marketplace_binder_invoices(id uuid PRIMARY KEY,binder_id uuid,quote_id uuid,vat_regime text DEFAULT 'VAT_LIABLE',status text,deposit_cents integer DEFAULT 0,
  issuer jsonb DEFAULT '{}',currency text DEFAULT 'EUR',client_type text,client_name text,client_legal_name text,
  client_billing_address_line1 text,client_billing_postal_code text,client_billing_city text,client_billing_country text,client_siren text,client_vat_number text,
  total_ht_cents integer,total_vat_cents integer,total_ttc_cents integer,vat_breakdown jsonb,legal_mentions jsonb DEFAULT '[]');
@@ -34,6 +34,7 @@ beforeAll(async () => {
   await db.exec(sql("20261006100000_workshop_subscriptions"));
   await db.exec(sql("20261006110000_workshop_partial_credit_notes"));
   await db.exec(sql("20261006120000_workshop_connect_payments"));
+  await db.exec(sql("20261006140000_workshop_credit_franchise"));
   await db.exec(`INSERT INTO marketplace_binder_billing_profiles VALUES('${id(10)}','AV');
  INSERT INTO marketplace_binder_works VALUES('${id(20)}','${id(10)}','mon_client');
  INSERT INTO marketplace_binder_quotes VALUES('${id(30)}','${id(10)}','${id(20)}');
@@ -174,4 +175,95 @@ describe("paiement Connect distinct", () => {
       ),
     ).rejects.toThrow("online_invoice_ineligible");
   });
+});
+
+describe("franchise : taux effectif et documents historiques", () => {
+  it.each([{ groups: [] }, { groups: [{ vatRateBps: 0, baseHtCents: 900, vatCents: 0 }] }])(
+    "crédite une franchise sans TVA avec taux catalogue inchangé : %j",
+    async ({ groups }) => {
+      const n = groups.length ? 81 : 80;
+      await db.query(
+        `INSERT INTO marketplace_binder_invoices(id,binder_id,quote_id,vat_regime,status,total_ht_cents,total_vat_cents,total_ttc_cents,vat_breakdown) VALUES($1,$2,$3,'FRANCHISE','issued',900,0,900,$4)`,
+        [id(n), id(10), id(30), JSON.stringify(groups)],
+      );
+      await db.query(
+        `INSERT INTO marketplace_binder_invoice_items VALUES($1,$2,$3,0,'Franchise',NULL,NULL,1,1000,2000,1000)`,
+        [id(n + 10), id(10), id(n)],
+      );
+      expect(
+        (
+          await db.query(`SELECT remaining_ht_cents FROM marketplace_binder_credit_limits($1,$2)`, [
+            id(10),
+            id(n),
+          ])
+        ).rows,
+      ).toEqual([{ remaining_ht_cents: 900 }]);
+      const first = (
+        await db.query<{ id: string }>(
+          `SELECT marketplace_binder_create_partial_credit_note($1,$2,'2026-10-05','Correction franchise',$3,'[{"position":0,"htCents":100}]') AS id`,
+          [id(10), id(n), id(n + 20)],
+        )
+      ).rows[0].id;
+      expect(
+        (
+          await db.query(
+            `SELECT total_ht_cents,total_vat_cents FROM marketplace_binder_credit_notes WHERE id=$1`,
+            [first],
+          )
+        ).rows,
+      ).toEqual([{ total_ht_cents: 100, total_vat_cents: 0 }]);
+      await db.query(
+        `SELECT marketplace_binder_create_full_credit_note($1,$2,'2026-10-05','Annulation reliquat')`,
+        [id(10), id(n)],
+      );
+      expect(
+        (
+          await db.query(
+            `SELECT sum(total_ttc_cents)::integer AS total FROM marketplace_binder_credit_notes WHERE invoice_id=$1`,
+            [id(n)],
+          )
+        ).rows,
+      ).toEqual([{ total: 900 }]);
+      expect(
+        (
+          await db.query(
+            `SELECT total_ht_cents,vat_rate_bps FROM marketplace_binder_invoice_items WHERE invoice_id=$1`,
+            [id(n)],
+          )
+        ).rows,
+      ).toEqual([{ total_ht_cents: 1000, vat_rate_bps: 2000 }]);
+    },
+  );
+});
+it("conserve l’avoir complet d’une facture ancienne sans ventilation fiscale", async () => {
+  await db.exec(`INSERT INTO marketplace_binder_invoices(id,binder_id,quote_id,vat_regime,status,total_ht_cents,total_vat_cents,total_ttc_cents,vat_breakdown)
+    VALUES('${id(82)}','${id(10)}','${id(30)}','VAT_LIABLE','issued',900,115,1015,'[]');
+    INSERT INTO marketplace_binder_invoice_items VALUES('${id(92)}','${id(10)}','${id(82)}',0,'Historique',NULL,NULL,1,900,2000,900);`);
+  expect(
+    (
+      await db.query(
+        `SELECT remaining_ht_cents FROM marketplace_binder_credit_limits('${id(10)}','${id(82)}')`,
+      )
+    ).rows,
+  ).toEqual([{ remaining_ht_cents: 0 }]);
+  await expect(
+    db.exec(
+      `SELECT marketplace_binder_create_partial_credit_note('${id(10)}','${id(82)}','2026-10-05','Partiel','${id(102)}','[{"position":0,"htCents":1}]')`,
+    ),
+  ).rejects.toThrow("credit_exceeds_line");
+  const issue = () =>
+    db.query(
+      `SELECT marketplace_binder_create_full_credit_note('${id(10)}','${id(82)}','2026-10-05','Annulation complète') AS id`,
+    );
+  const first = await issue();
+  expect((await issue()).rows).toEqual(first.rows);
+  expect(
+    (
+      await db.query(
+        `SELECT total_ht_cents,total_vat_cents,total_ttc_cents,vat_breakdown FROM marketplace_binder_credit_notes WHERE invoice_id='${id(82)}'`,
+      )
+    ).rows,
+  ).toEqual([
+    { total_ht_cents: 900, total_vat_cents: 115, total_ttc_cents: 1015, vat_breakdown: [] },
+  ]);
 });
