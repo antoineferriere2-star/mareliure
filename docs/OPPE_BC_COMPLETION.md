@@ -70,3 +70,7 @@ Validation expert-comptable de la TVA et revue juridique non obtenues. Premier p
 - Création des comptes Connect limitée à la France ; offre internationale toujours fermée.
 
 La recette a ajouté une correction de compatibilité : taux effectif nul en franchise, y compris les anciens documents sans ventilation. Les anciennes factures assujetties sans ventilation gardent la lecture et l’avoir complet original ; un avoir partiel exige une ventilation fiable. Neuf tests PostgreSQL couvrent ces cas et les circuits B/C.
+
+Recette hébergée qwf complémentaire : émission d’un avoir partiel par l’interface, reprise RPC sans doublon, avoir du reliquat et facture originale inchangée. Cycle B sur un propriétaire fictif isolé : Stripe test actif, transition explicite enregistrée, résiliation à échéance sans perte anticipée des droits, résiliation effective et événement ancien sans rétablissement. Les indicateurs qwf ont été refermés et la gratuité de l’atelier fictif rétablie. Ce test technique n’atteste pas la validation fiscale du Checkout, du portail ni des e-mails.
+
+Sauvegarde fraîche finale : 1 207 410 octets, SHA256 `81c4cf1f7e61e4acf04531bee3f1744a7861573c9dc4b23b65ead4d226138793`. Restauration PostgreSQL 17, cinq migrations répétées puis comparaison en UTC des douze empreintes historiques avec la production : identiques. La restauration locale omet uniquement l’extension Supabase Vault indisponible localement (huit diagnostics liés à Vault). Aucun document métier n’est modifié par les migrations.
