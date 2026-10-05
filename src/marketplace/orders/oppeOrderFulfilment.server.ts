@@ -208,6 +208,24 @@ export async function onOppePaymentConfirmed(
     logOperationalError("oppe-order.stripe-fees-failed", err, { caseId: input.caseId });
   }
   const invoiceId = await issueOppeInvoice(sb, { caseId: input.caseId, proposalId: input.proposalId, paymentIntentId: input.paymentIntentId, paidAt });
-  await sendOrderConfirmation(sb, { caseId: input.caseId, proposalId: input.proposalId, invoiceId });
+  // La confirmation ne bloque jamais la commande ni la facture : en cas d'échec l'équipe est prévenue
+  // et `confirmation_sent_at` reste vide (un rejeu de l'événement la renverra).
+  try {
+    await sendOrderConfirmation(sb, { caseId: input.caseId, proposalId: input.proposalId, invoiceId });
+  } catch (err) {
+    logOperationalError("oppe-order.confirmation-failed", err, { caseId: input.caseId });
+    try {
+      const { caseReference, notifyAdmin } = await import("@/marketplace/notifications/adminAlerts.server");
+      const { reference } = await caseReference(sb, input.caseId);
+      await notifyAdmin({
+        caseId: input.caseId,
+        heading: `Confirmation de commande non partie — ${reference}`,
+        intro: `La commande ${reference} est payée et facturée, mais l'e-mail de confirmation n'a pas pu partir. Prévenez le client vous-même.`,
+        idempotencyKey: `order-confirmation-failed-${input.proposalId}`,
+      });
+    } catch (alertErr) {
+      logOperationalError("oppe-order.confirmation-alert-failed", alertErr, { caseId: input.caseId });
+    }
+  }
   return { orderOpened: data === true, invoiceId };
 }
