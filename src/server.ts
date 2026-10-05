@@ -3,7 +3,7 @@ import "./lib/error-capture";
 import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { isMaReliure } from "./brand";
-import { wwwToApexRedirectUrl } from "./marketplace/brand/wwwRedirect";
+import { canonicalRedirectUrl } from "./marketplace/brand/wwwRedirect";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -49,7 +49,7 @@ function isH3SwallowedErrorBody(body: string): boolean {
 export default {
   async fetch(request: Request, env: unknown, ctx: unknown) {
     if (isMaReliure) {
-      const target = wwwToApexRedirectUrl(request.url);
+      const target = canonicalRedirectUrl(request.url);
       if (target) return Response.redirect(target, 301);
     }
     try {
