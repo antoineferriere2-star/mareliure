@@ -39,6 +39,7 @@ const db = vi.hoisted(() => ({
   failNextProposalLoad: false,
   nowMs: 1_000_000,
   logged: [] as string[],
+  fulfilled: [] as string[],
 }));
 
 const STALE_MS = 300_000;
@@ -75,6 +76,14 @@ vi.mock("@/build/services/adminAuth.server", () => ({
       };
     },
   }),
+}));
+// La suite d'un paiement (commande, facture, confirmation) a ses propres tests : ici, on vérifie
+// seulement qu'elle est appelée pour chaque paiement vérifié.
+vi.mock("@/marketplace/orders/oppeOrderFulfilment.server", () => ({
+  onOppePaymentConfirmed: async (_sb: unknown, input: { proposalId: string }) => {
+    db.fulfilled.push(input.proposalId);
+    return { orderOpened: true };
+  },
 }));
 vi.mock("@/build/services/operationalLog.server", () => ({
   logOperationalError: (name: string) => void db.logged.push(name),

@@ -59,6 +59,8 @@ console.info(`[supabase] client → ${SUPABASE_URL}`);
 
 export default defineConfig({
   vite: {
+    // Cache de dépendances distinct quand plusieurs serveurs de développement partagent node_modules.
+    ...(process.env.VITE_CACHE_DIR ? { cacheDir: process.env.VITE_CACHE_DIR } : {}),
     resolve: {
       alias: [
         // `pdf-lib` déclare `main: cjs/index.js` : le bundle Worker en tire `tslib` 1.x (UMD/CJS) dont

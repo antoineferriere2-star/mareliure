@@ -153,9 +153,8 @@ describe("la proposition se construit sur le prix validé, jamais sur la sortie 
     expect(create.indexOf("loadAcceptedCommercialProposal(")).toBeLessThan(create.indexOf("insertCommercialProposal("));
   });
 
-  it("l'acceptation par l'admin refuse une proposition périmée avant d'écrire", () => {
-    const accept = src.slice(src.indexOf("export async function acceptCommercialProposalCore("), src.indexOf("export const getAcceptedCommercialProposal"));
-    expect(accept).toMatch(/assertProposalPriceCurrent\(sb, proposalId\)/);
-    expect(accept.indexOf("assertProposalPriceCurrent(")).toBeLessThan(accept.indexOf("acceptCommercialProposalRow(sb"));
+  it("aucune acceptation ne passe plus par l'administration (seul le client accepte)", () => {
+    expect(src).not.toContain("export async function acceptCommercialProposalCore(");
+    expect(src).not.toContain("export const acceptCommercialProposal ");
   });
 });

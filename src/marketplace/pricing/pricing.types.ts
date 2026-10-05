@@ -22,6 +22,12 @@ export interface PricingPolicy {
   minimumContributionCents: number;
   roundingIncrementCents: number;
   /**
+   * La référence Pricebook relève-t-elle le prix (troisième candidat du MAX) ? Vrai jusqu'à la v5 ;
+   * faux depuis le modèle Oppe (v6) : le prix suit la marge cible sur la rémunération acceptée,
+   * la référence reste affichée comme repère de dérive, jamais imposée au client.
+   */
+  pricebookBindsPrice: boolean;
+  /**
    * L'acompte d'un projet ESTIMATE_THEN_CONFIRM (§25) : max(pourcentage,
    * plancher absolu) — la même formule que la marge, jamais un montant fixe
    * inventé (« ne pas hardcoder 100 € »).

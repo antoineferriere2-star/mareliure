@@ -40,7 +40,6 @@ import { CIRCUIT_REFUSALS, circuitRefusal, commercialOriginOf } from "@/marketpl
 import { loadPricebook } from "./pricingRepository.server";
 import { assertProposalPriceCurrent } from "./pricingGuards.server";
 import {
-  acceptCommercialProposal as acceptCommercialProposalRow,
   insertCommercialProposal,
   listCommercialProposals,
   loadAcceptedCommercialProposal,
@@ -51,6 +50,44 @@ import {
 } from "./commercialProposalRepository.server";
 
 const uuid = z.string().uuid();
+
+/** Les refus SQL de l'accord atelier (migration 20261005120000), dits à l'administration. */
+const AGREEMENT_REFUSALS: Record<string, string> = {
+  workshop_agreement_required: "L'atelier retenu doit d'abord accepter la prestation, sa rémunération et son délai.",
+  workshop_payout_mismatch: "La rémunération du devis doit être celle que l'atelier a acceptée.",
+  margin_below_target_without_derogation:
+    "La marge est inférieure à 25 % du prix de vente HT : appliquez le prix cible ou motivez une dérogation.",
+  proposal_agreement_immutable: "Les termes de cette proposition sont figés : créez une nouvelle version.",
+  customer_acceptance_required: "Seul le client peut accepter cette proposition, depuis son espace.",
+};
+
+function agreementRefusal(message: string): string | null {
+  const code = Object.keys(AGREEMENT_REFUSALS).find((key) => message.includes(key));
+  return code ? AGREEMENT_REFUSALS[code] : null;
+}
+
+/** L'offre retenue et acceptée par l'atelier : la seule source des termes atelier d'un devis. */
+export async function loadSelectedWorkshopAgreement(sb: Awaited<ReturnType<typeof admin>>, caseId: string) {
+  const { data, error } = await sb
+    .from("marketplace_quotes")
+    .select("id, binder_id, binder_payout_cents, lead_time_days, service_description, agreement_version, accepted_at, selected_at")
+    .eq("case_id", caseId)
+    .eq("state", "selected")
+    .not("agreement_version", "is", null)
+    .order("selected_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw error;
+  if (!data || data.binder_payout_cents === null) return null;
+  return {
+    offerId: data.id,
+    binderId: data.binder_id,
+    binderPayoutCents: data.binder_payout_cents,
+    leadTimeDays: data.lead_time_days,
+    serviceDescription: data.service_description,
+    acceptedAt: data.accepted_at,
+  };
+}
 
 /** Ce que les fonctions « cœur » lisent du contexte authentifié : de quoi vérifier le rôle admin et tracer l'auteur. */
 export type AdminCallContext = { supabase: Parameters<typeof assertAdmin>[0]; userId: string };
@@ -112,6 +149,14 @@ export async function createCommercialProposalCore(context: AdminCallContext, da
     // Une proposition acceptée fige le dossier : une évolution commerciale n'est jamais un simple
     // « nouvelle version » silencieuse sur une commande déjà acceptée (P1-5).
     if (await loadAcceptedCommercialProposal(sb, data.caseId)) fail(409, REPRICE_BLOCK_MESSAGES.proposal_accepted);
+
+    // Modèle Oppe : le devis client reprend l'accord de l'atelier retenu (prestation, rémunération,
+    // délai). La base l'impose aussi (b_marketplace_bind_proposal_to_agreement).
+    const agreement = await loadSelectedWorkshopAgreement(sb, data.caseId);
+    if (!agreement)
+      fail(409, "L'atelier retenu doit d'abord accepter la prestation, sa rémunération et son délai.");
+    if (agreement.binderPayoutCents !== row.binder_payout_cents)
+      fail(409, "La rémunération acceptée par l'atelier diffère de celle du prix validé : revalidez le prix avant le devis.");
 
     // UNE autorité de prix (P1-4) : le prix client RETENU et VALIDÉ par un humain — jamais la sortie
     // brute du moteur (`service_price_cents`), qui peut avoir été corrigée depuis.
@@ -175,7 +220,8 @@ export async function createCommercialProposalCore(context: AdminCallContext, da
       targetMarginBps: PRICING_POLICY.targetMarginBps,
       minimumContributionCents: PRICING_POLICY.minimumContributionCents,
       roundingIncrementCents: PRICING_POLICY.roundingIncrementCents,
-      referenceCents: pricebookReferenceCents,
+      // v6 : la référence Pricebook est un repère, jamais un plancher imposé au client.
+      referenceCents: PRICING_POLICY.pricebookBindsPrice ? pricebookReferenceCents : null,
     });
 
     const roundTrip = data.shippingOffer === ROUND_TRIP_PRODUCT;
@@ -229,16 +275,17 @@ export async function createCommercialProposalCore(context: AdminCallContext, da
       businessVatValidationStatus: null,
       billingCountry: null,
       deposit,
-      status: "proposed",
+      // Brouillon : visible du client seulement une fois envoyé (markCommercialProposalSent).
+      status: "draft",
     });
 
     const version = await nextProposalVersion(sb, data.caseId);
     let proposal: Awaited<ReturnType<typeof insertCommercialProposal>>;
     try {
-      proposal = await insertCommercialProposal(sb, snapshot, version, context.userId, data.shippingOffer);
+      proposal = await insertCommercialProposal(sb, snapshot, version, context.userId, data.shippingOffer, row.pricing_derogation_reason ?? null);
     } catch (error) {
       const message = String((error as { message?: string })?.message ?? "");
-      const refusal = circuitRefusal(message);
+      const refusal = circuitRefusal(message) ?? agreementRefusal(message);
       if (refusal) fail(409, refusal);
       const code = logisticsErrorCode(message);
       if (!code) throw error;
@@ -280,53 +327,9 @@ export const listCaseCommercialProposals = createServerFn({ method: "GET" })
     return listCommercialProposals(sb, caseId);
   });
 
-/**
- * Fige une version — la dernière écriture que cette ligne subira jamais
- * (le trigger `marketplace_commercial_proposals_immutable_after_acceptance`
- * refuse tout UPDATE ultérieur). Réservé à l'admin dans cette phase : aucun
- * parcours client ne déclenche encore cette acceptation lui-même.
- */
-export async function acceptCommercialProposalCore(context: AdminCallContext, proposalId: string) {
-    await assertAdmin(context.supabase, context.userId);
-    const sb = await admin();
-
-    // Jamais d'acceptation d'une proposition périmée (P1-4).
-    await assertProposalPriceCurrent(sb, proposalId);
-
-    let accepted;
-    try {
-      accepted = await acceptCommercialProposalRow(sb, proposalId);
-    } catch (err) {
-      const messages: Record<string, string> = {
-        proposal_not_found: "Cette proposition est introuvable.",
-        proposal_already_accepted: "Cette proposition est déjà acceptée.",
-        proposal_tax_not_validated:
-          "La fiscalité de cette proposition doit être validée avant de l'accepter.",
-      };
-      const message = err instanceof Error ? messages[err.message] : undefined;
-      fail(409, message ?? "Cette proposition est introuvable ou déjà acceptée.");
-    }
-
-    await sb.from("marketplace_events").insert({
-      case_id: accepted.caseId,
-      actor_user_id: context.userId,
-      event_type: "commercial_proposal_accepted",
-      metadata: {
-        proposal_id: accepted.id,
-        version: accepted.version,
-        brand: accepted.brand,
-        customer_service_price_cents: accepted.customerServicePriceCents,
-        binder_payout_cents: accepted.binderPayoutCents,
-      },
-    });
-
-    return accepted;
-}
-
-export const acceptCommercialProposal = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
-  .handler(async ({ context, data }) => acceptCommercialProposalCore(context, data));
+// L'acceptation n'appartient qu'au client (customerProposalAcceptance.server.ts) : aucune
+// fonction d'administration ne peut plus accepter une proposition à sa place (modèle Oppe,
+// 5 octobre 2026 ; garde SQL a_marketplace_require_customer_acceptance).
 
 export const getAcceptedCommercialProposal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])

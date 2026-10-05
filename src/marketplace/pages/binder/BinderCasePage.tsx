@@ -21,6 +21,7 @@ import { WORK_KEY, WORKS_KEY } from "./works/workKeys";
 import { WorkshopReceptionPanel } from "./works/RoundTripWorkshopPanels";
 import { sourceLabel } from "@/marketplace/binders/fineBinderyProfile";
 import { circuitRefusal, commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
+import { WorkshopOrderProgress } from "./WorkshopOrderProgress";
 
 const DECLINE_REASONS = [
   ["payout_insufficient", "Rémunération insuffisante"],
@@ -55,6 +56,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   const [reasonCode, setReasonCode] = useState<(typeof DECLINE_REASONS)[number][0]>("no_capacity");
   const [reasonDetail, setReasonDetail] = useState("");
   const [minimumPayout, setMinimumPayout] = useState("");
+  const [leadTimeDays, setLeadTimeDays] = useState("");
   const [problem, setProblem] = useState<string | null>(null);
 
   const { data, isPending, error } = useQuery({
@@ -68,6 +70,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
         data: {
           caseId,
           accept,
+          leadTimeDays: accept ? Number.parseInt(leadTimeDays, 10) : null,
           reasonCode: accept ? null : reasonCode,
           reasonDetail: accept ? null : reasonDetail,
           minimumRequiredPayoutCents:
@@ -121,11 +124,17 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
           <h2 className="font-serif text-lg">Proposition de projet</h2>
           {offer?.binder_payout_cents ? (
             <>
-              <p className="mt-3 text-sm text-muted-foreground">Votre rémunération fixe</p>
+              <p className="mt-3 text-sm text-muted-foreground">Votre rémunération fixe (HT)</p>
               <p className="mt-1 text-3xl font-medium">{formatEuros(offer.binder_payout_cents)}</p>
+              {offer.service_description && (
+                <p className="mt-3 text-sm leading-6"><span className="text-muted-foreground">Prestation : </span>{offer.service_description}</p>
+              )}
+              {offer.lead_time_days && (
+                <p className="mt-1 text-sm"><span className="text-muted-foreground">Votre délai : </span>{offer.lead_time_days} jours</p>
+              )}
               <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Cette rémunération couvre le périmètre décrit dans le Project Brief. Aucun prix
-                n’est demandé à l’atelier.
+                Oppe vend ce projet au client sous sa marque et vous confie sa réalisation. Vous facturez cette rémunération à
+                Oppe ; vous n'émettez ni devis ni facture au client.
               </p>
             </>
           ) : (
@@ -139,12 +148,23 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
         {data.canRespond && offer?.binder_payout_cents ? (
           <section className="space-y-4 rounded-lg border border-border bg-card p-5">
             <h2 className="font-serif text-lg">Votre disponibilité</h2>
+            <div>
+              <Label htmlFor="lead-time">Délai de réalisation que vous vous engagez à tenir (jours)</Label>
+              <Input
+                id="lead-time"
+                className="mt-1"
+                inputMode="numeric"
+                value={leadTimeDays}
+                onChange={(event) => setLeadTimeDays(event.target.value.replace(/[^0-9]/g, ""))}
+                placeholder="par exemple 21"
+              />
+            </div>
             <Button
               className="w-full"
-              disabled={answer.isPending}
+              disabled={answer.isPending || !(Number.parseInt(leadTimeDays, 10) >= 1 && Number.parseInt(leadTimeDays, 10) <= 365)}
               onClick={() => answer.mutate(true)}
             >
-              Accepter cette offre
+              Accepter la prestation, la rémunération et ce délai
             </Button>
             <div className="border-t border-border pt-4">
               <Label htmlFor="decline-reason">Motif de refus</Label>
@@ -205,13 +225,14 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
         ) : (
           <section className="rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground">
             {offer?.state === "accepted" &&
-              "Offre acceptée. Ma Reliure vous confirmera si l’atelier est retenu."}
+              "Offre acceptée. Oppe vous confirmera si votre atelier est retenu."}
             {offer?.state === "selected" && "Votre atelier est retenu pour ce projet."}
             {offer?.state === "declined" && "Vous avez refusé cette offre."}
             {offer?.state === "cancelled" && "Cette offre a été clôturée."}
             {!offer && "Aucune offre active pour ce projet."}
           </section>
         )}
+        {isSelected && oppeOrder && <WorkshopOrderProgress caseId={caseId} />}
         <WorkshopReceptionPanel caseId={caseId} />
       </aside>
     </div>

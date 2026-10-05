@@ -554,6 +554,10 @@ export interface CustomerCopy {
   proposalAcceptedOn: (date: string) => string;
   proposalPaid: string;
   acceptLabel: string;
+  /** Case obligatoire avant l'acceptation : le devis et les conditions générales de vente. */
+  termsConsent: string;
+  termsLinkLabel: string;
+  termsHref: string;
   acceptBusy: string;
   acceptError: string;
   acceptedNotice: string;
@@ -665,7 +669,10 @@ const FR: CustomerCopy = {
   proposalPayAfterAccept: "Le paiement sera disponible dès que vous aurez accepté la proposition.",
   proposalAcceptedOn: (d) => `Proposition acceptée le ${d}.`,
   proposalPaid: "Paiement reçu. Merci.",
-  acceptLabel: "Accepter la proposition",
+  acceptLabel: "Accepter le devis",
+  termsConsent: "J'accepte ce devis et les conditions générales de vente d'OPPE SAS, qui vend la prestation sous la marque Ma Reliure.",
+  termsLinkLabel: "Lire les conditions générales de vente",
+  termsHref: "/conditions-generales-de-vente",
   acceptBusy: "Enregistrement…",
   acceptError: "Nous n'avons pas pu enregistrer votre acceptation. Réessayez.",
   acceptedNotice: "Proposition acceptée. Vous pouvez maintenant payer.",
@@ -774,7 +781,10 @@ const EN: CustomerCopy = {
   proposalPayAfterAccept: "Payment will be available as soon as you accept the proposal.",
   proposalAcceptedOn: (d) => `Proposal accepted on ${d}.`,
   proposalPaid: "Payment received. Thank you.",
-  acceptLabel: "Accept proposal",
+  acceptLabel: "Accept the quote",
+  termsConsent: "I accept this quote and the terms of sale of OPPE SAS, which sells the service under the Fine Bindery brand.",
+  termsLinkLabel: "Read the terms of sale",
+  termsHref: "/terms-of-sale",
   acceptBusy: "Saving…",
   acceptError: "We couldn't record your acceptance. Please try again.",
   acceptedNotice: "Proposal accepted. You can now pay securely.",

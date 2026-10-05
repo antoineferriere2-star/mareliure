@@ -6,6 +6,7 @@
  * box. The admin decides, which is the whole point of a concierge MVP — and of
  * the CLAUDE.md rule that the system proposes and the human disposes.
  */
+import { OppeOrderPanel } from "./OppeOrderPanel";
 import { commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
 import { OperatorLogisticsPanel } from "./OperatorLogisticsPanel";
 import { useState, type ReactNode } from "react";
@@ -21,7 +22,6 @@ import {
   validateMarketplacePricing,
 } from "@/marketplace/services/marketplace.data.functions";
 import {
-  acceptCommercialProposal,
   applyAutomaticFranceTaxPolicy,
   createCommercialProposal,
   getPaymentPreflight,
@@ -45,7 +45,7 @@ import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
 import { formatEuros } from "@/marketplace/pricing/money";
-import { validateManagedPrice } from "@/marketplace/pricing/pricing.engine";
+import { validateManagedPrice, targetServicePriceCents, hasDerogation } from "@/marketplace/pricing/pricing.engine";
 import { BASE_PRICE_NOTE } from "@/marketplace/pricing/basePriceSuggestion";
 import {
   sendPriceToCustomer,
@@ -68,16 +68,10 @@ function toCents(euros: string): number {
 
 function PricingPanel({
   caseId,
-  brand,
   row,
   refresh,
-  onSent,
 }: {
   caseId: string;
-  /** L'envoi en un clic est réservé aux demandes directes Ma Reliure. */
-  brand: string;
-  /** Le panneau se remonte quand le prix passe à « validé » : le compte rendu d'envoi est gardé par la page. */
-  onSent: (result: SendPriceResult) => void;
   row: {
     manual_review_required: boolean;
     pricing_status: string;
@@ -92,25 +86,30 @@ function PricingPanel({
     pricing_low_estimate_cents: number | null;
     pricing_high_estimate_cents: number | null;
     pricing_reference_count: number | null;
+    pricing_derogation_reason?: string | null;
   };
   refresh: () => Promise<unknown>;
 }) {
   const generate = useServerFn(generateMarketplacePricing);
   const save = useServerFn(saveMarketplacePricing);
   const validate = useServerFn(validateMarketplacePricing);
-  const sendToCustomer = useServerFn(sendPriceToCustomer);
-  const [sendShipping, setSendShipping] = useState<"manual" | "book_round_trip_fr">("manual");
   const initialCustomer = row.customer_price_cents ?? row.suggested_customer_price_cents;
   const initialPayout = row.binder_payout_cents ?? row.suggested_binder_payout_cents;
   const [customer, setCustomer] = useState(initialCustomer ? String(initialCustomer / 100) : "");
   const [payout, setPayout] = useState(initialPayout ? String(initialPayout / 100) : "");
   const [includes, setIncludes] = useState(row.price_includes.join(", "));
+  const [derogation, setDerogation] = useState(row.pricing_derogation_reason ?? "");
   const customerCents = toCents(customer);
   const payoutCents = toCents(payout);
+  const targetCents = Number.isFinite(payoutCents) && payoutCents > 0 ? targetServicePriceCents(payoutCents) : null;
+  const isDerogation = targetCents !== null && Number.isFinite(customerCents) && customerCents !== targetCents;
   const result = validateManagedPrice(
     Number.isFinite(customerCents) ? customerCents : 0,
     Number.isFinite(payoutCents) ? payoutCents : 0,
+    undefined,
+    isDerogation ? derogation : null,
   );
+  const derogationMissing = isDerogation && !hasDerogation(derogation);
   const payload = {
     caseId,
     customerPriceCents: customerCents,
@@ -119,6 +118,7 @@ function PricingPanel({
       .split(",")
       .map((item) => item.trim())
       .filter(Boolean),
+    derogationReason: isDerogation ? derogation.trim() : null,
   };
   const generation = useMutation({
     mutationFn: () => generate({ data: { caseId } }),
@@ -128,13 +128,6 @@ function PricingPanel({
   const validation = useMutation({
     mutationFn: () => validate({ data: payload }),
     onSuccess: refresh,
-  });
-  const sending = useMutation({
-    mutationFn: () => sendToCustomer({ data: { ...payload, shippingOffer: sendShipping } }),
-    onSuccess: (result) => {
-      onSent(result);
-      return refresh();
-    },
   });
   const fromBasePrices = (row.pricing_components ?? []).some((component) =>
     (component.approximationNote ?? "").startsWith(BASE_PRICE_NOTE),
@@ -254,9 +247,36 @@ function PricingPanel({
           placeholder="Reliure, matériaux, expédition retour"
         />
       </div>
-      <p className={`mt-3 text-sm ${result.valid ? "text-emerald-700" : "text-destructive"}`}>
+      {targetCents !== null && (
+        <div className="mt-3 flex flex-wrap items-center gap-2 text-sm">
+          <span>
+            Prix cible (marge de 25 % du prix de vente HT) : <strong className="tabular-nums">{formatEuros(targetCents)}</strong>
+          </span>
+          {row.pricing_status !== "validated" && customerCents !== targetCents && (
+            <Button variant="outline" size="sm" onClick={() => setCustomer(String(targetCents / 100))}>
+              Appliquer le prix cible
+            </Button>
+          )}
+        </div>
+      )}
+      <p className={`mt-2 text-sm ${result.valid && !derogationMissing ? "text-emerald-700" : "text-destructive"}`}>
         Marge : {formatEuros(result.marginCents)} · {(result.marginBps / 100).toFixed(1)} %
       </p>
+      {isDerogation && row.pricing_status !== "validated" && (
+        <div className="mt-3">
+          <Label htmlFor="price-derogation">Motif de la dérogation au prix cible (obligatoire)</Label>
+          <Input
+            id="price-derogation"
+            className="mt-1"
+            value={derogation}
+            onChange={(event) => setDerogation(event.target.value)}
+            placeholder="Geste commercial validé, cas particulier…"
+          />
+        </div>
+      )}
+      {row.pricing_status === "validated" && row.pricing_derogation_reason && (
+        <p className="mt-2 text-xs text-muted-foreground">Dérogation : {row.pricing_derogation_reason}</p>
+      )}
       {!result.valid && customer !== "" && payout !== "" && (
         <p className="mt-1 text-xs text-destructive">{result.errors.join(" ")}</p>
       )}
@@ -277,7 +297,7 @@ function PricingPanel({
         {row.pricing_status !== "validated" && (
           <Button
             variant="outline"
-            disabled={!result.valid || saving.isPending}
+            disabled={!result.valid || derogationMissing || saving.isPending}
             onClick={() => saving.mutate()}
           >
             Enregistrer
@@ -285,45 +305,16 @@ function PricingPanel({
         )}
         {row.pricing_status !== "validated" && (
           <Button
-            disabled={!result.valid || validation.isPending || row.manual_review_required}
+            disabled={!result.valid || derogationMissing || validation.isPending || row.manual_review_required}
             onClick={() => validation.mutate()}
           >
             Valider le prix
           </Button>
         )}
       </div>
-      {brand === "MA_RELIURE" && row.pricing_status !== "validated" && (
-        <div className="mt-5 border-t border-border pt-4">
-          <p className="text-sm font-medium">Envoyer au client en un clic</p>
-          <p className="mt-1 text-xs leading-5 text-muted-foreground">
-            Valide le prix, crée la proposition, applique la TVA française (20 %) pour un client particulier en France,
-            la rend payable par carte et envoie au client un e-mail avec le lien vers son espace. Client professionnel,
-            hors France ou acompte : utilisez les étapes manuelles.
-          </p>
-          <div className="mt-3 flex flex-wrap items-center gap-2">
-            <label className="text-xs">
-              Transport{" "}
-              <select
-                className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-                value={sendShipping}
-                onChange={(event) => setSendShipping(event.target.value as typeof sendShipping)}
-              >
-                <option value="manual">Sans forfait (traitement manuel)</option>
-                <option value="book_round_trip_fr">Transport aller-retour — 15 € TTC</option>
-              </select>
-            </label>
-            <Button
-              disabled={!result.valid || sending.isPending || row.manual_review_required}
-              onClick={() => sending.mutate()}
-            >
-              {sending.isPending ? "Envoi…" : "Valider et envoyer au client"}
-            </Button>
-          </div>
-        </div>
-      )}
-      {(generation.error || saving.error || validation.error || sending.error) && (
+      {(generation.error || saving.error || validation.error) && (
         <p className="mt-3 text-sm text-destructive">
-          {(generation.error ?? saving.error ?? validation.error ?? (sending.error as Error)).message}
+          {(generation.error ?? saving.error ?? (validation.error as Error)).message}
         </p>
       )}
     </section>
@@ -471,8 +462,8 @@ function EconomicsPanel({
 
 const PROPOSAL_STATUS_LABELS: Record<string, string> = {
   draft: "Brouillon",
-  proposed: "Proposée",
-  accepted: "Acceptée",
+  proposed: "Envoyé au client",
+  accepted: "Accepté par le client",
   superseded: "Remplacée",
   cancelled: "Annulée",
 };
@@ -768,19 +759,31 @@ function PreflightPanel({ caseId }: { caseId: string }) {
 }
 
 /**
- * La couche commerciale immuable (audit §2-3) : chaque version figée d'une
- * proposition pour ce dossier. « Accepter » est réservé à l'administration
- * dans cette phase — aucun parcours client ne le fait encore lui-même.
+ * Le devis Oppe (activité A) : chaque version figée, liée à l'accord de l'atelier retenu.
+ * L'administration crée et envoie ; seul le client accepte, depuis son espace.
  */
 const TAX_VALIDATION_SOURCE_LABELS: Record<string, string> = {
   manual_admin_review: "Validation manuelle (admin)",
   FR_STANDARD_VAT_20: "Automatique — TVA France standard 20 %",
 };
 
-function CommercialProposalPanel({ caseId, brand }: { caseId: string; brand: string }) {
+function sendOutcome(result: SendPriceResult): string {
+  if (result.email.sent) {
+    return result.email.to === "account"
+      ? "Le client a reçu un e-mail : il accepte le devis et les conditions de vente dans son espace, puis paie."
+      : "Le client a reçu un e-mail à l'adresse de sa demande ; en se connectant avec elle, il retrouvera son devis.";
+  }
+  if (result.email.reason === "tax_review_required")
+    return "Devis créé en brouillon : validez sa fiscalité ci-dessous, puis envoyez-le.";
+  return result.email.reason === "no_address"
+    ? "Aucune adresse e-mail connue : prévenez le client vous-même."
+    : "L'e-mail n'a pas pu partir : prévenez le client vous-même.";
+}
+
+function CommercialProposalPanel({ caseId, onSent }: { caseId: string; onSent: (result: SendPriceResult) => void }) {
   const list = useServerFn(listCaseCommercialProposals);
   const create = useServerFn(createCommercialProposal);
-  const accept = useServerFn(acceptCommercialProposal);
+  const createAndSend = useServerFn(sendPriceToCustomer);
   const resetTax = useServerFn(resetProposalTaxToManualReview);
   const sendProposal = useServerFn(sendProposalToCustomer);
   const queryClient = useQueryClient();
@@ -791,105 +794,93 @@ function CommercialProposalPanel({ caseId, brand }: { caseId: string; brand: str
     queryFn: () => list({ data: caseId }),
   });
 
+  const refreshAll = () => {
+    queryClient.invalidateQueries({ queryKey });
+    queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
+    queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "logistics"] });
+  };
   const [shippingOffer, setShippingOffer] = useState<"manual" | "book_round_trip_fr">("manual");
   const creating = useMutation({
     mutationFn: () =>
       create({ data: { caseId, shipping: { outboundCents: 0, returnCents: 0, otherCents: 0 }, shippingOffer } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "logistics"] });
-    },
+    onSuccess: refreshAll,
   });
-  const accepting = useMutation({
-    mutationFn: (proposalId: string) => accept({ data: proposalId }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey }),
+  const creatingAndSending = useMutation({
+    mutationFn: () => createAndSend({ data: { caseId, shippingOffer } }),
+    onSuccess: (result) => {
+      onSent(result);
+      refreshAll();
+    },
   });
   const resetting = useMutation({
     mutationFn: (proposalId: string) => resetTax({ data: proposalId }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
-    },
+    onSuccess: refreshAll,
   });
-
-  // « Envoyer au client » : TVA automatique si besoin, puis e-mail ; le client accepte lui-même.
   const sendingProposal = useMutation({
     mutationFn: (proposalId: string) => sendProposal({ data: { proposalId } }),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey });
-      queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "payment-preflight"] });
+    onSuccess: (result) => {
+      onSent(result);
+      refreshAll();
     },
   });
 
   const hasAccepted = (proposals ?? []).some((p) => p.status === "accepted");
+  const error = creating.error ?? creatingAndSending.error ?? resetting.error ?? sendingProposal.error;
 
   return (
     <section className="rounded-lg border border-border bg-card p-5">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Proposition commerciale
-        </h2>
-        <div className="flex flex-wrap items-center gap-2">
-          <label className="text-xs">
-            Transport{" "}
-            <select
-              className="h-8 rounded-md border border-input bg-background px-2 text-xs"
-              value={shippingOffer}
-              onChange={(event) => setShippingOffer(event.target.value as typeof shippingOffer)}
-            >
-              <option value="manual">Sans forfait (traitement manuel)</option>
-              <option value="book_round_trip_fr">Transport aller-retour — 15 € TTC</option>
-            </select>
-          </label>
-          <Button size="sm" variant="outline" disabled={creating.isPending} onClick={() => creating.mutate()}>
-            {(proposals ?? []).length === 0 ? "Créer la proposition" : "Nouvelle version"}
-          </Button>
-        </div>
+        <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Devis Oppe</h2>
+        {!hasAccepted && (
+          <div className="flex flex-wrap items-center gap-2">
+            <label className="text-xs">
+              Transport{" "}
+              <select
+                className="h-8 rounded-md border border-input bg-background px-2 text-xs"
+                value={shippingOffer}
+                onChange={(event) => setShippingOffer(event.target.value as typeof shippingOffer)}
+              >
+                <option value="manual">Sans forfait (traitement manuel)</option>
+                <option value="book_round_trip_fr">Transport aller-retour — 15 € TTC</option>
+              </select>
+            </label>
+            <Button size="sm" disabled={creatingAndSending.isPending} onClick={() => creatingAndSending.mutate()}>
+              {creatingAndSending.isPending ? "Envoi…" : "Créer et envoyer le devis au client"}
+            </Button>
+            <Button size="sm" variant="outline" disabled={creating.isPending} onClick={() => creating.mutate()}>
+              Créer un brouillon
+            </Button>
+          </div>
+        )}
       </div>
+      <p className="mt-2 text-xs leading-5 text-muted-foreground">
+        Le devis reprend l'accord de l'atelier retenu (prestation, rémunération, délai) et le prix validé. Le client
+        l'accepte lui-même avec les conditions générales de vente, puis le règle.
+      </p>
       {isPending && <p className="mt-2 text-xs text-muted-foreground">Chargement…</p>}
-      {creating.error && (
-        <p className="mt-2 text-xs text-destructive">{(creating.error as Error).message}</p>
-      )}
-      {accepting.error && (
-        <p className="mt-2 text-xs text-destructive">{(accepting.error as Error).message}</p>
-      )}
-      {resetting.error && (
-        <p className="mt-2 text-xs text-destructive">{(resetting.error as Error).message}</p>
-      )}
-      {sendingProposal.error && (
-        <p className="mt-2 text-xs text-destructive">{(sendingProposal.error as Error).message}</p>
-      )}
-      {sendingProposal.data && (
-        <p role="status" className="mt-2 rounded-md border border-emerald-300 bg-emerald-50 p-2 text-xs leading-5 text-emerald-900">
-          Proposition envoyée
-          {sendingProposal.data.totalTtcCents !== null ? ` (${formatEuros(sendingProposal.data.totalTtcCents)} TTC)` : ""}.{" "}
-          {sendingProposal.data.email.sent
-            ? sendingProposal.data.email.to === "account"
-              ? "Le client a reçu un e-mail : il accepte la proposition dans son espace, puis paie."
-              : "Le client a reçu un e-mail à l'adresse de sa demande ; en se connectant avec elle, il retrouvera la proposition."
-            : sendingProposal.data.email.reason === "no_address"
-              ? "Aucune adresse e-mail connue : prévenez le client vous-même."
-              : "L'e-mail n'a pas pu partir : prévenez le client vous-même."}
-        </p>
-      )}
+      {error && <p className="mt-2 text-xs text-destructive">{(error as Error).message}</p>}
       <ul className="mt-3 space-y-2 text-sm">
         {(proposals ?? []).map((proposal) => (
           <li key={proposal.id} className="rounded-md border border-border p-2">
             <div className="flex items-center justify-between gap-3">
-              <div>
+              <div className="min-w-0">
                 <p>
                   v{proposal.version} · {PROPOSAL_STATUS_LABELS[proposal.status] ?? proposal.status} ·{" "}
-                  {formatEuros(proposal.customerServicePriceCents)}
+                  {formatEuros(proposal.customerServicePriceCents)} HT
                   {proposal.shippingOfferKind === "book_round_trip_fr" && " · + Transport aller-retour — 15 € TTC (12,50 € HT)"}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  Rémunération atelier {formatEuros(proposal.binderPayoutCents)} · plancher :{" "}
-                  {proposal.priceBoundBy === "reference"
-                    ? "référence Pricebook"
-                    : proposal.priceBoundBy === "margin_floor"
-                      ? "marge"
-                      : "contribution minimale"}
+                  Rémunération atelier {formatEuros(proposal.binderPayoutCents)} HT · marge{" "}
+                  {formatEuros(proposal.customerServicePriceCents - proposal.binderPayoutCents)}
+                  {proposal.workshopLeadTimeDays ? ` · délai atelier ${proposal.workshopLeadTimeDays} j` : ""}
+                  {proposal.contractVersion ? "" : " · proposition historique (sans accord atelier lié)"}
                 </p>
+                {proposal.workshopServiceDescription && (
+                  <p className="mt-1 text-xs text-muted-foreground">Prestation : {proposal.workshopServiceDescription}</p>
+                )}
+                {proposal.priceDerogationReason && (
+                  <p className="mt-1 text-xs text-amber-800">Dérogation au prix cible : {proposal.priceDerogationReason}</p>
+                )}
                 <p className="mt-1 text-xs text-muted-foreground">
                   Fiscalité :{" "}
                   {proposal.taxValidatedAt
@@ -908,29 +899,16 @@ function CommercialProposalPanel({ caseId, brand }: { caseId: string; brand: str
                   {proposal.customerType === "BUSINESS"
                     ? `Professionnel — ${proposal.businessName ?? "raison sociale à renseigner"}`
                     : "Particulier"}
+                  {proposal.sentAt ? ` · envoyé le ${new Date(proposal.sentAt).toLocaleDateString("fr-FR")}` : ""}
                 </p>
               </div>
               <div className="flex shrink-0 flex-col items-end gap-1">
-                {brand === "MA_RELIURE" && proposal.status === "proposed" && !hasAccepted && (
-                  <Button
-                    size="sm"
-                    disabled={sendingProposal.isPending}
-                    onClick={() => sendingProposal.mutate(proposal.id)}
-                    title="Applique la TVA France 20 % si besoin (particulier en France), puis envoie l'e-mail « Votre proposition est prête »."
-                  >
-                    {sendingProposal.isPending ? "Envoi…" : "Envoyer au client"}
+                {(proposal.status === "draft" || proposal.status === "proposed") && !hasAccepted && proposal.taxValidatedAt && (
+                  <Button size="sm" disabled={sendingProposal.isPending} onClick={() => sendingProposal.mutate(proposal.id)}>
+                    {proposal.status === "draft" ? "Envoyer au client" : "Renvoyer l'e-mail"}
                   </Button>
                 )}
-                {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (
-                  <Button
-                    size="sm"
-                    disabled={accepting.isPending}
-                    onClick={() => accepting.mutate(proposal.id)}
-                  >
-                    Accepter
-                  </Button>
-                )}
-                {proposal.status === "proposed" && !hasAccepted && proposal.taxValidatedAt && (
+                {proposal.status === "draft" && !hasAccepted && proposal.taxValidatedAt && (
                   <Button
                     size="sm"
                     variant="ghost"
@@ -943,14 +921,14 @@ function CommercialProposalPanel({ caseId, brand }: { caseId: string; brand: str
                 )}
               </div>
             </div>
-            {proposal.status === "proposed" && !hasAccepted && !proposal.taxValidatedAt && (
+            {(proposal.status === "draft" || proposal.status === "proposed") && !hasAccepted && !proposal.taxValidatedAt && (
               <TaxValidationForm proposal={proposal} caseId={caseId} />
             )}
           </li>
         ))}
       </ul>
       {(proposals ?? []).length === 0 && !isPending && (
-        <p className="mt-2 text-xs text-muted-foreground">Aucune proposition figée pour l'instant.</p>
+        <p className="mt-2 text-xs text-muted-foreground">Aucun devis pour l'instant.</p>
       )}
     </section>
   );
@@ -965,6 +943,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
   const [selected, setSelected] = useState<string[]>([]);
   const [problem, setProblem] = useState<string | null>(null);
   const [sentNotice, setSentNotice] = useState<SendPriceResult | null>(null);
+  const [serviceDescription, setServiceDescription] = useState("");
 
   const queryKey = ["marketplace", "case", caseId] as const;
   const { data, isPending, error } = useQuery({
@@ -973,7 +952,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
   });
 
   const invite = useMutation({
-    mutationFn: () => send({ data: { caseId, binderIds: selected } }),
+    mutationFn: () => send({ data: { caseId, binderIds: selected, serviceDescription } }),
     onSuccess: async () => {
       setSelected([]);
       setProblem(null);
@@ -1005,7 +984,8 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
     data.case.pricing_status === "validated" &&
     data.case.status === "matching" &&
     remaining > 0 &&
-    selected.length > 0;
+    selected.length > 0 &&
+    serviceDescription.trim().length >= 10;
 
   function toggle(id: string) {
     setProblem(null);
@@ -1074,26 +1054,16 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
         {sentNotice && (
           <section role="status" className="rounded-lg border border-emerald-300 bg-emerald-50 p-4 text-sm leading-6 text-emerald-900">
             <p className="font-medium">
-              Proposition envoyée au client
+              {sentNotice.email.sent || sentNotice.email.reason !== "tax_review_required" ? "Devis envoyé au client" : "Devis créé"}
               {sentNotice.totalTtcCents !== null ? ` — ${formatEuros(sentNotice.totalTtcCents)} TTC` : ""}.
             </p>
-            <p className="mt-1">
-              {sentNotice.email.sent
-                ? sentNotice.email.to === "account"
-                  ? "Le client a reçu un e-mail avec le lien vers son dossier ; il peut payer par carte."
-                  : "Le client a reçu un e-mail à l'adresse saisie lors de sa demande ; en se connectant avec elle, il retrouvera son dossier et pourra payer."
-                : sentNotice.email.reason === "no_address"
-                  ? "Aucune adresse e-mail connue pour ce client : prévenez-le vous-même."
-                  : "L'e-mail n'a pas pu partir : prévenez le client vous-même."}
-            </p>
+            <p className="mt-1">{sendOutcome(sentNotice)}</p>
           </section>
         )}
 
         <PricingPanel
           key={`${data.case.pricing_status}-${data.case.pricing_generated_at ?? "new"}`}
           caseId={caseId}
-          brand={data.case.brand}
-          onSent={setSentNotice}
           row={data.case}
           refresh={() => queryClient.invalidateQueries({ queryKey })}
         />
@@ -1103,7 +1073,11 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
         {data.case.pricing_status === "validated" && (
           <>
             <OperatorLogisticsPanel caseId={caseId} />
-            <CommercialProposalPanel caseId={caseId} brand={data.case.brand} />
+            <CommercialProposalPanel caseId={caseId} onSent={setSentNotice} />
+            <OppeOrderPanel
+              caseId={caseId}
+              candidates={data.candidates.map((c) => ({ id: c.id, name: c.workshopName ?? c.displayName }))}
+            />
             <PreflightPanel caseId={caseId} />
           </>
         )}
@@ -1236,6 +1210,17 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
               })}
             </ul>
           )}
+
+          <div className="mt-4">
+            <Label htmlFor="service-description">Prestation demandée à l'atelier</Label>
+            <textarea
+              id="service-description"
+              className="mt-1 min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={serviceDescription}
+              onChange={(event) => setServiceDescription(event.target.value)}
+              placeholder="Ce que l'atelier s'engage à réaliser : il l'accepte avec sa rémunération et son délai."
+            />
+          </div>
 
           {problem && <p className="mt-4 text-sm text-destructive">{problem}</p>}
 

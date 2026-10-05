@@ -3,7 +3,14 @@ import { applyBrandServicePricing } from "./brandPricing";
 import { resolveServicePriceFloors } from "./pricebook";
 import { MARKETPLACE_BRAND_CONFIGS, type MarketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 
+/** Le mécanisme de multiplicateur reste testé sur l'ancienne politique Fine Bindery (×1,30). */
+const LEGACY_FINE_BINDERY_POLICY = { serviceMultiplierBps: 13_000, minimumServicePriceCents: null };
+
 describe("applyBrandServicePricing — §58", () => {
+  it("applique depuis le modèle Oppe (v6) la même marge aux deux marques", () => {
+    expect(applyBrandServicePricing(100_000, "FINE_BINDERY", 100).servicePriceCents).toBe(100_000);
+  });
+
   it("leaves Ma Reliure's own price untouched — multiplier is ×1.00", () => {
     const result = applyBrandServicePricing(100_000, "MA_RELIURE", 1_000);
     expect(result.brandMultiplierBps).toBe(10_000);
@@ -12,15 +19,15 @@ describe("applyBrandServicePricing — §58", () => {
     expect(result.minimumApplied).toBe(false);
   });
 
-  it("adds exactly 30% for Fine Bindery — 100 000 cents base becomes 130 000", () => {
-    const result = applyBrandServicePricing(100_000, "FINE_BINDERY", 1_000);
+  it("adds exactly 30% under the legacy Fine Bindery policy — 100 000 cents base becomes 130 000", () => {
+    const result = applyBrandServicePricing(100_000, "FINE_BINDERY", 1_000, LEGACY_FINE_BINDERY_POLICY);
     expect(result.brandMultiplierBps).toBe(13_000);
     expect(result.servicePriceCents).toBe(130_000);
   });
 
   it("rounds the multiplied price up to the configured increment, never down", () => {
     // 118 000 × 1.30 = 153 400 → doit monter à 154 000, pas retomber à 153 000.
-    const result = applyBrandServicePricing(118_000, "FINE_BINDERY", 1_000);
+    const result = applyBrandServicePricing(118_000, "FINE_BINDERY", 1_000, LEGACY_FINE_BINDERY_POLICY);
     expect(result.servicePriceCents).toBe(154_000);
   });
 
@@ -81,7 +88,7 @@ describe("applyBrandServicePricing — §58", () => {
     });
     expect(maReliure.priceCents).toBe(50_000); // 500 €, plancher de marge
 
-    const fineBindery = applyBrandServicePricing(maReliure.priceCents, "FINE_BINDERY", 1_000);
+    const fineBindery = applyBrandServicePricing(maReliure.priceCents, "FINE_BINDERY", 1_000, LEGACY_FINE_BINDERY_POLICY);
     expect(fineBindery.servicePriceCents).toBe(65_000); // 650 €
     // Le payout atelier n'entre nulle part dans ce dernier calcul — la seule
     // façon de le vérifier ici est qu'aucun de ses arguments ne le porte.

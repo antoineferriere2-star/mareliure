@@ -33,10 +33,18 @@ export interface CommercialProposalRow extends CommercialProposalSnapshot {
   validatedBy: string | null;
   acceptedAt: string | null;
   supersededAt: string | null;
+  /** `oppe-a-v1` : proposition du modèle Oppe, liée à un accord atelier ; NULL : historique. */
+  contractVersion: string | null;
+  workshopBinderId: string | null;
+  workshopOfferId: string | null;
+  workshopServiceDescription: string | null;
+  workshopLeadTimeDays: number | null;
+  priceDerogationReason: string | null;
+  sentAt: string | null;
 }
 
 const COLUMNS =
-  "payment_circuit, shipping_offer_kind, id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, tax_country, tax_basis, tax_validation_source, tax_validated_at, tax_validated_by, customer_type, business_name, business_vat_number, business_vat_validation_status, billing_country, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at";
+  "payment_circuit, shipping_offer_kind, id, case_id, version, brand, currency, pricing_mode, pricing_rule_version, pricebook_reference_cents, pricebook_provenance, brand_multiplier_bps, brand_reference_cents, binder_payout_cents, binder_vat_rate_bps, binder_vat_amount_cents, binder_payout_ttc_cents, target_margin_bps, minimum_contribution_cents, margin_floor_cents, contribution_floor_cents, price_bound_by, customer_service_price_cents, estimate_min_cents, estimate_max_cents, shipping_outbound_cents, shipping_return_cents, shipping_other_cents, shipping_total_cents, shipping_margin_cents, shipping_handling_fee_cents, tax_policy, customer_vat_rate_bps, customer_vat_amount_cents, customer_total_ht_cents, customer_total_ttc_cents, tax_country, tax_basis, tax_validation_source, tax_validated_at, tax_validated_by, customer_type, business_name, business_vat_number, business_vat_validation_status, billing_country, deposit_type, deposit_value_bps, deposit_amount_cents, balance_due_cents, status, notes, created_at, created_by, validated_at, validated_by, accepted_at, superseded_at, contract_version, workshop_binder_id, workshop_offer_id, workshop_service_description, workshop_lead_time_days, price_derogation_reason, sent_at";
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 function toRow(row: any): CommercialProposalRow {
@@ -99,6 +107,13 @@ function toRow(row: any): CommercialProposalRow {
     validatedBy: row.validated_by,
     acceptedAt: row.accepted_at,
     supersededAt: row.superseded_at,
+    contractVersion: row.contract_version ?? null,
+    workshopBinderId: row.workshop_binder_id ?? null,
+    workshopOfferId: row.workshop_offer_id ?? null,
+    workshopServiceDescription: row.workshop_service_description ?? null,
+    workshopLeadTimeDays: row.workshop_lead_time_days ?? null,
+    priceDerogationReason: row.price_derogation_reason ?? null,
+    sentAt: row.sent_at ?? null,
   };
 }
 
@@ -126,6 +141,7 @@ export async function insertCommercialProposal(
   version: number,
   createdBy: string | null,
   shippingOfferKind: "manual" | "book_round_trip_fr" = "manual",
+  priceDerogationReason: string | null = null,
 ): Promise<CommercialProposalRow> {
   const { data, error } = await sb
     .from("marketplace_commercial_proposals")
@@ -181,6 +197,7 @@ export async function insertCommercialProposal(
       notes: snapshot.notes,
       created_by: createdBy,
       shipping_offer_kind: shippingOfferKind,
+      price_derogation_reason: priceDerogationReason,
     })
     .select(COLUMNS)
     .single();
@@ -353,36 +370,38 @@ export async function resetProposalTaxToManualReview(
  * précis, et garanti de toute façon par le trigger (migration
  * 20260917090000) si ce contrôle applicatif était contourné.
  */
-export async function acceptCommercialProposal(
+/**
+ * Le client accepte la proposition qu'on lui présente — et lui seul : la fonction SQL vérifie qu'il
+ * est le propriétaire du dossier, que la proposition est la dernière version envoyée et que sa
+ * fiscalité est validée, puis enregistre la preuve (version des conditions, empreinte du devis,
+ * adresse IP, navigateur). Aucune acceptation ne peut être posée depuis l'administration
+ * (trigger `a_marketplace_require_customer_acceptance`, migration 20261005120000).
+ */
+export async function acceptCommercialProposalAsCustomer(
   sb: Supa,
-  proposalId: string,
-): Promise<CommercialProposalRow> {
-  const { data: current, error: readError } = await sb
-    .from("marketplace_commercial_proposals")
-    .select("id, accepted_at, tax_validated_at")
-    .eq("id", proposalId)
-    .maybeSingle();
-  if (readError) throw readError;
-  if (!current) throw new Error("proposal_not_found");
-  if (current.accepted_at) throw new Error("proposal_already_accepted");
-  if (!current.tax_validated_at) throw new Error("proposal_tax_not_validated");
+  input: { proposalId: string; customerUserId: string; termsVersion: string; snapshotSha256: string; ipAddress: string | null; userAgent: string | null },
+): Promise<"accepted" | "already_accepted"> {
+  const { data, error } = await sb.rpc("marketplace_accept_proposal_as_customer", {
+    p_proposal_id: input.proposalId,
+    p_customer_user_id: input.customerUserId,
+    p_terms_version: input.termsVersion,
+    p_snapshot_sha256: input.snapshotSha256,
+    p_ip_address: input.ipAddress ?? "",
+    p_user_agent: input.userAgent ?? "",
+  });
+  if (error) throw error;
+  return data === "already_accepted" ? "already_accepted" : "accepted";
+}
 
+/** Brouillon → envoyé : la proposition devient visible et acceptable par le client. */
+export async function markCommercialProposalSent(sb: Supa, proposalId: string): Promise<boolean> {
   const { data, error } = await sb
     .from("marketplace_commercial_proposals")
-    .update({ status: "accepted", accepted_at: new Date().toISOString() })
+    .update({ status: "proposed", sent_at: new Date().toISOString() })
     .eq("id", proposalId)
+    .eq("status", "draft")
     .is("accepted_at", null)
-    .select(COLUMNS)
-    .single();
+    .select("id");
   if (error) throw error;
-  const accepted = toRow(data);
-
-  await sb
-    .from("marketplace_commercial_proposals")
-    .update({ status: "superseded", superseded_at: new Date().toISOString() })
-    .eq("case_id", accepted.caseId)
-    .neq("id", accepted.id)
-    .in("status", ["draft", "proposed"]);
-
-  return accepted;
+  return (data ?? []).length === 1;
 }

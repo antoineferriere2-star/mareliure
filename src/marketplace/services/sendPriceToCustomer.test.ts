@@ -1,53 +1,50 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { priceReadyEmailContent } from "./sendPriceToCustomer.data.functions";
+import { proposalReadyEmailContent } from "./sendPriceToCustomer.data.functions";
 
 const source = readFileSync(resolve(process.cwd(), "src/marketplace/services/sendPriceToCustomer.data.functions.ts"), "utf8");
+const proposalSource = readFileSync(resolve(process.cwd(), "src/marketplace/services/commercialProposal.data.functions.ts"), "utf8");
 
-describe("« Envoyer au client » (proposition construite à la main)", () => {
-  it("annonce une proposition à accepter, puis à régler", async () => {
-    const { proposalReadyEmailContent } = await import("./sendPriceToCustomer.data.functions");
-    const c = proposalReadyEmailContent(13500);
-    expect(c.heading).toBe("Votre proposition est prête");
-    expect(c.intro).toMatch(/135,00\s€ TTC/);
-    expect(c.intro).toContain("acceptez-la");
+describe("« Créer et envoyer le devis au client » (modèle Oppe)", () => {
+  it("annonce un devis à accepter avec les conditions de vente, puis à régler", () => {
+    const fr = proposalReadyEmailContent(24_000);
+    expect(fr.heading).toBe("Votre devis est prêt");
+    expect(fr.intro).toMatch(/240,00\s€ TTC/);
+    expect(fr.intro).toContain("acceptez-le avec les conditions générales de vente");
+    const en = proposalReadyEmailContent(24_000, "FINE_BINDERY");
+    expect(en.heading).toBe("Your quote is ready");
+    expect(en.intro).toContain("accept it and the terms of sale");
+    expect(proposalReadyEmailContent(null).intro).not.toMatch(/€/);
   });
 
-  it("n'accepte jamais la proposition à la place du client", () => {
-    const fn = source.slice(source.indexOf("export const sendProposalToCustomer"));
-    expect(fn).not.toContain("acceptCommercialProposalCore");
-    expect(fn).toContain("applyAutomaticFranceTaxPolicyCore");
-    expect(fn.indexOf('row.brand !== "MA_RELIURE"')).toBeLessThan(fn.indexOf("applyAutomaticFranceTaxPolicyCore(ctx"));
-  });
-});
-
-describe("« Valider et envoyer au client »", () => {
-  it("annonce le montant TTC et le chemin vers le paiement", () => {
-    const content = priceReadyEmailContent(20400);
-    expect(content.heading).toBe("Le prix de votre projet est prêt");
-    expect(content.intro).toMatch(/204,00\s€ TTC/);
-    expect(content.intro).toContain("carte bancaire");
-    expect(content.ctaLabel).toBe("Voir et régler");
-    expect(priceReadyEmailContent(null).intro).not.toMatch(/€/);
+  it("n'accepte jamais le devis à la place du client", () => {
+    expect(source).not.toMatch(/acceptCommercialProposal|accepted_at|status: "accepted"/);
+    expect(proposalSource).not.toContain("export const acceptCommercialProposal");
   });
 
-  it("enchaîne les quatre gestes manuels dans l'ordre, par leurs fonctions « cœur »", () => {
-    const order = ["validateMarketplacePricingCore(ctx", "createCommercialProposalCore(ctx", "applyAutomaticFranceTaxPolicyCore(ctx", "acceptCommercialProposalCore(ctx", "sendTemplateEmail("];
+  it("crée, applique la fiscalité automatique quand elle existe, puis envoie — dans cet ordre", () => {
+    const order = ["createCommercialProposalCore(ctx", "return sendDraft(sb, ctx"];
     const positions = order.map((needle) => source.indexOf(needle));
     expect(positions.every((p) => p > 0)).toBe(true);
-    expect([...positions].sort((a, b) => a - b)).toEqual(positions);
+    const draft = source.slice(source.indexOf("async function sendDraft"));
+    expect(draft.indexOf("applyAutomaticFranceTaxPolicyCore(ctx")).toBeLessThan(draft.indexOf("markCommercialProposalSent(sb"));
+    expect(draft.indexOf('reason: "tax_review_required"')).toBeLessThan(draft.indexOf("markCommercialProposalSent(sb"));
   });
 
-  it("refuse avant toute écriture Fine Bindery et les dossiers à acompte", () => {
-    const firstWrite = source.indexOf("validateMarketplacePricingCore(ctx");
-    expect(source.indexOf('row.brand !== "MA_RELIURE"')).toBeLessThan(firstWrite);
-    expect(source.indexOf("row.deposit_cents")).toBeLessThan(firstWrite);
+  it("exige l'accord de l'atelier retenu avant tout devis", () => {
+    expect(proposalSource).toContain("loadSelectedWorkshopAgreement(sb, data.caseId)");
+    expect(proposalSource.indexOf("loadSelectedWorkshopAgreement(sb, data.caseId)")).toBeLessThan(
+      proposalSource.indexOf("insertCommercialProposal(sb, snapshot"),
+    );
   });
 
-  it("n'envoie jamais deux fois le même prix (clé d'idempotence par proposition)", () => {
-    expect(source).toContain("emailKey: `price-ready-${proposal.id}`");
-    expect(source).toContain("emailKey: `proposal-ready-${proposal.id}`");
-    expect(source).toContain("idempotencyKey: input.emailKey");
+  it("refuse les dossiers à acompte avant toute écriture", () => {
+    const fn = source.slice(source.indexOf("export const sendPriceToCustomer"));
+    expect(fn.indexOf("row.deposit_cents")).toBeLessThan(fn.indexOf("createCommercialProposalCore(ctx"));
+  });
+
+  it("n'envoie jamais deux fois le même devis (clé d'idempotence par devis)", () => {
+    expect(source).toContain("idempotencyKey: `proposal-ready-${input.proposalId}`");
   });
 });

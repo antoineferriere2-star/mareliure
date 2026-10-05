@@ -2879,6 +2879,7 @@ export type Database = {
           pricing_components: Json
           pricing_confidence: string | null
           pricing_currency: string
+          pricing_derogation_reason: string | null
           pricing_generated_at: string | null
           pricing_high_estimate_cents: number | null
           pricing_low_estimate_cents: number | null
@@ -2928,6 +2929,7 @@ export type Database = {
           pricing_components?: Json
           pricing_confidence?: string | null
           pricing_currency?: string
+          pricing_derogation_reason?: string | null
           pricing_generated_at?: string | null
           pricing_high_estimate_cents?: number | null
           pricing_low_estimate_cents?: number | null
@@ -2977,6 +2979,7 @@ export type Database = {
           pricing_components?: Json
           pricing_confidence?: string | null
           pricing_currency?: string
+          pricing_derogation_reason?: string | null
           pricing_generated_at?: string | null
           pricing_high_estimate_cents?: number | null
           pricing_low_estimate_cents?: number | null
@@ -3085,6 +3088,7 @@ export type Database = {
           business_vat_number: string | null
           business_vat_validation_status: string | null
           case_id: string
+          contract_version: string | null
           contribution_floor_cents: number
           created_at: string
           created_by: string | null
@@ -3101,19 +3105,24 @@ export type Database = {
           estimate_max_cents: number | null
           estimate_min_cents: number | null
           id: string
+          logistics_plan_version: number | null
           margin_floor_cents: number
           minimum_contribution_cents: number
           notes: string | null
+          payment_circuit: string
+          payment_provenance: Json | null
           price_bound_by: string
+          price_derogation_reason: string | null
           pricebook_provenance: Json | null
           pricebook_reference_cents: number | null
           pricing_mode: string
           pricing_rule_version: string
+          sent_at: string | null
           shipping_handling_fee_cents: number
           shipping_margin_cents: number
+          shipping_offer_kind: string
           shipping_other_cents: number
           shipping_outbound_cents: number
-          shipping_offer_kind: string
           shipping_return_cents: number
           shipping_total_cents: number
           status: string
@@ -3128,8 +3137,10 @@ export type Database = {
           validated_at: string | null
           validated_by: string | null
           version: number
-                  payment_provenance: Json | null
-                  payment_circuit: string
+          workshop_binder_id: string | null
+          workshop_lead_time_days: number | null
+          workshop_offer_id: string | null
+          workshop_service_description: string | null
         }
         Insert: {
           accepted_at?: string | null
@@ -3146,6 +3157,7 @@ export type Database = {
           business_vat_number?: string | null
           business_vat_validation_status?: string | null
           case_id: string
+          contract_version?: string | null
           contribution_floor_cents: number
           created_at?: string
           created_by?: string | null
@@ -3162,19 +3174,24 @@ export type Database = {
           estimate_max_cents?: number | null
           estimate_min_cents?: number | null
           id?: string
+          logistics_plan_version?: number | null
           margin_floor_cents: number
           minimum_contribution_cents?: number
           notes?: string | null
+          payment_circuit?: string
+          payment_provenance?: Json | null
           price_bound_by: string
+          price_derogation_reason?: string | null
           pricebook_provenance?: Json | null
           pricebook_reference_cents?: number | null
           pricing_mode: string
           pricing_rule_version: string
+          sent_at?: string | null
           shipping_handling_fee_cents?: number
           shipping_margin_cents?: number
+          shipping_offer_kind?: string
           shipping_other_cents?: number
           shipping_outbound_cents?: number
-          shipping_offer_kind?: string
           shipping_return_cents?: number
           shipping_total_cents?: number
           status?: string
@@ -3189,8 +3206,10 @@ export type Database = {
           validated_at?: string | null
           validated_by?: string | null
           version: number
-                  payment_provenance?: Json | null
-                  payment_circuit?: string
+          workshop_binder_id?: string | null
+          workshop_lead_time_days?: number | null
+          workshop_offer_id?: string | null
+          workshop_service_description?: string | null
         }
         Update: {
           accepted_at?: string | null
@@ -3207,6 +3226,7 @@ export type Database = {
           business_vat_number?: string | null
           business_vat_validation_status?: string | null
           case_id?: string
+          contract_version?: string | null
           contribution_floor_cents?: number
           created_at?: string
           created_by?: string | null
@@ -3223,19 +3243,24 @@ export type Database = {
           estimate_max_cents?: number | null
           estimate_min_cents?: number | null
           id?: string
+          logistics_plan_version?: number | null
           margin_floor_cents?: number
           minimum_contribution_cents?: number
           notes?: string | null
+          payment_circuit?: string
+          payment_provenance?: Json | null
           price_bound_by?: string
+          price_derogation_reason?: string | null
           pricebook_provenance?: Json | null
           pricebook_reference_cents?: number | null
           pricing_mode?: string
           pricing_rule_version?: string
+          sent_at?: string | null
           shipping_handling_fee_cents?: number
           shipping_margin_cents?: number
+          shipping_offer_kind?: string
           shipping_other_cents?: number
           shipping_outbound_cents?: number
-          shipping_offer_kind?: string
           shipping_return_cents?: number
           shipping_total_cents?: number
           status?: string
@@ -3250,8 +3275,10 @@ export type Database = {
           validated_at?: string | null
           validated_by?: string | null
           version?: number
-                  payment_provenance?: Json | null
-                  payment_circuit?: string
+          workshop_binder_id?: string | null
+          workshop_lead_time_days?: number | null
+          workshop_offer_id?: string | null
+          workshop_service_description?: string | null
         }
         Relationships: [
           {
@@ -3476,6 +3503,93 @@ export type Database = {
           },
         ]
       }
+      marketplace_oppe_order_assignments: {
+        Row: {
+          binder_id: string
+          case_id: string
+          end_reason: string | null
+          ended_at: string | null
+          id: string
+          lead_time_days: number | null
+          offer_id: string | null
+          payout_cents: number
+          service_description: string | null
+          started_at: string
+          validated_by: string | null
+        }
+        Insert: {
+          binder_id: string
+          case_id: string
+          end_reason?: string | null
+          ended_at?: string | null
+          id?: string
+          lead_time_days?: number | null
+          offer_id?: string | null
+          payout_cents: number
+          service_description?: string | null
+          started_at?: string
+          validated_by?: string | null
+        }
+        Update: {
+          binder_id?: string
+          case_id?: string
+          end_reason?: string | null
+          ended_at?: string | null
+          id?: string
+          lead_time_days?: number | null
+          offer_id?: string | null
+          payout_cents?: number
+          service_description?: string | null
+          started_at?: string
+          validated_by?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_oppe_orders: {
+        Row: {
+          brand: string
+          cancel_reason: string | null
+          cancelled_at: string | null
+          case_id: string
+          completed_at: string | null
+          confirmation_sent_at: string | null
+          created_at: string
+          in_production_at: string | null
+          paid_at: string
+          proposal_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          brand: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          case_id: string
+          completed_at?: string | null
+          confirmation_sent_at?: string | null
+          created_at?: string
+          in_production_at?: string | null
+          paid_at: string
+          proposal_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          brand?: string
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          case_id?: string
+          completed_at?: string | null
+          confirmation_sent_at?: string | null
+          created_at?: string
+          in_production_at?: string | null
+          paid_at?: string
+          proposal_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketplace_pricebook: {
         Row: {
           complexity_class: string
@@ -3541,9 +3655,43 @@ export type Database = {
           },
         ]
       }
+      marketplace_proposal_acceptances: {
+        Row: {
+          accepted_at: string
+          case_id: string
+          customer_user_id: string
+          ip_address: string | null
+          proposal_id: string
+          snapshot_sha256: string
+          terms_version: string
+          user_agent: string | null
+        }
+        Insert: {
+          accepted_at?: string
+          case_id: string
+          customer_user_id: string
+          ip_address?: string | null
+          proposal_id: string
+          snapshot_sha256: string
+          terms_version: string
+          user_agent?: string | null
+        }
+        Update: {
+          accepted_at?: string
+          case_id?: string
+          customer_user_id?: string
+          ip_address?: string | null
+          proposal_id?: string
+          snapshot_sha256?: string
+          terms_version?: string
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       marketplace_quotes: {
         Row: {
           accepted_at: string | null
+          agreement_version: string | null
           amount_cents: number
           binder_id: string
           binder_payout_cents: number | null
@@ -3558,11 +3706,13 @@ export type Database = {
           description: string | null
           expires_at: string | null
           id: string
+          lead_time_days: number | null
           lead_time_weeks: number | null
           materials: string | null
           offered_at: string | null
           options: string | null
           selected_at: string | null
+          service_description: string | null
           state: string
           technique: string | null
           updated_at: string
@@ -3570,6 +3720,7 @@ export type Database = {
         }
         Insert: {
           accepted_at?: string | null
+          agreement_version?: string | null
           amount_cents: number
           binder_id: string
           binder_payout_cents?: number | null
@@ -3584,11 +3735,13 @@ export type Database = {
           description?: string | null
           expires_at?: string | null
           id?: string
+          lead_time_days?: number | null
           lead_time_weeks?: number | null
           materials?: string | null
           offered_at?: string | null
           options?: string | null
           selected_at?: string | null
+          service_description?: string | null
           state?: string
           technique?: string | null
           updated_at?: string
@@ -3596,6 +3749,7 @@ export type Database = {
         }
         Update: {
           accepted_at?: string | null
+          agreement_version?: string | null
           amount_cents?: number
           binder_id?: string
           binder_payout_cents?: number | null
@@ -3610,11 +3764,13 @@ export type Database = {
           description?: string | null
           expires_at?: string | null
           id?: string
+          lead_time_days?: number | null
           lead_time_weeks?: number | null
           materials?: string | null
           offered_at?: string | null
           options?: string | null
           selected_at?: string | null
+          service_description?: string | null
           state?: string
           technique?: string | null
           updated_at?: string
@@ -4073,6 +4229,43 @@ export type Database = {
     }
     Functions: {
       // Migration 20260928090000, local schema contract; production is not migrated.
+      marketplace_accept_proposal_as_customer: {
+        Args: {
+          p_proposal_id: string
+          p_customer_user_id: string
+          p_terms_version: string
+          p_snapshot_sha256: string
+          p_ip_address: string
+          p_user_agent: string
+        }
+        Returns: string
+      }
+      marketplace_accept_workshop_offer: {
+        Args: {
+          p_case_id: string
+          p_binder_id: string
+          p_lead_time_days: number
+          p_actor_user_id: string
+        }
+        Returns: Database["public"]["Tables"]["marketplace_quotes"]["Row"]
+      }
+      marketplace_advance_oppe_order: {
+        Args: {
+          p_case_id: string
+          p_status: string
+          p_actor_user_id: string
+          p_actor_role: string
+          p_reason: string
+        }
+        Returns: string
+      }
+      marketplace_open_oppe_order: {
+        Args: {
+          p_proposal_id: string
+          p_paid_at: string
+        }
+        Returns: boolean
+      }
       marketplace_own_agreement_identity: {
         Args: { p_actor: string; p_binder: string; p_quote: string }
         Returns: Json
@@ -4080,6 +4273,15 @@ export type Database = {
       marketplace_complete_own_agreement_identity: {
         Args: { p_actor: string; p_attestation: string; p_binder: string; p_quote: string }
         Returns: undefined
+      }
+      marketplace_reassign_oppe_order: {
+        Args: {
+          p_case_id: string
+          p_new_binder_id: string
+          p_reason: string
+          p_actor_user_id: string
+        }
+        Returns: string
       }
       marketplace_seller_entity: {
         Args: { p_issuer: Json }
