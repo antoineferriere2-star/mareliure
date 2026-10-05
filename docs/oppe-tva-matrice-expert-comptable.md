@@ -1,0 +1,38 @@
+# TVA des prestations Oppe — matrice à faire valider (5 octobre 2026)
+
+**Statut : suggestions techniques, pas une position fiscale.** Aucun taux n'est appliqué automatiquement.
+Un devis Oppe ne peut être envoyé au client qu'après une décision d'administration qui qualifie la
+prestation, fixe le taux de chaque ligne et la justifie (conservée avec l'auteur et la date). Les
+propositions et factures historiques ne sont pas modifiées.
+
+## Ce que fait le logiciel
+
+| Sujet | Règle codée | Fichier |
+| --- | --- | --- |
+| Taux | Un taux **par ligne** (prestation, transport), saisi et confirmé par l'administrateur | `taxMatrix.ts`, `OppeTaxForm.tsx`, trigger SQL `c_marketplace_guard_oppe_tax_validation` |
+| Catégorie non validée | Devis en brouillon, non envoyable, non payable | `sendPriceToCustomer.data.functions.ts`, `checkoutEligibility` |
+| Règle « France = 20 % » | Conservée pour l'historique, **refusée** sur les nouveaux devis (SQL + serveur) | migration `20261005210000` |
+| TVA de vente / d'achat | Distinctes : TVA de vente sur la facture Oppe, TVA d'achat sur la facture de l'atelier (assujetti ou franchise avec mention art. 293 B) | lots 3 et 4 |
+| Avoirs | Ventilés proportionnellement aux lignes de la facture, au taux de chaque ligne | `marketplace_issue_oppe_credit_note` |
+| Fine Bindery | Pays de facturation saisi par le client, cohérent avec le pays de taxation ; catégories UE / hors UE / réexportation à décision manuelle | `taxPolicy.ts` |
+
+## Suggestions de la matrice (à confirmer)
+
+| Prestation | Taux suggéré | Source officielle | Réserve |
+| --- | --- | --- | --- |
+| Reliure d'un livre (au sens fiscal) | 5,5 % | BOI-TVA-LIQ-30-10-40 § 150 | Seulement si l'ouvrage répond aux quatre critères du livre (§ 10) |
+| Réparation, restauration, conservation d'un livre | 20 % | § 180 | Frontière avec la reliure à qualifier au cas par cas |
+| Autre ouvrage ou objet (boîte, carnet, album) | 20 % | § 120 pour un étui conçu pour un livre déterminé, livré avec lui | Vendu seul : taux normal |
+| Transport | 20 % | § 110 (valeur minime ou marginale) | Base distincte ou accessoire : à valider ; le forfait aller-retour est facturé 15 € TTC (12,50 € HT + 20 %) |
+
+Sources : BOFiP BOI-TVA-LIQ-30-10-40 (version du 21/08/2024) ; BOI-TVA-CHAMP-20-50-40 et art. 259 A du CGI
+(travaux sur biens meubles corporels pour un non-assujetti, imposables au lieu d'exécution matérielle).
+
+## Questions pour l'expert-comptable
+
+1. Taux applicable à la revente par Oppe d'une reliure, d'une restauration, d'une réparation et d'un étui, ligne par ligne.
+2. Transport : base distincte ou accessoire de la prestation principale.
+3. Correspondance entre les 195 opérations du référentiel et les taux ; ouvrages hors définition du livre.
+4. Fine Bindery : particulier UE ou hors UE (travail exécuté en France, art. 259 A), professionnel, réexportation après travaux et justificatifs.
+5. Atelier en franchise en base facturant Oppe : effet sur la marge et sur la TVA déductible d'Oppe.
+6. Avoirs et remboursements partiels : ventilation par taux.

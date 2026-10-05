@@ -12,7 +12,7 @@ export const SALES_TERMS_VERSION = "cgv-oppe-2026-10-05";
 type ProofInput = Pick<
   CommercialProposalRow,
   | "id" | "caseId" | "version" | "brand" | "currency" | "customerServicePriceCents" | "shippingTotalCents"
-  | "customerVatRateBps" | "customerVatAmountCents" | "customerTotalHtCents" | "customerTotalTtcCents"
+  | "customerVatRateBps" | "shippingVatRateBps" | "serviceTaxCategory" | "customerVatAmountCents" | "customerTotalHtCents" | "customerTotalTtcCents"
   | "depositAmountCents" | "workshopLeadTimeDays" | "workshopServiceDescription" | "shippingOfferKind"
 >;
 
@@ -20,7 +20,7 @@ type ProofInput = Pick<
 export function acceptanceCanonicalText(p: ProofInput, termsVersion = SALES_TERMS_VERSION): string {
   return JSON.stringify([
     "oppe-acceptance-v1", termsVersion, p.id, p.caseId, p.version, p.brand, p.currency,
-    p.customerServicePriceCents, p.shippingTotalCents, p.shippingOfferKind, p.customerVatRateBps,
+    p.customerServicePriceCents, p.shippingTotalCents, p.shippingOfferKind, p.customerVatRateBps, p.shippingVatRateBps, p.serviceTaxCategory,
     p.customerVatAmountCents, p.customerTotalHtCents, p.customerTotalTtcCents, p.depositAmountCents,
     p.workshopLeadTimeDays, p.workshopServiceDescription,
   ]);

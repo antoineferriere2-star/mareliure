@@ -3127,6 +3127,7 @@ export type Database = {
           pricing_mode: string
           pricing_rule_version: string
           sent_at: string | null
+          service_tax_category: string | null
           shipping_handling_fee_cents: number
           shipping_margin_cents: number
           shipping_offer_kind: string
@@ -3134,11 +3135,13 @@ export type Database = {
           shipping_outbound_cents: number
           shipping_return_cents: number
           shipping_total_cents: number
+          shipping_vat_rate_bps: number | null
           status: string
           superseded_at: string | null
           target_margin_bps: number
           tax_basis: string | null
           tax_country: string | null
+          tax_justification: string | null
           tax_policy: string
           tax_validated_at: string | null
           tax_validated_by: string | null
@@ -3196,6 +3199,7 @@ export type Database = {
           pricing_mode: string
           pricing_rule_version: string
           sent_at?: string | null
+          service_tax_category?: string | null
           shipping_handling_fee_cents?: number
           shipping_margin_cents?: number
           shipping_offer_kind?: string
@@ -3203,11 +3207,13 @@ export type Database = {
           shipping_outbound_cents?: number
           shipping_return_cents?: number
           shipping_total_cents?: number
+          shipping_vat_rate_bps?: number | null
           status?: string
           superseded_at?: string | null
           target_margin_bps: number
           tax_basis?: string | null
           tax_country?: string | null
+          tax_justification?: string | null
           tax_policy?: string
           tax_validated_at?: string | null
           tax_validated_by?: string | null
@@ -3265,6 +3271,7 @@ export type Database = {
           pricing_mode?: string
           pricing_rule_version?: string
           sent_at?: string | null
+          service_tax_category?: string | null
           shipping_handling_fee_cents?: number
           shipping_margin_cents?: number
           shipping_offer_kind?: string
@@ -3272,11 +3279,13 @@ export type Database = {
           shipping_outbound_cents?: number
           shipping_return_cents?: number
           shipping_total_cents?: number
+          shipping_vat_rate_bps?: number | null
           status?: string
           superseded_at?: string | null
           target_margin_bps?: number
           tax_basis?: string | null
           tax_country?: string | null
+          tax_justification?: string | null
           tax_policy?: string
           tax_validated_at?: string | null
           tax_validated_by?: string | null

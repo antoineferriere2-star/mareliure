@@ -33,6 +33,7 @@ import {
   resolveAutomaticTaxPolicy,
   validateTaxPolicySelection,
 } from "@/marketplace/commercial/taxPolicy";
+import { SERVICE_TAX_CATEGORIES, computeLineTax } from "@/marketplace/commercial/taxMatrix";
 import { getPaymentPreflight as loadPaymentPreflight } from "@/marketplace/stripe/paymentPreflight.server";
 import { loadCaseContext } from "./caseRepository.server";
 import { ROUND_TRIP_HT_CENTS, ROUND_TRIP_PRODUCT, logisticsErrorCode } from "@/marketplace/shipping/logisticsPlan";
@@ -398,6 +399,7 @@ export const validateCommercialProposalTax = createServerFn({ method: "POST" })
     const proposal = await loadCommercialProposalById(sb, data.proposalId);
     if (!proposal) fail(404, "Proposition introuvable.");
     if (proposal.acceptedAt) fail(409, "Cette proposition est déjà acceptée et donc immuable.");
+    if (proposal.contractVersion) fail(409, "Un devis Oppe se valide par qualification de la prestation et taux de chaque ligne.");
     // 15 € TTC n'existe qu'à la TVA française de 20 % : un autre régime exige une nouvelle version sans forfait.
     if (proposal.shippingOfferKind === ROUND_TRIP_PRODUCT &&
       (data.customerVatRateBps !== 2000 || data.taxCountry.trim().toUpperCase() !== "FR"))
@@ -445,6 +447,84 @@ export const validateCommercialProposalTax = createServerFn({ method: "POST" })
     return updated;
   });
 
+const validateLineTaxInput = z
+  .object({
+    proposalId: uuid,
+    /** Catégorie fiscale de la politique (pays du client) : FR_B2C, EU_B2C, NON_EU_B2C… */
+    taxPolicy: z.string(),
+    taxCountry: z.string().trim().length(2),
+    serviceTaxCategory: z.enum(SERVICE_TAX_CATEGORIES),
+    /** Taux de la ligne de prestation, saisi et confirmé par l'administrateur (points de base). */
+    serviceVatRateBps: z.number().int().min(0).max(3000),
+    /** Taux de la ligne de transport ; obligatoire quand le devis comporte du transport. */
+    shippingVatRateBps: z.number().int().min(0).max(3000).nullable(),
+    justification: z.string().trim().min(12).max(1000),
+    customerType: z.enum(["CUSTOMER", "BUSINESS"]).default("CUSTOMER"),
+    businessName: z.string().trim().min(1).nullable().default(null),
+    businessVatNumber: z.string().trim().min(1).nullable().default(null),
+  })
+  .strict();
+
+/**
+ * Validation fiscale d'un devis Oppe : qualification de la prestation, taux de chaque ligne,
+ * justification tracée. Aucun taux n'est choisi en silence : la matrice ne fait que suggérer.
+ */
+export async function validateOppeProposalTaxCore(context: AdminCallContext, data: z.infer<typeof validateLineTaxInput>) {
+  await assertAdmin(context.supabase, context.userId);
+  if (!isCommercialTaxPolicy(data.taxPolicy) || data.taxPolicy === "MANUAL_TAX_REVIEW") fail(400, "Choisissez une catégorie fiscale concrète.");
+  const taxPolicy: CommercialTaxPolicy = data.taxPolicy;
+  if (data.customerType === "BUSINESS" && !data.businessName) fail(400, "La raison sociale est requise pour un client professionnel.");
+  const sb = await admin();
+  const proposal = await loadCommercialProposalById(sb, data.proposalId);
+  if (!proposal) fail(404, "Proposition introuvable.");
+  if (proposal.acceptedAt) fail(409, "Cette proposition est déjà acceptée et donc immuable.");
+  if (!proposal.contractVersion) fail(409, "Cette proposition historique suit l'ancienne validation fiscale.");
+  if (proposal.shippingTotalCents > 0 && data.shippingVatRateBps === null) fail(422, "Indiquez le taux de la ligne de transport.");
+  if (proposal.shippingOfferKind === ROUND_TRIP_PRODUCT && (data.shippingVatRateBps !== 2000 || data.taxCountry.toUpperCase() !== "FR"))
+    fail(409, "Le forfait de transport aller-retour à 15 € TTC suppose 20 % sur sa ligne et une exécution facturée en France.");
+  const tax = computeLineTax({
+    serviceCents: proposal.customerServicePriceCents,
+    shippingCents: proposal.shippingTotalCents,
+    serviceRateBps: data.serviceVatRateBps,
+    shippingRateBps: data.shippingVatRateBps,
+  });
+  const updated = await updateProposalTaxValidation(sb, data.proposalId, {
+    taxPolicy,
+    taxCountry: data.taxCountry.toUpperCase(),
+    customerVatRateBps: data.serviceVatRateBps,
+    taxBasis: "service_and_shipping",
+    taxValidationSource: "manual_admin_review",
+    validatedBy: context.userId,
+    customerVatAmountCents: tax.vatCents,
+    customerTotalTtcCents: tax.totalTtcCents,
+    balanceDueCents: Math.max(0, tax.totalHtCents - proposal.depositAmountCents),
+    customerType: data.customerType,
+    businessName: data.businessName,
+    businessVatNumber: data.businessVatNumber,
+    businessVatValidationStatus: data.businessVatNumber ? "NOT_CHECKED" : null,
+    billingCountry: data.taxCountry.toUpperCase(),
+    shippingVatRateBps: data.shippingVatRateBps,
+    serviceTaxCategory: data.serviceTaxCategory,
+    taxJustification: data.justification,
+  });
+  await sb.from("marketplace_events").insert({
+    case_id: updated.caseId,
+    actor_user_id: context.userId,
+    event_type: "commercial_proposal_tax_validated",
+    metadata: {
+      proposal_id: updated.id, tax_policy: taxPolicy, tax_country: updated.taxCountry, service_tax_category: data.serviceTaxCategory,
+      service_vat_rate_bps: data.serviceVatRateBps, shipping_vat_rate_bps: data.shippingVatRateBps, justification: data.justification,
+      total_ttc_cents: tax.totalTtcCents,
+    },
+  });
+  return updated;
+}
+
+export const validateOppeProposalTax = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => validateLineTaxInput.parse(data))
+  .handler(async ({ context, data }) => validateOppeProposalTaxCore(context, data));
+
 const applyAutomaticFranceTaxInput = z.object({
   proposalId: uuid,
   billingCountry: z.string().trim().min(1),
@@ -481,6 +561,8 @@ export async function applyAutomaticFranceTaxPolicyCore(context: AdminCallContex
     const proposal = await loadCommercialProposalById(sb, data.proposalId);
     if (!proposal) fail(404, "Proposition introuvable.");
     if (proposal.acceptedAt) fail(409, "Cette proposition est déjà acceptée et donc immuable.");
+    // Modèle Oppe : le taux dépend de la nature de la prestation et de l'ouvrage, jamais d'un pays.
+    if (proposal.contractVersion) fail(409, "La TVA d'un devis Oppe se valide par qualification de la prestation et taux de chaque ligne.");
 
     const recomputed = recomputeProposalTax(
       {
