@@ -126,6 +126,13 @@ async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): 
     return { ok: true };
   }
 
+  // Remboursements et litiges des commandes Oppe : rapprochés et suivis, en plus du journal.
+  if (event.type === "charge.refunded" || event.type.startsWith("charge.dispute.")) {
+    const { handleChargeRefunded, handleDispute } = await import("@/marketplace/orders/oppeRefundsDisputes.server");
+    if (event.type === "charge.refunded") await handleChargeRefunded(sb, event.data.object as never);
+    else await handleDispute(sb, event.data.object as never);
+  }
+
   if (action.kind === "log" && action.caseId) {
     const { error } = await sb.from("marketplace_events").insert({
       case_id: action.caseId,

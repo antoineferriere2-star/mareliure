@@ -3035,8 +3035,11 @@ export type Database = {
           paid_at: string | null
           paid_currency: string | null
           proposal_id: string
+          stripe_balance_transaction_id: string | null
           stripe_checkout_session_id: string | null
+          stripe_fee_cents: number | null
           stripe_invoice_id: string | null
+          stripe_net_cents: number | null
           stripe_payment_intent_id: string | null
           updated_at: string
         }
@@ -3046,8 +3049,11 @@ export type Database = {
           paid_at?: string | null
           paid_currency?: string | null
           proposal_id: string
+          stripe_balance_transaction_id?: string | null
           stripe_checkout_session_id?: string | null
+          stripe_fee_cents?: number | null
           stripe_invoice_id?: string | null
+          stripe_net_cents?: number | null
           stripe_payment_intent_id?: string | null
           updated_at?: string
         }
@@ -3057,8 +3063,11 @@ export type Database = {
           paid_at?: string | null
           paid_currency?: string | null
           proposal_id?: string
+          stripe_balance_transaction_id?: string | null
           stripe_checkout_session_id?: string | null
+          stripe_fee_cents?: number | null
           stripe_invoice_id?: string | null
+          stripe_net_cents?: number | null
           stripe_payment_intent_id?: string | null
           updated_at?: string
         }
@@ -3503,6 +3512,207 @@ export type Database = {
           },
         ]
       }
+      marketplace_oppe_credit_notes: {
+        Row: {
+          id: string
+          invoice_id: string
+          issue_date: string
+          issued_at: string
+          items: Json
+          number: string
+          reason: string
+          retained_until: string
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          vat_breakdown: Json
+        }
+        Insert: {
+          id?: string
+          invoice_id: string
+          issue_date: string
+          issued_at?: string
+          items: Json
+          number: string
+          reason: string
+          retained_until: string
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          vat_breakdown: Json
+        }
+        Update: {
+          id?: string
+          invoice_id?: string
+          issue_date?: string
+          issued_at?: string
+          items?: Json
+          number?: string
+          reason?: string
+          retained_until?: string
+          total_ht_cents?: number
+          total_ttc_cents?: number
+          total_vat_cents?: number
+          vat_breakdown?: Json
+        }
+        Relationships: []
+      }
+      marketplace_oppe_disputes: {
+        Row: {
+          amount_cents: number | null
+          case_id: string | null
+          created_at: string
+          currency: string | null
+          evidence_due_by: string | null
+          payment_intent_id: string | null
+          reason: string | null
+          status: string
+          stripe_dispute_id: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents?: number | null
+          case_id?: string | null
+          created_at?: string
+          currency?: string | null
+          evidence_due_by?: string | null
+          payment_intent_id?: string | null
+          reason?: string | null
+          status: string
+          stripe_dispute_id: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number | null
+          case_id?: string | null
+          created_at?: string
+          currency?: string | null
+          evidence_due_by?: string | null
+          payment_intent_id?: string | null
+          reason?: string | null
+          status?: string
+          stripe_dispute_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_oppe_document_counters: {
+        Row: {
+          last_value: number
+          series: string
+          year: number
+        }
+        Insert: {
+          last_value?: number
+          series: string
+          year: number
+        }
+        Update: {
+          last_value?: number
+          series?: string
+          year?: number
+        }
+        Relationships: []
+      }
+      marketplace_oppe_invoice_items: {
+        Row: {
+          category: string
+          invoice_id: string
+          label: string
+          position: number
+          quantity: number
+          total_ht_cents: number
+          total_ttc_cents: number
+          unit_ht_cents: number
+          vat_cents: number
+          vat_rate_bps: number | null
+        }
+        Insert: {
+          category: string
+          invoice_id: string
+          label: string
+          position: number
+          quantity?: number
+          total_ht_cents: number
+          total_ttc_cents: number
+          unit_ht_cents: number
+          vat_cents: number
+          vat_rate_bps?: number | null
+        }
+        Update: {
+          category?: string
+          invoice_id?: string
+          label?: string
+          position?: number
+          quantity?: number
+          total_ht_cents?: number
+          total_ttc_cents?: number
+          unit_ht_cents?: number
+          vat_cents?: number
+          vat_rate_bps?: number | null
+        }
+        Relationships: []
+      }
+      marketplace_oppe_invoices: {
+        Row: {
+          brand: string
+          case_id: string
+          currency: string
+          customer: Json
+          id: string
+          issue_date: string
+          issued_at: string
+          legal_mentions: Json
+          number: string
+          payment: Json
+          proposal_id: string
+          retained_until: string
+          seller: Json
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          vat_breakdown: Json
+        }
+        Insert: {
+          brand: string
+          case_id: string
+          currency: string
+          customer: Json
+          id?: string
+          issue_date: string
+          issued_at?: string
+          legal_mentions?: Json
+          number: string
+          payment: Json
+          proposal_id: string
+          retained_until: string
+          seller: Json
+          total_ht_cents: number
+          total_ttc_cents: number
+          total_vat_cents: number
+          vat_breakdown: Json
+        }
+        Update: {
+          brand?: string
+          case_id?: string
+          currency?: string
+          customer?: Json
+          id?: string
+          issue_date?: string
+          issued_at?: string
+          legal_mentions?: Json
+          number?: string
+          payment?: Json
+          proposal_id?: string
+          retained_until?: string
+          seller?: Json
+          total_ht_cents?: number
+          total_ttc_cents?: number
+          total_vat_cents?: number
+          vat_breakdown?: Json
+        }
+        Relationships: []
+      }
       marketplace_oppe_order_assignments: {
         Row: {
           binder_id: string
@@ -3586,6 +3796,54 @@ export type Database = {
           paid_at?: string
           proposal_id?: string
           status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_oppe_refunds: {
+        Row: {
+          amount_cents: number
+          case_id: string
+          created_at: string
+          credit_note_id: string | null
+          currency: string
+          id: string
+          idempotency_key: string
+          invoice_id: string
+          reason: string
+          requested_by: string | null
+          status: string
+          stripe_refund_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          case_id: string
+          created_at?: string
+          credit_note_id?: string | null
+          currency: string
+          id?: string
+          idempotency_key: string
+          invoice_id: string
+          reason: string
+          requested_by?: string | null
+          status?: string
+          stripe_refund_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          case_id?: string
+          created_at?: string
+          credit_note_id?: string | null
+          currency?: string
+          id?: string
+          idempotency_key?: string
+          invoice_id?: string
+          reason?: string
+          requested_by?: string | null
+          status?: string
+          stripe_refund_id?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -3685,6 +3943,54 @@ export type Database = {
           snapshot_sha256?: string
           terms_version?: string
           user_agent?: string | null
+        }
+        Relationships: []
+      }
+      marketplace_proposal_billing_details: {
+        Row: {
+          address_line1: string
+          address_line2: string | null
+          business_name: string | null
+          captured_at: string
+          case_id: string
+          city: string
+          country: string
+          customer_type: string
+          email: string | null
+          name: string
+          postal_code: string
+          proposal_id: string
+          vat_number: string | null
+        }
+        Insert: {
+          address_line1: string
+          address_line2?: string | null
+          business_name?: string | null
+          captured_at?: string
+          case_id: string
+          city: string
+          country: string
+          customer_type: string
+          email?: string | null
+          name: string
+          postal_code: string
+          proposal_id: string
+          vat_number?: string | null
+        }
+        Update: {
+          address_line1?: string
+          address_line2?: string | null
+          business_name?: string | null
+          captured_at?: string
+          case_id?: string
+          city?: string
+          country?: string
+          customer_type?: string
+          email?: string | null
+          name?: string
+          postal_code?: string
+          proposal_id?: string
+          vat_number?: string | null
         }
         Relationships: []
       }
@@ -4240,6 +4546,18 @@ export type Database = {
         }
         Returns: string
       }
+      marketplace_accept_proposal_as_customer_v2: {
+        Args: {
+          p_proposal_id: string
+          p_customer_user_id: string
+          p_terms_version: string
+          p_snapshot_sha256: string
+          p_ip_address: string
+          p_user_agent: string
+          p_billing: Json
+        }
+        Returns: string
+      }
       marketplace_accept_workshop_offer: {
         Args: {
           p_case_id: string
@@ -4256,6 +4574,24 @@ export type Database = {
           p_actor_user_id: string
           p_actor_role: string
           p_reason: string
+        }
+        Returns: string
+      }
+      marketplace_issue_oppe_credit_note: {
+        Args: {
+          p_invoice_id: string
+          p_amount_ttc_cents: number
+          p_reason: string
+        }
+        Returns: string
+      }
+      marketplace_issue_oppe_invoice: {
+        Args: {
+          p_proposal_id: string
+          p_seller: Json
+          p_customer: Json
+          p_payment: Json
+          p_service_label: string
         }
         Returns: string
       }

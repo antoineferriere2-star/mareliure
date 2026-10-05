@@ -52,7 +52,7 @@ const store = vi.hoisted(() => ({
   },
   paidAt: null as string | null,
   acceptShouldThrow: null as null | Error,
-  lastAccept: null as null | { proposalId: string; customerUserId: string; termsVersion: string; snapshotSha256: string },
+  lastAccept: null as null | { proposalId: string; customerUserId: string; termsVersion: string; snapshotSha256: string; billing?: unknown },
   calls: { accept: 0, byId: 0, accepted: 0, latest: 0, case: 0 },
 }));
 
@@ -161,10 +161,12 @@ function fakeSb() {
   };
 }
 
+const BILLING = { name: "Client Test", addressLine1: "1 rue du Livre", postalCode: "75001", city: "Paris", country: "FR" };
 const owner = (over: Partial<{ caseId: string; proposalId: string; userId: string }> = {}) => ({
   caseId: CASE_ID,
   proposalId: P1,
   termsAccepted: true as const,
+  billing: BILLING,
   userId: OWNER,
   ...over,
 });
@@ -202,7 +204,7 @@ describe("le propriétaire accepte sa proposition", () => {
     expect(store.calls.accept).toBe(1);
     expect(store.proposals[0].status).toBe("accepted");
     expect(store.proposals[0].acceptedAt).toBe("2026-09-19T10:00:00.000Z");
-    expect(store.lastAccept).toMatchObject({ proposalId: P1, customerUserId: OWNER, termsVersion: "cgv-oppe-2026-10-05" });
+    expect(store.lastAccept).toMatchObject({ proposalId: P1, customerUserId: OWNER, termsVersion: "cgv-oppe-2026-10-05", billing: { city: "Paris", country: "FR" } });
     expect(store.lastAccept?.snapshotSha256).toMatch(/^[0-9a-f]{64}$/);
     // L'événement est écrit par la fonction SQL, dans la même transaction : jamais deux fois.
     expect(events).toHaveLength(0);
@@ -439,10 +441,10 @@ describe("ce que le client voit d'une proposition avant de l'accepter", () => {
 
 describe("le contrat : deux identifiants, jamais un montant", () => {
   it("l'entrée est exactement { caseId, proposalId } — et refuse tout champ en plus", () => {
-    expect(Object.keys(acceptProposalInput.shape).sort()).toEqual(["caseId", "proposalId", "termsAccepted"]);
-    expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1, termsAccepted: true }).success).toBe(true);
+    expect(Object.keys(acceptProposalInput.shape).sort()).toEqual(["billing", "caseId", "proposalId", "termsAccepted"]);
+    expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1, termsAccepted: true, billing: BILLING }).success).toBe(true);
     for (const extra of ["amountCents", "totalCents", "price", "status", "taxRate", "binderPayoutCents"]) {
-      expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1, termsAccepted: true, [extra]: 1 }).success, extra).toBe(false);
+      expect(acceptProposalInput.safeParse({ caseId: CASE_ID, proposalId: P1, termsAccepted: true, billing: BILLING, [extra]: 1 }).success, extra).toBe(false);
     }
     expect(acceptProposalInput.safeParse({ caseId: "not-a-uuid", proposalId: P1 }).success).toBe(false);
     expect(acceptProposalInput.safeParse({ caseId: CASE_ID }).success).toBe(false);

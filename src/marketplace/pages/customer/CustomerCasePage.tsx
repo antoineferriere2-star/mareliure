@@ -12,6 +12,7 @@
  * proposition en liste blanche, un `CaseView` déjà filtré) et cet écran les met
  * en page. Aucun message d'erreur du serveur n'est affiché.
  */
+import { CustomerOppeDocuments } from "./CustomerOppeDocuments";
 import { ORDER_STAGE_LABELS } from "@/marketplace/orders/orderStatus";
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -116,13 +117,29 @@ function AcceptButton({
   const queryClient = useQueryClient();
   const [failed, setFailed] = useState(false);
   const [consent, setConsent] = useState(false);
+  const [billing, setBilling] = useState({ name: "", addressLine1: "", postalCode: "", city: "", country: copy.billingDefaultCountry });
+  const billingComplete =
+    billing.name.trim() !== "" && billing.addressLine1.trim() !== "" && billing.postalCode.trim() !== "" &&
+    billing.city.trim() !== "" && /^[A-Za-z]{2}$/.test(billing.country.trim());
+  const field = (key: keyof typeof billing, label: string) => (
+    <label className="block text-sm">
+      <span className="text-[#6b5847]">{label}</span>
+      <input
+        className="mt-1 h-10 w-full rounded-md border border-[#cfc5b6] bg-white px-3 text-sm"
+        value={billing[key]}
+        maxLength={key === "country" ? 2 : 200}
+        onChange={(event) => setBilling((current) => ({ ...current, [key]: event.target.value }))}
+      />
+    </label>
+  );
   const refresh = () =>
     Promise.all([
       queryClient.invalidateQueries({ queryKey: ["marketplace", "customer", "case", caseId] }),
       queryClient.invalidateQueries({ queryKey: ["marketplace", "customer", "cases"] }),
     ]);
   const mutation = useMutation({
-    mutationFn: () => accept({ data: { caseId, proposalId, termsAccepted: true } }),
+    mutationFn: () =>
+      accept({ data: { caseId, proposalId, termsAccepted: true, billing: { ...billing, country: billing.country.trim().toUpperCase() } } }),
     onSuccess: async () => {
       setFailed(false);
       await refresh();
@@ -136,6 +153,14 @@ function AcceptButton({
 
   return (
     <div>
+      <fieldset className="mb-4 grid gap-3 sm:grid-cols-2">
+        <legend className="mb-1 text-sm font-semibold text-[#241a12]">{copy.billingTitle}</legend>
+        <div className="sm:col-span-2">{field("name", copy.billingName)}</div>
+        <div className="sm:col-span-2">{field("addressLine1", copy.billingAddress)}</div>
+        {field("postalCode", copy.billingPostalCode)}
+        {field("city", copy.billingCity)}
+        {field("country", copy.billingCountry)}
+      </fieldset>
       <label className="mb-3 flex items-start gap-3 text-sm leading-6">
         <input
           type="checkbox"
@@ -154,7 +179,7 @@ function AcceptButton({
         size="lg"
         data-primary-action=""
         className="h-11 w-full sm:w-auto"
-        disabled={mutation.isPending || !consent}
+        disabled={mutation.isPending || !consent || !billingComplete}
         onClick={() => {
           setFailed(false);
           mutation.mutate();
@@ -549,6 +574,8 @@ export function CustomerCasePage({
         copy={copy}
         locale={locale}
       />
+
+      {data.case.paidAt && <CustomerOppeDocuments caseId={caseId} english={locale.startsWith("en")} />}
 
       {status.key !== "cancelled" && <CustomerLogisticsPanel caseId={caseId} locale={locale} />}
 
