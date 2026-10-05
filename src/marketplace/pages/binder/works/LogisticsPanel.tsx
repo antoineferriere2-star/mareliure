@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
+  getWorkTransportOrders,
   appendWorkLogistics,
   readWorkLogistics,
   uploadLogisticsPhoto,
@@ -24,6 +25,11 @@ export function LogisticsPanel({ workId }: { workId: string }) {
   const read = useServerFn(readWorkLogistics),
     append = useServerFn(appendWorkLogistics),
     upload = useServerFn(uploadLogisticsPhoto);
+  const loadOrders = useServerFn(getWorkTransportOrders);
+  const orders = useQuery({
+    queryKey: ["work-transport-orders", workId],
+    queryFn: () => loadOrders({ data: { workId } }),
+  });
   const cache = useQueryClient();
   const key = ["work-logistics", workId];
   const query = useQuery({
@@ -68,6 +74,7 @@ export function LogisticsPanel({ workId }: { workId: string }) {
         <LogisticsEditor
           workId={workId}
           journal={query.data}
+          transportOrders={orders.data}
           pending={mutation.isPending}
           save={async (data) => {
             await mutation.mutateAsync(data);
@@ -97,6 +104,7 @@ export function LogisticsEditor({
   save,
   upload,
   uploading,
+  transportOrders,
 }: {
   workId: string;
   journal: LogisticsJournal;
@@ -104,9 +112,17 @@ export function LogisticsEditor({
   save: (entry: Entry) => Promise<void>;
   upload: (eventId: string, file: File) => Promise<void>;
   uploading: boolean;
+  transportOrders?: {
+    ownClient: boolean;
+    invoices: { id: string; invoice_number: string | null }[];
+  };
 }) {
   const { locale } = useFineBinderyWorkspace();
   const t = logisticsCopy[locale];
+  const [invoiceId, setInvoiceId] = useState("");
+  const [payer, setPayer] = useState<"customer" | "workshop">("customer");
+  const [cost, setCost] = useState("");
+  const [coverage, setCoverage] = useState("");
   const [selected, setSelected] = useState<LogisticsKind>("outbound");
   const [mode, setMode] = useState<"parcel" | "hand">("parcel");
   const [condition, setCondition] = useState<"consistent" | "difference">("consistent");
@@ -130,6 +146,14 @@ export function LogisticsEditor({
     const details: LogisticsEvent["details"] = {};
     if (shipping) {
       details.mode = mode;
+      if (transportOrders?.ownClient) {
+        details.invoiceId = invoiceId;
+        details.payer = payer;
+        if (mode === "parcel") {
+          details.transportCostCents = Math.round(Number(cost.replace(",", ".")) * 100);
+          details.coverageEvidence = coverage.trim();
+        }
+      }
       if (mode === "parcel") {
         details.carrier = carrier.trim();
         details.tracking = tracking.trim();
@@ -139,6 +163,9 @@ export function LogisticsEditor({
     if (description.trim()) details.description = description.trim();
     if (needsProof) details.proof = proof.trim();
     if (
+      (shipping &&
+        transportOrders?.ownClient &&
+        (!invoiceId || (mode === "parcel" && (!cost.trim() || !coverage.trim())))) ||
       (shipping && mode === "parcel" && (!carrier.trim() || !tracking.trim())) ||
       (needsProof && proof.trim().length < 8) ||
       (needsDescription && description.trim().length < 8)
@@ -248,6 +275,64 @@ export function LogisticsEditor({
             ))}
           </select>
         </label>
+        {shipping && transportOrders?.ownClient && (
+          <div className="space-y-3 border p-4">
+            <label className="block">
+              Commande atelier
+              <select
+                className={field}
+                value={invoiceId}
+                onChange={(event) => setInvoiceId(event.target.value)}
+              >
+                <option value="">Choisir la facture de commande</option>
+                {transportOrders.invoices.map((invoice) => (
+                  <option key={invoice.id} value={invoice.id}>
+                    {invoice.invoice_number}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="block">
+              Payeur du transport
+              <select
+                className={field}
+                value={payer}
+                onChange={(event) => setPayer(event.target.value as "customer" | "workshop")}
+              >
+                <option value="customer">Client</option>
+                <option value="workshop">Atelier</option>
+              </select>
+            </label>
+            {mode === "parcel" && (
+              <>
+                <label className="block">
+                  Coût de ce transport TTC (€)
+                  <input
+                    className={field}
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={cost}
+                    onChange={(event) => setCost(event.target.value)}
+                  />
+                </label>
+                <label className="block">
+                  Conditions de couverture vérifiées
+                  <input
+                    className={field}
+                    value={coverage}
+                    onChange={(event) => setCoverage(event.target.value)}
+                    placeholder="Référence et limites du contrat transporteur"
+                  />
+                </label>
+                <p className="text-sm">
+                  Transport organisé par votre atelier, sans extension du forfait Oppe et sans achat
+                  automatique.
+                </p>
+              </>
+            )}
+          </div>
+        )}
         {shipping && (
           <>
             <label className="block">

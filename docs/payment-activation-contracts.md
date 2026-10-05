@@ -1,66 +1,35 @@
-# Activation progressive des paiements — nouveaux accords uniquement
+# Ouverture progressive des activités Oppe
 
-**Mise à jour recette, 29 septembre :** les réserves de recette hébergée et d'accord navigateur formulées lors de la préparation ci-dessous sont complétées par [l'avis de publication du circuit externe](qa/20260929/publication-review.md). Auth, HTTP/PDF/Storage, droits, types et accord public des deux marques ont leurs preuves sur le projet de test. Les restrictions d'activation payante et l'exigence d'une autorisation distincte pour la production restent inchangées.
+> Mise à jour du 5 octobre 2026. Le modèle A déployé remplace les anciennes orientations de commission réseau et de conciergerie. Les textes antérieurs sont consultables dans l'historique Git, notamment au commit 77af584. Les contrats et documents émis restent figés.
 
-Les quatre orientations de l'audit ont été validées par le propriétaire le 28 septembre 2026. Ce document remplace la liste des décisions commerciales ouvertes de `payment-circuits-audit-20260928.md`. Il ne constitue pas des CGV acceptées par les ateliers ou leurs clients. PR #51 reste ouverte ; aucune migration production, aucun paiement ni déploiement.
+## Autorisation du chantier
 
-## Ordre proposé
+Le propriétaire a demandé le 5 octobre 2026 de poursuivre tous les chantiers à la suite de la passation. Cette autorisation de travail ne vaut ni validation par un expert-comptable, ni avis juridique, ni accord de transition d'un atelier gratuit.
 
-1. **Client propre / règlement externe** : livré ici, sans frais plateforme ni Stripe. Accord déclaré avec justificatif, facture atelier, journal des règlements et remboursements, litige. Recette PostgreSQL locale isolée.
-2. **Client propre / encaissement plateforme** : même chaîne contractuelle, avec 3 % du TTC encaissé et frais Stripe séparés. Ouverture seulement après catalogue/compte test, configuration Connect, contrat atelier et validation fiscale. Le Checkout historique reste interdit à ce circuit.
-3. **Vente apportée** : vendeur atelier, facture atelier au client, commission facturée par plateforme à l'atelier sur 25 % du HT des seuls travaux. Nécessite preuve d'apport, accord atelier sur l'assiette détaillée et rapprochement du paiement ; ni marque ni origine dossier ne déclenche la commission.
-4. **Conciergerie**, puis **abonnement** : coordination séparée des travaux et du transport ; offre 15 € HT/mois sans migration des contrats existants. On peut préparer les textes et contrats en parallèle, mais pas créer des Prices ni abonnements réels.
+## A — déjà ouvert
 
-## Contrats et responsabilités
+Vendeur OPPE SAS, accord atelier, marge cible 25 % du prix de vente HT, devis accepté exclusivement par le client, facture Oppe, facture fournisseur atelier et virement rapproché à 30 jours. TVA décidée par ligne. PR #78 à #85 fusionnées ; Worker de référence b812e4cc, 102 migrations.
 
-| Circuit | Vendeur / facture | Avant accord | Exigibilité cible / preuve | Verrou restant |
-| --- | --- | --- | --- | --- |
-| Client propre externe | Atelier vend et facture les travaux au client | Identité atelier, lignes HT/TVA/TTC/devise, échéance, règlement direct, frais plateforme 0 € | Dette client selon échéance du devis ; règlement seulement déclaré après réception avec référence conservée | Recette complète Supabase/habilitations avant publication ; pas de banque connectée |
-| Client propre plateforme | Atelier facture les travaux ; plateforme facture sa rémunération à l'atelier ; frais Stripe distincts | 3 % du TTC effectivement encaissé, exemples calculés depuis le vrai devis, traitement TVA des honoraires et grille de frais Stripe identifiée | Rémunération après paiement effectivement réussi et rapproché ; pas à la création de Checkout ou sur simple retour navigateur | Compte test, choix Connect, frais réels et leur payeur, contrat signé, fiscalité. Acompte toujours bloqué |
-| Vente apportée | Atelier → client pour travaux ; plateforme → atelier pour commission | HT travaux remisés par ligne, transport isolé, taxes exclues ; 25 % affichés en montant, jamais cumulés avec 3 % ; identité vendeur et plateforme | Premier périmètre : paiement intégral réussi et vérifié, accord commercial et preuve d'apport liés au même dossier. Paiement externe exige un justificatif validé ; simple origine insuffisante | Proposition de commission acceptée par atelier, traitement fiscal, facture de commission et recouvrement non construits |
-| Conciergerie | Plateforme → client pour coordination ; atelier → client pour travaux ; facture transport par bénéficiaire nommé | Trois rubriques séparées, chaque prix/devise/TVA/échéance et bénéficiaire. Honoraires de coordination chiffrés et acceptés au dossier | Coordination due selon prestation et échéance explicites du devis séparé ; aucune règle de prélèvement anticipé présumée | Montants coordination, conditions de service et fiscalité à finaliser ; aucun transfert automatique |
-| Abonnement nouveau | Plateforme → atelier : 15 € HT/mois, vitrine + outil métier | TTC applicable, périodicité, contenu inclus, date de début, résiliation et conservation/export des données | Selon période explicitement souscrite, paiement confirmé par Stripe ; aucun prix changé sur contrat existant | Catalogue Stripe, éventuels engagements 0/39 €, CGV, taxe, droits après résiliation et portail à valider |
+## B — ouverture payante fermée
 
-« Plateforme » doit être remplacé dans chaque pièce émise par l'identité juridique configurée et vérifiée ; aucune nouvelle identité fiscale n'est inventée. Les anciens contrats de revente acceptés, montants et factures restent strictement inchangés. Les circuits cibles ne réutilisent pas la marge historique ou son Checkout.
+Le catalogue doit être créé sur le compte Stripe live dédié ; le prix doit être exactement 15 € HT, EUR, mensuel, hors taxes. Configurer Stripe Tax et le portail de facturation ; faire valider la fiscalité du service et poser WORKSHOP_SUBSCRIPTION_TAX_APPROVED=true seulement après cette validation.
 
-## Premier circuit livré
+Faire relire les [conditions ateliers](../src/routes/conditions-ateliers.tsx), puis éprouver Checkout, renouvellement, refus, impayé, résiliation fin de période, événements doublés/hors ordre, gratuité des anciens ateliers et téléchargement historique. Ouvrir ensuite l'indicateur serveur marketplace_workshop_offer_settings.subscription_open et l'annonce WORKSHOP_OFFER.subscriptionOpen. Aucun ancien atelier n'est prélevé sans accord explicite du propriétaire.
 
-Le contact ou l'ouvrage doit être enregistré comme client propre sans dossier réseau lié. Les contacts libres sans provenance, les acomptes et les accords historiques sans version `own-external-v1` ne sont pas ouverts au nouveau journal. Aucun document ancien n'est requalifié.
+## C — ouverture en ligne fermée
 
-Sur un devis envoyé, l'atelier voit le TTC/devise, son rôle de vendeur et les frais plateforme nuls. Il saisit la référence d'un accord déjà obtenu (e-mail ou devis signé). Le serveur résout l'atelier depuis la session, puis SQL revérifie le membre actif, l'origine, l'absence d'acompte et le statut. L'enregistrement fige version, auteur, heure, justificatif, identité vendeur et montant. Ce n'est pas une signature électronique ni une acceptation automatique à la place du client.
+Activer Connect sur le compte live dédié. Utiliser un compte connecté dont le Dashboard est complet, les frais Stripe sont payés par l'atelier et les pertes sont gérées par Stripe. Le compte Express ancien supporté par Oppe est incompatible avec cette configuration.
 
-La facture est préparée puis émise par les RPC existantes, avec contrôles fiscaux et mentions existants. Le montant, la devise et la référence devis doivent correspondre à l'accord ; les documents émis restent immuables. L'atelier peut déclarer les sommes reçues directement, avec une référence unique de justificatif. Le serveur dérive la devise de la facture et calcule le solde sous verrou transactionnel. Un retry identique ne crée rien ; changement de contenu avec la même clé, doublon de justificatif ou dépassement du solde est refusé. Le statut partiel est distinct d'un acompte : aucun échéancier d'acompte n'est activé.
+Configurer le webhook Connect dédié et STRIPE_CONNECT_WEBHOOK_SECRET. Abonner aux événements checkout.session.completed, checkout.session.async_payment_succeeded, checkout.session.async_payment_failed, checkout.session.expired, payment_intent.succeeded, payment_intent.payment_failed, charge.refunded et charge.dispute.*. Vérifier les événements du bon compte connecté, les frais réels, les reçus et les notifications Stripe.
 
-L'accord vérifie une empreinte de la version affichée du devis : une modification concurrente impose de relire avant confirmation. Le SIRET de l'émetteur à l'émission doit correspondre à celui figé dans l'accord. Le statut payé et son montant ne peuvent pas être modifiés indépendamment du journal pour ce circuit.
+Recette avant ouverture : facture atelier de client propre, lien client, succès/refus/asynchrone, retour navigateur sans preuve de paiement, mauvais montant/devise/session/compte, doublons, reprise après panne, remboursements partiel/total avec avoirs, litige et absence de mélange avec les règlements déclarés. La première version est limitée aux factures sans acompte ; les reprises après un Checkout complété refusé restent une tâche d'exploitation.
 
-Le journal est append-only, accessible via fonctions authentifiées seulement. Le reçu est **déclaré par l'atelier**, pas vérifié auprès d'une banque : conserver le justificatif original. Aucun upload de relevé bancaire ou stockage de coordonnées bancaires n'est demandé.
+Puis ouvrir marketplace_workshop_offer_settings.online_payment_open et WORKSHOP_OFFER.onlinePaymentOpen. Les 3 % portent sur le TTC réellement encaissé ; les frais Stripe sont distincts et à la charge de l'atelier.
 
-## Annulation, remboursement et litige
+## Transport et contrôles externes
 
-- Avant accord : refuser/laisser expirer le devis, aucune commission ni encaissement. Après accord : ne pas réécrire son prix ; établir une nouvelle proposition. L'annulation contractuelle doit être convenue et conservée par l'atelier.
-- Facture émise : avoir intégral existant conservé, bloque toute nouvelle déclaration de règlement. Il n'effectue pas de remboursement bancaire. Pour un avoir partiel, le générateur applicatif reste absent : pièce rectificative conforme à établir avec l'outil comptable de l'atelier avant mise en service d'une automatisation.
-- Remboursement externe partiel/total : l'atelier effectue d'abord le remboursement hors plateforme, puis référence son justificatif. Le journal plafonne la somme au net reçu et recalcule ce net. Un remboursement ne crée pas d'avoir automatiquement et ne décide pas du droit à remboursement. Frais plateforme toujours nuls.
-- Litige externe : ouverture tracée, nouvelles déclarations de recettes bloquées jusqu'à clôture documentée ; remboursements possibles dans la limite reçue. Aucun effacement d'historique ni décision juridique automatique. La clôture ne verse ni ne prélève d'argent.
-- Circuits Stripe futurs : aucun automatisme de restitution de commission/frais, de chargeback ou de compensation. Bloquer le calcul définitif en présence de remboursement/litige ; valider la règle contractuelle de restitution (totale ou prorata du HT travaux remboursés pour le réseau), le traitement TVA/avoir et la prise en charge des frais Stripe non restitués avant activation. L'orientation 3 % / 25 % ne tranche pas à elle seule ces points.
+Le forfait A à 15 € TTC conserve son périmètre français admissible et ses limites de couverture. Les transports des clients propres sont déclarés avec facture de commande, payeur, coût et référence de couverture. Aucune extension automatique à C ou à l'international. Une offre internationale se chiffre avant achat ; les secrets et un aller-retour Sendcloud réel restent à fournir/éprouver.
 
-## Recette et limites
+Identité publique Stripe live, validation de la matrice TVA A, revue juridique des clauses signalées et premier paiement réel de faible montant suivi d'un remboursement restent nécessaires. Les tests techniques ne les certifient pas.
 
-`externalSettlement.recipe.test.ts` crée une base PostgreSQL/PGlite éphémère et applique huit migrations réelles, dont les six migrations devis/factures/contacts/blocs/identité et les deux migrations de PR #51. Tables auth, membres, dossiers, stockage et propositions historiques environnantes sont minimales ; les tables, triggers et RPC devis/factures sont ceux du dépôt. Tests : devis envoyé → accord documenté → facture brouillon → facture émise, règlements partiels et total, retries, double justificatif, dépassement, remboursements, litiges, avoir intégral, permissions membre/anon/service_role et immutabilité.
-
-Cette base est une recette SQL locale, pas une instance Supabase distante ni une restauration complète de production. Auth, Storage, envoi de devis et signature client ne sont pas testés de bout en bout. La QA visuelle utilise des données fictives locales ; aucune donnée client réelle n'est créée.
-
-Aucune clé Stripe test/live détectée lors de cette reprise. Pas de catalogue consulté, de création de Product/Price, de Checkout Stripe test ni de remboursement Stripe testé. Le choix Connect est volontairement ouvert : [les types de charges](https://docs.stripe.com/connect/charges) répartissent différemment frais, remboursements et litiges ; [Stripe Tax avec Connect](https://docs.stripe.com/tax/connect) n'enlève pas la nécessité de déterminer le redevable. Les [webhooks](https://docs.stripe.com/webhooks) doivent être rapprochés et rejouables. Aucun frais Stripe négocié n'est supposé.
-
-## Conditions exactes d'ouverture
-
-Pour publier le premier circuit externe : revue PR, recette sur instance Supabase jetable avec membres authentifiés, émission/PDF/avoir, droits et sauvegarde, puis autorisation distincte pour migrations et Worker. Migration `20260928110000` après `20260928090000`, types régénérés depuis recette, diff contrôlé ; pas de production dans cette mission. Procédure et jeux de données : [recette hébergée](payment-external-hosted-recipe.md).
-
-### Séparation du contrat réseau et de sa qualification
-
-La migration 0900 non publiée est corrigée dans cette PR : `marketplace_case_payment_circuits` qualifie le dossier pour une évolution future, sans activer de contrat. Le calculateur de propositions commerciales existant conserve exclusivement `payment_circuit = legacy_resale`, y compris pour les nouveaux dossiers Ma Reliure et Fine Bindery encore `review_required`, ou qualifiés `network_sale` par un administrateur. Le snapshot conserve cette qualification séparément (`qualified_circuit`) et le modèle effectivement employé (`contract_model`). Le modèle, le vendeur, les montants et le Checkout historiques ne sont pas réinterprétés comme une commission de 25 %.
-
-Toute tentative d'insérer ou convertir une proposition vers un contrat cible est refusée par SQL (`target_payment_contract_required`). Le circuit et la provenance des propositions déjà acceptées sont immuables. Aucun drapeau administrateur ne permet d'ouvrir les circuits payants incomplets : leur activation exigera une autre migration et un parcours contractuel distinct. Le circuit externe est réservé aux devis atelier de clients propres sans dossier réseau ; il ne passe pas par les propositions commerciales de revente.
-
-**Réponse au blocage : oui au niveau SQL testé, les nouveaux dossiers réseau restent opérationnels après 0900 et le circuit externe peut coexister avec eux. Ce n'est pas encore un feu vert de mise en production** : Auth/HTTP/PDF/Storage sur Supabase hébergé et génération des types restent à vérifier. Les tests PGlite couvrent les deux origines, création → proposition → acceptation, qualification sans commission et refus de modification des snapshots acceptés ; ils ne simulent pas à eux seuls tout Supabase.
-
-Pour ouvrir la carte : fournir un accès Stripe **test** au bon compte, vérifier catalogue/contrats actuels, choisir la configuration Connect avec vendeur atelier et frais à sa charge, faire approuver les clauses annulation/remboursement/litige et la fiscalité, puis implémenter uniquement le Checkout client propre 3 % et son rapprochement facture. Recette obligatoire : succès, refus, annulation, expiration, paiement asynchrone, doublons, ordre inversé, refund partiel/total, litige et rapprochement des frais. Garder le verrou jusqu'à validation de cette chaîne complète.
+[Procédure de sauvegarde, répétition et publication](OPPE_BC_COMPLETION.md).

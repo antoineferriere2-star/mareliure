@@ -77,7 +77,10 @@ const MESSAGES: Record<BinderQuotesErrorCode, string> = {
 };
 
 /** Une erreur métier devient une réponse ; jamais le détail interne d'une requête. */
-async function run<T>(userId: string, work: (binderId: string, sb: Awaited<ReturnType<typeof admin>>) => Promise<T>): Promise<T> {
+async function run<T>(
+  userId: string,
+  work: (binderId: string, sb: Awaited<ReturnType<typeof admin>>) => Promise<T>,
+): Promise<T> {
   const sb = await admin();
   try {
     const binderId = await requireBinderId(sb, userId);
@@ -85,7 +88,10 @@ async function run<T>(userId: string, work: (binderId: string, sb: Awaited<Retur
   } catch (err) {
     if (err instanceof BinderQuotesError) {
       // `profile_incomplete:<ce qu'il manque>` : le relieur lit quoi renseigner.
-      const message = err.code === "profile_incomplete" ? `profile_incomplete:${err.missing.join("|")}` : MESSAGES[err.code];
+      const message =
+        err.code === "profile_incomplete"
+          ? `profile_incomplete:${err.missing.join("|")}`
+          : MESSAGES[err.code];
       fail(err.status, message);
     }
     // Les gardes SQL de circuit (projet Oppe, client propre) arrivent en message PostgreSQL.
@@ -101,22 +107,30 @@ const id = z.object({ id: z.string().uuid() }).strict();
 
 export const getBillingProfile = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(({ context }) => run(context.userId, (binderId, sb) => loadBillingProfile(sb, binderId)));
+  .handler(({ context }) =>
+    run(context.userId, (binderId, sb) => loadBillingProfile(sb, binderId)),
+  );
 
 export const saveMyBillingProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => billingProfileInput.parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => saveBillingProfile(sb, binderId, data)));
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => saveBillingProfile(sb, binderId, data)),
+  );
 
-const documentLogoInput = z.object({
-  mimeType: z.enum(DOCUMENT_LOGO_MIME_TYPES),
-  imageBase64: z.string().min(1).max(3_000_000),
-}).strict();
+const documentLogoInput = z
+  .object({
+    mimeType: z.enum(DOCUMENT_LOGO_MIME_TYPES),
+    imageBase64: z.string().min(1).max(3_000_000),
+  })
+  .strict();
 
 export const uploadMyDocumentLogo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => documentLogoInput.parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => uploadDocumentLogo(sb, binderId, data)));
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => uploadDocumentLogo(sb, binderId, data)),
+  );
 
 export const clearMyDocumentLogo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -124,9 +138,16 @@ export const clearMyDocumentLogo = createServerFn({ method: "POST" })
 
 export const getMyCatalog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ includeArchived: z.boolean().optional() }).strict().parse(data ?? {}))
+  .inputValidator((data: unknown) =>
+    z
+      .object({ includeArchived: z.boolean().optional() })
+      .strict()
+      .parse(data ?? {}),
+  )
   .handler(({ context, data }) =>
-    run(context.userId, (binderId, sb) => listCatalog(sb, binderId, { includeArchived: data.includeArchived })),
+    run(context.userId, (binderId, sb) =>
+      listCatalog(sb, binderId, { includeArchived: data.includeArchived }),
+    ),
   );
 
 /**
@@ -137,25 +158,31 @@ export const getMyCatalog = createServerFn({ method: "GET" })
 export const getMyBasePriceServices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(({ context }) =>
-    run(context.userId, async (binderId, sb) => (await listBinderPricingCatalog(sb, binderId)).map((row) => ({
-      pricingKey: row.pricingKey,
-      label: row.label,
-      unit: row.unit,
-      unitPriceCents: row.effectivePriceCents,
-      pricingMode: row.effectivePricingMode,
-      isFavorite: row.isFavorite,
-    }))),
+    run(context.userId, async (binderId, sb) =>
+      (await listBinderPricingCatalog(sb, binderId)).map((row) => ({
+        pricingKey: row.pricingKey,
+        label: row.label,
+        unit: row.unit,
+        unitPriceCents: row.effectivePriceCents,
+        pricingMode: row.effectivePricingMode,
+        isFavorite: row.isFavorite,
+      })),
+    ),
   );
 
 export const saveMyCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => categoryInput.parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => saveCategory(sb, binderId, data)));
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => saveCategory(sb, binderId, data)),
+  );
 
 export const saveMyService = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => serviceInput.parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => saveService(sb, binderId, data)));
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => saveService(sb, binderId, data)),
+  );
 
 export const archiveMyService = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -174,7 +201,9 @@ export const getMyClients = createServerFn({ method: "GET" })
 export const saveMyClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => clientInput.parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => saveClient(sb, binderId, data)));
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => saveClient(sb, binderId, data)),
+  );
 
 // --- Devis --------------------------------------------------------------------------------
 
@@ -185,25 +214,48 @@ export const getMyQuotes = createServerFn({ method: "GET" })
 /** Les dernières prestations réellement utilisées, limitées à l'atelier authentifié. */
 export const getMyRecentServiceIds = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(({ context }) => run(context.userId, async (binderId, sb) => {
-    const { data: quotes, error: quoteError } = await sb.from("marketplace_binder_quotes")
-      .select("id").eq("binder_id", binderId).order("created_at", { ascending: false }).limit(30);
-    if (quoteError) throw new BinderQuotesError("failed");
-    if (!quotes?.length) return [] as string[];
-    const { data: items, error: itemError } = await sb.from("marketplace_binder_quote_items")
-      .select("quote_id, service_id, position").eq("binder_id", binderId)
-      .in("quote_id", quotes.map((quote) => quote.id)).not("service_id", "is", null);
-    if (itemError) throw new BinderQuotesError("failed");
-    const order = new Map(quotes.map((quote, index) => [quote.id, index]));
-    return [...new Set((items ?? [])
-      .sort((a, b) => (order.get(a.quote_id) ?? 0) - (order.get(b.quote_id) ?? 0) || a.position - b.position)
-      .map((item) => item.service_id).filter((value): value is string => Boolean(value)))].slice(0, 8);
-  }));
+  .handler(({ context }) =>
+    run(context.userId, async (binderId, sb) => {
+      const { data: quotes, error: quoteError } = await sb
+        .from("marketplace_binder_quotes")
+        .select("id")
+        .eq("binder_id", binderId)
+        .order("created_at", { ascending: false })
+        .limit(30);
+      if (quoteError) throw new BinderQuotesError("failed");
+      if (!quotes?.length) return [] as string[];
+      const { data: items, error: itemError } = await sb
+        .from("marketplace_binder_quote_items")
+        .select("quote_id, service_id, position")
+        .eq("binder_id", binderId)
+        .in(
+          "quote_id",
+          quotes.map((quote) => quote.id),
+        )
+        .not("service_id", "is", null);
+      if (itemError) throw new BinderQuotesError("failed");
+      const order = new Map(quotes.map((quote, index) => [quote.id, index]));
+      return [
+        ...new Set(
+          (items ?? [])
+            .sort(
+              (a, b) =>
+                (order.get(a.quote_id) ?? 0) - (order.get(b.quote_id) ?? 0) ||
+                a.position - b.position,
+            )
+            .map((item) => item.service_id)
+            .filter((value): value is string => Boolean(value)),
+        ),
+      ].slice(0, 8);
+    }),
+  );
 
 export const getMyQuote = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => id.parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => getQuote(sb, binderId, data.id)));
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => getQuote(sb, binderId, data.id)),
+  );
 
 export const createMyQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -214,25 +266,31 @@ export const createMyQuote = createServerFn({ method: "POST" })
 
 export const updateMyQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), quote: quoteInput }).strict().parse(data))
+  .inputValidator((data: unknown) =>
+    z.object({ id: z.string().uuid(), quote: quoteInput }).strict().parse(data),
+  )
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => updateQuote(sb, binderId, data.id, data.quote)),
   );
 
-const quotePhotoInput = z.object({
-  quoteId: z.string().uuid(),
-  lineKey: z.string().trim().min(1).max(100),
-  filename: z.string().trim().min(1).max(200),
-  mimeType: z.enum(QUOTE_OPERATION_PHOTO_MIME_TYPES),
-  imageBase64: z.string().min(1).max(12_000_000),
-  caption: z.string().trim().max(300).nullable(),
-  includeInPdf: z.boolean(),
-}).strict();
+const quotePhotoInput = z
+  .object({
+    quoteId: z.string().uuid(),
+    lineKey: z.string().trim().min(1).max(100),
+    filename: z.string().trim().min(1).max(200),
+    mimeType: z.enum(QUOTE_OPERATION_PHOTO_MIME_TYPES),
+    imageBase64: z.string().min(1).max(12_000_000),
+    caption: z.string().trim().max(300).nullable(),
+    includeInPdf: z.boolean(),
+  })
+  .strict();
 
 export const uploadMyQuoteItemPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => quotePhotoInput.parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => uploadQuoteItemPhoto(sb, binderId, data)));
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => uploadQuoteItemPhoto(sb, binderId, data)),
+  );
 
 // --- Photos d'exemple par opération ----------------------------------------------------
 
@@ -243,65 +301,96 @@ const operationTarget = z.union([
 
 export const getMyOperationPhotos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .handler(({ context }) => run(context.userId, (binderId, sb) => listOperationPhotos(sb, binderId)));
+  .handler(({ context }) =>
+    run(context.userId, (binderId, sb) => listOperationPhotos(sb, binderId)),
+  );
 
 export const uploadMyOperationPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({
-    target: operationTarget,
-    mimeType: z.enum(QUOTE_OPERATION_PHOTO_MIME_TYPES),
-    imageBase64: z.string().min(1).max(12_000_000),
-    caption: z.string().trim().max(300).nullable(),
-  }).strict().parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => uploadOperationPhoto(sb, binderId, data)));
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        target: operationTarget,
+        mimeType: z.enum(QUOTE_OPERATION_PHOTO_MIME_TYPES),
+        imageBase64: z.string().min(1).max(12_000_000),
+        caption: z.string().trim().max(300).nullable(),
+      })
+      .strict()
+      .parse(data),
+  )
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => uploadOperationPhoto(sb, binderId, data)),
+  );
 
 export const updateMyOperationPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), caption: z.string().trim().max(300).nullable() }).strict().parse(data))
-  .handler(({ context, data }) => run(context.userId, async (binderId, sb) => {
-    await updateOperationPhotoCaption(sb, binderId, data.id, data.caption || null);
-    return { ok: true as const };
-  }));
+  .inputValidator((data: unknown) =>
+    z
+      .object({ id: z.string().uuid(), caption: z.string().trim().max(300).nullable() })
+      .strict()
+      .parse(data),
+  )
+  .handler(({ context, data }) =>
+    run(context.userId, async (binderId, sb) => {
+      await updateOperationPhotoCaption(sb, binderId, data.id, data.caption || null);
+      return { ok: true as const };
+    }),
+  );
 
 export const deleteMyOperationPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => id.parse(data))
-  .handler(({ context, data }) => run(context.userId, async (binderId, sb) => {
-    await deleteOperationPhoto(sb, binderId, data.id);
-    return { ok: true as const };
-  }));
+  .handler(({ context, data }) =>
+    run(context.userId, async (binderId, sb) => {
+      await deleteOperationPhoto(sb, binderId, data.id);
+      return { ok: true as const };
+    }),
+  );
 
 /** Copie un exemple de la bibliothèque sur une ligne d'un brouillon. */
 export const attachMyOperationPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({
-    quoteId: z.string().uuid(),
-    lineKey: z.string().trim().min(1).max(100),
-    photoId: z.string().uuid(),
-    caption: z.string().trim().max(300).nullable(),
-    includeInPdf: z.boolean(),
-  }).strict().parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => attachOperationPhotoToQuoteItem(sb, binderId, data)));
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        quoteId: z.string().uuid(),
+        lineKey: z.string().trim().min(1).max(100),
+        photoId: z.string().uuid(),
+        caption: z.string().trim().max(300).nullable(),
+        includeInPdf: z.boolean(),
+      })
+      .strict()
+      .parse(data),
+  )
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => attachOperationPhotoToQuoteItem(sb, binderId, data)),
+  );
 
 export const deleteMyQuoteItemPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => id.parse(data))
-  .handler(({ context, data }) => run(context.userId, async (binderId, sb) => {
-    await deleteQuoteItemPhoto(sb, binderId, data.id);
-    return { ok: true as const };
-  }));
+  .handler(({ context, data }) =>
+    run(context.userId, async (binderId, sb) => {
+      await deleteQuoteItemPhoto(sb, binderId, data.id);
+      return { ok: true as const };
+    }),
+  );
 
 /** Nouveau brouillon issu du snapshot d'un devis de cet atelier. */
 export const duplicateMyQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => id.parse(data))
-  .handler(({ context, data }) => run(context.userId, async (binderId, sb) => {
-    return duplicateQuote(sb, binderId, data.id, todayInParis());
-  }));
+  .handler(({ context, data }) =>
+    run(context.userId, async (binderId, sb) => {
+      return duplicateQuote(sb, binderId, data.id, todayInParis());
+    }),
+  );
 
 export const setMyQuoteStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), status: z.string() }).strict().parse(data))
+  .inputValidator((data: unknown) =>
+    z.object({ id: z.string().uuid(), status: z.string() }).strict().parse(data),
+  )
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => setQuoteStatus(sb, binderId, data.id, data.status)),
   );
@@ -312,7 +401,9 @@ export const convertMyQuoteToInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
-    run(context.userId, (binderId, sb) => convertQuoteToInvoice(sb, binderId, data.id, todayInParis())),
+    run(context.userId, (binderId, sb) =>
+      convertQuoteToInvoice(sb, binderId, data.id, todayInParis()),
+    ),
   );
 
 export const getMyInvoices = createServerFn({ method: "GET" })
@@ -322,22 +413,77 @@ export const getMyInvoices = createServerFn({ method: "GET" })
 export const getMyInvoice = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => id.parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => getInvoice(sb, binderId, data.id)));
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => getInvoice(sb, binderId, data.id)),
+  );
 
 export const updateMyInvoiceDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), draft: invoiceDraftInput }).strict().parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => updateInvoiceDraft(sb, binderId, data.id, data.draft)));
+  .inputValidator((data: unknown) =>
+    z.object({ id: z.string().uuid(), draft: invoiceDraftInput }).strict().parse(data),
+  )
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => updateInvoiceDraft(sb, binderId, data.id, data.draft)),
+  );
 
 export const issueMyInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => id.parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => issueInvoice(sb, binderId, data.id)));
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) => issueInvoice(sb, binderId, data.id)),
+  );
 
 export const createMyFullCreditNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(1000) }).strict().parse(data))
-  .handler(({ context, data }) => run(context.userId, (binderId, sb) => createFullCreditNote(sb, binderId, data.id, todayInParis(), data.reason)));
+  .inputValidator((data: unknown) =>
+    z
+      .object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(1000) })
+      .strict()
+      .parse(data),
+  )
+  .handler(({ context, data }) =>
+    run(context.userId, (binderId, sb) =>
+      createFullCreditNote(sb, binderId, data.id, todayInParis(), data.reason),
+    ),
+  );
+
+export const createMyPartialCreditNote = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        requestId: z.string().uuid(),
+        reason: z.string().trim().min(1).max(1000),
+        lines: z
+          .array(
+            z
+              .object({ position: z.number().int().min(0), htCents: z.number().int().positive() })
+              .strict(),
+          )
+          .min(1)
+          .max(100),
+      })
+      .strict()
+      .parse(data),
+  )
+  .handler(({ context, data }) =>
+    run(context.userId, async (binderId, sb) => {
+      const invoice = await getInvoice(sb, binderId, data.id);
+      if (invoice.status !== "issued") fail(409, "La facture doit être émise.");
+      const result = await sb.rpc("marketplace_binder_create_partial_credit_note", {
+        p_binder_id: binderId,
+        p_invoice_id: data.id,
+        p_issue_date: todayInParis(),
+        p_reason: data.reason,
+        p_request_id: data.requestId,
+        p_lines: data.lines,
+      });
+      if (result.error)
+        fail(409, "Avoir refusé : vérifiez les lignes et les montants restant à créditer.");
+      return getInvoice(sb, binderId, data.id);
+    }),
+  );
 
 // --- PDF ----------------------------------------------------------------------------------------
 

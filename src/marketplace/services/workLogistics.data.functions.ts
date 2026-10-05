@@ -13,6 +13,44 @@ import { associateLogisticsPhoto } from "@/marketplace/works/logisticsPhotoRecov
 
 const bucket = "work-logistics-private";
 const workInput = z.object({ workId: z.string().uuid() }).strict();
+export const getWorkTransportOrders = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((value: unknown) => workInput.parse(value))
+  .handler(async ({ context, data }) => {
+    const { sb, binder } = await access(context.userId);
+    const work = await sb
+      .from("marketplace_binder_works")
+      .select("source")
+      .eq("id", data.workId)
+      .eq("binder_id", binder)
+      .single();
+    if (work.error) fail(404, "Ouvrage introuvable.");
+    const quotes = await sb
+      .from("marketplace_binder_quotes")
+      .select("id")
+      .eq("binder_id", binder)
+      .eq("work_id", data.workId);
+    if (quotes.error) throw quotes.error;
+    if (!quotes.data?.length)
+      return {
+        ownClient: ["mon_client", "workshop_platform"].includes(work.data!.source),
+        invoices: [],
+      };
+    const invoices = await sb
+      .from("marketplace_binder_invoices")
+      .select("id,invoice_number")
+      .eq("binder_id", binder)
+      .eq("status", "issued")
+      .in(
+        "quote_id",
+        quotes.data.map((q) => q.id),
+      );
+    if (invoices.error) throw invoices.error;
+    return {
+      ownClient: ["mon_client", "workshop_platform"].includes(work.data!.source),
+      invoices: invoices.data ?? [],
+    };
+  });
 async function access(actor: string) {
   const sb = await admin();
   return { sb, binder: await requireWorkshopAccess(sb, actor) };
@@ -82,7 +120,10 @@ export const uploadLogisticsPhoto = createServerFn({ method: "POST" })
     const mime = photoMime(bytes!);
     if (!mime || bytes!.length > 5242880)
       fail(400, "Photo JPEG, PNG ou WebP de 5 Mo maximum requise.");
-    const id = await logisticsPhotoId(`${binder}/${data.workId}/${data.eventId}/${context.userId}`, bytes!);
+    const id = await logisticsPhotoId(
+      `${binder}/${data.workId}/${data.eventId}/${context.userId}`,
+      bytes!,
+    );
     if (event.photos.some((photo) => photo.id === id)) return { ok: true };
     if (event.photos.length >= 8) fail(409, "Photo impossible pour ce constat.");
     const path = `${binder}/${data.workId}/${data.eventId}/${id}`;
@@ -91,7 +132,11 @@ export const uploadLogisticsPhoto = createServerFn({ method: "POST" })
       .upload(path, bytes!, { contentType: mime!, upsert: false });
     if (uploaded.error) {
       const previous = await sb.storage.from(bucket).download(path);
-      if (previous.error || !previous.data || !samePhotoBytes(bytes!, new Uint8Array(await previous.data.arrayBuffer())))
+      if (
+        previous.error ||
+        !previous.data ||
+        !samePhotoBytes(bytes!, new Uint8Array(await previous.data.arrayBuffer()))
+      )
         fail(503, "La photo n’a pas été enregistrée. Réessayez.");
     }
     // On ambiguous database failure retain the private object: deleting it could destroy

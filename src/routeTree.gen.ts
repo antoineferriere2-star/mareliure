@@ -14,6 +14,7 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CandidatureAtelierRouteImport } from './routes/candidature-atelier'
 import { Route as ConditionsRouteImport } from './routes/conditions'
+import { Route as ConditionsAteliersRouteImport } from './routes/conditions-ateliers'
 import { Route as ConditionsGeneralesDeVenteRouteImport } from './routes/conditions-generales-de-vente'
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -55,12 +56,15 @@ import { Route as AuthenticatedMarketplaceRouteRouteImport } from './routes/_aut
 import { Route as AuthenticatedMesLivresRouteRouteImport } from './routes/_authenticated/mes-livres/route'
 import { Route as AuthenticatedPortalRouteRouteImport } from './routes/_authenticated/portal/route'
 import { Route as ASlugRouteImport } from './routes/a.$slug'
+import { Route as AteliersSlugRouteImport } from './routes/ateliers.$slug'
 import { Route as DemoDeckProjectRouteImport } from './routes/demo.deck-project'
 import { Route as InvitationAtelierTokenRouteImport } from './routes/invitation-atelier.$token'
 import { Route as MPublicTokenRouteImport } from './routes/m.$publicToken'
 import { Route as ProjectSummaryAccessTokenRouteImport } from './routes/project-summary.$accessToken'
+import { Route as ReglementAtelierTokenRouteImport } from './routes/reglement-atelier.$token'
 import { Route as AuthenticatedAdminIndexRouteImport } from './routes/_authenticated/admin/index'
 import { Route as AuthenticatedAtelierIndexRouteImport } from './routes/_authenticated/atelier/index'
+import { Route as AuthenticatedAtelierAbonnementRouteImport } from './routes/_authenticated/atelier/abonnement'
 import { Route as AuthenticatedAtelierProfilPublicRouteImport } from './routes/_authenticated/atelier/profil-public'
 import { Route as AuthenticatedAtelierTarifsRouteImport } from './routes/_authenticated/atelier/tarifs'
 import { Route as AuthenticatedBuildIndexRouteImport } from './routes/_authenticated/build/index'
@@ -81,6 +85,7 @@ import { Route as AuthenticatedPortalMissionsRouteImport } from './routes/_authe
 import { Route as AuthenticatedPortalSettingsRouteImport } from './routes/_authenticated/portal/settings'
 import { Route as AuthenticatedPortalSetupRouteImport } from './routes/_authenticated/portal/setup'
 import { Route as AuthenticatedPortalTeamRouteImport } from './routes/_authenticated/portal/team'
+import { Route as ApiMarketplaceConnectWebhookRouteImport } from './routes/api/marketplace/connect-webhook'
 import { Route as ApiMarketplaceSendcloudWebhookRouteImport } from './routes/api/marketplace/sendcloud-webhook'
 import { Route as ApiMarketplaceStripeHealthRouteImport } from './routes/api/marketplace/stripe-health'
 import { Route as ApiMarketplaceStripeWebhookRouteImport } from './routes/api/marketplace/stripe-webhook'
@@ -160,6 +165,11 @@ const CandidatureAtelierRoute = CandidatureAtelierRouteImport.update({
 const ConditionsRoute = ConditionsRouteImport.update({
   id: '/conditions',
   path: '/conditions',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ConditionsAteliersRoute = ConditionsAteliersRouteImport.update({
+  id: '/conditions-ateliers',
+  path: '/conditions-ateliers',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ConditionsGeneralesDeVenteRoute =
@@ -374,6 +384,11 @@ const ASlugRoute = ASlugRouteImport.update({
   path: '/a/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AteliersSlugRoute = AteliersSlugRouteImport.update({
+  id: '/ateliers/$slug',
+  path: '/ateliers/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoDeckProjectRoute = DemoDeckProjectRouteImport.update({
   id: '/demo/deck-project',
   path: '/demo/deck-project',
@@ -395,6 +410,11 @@ const ProjectSummaryAccessTokenRoute =
     path: '/project-summary/$accessToken',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ReglementAtelierTokenRoute = ReglementAtelierTokenRouteImport.update({
+  id: '/reglement-atelier/$token',
+  path: '/reglement-atelier/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedAdminIndexRoute = AuthenticatedAdminIndexRouteImport.update({
   id: '/',
   path: '/',
@@ -404,6 +424,12 @@ const AuthenticatedAtelierIndexRoute =
   AuthenticatedAtelierIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedAtelierRouteRoute,
+  } as any)
+const AuthenticatedAtelierAbonnementRoute =
+  AuthenticatedAtelierAbonnementRouteImport.update({
+    id: '/abonnement',
+    path: '/abonnement',
     getParentRoute: () => AuthenticatedAtelierRouteRoute,
   } as any)
 const AuthenticatedAtelierProfilPublicRoute =
@@ -524,6 +550,12 @@ const AuthenticatedPortalTeamRoute = AuthenticatedPortalTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => AuthenticatedPortalRouteRoute,
 } as any)
+const ApiMarketplaceConnectWebhookRoute =
+  ApiMarketplaceConnectWebhookRouteImport.update({
+    id: '/api/marketplace/connect-webhook',
+    path: '/api/marketplace/connect-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiMarketplaceSendcloudWebhookRoute =
   ApiMarketplaceSendcloudWebhookRouteImport.update({
     id: '/api/marketplace/sendcloud-webhook',
@@ -858,6 +890,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
+  '/conditions-ateliers': typeof ConditionsAteliersRoute
   '/conditions-generales-de-vente': typeof ConditionsGeneralesDeVenteRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
@@ -898,11 +931,14 @@ export interface FileRoutesByFullPath {
   '/$locale/project': typeof LocaleProjectRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
+  '/ateliers/$slug': typeof AteliersSlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/reglement-atelier/$token': typeof ReglementAtelierTokenRoute
   '/$locale/': typeof LocaleIndexRoute
+  '/atelier/abonnement': typeof AuthenticatedAtelierAbonnementRoute
   '/atelier/profil-public': typeof AuthenticatedAtelierProfilPublicRoute
   '/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
@@ -919,6 +955,7 @@ export interface FileRoutesByFullPath {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/connect-webhook': typeof ApiMarketplaceConnectWebhookRoute
   '/api/marketplace/sendcloud-webhook': typeof ApiMarketplaceSendcloudWebhookRoute
   '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
   '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
@@ -987,6 +1024,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
+  '/conditions-ateliers': typeof ConditionsAteliersRoute
   '/conditions-generales-de-vente': typeof ConditionsGeneralesDeVenteRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
@@ -1021,11 +1059,14 @@ export interface FileRoutesByTo {
   '/$locale/project': typeof LocaleProjectRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
+  '/ateliers/$slug': typeof AteliersSlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/reglement-atelier/$token': typeof ReglementAtelierTokenRoute
   '/$locale': typeof LocaleIndexRoute
+  '/atelier/abonnement': typeof AuthenticatedAtelierAbonnementRoute
   '/atelier/profil-public': typeof AuthenticatedAtelierProfilPublicRoute
   '/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/build/activity': typeof AuthenticatedBuildActivityRoute
@@ -1041,6 +1082,7 @@ export interface FileRoutesByTo {
   '/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/connect-webhook': typeof ApiMarketplaceConnectWebhookRoute
   '/api/marketplace/sendcloud-webhook': typeof ApiMarketplaceSendcloudWebhookRoute
   '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
   '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
@@ -1111,6 +1153,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/candidature-atelier': typeof CandidatureAtelierRoute
   '/conditions': typeof ConditionsRoute
+  '/conditions-ateliers': typeof ConditionsAteliersRoute
   '/conditions-generales-de-vente': typeof ConditionsGeneralesDeVenteRoute
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
@@ -1151,11 +1194,14 @@ export interface FileRoutesById {
   '/$locale/project': typeof LocaleProjectRoute
   '/_authenticated/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
+  '/ateliers/$slug': typeof AteliersSlugRoute
   '/demo/deck-project': typeof DemoDeckProjectRoute
   '/invitation-atelier/$token': typeof InvitationAtelierTokenRoute
   '/m/$publicToken': typeof MPublicTokenRoute
   '/project-summary/$accessToken': typeof ProjectSummaryAccessTokenRoute
+  '/reglement-atelier/$token': typeof ReglementAtelierTokenRoute
   '/$locale/': typeof LocaleIndexRoute
+  '/_authenticated/atelier/abonnement': typeof AuthenticatedAtelierAbonnementRoute
   '/_authenticated/atelier/profil-public': typeof AuthenticatedAtelierProfilPublicRoute
   '/_authenticated/atelier/tarifs': typeof AuthenticatedAtelierTarifsRoute
   '/_authenticated/build/activity': typeof AuthenticatedBuildActivityRoute
@@ -1172,6 +1218,7 @@ export interface FileRoutesById {
   '/_authenticated/portal/settings': typeof AuthenticatedPortalSettingsRoute
   '/_authenticated/portal/setup': typeof AuthenticatedPortalSetupRoute
   '/_authenticated/portal/team': typeof AuthenticatedPortalTeamRoute
+  '/api/marketplace/connect-webhook': typeof ApiMarketplaceConnectWebhookRoute
   '/api/marketplace/sendcloud-webhook': typeof ApiMarketplaceSendcloudWebhookRoute
   '/api/marketplace/stripe-health': typeof ApiMarketplaceStripeHealthRoute
   '/api/marketplace/stripe-webhook': typeof ApiMarketplaceStripeWebhookRoute
@@ -1242,6 +1289,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/candidature-atelier'
     | '/conditions'
+    | '/conditions-ateliers'
     | '/conditions-generales-de-vente'
     | '/confidentialite'
     | '/contact'
@@ -1282,11 +1330,14 @@ export interface FileRouteTypes {
     | '/$locale/project'
     | '/activer-mon-atelier'
     | '/a/$slug'
+    | '/ateliers/$slug'
     | '/demo/deck-project'
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/reglement-atelier/$token'
     | '/$locale/'
+    | '/atelier/abonnement'
     | '/atelier/profil-public'
     | '/atelier/tarifs'
     | '/build/activity'
@@ -1303,6 +1354,7 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/connect-webhook'
     | '/api/marketplace/sendcloud-webhook'
     | '/api/marketplace/stripe-health'
     | '/api/marketplace/stripe-webhook'
@@ -1371,6 +1423,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/candidature-atelier'
     | '/conditions'
+    | '/conditions-ateliers'
     | '/conditions-generales-de-vente'
     | '/confidentialite'
     | '/contact'
@@ -1405,11 +1458,14 @@ export interface FileRouteTypes {
     | '/$locale/project'
     | '/activer-mon-atelier'
     | '/a/$slug'
+    | '/ateliers/$slug'
     | '/demo/deck-project'
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/reglement-atelier/$token'
     | '/$locale'
+    | '/atelier/abonnement'
     | '/atelier/profil-public'
     | '/atelier/tarifs'
     | '/build/activity'
@@ -1425,6 +1481,7 @@ export interface FileRouteTypes {
     | '/portal/settings'
     | '/portal/setup'
     | '/portal/team'
+    | '/api/marketplace/connect-webhook'
     | '/api/marketplace/sendcloud-webhook'
     | '/api/marketplace/stripe-health'
     | '/api/marketplace/stripe-webhook'
@@ -1494,6 +1551,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/candidature-atelier'
     | '/conditions'
+    | '/conditions-ateliers'
     | '/conditions-generales-de-vente'
     | '/confidentialite'
     | '/contact'
@@ -1534,11 +1592,14 @@ export interface FileRouteTypes {
     | '/$locale/project'
     | '/_authenticated/activer-mon-atelier'
     | '/a/$slug'
+    | '/ateliers/$slug'
     | '/demo/deck-project'
     | '/invitation-atelier/$token'
     | '/m/$publicToken'
     | '/project-summary/$accessToken'
+    | '/reglement-atelier/$token'
     | '/$locale/'
+    | '/_authenticated/atelier/abonnement'
     | '/_authenticated/atelier/profil-public'
     | '/_authenticated/atelier/tarifs'
     | '/_authenticated/build/activity'
@@ -1555,6 +1616,7 @@ export interface FileRouteTypes {
     | '/_authenticated/portal/settings'
     | '/_authenticated/portal/setup'
     | '/_authenticated/portal/team'
+    | '/api/marketplace/connect-webhook'
     | '/api/marketplace/sendcloud-webhook'
     | '/api/marketplace/stripe-health'
     | '/api/marketplace/stripe-webhook'
@@ -1625,6 +1687,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CandidatureAtelierRoute: typeof CandidatureAtelierRoute
   ConditionsRoute: typeof ConditionsRoute
+  ConditionsAteliersRoute: typeof ConditionsAteliersRoute
   ConditionsGeneralesDeVenteRoute: typeof ConditionsGeneralesDeVenteRoute
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
@@ -1658,11 +1721,14 @@ export interface RootRouteChildren {
   LocaleProfessionalsRoute: typeof LocaleProfessionalsRoute
   LocaleProjectRoute: typeof LocaleProjectRoute
   ASlugRoute: typeof ASlugRoute
+  AteliersSlugRoute: typeof AteliersSlugRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
   InvitationAtelierTokenRoute: typeof InvitationAtelierTokenRoute
   MPublicTokenRoute: typeof MPublicTokenRoute
   ProjectSummaryAccessTokenRoute: typeof ProjectSummaryAccessTokenRoute
+  ReglementAtelierTokenRoute: typeof ReglementAtelierTokenRoute
   LocaleIndexRoute: typeof LocaleIndexRoute
+  ApiMarketplaceConnectWebhookRoute: typeof ApiMarketplaceConnectWebhookRoute
   ApiMarketplaceSendcloudWebhookRoute: typeof ApiMarketplaceSendcloudWebhookRoute
   ApiMarketplaceStripeHealthRoute: typeof ApiMarketplaceStripeHealthRoute
   ApiMarketplaceStripeWebhookRoute: typeof ApiMarketplaceStripeWebhookRoute
@@ -1717,6 +1783,13 @@ declare module '@tanstack/react-router' {
       path: '/conditions'
       fullPath: '/conditions'
       preLoaderRoute: typeof ConditionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/conditions-ateliers': {
+      id: '/conditions-ateliers'
+      path: '/conditions-ateliers'
+      fullPath: '/conditions-ateliers'
+      preLoaderRoute: typeof ConditionsAteliersRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/conditions-generales-de-vente': {
@@ -2006,6 +2079,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ASlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/ateliers/$slug': {
+      id: '/ateliers/$slug'
+      path: '/ateliers/$slug'
+      fullPath: '/ateliers/$slug'
+      preLoaderRoute: typeof AteliersSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/deck-project': {
       id: '/demo/deck-project'
       path: '/demo/deck-project'
@@ -2034,6 +2114,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ProjectSummaryAccessTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/reglement-atelier/$token': {
+      id: '/reglement-atelier/$token'
+      path: '/reglement-atelier/$token'
+      fullPath: '/reglement-atelier/$token'
+      preLoaderRoute: typeof ReglementAtelierTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/_authenticated/admin/': {
       id: '/_authenticated/admin/'
       path: '/'
@@ -2046,6 +2133,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/atelier/'
       preLoaderRoute: typeof AuthenticatedAtelierIndexRouteImport
+      parentRoute: typeof AuthenticatedAtelierRouteRoute
+    }
+    '/_authenticated/atelier/abonnement': {
+      id: '/_authenticated/atelier/abonnement'
+      path: '/abonnement'
+      fullPath: '/atelier/abonnement'
+      preLoaderRoute: typeof AuthenticatedAtelierAbonnementRouteImport
       parentRoute: typeof AuthenticatedAtelierRouteRoute
     }
     '/_authenticated/atelier/profil-public': {
@@ -2187,6 +2281,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/portal/team'
       preLoaderRoute: typeof AuthenticatedPortalTeamRouteImport
       parentRoute: typeof AuthenticatedPortalRouteRoute
+    }
+    '/api/marketplace/connect-webhook': {
+      id: '/api/marketplace/connect-webhook'
+      path: '/api/marketplace/connect-webhook'
+      fullPath: '/api/marketplace/connect-webhook'
+      preLoaderRoute: typeof ApiMarketplaceConnectWebhookRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/marketplace/sendcloud-webhook': {
       id: '/api/marketplace/sendcloud-webhook'
@@ -2609,6 +2710,7 @@ const AuthenticatedAdminRouteRouteWithChildren =
   )
 
 interface AuthenticatedAtelierRouteRouteChildren {
+  AuthenticatedAtelierAbonnementRoute: typeof AuthenticatedAtelierAbonnementRoute
   AuthenticatedAtelierProfilPublicRoute: typeof AuthenticatedAtelierProfilPublicRoute
   AuthenticatedAtelierTarifsRoute: typeof AuthenticatedAtelierTarifsRoute
   AuthenticatedAtelierIndexRoute: typeof AuthenticatedAtelierIndexRoute
@@ -2633,6 +2735,7 @@ interface AuthenticatedAtelierRouteRouteChildren {
 
 const AuthenticatedAtelierRouteRouteChildren: AuthenticatedAtelierRouteRouteChildren =
   {
+    AuthenticatedAtelierAbonnementRoute: AuthenticatedAtelierAbonnementRoute,
     AuthenticatedAtelierProfilPublicRoute:
       AuthenticatedAtelierProfilPublicRoute,
     AuthenticatedAtelierTarifsRoute: AuthenticatedAtelierTarifsRoute,
@@ -2867,6 +2970,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CandidatureAtelierRoute: CandidatureAtelierRoute,
   ConditionsRoute: ConditionsRoute,
+  ConditionsAteliersRoute: ConditionsAteliersRoute,
   ConditionsGeneralesDeVenteRoute: ConditionsGeneralesDeVenteRoute,
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
@@ -2900,11 +3004,14 @@ const rootRouteChildren: RootRouteChildren = {
   LocaleProfessionalsRoute: LocaleProfessionalsRoute,
   LocaleProjectRoute: LocaleProjectRoute,
   ASlugRoute: ASlugRoute,
+  AteliersSlugRoute: AteliersSlugRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
   InvitationAtelierTokenRoute: InvitationAtelierTokenRoute,
   MPublicTokenRoute: MPublicTokenRoute,
   ProjectSummaryAccessTokenRoute: ProjectSummaryAccessTokenRoute,
+  ReglementAtelierTokenRoute: ReglementAtelierTokenRoute,
   LocaleIndexRoute: LocaleIndexRoute,
+  ApiMarketplaceConnectWebhookRoute: ApiMarketplaceConnectWebhookRoute,
   ApiMarketplaceSendcloudWebhookRoute: ApiMarketplaceSendcloudWebhookRoute,
   ApiMarketplaceStripeHealthRoute: ApiMarketplaceStripeHealthRoute,
   ApiMarketplaceStripeWebhookRoute: ApiMarketplaceStripeWebhookRoute,

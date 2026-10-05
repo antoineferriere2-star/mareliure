@@ -1,16 +1,3 @@
-/**
- * Préparation Stripe Connect côté atelier (§18-19 du brief du 16 septembre
- * 2026) — code prêt, jamais appelé par ce chantier : « le premier Connected
- * Account créé devra correspondre à un vrai atelier partenaire ». Rien
- * n'invoque ces fonctions depuis une route ou un bouton admin pour
- * l'instant ; les brancher est un chantier séparé, une fois un atelier réel
- * prêt à démarrer son onboarding.
- *
- * Separate Charges and Transfers (§20) : ces comptes ne reçoivent jamais de
- * `on_behalf_of` sur un paiement client — seulement des `transfers` séparés,
- * une dette B2B distincte du PaymentIntent client (voir §19 : 80 % à
- * l'acceptation, 20 % au solde, ni l'un ni l'autre construit ici).
- */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
@@ -32,7 +19,7 @@ async function loadBinderEmail(sb: Supa, userId: string | null): Promise<string 
 }
 
 /**
- * Crée le Connected Account Stripe Express de l'atelier s'il n'en a pas
+ * Crée le compte Stripe de l'atelier avec Dashboard complet s'il n'en a pas
  * encore un, sinon renvoie celui qui existe déjà — idempotent par
  * construction (le champ `stripe_account_id` est la source de vérité,
  * jamais recréé une deuxième fois pour le même atelier).
@@ -40,12 +27,13 @@ async function loadBinderEmail(sb: Supa, userId: string | null): Promise<string 
 export async function ensureBinderStripeAccount(sb: Supa, binderId: string): Promise<string> {
   const { data: binder, error } = await sb
     .from("marketplace_binders")
-    .select("id, user_id, stripe_account_id, display_name, workshop_name")
+    .select("id, user_id, stripe_account_id, display_name, workshop_name, country_code")
     .eq("id", binderId)
     .maybeSingle();
   if (error) throw error;
   if (!binder) throw new Error(`Atelier introuvable : ${binderId}`);
   if (binder.stripe_account_id) return binder.stripe_account_id;
+  if (binder.country_code !== "FR") throw new Error("connect_country_not_open");
 
   // Avant tout appel Stripe réel — jamais après.
   await assertExpectedStripeAccount();
@@ -54,31 +42,22 @@ export async function ensureBinderStripeAccount(sb: Supa, binderId: string): Pro
   const stripe = getMarketplaceStripeClient();
   const account = await stripe.accounts.create(
     {
-      // Le paramètre `type: "express"` est l'ancien raccourci — le
-      // planificateur Stripe (arbre de décision Connect, 16 septembre
-      // 2026) demande explicitement de ne plus l'utiliser et de déclarer
-      // `controller` explicitement. Ces quatre valeurs reproduisent
-      // exactement un compte Express, mais en clair : la marketplace
-      // porte les frais et les pertes (jamais l'atelier), garde le
-      // Dashboard Express, et Stripe collecte les informations
-      // d'onboarding — cohérent avec Separate Charges and Transfers
-      // (§20 du brief) où la plateforme reste responsable, jamais
-      // `on_behalf_of` sur l'atelier.
+      // Activité C : atelier vendeur, frais Stripe atelier, Dashboard complet.
       controller: {
-        fees: { payer: "application" },
-        losses: { payments: "application" },
-        stripe_dashboard: { type: "express" },
+        fees: { payer: "account" },
+        losses: { payments: "stripe" },
+        stripe_dashboard: { type: "full" },
         requirement_collection: "stripe",
       },
       country: "FR",
       email: email ?? undefined,
-      business_type: "individual",
-      capabilities: { transfers: { requested: true } },
+
+      capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
       metadata: { binder_id: binderId },
     },
     // Idempotent : un retry sur cet appel ne crée jamais un deuxième
     // Connected Account pour le même atelier.
-    { idempotencyKey: `binder-connect-account-${binderId}` },
+    { idempotencyKey: `binder-connect-direct-account-${binderId}` },
   );
 
   const { error: updateError } = await sb
@@ -91,7 +70,7 @@ export async function ensureBinderStripeAccount(sb: Supa, binderId: string): Pro
   return account.id;
 }
 
-/** L'URL Stripe où l'atelier termine son onboarding Express. */
+/** L'URL Stripe où l'atelier termine la configuration de son compte. */
 export async function createBinderOnboardingLink(
   sb: Supa,
   binderId: string,
@@ -129,7 +108,13 @@ export async function refreshBinderConnectStatus(
   if (error) throw error;
   if (!binder) throw new Error(`Atelier introuvable : ${binderId}`);
   if (!binder.stripe_account_id) {
-    return { binderId, stripeAccountId: null, onboarded: false, chargesEnabled: false, payoutsEnabled: false };
+    return {
+      binderId,
+      stripeAccountId: null,
+      onboarded: false,
+      chargesEnabled: false,
+      payoutsEnabled: false,
+    };
   }
 
   await assertExpectedStripeAccount();
@@ -137,7 +122,11 @@ export async function refreshBinderConnectStatus(
   const account = await stripe.accounts.retrieve(binder.stripe_account_id);
   const chargesEnabled = !!account.charges_enabled;
   const payoutsEnabled = !!account.payouts_enabled;
-  const onboarded = chargesEnabled && payoutsEnabled;
+  const onboarded =
+    chargesEnabled &&
+    payoutsEnabled &&
+    account.controller?.fees?.payer === "account" &&
+    account.controller?.losses?.payments === "stripe";
 
   const { error: updateError } = await sb
     .from("marketplace_binders")
@@ -149,5 +138,11 @@ export async function refreshBinderConnectStatus(
     .eq("id", binderId);
   if (updateError) throw updateError;
 
-  return { binderId, stripeAccountId: binder.stripe_account_id, onboarded, chargesEnabled, payoutsEnabled };
+  return {
+    binderId,
+    stripeAccountId: binder.stripe_account_id,
+    onboarded,
+    chargesEnabled,
+    payoutsEnabled,
+  };
 }

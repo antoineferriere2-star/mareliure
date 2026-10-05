@@ -27,6 +27,10 @@ export const logisticsDetails = z
     condition: z.enum(["consistent", "difference"]).optional(),
     description: z.string().trim().max(2000).optional(),
     proof: z.string().trim().max(500).optional(),
+    invoiceId: z.string().uuid().optional(),
+    payer: z.enum(["customer", "workshop"]).optional(),
+    transportCostCents: z.number().int().min(0).max(100_000_000).optional(),
+    coverageEvidence: z.string().trim().min(1).max(1000).optional(),
   })
   .strict();
 export const logisticsAppend = z
