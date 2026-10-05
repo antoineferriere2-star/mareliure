@@ -15,6 +15,7 @@ import {
   PUBLIC_TECHNIQUE_KEYS,
   publicProfileMissing,
 } from "@/marketplace/binders/fineBinderyProfile";
+import { loadWorkshopSubscription } from "./workshopSubscription.server";
 import { isValidReferralSlug, slugify } from "@/marketplace/binders/referral";
 
 const PHOTO_BUCKET = "marketplace-binder-photos";
@@ -219,6 +220,8 @@ export const setMyFineBinderyProfilePublication = createServerFn({ method: "POST
     let binder = await myBinder(sb, context.userId);
     const skills = await skillsFor(sb, binder.id);
     if (data.publish) {
+      const subscription = await loadWorkshopSubscription(sb, binder.id);
+      if (!subscription.canCreate) fail(409, "Un abonnement actif est requis pour publier la vitrine.");
       if (binder.status !== "approved") fail(409, "L'atelier doit être approuvé avant publication.");
       const missing = publicProfileMissing({ workshopName: binder.workshop_name, city: binder.city, bio: binder.bio, skills });
       if (missing.length) fail(409, `Profil incomplet : ${missing.join(", ")}.`);
@@ -304,6 +307,7 @@ export const saveMyFineBinderyPortfolioItem = createServerFn({ method: "POST" })
     const { data: existing } = await sb.from("marketplace_binder_portfolio")
       .select("id, before_photo_path, after_photo_path").eq("id", data.id).eq("binder_id", binder.id).maybeSingle();
     if (!existing) fail(404, "Réalisation introuvable.");
+    if (data.publish && !(await loadWorkshopSubscription(sb, binder.id)).canCreate) fail(409, "Un abonnement actif est requis pour publier une réalisation.");
     if (data.publish && (!data.consent || (!existing!.before_photo_path && !existing!.after_photo_path))) {
       fail(409, "Une photo et le consentement explicite sont requis pour publier.");
     }
@@ -377,7 +381,9 @@ async function publicBinderRows(sb: Supa) {
     .eq("status", "approved").eq("public_profile_status", "published")
     .not("personal_referral_slug", "is", null).order("workshop_name");
   if (error) throw error;
-  return data ?? [];
+  const rows = data ?? [];
+  const eligibility = await Promise.all(rows.map(async binder => (await loadWorkshopSubscription(sb, binder.id)).canCreate));
+  return rows.filter((_, index) => eligibility[index]);
 }
 
 export const listPublicFineBinderyProfiles = createServerFn({ method: "GET" })
@@ -409,6 +415,7 @@ export const getPublicFineBinderyProfile = createServerFn({ method: "GET" })
       .eq("personal_referral_slug", data.slug).eq("status", "approved")
       .eq("public_profile_status", "published").maybeSingle();
     if (error || !binder) return null;
+    if (!(await loadWorkshopSubscription(sb, binder.id)).canCreate) return null;
     const [skills, portfolio, logoUrl, workshopPhotoUrl] = await Promise.all([
       skillsFor(sb, binder.id), publicPortfolioFor(sb, binder.id),
       signedUrl(sb, binder.avatar_path), signedUrl(sb, binder.workshop_photo_path),

@@ -7,7 +7,10 @@
  */
 import type { Issuer } from "./quoteBuild";
 import type { VatGroup, VatRegime } from "./quoteCalc";
-import type { InvoiceClientType, InvoiceOperationNature } from "@/marketplace/invoices/invoiceCompliance";
+import type {
+  InvoiceClientType,
+  InvoiceOperationNature,
+} from "@/marketplace/invoices/invoiceCompliance";
 
 export interface DocumentItemView {
   position: number;
@@ -106,7 +109,12 @@ export interface DocumentView {
   workId?: string | null;
   createdAt: string;
   /** Facture seulement : le suivi de paiement (aucun encaissement n'est fait ici). */
-  payment: { status: "unpaid" | "deposit_paid" | "partial" | "paid"; amountPaidCents: number; depositPaidCents: number; declaredExternal?: boolean } | null;
+  payment: {
+    status: "unpaid" | "deposit_paid" | "partial" | "paid";
+    amountPaidCents: number;
+    depositPaidCents: number;
+    declaredExternal?: boolean;
+  } | null;
   invoiceCompliance: {
     serviceDate: string | null;
     dueDate: string | null;
@@ -131,6 +139,8 @@ export interface DocumentView {
     legalMentions: string[];
   } | null;
   creditNote: { id: string; number: string; issueDate: string } | null;
+  creditNotes?: { id: string; number: string; issueDate: string; totalTtcCents: number }[];
+  creditLimits?: { position: number; remainingHtCents: number }[];
 }
 
 export type CreditNoteDocumentView = Omit<DocumentView, "kind"> & {
@@ -252,14 +262,15 @@ function common(row: CommonRow, items: ItemDbRow[], photos: PhotoDbRow[] = []) {
   const blocks = new Map<string, DocumentBlockView>();
   for (const item of sorted) {
     const key = item.block_key ?? "format-principal";
-    if (!blocks.has(key)) blocks.set(key, {
-      key,
-      label: item.block_label ?? "Format principal",
-      bookCount: item.block_book_count ?? 1,
-      heightMm: item.block_height_mm ?? row.height_mm,
-      widthMm: item.block_width_mm ?? row.width_mm,
-      spineMm: item.block_spine_mm ?? row.spine_mm,
-    });
+    if (!blocks.has(key))
+      blocks.set(key, {
+        key,
+        label: item.block_label ?? "Format principal",
+        bookCount: item.block_book_count ?? 1,
+        heightMm: item.block_height_mm ?? row.height_mm,
+        widthMm: item.block_width_mm ?? row.width_mm,
+        spineMm: item.block_spine_mm ?? row.spine_mm,
+      });
   }
   return {
     client: {
@@ -281,27 +292,33 @@ function common(row: CommonRow, items: ItemDbRow[], photos: PhotoDbRow[] = []) {
       notes: row.book_notes,
     },
     blocks: [...blocks.values()],
-    items: sorted
-      .map<DocumentItemView>((item) => ({
-        position: item.position,
-        lineKey: item.line_key ?? `position-${item.position}`,
-        blockKey: item.block_key ?? "format-principal",
-        serviceId: item.service_id,
-        label: item.label,
-        description: item.description,
-        unit: item.unit,
-        quantity: Number(item.quantity),
-        unitPriceCents: item.unit_price_cents,
-        catalogPriceCents: item.catalog_price_cents ?? null,
-        vatRateBps: item.vat_rate_bps,
-        totalHtCents: item.total_ht_cents,
-        referenceVersion: item.reference_version ?? null,
-        referenceOperationKey: item.reference_operation_key ?? null,
-        photos: photos
-          .filter((photo) => photo.line_key === (item.line_key ?? `position-${item.position}`))
-          .sort((a, b) => a.position - b.position)
-          .map((photo) => ({ id: photo.id, lineKey: photo.line_key, url: photo.url, caption: photo.caption, includeInPdf: photo.include_in_pdf, position: photo.position })),
-      })),
+    items: sorted.map<DocumentItemView>((item) => ({
+      position: item.position,
+      lineKey: item.line_key ?? `position-${item.position}`,
+      blockKey: item.block_key ?? "format-principal",
+      serviceId: item.service_id,
+      label: item.label,
+      description: item.description,
+      unit: item.unit,
+      quantity: Number(item.quantity),
+      unitPriceCents: item.unit_price_cents,
+      catalogPriceCents: item.catalog_price_cents ?? null,
+      vatRateBps: item.vat_rate_bps,
+      totalHtCents: item.total_ht_cents,
+      referenceVersion: item.reference_version ?? null,
+      referenceOperationKey: item.reference_operation_key ?? null,
+      photos: photos
+        .filter((photo) => photo.line_key === (item.line_key ?? `position-${item.position}`))
+        .sort((a, b) => a.position - b.position)
+        .map((photo) => ({
+          id: photo.id,
+          lineKey: photo.line_key,
+          url: photo.url,
+          caption: photo.caption,
+          includeInPdf: photo.include_in_pdf,
+          position: photo.position,
+        })),
+    })),
     currency: row.currency,
     issuer: row.issuer,
     vatRegime: row.vat_regime,
@@ -372,7 +389,9 @@ export function invoiceView(
       status: row.payment_status,
       amountPaidCents: row.amount_paid_cents,
       depositPaidCents: row.deposit_paid_cents,
-      ...(row.payment_snapshot?.agreement_version === "own-external-v1" ? { declaredExternal: true } : {}),
+      ...(row.payment_snapshot?.agreement_version === "own-external-v1"
+        ? { declaredExternal: true }
+        : {}),
     },
     invoiceCompliance: {
       serviceDate: row.service_date,
@@ -397,7 +416,13 @@ export function invoiceView(
       latePenaltyTerms: row.late_penalty_terms,
       legalMentions: row.legal_mentions ?? [],
     },
-    creditNote: creditNote ? { id: creditNote.id, number: creditNote.credit_note_number, issueDate: creditNote.issue_date } : null,
+    creditNote: creditNote
+      ? {
+          id: creditNote.id,
+          number: creditNote.credit_note_number,
+          issueDate: creditNote.issue_date,
+        }
+      : null,
   };
 }
 
@@ -419,9 +444,12 @@ export interface DocumentSummary {
 }
 
 /** Somme TTC des avoirs émis, par facture. */
-export function creditedByInvoice(rows: readonly { invoice_id: string; total_ttc_cents: number }[]): Map<string, number> {
+export function creditedByInvoice(
+  rows: readonly { invoice_id: string; total_ttc_cents: number }[],
+): Map<string, number> {
   const totals = new Map<string, number>();
-  for (const row of rows) totals.set(row.invoice_id, (totals.get(row.invoice_id) ?? 0) + row.total_ttc_cents);
+  for (const row of rows)
+    totals.set(row.invoice_id, (totals.get(row.invoice_id) ?? 0) + row.total_ttc_cents);
   return totals;
 }
 
@@ -435,7 +463,11 @@ export function invoiceListStatus(
   creditedTtcCents = 0,
 ): string {
   if (row.status === "draft") return "draft";
-  if (row.status === "credited" || (creditedTtcCents > 0 && creditedTtcCents >= row.total_ttc_cents)) return "credited";
+  if (
+    row.status === "credited" ||
+    (creditedTtcCents > 0 && creditedTtcCents >= row.total_ttc_cents)
+  )
+    return "credited";
   return row.payment_status;
 }
 

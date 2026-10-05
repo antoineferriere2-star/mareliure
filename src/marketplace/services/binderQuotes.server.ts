@@ -72,8 +72,9 @@ import {
 // Frontières typées : ce que la base garantit par CHECK / par construction du serveur.
 const asQuoteRow = (row: Tables<"marketplace_binder_quotes">) => row as unknown as QuoteDbRow;
 const asInvoiceRow = (row: Tables<"marketplace_binder_invoices">) => row as unknown as InvoiceDbRow;
-const asItemRows = (rows: Tables<"marketplace_binder_quote_items">[] | Tables<"marketplace_binder_invoice_items">[]) =>
-  rows as unknown as ItemDbRow[];
+const asItemRows = (
+  rows: Tables<"marketplace_binder_quote_items">[] | Tables<"marketplace_binder_invoice_items">[],
+) => rows as unknown as ItemDbRow[];
 /** Une valeur du domaine transmise à une fonction SQL en jsonb. */
 const asJson = (value: unknown) => value as Json;
 
@@ -123,8 +124,11 @@ export async function requireBinderId(sb: Supa, userId: string): Promise<string>
 /** Lead access is separate from access to an atelier's private tools. */
 export async function requireLeadApprovedBinderId(sb: Supa, userId: string): Promise<string> {
   const binderId = await requireBinderId(sb, userId);
-  const { data, error } = await sb.from("marketplace_binders")
-    .select("status").eq("id", binderId).single();
+  const { data, error } = await sb
+    .from("marketplace_binders")
+    .select("status")
+    .eq("id", binderId)
+    .single();
   if (error) throw error;
   if (data.status !== "approved") throw new BinderQuotesError("no_binder");
   return binderId;
@@ -132,7 +136,10 @@ export async function requireLeadApprovedBinderId(sb: Supa, userId: string): Pro
 
 const fromQuoteError = (error: unknown): never => {
   if (error instanceof QuoteError) {
-    throw new BinderQuotesError(error.code === "profile_incomplete" ? "profile_incomplete" : "invalid_input", error.missing);
+    throw new BinderQuotesError(
+      error.code === "profile_incomplete" ? "profile_incomplete" : "invalid_input",
+      error.missing,
+    );
   }
   throw error;
 };
@@ -191,7 +198,9 @@ export async function loadBillingProfile(sb: Supa, binderId: string): Promise<Bi
   if (data) {
     const profile = profileFromRow(data);
     if (profile.logoStoragePath) {
-      const { data: signed } = await sb.storage.from(DOCUMENT_LOGOS_BUCKET).createSignedUrl(profile.logoStoragePath, 3600);
+      const { data: signed } = await sb.storage
+        .from(DOCUMENT_LOGOS_BUCKET)
+        .createSignedUrl(profile.logoStoragePath, 3600);
       profile.logoUrl = signed?.signedUrl ?? null;
     }
     return profile;
@@ -210,7 +219,11 @@ export async function loadBillingProfile(sb: Supa, binderId: string): Promise<Bi
   };
 }
 
-export async function saveBillingProfile(sb: Supa, binderId: string, input: BillingProfileInput): Promise<BillingProfile> {
+export async function saveBillingProfile(
+  sb: Supa,
+  binderId: string,
+  input: BillingProfileInput,
+): Promise<BillingProfile> {
   const { data, error } = await sb
     .from("marketplace_binder_billing_profiles")
     .upsert(
@@ -258,15 +271,24 @@ export async function saveBillingProfile(sb: Supa, binderId: string, input: Bill
   return loadBillingProfile(sb, binderId);
 }
 
-export async function uploadDocumentLogo(sb: Supa, binderId: string, input: { mimeType: DocumentLogoMime; imageBase64: string }) {
-  if (!DOCUMENT_LOGO_MIME_TYPES.includes(input.mimeType)) throw new BinderQuotesError("invalid_input");
+export async function uploadDocumentLogo(
+  sb: Supa,
+  binderId: string,
+  input: { mimeType: DocumentLogoMime; imageBase64: string },
+) {
+  if (!DOCUMENT_LOGO_MIME_TYPES.includes(input.mimeType))
+    throw new BinderQuotesError("invalid_input");
   const bytes = Buffer.from(input.imageBase64, "base64");
-  if (bytes.length === 0 || bytes.length > DOCUMENT_LOGO_MAX_BYTES) throw new BinderQuotesError("invalid_input");
+  if (bytes.length === 0 || bytes.length > DOCUMENT_LOGO_MAX_BYTES)
+    throw new BinderQuotesError("invalid_input");
   const extension = input.mimeType === "image/png" ? "png" : "jpg";
   const path = `${binderId}/${crypto.randomUUID()}.${extension}`;
-  const { error: uploadError } = await sb.storage.from(DOCUMENT_LOGOS_BUCKET).upload(path, bytes, { contentType: input.mimeType, upsert: false });
+  const { error: uploadError } = await sb.storage
+    .from(DOCUMENT_LOGOS_BUCKET)
+    .upload(path, bytes, { contentType: input.mimeType, upsert: false });
   if (uploadError) throw new BinderQuotesError("failed");
-  const { error } = await sb.from("marketplace_binder_billing_profiles")
+  const { error } = await sb
+    .from("marketplace_binder_billing_profiles")
     .upsert({ binder_id: binderId, logo_storage_path: path }, { onConflict: "binder_id" });
   if (error) {
     await sb.storage.from(DOCUMENT_LOGOS_BUCKET).remove([path]);
@@ -276,8 +298,10 @@ export async function uploadDocumentLogo(sb: Supa, binderId: string, input: { mi
 }
 
 export async function clearDocumentLogo(sb: Supa, binderId: string): Promise<BillingProfile> {
-  const { error } = await sb.from("marketplace_binder_billing_profiles")
-    .update({ logo_storage_path: null }).eq("binder_id", binderId);
+  const { error } = await sb
+    .from("marketplace_binder_billing_profiles")
+    .update({ logo_storage_path: null })
+    .eq("binder_id", binderId);
   if (error) throw new BinderQuotesError("failed");
   // Le fichier reste privé : un ancien devis peut encore le référencer dans
   // son snapshot d'émetteur. Il n'est donc pas supprimé du bucket ici.
@@ -309,7 +333,11 @@ export interface ServiceView {
   isFavorite: boolean;
 }
 
-const categoryView = (row: Tables<"marketplace_binder_service_categories">): CategoryView => ({ id: row.id, name: row.name, sortOrder: row.sort_order });
+const categoryView = (row: Tables<"marketplace_binder_service_categories">): CategoryView => ({
+  id: row.id,
+  name: row.name,
+  sortOrder: row.sort_order,
+});
 export const serviceView = (row: Tables<"marketplace_binder_services">): ServiceView => ({
   id: row.id,
   categoryId: row.category_id,
@@ -331,13 +359,23 @@ export async function listCatalog(
   options: { includeArchived?: boolean } = {},
 ): Promise<{ categories: CategoryView[]; services: ServiceView[] }> {
   const [categories, services] = await Promise.all([
-    sb.from("marketplace_binder_service_categories").select("*").eq("binder_id", binderId).order("sort_order"),
-    sb.from("marketplace_binder_services").select("*").eq("binder_id", binderId).order("sort_order"),
+    sb
+      .from("marketplace_binder_service_categories")
+      .select("*")
+      .eq("binder_id", binderId)
+      .order("sort_order"),
+    sb
+      .from("marketplace_binder_services")
+      .select("*")
+      .eq("binder_id", binderId)
+      .order("sort_order"),
   ]);
   if (categories.error || services.error) throw new BinderQuotesError("failed");
   return {
     categories: (categories.data ?? []).map(categoryView),
-    services: (services.data ?? []).map(serviceView).filter((s: ServiceView) => options.includeArchived || !s.archived),
+    services: (services.data ?? [])
+      .map(serviceView)
+      .filter((s: ServiceView) => options.includeArchived || !s.archived),
   };
 }
 
@@ -352,10 +390,18 @@ export async function assertOwnCategory(sb: Supa, binderId: string, categoryId: 
   if (!data) throw new BinderQuotesError("invalid_input");
 }
 
-export async function saveCategory(sb: Supa, binderId: string, input: CategoryInput): Promise<CategoryView> {
+export async function saveCategory(
+  sb: Supa,
+  binderId: string,
+  input: CategoryInput,
+): Promise<CategoryView> {
   const values = { name: input.name, sort_order: input.sortOrder };
   const query = input.id
-    ? sb.from("marketplace_binder_service_categories").update(values).eq("id", input.id).eq("binder_id", binderId)
+    ? sb
+        .from("marketplace_binder_service_categories")
+        .update(values)
+        .eq("id", input.id)
+        .eq("binder_id", binderId)
     : sb.from("marketplace_binder_service_categories").insert({ ...values, binder_id: binderId });
   const { data, error } = await query.select("*").maybeSingle();
   if (error) throw new BinderQuotesError("failed");
@@ -363,7 +409,11 @@ export async function saveCategory(sb: Supa, binderId: string, input: CategoryIn
   return categoryView(data);
 }
 
-export async function saveService(sb: Supa, binderId: string, input: ServiceInput): Promise<ServiceView> {
+export async function saveService(
+  sb: Supa,
+  binderId: string,
+  input: ServiceInput,
+): Promise<ServiceView> {
   await assertOwnCategory(sb, binderId, input.categoryId);
   const values = {
     category_id: input.categoryId,
@@ -378,7 +428,11 @@ export async function saveService(sb: Supa, binderId: string, input: ServiceInpu
     ...(input.isFavorite === undefined ? {} : { is_favorite: input.isFavorite }),
   };
   const query = input.id
-    ? sb.from("marketplace_binder_services").update(values).eq("id", input.id).eq("binder_id", binderId)
+    ? sb
+        .from("marketplace_binder_services")
+        .update(values)
+        .eq("id", input.id)
+        .eq("binder_id", binderId)
     : sb.from("marketplace_binder_services").insert({ ...values, binder_id: binderId });
   const { data, error } = await query.select("*").maybeSingle();
   if (error) throw new BinderQuotesError("failed");
@@ -427,13 +481,21 @@ const clientView = (row: Tables<"marketplace_binder_clients">): ClientView => ({
 });
 
 export async function listClients(sb: Supa, binderId: string): Promise<ClientView[]> {
-  const { data, error } = await sb.from("marketplace_binder_clients").select("*").eq("binder_id", binderId).order("name");
+  const { data, error } = await sb
+    .from("marketplace_binder_clients")
+    .select("*")
+    .eq("binder_id", binderId)
+    .order("name");
   if (error) throw new BinderQuotesError("failed");
   // Les contacts archivés ne sont plus proposés dans le constructeur (ils restent lisibles dans leurs devis).
   return (data ?? []).filter((row) => !row.archived_at).map(clientView);
 }
 
-export async function saveClient(sb: Supa, binderId: string, input: ClientInput): Promise<ClientView> {
+export async function saveClient(
+  sb: Supa,
+  binderId: string,
+  input: ClientInput,
+): Promise<ClientView> {
   const values = {
     name: input.name,
     email: input.email,
@@ -445,7 +507,11 @@ export async function saveClient(sb: Supa, binderId: string, input: ClientInput)
     notes: input.notes,
   };
   const query = input.id
-    ? sb.from("marketplace_binder_clients").update(values).eq("id", input.id).eq("binder_id", binderId)
+    ? sb
+        .from("marketplace_binder_clients")
+        .update(values)
+        .eq("id", input.id)
+        .eq("binder_id", binderId)
     : sb.from("marketplace_binder_clients").insert({ ...values, binder_id: binderId });
   const { data, error } = await query.select("*").maybeSingle();
   if (error) throw new BinderQuotesError("failed");
@@ -470,7 +536,11 @@ async function resolveClientId(sb: Supa, binderId: string, input: QuoteInput): P
 }
 
 /** L'ouvrage d'un devis : un ouvrage DE CET ATELIER, ou une erreur — jamais celui d'un autre. */
-async function assertOwnWork(sb: Supa, binderId: string, workId: string | null | undefined): Promise<string | null> {
+async function assertOwnWork(
+  sb: Supa,
+  binderId: string,
+  workId: string | null | undefined,
+): Promise<string | null> {
   if (!workId) return null;
   const { data, error } = await sb
     .from("marketplace_binder_works")
@@ -490,9 +560,15 @@ type Provenance = { reference_version: string; reference_operation_key: string }
  * Chaque prestation citée par une ligne doit être CELLE DE L'ATELIER. Renvoie la provenance de
  * chacune : elle vient de la base, jamais du navigateur (la ligne de devis n'a aucun champ pour la dire).
  */
-async function assertOwnServices(sb: Supa, binderId: string, input: QuoteInput): Promise<Map<string, Provenance>> {
+async function assertOwnServices(
+  sb: Supa,
+  binderId: string,
+  input: QuoteInput,
+): Promise<Map<string, Provenance>> {
   const provenance = new Map<string, Provenance>();
-  const ids = [...new Set(input.lines.map((l) => l.serviceId).filter((id): id is string => Boolean(id)))];
+  const ids = [
+    ...new Set(input.lines.map((l) => l.serviceId).filter((id): id is string => Boolean(id))),
+  ];
   if (ids.length === 0) return provenance;
   const { data, error } = await sb
     .from("marketplace_binder_services")
@@ -503,7 +579,10 @@ async function assertOwnServices(sb: Supa, binderId: string, input: QuoteInput):
   if ((data ?? []).length !== ids.length) throw new BinderQuotesError("invalid_input");
   for (const row of data ?? []) {
     if (row.reference_version && row.reference_operation_key) {
-      provenance.set(row.id, { reference_version: row.reference_version, reference_operation_key: row.reference_operation_key });
+      provenance.set(row.id, {
+        reference_version: row.reference_version,
+        reference_operation_key: row.reference_operation_key,
+      });
     }
   }
   return provenance;
@@ -521,15 +600,23 @@ async function referenceProvenance(input: QuoteInput): Promise<Map<number, Prove
   for (const [position, line] of input.lines.entries()) {
     if (line.serviceId) continue; // La base est la seule source de provenance des prestations d'atelier.
     if (!line.referenceVersion && !line.referenceOperationKey) continue;
-    if (!line.referenceVersion || !line.referenceOperationKey) throw new BinderQuotesError("invalid_input");
+    if (!line.referenceVersion || !line.referenceOperationKey)
+      throw new BinderQuotesError("invalid_input");
     const found = await findReferenceOperation(line.referenceVersion, line.referenceOperationKey);
     if (!found || !isImportable(found.operation)) throw new BinderQuotesError("invalid_input");
-    result.set(position, { reference_version: line.referenceVersion, reference_operation_key: line.referenceOperationKey });
+    result.set(position, {
+      reference_version: line.referenceVersion,
+      reference_operation_key: line.referenceOperationKey,
+    });
   }
   return result;
 }
 
-function withProvenance<T extends { service_id: string | null }>(items: T[], provenance: Map<string, Provenance>, references: Map<number, Provenance>): (T | (T & Provenance))[] {
+function withProvenance<T extends { service_id: string | null }>(
+  items: T[],
+  provenance: Map<string, Provenance>,
+  references: Map<number, Provenance>,
+): (T | (T & Provenance))[] {
   return items.map((item, index) => {
     const p = item.service_id ? provenance.get(item.service_id) : references.get(index);
     return p ? { ...item, ...p } : item;
@@ -540,7 +627,11 @@ function withProvenance<T extends { service_id: string | null }>(items: T[], pro
 // Devis
 // ---------------------------------------------------------------------------
 
-async function loadQuoteRow(sb: Supa, binderId: string, quoteId: string): Promise<QuoteDbRow | null> {
+async function loadQuoteRow(
+  sb: Supa,
+  binderId: string,
+  quoteId: string,
+): Promise<QuoteDbRow | null> {
   const { data, error } = await sb
     .from("marketplace_binder_quotes")
     .select("*")
@@ -552,33 +643,56 @@ async function loadQuoteRow(sb: Supa, binderId: string, quoteId: string): Promis
 }
 
 async function loadQuotePhotos(sb: Supa, binderId: string, quoteId: string): Promise<PhotoDbRow[]> {
-  const { data, error } = await sb.from("marketplace_binder_quote_item_photos")
+  const { data, error } = await sb
+    .from("marketplace_binder_quote_item_photos")
     .select("id, line_key, storage_path, caption, include_in_pdf, position")
-    .eq("quote_id", quoteId).eq("binder_id", binderId).order("position");
+    .eq("quote_id", quoteId)
+    .eq("binder_id", binderId)
+    .order("position");
   if (error) throw new BinderQuotesError("failed");
-  return Promise.all((data ?? []).map(async (photo) => {
-    const { data: signed, error: signError } = await sb.storage
-      .from(QUOTE_OPERATION_PHOTOS_BUCKET).createSignedUrl(photo.storage_path, 3600);
-    if (signError || !signed?.signedUrl) throw new BinderQuotesError("failed");
-    return { ...photo, url: signed.signedUrl };
-  }));
+  return Promise.all(
+    (data ?? []).map(async (photo) => {
+      const { data: signed, error: signError } = await sb.storage
+        .from(QUOTE_OPERATION_PHOTOS_BUCKET)
+        .createSignedUrl(photo.storage_path, 3600);
+      if (signError || !signed?.signedUrl) throw new BinderQuotesError("failed");
+      return { ...photo, url: signed.signedUrl };
+    }),
+  );
 }
 
 export async function getQuote(sb: Supa, binderId: string, quoteId: string): Promise<DocumentView> {
   const row = await loadQuoteRow(sb, binderId, quoteId);
   if (!row) throw new BinderQuotesError("not_found");
   const [items, invoice, photos] = await Promise.all([
-    sb.from("marketplace_binder_quote_items").select("*").eq("quote_id", quoteId).eq("binder_id", binderId).order("position"),
-    sb.from("marketplace_binder_invoices").select("id, invoice_number").eq("quote_id", quoteId).eq("binder_id", binderId).maybeSingle(),
+    sb
+      .from("marketplace_binder_quote_items")
+      .select("*")
+      .eq("quote_id", quoteId)
+      .eq("binder_id", binderId)
+      .order("position"),
+    sb
+      .from("marketplace_binder_invoices")
+      .select("id, invoice_number")
+      .eq("quote_id", quoteId)
+      .eq("binder_id", binderId)
+      .maybeSingle(),
     loadQuotePhotos(sb, binderId, quoteId),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
-  return signIssuerLogo(sb, quoteView(row, asItemRows(items.data ?? []), invoice.data ?? null, photos));
+  return signIssuerLogo(
+    sb,
+    quoteView(row, asItemRows(items.data ?? []), invoice.data ?? null, photos),
+  );
 }
 
-async function signIssuerLogo<T extends Pick<DocumentView, "issuer">>(sb: Supa, document: T): Promise<T> {
+async function signIssuerLogo<T extends Pick<DocumentView, "issuer">>(
+  sb: Supa,
+  document: T,
+): Promise<T> {
   if (!document.issuer.logoStoragePath) return document;
-  const { data } = await sb.storage.from(DOCUMENT_LOGOS_BUCKET)
+  const { data } = await sb.storage
+    .from(DOCUMENT_LOGOS_BUCKET)
     .createSignedUrl(document.issuer.logoStoragePath, 3600);
   return {
     ...document,
@@ -587,35 +701,64 @@ async function signIssuerLogo<T extends Pick<DocumentView, "issuer">>(sb: Supa, 
 }
 
 /** Une ligne de brouillon de CET atelier peut-elle recevoir une photo de plus ? Renvoie sa position. */
-async function nextQuotePhotoPosition(sb: Supa, binderId: string, quoteId: string, lineKey: string): Promise<number> {
+async function nextQuotePhotoPosition(
+  sb: Supa,
+  binderId: string,
+  quoteId: string,
+  lineKey: string,
+): Promise<number> {
   const quote = await loadQuoteRow(sb, binderId, quoteId);
   if (!quote) throw new BinderQuotesError("not_found");
   if (quote.status !== "draft") throw new BinderQuotesError("conflict");
-  const [{ data: item, error: itemError }, { data: existing, error: countError }] = await Promise.all([
-    sb.from("marketplace_binder_quote_items").select("id").eq("quote_id", quoteId)
-      .eq("binder_id", binderId).eq("line_key", lineKey).maybeSingle(),
-    sb.from("marketplace_binder_quote_item_photos").select("id").eq("quote_id", quoteId)
-      .eq("binder_id", binderId).eq("line_key", lineKey),
-  ]);
+  const [{ data: item, error: itemError }, { data: existing, error: countError }] =
+    await Promise.all([
+      sb
+        .from("marketplace_binder_quote_items")
+        .select("id")
+        .eq("quote_id", quoteId)
+        .eq("binder_id", binderId)
+        .eq("line_key", lineKey)
+        .maybeSingle(),
+      sb
+        .from("marketplace_binder_quote_item_photos")
+        .select("id")
+        .eq("quote_id", quoteId)
+        .eq("binder_id", binderId)
+        .eq("line_key", lineKey),
+    ]);
   if (itemError || countError) throw new BinderQuotesError("failed");
   if (!item) throw new BinderQuotesError("not_found");
-  if ((existing ?? []).length >= QUOTE_OPERATION_PHOTO_MAX_PER_LINE) throw new BinderQuotesError("invalid_input");
+  if ((existing ?? []).length >= QUOTE_OPERATION_PHOTO_MAX_PER_LINE)
+    throw new BinderQuotesError("invalid_input");
   return (existing ?? []).length + 1;
 }
 
 /** Le fichier est déjà dans le bucket : on l'inscrit sur la ligne, ou on le retire si l'inscription échoue. */
-async function insertQuoteItemPhoto(sb: Supa, binderId: string, row: {
-  quoteId: string; lineKey: string; storagePath: string; caption: string | null; includeInPdf: boolean; position: number;
-}) {
-  const { data, error } = await sb.from("marketplace_binder_quote_item_photos").insert({
-    binder_id: binderId,
-    quote_id: row.quoteId,
-    line_key: row.lineKey,
-    storage_path: row.storagePath,
-    caption: row.caption,
-    include_in_pdf: row.includeInPdf,
-    position: row.position,
-  }).select("id").single();
+async function insertQuoteItemPhoto(
+  sb: Supa,
+  binderId: string,
+  row: {
+    quoteId: string;
+    lineKey: string;
+    storagePath: string;
+    caption: string | null;
+    includeInPdf: boolean;
+    position: number;
+  },
+) {
+  const { data, error } = await sb
+    .from("marketplace_binder_quote_item_photos")
+    .insert({
+      binder_id: binderId,
+      quote_id: row.quoteId,
+      line_key: row.lineKey,
+      storage_path: row.storagePath,
+      caption: row.caption,
+      include_in_pdf: row.includeInPdf,
+      position: row.position,
+    })
+    .select("id")
+    .single();
   if (error || !data) {
     await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove([row.storagePath]);
     throw new BinderQuotesError("failed");
@@ -623,22 +766,29 @@ async function insertQuoteItemPhoto(sb: Supa, binderId: string, row: {
   return { id: data.id };
 }
 
-export async function uploadQuoteItemPhoto(sb: Supa, binderId: string, input: {
-  quoteId: string;
-  lineKey: string;
-  filename: string;
-  mimeType: QuoteOperationPhotoMime;
-  imageBase64: string;
-  caption: string | null;
-  includeInPdf: boolean;
-}) {
+export async function uploadQuoteItemPhoto(
+  sb: Supa,
+  binderId: string,
+  input: {
+    quoteId: string;
+    lineKey: string;
+    filename: string;
+    mimeType: QuoteOperationPhotoMime;
+    imageBase64: string;
+    caption: string | null;
+    includeInPdf: boolean;
+  },
+) {
   const position = await nextQuotePhotoPosition(sb, binderId, input.quoteId, input.lineKey);
-  if (!QUOTE_OPERATION_PHOTO_MIME_TYPES.includes(input.mimeType)) throw new BinderQuotesError("invalid_input");
+  if (!QUOTE_OPERATION_PHOTO_MIME_TYPES.includes(input.mimeType))
+    throw new BinderQuotesError("invalid_input");
   const bytes = Buffer.from(input.imageBase64, "base64");
-  if (bytes.length === 0 || bytes.length > QUOTE_OPERATION_PHOTO_MAX_BYTES) throw new BinderQuotesError("invalid_input");
+  if (bytes.length === 0 || bytes.length > QUOTE_OPERATION_PHOTO_MAX_BYTES)
+    throw new BinderQuotesError("invalid_input");
   const extension = input.mimeType === "image/png" ? "png" : "jpg";
   const storagePath = `${binderId}/${input.quoteId}/${crypto.randomUUID()}.${extension}`;
-  const { error: uploadError } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET)
+  const { error: uploadError } = await sb.storage
+    .from(QUOTE_OPERATION_PHOTOS_BUCKET)
     .upload(storagePath, bytes, { contentType: input.mimeType, upsert: false });
   if (uploadError) throw new BinderQuotesError("failed");
   return insertQuoteItemPhoto(sb, binderId, { ...input, storagePath, position });
@@ -648,34 +798,54 @@ export async function uploadQuoteItemPhoto(sb: Supa, binderId: string, input: {
  * Reprend un exemple de la bibliothèque sur une ligne de devis. Le fichier est COPIÉ :
  * le devis garde sa photo même si l'atelier retire ensuite l'exemple de sa bibliothèque.
  */
-export async function attachOperationPhotoToQuoteItem(sb: Supa, binderId: string, input: {
-  quoteId: string;
-  lineKey: string;
-  photoId: string;
-  caption: string | null;
-  includeInPdf: boolean;
-}) {
+export async function attachOperationPhotoToQuoteItem(
+  sb: Supa,
+  binderId: string,
+  input: {
+    quoteId: string;
+    lineKey: string;
+    photoId: string;
+    caption: string | null;
+    includeInPdf: boolean;
+  },
+) {
   const position = await nextQuotePhotoPosition(sb, binderId, input.quoteId, input.lineKey);
-  const { data: source, error } = await sb.from("marketplace_binder_operation_photos")
-    .select("id, storage_path").eq("id", input.photoId).eq("binder_id", binderId).maybeSingle();
+  const { data: source, error } = await sb
+    .from("marketplace_binder_operation_photos")
+    .select("id, storage_path")
+    .eq("id", input.photoId)
+    .eq("binder_id", binderId)
+    .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!source) throw new BinderQuotesError("not_found");
   const extension = source.storage_path.endsWith(".png") ? "png" : "jpg";
   const storagePath = `${binderId}/${input.quoteId}/${crypto.randomUUID()}.${extension}`;
-  const { error: copyError } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).copy(source.storage_path, storagePath);
+  const { error: copyError } = await sb.storage
+    .from(QUOTE_OPERATION_PHOTOS_BUCKET)
+    .copy(source.storage_path, storagePath);
   if (copyError) throw new BinderQuotesError("failed");
   return insertQuoteItemPhoto(sb, binderId, { ...input, storagePath, position });
 }
 
 /** Chaque duplication conserve les photos du document, jamais celles du catalogue actuel. */
-export async function duplicateQuote(sb: Supa, binderId: string, quoteId: string, today: string): Promise<DocumentView> {
+export async function duplicateQuote(
+  sb: Supa,
+  binderId: string,
+  quoteId: string,
+  today: string,
+): Promise<DocumentView> {
   const source = await getQuote(sb, binderId, quoteId);
-  const { data: photos, error: photoError } = await sb.from("marketplace_binder_quote_item_photos")
+  const { data: photos, error: photoError } = await sb
+    .from("marketplace_binder_quote_item_photos")
     .select("line_key, storage_path, caption, include_in_pdf, position")
-    .eq("quote_id", quoteId).eq("binder_id", binderId).order("position");
+    .eq("quote_id", quoteId)
+    .eq("binder_id", binderId)
+    .order("position");
   if (photoError) throw new BinderQuotesError("failed");
   const input = duplicateQuoteInput(source);
-  const lineKeys = new Map(source.items.map((item, index) => [item.lineKey, input.lines[index].lineKey]));
+  const lineKeys = new Map(
+    source.items.map((item, index) => [item.lineKey, input.lines[index].lineKey]),
+  );
   const copy = await createQuote(sb, binderId, input, today);
   const copiedPaths: string[] = [];
   try {
@@ -685,44 +855,72 @@ export async function duplicateQuote(sb: Supa, binderId: string, quoteId: string
       if (!lineKey) continue;
       const extension = photo.storage_path.endsWith(".png") ? "png" : "jpg";
       const storagePath = `${binderId}/${copy.id}/${crypto.randomUUID()}.${extension}`;
-      const { error } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).copy(photo.storage_path, storagePath);
+      const { error } = await sb.storage
+        .from(QUOTE_OPERATION_PHOTOS_BUCKET)
+        .copy(photo.storage_path, storagePath);
       if (error) throw new BinderQuotesError("failed");
       copiedPaths.push(storagePath);
       await insertQuoteItemPhoto(sb, binderId, {
-        quoteId: copy.id, lineKey, storagePath, caption: photo.caption,
-        includeInPdf: photo.include_in_pdf, position: photo.position,
+        quoteId: copy.id,
+        lineKey,
+        storagePath,
+        caption: photo.caption,
+        includeInPdf: photo.include_in_pdf,
+        position: photo.position,
       });
     }
     return await getQuote(sb, binderId, copy.id);
   } catch (error) {
     // Annuler uniquement le brouillon créé par cet appel ; jamais le devis d'origine.
     // La suppression du parent entraîne celle des lignes et photos par les FK CASCADE.
-    const { data: removed, error: rollbackError } = await sb.from("marketplace_binder_quotes").delete()
-      .eq("id", copy.id).eq("binder_id", binderId).eq("status", "draft").select("id").maybeSingle();
-    if (!rollbackError && removed && copiedPaths.length) await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove(copiedPaths);
+    const { data: removed, error: rollbackError } = await sb
+      .from("marketplace_binder_quotes")
+      .delete()
+      .eq("id", copy.id)
+      .eq("binder_id", binderId)
+      .eq("status", "draft")
+      .select("id")
+      .maybeSingle();
+    if (!rollbackError && removed && copiedPaths.length)
+      await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove(copiedPaths);
     throw error;
   }
 }
 
-export async function deleteQuoteItemPhoto(sb: Supa, binderId: string, photoId: string): Promise<void> {
-  const { data: photo, error } = await sb.from("marketplace_binder_quote_item_photos")
-    .select("id, quote_id, storage_path").eq("id", photoId).eq("binder_id", binderId).maybeSingle();
+export async function deleteQuoteItemPhoto(
+  sb: Supa,
+  binderId: string,
+  photoId: string,
+): Promise<void> {
+  const { data: photo, error } = await sb
+    .from("marketplace_binder_quote_item_photos")
+    .select("id, quote_id, storage_path")
+    .eq("id", photoId)
+    .eq("binder_id", binderId)
+    .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!photo) throw new BinderQuotesError("not_found");
   const quote = await loadQuoteRow(sb, binderId, photo.quote_id);
   if (!quote) throw new BinderQuotesError("not_found");
   if (quote.status !== "draft") throw new BinderQuotesError("conflict");
-  const { error: removeError } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).remove([photo.storage_path]);
+  const { error: removeError } = await sb.storage
+    .from(QUOTE_OPERATION_PHOTOS_BUCKET)
+    .remove([photo.storage_path]);
   if (removeError) throw new BinderQuotesError("failed");
-  const { error: deleteError } = await sb.from("marketplace_binder_quote_item_photos")
-    .delete().eq("id", photoId).eq("binder_id", binderId);
+  const { error: deleteError } = await sb
+    .from("marketplace_binder_quote_item_photos")
+    .delete()
+    .eq("id", photoId)
+    .eq("binder_id", binderId);
   if (deleteError) throw new BinderQuotesError("failed");
 }
 
 export async function listQuotes(sb: Supa, binderId: string): Promise<DocumentSummary[]> {
   const { data, error } = await sb
     .from("marketplace_binder_quotes")
-    .select("id, work_id, quote_number, status, issue_date, valid_until, client_name, book_title, total_ttc_cents, currency")
+    .select(
+      "id, work_id, quote_number, status, issue_date, valid_until, client_name, book_title, total_ttc_cents, currency",
+    )
     .eq("binder_id", binderId)
     .order("created_at", { ascending: false });
   if (error) throw new BinderQuotesError("failed");
@@ -745,7 +943,12 @@ export async function listQuotes(sb: Supa, binderId: string): Promise<DocumentSu
  * Crée un devis : le serveur recalcule tout, attribue le numéro (dans la même
  * transaction que l'écriture des lignes) et renvoie le document tel qu'enregistré.
  */
-export async function createQuote(sb: Supa, binderId: string, input: QuoteInput, today: string): Promise<DocumentView> {
+export async function createQuote(
+  sb: Supa,
+  binderId: string,
+  input: QuoteInput,
+  today: string,
+): Promise<DocumentView> {
   const profile = await loadBillingProfile(sb, binderId);
   const provenance = await assertOwnServices(sb, binderId, input);
   const references = await referenceProvenance(input);
@@ -771,7 +974,12 @@ export async function createQuote(sb: Supa, binderId: string, input: QuoteInput,
 }
 
 /** Modifie un devis BROUILLON (le numéro, la date et le statut ne changent pas). */
-export async function updateQuote(sb: Supa, binderId: string, quoteId: string, input: QuoteInput): Promise<DocumentView> {
+export async function updateQuote(
+  sb: Supa,
+  binderId: string,
+  quoteId: string,
+  input: QuoteInput,
+): Promise<DocumentView> {
   const existing = await loadQuoteRow(sb, binderId, quoteId);
   if (!existing) throw new BinderQuotesError("not_found");
   if (existing.status !== "draft") throw new BinderQuotesError("conflict");
@@ -780,11 +988,16 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
   const provenance = await assertOwnServices(sb, binderId, input);
   const references = await referenceProvenance(input);
   const clientId = await resolveClientId(sb, binderId, input);
-  const { data: currentPhotos, error: photoError } = await sb.from("marketplace_binder_quote_item_photos")
-    .select("line_key, storage_path").eq("quote_id", quoteId).eq("binder_id", binderId);
+  const { data: currentPhotos, error: photoError } = await sb
+    .from("marketplace_binder_quote_item_photos")
+    .select("line_key, storage_path")
+    .eq("quote_id", quoteId)
+    .eq("binder_id", binderId);
   if (photoError) throw new BinderQuotesError("failed");
   const retainedLineKeys = new Set(input.lines.map((line) => line.lineKey));
-  const removedPhotoPaths = (currentPhotos ?? []).filter((photo) => !retainedLineKeys.has(photo.line_key)).map((photo) => photo.storage_path);
+  const removedPhotoPaths = (currentPhotos ?? [])
+    .filter((photo) => !retainedLineKeys.has(photo.line_key))
+    .map((photo) => photo.storage_path);
   let built;
   try {
     // La date d'émission reste celle du devis ; la validité repart d'elle.
@@ -799,7 +1012,8 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
     p_items: asJson(withProvenance(built.items, provenance, references)),
   });
   if (error) {
-    if (String(error.message).includes("quote_not_editable")) throw new BinderQuotesError("conflict");
+    if (String(error.message).includes("quote_not_editable"))
+      throw new BinderQuotesError("conflict");
     if (String(error.message).includes("quote_not_found")) throw new BinderQuotesError("not_found");
     throw new BinderQuotesError("failed");
   }
@@ -812,7 +1026,12 @@ export async function updateQuote(sb: Supa, binderId: string, quoteId: string, i
   return getQuote(sb, binderId, quoteId);
 }
 
-export async function setQuoteStatus(sb: Supa, binderId: string, quoteId: string, to: string): Promise<DocumentView> {
+export async function setQuoteStatus(
+  sb: Supa,
+  binderId: string,
+  quoteId: string,
+  to: string,
+): Promise<DocumentView> {
   if (!isQuoteStatus(to)) throw new BinderQuotesError("invalid_input");
   const row = await loadQuoteRow(sb, binderId, quoteId);
   if (!row) throw new BinderQuotesError("not_found");
@@ -828,7 +1047,8 @@ export async function setQuoteStatus(sb: Supa, binderId: string, quoteId: string
     .select("id")
     .maybeSingle();
   // Un devis client propre du circuit externe ne s'accepte que par un accord référencé (audit #53, C2).
-  if (error && String(error.message).includes("own_agreement_required")) throw new BinderQuotesError("agreement_required");
+  if (error && String(error.message).includes("own_agreement_required"))
+    throw new BinderQuotesError("agreement_required");
   if (error) throw new BinderQuotesError("failed");
   if (!data) throw new BinderQuotesError("conflict");
   return getQuote(sb, binderId, quoteId);
@@ -843,7 +1063,12 @@ export async function setQuoteStatus(sb: Supa, binderId: string, quoteId: string
  * l'atelier (adresse, SIRET, TVA ou mention de franchise) ; elle reprend le devis
  * tel qu'il est, avec l'identité de l'émetteur À CETTE DATE.
  */
-export async function convertQuoteToInvoice(sb: Supa, binderId: string, quoteId: string, today: string): Promise<DocumentView> {
+export async function convertQuoteToInvoice(
+  sb: Supa,
+  binderId: string,
+  quoteId: string,
+  today: string,
+): Promise<DocumentView> {
   const quote = await loadQuoteRow(sb, binderId, quoteId);
   if (!quote) throw new BinderQuotesError("not_found");
   if (quote.status !== "accepted") throw new BinderQuotesError("conflict");
@@ -874,13 +1099,18 @@ export async function convertQuoteToInvoice(sb: Supa, binderId: string, quoteId:
   if (error || !data) {
     const message = String(error?.message ?? "");
     if (message.includes("quote_not_found")) throw new BinderQuotesError("not_found");
-    if (message.includes("quote_not_accepted") || message.includes("quote_already_invoiced")) throw new BinderQuotesError("conflict");
+    if (message.includes("quote_not_accepted") || message.includes("quote_already_invoiced"))
+      throw new BinderQuotesError("conflict");
     throw new BinderQuotesError("failed");
   }
   return getInvoice(sb, binderId, data as string);
 }
 
-const draftPayload = (input: InvoiceDraftInput, issuer: ReturnType<typeof issuerOf>, vatMention: string | null) => ({
+const draftPayload = (
+  input: InvoiceDraftInput,
+  issuer: ReturnType<typeof issuerOf>,
+  vatMention: string | null,
+) => ({
   issue_date: input.issueDate,
   service_date: input.serviceDate,
   due_date: input.dueDate,
@@ -915,7 +1145,12 @@ const draftPayload = (input: InvoiceDraftInput, issuer: ReturnType<typeof issuer
   notes: input.notes,
 });
 
-export async function updateInvoiceDraft(sb: Supa, binderId: string, invoiceId: string, input: InvoiceDraftInput): Promise<DocumentView> {
+export async function updateInvoiceDraft(
+  sb: Supa,
+  binderId: string,
+  invoiceId: string,
+  input: InvoiceDraftInput,
+): Promise<DocumentView> {
   const current = await getInvoice(sb, binderId, invoiceId);
   if (current.status !== "draft") throw new BinderQuotesError("conflict");
   const profile = await loadBillingProfile(sb, binderId);
@@ -926,7 +1161,8 @@ export async function updateInvoiceDraft(sb: Supa, binderId: string, invoiceId: 
     p_draft: asJson(draftPayload(input, issuerOf(profile), vatMention)),
   });
   if (error) {
-    if (String(error.message).includes("invoice_draft_not_found")) throw new BinderQuotesError("conflict");
+    if (String(error.message).includes("invoice_draft_not_found"))
+      throw new BinderQuotesError("conflict");
     throw new BinderQuotesError("failed");
   }
   return getInvoice(sb, binderId, invoiceId);
@@ -967,11 +1203,20 @@ function issueCandidate(doc: DocumentView): InvoiceIssueCandidate {
     paymentTerms: doc.paymentTerms,
     earlyPaymentDiscountTerms: compliance.earlyPaymentDiscountTerms,
     latePenaltyTerms: compliance.latePenaltyTerms,
-    items: doc.items.map((item) => ({ label: item.label, quantity: item.quantity, unitPriceCents: item.unitPriceCents, vatRateBps: item.vatRateBps })),
+    items: doc.items.map((item) => ({
+      label: item.label,
+      quantity: item.quantity,
+      unitPriceCents: item.unitPriceCents,
+      vatRateBps: item.vatRateBps,
+    })),
   };
 }
 
-export async function issueInvoice(sb: Supa, binderId: string, invoiceId: string): Promise<DocumentView> {
+export async function issueInvoice(
+  sb: Supa,
+  binderId: string,
+  invoiceId: string,
+): Promise<DocumentView> {
   const current = await getInvoice(sb, binderId, invoiceId);
   if (current.status !== "draft") return current;
   const result = validateInvoiceForIssue(issueCandidate(current));
@@ -984,14 +1229,22 @@ export async function issueInvoice(sb: Supa, binderId: string, invoiceId: string
   if (error) {
     const message = String(error.message);
     // L'identité vendeur figée à l'accord ne correspond pas : jamais une erreur générique (audit #53, C1).
-    if (message.includes("seller_identity_completion_required")) throw new BinderQuotesError("seller_identity_completion_required");
+    if (message.includes("seller_identity_completion_required"))
+      throw new BinderQuotesError("seller_identity_completion_required");
     if (message.includes("invoice_seller_changed")) throw new BinderQuotesError("seller_changed");
-    throw new BinderQuotesError(message.includes("invoice_incomplete") ? "profile_incomplete" : "failed", result.missing);
+    throw new BinderQuotesError(
+      message.includes("invoice_incomplete") ? "profile_incomplete" : "failed",
+      result.missing,
+    );
   }
   return getInvoice(sb, binderId, invoiceId);
 }
 
-export async function getInvoice(sb: Supa, binderId: string, invoiceId: string): Promise<DocumentView> {
+export async function getInvoice(
+  sb: Supa,
+  binderId: string,
+  invoiceId: string,
+): Promise<DocumentView> {
   const { data: row, error } = await sb
     .from("marketplace_binder_invoices")
     .select("*")
@@ -1001,62 +1254,162 @@ export async function getInvoice(sb: Supa, binderId: string, invoiceId: string):
   if (error) throw new BinderQuotesError("failed");
   if (!row) throw new BinderQuotesError("not_found");
   const [items, quote, photos, creditNote] = await Promise.all([
-    sb.from("marketplace_binder_invoice_items").select("*").eq("invoice_id", invoiceId).eq("binder_id", binderId).order("position"),
-    sb.from("marketplace_binder_quotes").select("id, quote_number").eq("id", row.quote_id).eq("binder_id", binderId).maybeSingle(),
+    sb
+      .from("marketplace_binder_invoice_items")
+      .select("*")
+      .eq("invoice_id", invoiceId)
+      .eq("binder_id", binderId)
+      .order("position"),
+    sb
+      .from("marketplace_binder_quotes")
+      .select("id, quote_number")
+      .eq("id", row.quote_id)
+      .eq("binder_id", binderId)
+      .maybeSingle(),
     loadQuotePhotos(sb, binderId, row.quote_id),
-    sb.from("marketplace_binder_credit_notes").select("id, credit_note_number, issue_date").eq("invoice_id", invoiceId).eq("binder_id", binderId).maybeSingle(),
+    sb
+      .from("marketplace_binder_credit_notes")
+      .select("id, credit_note_number, issue_date, total_ttc_cents")
+      .eq("invoice_id", invoiceId)
+      .eq("binder_id", binderId)
+      .order("created_at"),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
   if (creditNote.error) throw new BinderQuotesError("failed");
-  return signIssuerLogo(sb, invoiceView(asInvoiceRow(row), asItemRows(items.data ?? []), quote.data ?? null, photos, creditNote.data));
+  const notes = creditNote.data ?? [];
+  const full =
+    notes.reduce((total, note) => total + note.total_ttc_cents, 0) >= row.total_ttc_cents
+      ? (notes[notes.length - 1] ?? null)
+      : null;
+  const view = invoiceView(
+    asInvoiceRow(row),
+    asItemRows(items.data ?? []),
+    quote.data ?? null,
+    photos,
+    full,
+  );
+  view.creditNotes = notes.map((note) => ({
+    id: note.id,
+    number: note.credit_note_number,
+    issueDate: note.issue_date,
+    totalTtcCents: note.total_ttc_cents,
+  }));
+  // Les plafonds restent calculés dans la transaction d'émission, indépendamment de l'aperçu.
+  const limits = await sb.rpc("marketplace_binder_credit_limits", {
+    p_binder_id: binderId,
+    p_invoice_id: invoiceId,
+  });
+  if (limits.error) throw new BinderQuotesError("failed");
+  view.creditLimits = (limits.data ?? []).map((line) => ({
+    position: line.position,
+    remainingHtCents: line.remaining_ht_cents,
+  }));
+  return signIssuerLogo(sb, view);
 }
 
 /** L'avoir et ses lignes sont immuables ; aucun profil ni catalogue courant n'est consulté. */
-export async function getCreditNote(sb: Supa, binderId: string, creditId: string): Promise<CreditNoteDocumentView> {
-  const { data: credit, error } = await sb.from("marketplace_binder_credit_notes")
-    .select("*").eq("id", creditId).eq("binder_id", binderId).maybeSingle();
+export async function getCreditNote(
+  sb: Supa,
+  binderId: string,
+  creditId: string,
+): Promise<CreditNoteDocumentView> {
+  const { data: credit, error } = await sb
+    .from("marketplace_binder_credit_notes")
+    .select("*")
+    .eq("id", creditId)
+    .eq("binder_id", binderId)
+    .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!credit) throw new BinderQuotesError("not_found");
   const [invoice, items] = await Promise.all([
     getInvoice(sb, binderId, credit.invoice_id),
-    sb.from("marketplace_binder_credit_note_items").select("*")
-      .eq("credit_note_id", credit.id).eq("binder_id", binderId).order("position"),
+    sb
+      .from("marketplace_binder_credit_note_items")
+      .select("*")
+      .eq("credit_note_id", credit.id)
+      .eq("binder_id", binderId)
+      .order("position"),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
   const client = credit.client as Record<string, Json>;
-  const text = (key: string) => typeof client[key] === "string" ? client[key] as string : null;
+  const text = (key: string) => (typeof client[key] === "string" ? (client[key] as string) : null);
   return signIssuerLogo(sb, {
     ...invoice,
     kind: "credit_note",
-    id: credit.id, number: credit.credit_note_number, issueDate: credit.issue_date,
+    id: credit.id,
+    number: credit.credit_note_number,
+    issueDate: credit.issue_date,
     originalInvoice: { number: invoice.number, issueDate: invoice.issueDate },
-    reason: credit.reason, createdAt: credit.created_at, currency: credit.currency,
+    reason: credit.reason,
+    createdAt: credit.created_at,
+    currency: credit.currency,
     issuer: credit.issuer as unknown as DocumentView["issuer"],
-    client: { id: null, name: text("name") ?? "", email: null, phone: null,
-      addressLine1: text("addressLine1"), postalCode: text("postalCode"), city: text("city"), country: text("country") },
-    invoiceCompliance: invoice.invoiceCompliance ? { ...invoice.invoiceCompliance,
-      dueDate: null, clientLegalName: text("legalName"), billingAddressLine1: text("addressLine1"),
-      billingPostalCode: text("postalCode"), billingCity: text("city"), billingCountry: text("country"),
-      clientSiren: text("siren"), clientVatNumber: text("vatNumber"),
-      legalMentions: credit.legal_mentions as string[],
-    } : null,
+    client: {
+      id: null,
+      name: text("name") ?? "",
+      email: null,
+      phone: null,
+      addressLine1: text("addressLine1"),
+      postalCode: text("postalCode"),
+      city: text("city"),
+      country: text("country"),
+    },
+    invoiceCompliance: invoice.invoiceCompliance
+      ? {
+          ...invoice.invoiceCompliance,
+          dueDate: null,
+          clientLegalName: text("legalName"),
+          billingAddressLine1: text("addressLine1"),
+          billingPostalCode: text("postalCode"),
+          billingCity: text("city"),
+          billingCountry: text("country"),
+          clientSiren: text("siren"),
+          clientVatNumber: text("vatNumber"),
+          legalMentions: credit.legal_mentions as string[],
+        }
+      : null,
     blocks: invoice.blocks,
     items: (items.data ?? []).map((item) => ({
-      position: item.position, lineKey: `credit-${item.position}`,
-      blockKey: invoice.items.find((line) => line.position === item.position)?.blockKey ?? "credit", serviceId: null,
-      label: item.label, description: item.description, unit: item.unit, quantity: Number(item.quantity),
-      unitPriceCents: item.unit_price_cents, catalogPriceCents: null, vatRateBps: item.vat_rate_bps,
-      totalHtCents: item.total_ht_cents, photos: [],
+      position: item.position,
+      lineKey: `credit-${item.position}`,
+      blockKey: invoice.items.find((line) => line.position === item.position)?.blockKey ?? "credit",
+      serviceId: null,
+      label: item.label,
+      description: item.description,
+      unit: item.unit,
+      quantity: Number(item.quantity),
+      unitPriceCents: item.unit_price_cents,
+      catalogPriceCents: null,
+      vatRateBps: item.vat_rate_bps,
+      totalHtCents: item.total_ht_cents,
+      photos: [],
     })),
-    totalHtCents: credit.total_ht_cents, totalVatCents: credit.total_vat_cents, totalTtcCents: credit.total_ttc_cents,
+    totalHtCents: credit.total_ht_cents,
+    totalVatCents: credit.total_vat_cents,
+    totalTtcCents: credit.total_ttc_cents,
     vatBreakdown: credit.vat_breakdown as unknown as DocumentView["vatBreakdown"],
-    paymentTerms: null, notes: null, payment: null, creditNote: null,
-    depositType: "NONE", depositValue: 0, depositCents: 0, balanceCents: 0,
-    linkedQuoteId: null, linkedQuoteNumber: null, linkedInvoiceId: invoice.id, linkedInvoiceNumber: invoice.number,
+    paymentTerms: null,
+    notes: null,
+    payment: null,
+    creditNote: null,
+    depositType: "NONE",
+    depositValue: 0,
+    depositCents: 0,
+    balanceCents: 0,
+    linkedQuoteId: null,
+    linkedQuoteNumber: null,
+    linkedInvoiceId: invoice.id,
+    linkedInvoiceNumber: invoice.number,
   });
 }
 
-export async function createFullCreditNote(sb: Supa, binderId: string, invoiceId: string, today: string, reason: string) {
+export async function createFullCreditNote(
+  sb: Supa,
+  binderId: string,
+  invoiceId: string,
+  today: string,
+  reason: string,
+) {
   if (!reason.trim()) throw new BinderQuotesError("invalid_input");
   const invoice = await getInvoice(sb, binderId, invoiceId);
   if (invoice.status !== "issued") throw new BinderQuotesError("conflict");
@@ -1078,11 +1431,16 @@ export async function createFullCreditNote(sb: Supa, binderId: string, invoiceId
 export async function listInvoices(sb: Supa, binderId: string): Promise<DocumentSummary[]> {
   const { data, error } = await sb
     .from("marketplace_binder_invoices")
-    .select("id, invoice_number, status, issue_date, due_date, client_name, book_title, total_ttc_cents, currency, payment_status")
+    .select(
+      "id, invoice_number, status, issue_date, due_date, client_name, book_title, total_ttc_cents, currency, payment_status",
+    )
     .eq("binder_id", binderId)
     .order("created_at", { ascending: false });
   if (error) throw new BinderQuotesError("failed");
-  const credits = await sb.from("marketplace_binder_credit_notes").select("invoice_id, total_ttc_cents").eq("binder_id", binderId);
+  const credits = await sb
+    .from("marketplace_binder_credit_notes")
+    .select("invoice_id, total_ttc_cents")
+    .eq("binder_id", binderId);
   if (credits.error) throw new BinderQuotesError("failed");
   const credited = creditedByInvoice(credits.data ?? []);
   return (data ?? []).map((row) => ({

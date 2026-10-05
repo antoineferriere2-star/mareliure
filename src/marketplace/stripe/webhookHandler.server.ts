@@ -19,7 +19,10 @@
  *   `failed` : une alerte d'exploitation et un examen sont nécessaires avant rejeu.
  */
 import { admin } from "@/build/services/adminAuth.server";
-import { getMarketplaceStripeClient, getMarketplaceStripeWebhookSecret } from "./stripeClient.server";
+import {
+  getMarketplaceStripeClient,
+  getMarketplaceStripeWebhookSecret,
+} from "./stripeClient.server";
 import { decideWebhookAction, type StripeEventLike } from "./webhookEvents";
 import { verifyPaymentEvidence } from "./paymentVerification";
 import {
@@ -39,7 +42,10 @@ export const MAX_WEBHOOK_ATTEMPTS = 8;
 type Supa = Awaited<ReturnType<typeof admin>>;
 
 function json(status: number, body: unknown): Response {
-  return new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json" },
+  });
 }
 
 type Outcome = { ok: true } | { ok: false; reason: string; detail: string };
@@ -49,7 +55,10 @@ type Outcome = { ok: true } | { ok: false; reason: string; detail: string };
  * été enregistré par une tentative précédente qui s'est arrêtée avant d'écrire le journal, ou si
  * l'autre événement du même paiement (session + PaymentIntent) est arrivé le premier.
  */
-async function ensurePaymentJournal(sb: Supa, input: { caseId: string; proposalId: string; paymentIntentId: string }): Promise<boolean> {
+async function ensurePaymentJournal(
+  sb: Supa,
+  input: { caseId: string; proposalId: string; paymentIntentId: string },
+): Promise<boolean> {
   const existing = await sb
     .from("marketplace_events")
     .select("id")
@@ -70,20 +79,43 @@ async function ensurePaymentJournal(sb: Supa, input: { caseId: string; proposalI
 }
 
 async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): Promise<Outcome> {
+  const { syncWorkshopSubscriptionEvent } =
+    await import("@/marketplace/services/workshopSubscription.server");
+  if (await syncWorkshopSubscriptionEvent(sb, event as unknown as import("stripe").default.Event))
+    return { ok: true };
   const action = decideWebhookAction(event);
 
   if (action.kind === "mark_paid") {
     const proposal = await loadCommercialProposalById(sb, action.proposalId);
     const payment = proposal ? await loadCommercialPaymentState(sb, proposal.id) : null;
     if (action.evidence.source === "payment_intent") {
-      if (!payment?.stripeCheckoutSessionId) return { ok: false, reason: "session_missing", detail: "checkout not recorded yet" };
-      const session = await getMarketplaceStripeClient().checkout.sessions.retrieve(payment.stripeCheckoutSessionId);
-      const intentId = typeof session.payment_intent === "string" ? session.payment_intent : session.payment_intent?.id;
-      if (intentId !== action.evidence.paymentIntentId || session.metadata?.proposal_id !== action.proposalId || session.metadata?.case_id !== action.caseId) {
-        return { ok: false, reason: "session_mismatch", detail: "PaymentIntent does not belong to the recorded checkout" };
+      if (!payment?.stripeCheckoutSessionId)
+        return { ok: false, reason: "session_missing", detail: "checkout not recorded yet" };
+      const session = await getMarketplaceStripeClient().checkout.sessions.retrieve(
+        payment.stripeCheckoutSessionId,
+      );
+      const intentId =
+        typeof session.payment_intent === "string"
+          ? session.payment_intent
+          : session.payment_intent?.id;
+      if (
+        intentId !== action.evidence.paymentIntentId ||
+        session.metadata?.proposal_id !== action.proposalId ||
+        session.metadata?.case_id !== action.caseId
+      ) {
+        return {
+          ok: false,
+          reason: "session_mismatch",
+          detail: "PaymentIntent does not belong to the recorded checkout",
+        };
       }
     }
-    const verdict = verifyPaymentEvidence({ evidence: action.evidence, claimedCaseId: action.caseId, proposal, payment });
+    const verdict = verifyPaymentEvidence({
+      evidence: action.evidence,
+      claimedCaseId: action.caseId,
+      proposal,
+      payment,
+    });
     if (!verdict.ok) return { ok: false, reason: verdict.reason, detail: verdict.detail };
 
     if (!verdict.alreadyRecorded) {
@@ -96,7 +128,11 @@ async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): 
       // Un autre PaymentIntent a été enregistré entre la vérification et l'écriture : double paiement,
       // rien n'a été écrasé — signalé, jamais avalé.
       if (recorded === "other_payment") {
-        return { ok: false, reason: "duplicate_payment", detail: `concurrent payment recorded before ${action.evidence.paymentIntentId}` };
+        return {
+          ok: false,
+          reason: "duplicate_payment",
+          detail: `concurrent payment recorded before ${action.evidence.paymentIntentId}`,
+        };
       }
     }
     const journalCreated = await ensurePaymentJournal(sb, {
@@ -106,14 +142,24 @@ async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): 
     });
     // La commande Oppe s'ouvre une seule fois, quel que soit l'événement qui confirme le paiement.
     try {
-      const { onOppePaymentConfirmed } = await import("@/marketplace/orders/oppeOrderFulfilment.server");
-      await onOppePaymentConfirmed(sb, { caseId: action.caseId, proposalId: action.proposalId, paymentIntentId: action.evidence.paymentIntentId });
+      const { onOppePaymentConfirmed } =
+        await import("@/marketplace/orders/oppeOrderFulfilment.server");
+      await onOppePaymentConfirmed(sb, {
+        caseId: action.caseId,
+        proposalId: action.proposalId,
+        paymentIntentId: action.evidence.paymentIntentId,
+      });
     } catch (err) {
-      return { ok: false, reason: "fulfilment_failed", detail: err instanceof Error ? err.message : String(err) };
+      return {
+        ok: false,
+        reason: "fulfilment_failed",
+        detail: err instanceof Error ? err.message : String(err),
+      };
     }
     // Alerte « paiement reçu » (4 octobre 2026) : une fois par paiement, jamais bloquante.
     if (journalCreated) {
-      const { caseReference, formatEurosForAlert, notifyAdmin } = await import("@/marketplace/notifications/adminAlerts.server");
+      const { caseReference, formatEurosForAlert, notifyAdmin } =
+        await import("@/marketplace/notifications/adminAlerts.server");
       const { reference } = await caseReference(sb, action.caseId);
       const amount = formatEurosForAlert(verdict.amountDue.amountCents);
       await notifyAdmin({
@@ -128,8 +174,10 @@ async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): 
 
   // Remboursements et litiges des commandes Oppe : rapprochés et suivis, en plus du journal.
   if (event.type === "charge.refunded" || event.type.startsWith("charge.dispute.")) {
-    const { handleChargeRefunded, handleDispute } = await import("@/marketplace/orders/oppeRefundsDisputes.server");
-    if (event.type === "charge.refunded") await handleChargeRefunded(sb, event.data.object as never);
+    const { handleChargeRefunded, handleDispute } =
+      await import("@/marketplace/orders/oppeRefundsDisputes.server");
+    if (event.type === "charge.refunded")
+      await handleChargeRefunded(sb, event.data.object as never);
     else await handleDispute(sb, event.data.object as never);
   }
 
@@ -154,11 +202,11 @@ export async function handleStripeWebhookRequest(request: Request): Promise<Resp
   const stripe = getMarketplaceStripeClient();
   let event: StripeEventLike;
   try {
-    event = await stripe.webhooks.constructEventAsync(
+    event = (await stripe.webhooks.constructEventAsync(
       rawBody,
       signature,
       getMarketplaceStripeWebhookSecret(),
-    ) as unknown as StripeEventLike;
+    )) as unknown as StripeEventLike;
   } catch (err) {
     const { logOperationalError } = await import("@/build/services/operationalLog.server");
     logOperationalError("stripe-webhook.invalid-signature", err, {});
@@ -187,15 +235,23 @@ export async function handleStripeWebhookRequest(request: Request): Promise<Resp
       return json(200, { ok: true });
     }
     failure = outcome;
-    logOperationalError("stripe-webhook.payment-rejected", new Error(`${outcome.reason}: ${outcome.detail}`), {
+    logOperationalError(
+      "stripe-webhook.payment-rejected",
+      new Error(`${outcome.reason}: ${outcome.detail}`),
+      {
+        eventId,
+        type: event.type,
+        attempts: claim.attempts,
+      },
+    );
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    failure = { reason: "processing_error", detail: message };
+    logOperationalError("stripe-webhook.processing-failed", err, {
       eventId,
       type: event.type,
       attempts: claim.attempts,
     });
-  } catch (err) {
-    const message = err instanceof Error ? err.message : String(err);
-    failure = { reason: "processing_error", detail: message };
-    logOperationalError("stripe-webhook.processing-failed", err, { eventId, type: event.type, attempts: claim.attempts });
   }
 
   try {
@@ -204,5 +260,11 @@ export async function handleStripeWebhookRequest(request: Request): Promise<Resp
     // La ligne reste `processing` : elle sera reprise à l'expiration du délai, jamais perdue.
     logOperationalError("stripe-webhook.mark-failed-failed", err, { eventId });
   }
-  return json(500, { ok: false, error: "processing_failed", reason: failure.reason, attempts: claim.attempts, needsAttention: claim.attempts >= MAX_WEBHOOK_ATTEMPTS });
+  return json(500, {
+    ok: false,
+    error: "processing_failed",
+    reason: failure.reason,
+    attempts: claim.attempts,
+    needsAttention: claim.attempts >= MAX_WEBHOOK_ATTEMPTS,
+  });
 }

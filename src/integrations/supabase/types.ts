@@ -39,6 +39,191 @@ export type Database = {
   }
   public: {
     Tables: {
+      marketplace_workshop_connect_consents: {
+        Row: {
+          accepted_at: string
+          accepted_by: string
+          binder_id: string
+          fee_bps: number
+          terms_version: string
+        }
+        Insert: {
+          accepted_at?: string
+          accepted_by: string
+          binder_id: string
+          fee_bps?: number
+          terms_version: string
+        }
+        Update: {
+          accepted_at?: string
+          accepted_by?: string
+          binder_id?: string
+          fee_bps?: number
+          terms_version?: string
+        }
+        Relationships: []
+      }
+      marketplace_workshop_online_payments: {
+        Row: {
+          amount_cents: number
+          binder_id: string
+          checkout_expires_at: string | null
+          checkout_session_id: string | null
+          currency: string
+          disputed: boolean
+          fee_cents: number
+          id: string
+          invoice_id: string
+          paid_at: string | null
+          payment_intent_id: string | null
+          reconciliation_required: boolean
+          refunded_cents: number
+          status: string
+          stripe_account_id: string
+          stripe_fee_cents: number | null
+          token_expires_at: string
+          token_hash: string
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          binder_id: string
+          checkout_expires_at?: string | null
+          checkout_session_id?: string | null
+          currency: string
+          disputed?: boolean
+          fee_cents: number
+          id?: string
+          invoice_id: string
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          reconciliation_required?: boolean
+          refunded_cents?: number
+          status?: string
+          stripe_account_id: string
+          stripe_fee_cents?: number | null
+          token_expires_at: string
+          token_hash: string
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          binder_id?: string
+          checkout_expires_at?: string | null
+          checkout_session_id?: string | null
+          currency?: string
+          disputed?: boolean
+          fee_cents?: number
+          id?: string
+          invoice_id?: string
+          paid_at?: string | null
+          payment_intent_id?: string | null
+          reconciliation_required?: boolean
+          refunded_cents?: number
+          status?: string
+          stripe_account_id?: string
+          stripe_fee_cents?: number | null
+          token_expires_at?: string
+          token_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_workshop_online_refunds: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          credit_note_id: string
+          payment_id: string
+          stripe_refund_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          credit_note_id: string
+          payment_id: string
+          stripe_refund_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          credit_note_id?: string
+          payment_id?: string
+          stripe_refund_id?: string | null
+        }
+        Relationships: []
+      }
+
+      marketplace_workshop_offer_settings: {
+        Row: {
+          id: boolean
+          online_payment_open: boolean
+          subscription_open: boolean
+        }
+        Insert: {
+          id?: boolean
+          online_payment_open?: boolean
+          subscription_open?: boolean
+        }
+        Update: {
+          id?: boolean
+          online_payment_open?: boolean
+          subscription_open?: boolean
+        }
+        Relationships: []
+      }
+      marketplace_binder_subscriptions: {
+        Row: {
+          binder_id: string
+          cancel_at_period_end: boolean
+          checkout_expires_at: string | null
+          checkout_session_id: string | null
+          current_period_end: string | null
+          last_event_created: number
+          legacy_free: boolean
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          terms_version: string | null
+          transition_accepted_at: string | null
+          transition_accepted_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          binder_id: string
+          cancel_at_period_end?: boolean
+          checkout_expires_at?: string | null
+          checkout_session_id?: string | null
+          current_period_end?: string | null
+          last_event_created?: number
+          legacy_free?: boolean
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          terms_version?: string | null
+          transition_accepted_at?: string | null
+          transition_accepted_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          binder_id?: string
+          cancel_at_period_end?: boolean
+          checkout_expires_at?: string | null
+          checkout_session_id?: string | null
+          current_period_end?: string | null
+          last_event_created?: number
+          legacy_free?: boolean
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          terms_version?: string | null
+          transition_accepted_at?: string | null
+          transition_accepted_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
       build_dossier_access_tokens: {
         Row: {
           created_at: string
@@ -1202,6 +1387,7 @@ export type Database = {
           label: string
           position: number
           quantity: number
+          source_invoice_item_id: string | null
           total_ht_cents: number
           unit: string | null
           unit_price_cents: number
@@ -1215,6 +1401,7 @@ export type Database = {
           label: string
           position: number
           quantity: number
+          source_invoice_item_id?: string | null
           total_ht_cents: number
           unit?: string | null
           unit_price_cents: number
@@ -1228,6 +1415,7 @@ export type Database = {
           label?: string
           position?: number
           quantity?: number
+          source_invoice_item_id?: string | null
           total_ht_cents?: number
           unit?: string | null
           unit_price_cents?: number
@@ -1263,6 +1451,8 @@ export type Database = {
           issuer: Json
           legal_mentions: Json
           reason: string
+          request_id: string | null
+          request_lines: Json | null
           retained_until: string
           total_ht_cents: number
           total_ttc_cents: number
@@ -1281,6 +1471,8 @@ export type Database = {
           issuer: Json
           legal_mentions?: Json
           reason: string
+          request_id?: string | null
+          request_lines?: Json | null
           retained_until: string
           total_ht_cents: number
           total_ttc_cents: number
@@ -1299,6 +1491,8 @@ export type Database = {
           issuer?: Json
           legal_mentions?: Json
           reason?: string
+          request_id?: string | null
+          request_lines?: Json | null
           retained_until?: string
           total_ht_cents?: number
           total_ttc_cents?: number
@@ -4645,6 +4839,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+
       // Migration 20260928090000, local schema contract; production is not migrated.
       marketplace_accept_proposal_as_customer: {
         Args: {
@@ -4687,6 +4882,24 @@ export type Database = {
           p_reason: string
         }
         Returns: string
+      }
+      marketplace_binder_create_partial_credit_note: {
+        Args: {
+          p_binder_id: string
+          p_invoice_id: string
+          p_issue_date: string
+          p_reason: string
+          p_request_id: string
+          p_lines: Json
+        }
+        Returns: string
+      }
+      marketplace_binder_credit_limits: {
+        Args: {
+          p_binder_id: string
+          p_invoice_id: string
+        }
+        Returns: { position: number; remaining_ht_cents: number }[]
       }
       marketplace_issue_oppe_credit_note: {
         Args: {
@@ -4739,6 +4952,37 @@ export type Database = {
           p_actor: string
         }
         Returns: string
+      }
+      marketplace_reserve_workshop_checkout: {
+        Args: {
+          p_binder_id: string
+          p_user_id: string
+          p_terms_version: string
+        }
+        Returns: Json
+      }
+      marketplace_reserve_workshop_online_payment: {
+        Args: {
+          p_binder_id: string
+          p_invoice_id: string
+          p_token_hash: string
+          p_expires_at: string
+        }
+        Returns: Json
+      }
+      marketplace_reserve_workshop_payment_checkout: {
+        Args: {
+          p_payment_id: string
+        }
+        Returns: Json
+      }
+      marketplace_reserve_workshop_refund: {
+        Args: {
+          p_binder_id: string
+          p_payment_id: string
+          p_credit_note_id: string
+        }
+        Returns: Json
       }
       marketplace_review_supplier_invoice: {
         Args: {
@@ -4989,6 +5233,14 @@ export type Database = {
         }
         Returns: string
       }
+      marketplace_sync_workshop_subscription: {
+        Args: {
+          p_binder_id: string
+          p_snapshot: Json
+          p_event_created: number
+        }
+        Returns: undefined
+      }
       marketplace_validate_pricing: {
         Args: {
           p_actor_user_id: string
@@ -5053,6 +5305,12 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      marketplace_workshop_can_create: {
+        Args: {
+          p_binder_id: string
+        }
+        Returns: boolean
       }
       provision_owner_workspace: {
         Args: { _email: string; _user_id: string; _workspace_name: string }

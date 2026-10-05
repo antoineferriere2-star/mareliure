@@ -23,6 +23,7 @@ const SECONDARY_NAV = [
   { to: "/atelier/contacts", key: "contacts", icon: Users },
   { to: "/atelier/factures", key: "invoices", icon: ReceiptText },
   { to: "/atelier/tarifs", key: "settings", icon: LibraryBig },
+  { to: "/atelier/abonnement", key: "subscription", icon: ReceiptText },
   { to: "/atelier/profil-public", key: "profile", icon: Globe2 },
 ] as const;
 
