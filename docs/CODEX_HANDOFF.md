@@ -3459,3 +3459,62 @@ Claude Code (Opus 5.5) — 2 octobre 2026, #54 (`feat/book-roundtrip-shipping`, 
 ## Latest handoff
 
 Claude Code (Opus 5.5) — 2 octobre 2026 (après-midi), #54 : Fine Bindery ouvert (import dossier → ouvrage pour les deux marques, provenance affichée avec la bonne marque), défaut « référence d'étiquette déjà utilisée » corrigé, recette complète sur **build de production** (wrangler local, qwf) 101/101 deux marques × trois rôles × bureau/mobile, avertissement React identifié comme antérieur (TanStack Router, dev seulement), conditions Mondial Relay/Sendcloud et TVA documentées (§ 5 bis de `docs/book-roundtrip-operations.md`), secrets à poser décrits (§ 5 ter). Publication production et test fournisseur : voir le bloc suivant ou `PUBLICATION-54.md` de l'opération.
+
+---
+
+## Latest handoff
+
+**Agent :** Hermes (CEO opérateur Métré) — agent distinct de Claude Code / Codex.
+
+**Date :** 5 octobre 2026.
+
+**Branch :** `main`.
+
+**Commit :** sur `d5c642b7`.
+
+**Completed :**
+Correctif : les tunnels générés par le pipeline Hermes étaient publiés sans
+`proposal.defaultLocale`, donc **tous s'affichaient en anglais** — y compris
+ceux envoyés à des négoces français, qui recevaient un e-mail en français
+pointant vers un formulaire anglais (« Timber Application & Finish »,
+« Step 1 of 6 »). L'engine savait déjà rendre le français (`fr-FR` est dans
+`SUPPORTED_LOCALES`, traduit et couvert par `runtimeChrome.test.ts`) ; seule la
+déclaration manquait.
+
+- `src/build/services/hermesProspectFunnels.server.ts` — `HermesProspectInput`
+  gagne `locale` ; nouvelle `applyMissionLocale()` appelée juste après
+  `publish_workspace_onboarding`, qui écrit `proposal.defaultLocale` sur la
+  Mission. Le RPC de publication n'a pas de paramètre de langue, donc la
+  déclaration est posée sur la ligne `build_missions` — le seul endroit que le
+  runtime lit (`MissionRuntime.tsx#missionLocale`). Un locale inconnu est
+  ignoré plutôt qu'écrit (l'entrée arrive en JSON sur un endpoint machine).
+- `src/routes/api/internal/hermes/prospect-funnels.ts` — le schéma d'entrée
+  accepte `locale` (`z.enum(SUPPORTED_LOCALES)`).
+
+**Vérifié :** `npx tsc --noEmit` propre ; `npx vitest run` → **2841/2841**.
+Le working tree contenait le travail non commité d'un autre agent
+(`.claude/launch.json`, `analyze_batch50.py`, `audit-mareliure-pr53-2026-10-01.md`) :
+**non touché, non commité**.
+
+**In progress :** aucun chantier de code ouvert par cet agent.
+
+**Next recommended task :**
+1. **Backfill** — les Missions FR déjà publiées gardent un `proposal` sans
+   `defaultLocale` et resteront en anglais : ~66 tunnels concernés. Mise à jour
+   de données sur `build_missions.proposal` (le correctif de code ne couvre que
+   les prochaines publications).
+2. Vérifier après déploiement qu'un tunnel FR neuf s'ouvre bien en français.
+
+**Known issues :**
+- Le pipeline Hermes ne peut pas créer plus de 50 Missions actives
+  (plafond du plan) ; au-delà le tunnel tombe en échec et l'e-mail n'est pas
+  envoyé (règle voulue : pas d'envoi sans tunnel).
+- Le token de lecture des métriques (`OppeOppe`) diffère du token de création
+  (`Oppe2025!!!`) — ne pas les confondre.
+- `metre-pro.fr` n'expose aucune API analytics.
+- Une soumission de test (`diag.test@example.com`, tunnel Spiro Custom Pools)
+  existe en base : ne jamais la compter comme conversion.
+
+**Do not touch :**
+- Les modifications non commitées d'un autre agent listées ci-dessus.
+- `src/marketplace/` (périmètre Ma Reliure, hors de ce correctif).

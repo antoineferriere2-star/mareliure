@@ -33,6 +33,7 @@ import {
 } from "@/build/workspaces/internalSales";
 import type { Supa } from "./adminAuth.server";
 import { fail } from "./serverError";
+import { isSupportedLocale, type SupportedLocale } from "@/build/i18n/locales";
 
 export const HERMES_FUNNEL_STEPS = ["create", "analyze", "confirm", "generate", "publish"] as const;
 export type HermesFunnelStep = (typeof HERMES_FUNNEL_STEPS)[number];
@@ -48,6 +49,15 @@ export type HermesProspectInput = {
    */
   vertical?: string | null;
   product?: string | null;
+  /**
+   * The language the generated intake must render in. The runtime renders its
+   * chrome in the Mission's declared language (`proposal.defaultLocale`), and
+   * this pipeline is the only publisher that never set it — so every generated
+   * intake fell back to en-US, including the ones mailed to French independents.
+   * A French prospect landing on an English form is disqualifying, so the
+   * market decides: "fr-FR" for métré-pro.fr prospects, en-US otherwise.
+   */
+  locale?: SupportedLocale | null;
   campaignId?: string | null;
   requestId?: string | null;
 };
@@ -791,7 +801,53 @@ async function generateDraftAttempt(
   }
 }
 
-async function publishStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: string) {
+/**
+ * Persist the language the visitor will read.
+ *
+ * `publish_workspace_onboarding` has no locale parameter, and the funnel
+ * pipeline never wrote `proposal` at all — so every generated intake rendered
+ * in the runtime's default (en-US), including the ones sent to French
+ * independents. The Mission row is the only place the runtime reads the
+ * declaration from (`proposal.defaultLocale`), so it is set here, immediately
+ * after publish and before the link is ever mailed.
+ *
+ * An explicit locale wins; otherwise the locale is left absent, which keeps the
+ * previous "let the visitor choose" behaviour for callers that do not care.
+ */
+async function applyMissionLocale(
+  sb: Supa,
+  missionId: string | null | undefined,
+  locale: SupportedLocale | null | undefined,
+): Promise<void> {
+  if (!missionId) return;
+  // The value arrives as JSON on a machine endpoint, so an unknown locale is
+  // dropped rather than written: a bad declaration would be worse than none.
+  if (!locale || !isSupportedLocale(locale)) return;
+  const wanted = locale;
+
+  const { data, error } = await sb
+    .from("build_missions")
+    .select("proposal")
+    .eq("id", missionId)
+    .maybeSingle();
+  if (error) fail(500, error.message);
+
+  const existing = (data?.proposal ?? null) as Record<string, unknown> | null;
+  const proposal = { ...(existing ?? {}), defaultLocale: wanted };
+
+  const { error: updateError } = await sb
+    .from("build_missions")
+    .update({ proposal: proposal as unknown as Json })
+    .eq("id", missionId);
+  if (updateError) fail(500, updateError.message);
+}
+
+async function publishStep(
+  sb: Supa,
+  row: NonNullable<OnboardingRow>,
+  userId: string,
+  input: HermesProspectInput,
+) {
   if (row.status === "published" && row.mission_id) return row;
   await markStep(sb, row.id, "publish", "draft_ready");
   // Reaching publish without a playbook means draft generation gave up; say so
@@ -840,6 +896,11 @@ async function publishStep(sb: Supa, row: NonNullable<OnboardingRow>, userId: st
 
   const updated = await loadOnboardingById(sb, row.id);
   if (!updated) fail(404, "Prospect funnel disappeared during publish.");
+
+  // Declare the language before the link can be sent: without this the intake
+  // opens in English for a French prospect (see applyMissionLocale).
+  await applyMissionLocale(sb, updated.mission_id, input.locale);
+
   const { error: prospectError } = await sb
     .from("build_workspace_onboarding")
     .update({
@@ -869,7 +930,7 @@ async function processRow(
     step = "generate";
     current = await generateStep(sb, current, userId);
     step = "publish";
-    current = await publishStep(sb, current, userId);
+    current = await publishStep(sb, current, userId, input);
     return toResult(sb, input, current, "published");
   } catch (err) {
     // No playbook attached means the draft never came out of the generator, so

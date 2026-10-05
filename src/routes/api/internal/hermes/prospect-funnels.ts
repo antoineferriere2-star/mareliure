@@ -3,6 +3,7 @@ import { z } from "zod";
 import { admin } from "@/build/services/adminAuth.server";
 import { runHermesProspectFunnelBatch } from "@/build/services/hermesProspectFunnels.server";
 import { ServerFnError } from "@/build/services/serverError";
+import { SUPPORTED_LOCALES } from "@/build/i18n/locales";
 
 const MAX_BODY_BYTES = 24 * 1024;
 
@@ -12,6 +13,9 @@ const prospectInput = z.object({
   businessType: z.string().trim().max(80).optional().nullable(),
   vertical: z.string().trim().max(80).optional().nullable(),
   product: z.string().trim().max(80).optional().nullable(),
+  // The language the published intake must render in. A French prospect sent
+  // an English form simply does not fill it in, so the caller states the market.
+  locale: z.enum(SUPPORTED_LOCALES).optional().nullable(),
   campaignId: z.string().trim().max(120).optional().nullable(),
   requestId: z.string().trim().min(8).max(80).optional().nullable(),
 });
