@@ -4,7 +4,7 @@
 
 Cette recette est nouvelle, exécutée dans l'application hébergée sur `mareliure-oppe-lot7-qa.aferriere.workers.dev`, base isolée `qwfhebtxeubfmvvdsqdt`, compte Stripe test existant `acct_1UGISJKB3EBc6Slh`. Toutes les identités, prestations, décisions fiscales, références de règlement et étiquettes sont explicitement fictives. Aucun débit réel, virement ou achat d'affranchissement. Elle ne reprend pas comme preuves les recettes annoncées dans la passation.
 
-Les formulaires normaux ont servi à présenter les livres, inviter et choisir l'atelier, accepter les accords et devis, payer, déclarer le suivi, facturer et rapprocher. Les scripts privés lisent ensuite Stripe et la base pour corroborer le résultat ; ils ne fabriquent pas ces paiements ou documents.
+Les parcours normaux ont servi à présenter les livres, inviter et choisir l'atelier, accepter les accords et devis, payer, déclarer le suivi, facturer et rapprocher. Les scripts privés lisent ensuite Stripe et la base pour corroborer le résultat ; ils ne fabriquent pas ces paiements ou documents.
 
 ## Ma Reliure — RL-057
 
@@ -55,3 +55,11 @@ Le lot ne comporte pas de SQL. Les 115 migrations du lot 8 restent en place ; re
 ## Vérification locale et hébergée
 
 Version QA finale `04cb7378-3f9d-4067-85e0-245f48ff1287`. Suite entière finale : 3 618 tests, 291 fichiers, réussis ; TypeScript réussi, lint sans erreur, 19 avertissements préexistants. Les tests de reprise reproduisaient l'échec de confirmation absorbé avant la correction ; ils couvrent désormais les reprises sans double facture/commande, clés de déduplication, marque et lien corrects, alerte en panne, frais Stripe temporairement indisponibles, ainsi que l'interdiction du mode e-mail simulé en Stripe live.
+
+## Publication et dernière inspection des PDF
+
+PR #92 fusionnée après CI verte : merge `a11866d15a073fefe9037314b276feb85a14b4ff`, Worker `3528f090-0c6b-4be0-83e7-c71480df65ce` publié à 100 % le 6 octobre à 16:52:48 UTC. Dix-huit bindings conservés, 115 migrations et offres fermées, quatorze contrôles HTTP réussis. Facture et avoir Fine Bindery réellement téléchargés et inspectés ; le PDF d'avoir a révélé une mention erronée d'annulation intégrale et de remboursement par l'atelier.
+
+Correction publiée par #93, merge `a71f83e77f4b5201abbefc0412f2bf79020d7ef2` : Worker `42570020-0a67-48d0-812a-b05da1a4be70`, 100 %, 17:12:47 UTC. Nouvelle mention limitée au montant de l'avoir et neutre quant à l'acteur du remboursement. Nouveaux téléchargements normaux de l'avoir partiel MR -20 € et intégral FB -289,30 €, rendus et relus visuellement ; montants et factures originales conservés. Suite stable finale 3 618 / 291, CI PR/main vertes. Clients MR/FB sur mobile sans débordement ; réponse atelier effectivement reçue chez le client propre.
+
+La vitrine et les ouvertures de recette ont été remises en état fermé, les seuls secrets e-mail ajoutés sur QA retirés ; les historiques restent disponibles. Version QA après retrait des secrets `d2cdebe0-d28f-41e7-812d-777201e8093f`. Voir [le reçu final](OPPE_FINAL_PUBLICATION_20261006.md) pour la publication, le retour arrière et les dépendances externes.

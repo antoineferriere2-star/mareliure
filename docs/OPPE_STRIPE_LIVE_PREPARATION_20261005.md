@@ -33,6 +33,10 @@ Retour arrière de cette seule configuration : Worker `cbd5667f-3585-495a-addd-8
 
 Dernière vérification locale après correction de l’identité : **277 fichiers, 3 498 tests réussis**, avec deux workers et délai de 60 secondes ; TypeScript sans erreur. Aucun code applicatif modifié.
 
+## Actualisation du 6 octobre 2026
+
+Le socle Accounts v2 et la reprise des Checkout en échec sont désormais publiés ; la recette B complète et de nouvelles recettes A sont exécutées dans l'application. Le compte connecté existant reste réutilisé, avec 14 exigences test et capacités restreintes : succès C hébergé non attesté. Ce document conserve les vérifications live datées du 5 octobre ; les tâches de code et recette qui y étaient annoncées restent historiques. Voir [le bilan final](OPPE_FINAL_PUBLICATION_20261006.md) pour la version active et les seules dépendances encore non résolues.
+
 ## Identité publique corrigée et relue
 
 Identité publique corrigée dans le Dashboard et relue par l’API : nom Ma Reliure / Fine Bindery, descripteur `OPPE RELIURE`, préfixe `OPPE`, support `contact@oppe.fr`, site et URL de support `https://mareliure.fr`, description reliure/restauration et outil atelier. Le MCC `5734` reste inchangé et à qualifier auprès de Stripe.
