@@ -36,3 +36,6 @@ Sources : BOFiP BOI-TVA-LIQ-30-10-40 (version du 21/08/2024) ; BOI-TVA-CHAMP-20-
 4. Fine Bindery : particulier UE ou hors UE (travail exécuté en France, art. 259 A), professionnel, réexportation après travaux et justificatifs.
 5. Atelier en franchise en base facturant Oppe : effet sur la marge et sur la TVA déductible d'Oppe.
 6. Avoirs et remboursements partiels : ventilation par taux.
+7. Abonnement B à 15 € HT/mois : qualification fiscale, taux et catégorie Stripe Tax applicables, pays concernés et immatriculations nécessaires. La création du prix hors taxe ne vaut pas approbation fiscale.
+8. Frais plateforme C de 3 % du TTC encaissé : qualification et facturation de la prestation Oppe à l’atelier, assiette et traitement de TVA ; distinguer les frais de traitement facturés par Stripe.
+9. Configuration Stripe Tax existante : statut actif mais aucune immatriculation enregistrée, catégorie par défaut `txcd_10202000`. Confirmer par écrit les changements requis avant ouverture de B/C.
