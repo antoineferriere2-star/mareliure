@@ -11,7 +11,7 @@ describe("matrice fiscale (suggestions à valider)", () => {
     }
     expect(TAX_MATRIX.book_binding.suggestedRateBps).toBe(550);
     expect(TAX_MATRIX.book_repair_restoration.suggestedRateBps).toBe(2000);
-    expect(SHIPPING_SUGGESTION.caveat).toMatch(/à faire valider/);
+    expect(SHIPPING_SUGGESTION.caveat).toMatch(/reste à qualifier/);
     expect(TAX_QUESTIONS_FOR_ACCOUNTANT.length).toBeGreaterThanOrEqual(6);
     expect(isServiceTaxCategory("book_binding")).toBe(true);
     expect(isServiceTaxCategory("n'importe quoi")).toBe(false);

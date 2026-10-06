@@ -1,6 +1,10 @@
-# TVA des prestations Oppe — matrice à faire valider (5 octobre 2026)
+# TVA des prestations Oppe — approbation administrative du 6 octobre 2026
 
-**Statut : suggestions techniques, pas une position fiscale.** Aucun taux n'est appliqué automatiquement.
+**Statut : taux déjà configurés approuvés par le propriétaire le 6 octobre 2026.**
+Décision `oppe-administrative-tax-2026-10-06`, consignée sur instruction directe du propriétaire.
+Elle ne constitue pas une validation obtenue d'un expert-comptable ou d'un juriste.
+Elle couvre les valeurs de la matrice ci-dessous, sans inventer de régime, de taux supplémentaire
+ou d'immatriculation. Aucun taux n'est appliqué automatiquement à un ouvrage non qualifié.
 Un devis Oppe ne peut être envoyé au client qu'après une décision d'administration qui qualifie la
 prestation, fixe le taux de chaque ligne et la justifie (conservée avec l'auteur et la date). Les
 propositions et factures historiques ne sont pas modifiées.
@@ -16,9 +20,9 @@ propositions et factures historiques ne sont pas modifiées.
 | Avoirs | Ventilés proportionnellement aux lignes de la facture, au taux de chaque ligne | `marketplace_issue_oppe_credit_note` |
 | Fine Bindery | Pays de facturation saisi par le client, cohérent avec le pays de taxation ; catégories UE / hors UE / réexportation à décision manuelle | `taxPolicy.ts` |
 
-## Suggestions de la matrice (à confirmer)
+## Taux de la matrice approuvés administrativement
 
-| Prestation | Taux suggéré | Source officielle | Réserve |
+| Prestation | Taux approuvé | Source officielle | Réserve de qualification |
 | --- | --- | --- | --- |
 | Reliure d'un livre (au sens fiscal) | 5,5 % | BOI-TVA-LIQ-30-10-40 § 150 | Seulement si l'ouvrage répond aux quatre critères du livre (§ 10) |
 | Réparation, restauration, conservation d'un livre | 20 % | § 180 | Frontière avec la reliure à qualifier au cas par cas |
@@ -28,7 +32,20 @@ propositions et factures historiques ne sont pas modifiées.
 Sources : BOFiP BOI-TVA-LIQ-30-10-40 (version du 21/08/2024) ; BOI-TVA-CHAMP-20-50-40 et art. 259 A du CGI
 (travaux sur biens meubles corporels pour un non-assujetti, imposables au lieu d'exécution matérielle).
 
-## Questions pour l'expert-comptable
+## Exceptions B/C constatées en live le 6 octobre 2026
+
+- B : prix existant `price_1UNGCtK0Q47WbZPfij57EdX6`, 1 500 centimes EUR mensuels,
+  TVA exclusive. Produit `oppe_workshop_subscription_v1` sans code fiscal ; Stripe Tax actif
+  mais **zéro immatriculation**. Aucun taux effectif d'abonnement n'est défini. Le montant de
+  18 € TTC utilisé dans la recette Stripe test est issu d'une configuration fictive et ne devient
+  pas un taux live par cette approbation. Montant TTC live : **non déterminé**.
+- C : 3 % du TTC encaissé est le tarif plateforme, pas un taux de TVA. Aucun taux ni traitement
+  HT/TTC des frais plateforme n'est défini. Sur 100 € encaissés, les frais sont 3 € ; leur ventilation
+  fiscale reste non définie. Les frais Stripe sont distincts et à la charge de l'atelier.
+- Ces exceptions ne suspendent pas l'approbation des taux A déjà configurés. Les taux, pays et
+  catégories non définis ne sont ni complétés ni approuvés par supposition.
+
+## Questions conservées pour un avis professionnel éventuel
 
 1. Taux applicable à la revente par Oppe d'une reliure, d'une restauration, d'une réparation et d'un étui, ligne par ligne.
 2. Transport : base distincte ou accessoire de la prestation principale.

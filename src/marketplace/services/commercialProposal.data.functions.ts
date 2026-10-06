@@ -34,6 +34,7 @@ import {
   validateTaxPolicySelection,
 } from "@/marketplace/commercial/taxPolicy";
 import { SERVICE_TAX_CATEGORIES, computeLineTax } from "@/marketplace/commercial/taxMatrix";
+import { administrativeRateApproval } from "@/marketplace/commercial/administrativeTaxApproval";
 import { getPaymentPreflight as loadPaymentPreflight } from "@/marketplace/stripe/paymentPreflight.server";
 import { loadCaseContext } from "./caseRepository.server";
 import { ROUND_TRIP_HT_CENTS, ROUND_TRIP_PRODUCT, logisticsErrorCode } from "@/marketplace/shipping/logisticsPlan";
@@ -515,6 +516,12 @@ export async function validateOppeProposalTaxCore(context: AdminCallContext, dat
       proposal_id: updated.id, tax_policy: taxPolicy, tax_country: updated.taxCountry, service_tax_category: data.serviceTaxCategory,
       service_vat_rate_bps: data.serviceVatRateBps, shipping_vat_rate_bps: data.shippingVatRateBps, justification: data.justification,
       total_ttc_cents: tax.totalTtcCents,
+      administrative_rate_approval: administrativeRateApproval({
+        category: data.serviceTaxCategory,
+        serviceRateBps: data.serviceVatRateBps,
+        shippingCents: proposal.shippingTotalCents,
+        shippingRateBps: data.shippingVatRateBps,
+      }),
     },
   });
   return updated;
