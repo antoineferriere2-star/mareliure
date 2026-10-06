@@ -4,7 +4,10 @@ import { useServerFn } from "@tanstack/react-start";
 import {
   getWorkshopPublicPayment,
   createPublicWorkshopCheckout,
+  getWorkshopPublicInvoicePdf,
+  getWorkshopPublicCreditPdf,
 } from "@/marketplace/services/workshopOnlinePayment.data.functions";
+import { downloadPdf } from "@/marketplace/quotes/quoteFormat";
 export const Route = createFileRoute("/reglement-atelier/$token")({
   head: () => ({
     meta: [
@@ -19,6 +22,16 @@ function Payment() {
   const { token } = Route.useParams();
   const load = useServerFn(getWorkshopPublicPayment);
   const checkout = useServerFn(createPublicWorkshopCheckout);
+  const invoice = useServerFn(getWorkshopPublicInvoicePdf);
+  const credit = useServerFn(getWorkshopPublicCreditPdf);
+  const creditPdf = useMutation({
+    mutationFn: (creditId: string) => credit({ data: { token, creditId } }),
+    onSuccess: ({ filename, base64 }) => downloadPdf(filename, base64),
+  });
+  const pdf = useMutation({
+    mutationFn: () => invoice({ data: { token } }),
+    onSuccess: ({ filename, base64 }) => downloadPdf(filename, base64),
+  });
   const query = useQuery({
     queryKey: ["workshop-payment", token],
     queryFn: () => load({ data: { token } }),
@@ -50,6 +63,31 @@ function Payment() {
             L’atelier est le vendeur de la prestation et émet votre facture. Le paiement est traité
             par Stripe pour son compte.
           </p>
+          <button className="underline" disabled={pdf.isPending} onClick={() => pdf.mutate()}>
+            {pdf.isPending
+              ? "Préparation de la facture…"
+              : "Télécharger la facture de votre atelier"}
+          </button>
+          {p.receiptUrl && (
+            <a className="block underline" href={p.receiptUrl} target="_blank" rel="noreferrer">
+              Consulter le reçu Stripe
+            </a>
+          )}
+          {p.credits.map((note) => (
+            <button
+              key={note.id}
+              className="block underline"
+              disabled={creditPdf.isPending}
+              onClick={() => creditPdf.mutate(note.id)}
+            >
+              Télécharger l’avoir {note.credit_note_number}
+            </button>
+          ))}
+          {pdf.isError && (
+            <p role="alert">
+              La facture n’a pas pu être téléchargée. Réessayez ou contactez votre atelier.
+            </p>
+          )}
           {p.status === "paid" || p.status === "refunded" ? (
             <p role="status">
               Paiement confirmé.
@@ -57,7 +95,7 @@ function Payment() {
             </p>
           ) : p.status === "processing" ? (
             <p role="status">Paiement en cours de confirmation.</p>
-          ) : (
+          ) : !p.canPay ? <p role="status">Le paiement en ligne est indisponible. Contactez votre atelier.</p> : (
             <button
               className="rounded bg-stone-900 px-5 py-3 text-white"
               disabled={action.isPending}

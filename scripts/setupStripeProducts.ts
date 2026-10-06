@@ -88,7 +88,7 @@ async function main() {
   if (!secretKey) {
     throw new Error("STRIPE_SECRET_KEY manquant dans l'environnement — voir .env.example.");
   }
-  const stripe = new Stripe(secretKey, { apiVersion: "2026-06-24.dahlia" });
+  const stripe = new Stripe(secretKey, { apiVersion: "2026-06-24.dahlia" as Stripe.LatestApiVersion });
 
   const actual = await stripe.accounts.retrieveCurrent();
   const expectedAccountId = process.env.STRIPE_EXPECTED_ACCOUNT_ID ?? null;

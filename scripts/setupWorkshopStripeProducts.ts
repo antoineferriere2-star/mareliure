@@ -20,7 +20,7 @@ if (!key?.startsWith(mode === "live" ? "sk_live_" : "sk_test_"))
   throw new Error("La clé Stripe ne correspond pas au mode demandé.");
 const expected = mode === "live" ? "acct_1UGI34K0Q47WbZPf" : "acct_1UGISJKB3EBc6Slh";
 const stripe = new Stripe(key, {
-  apiVersion: "2026-06-24.dahlia",
+  apiVersion: "2026-09-30.endive",
   httpClient: Stripe.createFetchHttpClient(),
 });
 try {

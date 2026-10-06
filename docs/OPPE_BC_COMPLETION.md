@@ -2,6 +2,8 @@
 
 ## Périmètre et état
 
+Suite du 6 octobre : PR #89 fusionnée (`4eebb775`), adaptation Accounts v2 et branchements du lot 7 en cours de publication. Les preuves et limites actuelles figurent dans [le journal du lot 7](OPPE_LOT7_CONNECTED_JOURNEYS_20261006.md). Les paragraphes de recette du lot 6 restent des preuves historiques distinctes.
+
 Le propriétaire a demandé de poursuivre tous les chantiers à la suite de la passation.
 Branche : `feat/oppe-b-c-completion`, base `43f9110` (PR #85 fusionnée).
 Suite publiée : code applicatif `13f18d6`, Worker `cbd5667f`, 107 migrations. Voir [le journal de publication attesté](OPPE_LOT6_PUBLICATION_20261005.md).
@@ -12,7 +14,7 @@ Cette suite ajoute B, la vitrine commune, les avoirs partiels B, le socle C, le 
 ## B — abonnement
 
 - 15 € HT/mois ; compte et catalogue Stripe marketplace distincts du Billing Métré.
-- Tous les ateliers présents à la migration sont gratuits. Les ateliers créés pendant la fermeture bénéficient également de la gratuité.
+- Les quatre ateliers historiques conservent leur gratuité. Le lot 7 retire l'attribution automatique de la gratuité aux nouveaux ateliers ; leur accès historique en lecture reste indépendant des droits de création.
 - Accord explicite du propriétaire enregistré avant Checkout, avec date et version des conditions. Une tentative abandonnée conserve la gratuité ; celle-ci cesse à l'activation de l'abonnement accepté.
 - Checkout réservé et idempotent, un seul abonnement actif par atelier ; portail Stripe pour factures et résiliation.
 - Webhooks signés et journal commun avec reprise des échecs. Relecture de l'abonnement chez Stripe, prix fixe vérifié, garde sur client Stripe et événement ancien.
@@ -36,12 +38,12 @@ Choix : [paiements directs Stripe Connect](https://docs.stripe.com/connect/direc
 
 - Consentement du propriétaire aux conditions et aux 3 % du TTC encaissé, onboarding et contrôle réel des capacités Stripe.
 - Facture atelier émise, sans acompte pour cette première version, ouvrage `mon_client` ou `workshop_platform`. Les commandes Oppe sont refusées.
-- Lien client à secret de 256 bits, empreinte seule en base, durée 30 jours ; montant et frais calculés côté serveur. Pas d'envoi de message automatique par ce chantier.
+- Lien client à secret de 256 bits, empreinte pour la recherche et copie chiffrée pour la reprise par le propriétaire, durée 30 jours renouvelable ; montant et frais calculés côté serveur. La facture et les avoirs émis restent consultables sur le lien existant après fermeture de l'offre.
 - Paiement asynchrone conservé en attente. Montant, devise, session, compte connecté, atelier, facture et frais rapprochés avant confirmation.
 - Règlement déclaré et encaissement traité séparés ; la base interdit d'insérer une déclaration sur une facture réservée à Connect.
 - Remboursement demandé à partir d'un avoir, frais d'application remboursés proportionnellement ; idempotence par avoir et recherche Stripe avant reprise. Un remboursement extérieur sans avoir rapproché est signalé et bloque la suite.
 - Webhook dédié `/api/marketplace/connect-webhook`, secret `STRIPE_CONNECT_WEBHOOK_SECRET`, événements Checkout, PaymentIntent, remboursements et litiges. Ne pas remplacer le secret du webhook A.
-- Les Checkout complétés en attente de rapprochement ne permettent pas un second encaissement. Les paiements refusés après Checkout complété nécessitent pour l'instant une reprise d'exploitation avant nouvelle tentative.
+- Les Checkout complétés en attente de rapprochement ne permettent pas un second encaissement. Le lot 7 permet une nouvelle tentative après relecture d'un échec terminal chez Stripe et annulation idempotente du PaymentIntent encore réutilisable ; il interdit la reprise sur paiement en traitement, réussi ou inconnu.
 
 **À éprouver avant ouverture :** onboarding réel d'un atelier, succès/refus/asynchrone avec Stripe test et application hébergée, portail, remboursements partiel/total, litige, e-mails, reçus et comptabilisation des frais. Les tests automatisés ne remplacent pas cette recette.
 

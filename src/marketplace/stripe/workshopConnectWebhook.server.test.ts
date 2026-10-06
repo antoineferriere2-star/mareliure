@@ -6,10 +6,17 @@ const h = vi.hoisted(() => ({
   processed: vi.fn(),
   failed: vi.fn(),
   process: vi.fn(),
+  parse: vi.fn(),
+  refresh: vi.fn(),
+  guard: vi.fn(),
 }));
 vi.mock("@/build/services/adminAuth.server", () => ({ admin: async () => ({}) }));
 vi.mock("./stripeClient.server", () => ({
-  getMarketplaceStripeClient: () => ({ webhooks: { constructEventAsync: h.construct } }),
+  getMarketplaceStripeClient: () => ({
+    webhooks: { constructEventAsync: h.construct },
+    parseEventNotificationAsync: h.parse,
+  }),
+  assertExpectedStripeAccount: h.guard,
 }));
 vi.mock("@/marketplace/services/stripeWebhookLog.server", () => ({
   claimWebhookEvent: h.claim,
@@ -17,15 +24,17 @@ vi.mock("@/marketplace/services/stripeWebhookLog.server", () => ({
   markWebhookEventFailed: h.failed,
 }));
 vi.mock("./workshopOnlinePayment.server", () => ({ processWorkshopConnectEvent: h.process }));
+vi.mock("./binderConnect.server", () => ({ refreshWorkshopConnectAccountById: h.refresh }));
 const request = (signature = true) =>
   new Request("https://qa.invalid/api/marketplace/connect-webhook", {
     method: "POST",
     headers: signature ? { "stripe-signature": "qa" } : {},
-    body: "qa",
+    body: "{}",
   });
 beforeEach(() => {
   vi.clearAllMocks();
   process.env.STRIPE_CONNECT_WEBHOOK_SECRET = "qa";
+  delete process.env.STRIPE_CONNECT_V2_WEBHOOK_SECRET;
   h.construct.mockResolvedValue({
     id: "evt_qa",
     type: "payment_intent.succeeded",
@@ -54,5 +63,22 @@ describe("webhook Connect signé et rejouable", () => {
     expect(h.failed).toHaveBeenCalled();
     h.claim.mockResolvedValue({ outcome: "in_progress" });
     expect((await handleWorkshopConnectWebhook(request())).status).toBe(409);
+  });
+  it("vérifie la signature v2 et relit le compte sans traiter un paiement de la plateforme", async () => {
+    process.env.STRIPE_CONNECT_V2_WEBHOOK_SECRET = "qa_v2";
+    h.construct.mockRejectedValue(new Error("other_secret"));
+    const fetched = vi.fn().mockResolvedValue({ id: "evt_v2", type: "v2.core.account.updated" });
+    h.parse.mockResolvedValue({
+      id: "evt_v2",
+      type: "v2.core.account.updated",
+      related_object: { id: "acct_seller", type: "v2.core.account" },
+      fetchEvent: fetched,
+    });
+    expect((await handleWorkshopConnectWebhook(request())).status).toBe(200);
+    expect(h.refresh).toHaveBeenCalledWith({}, "acct_seller");
+    expect(h.process).not.toHaveBeenCalled();
+    h.claim.mockResolvedValue({ outcome: "already_processed" });
+    await handleWorkshopConnectWebhook(request());
+    expect(fetched).toHaveBeenCalledTimes(1);
   });
 });

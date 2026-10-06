@@ -12,6 +12,9 @@ import {
   workshopCanCreate,
   workshopOrigin,
 } from "@/marketplace/billing/workshopSubscription";
+import { recoverWorkshopCheckout } from "@/marketplace/stripe/checkoutRecovery.server";
+import { notifyWorkshop } from "@/marketplace/notifications/workshopNotices.server";
+import { findWorkshopCustomerAccount } from "@/marketplace/stripe/workshopAccountRecovery.server";
 
 export async function workshopBillingOwner(sb: Supa, userId: string) {
   const member = await findActiveBinderMembership(sb, userId);
@@ -37,14 +40,28 @@ export async function loadWorkshopSubscription(sb: Supa, binderId: string) {
 export async function createWorkshopCheckout(sb: Supa, userId: string, accepted: boolean) {
   if (!accepted) fail(400, "Votre accord explicite aux conditions de l’abonnement est requis.");
   const binderId = await workshopBillingOwner(sb, userId);
-  if (process.env.WORKSHOP_SUBSCRIPTION_TAX_APPROVED !== "true")
+  const workshop = await sb
+    .from("marketplace_binders")
+    .select("country_code")
+    .eq("id", binderId)
+    .single();
+  if (workshop.error) throw workshop.error;
+  if (workshop.data.country_code !== "FR")
+    fail(409, "L’abonnement n’est pas encore ouvert dans votre pays.");
+  if (
+    process.env.WORKSHOP_SUBSCRIPTION_TAX_APPROVED !== "true" ||
+    !process.env.WORKSHOP_SUBSCRIPTION_TAX_CODE
+  )
     fail(503, "La configuration fiscale de l’abonnement reste à valider.");
+  if (process.env.WORKSHOP_SUBSCRIPTION_LEGAL_APPROVED !== "true")
+    fail(503, "Les conditions de l’abonnement restent à valider.");
   await assertExpectedStripeAccount();
   const stripe = getMarketplaceStripeClient();
   const { data: prices } = await stripe.prices.list({
     lookup_keys: [WORKSHOP_PRICE_LOOKUP_KEY],
     active: true,
     limit: 2,
+    expand: ["data.product"],
   });
   const price = prices[0];
   if (
@@ -56,6 +73,62 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
     price.recurring.interval_count !== 1
   ) {
     fail(503, "Le prix de l’abonnement n’est pas configuré.");
+  }
+  const product =
+    typeof price.product === "object" && !price.product.deleted ? price.product : null;
+  const taxCode =
+    product && (typeof product.tax_code === "string" ? product.tax_code : product.tax_code?.id);
+  const [taxSettings, registrations] = await Promise.all([
+    stripe.tax.settings.retrieve(),
+    stripe.tax.registrations.list({ status: "active", limit: 100 }),
+  ]);
+  if (
+    taxCode !== process.env.WORKSHOP_SUBSCRIPTION_TAX_CODE ||
+    taxSettings.status !== "active" ||
+    !registrations.data.some((registration) => registration.country === "FR")
+  )
+    fail(503, "La configuration fiscale de l’abonnement reste à valider.");
+  const current = await loadWorkshopSubscription(sb, binderId);
+  if (!current.settings.subscription_open)
+    fail(409, "L’abonnement payant n’est pas encore ouvert.");
+  let previousSession = current.subscription.checkout_session_id;
+  if (!previousSession && current.subscription.checkout_expires_at) {
+    const recovered = await recoverWorkshopCheckout(
+      stripe,
+      current.subscription.checkout_expires_at,
+      { activity: "workshop_subscription", binder_id: binderId },
+    );
+    if (recovered) {
+      const saved = await sb
+        .from("marketplace_binder_subscriptions")
+        .update({ checkout_session_id: recovered.id })
+        .eq("binder_id", binderId)
+        .eq("checkout_expires_at", current.subscription.checkout_expires_at)
+        .is("checkout_session_id", null);
+      if (saved.error) throw saved.error;
+      previousSession = recovered.id;
+    }
+  }
+  if (previousSession) {
+    const previous = await stripe.checkout.sessions.retrieve(previousSession);
+    if (previous.status === "open" && previous.url) return { url: previous.url };
+    let reason: "expired" | "subscription_ended" | null =
+      previous.status === "expired" ? "expired" : null;
+    const subId =
+      typeof previous.subscription === "string" ? previous.subscription : previous.subscription?.id;
+    if (previous.status === "complete" && subId) {
+      const subscription = await stripe.subscriptions.retrieve(subId);
+      if (["canceled", "incomplete_expired"].includes(subscription.status))
+        reason = "subscription_ended";
+    }
+    if (!reason)
+      fail(409, "Le paiement est en cours de rapprochement. Réessayez dans quelques instants.");
+    const released = await sb.rpc("marketplace_release_workshop_subscription_checkout", {
+      p_binder_id: binderId,
+      p_session_id: previousSession,
+      p_reason: reason!,
+    });
+    if (released.error) throw released.error;
   }
   const { data, error } = await sb.rpc("marketplace_reserve_workshop_checkout", {
     p_binder_id: binderId,
@@ -75,10 +148,25 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   }
   let customer = reserved.stripe_customer_id;
   if (!customer) {
-    const created = await stripe.customers.create(
-      { metadata: { binder_id: binderId, activity: "workshop_subscription" } },
-      { idempotencyKey: `workshop-customer-${binderId}` },
-    );
+    const binder = await sb
+      .from("marketplace_binders")
+      .select("stripe_account_id")
+      .eq("id", binderId)
+      .single();
+    if (binder.error) throw binder.error;
+    const customerAccountId =
+      binder.data.stripe_account_id ?? (await findWorkshopCustomerAccount(binderId));
+    const created = customerAccountId
+      ? await stripe.v2.core.accounts.update(customerAccountId, {
+          configuration: { customer: {} },
+        })
+      : await stripe.v2.core.accounts.create(
+          {
+            configuration: { customer: {} },
+            metadata: { binder_id: binderId, activity: "workshop_subscription" },
+          },
+          { idempotencyKey: `workshop-customer-${binderId}` },
+        );
     customer = created.id;
     const saved = await sb
       .from("marketplace_binder_subscriptions")
@@ -94,8 +182,9 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   const origin = workshopOrigin();
   const session = await stripe.checkout.sessions.create(
     {
-      customer,
+      ...(customer.startsWith("acct_") ? { customer_account: customer } : { customer }),
       mode: "subscription",
+      integration_identifier: "oppe_workshop_subscription_cfjmkpwa",
       line_items: [{ price: price.id, quantity: 1 }],
       automatic_tax: { enabled: true },
       billing_address_collection: "required",
@@ -112,7 +201,9 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   const saved = await sb
     .from("marketplace_binder_subscriptions")
     .update({ checkout_session_id: session.id })
-    .eq("binder_id", binderId);
+    .eq("binder_id", binderId)
+    .eq("checkout_expires_at", reserved.checkout_expires_at)
+    .is("checkout_session_id", null);
   if (saved.error) throw saved.error;
   if (!session.url) throw new Error("checkout_url_missing");
   return { url: session.url };
@@ -141,6 +232,7 @@ export async function syncWorkshopSubscriptionEvent(
     subscriptionId = typeof sub === "string" ? sub : (sub?.id ?? null);
   }
   if (!subscriptionId) return false;
+  await assertExpectedStripeAccount();
   // Relecture Stripe : les événements peuvent arriver hors ordre.
   const subscription = await getMarketplaceStripeClient().subscriptions.retrieve(subscriptionId);
   if (subscription.metadata.activity !== "workshop_subscription") return false;
@@ -149,23 +241,126 @@ export async function syncWorkshopSubscriptionEvent(
   if (
     subscription.items.data.length !== 1 ||
     item.price.lookup_key !== WORKSHOP_PRICE_LOOKUP_KEY ||
-    item.quantity !== 1
+    item.quantity !== 1 ||
+    item.price.currency !== "eur" ||
+    item.price.unit_amount !== 1500 ||
+    item.price.tax_behavior !== "exclusive" ||
+    item.price.recurring?.interval !== "month" ||
+    item.price.recurring.interval_count !== 1
   )
     throw new Error("workshop_subscription_price_mismatch");
+  const customer =
+    subscription.customer_account ??
+    (typeof subscription.customer === "string" ? subscription.customer : subscription.customer?.id);
+  const latestInvoiceId =
+    typeof subscription.latest_invoice === "string"
+      ? subscription.latest_invoice
+      : subscription.latest_invoice?.id;
+  const invoiceId = event.type.startsWith("invoice.")
+    ? (object as Stripe.Invoice).id
+    : typeof subscription.latest_invoice === "string"
+      ? subscription.latest_invoice
+      : subscription.latest_invoice?.id;
+  const invoice = invoiceId
+    ? await getMarketplaceStripeClient().invoices.retrieve(invoiceId)
+    : null;
+  const latestInvoice =
+    invoice?.id === latestInvoiceId
+      ? invoice
+      : latestInvoiceId
+        ? await getMarketplaceStripeClient().invoices.retrieve(latestInvoiceId)
+        : null;
+  for (const checkedInvoice of [invoice, latestInvoice]) {
+    if (!checkedInvoice) continue;
+    const invoiceCustomer =
+      checkedInvoice.customer_account ??
+      (typeof checkedInvoice.customer === "string"
+        ? checkedInvoice.customer
+        : checkedInvoice.customer?.id);
+    const invoiceSub = checkedInvoice.parent?.subscription_details?.subscription;
+    if (
+      invoiceCustomer !== customer ||
+      (typeof invoiceSub === "string" ? invoiceSub : invoiceSub?.id) !== subscription.id ||
+      checkedInvoice.currency !== "eur" ||
+      (checkedInvoice.subtotal_excluding_tax ?? checkedInvoice.subtotal) !== 1500 ||
+      (checkedInvoice.status === "paid" &&
+        (checkedInvoice.total < 1500 ||
+          checkedInvoice.amount_paid !== checkedInvoice.total ||
+          (checkedInvoice.amount_paid_off_stripe ?? 0) > 0))
+    )
+      throw new Error("workshop_subscription_invoice_mismatch");
+  }
+  if (
+    ["active", "trialing"].includes(subscription.status) &&
+    (!latestInvoice || latestInvoice.status !== "paid")
+  )
+    throw new Error("workshop_subscription_payment_not_verified");
+  // The hosted portal can schedule cancel_at instead of setting cancel_at_period_end.
+  // Preserve that effective end date and never extend paid rights beyond it.
+  const scheduledCancellation =
+    subscription.cancel_at_period_end || typeof subscription.cancel_at === "number";
+  const effectivePeriodEnd = Math.min(
+    item.current_period_end,
+    subscription.cancel_at ?? item.current_period_end,
+  );
   const { error } = await sb.rpc("marketplace_sync_workshop_subscription", {
     p_binder_id: binderId,
     p_event_created: event.created,
     p_snapshot: {
       id: subscription.id,
-      customer:
-        typeof subscription.customer === "string"
-          ? subscription.customer
-          : subscription.customer.id,
+      customer,
       status: subscription.status,
-      period_end: new Date(item.current_period_end * 1000).toISOString(),
-      cancel_at_period_end: subscription.cancel_at_period_end,
+      period_end: new Date(effectivePeriodEnd * 1000).toISOString(),
+      cancel_at_period_end: scheduledCancellation,
     },
   });
   if (error) throw error;
+  if (invoice?.status) {
+    const saved = await sb.from("marketplace_workshop_billing_documents").upsert({
+      stripe_invoice_id: invoice.id,
+      binder_id: binderId,
+      stripe_subscription_id: subscription.id,
+      number: invoice.number,
+      status: invoice.status,
+      currency: invoice.currency,
+      total_cents: invoice.total,
+      paid_cents: invoice.amount_paid,
+      invoice_url: invoice.hosted_invoice_url,
+      pdf_url: invoice.invoice_pdf,
+      issued_at: new Date(invoice.created * 1000).toISOString(),
+      updated_at: new Date().toISOString(),
+    });
+    if (saved.error) throw saved.error;
+    if (
+      event.type === "invoice.paid" ||
+      (event.type === "invoice.payment_failed" && invoice.id === latestInvoiceId)
+    ) {
+      const paid = invoice.status === "paid";
+      await notifyWorkshop(sb, {
+        id: `subscription-${invoice.id}-${paid ? "paid" : "failed"}`,
+        binderId,
+        heading: paid
+          ? "Votre facture d’abonnement est disponible"
+          : "Votre paiement d’abonnement demande une action",
+        intro: paid
+          ? "Le paiement est enregistré. Votre facture est disponible dans votre espace atelier."
+          : "Vérifiez votre moyen de paiement dans le portail Stripe de votre atelier.",
+      });
+    }
+  }
+  if (
+    event.type === "customer.subscription.deleted" ||
+    (event.type === "customer.subscription.updated" && scheduledCancellation)
+  ) {
+    await notifyWorkshop(sb, {
+      id: `subscription-${subscription.id}-cancel-${subscription.status === "canceled" ? "effective" : "scheduled"}-${effectivePeriodEnd}`,
+      binderId,
+      heading: "Résiliation de votre abonnement",
+      intro:
+        subscription.status === "canceled"
+          ? "Votre abonnement est terminé. Vos documents historiques restent consultables et téléchargeables."
+          : `Votre abonnement se termine le ${new Date(effectivePeriodEnd * 1000).toLocaleDateString("fr-FR")}. Vos documents historiques restent conservés.`,
+    });
+  }
   return true;
 }

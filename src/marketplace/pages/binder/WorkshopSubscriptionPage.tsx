@@ -41,9 +41,11 @@ export function WorkshopSubscriptionPage() {
         <p className="mt-3">
           {s.legacy_free
             ? "Votre atelier bénéficie de la gratuité. Aucun prélèvement sans votre accord explicite."
-            : canCreate
-              ? "Votre abonnement est actif."
-              : "Votre accès conserve la consultation et le téléchargement des documents historiques. La création de documents et la publication de la vitrine nécessitent un abonnement actif."}
+            : !settings.subscription_open
+              ? "Votre accès est disponible pendant la préparation de l’offre payante. Aucun prélèvement sans votre accord."
+              : canCreate
+                ? "Votre abonnement est actif."
+                : "Votre accès conserve la consultation et le téléchargement des documents historiques. La création de documents et la publication de la vitrine nécessitent un abonnement actif."}
         </p>
         {s.cancel_at_period_end && s.current_period_end && (
           <p className="mt-3">
@@ -105,6 +107,67 @@ export function WorkshopSubscriptionPage() {
           </ErrorNote>
         )}
       </section>
+      {query.data.documents.length > 0 && (
+        <section className={CARD}>
+          <h2 className="font-serif text-xl">Factures d’abonnement</h2>
+          <ul className="mt-4 space-y-3">
+            {query.data.documents.map((document) => (
+              <li key={document.stripe_invoice_id}>
+                <span>
+                  {document.number ?? "Facture Stripe"} ·{" "}
+                  {new Date(document.issued_at).toLocaleDateString("fr-FR")} ·{" "}
+                  {new Intl.NumberFormat("fr-FR", {
+                    style: "currency",
+                    currency: document.currency.toUpperCase(),
+                  }).format(document.total_cents / 100)}{" "}
+                  · {document.status === "paid" ? "Payée" : "À vérifier"}
+                </span>
+                {document.invoice_url && (
+                  <a
+                    className="ml-3 underline"
+                    href={document.invoice_url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Consulter
+                  </a>
+                )}
+                {document.pdf_url && (
+                  <a
+                    className="ml-3 underline"
+                    href={document.pdf_url}
+                    target="_blank"
+                    rel="noreferrer"
+                  >
+                    Télécharger le PDF
+                  </a>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+      {query.data.notices.length > 0 && (
+        <section className={CARD}>
+          <h2 className="font-serif text-xl">Notifications de votre atelier</h2>
+          <ul className="mt-4 space-y-4">
+            {query.data.notices.map((notice) => (
+              <li key={notice.id}>
+                <p className="font-medium">{notice.heading}</p>
+                <p>{notice.intro}</p>
+                {notice.captured_at && (
+                  <p className="text-sm">Recette : e-mail capturé, aucun envoi au destinataire.</p>
+                )}
+                {!notice.sent_at && !notice.captured_at && (
+                  <p className="text-sm">
+                    Notification enregistrée · envoi de l’e-mail à reprendre.
+                  </p>
+                )}
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       <WorkshopConnectPanel open={settings.online_payment_open} isOwner={isOwner} />
     </div>
   );

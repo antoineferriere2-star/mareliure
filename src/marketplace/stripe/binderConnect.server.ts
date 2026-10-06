@@ -1,6 +1,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
+import { findWorkshopCustomerAccount } from "./workshopAccountRecovery.server";
 
 type Supa = SupabaseClient<Database>;
 
@@ -10,12 +11,36 @@ export interface BinderConnectStatus {
   onboarded: boolean;
   chargesEnabled: boolean;
   payoutsEnabled: boolean;
+  requirements: string[];
+  configurationCompatible: boolean;
 }
 
-async function loadBinderEmail(sb: Supa, userId: string | null): Promise<string | null> {
-  if (!userId) return null;
-  const { data } = await sb.auth.admin.getUserById(userId);
-  return data.user?.email ?? null;
+/** Accounts v2 is authoritative; a cached flag never authorizes a charge. */
+export async function readWorkshopConnectAccount(accountId: string) {
+  await assertExpectedStripeAccount();
+  const account = await getMarketplaceStripeClient().v2.core.accounts.retrieve(accountId, {
+    include: ["configuration.merchant", "defaults", "requirements"],
+  });
+  const capabilities = account.configuration?.merchant?.capabilities;
+  const responsibilities = account.defaults?.responsibilities;
+  const chargesEnabled = capabilities?.card_payments?.status === "active";
+  const payoutsEnabled = capabilities?.stripe_balance?.payouts?.status === "active";
+  const configurationCompatible =
+    !account.closed &&
+    account.dashboard === "full" &&
+    responsibilities?.fees_collector === "stripe" &&
+    responsibilities?.losses_collector === "stripe" &&
+    responsibilities?.requirements_collector === "stripe";
+  return {
+    account,
+    chargesEnabled,
+    payoutsEnabled,
+    configurationCompatible,
+    onboarded: chargesEnabled && payoutsEnabled && configurationCompatible,
+    requirements: (account.requirements?.entries ?? [])
+      .filter((entry) => entry.awaiting_action_from === "user")
+      .map((entry) => entry.description),
+  };
 }
 
 /**
@@ -38,27 +63,42 @@ export async function ensureBinderStripeAccount(sb: Supa, binderId: string): Pro
   // Avant tout appel Stripe réel — jamais après.
   await assertExpectedStripeAccount();
 
-  const email = await loadBinderEmail(sb, binder.user_id);
   const stripe = getMarketplaceStripeClient();
-  const account = await stripe.accounts.create(
-    {
-      // Activité C : atelier vendeur, frais Stripe atelier, Dashboard complet.
-      controller: {
-        fees: { payer: "account" },
-        losses: { payments: "stripe" },
-        stripe_dashboard: { type: "full" },
-        requirement_collection: "stripe",
-      },
-      country: "FR",
-      email: email ?? undefined,
-
-      capabilities: { card_payments: { requested: true }, transfers: { requested: true } },
-      metadata: { binder_id: binderId },
+  const subscription = await sb
+    .from("marketplace_binder_subscriptions")
+    .select("stripe_customer_id")
+    .eq("binder_id", binderId)
+    .maybeSingle();
+  if (subscription.error) throw subscription.error;
+  const customerAccountId = subscription.data?.stripe_customer_id?.startsWith("acct_")
+    ? subscription.data.stripe_customer_id
+    : await findWorkshopCustomerAccount(binderId);
+  const parameters = {
+    // Activité C : atelier vendeur, frais Stripe atelier, Dashboard complet.
+    dashboard: "full" as const,
+    defaults: {
+      responsibilities: { fees_collector: "stripe" as const, losses_collector: "stripe" as const },
     },
-    // Idempotent : un retry sur cet appel ne crée jamais un deuxième
-    // Connected Account pour le même atelier.
-    { idempotencyKey: `binder-connect-direct-account-${binderId}` },
-  );
+    configuration: {
+      customer: {},
+      merchant: { capabilities: { card_payments: { requested: true } } },
+    },
+    metadata: { binder_id: binderId },
+  };
+  const account = customerAccountId
+    ? await stripe.v2.core.accounts.update(customerAccountId, parameters, {
+        idempotencyKey: `binder-connect-direct-account-${binderId}`,
+      })
+    : await stripe.v2.core.accounts.create(
+        {
+          ...parameters,
+          identity: { country: "FR" },
+          display_name: binder.workshop_name || binder.display_name,
+        },
+        // Idempotent : un retry sur cet appel ne crée jamais un deuxième
+        // Connected Account pour le même atelier.
+        { idempotencyKey: `binder-connect-direct-account-${binderId}` },
+      );
 
   const { error: updateError } = await sb
     .from("marketplace_binders")
@@ -66,8 +106,15 @@ export async function ensureBinderStripeAccount(sb: Supa, binderId: string): Pro
     .eq("id", binderId)
     .is("stripe_account_id", null);
   if (updateError) throw updateError;
-
-  return account.id;
+  // A concurrent attachment wins: return the stored account, never an orphan.
+  const stored = await sb
+    .from("marketplace_binders")
+    .select("stripe_account_id")
+    .eq("id", binderId)
+    .single();
+  if (stored.error) throw stored.error;
+  if (!stored.data.stripe_account_id) throw new Error("connect_account_not_saved");
+  return stored.data.stripe_account_id;
 }
 
 /** L'URL Stripe où l'atelier termine la configuration de son compte. */
@@ -82,11 +129,16 @@ export async function createBinderOnboardingLink(
   // avant ce garde ; on le repasse ici pour couvrir aussi ce cas.
   await assertExpectedStripeAccount();
   const stripe = getMarketplaceStripeClient();
-  const link = await stripe.accountLinks.create({
+  const link = await stripe.v2.core.accountLinks.create({
     account: accountId,
-    type: "account_onboarding",
-    return_url: input.returnUrl,
-    refresh_url: input.refreshUrl,
+    use_case: {
+      type: "account_onboarding",
+      account_onboarding: {
+        return_url: input.returnUrl,
+        refresh_url: input.refreshUrl,
+        collection_options: { fields: "currently_due" },
+      },
+    },
   });
   return { url: link.url };
 }
@@ -114,26 +166,20 @@ export async function refreshBinderConnectStatus(
       onboarded: false,
       chargesEnabled: false,
       payoutsEnabled: false,
+      configurationCompatible: false,
+      requirements: [],
     };
   }
 
-  await assertExpectedStripeAccount();
-  const stripe = getMarketplaceStripeClient();
-  const account = await stripe.accounts.retrieve(binder.stripe_account_id);
-  const chargesEnabled = !!account.charges_enabled;
-  const payoutsEnabled = !!account.payouts_enabled;
-  const onboarded =
-    chargesEnabled &&
-    payoutsEnabled &&
-    account.controller?.fees?.payer === "account" &&
-    account.controller?.losses?.payments === "stripe";
+  const { chargesEnabled, payoutsEnabled, onboarded, requirements, configurationCompatible } =
+    await readWorkshopConnectAccount(binder.stripe_account_id);
 
   const { error: updateError } = await sb
     .from("marketplace_binders")
     .update({
       stripe_connect_charges_enabled: chargesEnabled,
       stripe_connect_payouts_enabled: payoutsEnabled,
-      ...(onboarded ? { stripe_connect_onboarded_at: new Date().toISOString() } : {}),
+      stripe_connect_onboarded_at: onboarded ? new Date().toISOString() : null,
     })
     .eq("id", binderId);
   if (updateError) throw updateError;
@@ -144,5 +190,18 @@ export async function refreshBinderConnectStatus(
     onboarded,
     chargesEnabled,
     payoutsEnabled,
+    requirements,
+    configurationCompatible,
   };
+}
+
+/** Both snapshot account.updated and Accounts v2 notifications refresh this cache. */
+export async function refreshWorkshopConnectAccountById(sb: Supa, accountId: string) {
+  const binder = await sb
+    .from("marketplace_binders")
+    .select("id")
+    .eq("stripe_account_id", accountId)
+    .maybeSingle();
+  if (binder.error) throw binder.error;
+  if (binder.data) await refreshBinderConnectStatus(sb, binder.data.id);
 }

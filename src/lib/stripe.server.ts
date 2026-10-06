@@ -31,7 +31,8 @@ export function createStripeClient(env: StripeEnv): Stripe {
   }
 
   return new Stripe(connectionApiKey, {
-    apiVersion: "2026-06-24.dahlia",
+    // Preserve the independent Lovable gateway contract when upgrading the SDK.
+    apiVersion: "2026-06-24.dahlia" as Stripe.LatestApiVersion,
     httpClient: Stripe.createFetchHttpClient((input, init) => {
       const url = (input instanceof Request ? input.url : input.toString()).replace(
         "https://api.stripe.com",

@@ -22,7 +22,28 @@ export const getMyWorkshopSubscription = createServerFn({ method: "GET" })
     const member = await findActiveBinderMembership(sb, context.userId);
     if (!member) fail(403, "no_binder");
     const state = await loadWorkshopSubscription(sb, member!.binderId);
-    return { ...state, isOwner: member!.role === "OWNER" };
+    const [documents, notices] = await Promise.all([
+      sb
+        .from("marketplace_workshop_billing_documents")
+        .select("*")
+        .eq("binder_id", member!.binderId)
+        .order("issued_at", { ascending: false })
+        .limit(36),
+      sb
+        .from("marketplace_workshop_notices")
+        .select("id,heading,intro,created_at,sent_at,captured_at")
+        .eq("binder_id", member!.binderId)
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ]);
+    if (documents.error) throw documents.error;
+    if (notices.error) throw notices.error;
+    return {
+      ...state,
+      documents: documents.data,
+      notices: notices.data,
+      isOwner: member!.role === "OWNER",
+    };
   });
 
 export const createMyWorkshopCheckout = createServerFn({ method: "POST" })
@@ -46,7 +67,9 @@ export const createMyWorkshopBillingPortal = createServerFn({ method: "POST" })
     if (!subscription.stripe_customer_id) fail(409, "Aucun abonnement à gérer.");
     await assertExpectedStripeAccount();
     const portal = await getMarketplaceStripeClient().billingPortal.sessions.create({
-      customer: subscription.stripe_customer_id!,
+      ...(subscription.stripe_customer_id!.startsWith("acct_")
+        ? { customer_account: subscription.stripe_customer_id! }
+        : { customer: subscription.stripe_customer_id! }),
       return_url: `${workshopOrigin()}/atelier/abonnement`,
     });
     return { url: portal.url };

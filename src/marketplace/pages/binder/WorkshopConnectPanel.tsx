@@ -1,20 +1,42 @@
-import { useState } from "react";
-import { useMutation } from "@tanstack/react-query";
+import { useEffect, useState } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   refreshMyWorkshopConnect,
   startMyWorkshopConnect,
+  resumeMyWorkshopConnect,
 } from "@/marketplace/services/workshopOnlinePayment.data.functions";
 import { CARD, ErrorNote, PRIMARY_BUTTON } from "./quotes/quoteUi";
 export function WorkshopConnectPanel({ open, isOwner }: { open: boolean; isOwner: boolean }) {
   const [accepted, setAccepted] = useState(false);
   const start = useServerFn(startMyWorkshopConnect);
   const refresh = useServerFn(refreshMyWorkshopConnect);
+  const resume = useServerFn(resumeMyWorkshopConnect);
   const onboarding = useMutation({
     mutationFn: () => start({ data: { accepted: true } }),
     onSuccess: ({ url }) => window.location.assign(url),
   });
-  const status = useMutation({ mutationFn: () => refresh() });
+  const status = useQuery({
+    queryKey: ["workshop", "connect"],
+    queryFn: () => refresh(),
+    enabled: open && isOwner,
+    refetchInterval: open ? 30_000 : false,
+  });
+  const restart = useMutation({
+    mutationFn: () => resume(),
+    onSuccess: ({ url }) => window.location.assign(url),
+  });
+  useEffect(() => {
+    if (
+      open &&
+      isOwner &&
+      new URLSearchParams(window.location.search).get("connect") === "refresh"
+    ) {
+      // Consume the refresh marker once; all authentication/consent checks run on the server.
+      window.history.replaceState(null, "", window.location.pathname);
+      restart.mutate();
+    }
+  }, [open, isOwner]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <section className={CARD}>
       <h2 className="font-serif text-xl">Paiements de vos clients</h2>
@@ -52,18 +74,47 @@ export function WorkshopConnectPanel({ open, isOwner }: { open: boolean; isOwner
             <button
               className={`${PRIMARY_BUTTON} ml-3`}
               disabled={status.isPending}
-              onClick={() => status.mutate()}
+              onClick={() => void status.refetch()}
             >
               Vérifier la configuration
             </button>
             {status.data && (
-              <p role="status">
-                {status.data.onboarded
-                  ? "Compte prêt pour les paiements de vos clients."
-                  : "La configuration Stripe reste à compléter ou le type de compte doit être adapté."}
-              </p>
+              <div role="status">
+                <p>
+                  {status.data.onboarded
+                    ? "Compte prêt pour les paiements de vos clients."
+                    : "La configuration Stripe reste à compléter ou le type de compte doit être adapté."}
+                </p>
+                {status.data.requirements.length > 0 && (
+                  <p className="mt-3">
+                    Stripe demande des informations complémentaires. Complétez-les dans le parcours
+                    sécurisé Stripe.
+                  </p>
+                )}
+                {status.data.stripeAccountId && (
+                  <div className="mt-3 flex flex-wrap gap-3">
+                    {!status.data.onboarded && (
+                      <button
+                        className={PRIMARY_BUTTON}
+                        disabled={restart.isPending}
+                        onClick={() => restart.mutate()}
+                      >
+                        Reprendre la configuration
+                      </button>
+                    )}
+                    <a
+                      className="underline"
+                      href="https://dashboard.stripe.com/"
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      Ouvrir mon espace Stripe
+                    </a>
+                  </div>
+                )}
+              </div>
             )}
-            {(status.isError || onboarding.isError) && (
+            {(status.isError || onboarding.isError || restart.isError) && (
               <ErrorNote>
                 La configuration Stripe n’a pas abouti. Réessayez ou contactez Oppe.
               </ErrorNote>
