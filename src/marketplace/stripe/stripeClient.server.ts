@@ -9,8 +9,8 @@
  * `price_data` dynamique par construction. La marketplace a besoin des deux,
  * donc de son propre client.
  *
- * NO SANDBOX (décision explicite de l'utilisateur, 16 septembre 2026) :
- * une seule clé, toujours live. `STRIPE_SECRET_KEY` doit être un secret du
+ * Production : clé live dédiée. La recette autorisée utilise une clé test
+ * et un compte attendu distincts, sans débit réel. `STRIPE_SECRET_KEY` reste un secret du
  * Worker Cloudflare (`npx wrangler secret put STRIPE_SECRET_KEY --name
  * mareliure`), jamais commité, jamais dans `.env` versionné.
  *
@@ -38,7 +38,7 @@ export function getMarketplaceStripeClient(): Stripe {
     );
   }
   cached = new Stripe(secretKey, {
-    apiVersion: "2026-06-24.dahlia",
+    apiVersion: "2026-09-30.endive",
     // Le Worker Cloudflare n'a pas les modules Node (`http`/`https`/`net`)
     // dont le SDK Stripe se sert par défaut — sans ce client fetch, les
     // appels échouent au niveau transport, pas au niveau Stripe (constaté :

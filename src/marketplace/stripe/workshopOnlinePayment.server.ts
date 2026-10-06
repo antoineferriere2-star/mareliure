@@ -3,12 +3,24 @@ import type { Supa } from "@/build/services/adminAuth.server";
 import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
 import { workshopOrigin } from "@/marketplace/billing/workshopSubscription";
 import { hashAccessToken, generateAccessToken } from "@/build/services/dossierAccessToken.server";
+import {
+  readWorkshopConnectAccount,
+  refreshWorkshopConnectAccountById,
+} from "./binderConnect.server";
+import { inspectWorkshopCheckout, recoverWorkshopCheckout } from "./checkoutRecovery.server";
+import { notifyWorkshop } from "@/marketplace/notifications/workshopNotices.server";
+import { openWorkshopPaymentToken, sealWorkshopPaymentToken } from "./workshopPaymentToken.server";
 
 export async function createWorkshopInvoicePaymentLink(
   sb: Supa,
   binderId: string,
   invoiceId: string,
 ) {
+  if (!process.env.WORKSHOP_PAYMENT_LINK_KEY) throw new Error("workshop_payment_link_key_missing");
+  const existing = await sb.from("marketplace_workshop_online_payments").select("id,sealed_token")
+    .eq("binder_id", binderId).eq("invoice_id", invoiceId).maybeSingle();
+  if (existing.error) throw existing.error;
+  if (existing.data?.sealed_token) return restoreWorkshopPaymentLink(sb, binderId, existing.data.id, existing.data.sealed_token);
   const token = generateAccessToken();
   const result = await sb.rpc("marketplace_reserve_workshop_online_payment", {
     p_binder_id: binderId,
@@ -17,22 +29,37 @@ export async function createWorkshopInvoicePaymentLink(
     p_expires_at: new Date(Date.now() + 30 * 86400_000).toISOString(),
   });
   if (result.error) throw result.error;
-  const row = result.data as { token_hash: string; id: string; status: string };
-  if (row.token_hash !== (await hashAccessToken(token))) {
+  const row = result.data as { token_hash: string; id: string; status: string; sealed_token: string | null };
+  if (!row.sealed_token) {
+    const sealed = await sealWorkshopPaymentToken(token, binderId, row.id);
     const rotated = await sb
       .from("marketplace_workshop_online_payments")
       .update({
         token_hash: hashAccessToken(token),
         token_expires_at: new Date(Date.now() + 30 * 86400_000).toISOString(),
+        sealed_token: sealed,
       })
       .eq("id", row.id)
       .eq("status", "ready")
+      .eq("token_hash", row.token_hash)
+      .is("sealed_token", null)
       .is("checkout_session_id", null)
       .select("id")
-      .single();
-    if (rotated.error) throw new Error("payment_link_already_in_use");
+      .maybeSingle();
+    if (rotated.error) throw rotated.error;
   }
-  return { url: `${workshopOrigin()}/reglement-atelier/${token}` };
+  const stored = await sb.from("marketplace_workshop_online_payments").select("sealed_token")
+    .eq("id", row.id).eq("binder_id", binderId).single();
+  if (stored.error) throw stored.error;
+  if (!stored.data.sealed_token) throw new Error("payment_link_already_in_use");
+  return restoreWorkshopPaymentLink(sb, binderId, row.id, stored.data.sealed_token);
+}
+async function restoreWorkshopPaymentLink(sb: Supa, binderId: string, paymentId: string, sealed: string) {
+  const access = await openWorkshopPaymentToken(sealed, binderId, paymentId);
+  const extended = await sb.from("marketplace_workshop_online_payments")
+    .update({ token_expires_at: new Date(Date.now() + 30 * 86400_000).toISOString() }).eq("id", paymentId).eq("binder_id", binderId);
+  if (extended.error) throw extended.error;
+  return { url: `${workshopOrigin()}/reglement-atelier/${access}` };
 }
 
 export async function paymentByToken(sb: Supa, token: string) {
@@ -47,32 +74,54 @@ export async function paymentByToken(sb: Supa, token: string) {
 }
 
 export async function assertWorkshopDirectChargeAccount(accountId: string) {
-  await assertExpectedStripeAccount();
-  const account = await getMarketplaceStripeClient().accounts.retrieve(accountId);
-  if (
-    !account.charges_enabled ||
-    !account.payouts_enabled ||
-    account.controller?.fees?.payer !== "account" ||
-    account.controller?.losses?.payments !== "stripe"
-  ) {
+  const status = await readWorkshopConnectAccount(accountId);
+  if (!status.onboarded) {
     throw new Error("connect_direct_charge_account_required");
   }
-  return account;
+  return status.account;
 }
 
 export async function createWorkshopInvoiceCheckout(sb: Supa, token: string) {
+  const settings = await sb.from("marketplace_workshop_offer_settings").select("online_payment_open").eq("id", true).single();
+  if (settings.error) throw settings.error;
+  if (!settings.data.online_payment_open) throw new Error("online_payment_closed");
+  if (process.env.WORKSHOP_CONNECT_LEGAL_APPROVED !== "true")
+    throw new Error("workshop_online_payment_terms_not_approved");
   const row = await paymentByToken(sb, token);
+  if (row.paid_at || !["ready", "failed"].includes(row.status))
+    throw new Error("payment_pending_reconciliation");
   await assertWorkshopDirectChargeAccount(row.stripe_account_id);
   const stripe = getMarketplaceStripeClient();
-  if (row.checkout_session_id) {
-    const previous = await stripe.checkout.sessions.retrieve(
-      row.checkout_session_id,
-      {},
-      { stripeAccount: row.stripe_account_id },
+  const options = { stripeAccount: row.stripe_account_id };
+  if (!row.checkout_session_id && row.checkout_expires_at) {
+    const recovered = await recoverWorkshopCheckout(
+      stripe,
+      row.checkout_expires_at,
+      { activity: "workshop_online_payment", payment_id: row.id },
+      options,
     );
-    if (previous.status === "open" && previous.url) return { url: previous.url };
-    // Un Checkout complété peut rester asynchrone : ne jamais ouvrir un second encaissement.
-    if (previous.status === "complete") throw new Error("payment_pending_reconciliation");
+    if (recovered) {
+      const saved = await sb
+        .from("marketplace_workshop_online_payments")
+        .update({ checkout_session_id: recovered.id })
+        .eq("id", row.id)
+        .eq("checkout_expires_at", row.checkout_expires_at)
+        .is("checkout_session_id", null);
+      if (saved.error) throw saved.error;
+      // Reload after compare-and-set; a concurrent request may have already saved it.
+      return createWorkshopInvoiceCheckout(sb, token);
+    }
+  }
+  if (row.checkout_session_id) {
+    const previous = await inspectWorkshopCheckout(stripe, row.checkout_session_id, options);
+    if (previous.kind === "open") return { url: previous.url };
+    const released = await sb.rpc("marketplace_release_workshop_payment_checkout", {
+      p_payment_id: row.id,
+      p_session_id: row.checkout_session_id,
+      p_intent_id: previous.intentId,
+      p_reason: previous.reason,
+    });
+    if (released.error) throw released.error;
   }
   const result = await sb.rpc("marketplace_reserve_workshop_payment_checkout", {
     p_payment_id: row.id,
@@ -82,7 +131,6 @@ export async function createWorkshopInvoiceCheckout(sb: Supa, token: string) {
     checkout_session_id: string | null;
     checkout_expires_at: string;
   };
-  const options = { stripeAccount: row.stripe_account_id };
   if (reserved.checkout_session_id) {
     const existing = await stripe.checkout.sessions.retrieve(
       reserved.checkout_session_id,
@@ -109,6 +157,7 @@ export async function createWorkshopInvoiceCheckout(sb: Supa, token: string) {
   const session = await stripe.checkout.sessions.create(
     {
       mode: "payment",
+      integration_identifier: "oppe_workshop_payment_kqynvtaz",
       customer_email: invoice.data.client_email ?? undefined,
       line_items: [
         {
@@ -120,7 +169,11 @@ export async function createWorkshopInvoiceCheckout(sb: Supa, token: string) {
           },
         },
       ],
-      payment_intent_data: { application_fee_amount: row.fee_cents, metadata },
+      payment_intent_data: {
+        application_fee_amount: row.fee_cents,
+        metadata,
+        receipt_email: invoice.data.client_email ?? undefined,
+      },
       metadata,
       success_url: `${url}?payment=returned`,
       cancel_url: url,
@@ -131,7 +184,9 @@ export async function createWorkshopInvoiceCheckout(sb: Supa, token: string) {
   const saved = await sb
     .from("marketplace_workshop_online_payments")
     .update({ checkout_session_id: session.id })
-    .eq("id", row.id);
+    .eq("id", row.id)
+    .eq("checkout_expires_at", reserved.checkout_expires_at)
+    .is("checkout_session_id", null);
   if (saved.error) throw saved.error;
   if (!session.url) throw new Error("checkout_url_missing");
   return { url: session.url };
@@ -159,18 +214,60 @@ export async function refundWorkshopInvoice(
     p_credit_note_id: creditId,
   });
   if (reserved.error) throw reserved.error;
-  const r = reserved.data as { amount_cents: number; stripe_refund_id: string | null };
-  if (r.stripe_refund_id) return { id: r.stripe_refund_id };
+  let r = reserved.data as {
+    amount_cents: number;
+    stripe_refund_id: string | null;
+    generation: number;
+  };
+  if (r.stripe_refund_id) {
+    const previous = await getMarketplaceStripeClient().refunds.retrieve(
+      r.stripe_refund_id,
+      {},
+      { stripeAccount: p.stripe_account_id },
+    );
+    if (!["failed", "canceled"].includes(previous.status ?? "")) return { id: previous.id };
+    const priorIntent =
+      typeof previous.payment_intent === "string"
+        ? previous.payment_intent
+        : previous.payment_intent?.id;
+    if (
+      previous.amount !== r.amount_cents ||
+      previous.currency !== p.currency ||
+      priorIntent !== p.payment_intent_id ||
+      previous.metadata?.credit_note_id !== creditId ||
+      previous.metadata.payment_id !== p.id
+    )
+      throw new Error("workshop_refund_mismatch");
+    const released = await sb.rpc("marketplace_retry_workshop_refund", {
+      p_binder_id: binderId,
+      p_credit_note_id: creditId,
+      p_refund_id: previous.id,
+      p_status: previous.status!,
+    });
+    if (released.error) throw released.error;
+    const current = await sb
+      .from("marketplace_workshop_online_refunds")
+      .select("*")
+      .eq("credit_note_id", creditId)
+      .eq("payment_id", p.id)
+      .single();
+    if (current.error) throw current.error;
+    r = current.data;
+    if (r.stripe_refund_id) return { id: r.stripe_refund_id };
+  }
   // Une réponse perdue peut dépasser la durée de rétention des clés d'idempotence Stripe.
   // Rechercher aussi la preuve du remboursement avant de refaire une écriture.
   for await (const prior of getMarketplaceStripeClient().refunds.list(
     { payment_intent: p.payment_intent_id, limit: 100 },
     { stripeAccount: p.stripe_account_id },
   )) {
-    if (prior.metadata?.credit_note_id === creditId) {
+    if (
+      prior.metadata?.credit_note_id === creditId &&
+      !["failed", "canceled"].includes(prior.status ?? "")
+    ) {
       const saved = await sb
         .from("marketplace_workshop_online_refunds")
-        .update({ stripe_refund_id: prior.id })
+        .update({ stripe_refund_id: prior.id, status: prior.status ?? "pending" })
         .eq("credit_note_id", creditId);
       if (saved.error) throw saved.error;
       return { id: prior.id };
@@ -183,11 +280,14 @@ export async function refundWorkshopInvoice(
       refund_application_fee: true,
       metadata: { credit_note_id: creditId, payment_id: paymentId },
     },
-    { stripeAccount: p.stripe_account_id, idempotencyKey: `workshop-refund-${creditId}` },
+    {
+      stripeAccount: p.stripe_account_id,
+      idempotencyKey: `workshop-refund-${creditId}${r.generation ? `-retry-${r.generation}` : ""}`,
+    },
   );
   const saved = await sb
     .from("marketplace_workshop_online_refunds")
-    .update({ stripe_refund_id: refund.id })
+    .update({ stripe_refund_id: refund.id, status: refund.status ?? "pending" })
     .eq("credit_note_id", creditId);
   if (saved.error) throw saved.error;
   return { id: refund.id };
@@ -195,6 +295,11 @@ export async function refundWorkshopInvoice(
 
 export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event) {
   if (!event.account) throw new Error("connect_event_account_required");
+  await assertExpectedStripeAccount();
+  if (event.type === "account.updated") {
+    await refreshWorkshopConnectAccountById(sb, event.account);
+    return;
+  }
   const stripe = getMarketplaceStripeClient();
   const options = { stripeAccount: event.account };
   let intentId: string | null = null;
@@ -211,7 +316,17 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
       .single();
     if (row.error) throw row.error;
     // Relire la session réellement réservée, jamais un montant fourni par le navigateur.
-    if (row.data.checkout_session_id !== session.id) throw new Error("connect_session_mismatch");
+    if (row.data.checkout_session_id !== session.id) {
+      const prior = await sb
+        .from("marketplace_workshop_checkout_attempts")
+        .select("checkout_session_id")
+        .eq("payment_id", row.data.id)
+        .eq("checkout_session_id", session.id)
+        .maybeSingle();
+      if (prior.error) throw prior.error;
+      if (prior.data) return;
+      throw new Error("connect_session_mismatch");
+    }
     intentId =
       typeof session.payment_intent === "string"
         ? session.payment_intent
@@ -250,6 +365,17 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
     .single();
   if (row.error) throw row.error;
   const p = row.data;
+  const prior = await sb
+    .from("marketplace_workshop_checkout_attempts")
+    .select("payment_intent_id")
+    .eq("payment_id", p.id)
+    .eq("payment_intent_id", intent.id)
+    .maybeSingle();
+  if (prior.error) throw prior.error;
+  if (prior.data) {
+    if (intent.status !== "canceled") throw new Error("archived_payment_requires_reconciliation");
+    return;
+  }
   if (!p.checkout_session_id) throw new Error("connect_session_missing");
   const session = await stripe.checkout.sessions.retrieve(p.checkout_session_id, {}, options);
   const sessionIntent =
@@ -274,12 +400,94 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
       .filter((fee) => fee.type === "stripe_fee")
       .reduce((total, fee) => total + fee.amount, 0) ?? null;
   const refunded = charge?.amount_refunded ?? 0;
+  let feeRefunded: number | null = p.fee_refunded_cents;
+  if (charge?.application_fee) {
+    const fee =
+      typeof charge.application_fee === "string"
+        ? await stripe.applicationFees.retrieve(charge.application_fee)
+        : charge.application_fee;
+    if (
+      fee.amount !== p.fee_cents ||
+      fee.currency !== p.currency ||
+      (typeof fee.account === "string" ? fee.account : fee.account.id) !== event.account
+    )
+      throw new Error("connect_fee_mismatch");
+    feeRefunded = fee.amount_refunded;
+  }
+  let disputed = false;
+  let disputeLost = false;
+  const disputeStates: string[] = [];
+  if (charge?.disputed || event.type.startsWith("charge.dispute.")) {
+    for await (const dispute of stripe.disputes.list(
+      { payment_intent: intent.id, limit: 100 },
+      options,
+    )) {
+      if (dispute.currency !== p.currency) throw new Error("connect_dispute_mismatch");
+      disputed ||= [
+        "needs_response",
+        "under_review",
+        "warning_needs_response",
+        "warning_under_review",
+      ].includes(dispute.status);
+      disputeLost ||= dispute.status === "lost";
+      disputeStates.push(`${dispute.id}-${dispute.status}`);
+      const saved = await sb.from("marketplace_workshop_online_disputes").upsert({
+        stripe_dispute_id: dispute.id,
+        payment_id: p.id,
+        status: dispute.status,
+        amount_cents: dispute.amount,
+        currency: dispute.currency,
+        reason: dispute.reason,
+        evidence_due_at: dispute.evidence_details.due_by
+          ? new Date(dispute.evidence_details.due_by * 1000).toISOString()
+          : null,
+        updated_at: new Date().toISOString(),
+      });
+      if (saved.error) throw saved.error;
+    }
+  }
   const refunds = await sb
     .from("marketplace_workshop_online_refunds")
     .select("amount_cents")
     .eq("payment_id", p.id);
   if (refunds.error) throw refunds.error;
-  const accounted = (refunds.data ?? []).reduce((total, r) => total + r.amount_cents, 0);
+  let accounted = 0;
+  if (refunded > 0) {
+    // Match actual refunds to issued credit notes; a reservation is never a refund receipt.
+    for await (const refund of stripe.refunds.list(
+      { payment_intent: intent.id, limit: 100 },
+      options,
+    )) {
+      const metadata = refund.metadata;
+      if (
+        refund.status !== "succeeded" ||
+        refund.currency !== p.currency ||
+        metadata?.payment_id !== p.id ||
+        !metadata.credit_note_id
+      )
+        continue;
+      const credit = await sb
+        .from("marketplace_workshop_online_refunds")
+        .select("amount_cents,stripe_refund_id")
+        .eq("payment_id", p.id)
+        .eq("credit_note_id", metadata.credit_note_id)
+        .maybeSingle();
+      if (credit.error) throw credit.error;
+      if (
+        !credit.data ||
+        credit.data.amount_cents !== refund.amount ||
+        (credit.data.stripe_refund_id && credit.data.stripe_refund_id !== refund.id)
+      )
+        continue;
+      const saved = await sb
+        .from("marketplace_workshop_online_refunds")
+        .update({ stripe_refund_id: refund.id, status: refund.status ?? "pending" })
+        .eq("credit_note_id", metadata.credit_note_id)
+        .eq("payment_id", p.id);
+      if (saved.error) throw saved.error;
+      accounted += refund.amount;
+    }
+  }
   const patch = {
     payment_intent_id: intent.id,
     status:
@@ -294,15 +502,50 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
       ? { paid_at: p.paid_at ?? new Date(event.created * 1000).toISOString() }
       : {}),
     refunded_cents: refunded,
-    disputed: charge?.disputed ?? false,
-    stripe_fee_cents: stripeFees,
-    reconciliation_required: refunded > accounted,
+    disputed,
+    fee_refunded_cents: feeRefunded,
+    receipt_url: charge?.receipt_url ?? p.receipt_url,
+    stripe_fee_cents: stripeFees ?? p.stripe_fee_cents,
+    reconciliation_required: refunded > accounted || disputeLost,
     updated_at: new Date().toISOString(),
   };
   const saved = await sb
     .from("marketplace_workshop_online_payments")
     .update(patch)
     .eq("id", p.id)
-    .lte("refunded_cents", refunded);
+    .eq("checkout_session_id", p.checkout_session_id)
+    .lte("refunded_cents", refunded)
+    .select("id")
+    .maybeSingle();
   if (saved.error) throw saved.error;
+  if (!saved.data) return;
+  if (
+    patch.status === "paid" ||
+    patch.status === "refunded" ||
+    patch.disputed ||
+    patch.status === "failed"
+  ) {
+    await notifyWorkshop(sb, {
+      id: `payment-${p.id}-${intent.id}-${patch.status}-${refunded}-${patch.disputed}-${disputeStates.sort().join("_")}`,
+      binderId: p.binder_id,
+      heading: disputeLost
+        ? "Litige clos : rapprochement à vérifier"
+        : patch.disputed
+          ? "Litige sur un paiement client"
+          : refunded > 0
+            ? "Remboursement client enregistré"
+            : patch.status === "paid"
+              ? "Paiement client confirmé"
+              : "Paiement client échoué",
+      intro: disputeLost
+        ? "Le litige est clos en faveur du client. Le rapprochement comptable demande une vérification."
+        : patch.disputed
+          ? "Consultez le litige dans votre espace Stripe. Le remboursement est suspendu pendant son traitement."
+          : patch.reconciliation_required
+            ? "Le remboursement Stripe demande un rapprochement avec un avoir dans votre atelier."
+            : patch.status === "failed"
+              ? "Votre client peut reprendre le paiement après vérification de la tentative Stripe."
+              : "Le solde de la facture et les frais de paiement sont mis à jour dans votre espace atelier.",
+    });
+  }
 }

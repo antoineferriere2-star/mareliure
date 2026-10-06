@@ -39,6 +39,24 @@ export type Database = {
   }
   public: {
     Tables: {
+      marketplace_workshop_checkout_attempts: {
+        Row: { checkout_session_id: string; payment_id: string | null; binder_id: string; payment_intent_id: string | null; terminal_reason: string; archived_at: string }
+        Insert: { checkout_session_id: string; payment_id?: string | null; binder_id: string; payment_intent_id?: string | null; terminal_reason: string; archived_at?: string }
+        Update: { checkout_session_id?: string; payment_id?: string | null; binder_id?: string; payment_intent_id?: string | null; terminal_reason?: string; archived_at?: string }
+        Relationships: []
+      }
+      marketplace_workshop_billing_documents: {
+        Row: { stripe_invoice_id: string; binder_id: string; stripe_subscription_id: string; number: string | null; status: string; currency: string; total_cents: number; paid_cents: number; invoice_url: string | null; pdf_url: string | null; issued_at: string; updated_at: string }
+        Insert: { stripe_invoice_id: string; binder_id: string; stripe_subscription_id: string; number?: string | null; status: string; currency: string; total_cents: number; paid_cents: number; invoice_url?: string | null; pdf_url?: string | null; issued_at: string; updated_at?: string }
+        Update: Partial<Database["public"]["Tables"]["marketplace_workshop_billing_documents"]["Insert"]>
+        Relationships: []
+      }
+      marketplace_workshop_notices: {
+        Row: { id: string; binder_id: string; heading: string; intro: string; created_at: string; sent_at: string | null; processing_until: string | null; claim_token: string | null; captured_at: string | null; captured_text: string | null }
+        Insert: { id: string; binder_id: string; heading: string; intro: string; created_at?: string; sent_at?: string | null; processing_until?: string | null; claim_token?: string | null; captured_at?: string | null; captured_text?: string | null }
+        Update: Partial<Database["public"]["Tables"]["marketplace_workshop_notices"]["Insert"]>
+        Relationships: []
+      }
       marketplace_workshop_connect_consents: {
         Row: {
           accepted_at: string
@@ -72,11 +90,14 @@ export type Database = {
           currency: string
           disputed: boolean
           fee_cents: number
+          fee_refunded_cents: number | null
           id: string
           invoice_id: string
           paid_at: string | null
           payment_intent_id: string | null
           reconciliation_required: boolean
+          receipt_url: string | null
+          sealed_token: string | null
           refunded_cents: number
           status: string
           stripe_account_id: string
@@ -93,11 +114,14 @@ export type Database = {
           currency: string
           disputed?: boolean
           fee_cents: number
+          fee_refunded_cents?: number | null
           id?: string
           invoice_id: string
           paid_at?: string | null
           payment_intent_id?: string | null
           reconciliation_required?: boolean
+          receipt_url?: string | null
+          sealed_token?: string | null
           refunded_cents?: number
           status?: string
           stripe_account_id: string
@@ -114,11 +138,14 @@ export type Database = {
           currency?: string
           disputed?: boolean
           fee_cents?: number
+          fee_refunded_cents?: number | null
           id?: string
           invoice_id?: string
           paid_at?: string | null
           payment_intent_id?: string | null
           reconciliation_required?: boolean
+          receipt_url?: string | null
+          sealed_token?: string | null
           refunded_cents?: number
           status?: string
           stripe_account_id?: string
@@ -134,6 +161,8 @@ export type Database = {
           amount_cents: number
           created_at: string
           credit_note_id: string
+          generation: number
+          status: string
           payment_id: string
           stripe_refund_id: string | null
         }
@@ -141,6 +170,8 @@ export type Database = {
           amount_cents: number
           created_at?: string
           credit_note_id: string
+          generation?: number
+          status?: string
           payment_id: string
           stripe_refund_id?: string | null
         }
@@ -148,9 +179,17 @@ export type Database = {
           amount_cents?: number
           created_at?: string
           credit_note_id?: string
+          generation?: number
+          status?: string
           payment_id?: string
           stripe_refund_id?: string | null
         }
+        Relationships: []
+      }
+      marketplace_workshop_online_disputes: {
+        Row: { stripe_dispute_id: string; payment_id: string; status: string; amount_cents: number; currency: string; reason: string; evidence_due_at: string | null; updated_at: string }
+        Insert: { stripe_dispute_id: string; payment_id: string; status: string; amount_cents: number; currency: string; reason: string; evidence_due_at?: string | null; updated_at?: string }
+        Update: Partial<Database["public"]["Tables"]["marketplace_workshop_online_disputes"]["Insert"]>
         Relationships: []
       }
 
@@ -4992,6 +5031,15 @@ export type Database = {
         }
         Returns: Json
       }
+      marketplace_release_workshop_payment_checkout: {
+        Args: { p_payment_id: string; p_session_id: string; p_intent_id: string | null; p_reason: string }
+        Returns: undefined
+      }
+      marketplace_release_workshop_subscription_checkout: {
+        Args: { p_binder_id: string; p_session_id: string; p_reason: string }
+        Returns: undefined
+      }
+      marketplace_claim_workshop_notice: { Args: { p_id: string }; Returns: string | null }
       marketplace_reserve_workshop_refund: {
         Args: {
           p_binder_id: string
@@ -4999,6 +5047,10 @@ export type Database = {
           p_credit_note_id: string
         }
         Returns: Json
+      }
+      marketplace_retry_workshop_refund: {
+        Args: { p_binder_id: string; p_credit_note_id: string; p_refund_id: string; p_status: string }
+        Returns: undefined
       }
       marketplace_review_supplier_invoice: {
         Args: {

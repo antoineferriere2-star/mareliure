@@ -17,6 +17,7 @@ export function OnlineInvoicePaymentPanel({ doc }: { doc: DocumentView }) {
   const query = useQuery({
     queryKey: ["invoice-online-payment", doc.id],
     queryFn: () => load({ data: { invoiceId: doc.id } }),
+    refetchInterval: 15000,
   });
   const [url, setUrl] = useState("");
   const create = useMutation({
@@ -37,8 +38,8 @@ export function OnlineInvoicePaymentPanel({ doc }: { doc: DocumentView }) {
       <h2 className="font-serif text-lg">Paiement traité par Stripe</h2>
       <p className="mt-2 text-sm">
         Pour vos clients propres, avec votre compte Stripe configuré. Ce circuit reste distinct d’un
-        règlement déclaré. Générer un nouveau lien remplace le précédent tant qu’aucun paiement n’a
-        été commencé.
+        règlement déclaré. Le lien peut être retrouvé et partagé à nouveau sans changer le paiement
+        ni créer une autre facture.
       </p>
       {p ? (
         <div className="mt-3 space-y-2">
@@ -55,6 +56,12 @@ export function OnlineInvoicePaymentPanel({ doc }: { doc: DocumentView }) {
             {p.stripe_fee_cents === null ? "en cours de rapprochement" : euros(p.stripe_fee_cents)}{" "}
             · Remboursé : {euros(p.refunded_cents)}
           </p>
+          {p.fee_refunded_cents !== null && p.fee_refunded_cents > 0 && (
+            <p className="text-sm">
+              Frais Oppe remboursés : {euros(p.fee_refunded_cents)} · frais Oppe conservés :{" "}
+              {euros(p.fee_cents - p.fee_refunded_cents)}
+            </p>
+          )}
           {p.disputed && <p role="alert">Un litige est signalé dans Stripe.</p>}
           {p.reconciliation_required && (
             <p role="alert">
@@ -68,10 +75,27 @@ export function OnlineInvoicePaymentPanel({ doc }: { doc: DocumentView }) {
               <button
                 key={note.id}
                 className={PRIMARY_BUTTON}
-                disabled={repayment.isPending}
+                disabled={
+                  repayment.isPending ||
+                  query.data?.refunds.some(
+                    (r) =>
+                      r.credit_note_id === note.id && !["failed", "canceled"].includes(r.status),
+                  )
+                }
                 onClick={() => repayment.mutate(note.id)}
               >
-                Rembourser l’avoir {note.number} ({euros(note.totalTtcCents)})
+                {query.data?.refunds.some(
+                  (r) => r.credit_note_id === note.id && r.status === "succeeded",
+                )
+                  ? "Remboursement confirmé pour"
+                  : query.data?.refunds.some(
+                        (r) =>
+                          r.credit_note_id === note.id &&
+                          ["reserved", "pending", "requires_action"].includes(r.status),
+                      )
+                    ? "Remboursement en cours pour"
+                    : "Rembourser"}{" "}
+                l’avoir {note.number} ({euros(note.totalTtcCents)})
               </button>
             ))}
         </div>
@@ -79,13 +103,13 @@ export function OnlineInvoicePaymentPanel({ doc }: { doc: DocumentView }) {
       {query.data && !query.data.open && (
         <p className="mt-3">Le paiement en ligne n’est pas encore ouvert.</p>
       )}
-      {query.data?.open && (!p || p.status === "ready") && (
+      {(p || query.data?.open) && (
         <button
           className={`${PRIMARY_BUTTON} mt-4`}
           disabled={create.isPending}
           onClick={() => create.mutate()}
         >
-          Générer le lien de paiement client
+          {p ? "Retrouver le lien client et les documents" : "Générer le lien de paiement client"}
         </button>
       )}
       {url && (
