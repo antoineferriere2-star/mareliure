@@ -3,12 +3,12 @@ import { reconcileCaseTriage } from "./services/caseRepository.server";
 
 type Row = Record<string, unknown>;
 
-function germanRequestClient() {
+function germanRequestClient(source: string | null = "finebindery_profile", found = true) {
   const updates: Row[] = [];
   const matches: Row[] = [];
   const events: Row[] = [];
   const answers = {
-    _request_source: "finebindery_profile",
+    _request_source: source,
     _referral_slug: "atelier-martin",
     _submission_locale: "de",
     _preferred_language: "de",
@@ -27,7 +27,7 @@ function germanRequestClient() {
     async maybeSingle() {
       if (this.table === "build_dossiers") return { data: { session_id: "session-de" }, error: null };
       if (this.table === "build_runtime_sessions") return { data: { answers }, error: null };
-      if (this.table === "marketplace_binders") return { data: { id: "binder-martin", display_name: "Martin", workshop_name: "Atelier Martin" }, error: null };
+      if (this.table === "marketplace_binders") return { data: found ? { id: "binder-martin", display_name: "Martin", workshop_name: "Atelier Martin" } : null, error: null };
       return { data: null, error: null };
     }
     then<TResult1 = { data: unknown; error: null }, TResult2 = never>(
@@ -49,6 +49,19 @@ function germanRequestClient() {
 }
 
 describe("FineBindery German project routing", () => {
+  it("rattache aussi une demande du lien personnel Ma Reliure au seul atelier référent", async () => {
+    const { client, updates, matches } = germanRequestClient(null);
+    await reconcileCaseTriage(client as never);
+    expect(updates).toContainEqual(expect.objectContaining({ acquisition_origin: "BINDER_REFERRED", referred_binder_id: "binder-martin" }));
+    expect(matches).toEqual([expect.objectContaining({ case_id: "case-de", binder_id: "binder-martin", state: "invited" })]);
+  });
+  it("un atelier devenu indisponible ne transforme jamais son client propre en vente Oppe", async () => {
+    const { client, updates, matches, events } = germanRequestClient(null, false);
+    await reconcileCaseTriage(client as never);
+    expect(updates).toContainEqual(expect.objectContaining({ acquisition_origin: "BINDER_REFERRED", referred_binder_id: null, manual_review_required: true, triage_flags: expect.arrayContaining(["unresolved_workshop_referral"]) }));
+    expect(matches).toEqual([]);
+    expect(events).toEqual([]);
+  });
   it("stores German preferences and sends Atelier Martin an attributed invitation", async () => {
     const { client, updates, matches, events } = germanRequestClient();
     await expect(reconcileCaseTriage(client as never)).resolves.toBe(1);

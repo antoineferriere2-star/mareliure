@@ -36,6 +36,7 @@ import { PortalEmpty, PortalError, PortalListSkeleton, StatusBadge } from "./Cus
 
 export interface CustomerListRow {
   id: string;
+  commercialOrigin?: "oppe" | "workshop_client";
   status: string;
   createdAt: string;
   title: string;
@@ -99,7 +100,8 @@ function ProjectCard({
 }) {
   const facts = factsOf(row);
   const status = customerStatus(facts, locale);
-  const next = customerNextStep(facts, locale);
+  const ownClient = row.commercialOrigin === "workshop_client";
+  const next = ownClient ? {text: locale === "en-US" ? "View the quote, documents and tracking from your workshop." : "Consultez le devis, les documents et le suivi de votre atelier."} : customerNextStep(facts, locale);
   const created = formatCustomerDate(row.createdAt, locale);
   const meta = [row.projectType, created ? copy.createdOn(created) : null].filter(Boolean).join(" · ");
   const urgent = row.actionRequired || row.paymentEligible || row.proposalAcceptable;
@@ -118,7 +120,7 @@ function ProjectCard({
         <h2 className={`${fineBindery ? "font-editorial text-[#14201d]" : "font-serif text-[#241a12]"} text-lg leading-snug break-words`}>{row.title}</h2>
         {meta && <p className="mt-1 text-xs text-[#6b5847]">{meta}</p>}
         <div className="mt-3 flex flex-wrap items-center gap-2">
-          <StatusBadge status={status} />
+          {ownClient ? <span className="text-sm">{locale === "en-US" ? "Your workshop" : "Votre atelier"}</span> : <StatusBadge status={status} />}
           {row.unreadCount > 0 && (
             <span className="rounded-full bg-[#3b2a1d] px-2 py-0.5 text-xs font-semibold text-[#fdfaf3]">
               {copy.newMessages(row.unreadCount)}

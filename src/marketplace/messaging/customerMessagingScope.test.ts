@@ -108,18 +108,20 @@ const message = (id: string, caseId: string, role: string, body: string, minute:
   deleted_at: null,
 });
 
-function world() {
+function world(ownClient = false, foreignSelected = false) {
   const tables: Record<string, Row[]> = {
     marketplace_cases: [
-      { id: CASE_FB, customer_user_id: CUSTOMER, brand: "FINE_BINDERY" },
+      { id: CASE_FB, customer_user_id: CUSTOMER, brand: "FINE_BINDERY", acquisition_origin: ownClient ? "FINEBINDERY_PROFILE" : "FINEBINDERY_SITE", referred_binder_id: ownClient ? "b1" : null },
       { id: CASE_MR, customer_user_id: CUSTOMER, brand: "MA_RELIURE" },
     ],
     marketplace_case_matches: [
+      ...(foreignSelected ? [{ case_id: CASE_FB, binder_id: "b-foreign", state: "selected" }] : []),
       { case_id: CASE_FB, binder_id: "b1", state: "selected" },
       { case_id: CASE_MR, binder_id: "b1", state: "selected" },
     ],
     marketplace_binders: [
       { id: "b1", status: "approved" },
+      { id: "b-foreign", status: "approved" },
       { id: "b-susp", status: "suspended" },
       { id: "b-rej", status: "rejected" },
     ],
@@ -128,6 +130,7 @@ function world() {
       message("f2", CASE_FB, "admin", "concierge answer", 2, "customer_concierge"),
       message("f3", CASE_FB, "binder", "workshop note", 3, "workshop_platform"),
       message("f4", CASE_FB, "admin", "concierge to workshop", 4, "workshop_platform"),
+      ...(ownClient ? [message("f5", CASE_FB, "binder", "direct seller answer", 5, "shared")] : []),
       message("m1", CASE_MR, "customer", "question client", 1),
       message("m2", CASE_MR, "admin", "réponse équipe", 2),
       message("m3", CASE_MR, "binder", "note de l'atelier", 3),
@@ -156,6 +159,22 @@ describe("la règle : qui lit quoi (audiences persistées)", () => {
 });
 
 describe("listCaseMessages", () => {
+  it("un client propre Fine Bindery échange avec son vendeur, sans lire ses échanges privés avec Oppe", async () => {
+    state.sb = world(true).sb;
+    const result = await listCaseMessages({ context: context(CUSTOMER), data: { caseId: CASE_FB } } as never);
+    expect(bodies(result as never)).toEqual(["customer question", "concierge answer", "direct seller answer"]);
+    expect(JSON.stringify(result)).not.toContain("workshop note");
+  });
+
+  it("un ancien match étranger sélectionné ne donne aucun droit sur un client propre", async () => {
+    state.sb = world(true, true).sb;
+    state.viewer = {role:"binder",binderId:"b-foreign"};
+    await expect(listCaseMessages({context:context("foreign-user"),data:{caseId:CASE_FB}} as never)).rejects.toThrow();
+    state.viewer = {role:"binder",binderId:"b1"};
+    const result = await listCaseMessages({context:context("seller-user"),data:{caseId:CASE_FB}} as never);
+    expect(bodies(result as never)).toContain("direct seller answer");
+    expect(bodies(result as never)).not.toContain("customer question");
+  });
   it("Fine Bindery — le client ne reçoit aucun message d'atelier, le concierge et lui-même seulement", async () => {
     const { sb } = world();
     state.sb = sb;

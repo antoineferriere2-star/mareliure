@@ -5,6 +5,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import type { Json } from "@/integrations/supabase/types";
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { isPdf } from "@/marketplace/shipping/labelProvider";
+import { workshopTransportOptionsInput } from "@/marketplace/works/workshopTransport";
 import { requireWorkshopAccess } from "./workshopAccess.server";
 import { logisticsAppend, photoMime, type LogisticsJournal } from "@/marketplace/works/logistics";
 
@@ -76,6 +79,17 @@ export const readWorkLogistics = createServerFn({ method: "GET" })
   .inputValidator((value: unknown) => workInput.parse(value))
   .handler(async ({ context, data }) => {
     const { sb, value } = await journal(context.userId, data.workId, "read");
+    if (value.events.length) {
+      const labels = await (sb as unknown as SupabaseClient).from("marketplace_work_logistics_labels").select("id,event_id,path").in("event_id", value.events.map(e => e.id));
+      if (labels.error) throw labels.error;
+      for (const event of value.events) {
+        event.labels = [];
+        for (const label of labels.data ?? []) if (label.event_id === event.id) {
+          const signed = await sb.storage.from("work-transport-labels-private").createSignedUrl(label.path, 60);
+          event.labels.push({ id: label.id, url: signed.data?.signedUrl });
+        }
+      }
+    }
     for (const event of value.events)
       for (const photo of event.photos) {
         const signed = await sb.storage.from(bucket).createSignedUrl(photo.path, 60);
@@ -83,6 +97,40 @@ export const readWorkLogistics = createServerFn({ method: "GET" })
         photo.path = ""; // Do not expose internal object names in the view.
       }
     return value;
+  });
+
+export const getWorkshopTransportOptions = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((value: unknown) => workshopTransportOptionsInput.parse(value))
+  .handler(async ({ context, data }) => {
+    const { sb, binder } = await access(context.userId);
+    const { workshopTransportOptions } = await import("./workshopTransport.server");
+    return workshopTransportOptions(sb, binder, data);
+  });
+
+/** Existing provider label only: this uploads a private PDF, it never purchases transport. */
+export const uploadWorkTransportLabel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((value: unknown) => workInput.extend({ eventId: z.string().uuid(), base64: z.string().min(16).max(6990508) }).strict().parse(value))
+  .handler(async ({ context, data }) => {
+    const { sb, binder, value } = await journal(context.userId, data.workId, "read");
+    const event = value.events.find(e => e.id === data.eventId);
+    if (!event || !["outbound", "return"].includes(event.kind) || event.details.mode !== "parcel") fail(409, "Trajet colis requis.");
+    const work = await sb.from("marketplace_binder_works").select("source").eq("id", data.workId).eq("binder_id", binder).single();
+    if (work.error || !["mon_client", "workshop_platform"].includes(work.data!.source)) fail(404, "Ouvrage client propre introuvable.");
+    const bytes = Buffer.from(data.base64, "base64");
+    if (bytes.toString("base64") !== data.base64 || !isPdf(bytes)) fail(400, "Étiquette PDF de 5 Mo maximum requise.");
+    const id = await logisticsPhotoId(`label/${binder}/${data.workId}/${data.eventId}/${context.userId}`, bytes);
+    const path = `${binder}/${data.workId}/${data.eventId}/${id}.pdf`;
+    const uploaded = await sb.storage.from("work-transport-labels-private").upload(path, bytes, { contentType: "application/pdf", upsert: false });
+    if (uploaded.error) {
+      const previous = await sb.storage.from("work-transport-labels-private").download(path);
+      if (previous.error || !previous.data || !samePhotoBytes(bytes, new Uint8Array(await previous.data.arrayBuffer()))) fail(503, "Étiquette non confirmée. Réessayez.");
+    }
+    const attached = await (sb as unknown as SupabaseClient).rpc("marketplace_attach_work_transport_label", { p_work: data.workId, p_binder: binder, p_actor: context.userId, p_event: data.eventId, p_id: id });
+    // Keep an ambiguously committed object; same bytes retry with the same id and repair the association.
+    if (attached.error) fail(409, "Rattachement de l’étiquette non confirmé. Relisez le trajet et réessayez.");
+    return { ok: true };
   });
 export const appendWorkLogistics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])

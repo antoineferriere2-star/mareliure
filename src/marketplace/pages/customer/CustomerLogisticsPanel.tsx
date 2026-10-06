@@ -24,10 +24,10 @@ const errorText = (error: unknown, copy: LogisticsCustomerCopy) => {
   return copy.errors[code] ?? copy.genericError;
 };
 
-function useCustomerLogistics(caseId: string) {
+function useCustomerLogistics(caseId: string, enabled = true) {
   const read = useServerFn(getMyCaseLogistics);
   return useQuery({ queryKey: ["marketplace", "customer", "case", caseId, "logistics"] as const,
-    queryFn: () => read({ data: { caseId } }), refetchInterval: 60_000 });
+    queryFn: () => read({ data: { caseId } }), refetchInterval: 60_000, enabled });
 }
 
 /** Étapes où le client doit agir lui-même : elles remontent en tête de page. */
@@ -39,8 +39,8 @@ const CUSTOMER_ACTIONS = new Set(["choose_mode", "drop_parcel", "send_or_bring",
  * sert pour ne pas affirmer « Aucune action requise » au-dessus d'un bandeau
  * qui demande de choisir le mode d'acheminement (recette du 4 octobre 2026).
  */
-export function useLogisticsCustomerAction(caseId: string): boolean {
-  const { data } = useCustomerLogistics(caseId);
+export function useLogisticsCustomerAction(caseId: string, enabled = true): boolean {
+  const { data } = useCustomerLogistics(caseId, enabled);
   return !!data && !(!data.plan && data.locked) && CUSTOMER_ACTIONS.has(data.next);
 }
 

@@ -24,9 +24,12 @@ beforeAll(async () => {
     CREATE TABLE marketplace_binders(id uuid PRIMARY KEY, status text);
     CREATE TABLE marketplace_cases(id uuid PRIMARY KEY, brand text NOT NULL DEFAULT 'MA_RELIURE',
       acquisition_origin text NOT NULL DEFAULT 'MA_RELIURE_ACQUIRED', referred_binder_id uuid);
-    CREATE TABLE marketplace_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),case_id uuid,actor_user_id uuid,event_type text,metadata jsonb);
+    CREATE TABLE marketplace_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),case_id uuid,binder_id uuid,actor_user_id uuid,event_type text,metadata jsonb);
     CREATE TABLE marketplace_commercial_proposals(id uuid PRIMARY KEY,case_id uuid,status text,accepted_at timestamptz,currency text,total_cents integer);
-    CREATE TABLE marketplace_case_matches(case_id uuid, binder_id uuid, state text);
+    CREATE TABLE marketplace_case_matches(case_id uuid, binder_id uuid, state text,selected_at timestamptz);
+    CREATE TABLE marketplace_binder_members(binder_id uuid,user_id uuid,account_status text);
+    CREATE TABLE recipe_rights(binder_id uuid PRIMARY KEY,eligible boolean);
+    CREATE FUNCTION marketplace_workshop_can_create(p_binder_id uuid) RETURNS boolean LANGUAGE sql AS $$ SELECT eligible FROM recipe_rights WHERE binder_id=p_binder_id $$;
     CREATE TABLE marketplace_quotes(id uuid PRIMARY KEY DEFAULT gen_random_uuid(), case_id uuid, binder_id uuid);
     CREATE TABLE marketplace_binder_clients(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),binder_id uuid,name text,email text,phone text,
       origin text NOT NULL DEFAULT 'mon_client',origin_case_id uuid,created_at timestamptz DEFAULT now(),
@@ -40,15 +43,18 @@ beforeAll(async () => {
       LANGUAGE sql AS $$ SELECT 'OUV-' || p_year || '-' || substr(gen_random_uuid()::text, 1, 6) $$;
     INSERT INTO auth.users VALUES('${ADMIN}'); INSERT INTO user_roles VALUES('${ADMIN}','admin');
     INSERT INTO marketplace_binders VALUES('${BINDER_A}','approved'),('${BINDER_B}','approved');
+    INSERT INTO marketplace_binder_members VALUES('${BINDER_A}','${ADMIN}','active');
+    INSERT INTO recipe_rights VALUES('${BINDER_A}',true),('${BINDER_B}',true);
   `);
   await db.exec(migration("20260928090000_marketplace_payment_circuits.sql"));
   await db.exec(migration("20261005090000_commercial_origin_separation.sql"));
+  await db.exec(migration("20261007150000_workshop_referral_import.sql"));
   await db.exec(`
     INSERT INTO marketplace_cases(id) VALUES('${OPPE_CASE}');
     INSERT INTO marketplace_cases(id, brand) VALUES('${OWN_CASE}','MA_RELIURE'),('${FB_PROFILE_CASE}','FINE_BINDERY');
     UPDATE marketplace_cases SET acquisition_origin='BINDER_REFERRED', referred_binder_id='${BINDER_A}' WHERE id='${OWN_CASE}';
     UPDATE marketplace_cases SET acquisition_origin='FINEBINDERY_PROFILE', referred_binder_id='${BINDER_A}' WHERE id='${FB_PROFILE_CASE}';
-    INSERT INTO marketplace_case_matches VALUES
+    INSERT INTO marketplace_case_matches(case_id,binder_id,state) VALUES
       ('${OPPE_CASE}','${BINDER_A}','selected'),('${OWN_CASE}','${BINDER_A}','selected'),
       ('${OWN_CASE}','${BINDER_B}','selected'),('${FB_PROFILE_CASE}','${BINDER_A}','selected');
   `);
@@ -59,6 +65,14 @@ const importCase = (binder: string, caseId: string) =>
   db.query<{ work: string }>(
     `SELECT marketplace_binder_import_case('${binder}','${caseId}','Client Test','client@example.test','0600000000','Missel','') AS work`,
   );
+
+const importOwn = (caseId: string, binder = BINDER_A, actor = ADMIN, title = "Ouvrage de recette") => db.query<{work:string}>(
+  "SELECT marketplace_binder_import_own_case($1,$2,$3,'Client fictif','fixture@example.test',null,$4,'Demande de recette') AS work", [binder,caseId,actor,title],
+);
+const seedOwn = async (n:number,state="invited") => {
+  await db.query("INSERT INTO marketplace_cases(id,acquisition_origin,referred_binder_id) VALUES($1,'BINDER_REFERRED',$2)",[id(n),BINDER_A]);
+  await db.query("INSERT INTO marketplace_case_matches(case_id,binder_id,state) VALUES($1,$2,$3)",[id(n),BINDER_A,state]);
+};
 
 describe("origine commerciale", () => {
   it("se dérive de la provenance, jamais d'une saisie", async () => {
@@ -165,5 +179,42 @@ describe("circuits de paiement", () => {
       `SELECT payment_provenance->>'seller' AS seller, payment_provenance->>'commercial_origin' AS origin FROM marketplace_commercial_proposals WHERE id='${id(30)}'`,
     );
     expect(rows).toEqual([{ seller: "oppe", origin: "oppe" }]);
+  });
+});
+
+describe("premier devis d’une demande de vitrine", () => {
+  it("refuse un autre atelier, un acteur non membre et une commande Oppe",async () => {
+    await seedOwn(70);
+    await expect(importOwn(id(70),BINDER_B)).rejects.toThrow("active_approved_workshop_required");
+    await expect(importOwn(id(70),BINDER_A,id(999))).rejects.toThrow("active_approved_workshop_required");
+    await expect(importOwn(OPPE_CASE)).rejects.toThrow("own_case_not_found");
+  });
+  it("ouvre une seule fiche personnelle avec coordonnées, sans prix ni accord Oppe",async () => {
+    const first=(await importOwn(id(70))).rows[0].work;
+    expect((await importOwn(id(70))).rows[0].work).toBe(first);
+    expect((await db.query("SELECT source,case_id FROM marketplace_binder_works WHERE id=$1",[first])).rows).toEqual([{source:"workshop_platform",case_id:id(70)}]);
+    expect((await db.query("SELECT state FROM marketplace_case_matches WHERE case_id=$1",[id(70)])).rows).toEqual([{state:"selected"}]);
+    expect((await db.query("SELECT id FROM marketplace_quotes WHERE case_id=$1",[id(70)])).rows).toHaveLength(0);
+    expect((await db.query("SELECT id FROM marketplace_events WHERE case_id=$1 AND event_type='workshop_own_case_imported'",[id(70)])).rows).toHaveLength(1);
+  });
+  it("conserve l’accès à une fiche existante après résiliation et refuse la nouvelle création",async () => {
+    await seedOwn(71); await db.query("UPDATE recipe_rights SET eligible=false WHERE binder_id=$1",[BINDER_A]);
+    await expect(importOwn(id(70))).resolves.toBeTruthy();
+    await expect(importOwn(id(71))).rejects.toThrow("workshop_subscription_required");
+    expect((await db.query("SELECT state FROM marketplace_case_matches WHERE case_id=$1",[id(71)])).rows).toEqual([{state:"invited"}]);
+    await db.query("UPDATE recipe_rights SET eligible=true WHERE binder_id=$1",[BINDER_A]);
+  });
+  it("annule aussi la sélection si l’import échoue et laisse une reprise possible",async () => {
+    await seedOwn(72);
+    await expect(importOwn(id(72),BINDER_A,ADMIN,"")).rejects.toThrow("invalid_case_import");
+    expect((await db.query("SELECT state FROM marketplace_case_matches WHERE case_id=$1",[id(72)])).rows).toEqual([{state:"invited"}]);
+    expect((await db.query("SELECT id FROM marketplace_binder_works WHERE case_id=$1",[id(72)])).rows).toHaveLength(0);
+    await expect(importOwn(id(72))).resolves.toBeTruthy();
+  });
+  it("ne rouvre pas un refus et ne vole pas une affectation existante",async () => {
+    await seedOwn(73,"declined"); await seedOwn(74);
+    await db.query("INSERT INTO marketplace_case_matches(case_id,binder_id,state) VALUES($1,$2,'selected')",[id(74),BINDER_B]);
+    await expect(importOwn(id(73))).rejects.toThrow("own_case_not_available");
+    await expect(importOwn(id(74))).rejects.toThrow("own_case_not_available");
   });
 });

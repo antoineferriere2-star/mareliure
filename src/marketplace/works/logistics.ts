@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parcelInput, receptionInput } from "@/marketplace/shipping/logisticsPlan";
 
 export const logisticsKinds = [
   "outbound",
@@ -31,6 +32,9 @@ export const logisticsDetails = z
     payer: z.enum(["customer", "workshop"]).optional(),
     transportCostCents: z.number().int().min(0).max(100_000_000).optional(),
     coverageEvidence: z.string().trim().min(1).max(1000).optional(),
+    fromAddress: receptionInput.optional(),
+    toAddress: receptionInput.optional(),
+    parcel: parcelInput.optional(),
   })
   .strict();
 export const logisticsAppend = z
@@ -50,6 +54,7 @@ export interface LogisticsEvent {
   actor_id: string;
   details: z.infer<typeof logisticsDetails>;
   photos: { id: string; path: string; url?: string }[];
+  labels?: { id: string; url?: string }[];
 }
 export interface LogisticsJournal {
   events: LogisticsEvent[];

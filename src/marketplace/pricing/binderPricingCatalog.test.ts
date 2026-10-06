@@ -22,6 +22,12 @@ const base = WORK_ITEMS.map((item, index) => ({
 }));
 
 describe("catalogue tarifaire atelier", () => {
+  it("une référence partielle conserve les prestations manquantes sans inventer de prix", () => {
+    const catalog=buildBinderPricingCatalog(base.slice(0,5),[]);
+    expect(catalog).toHaveLength(WORK_ITEMS.length);
+    expect(catalog.slice(5).every(item=>item.basePriceCents===null && item.effectivePriceCents===null && item.effectivePricingMode==="manual_review")).toBe(true);
+    expect(bulkPricePreview(catalog,catalog.slice(5).map(item=>item.pricingKey),1000,"base")).toEqual([]);
+  });
   it("affiche immédiatement 45 prestations, 41 numériques et 4 sur étude", () => {
     const catalog = buildBinderPricingCatalog(base, []);
     expect(catalog).toHaveLength(45);

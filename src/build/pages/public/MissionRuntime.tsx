@@ -811,7 +811,7 @@ function MissionRuntimeContent({
               )}
               {currentStep?.step.why && !reviewing && (
                 <p className="mt-3 max-w-2xl text-base leading-7 text-stone-600 sm:mt-4 sm:text-lg">
-                  {copy(currentStep.step.why)}
+                  {guidance?.stepExplanations?.[currentStep.step.id] ?? copy(currentStep.step.why)}
                 </p>
               )}
               {visibleSteps.length > 0 && (
@@ -923,6 +923,7 @@ function MissionRuntimeContent({
                     onEdit={editStep}
                     previews={photoPreviews}
                     photoShots={guidance?.photoShots}
+                    fieldLabels={guidance?.fieldLabels}
                   />
                   {guidance?.reviewNotice && <div className="mt-6">{guidance.reviewNotice}</div>}
                 </>
@@ -934,7 +935,7 @@ function MissionRuntimeContent({
                       return (
                         <FieldComponent
                           key={field.key}
-                          field={localizeField(field, copy)}
+                          field={localizeField({ ...field, label: guidance?.fieldLabels?.[field.key] ?? field.label, helpText: guidance?.fieldHelpText?.[field.key] ?? field.helpText, ...(field.type === "consent" ? { consentText: guidance?.consentTexts?.[field.key] ?? field.consentText } : {}) }, copy)}
                           value={answers[field.key]}
                           onChange={(value) => setAnswer(field.key, value)}
                           error={fieldErrors[field.key]}
@@ -1037,6 +1038,7 @@ export function ReviewAnswers({
   onEdit,
   previews,
   photoShots,
+  fieldLabels,
 }: {
   steps: VisibleStep[];
   answers: Answers;
@@ -1044,6 +1046,7 @@ export function ReviewAnswers({
   onEdit: (index: number) => void;
   previews: PhotoPreviewStore;
   photoShots?: Record<string, PhotoShot[]>;
+  fieldLabels?: Record<string, string>;
 }) {
   // Fields still blank, by step: the recap's job is to make "you left this
   // out" visible before sending, without ever blocking it — the required ones
@@ -1113,7 +1116,7 @@ export function ReviewAnswers({
                 field.type === "photo" && Array.isArray(value) ? (value as PhotoAnswerEntry[]) : [];
               return (
                 <div key={field.key} className="grid gap-1 sm:grid-cols-[220px_1fr] sm:gap-4">
-                  <dt className="text-sm font-medium text-stone-500">{copy(field.label)}</dt>
+                  <dt className="text-sm font-medium text-stone-500">{fieldLabels?.[field.key] ?? copy(field.label)}</dt>
                   <dd
                     className={
                       shown ? "text-base text-stone-950" : "text-base italic text-stone-400"

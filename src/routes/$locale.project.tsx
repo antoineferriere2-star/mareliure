@@ -1,8 +1,10 @@
+import {workshopIntakeGuidance} from "@/marketplace/pages/customer/workshopIntakeGuidance";
 import { useMemo, type ReactNode } from "react";
 import { createFileRoute, notFound } from "@tanstack/react-router";
 import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
 import { FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
 import { CustomerSpaceOffer } from "@/marketplace/pages/customer/CustomerSpaceOffer";
+import { WorkshopIntakeNotice } from "@/marketplace/pages/customer/WorkshopIntakeCopy";
 import { FINE_BINDERY_PREFERRED_LANGUAGE_KEY, FINE_BINDERY_SUBMISSION_LOCALE_KEY, PROFILE_REQUEST_SOURCE, PROFILE_SOURCE_ANSWER_KEY } from "@/marketplace/binders/fineBinderyProfile";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
 import { ENGINE_LOCALE, isFineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
@@ -20,7 +22,7 @@ function FineBinderyProjectRoute() {
   const { locale } = Route.useParams(); const { ref, source } = Route.useSearch();
   const seedAnswers = useMemo(() => isFineBinderyLocale(locale) ? { [FINE_BINDERY_SUBMISSION_LOCALE_KEY]: locale, [FINE_BINDERY_PREFERRED_LANGUAGE_KEY]: locale, ...(ref ? { [REFERRAL_ANSWER_KEY]: ref } : {}), ...(source === PROFILE_REQUEST_SOURCE ? { [PROFILE_SOURCE_ANSWER_KEY]: source } : {}) } : undefined, [locale, ref, source]);
   if (!isFineBinderyLocale(locale)) return null;
-  const afterSubmission = ({ visitorEmail }: { visitorEmail: string | null }): ReactNode => <CustomerSpaceOffer email={visitorEmail} publicToken={FINE_BINDERY_PUBLIC_TOKEN} />;
+  const afterSubmission = ({ visitorEmail }: { visitorEmail: string | null }): ReactNode => <>{ref && <WorkshopIntakeNotice locale={locale} stage="next" />}<CustomerSpaceOffer email={visitorEmail} publicToken={FINE_BINDERY_PUBLIC_TOKEN} /></>;
   // `fb-intake` : la palette Fine Bindery (styles.css) sur le même runtime de Mission — aucune règle de marque dans le moteur.
-  return <div className="fb-intake"><MissionRuntime publicToken={FINE_BINDERY_PUBLIC_TOKEN} renderAfterSubmission={afterSubmission} seedAnswers={seedAnswers} initialLocale={ENGINE_LOCALE[locale]} routeLocaleWins /></div>;
+  return <div className="fb-intake"><MissionRuntime publicToken={FINE_BINDERY_PUBLIC_TOKEN} renderAfterSubmission={afterSubmission} seedAnswers={seedAnswers} guidance={ref ? workshopIntakeGuidance(locale) : undefined} initialLocale={ENGINE_LOCALE[locale]} routeLocaleWins /></div>;
 }

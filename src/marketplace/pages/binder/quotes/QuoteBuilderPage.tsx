@@ -499,6 +499,8 @@ function BuilderForm({
         setMissingFromServer(parsed.missing);
         void queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY });
         setProblems(["Complétez d'abord les informations demandées en haut de page."]);
+      } else if (parsed.code === "workshop_subscription_required") {
+        setProblems(["Un abonnement actif est nécessaire pour créer un devis. Vos documents historiques restent consultables et téléchargeables dans votre espace atelier."]);
       } else setProblems(["Le devis n'a pas pu être enregistré. Réessayez."]);
     },
   });

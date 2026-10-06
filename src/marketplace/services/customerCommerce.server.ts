@@ -36,7 +36,7 @@ export interface CustomerCommerce {
   paidAt: string | null;
 }
 
-const NONE: CustomerCommerce = {
+export const NO_OPPE_COMMERCE: CustomerCommerce = {
   proposal: null,
   proposalAccepted: false,
   canAccept: false,
@@ -86,7 +86,7 @@ export async function loadCustomerCommerce(
   // voir, et seulement si elle est acceptable — une proposition en préparation
   // (fiscalité non validée, prix non validé) n'existe pas encore pour lui.
   const latest = await loadLatestCommercialProposal(sb, caseId);
-  if (!latest) return NONE;
+  if (!latest) return NO_OPPE_COMMERCE;
   const verdict = customerAcceptance({
     status: latest.status,
     acceptedAt: latest.acceptedAt,
@@ -103,7 +103,7 @@ export async function loadCustomerCommerce(
     }),
     caseStatus: caseFacts.caseStatus,
   });
-  if (!verdict.acceptable) return NONE;
+  if (!verdict.acceptable) return NO_OPPE_COMMERCE;
 
   return {
     proposal: toCustomerProposalView(latest),

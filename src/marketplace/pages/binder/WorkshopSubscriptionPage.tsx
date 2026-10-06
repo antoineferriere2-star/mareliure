@@ -49,7 +49,8 @@ export function WorkshopSubscriptionPage() {
         </p>
         {s.cancel_at_period_end && s.current_period_end && (
           <p className="mt-3">
-            Résiliation prévue le {new Date(s.current_period_end).toLocaleDateString("fr-FR")}.
+            {s.status === "canceled" ? "Abonnement terminé le " : "Résiliation prévue le "}
+            {new Date(s.current_period_end).toLocaleDateString("fr-FR")}.
           </p>
         )}
         {!settings.subscription_open && (

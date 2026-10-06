@@ -16,6 +16,13 @@ import type { PhotoShot } from "@/build/engine/fields/types";
 export type { GlossaryEntry, PhotoShot };
 
 export interface IntakeGuidance {
+  /** Deployment-provided explanations for individual steps, already localized. */
+  stepExplanations?: Record<string, string>;
+  /** Deployment-provided field help text, already localized. */
+  fieldHelpText?: Record<string, string>;
+  /** Presentation only; answer keys and validation stay in the Playbook. */
+  fieldLabels?: Record<string, string>;
+  consentTexts?: Record<string, string>;
   /**
    * What the visitor gets and what they must not do yet — shown once, above the
    * first question. The runtime places it and knows nothing of its content.

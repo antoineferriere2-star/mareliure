@@ -223,7 +223,7 @@ function PublicProfileEditor({
             ? `À compléter : ${draft.missing.join(", ")}.`
             : draft.approvalStatus !== "approved"
               ? "Le profil est prêt. L’atelier doit encore être approuvé avant publication."
-              : "Le profil peut être publié sur FineBindery."}
+              : `Le profil peut être publié sur ${brand === "mareliure" ? "Ma Reliure" : "Fine Bindery"}.`}
         </p>
         {draft.slug && (
           <p className="mt-2 font-mono text-xs">

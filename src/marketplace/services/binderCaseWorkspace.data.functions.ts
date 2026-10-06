@@ -7,6 +7,8 @@ import { fail } from "@/build/services/serverError";
 import { requireLeadApprovedBinderId } from "./binderQuotes.server";
 import { buildCaseView, loadCaseContext } from "./caseRepository.server";
 import { isMarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const input = z.object({ caseId: z.string().uuid() }).strict();
 
@@ -22,13 +24,14 @@ export const ensureMyCaseWork = createServerFn({ method: "POST" })
     const sb = await admin();
     const binderId = await requireLeadApprovedBinderId(sb, context.userId);
     const caseContext = await loadCaseContext(sb, data.caseId);
-    if (!caseContext || !isMarketplaceBrand(caseContext.row.brand) || caseContext.selectedBinderId !== binderId) {
+    const ownClient = !!caseContext && commercialOriginOf(caseContext.row.acquisition_origin) === "workshop_client" && caseContext.row.referred_binder_id === binderId && caseContext.invitedBinderIds.includes(binderId);
+    if (!caseContext || !isMarketplaceBrand(caseContext.row.brand) || (!ownClient && caseContext.selectedBinderId !== binderId)) {
       fail(404, "Dossier introuvable.");
     }
-    const view = await buildCaseView(sb, caseContext, "assigned");
+    const view = await buildCaseView(sb, caseContext, ownClient ? "full" : "assigned");
     const caseName = view.contact?.name?.trim() || caseContext.customerName?.trim() || `Client ${view.reference}`;
     const workTitle = view.title.trim() || view.reference;
-    const { data: workId, error } = await sb.rpc("marketplace_binder_import_case", {
+    const { data: workId, error } = await (sb as unknown as SupabaseClient).rpc(ownClient ? "marketplace_binder_import_own_case" : "marketplace_binder_import_case", {
       p_binder_id: binderId,
       p_case_id: data.caseId,
       p_contact_name: caseName,
@@ -37,6 +40,7 @@ export const ensureMyCaseWork = createServerFn({ method: "POST" })
       p_contact_phone: (view.contact?.phone ?? null) as unknown as string,
       p_work_title: workTitle,
       p_work_description: view.summary,
+      ...(ownClient ? { p_actor: context.userId } : {}),
     });
     if (error || !workId) fail(409, "Ce dossier ne peut pas être ajouté à l'atelier pour le moment.");
     return { workId };

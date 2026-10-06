@@ -36,6 +36,7 @@ export const TRIAGE_FLAGS = [
   "declared_value_over_1000",
   "heritage_book",
   "suspected_mould",
+  "unresolved_workshop_referral",
 ] as const;
 export type TriageFlag = (typeof TRIAGE_FLAGS)[number];
 
@@ -46,6 +47,7 @@ export const TRIAGE_FLAG_MESSAGES: Record<TriageFlag, string> = {
     "Ouvrage patrimonial : une validation par un professionnel est nécessaire avant prise en charge.",
   suspected_mould:
     "Suspicion de moisissure : à confirmer avant tout transport, et à réserver aux ateliers équipés.",
+  unresolved_workshop_referral: "Le lien de l’atelier ne peut plus être résolu. Vérifier le rattachement sans transformer cette demande en commande Oppe.",
 };
 
 export function isTriageFlag(value: unknown): value is TriageFlag {
