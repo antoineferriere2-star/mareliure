@@ -1,49 +1,27 @@
-# Passation Codex — modèle Oppe, après publication du lot 6
+# Passation Codex — modèle Oppe, état du 6 octobre 2026
 
-Mise à jour du 5 octobre 2026. Le [journal du lot 6](OPPE_LOT6_PUBLICATION_20261005.md) atteste les résultats ; le [dossier technique B/C](OPPE_BC_COMPLETION.md) précise les limites. La [préparation Stripe live](OPPE_STRIPE_LIVE_PREPARATION_20261005.md) donne les identifiants créés et les blocages constatés. Cette version remplace l’état de reprise du lot 5. Son historique reste accessible dans Git.
+Le [bilan final vérifié](OPPE_FINAL_PUBLICATION_20261006.md) remplace l'état de reprise du lot 6. Les journaux datés restent des preuves historiques distinctes.
 
-## Production vérifiée
+## Production
 
-- PR #78 à #86 fusionnées. Code applicatif publié : `13f18d6`.
-- Worker Ma Reliure/Fine Bindery : `8f9d80ce-82a3-4848-8e9a-0bc1edc383ae`, à 100 %, déployé le 5 octobre à 18:10:10 UTC. Même code que le lot 6 ; ajout du seul secret de signature Connect, 16 liaisons au total.
-- Base : **107 migrations**, dernière `20261006140000`.
-- Quatre ateliers historiques gratuits ; abonnement et encaissement en ligne fermés en base et dans les annonces publiques.
-- CI main verte, 3 498 tests et 19 contrôles de publication. Smoke final : 28 contrôles réussis ; webhooks sans signature en 400 et HTTP vers HTTPS en 301.
+PR #89 à #93 fusionnées après CI verte. Code applicatif 711b5ab92f34daa974640cc3730a63a9aefb0dfa, merge a71f83e77f4b5201abbefc0412f2bf79020d7ef2. Worker **42570020-0a67-48d0-812a-b05da1a4be70**, 100 %, publié à 17:12:47 UTC. 115 migrations, quatre ateliers historiques gratuits, B/C fermés. Dix-huit bindings/runtime conservés, aucune simulation e-mail de production.
 
-## Livré et vérifié
+## Parcours
 
-**A — projets vendus par Oppe** : reste en production, vérifié de bout en bout sur qwf avec Stripe test lors des lots précédents. Origine Oppe distincte des clients propres, accord atelier sur prestation/rémunération/délai, marge cible de 25 % du prix de vente HT, devis accepté uniquement par le client, commande, facture OPPE SAS par marque, TVA qualifiée par ligne, remboursement et avoir, facture atelier vers Oppe, contrôle et règlement manuel à 30 jours. Aucun prix client ni marge transmis à l’atelier.
+A : vente/facture Oppe, accord atelier, commande, fournisseur et règlement enregistré ; nouveaux parcours complets MR/FB en Stripe test avec remboursements partiels et intégral. Confirmation Fine Bindery reprise après panne sans doublon ; livraison e-mail simulée vers Resend officiel seulement. PDFs factures/avoirs et portails mobile/bureau vérifiés. A reste ouvert avec qualification fiscale administrative ; premier test réel non effectué.
 
-**B — outil atelier** : code d’abonnement à 15 € HT/mois publié, écran et consentement du propriétaire, Checkout/portail, synchronisation des preuves Stripe et droits en base. Les ateliers existants restent gratuits ; une tentative abandonnée ne supprime pas la gratuité. Consultation et téléchargement historiques conservés après suspension. Le cycle technique activation/résiliation est éprouvé sur Stripe test et qwf. **Le service payant reste fermé**, avec fiscalité, portail, Checkout et e-mails à valider avant ouverture.
+B : 15 EUR HT/mois, Checkout, factures, portail, droits, renouvellement, échec/reprise, résiliation effective et accès historique vérifiés. Notifications rendues/capturées, sans destinataire réel. Offre fermée faute de validations fiscales/juridiques ; les quatre gratuités historiques sont préservées.
 
-**Vitrine** : aperçu privé et publication explicite, rendu professionnel commun MR/FB ; route Ma Reliure `/ateliers/$slug`. Les droits des images et les consentements restent requis.
+C : paiements directs Accounts v2 sur le compte atelier existant, 3 % TTC et frais Stripe distincts ; onboarding/reprise, exigences et refus sans capacités éprouvés. Tests d'intégration de reprises, concurrence, remboursements, frais et litiges. Compte test existant acct_1UNTDkKB3EC6OVAY : 14 exigences et cartes/virements restricted. Titulaire nécessaire pour les identifiants et l'onboarding ; aucun KYC ni consentement inventé. Succès, remboursement et litige C hébergés non attestés avant résolution. C reste fermé.
 
-**Avoirs atelier** : partiels par prestation, montants après remise, taux effectivement facturés, plafonds par ligne et taux, reprise sans doublon et avoir du reliquat. Franchise et anciennes factures sans ventilation traitées sans appliquer un nouveau taux. Une ancienne facture assujettie sans ventilation fiable conserve son avoir complet d’origine ; l’avoir partiel n’est pas proposé. Recette par l’interface qwf, facture d’origine inchangée.
+Vitrines/clients propres : publication, modification, demande, vendeur atelier conservé, devis accepté et facture atelier, deux avoirs, déclarations de règlement/remboursement/litige, conversation reçue et isolation entre ateliers. Transport manuel : adresses/colis/payeur, journal/proofs, labels privés aller/retour. PDFs fictifs sans achat ni expédition ; Sendcloud réel reste externe. Aucun forfait international inventé.
 
-**C — clients propres** : socle de paiement direct sur le compte Stripe de l’atelier publié, 3 % du TTC, frais Stripe distincts à charge de l’atelier. Facture émise en EUR, sans acompte, ouvrage propre ; projet Oppe refusé. Consentement, configuration du compte, lien privé expirant, contrôles de preuve, remboursement lié à un avoir et webhook dédié. **L’encaissement reste fermé et C n’est pas entièrement prêt** : recette Connect complète et reprise d’un Checkout complété en échec à terminer.
+## Vérification et reprise
 
-**Transport clients propres** : journal déclaratif avec facture, payeur, coût et référence de couverture. Aucun achat d’étiquette supplémentaire. Le forfait Oppe français n’est pas étendu à C ou à l’international.
+3 618 tests / 291 fichiers verts, TypeScript sans erreur, lint sans erreur (19 avertissements préexistants), CI PR/main verte. Quatorze contrôles HTTP de production sur deux domaines et inspections bureau/mobile. Sauvegarde/migrations additives répétées et douze empreintes historiques conservées ; aucun SQL lot9/10. Rollback compatible multi-avoirs vers Worker 3528f090 lot9 ou 656dabba lot8 ; conserver migrations/documents/webhooks/clé stable C.
 
-## Travail restant, dans l’ordre
+QA B/C refermés, vitrine fictive retirée et approbation draft, Auth original rétabli, résiliation test originale restaurée, historiques conservés, secrets e-mail temporaires retirés. Les paramètres de recette ne valent aucune approbation live.
 
-1. Stripe live `acct_1UGI34K0Q47WbZPf` : Identité publique corrigée dans le Dashboard et relue par l’API : nom Ma Reliure / Fine Bindery, descripteur `OPPE RELIURE`, préfixe `OPPE`, support `contact@oppe.fr`, site et URL de support `https://mareliure.fr`, description reliure/restauration et outil atelier. Le MCC `5734` reste inchangé et à qualifier auprès de Stripe. Connect test vérifié ; le passage live requiert maintenant la pièce d’identité et le selfie du titulaire. Voir le reçu Stripe pour les preuves et l’écran de reprise.
-2. Obtenir les décisions fiscales de l’expert-comptable et la revue juridique des clauses marquées. Ne pas présenter une validation comme acquise sans sa preuve.
-3. B : produit/prix et portail live créés, événements abonnement activés. Stripe Tax a un statut actif mais aucune immatriculation enregistrée ; catégorie fiscale du produit non choisie et approbation fiscale non obtenue. Après décision comptable : configuration Tax, liens juridiques du portail et recette hébergée Checkout → paiement → facture/reçu/e-mail → résiliation, puis cohérence de l’indicateur en base et de l’offre publique.
-4. C : webhook et secret Connect configurés. Démonstration Stripe test réussie (100 € fictifs, 3 € de frais plateforme), compte Accounts v2 avec Dashboard complet et responsabilités Stripe ; capacités restreintes. Après vérification personnelle du titulaire, confirmer l’activation live, adapter le socle v1 à v2 et configurer un atelier français. Achever la reprise après échec puis recette applicative succès/refus/asynchrone, remboursements, litiges, frais et e-mails avant ouverture.
-5. Sendcloud : secrets, données de colis et couverture admissible, test physique réel aller-retour. Aucun tarif international inventé.
-6. Premier paiement réel de faible montant puis remboursement. **Aucun débit réel réalisé par le lot 6.**
-7. Offre internationale : pays, devises, transporteur, tarif réel, couverture, douanes et fiscalité à décider avant construction/ouverture.
+Actions externes : vérification personnelle Stripe live, onboarding personnel du compte connecté test puis recette C, validation expert-comptable TVA/immatriculations, revue juridique, secrets/couverture Sendcloud et test physique, premier paiement réel faible montant et remboursement. Zéro débit réel par Codex.
 
-Catalogue B : lookup `oppe_workshop_monthly_15_eur_v1`, prix test `price_1UNEP3KB3EBc6SlhrtzPgl4e`, prix live `price_1UNGCtK0Q47WbZPfij57EdX6` (1 500 centimes EUR, mensuel, TVA exclue). Portail live par défaut `bpc_1UNGGgK0Q47WbZPfn3zFcKbl`, résiliation à échéance. Le script `scripts/setupWorkshopStripeProducts.ts --live` refuse une clé test ou le mauvais compte ; il ne constitue pas une autorisation fiscale et ne doit pas ouvrir B automatiquement.
-
-## Méthode de reprise
-
-Lire `AGENTS.md`, `CLAUDE.md` et le dernier bloc de `CODEX_HANDOFF.md`. Vérifier branche et état local ; un seul agent à la fois. Règles métier dans `src/marketplace/`, aucun secret versionné, aucun prix commercial ou visuel inventé.
-
-Outillage et preuves privés : `D:/CodexProjects/oppe-model-operation/`. La base qwf est exclusivement de recette ; Stripe test, acteurs fictifs et aucun e-mail réel. La production Supabase est `hljxohondjvrkzqicexl` ; le build Ma Reliure vérifie le projet réellement inclus dans le bundle.
-
-Pour chaque migration : CI verte, fusion, sauvegarde fraîche, restauration, empreintes comparées en UTC, répétition du script transactionnel exact, contrôle de dérive et d’identité, application unique avec marqueur de commit, build vérifié, version Worker inactive, bascule et smoke. Sur résultat incertain, inspecter en lecture seule avant toute autre écriture ; ne jamais rejouer aveuglément.
-
-Le précédent Worker est `b812e4cc-a6ea-4050-81a8-508044caed0c`. Après émission d’avoirs partiels, il ne constitue plus un retour arrière complet : fermer les offres et utiliser une correction compatible avec plusieurs avoirs, garder les documents et les webhooks. Ne jamais supprimer des pièces pour revenir en arrière.
-
-La mise à jour de ce dossier et du journal est documentaire ; elle ne nécessite pas de redéployer le code applicatif `13f18d6`.
+Lire [le lot 7](OPPE_LOT7_CONNECTED_JOURNEYS_20261006.md), [le lot 8](OPPE_LOT8_OWN_CLIENT_JOURNEYS_20261006.md) et [la nouvelle recette A](OPPE_LOT9_A_RECIPE_20261006.md) pour les preuves propres et leurs limites. Reçus, captures, PDFs et sauvegardes privés hors Git : D:/CodexProjects/oppe-model-operation. Le bloc Latest handoff de CODEX_HANDOFF.md constitue la mémoire opérationnelle courante ; ne pas afficher ses anciennes données sensibles.
