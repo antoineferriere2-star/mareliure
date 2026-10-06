@@ -149,7 +149,7 @@ export function CaseBriefPanel({ view, locale = "fr-FR" }: { view: CaseView; loc
         <p className="mt-8 text-sm text-[#8a7663]">
           {en
             ? "The customer's contact details will be shared with you if your workshop is selected."
-            : "Les coordonnées du client vous seront transmises si Ma Reliure retient votre atelier."}
+            : "Les coordonnées du client vous seront transmises si Oppe retient votre atelier."}
         </p>
       )}
     </div>

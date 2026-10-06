@@ -23,7 +23,7 @@ import { WorkshopParcelFields } from "./WorkshopParcelFields";
 import { emptyWorkshopParcelPlan, useWorkshopTransportCopy } from "@/marketplace/works/workshopTransportCopy";
 import { workshopParcelPlan } from "@/marketplace/works/workshopTransport";
 
-export function LogisticsPanel({ workId }: { workId: string }) {
+export function LogisticsPanel({ workId, caseId }: { workId: string; caseId?: string | null }) {
   const { locale } = useFineBinderyWorkspace();
   const t = logisticsCopy[locale];
   const read = useServerFn(readWorkLogistics),
@@ -44,7 +44,10 @@ export function LogisticsPanel({ workId }: { workId: string }) {
   });
   const mutation = useMutation({
     mutationFn: async (data: Entry) => append({ data }),
-    onSettled: () => cache.invalidateQueries({ queryKey: key }),
+    onSettled: () => Promise.all([
+      cache.invalidateQueries({ queryKey: key }),
+      ...(caseId ? [cache.invalidateQueries({ queryKey: ["atelier", "case", caseId, "logistics"] })] : []),
+    ]),
   });
   const photo = useMutation({
     mutationFn: async ({ eventId, file }: { eventId: string; file: File }) => {

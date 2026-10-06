@@ -1632,6 +1632,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     return {
       case: {
         id: caseContext.row.id,
+        brand,
         commercialOrigin: commercialOriginOf(caseContext.row.acquisition_origin),
         preferredLanguage: caseContext.row.preferred_language,
         workshopAssigned: caseContext.selectedBinderId !== null,

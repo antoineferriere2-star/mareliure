@@ -44,8 +44,13 @@ const IDEMPOTENCY_KEY_MAX_LENGTH = 256;
 
 export async function sendResendEmail(
   message: ResendMessage,
-  options: { apiKey: string; fetchImpl?: typeof fetch },
+  options: { apiKey: string; fetchImpl?: typeof fetch; testDelivery?: boolean; stripeKey?: string },
 ): Promise<{ id: string | null }> {
+  // Le récepteur officiel Resend simule une livraison sans écrire au destinataire.
+  // Un drapeau oublié avec Stripe live doit arrêter l'envoi, jamais le détourner.
+  if (options.testDelivery && !options.stripeKey?.startsWith("sk_test_")) {
+    throw new Error("Resend delivery simulation requires Stripe test mode");
+  }
   const headers: Record<string, string> = {
     Authorization: `Bearer ${options.apiKey}`,
     "Content-Type": "application/json",
@@ -55,7 +60,7 @@ export async function sendResendEmail(
 
   const body = {
     from: message.from,
-    to: [message.to],
+    to: [options.testDelivery ? "delivered@resend.dev" : message.to],
     subject: message.subject,
     html: message.html,
     text: message.text,

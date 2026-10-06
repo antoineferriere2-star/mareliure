@@ -138,6 +138,16 @@ const RAW_LEAKS = [
 ];
 
 describe("retour vers la liste", () => {
+  it.each(BRANDS)("%s : le devis conserve la marque du dossier depuis l'autre portail", caseBrand => {
+    const portalBrand = caseBrand === "FINE_BINDERY" ? "MA_RELIURE" : "FINE_BINDERY";
+    const html = detail(portalBrand, "C", { caseFacts: { brand: caseBrand } });
+    expect(html).toContain(caseBrand === "FINE_BINDERY"
+      ? "the Fine Bindery brand"
+      : "sous la marque Ma Reliure");
+    expect(html).not.toContain(caseBrand === "FINE_BINDERY"
+      ? "sous la marque Ma Reliure"
+      : "the Fine Bindery brand");
+  });
   it.each(BRANDS)("%s : un client propre ne reçoit ni proposition ni facturation Oppe", brand => {
     const html=detail(brand,"F",{caseFacts:{commercialOrigin:"workshop_client",preferredLanguage:brand==="FINE_BINDERY"?"en":"fr",workshopAssigned:false}});
     expect(html).toContain(brand==="FINE_BINDERY"?"This workshop is your seller":"Cet atelier est votre vendeur");

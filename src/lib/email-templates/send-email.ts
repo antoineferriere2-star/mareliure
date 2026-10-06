@@ -134,7 +134,11 @@ export async function sendTemplateEmail(
         idempotencyKey,
         tag: templateName,
       },
-      { apiKey },
+      {
+        apiKey,
+        testDelivery: process.env.RESEND_TEST_DELIVERY === "true",
+        stripeKey: process.env.STRIPE_SECRET_KEY,
+      },
     );
     return { sent: true };
   }
