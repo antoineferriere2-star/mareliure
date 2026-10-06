@@ -76,7 +76,7 @@ const fr: RoundTripWorkshopCopy = {
   tracking: "Suivi",
   journalHint: "À l'arrivée, confirmez la réception physique et l'état du livre dans le journal ci-dessous : « livré » selon le transporteur ne suffit pas.",
   readyTitle: "Travaux terminés, retour prêt",
-  readyIntro: "Emballez le livre, pesez et mesurez le colis retour. Ma Reliure prépare alors l'étiquette retour après confirmation de l'adresse par le client.",
+  readyIntro: "Emballez le livre, pesez et mesurez le colis retour. Oppe prépare alors l'étiquette retour après confirmation de l'adresse par le client.",
   readyNeedsReceipt: "Le retour se déclare après la réception physique confirmée dans le journal.",
   weight: "Poids (g)", length: "Longueur (cm)", width: "Largeur (cm)", height: "Épaisseur (cm)",
   declareReady: "Déclarer le retour prêt",

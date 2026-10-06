@@ -49,6 +49,12 @@ const SENDER_LABELS: Record<Locale, Record<string, string>> = {
   "en-US": { customer: "You", binder: "Your workshop", admin: "Fine Bindery" },
 };
 
+/** L'atelier nomme son client et reconnaît ses propres messages. */
+const BINDER_SENDER_LABELS: Record<Locale, Record<string, string>> = {
+  "fr-FR": { customer: "Client", binder: "Vous", admin: "Ma Reliure" },
+  "en-US": { customer: "Customer", binder: "You", admin: "Fine Bindery" },
+};
+
 /** Ce que voit l'équipe (le concierge) : elle nomme les parties, elle ne parle pas « à la première personne ». */
 const ADMIN_SENDER_LABELS: Record<string, string> = { customer: "Client", binder: "Atelier", admin: "Équipe" };
 
@@ -65,6 +71,7 @@ export function ConversationPanel({
   channel = "direct",
   audience,
   heading,
+  senderBrandName,
 }: {
   caseId: string;
   viewerRole: "customer" | "binder" | "admin";
@@ -76,6 +83,7 @@ export function ConversationPanel({
    */
   audience?: MessageAudience;
   heading?: string;
+  senderBrandName?: string;
 }) {
   const en = locale === "en-US";
   const customer = viewerRole === "customer";
@@ -237,11 +245,15 @@ export function ConversationPanel({
             }`}
           >
             <p className="text-xs font-semibold opacity-70">
-              {concierge && message.senderRole === "admin"
+              {viewerRole === "binder" && message.senderRole === "admin" && senderBrandName
+                ? senderBrandName
+                : concierge && message.senderRole === "admin"
                 ? copy.conciergeAuthor
                 : viewerRole === "admin"
                   ? (ADMIN_SENDER_LABELS[message.senderRole] ?? message.senderRole)
-                  : (SENDER_LABELS[locale][message.senderRole] ?? message.senderRole)}
+                  : viewerRole === "binder"
+                    ? (BINDER_SENDER_LABELS[locale][message.senderRole] ?? message.senderRole)
+                    : (SENDER_LABELS[locale][message.senderRole] ?? message.senderRole)}
               {customer && (
                 <span className="ml-2 font-normal opacity-80">
                   {formatMessageTime(message.createdAt, locale)}

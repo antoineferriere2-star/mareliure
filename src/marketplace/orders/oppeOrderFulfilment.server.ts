@@ -226,6 +226,9 @@ export async function onOppePaymentConfirmed(
     } catch (alertErr) {
       logOperationalError("oppe-order.confirmation-alert-failed", alertErr, { caseId: input.caseId });
     }
+    // La commande et la facture existent déjà ; seul l'événement reste à reprendre.
+    // Un accusé 200 absorberait définitivement la relance de cette confirmation.
+    throw err;
   }
   return { orderOpened: data === true, invoiceId };
 }

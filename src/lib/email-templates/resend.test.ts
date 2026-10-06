@@ -21,6 +21,34 @@ describe("sendResendEmail", () => {
     });
   });
 
+  it("uses only the official simulation receiver in Stripe test mode, preserving content and deduplication", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, { id: "simulation" }));
+    await sendResendEmail({ ...message, idempotencyKey: "order-confirmed-42" }, {
+      apiKey: "re_fake", fetchImpl, testDelivery: true, stripeKey: "sk_test_fixture",
+    });
+    const [, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body))).toMatchObject({
+      to: ["delivered@resend.dev"], from: message.from, subject: message.subject,
+      html: message.html, text: message.text,
+    });
+    expect(init.headers).toHaveProperty("Idempotency-Key", "order-confirmed-42");
+  });
+
+  it.each(["sk_live_fixture", "", undefined])("refuses simulation without a Stripe test key (%s) before any provider call", async (stripeKey) => {
+    const fetchImpl = vi.fn();
+    await expect(sendResendEmail(message, {
+      apiKey: "re_fake", fetchImpl, testDelivery: true, stripeKey,
+    })).rejects.toThrow("requires Stripe test mode");
+    expect(fetchImpl).not.toHaveBeenCalled();
+  });
+
+  it("preserves the real recipient when simulation is disabled", async () => {
+    const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, { id: "normal" }));
+    await sendResendEmail(message, { apiKey: "re_fake", fetchImpl, stripeKey: "sk_live_fixture" });
+    const [, init] = fetchImpl.mock.calls[0] as [string, RequestInit];
+    expect(JSON.parse(String(init.body)).to).toEqual([message.to]);
+  });
+
   it("sends no idempotency header, reply-to or tag it was not given", async () => {
     const fetchImpl = vi.fn().mockResolvedValue(jsonResponse(200, { id: "email_1" }));
     await sendResendEmail({ ...message, tag: "pas une étiquette" }, { apiKey: "re_fake", fetchImpl });

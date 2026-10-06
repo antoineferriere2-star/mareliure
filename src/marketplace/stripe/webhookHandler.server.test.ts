@@ -37,6 +37,7 @@ const db = vi.hoisted(() => ({
   journal: [] as { case_id: string; event_type: string; metadata: Record<string, unknown> }[],
   failNextJournalInsert: false,
   failNextProposalLoad: false,
+  failNextFulfilment: false,
   nowMs: 1_000_000,
   logged: [] as string[],
   fulfilled: [] as string[],
@@ -82,6 +83,10 @@ vi.mock("@/build/services/adminAuth.server", () => ({
 vi.mock("@/marketplace/orders/oppeOrderFulfilment.server", () => ({
   onOppePaymentConfirmed: async (_sb: unknown, input: { proposalId: string }) => {
     db.fulfilled.push(input.proposalId);
+    if (db.failNextFulfilment) {
+      db.failNextFulfilment = false;
+      throw new Error("order confirmation unavailable");
+    }
     return { orderOpened: true };
   },
 }));
@@ -234,9 +239,11 @@ beforeEach(() => {
   adminAlerts.sent = [];
   db.events.clear();
   db.journal = [];
+  db.fulfilled = [];
   db.logged = [];
   db.failNextJournalInsert = false;
   db.failNextProposalLoad = false;
+  db.failNextFulfilment = false;
   db.nowMs = 1_000_000;
   db.proposal = acceptedProposal();
   db.payment = { proposalId: PROPOSAL_ID, stripeCheckoutSessionId: "cs_1", stripePaymentIntentId: null, paidAt: null, amountPaidCents: null, currency: null };
@@ -368,6 +375,21 @@ describe("P1-2 — un paiement n'est marqué qu'une fois vérifié", () => {
 });
 
 describe("P1-3 — un événement en échec n'est jamais « traité » : la redélivrance le reprend", () => {
+  it("confirmation indisponible après paiement : reprise du même événement sans nouveau paiement ni journal", async () => {
+    const event = sessionEvent();
+    db.failNextFulfilment = true;
+    expect((await deliver(event)).body).toMatchObject({ ok: false, reason: "fulfilment_failed" });
+    expect(paid()).toBe(true);
+    const payment = { ...db.payment! };
+    expect(paymentJournal()).toHaveLength(1);
+    expect(db.events.get(event.id)?.status).toBe("failed");
+    expect((await deliver(event)).status).toBe(200);
+    expect(db.payment).toEqual(payment);
+    expect(paymentJournal()).toHaveLength(1);
+    expect(db.events.get(event.id)).toMatchObject({ status: "processed", attempts: 2 });
+    expect((await deliver(event)).body).toMatchObject({ duplicate: true });
+    expect(db.fulfilled).toHaveLength(2);
+  });
   it("doublon d'un événement TRAITÉ → accusé, jamais rejoué", async () => {
     const event = sessionEvent();
     await deliver(event);

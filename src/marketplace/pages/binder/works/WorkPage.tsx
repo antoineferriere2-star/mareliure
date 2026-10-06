@@ -151,7 +151,7 @@ export function WorkPage({ workId }: { workId: string }) {
       </section>
 
       {work.caseId && <WorkshopRoundTripPanel caseId={work.caseId} />}
-      <LogisticsPanel workId={workId} />
+      <LogisticsPanel workId={workId} caseId={work.caseId} />
 
       <section aria-labelledby="work-quotes" className="space-y-3">
         <h2 id="work-quotes" className="font-serif text-xl">Devis</h2>

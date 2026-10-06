@@ -96,6 +96,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   // seulement sollicité. Avant ça, il n'y a rien à demander ni à discuter, et
   // canAccessConversation (côté serveur) refuserait de toute façon.
   const oppeOrder = commercialOriginOf(data.acquisitionOrigin) === "oppe";
+  const brandName = data.brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure";
   const isSelected = data.ownClient || offer?.state === "selected";
   const offerLabel = data.ownClient ? "Demande à votre atelier" : offer?.state === "offered" || offer?.state === "invited" ? "À examiner" : offer?.state === "accepted" ? "Disponibilité confirmée" : offer?.state === "selected" ? "Atelier retenu" : offer?.state === "declined" ? "Refusé" : offer?.state === "cancelled" ? "Clôturé" : "En attente";
   const nextAction = data.canRespond ? "Accepter ou refuser la proposition" : isSelected ? (oppeOrder ? "Suivre la réalisation" : "Créer ou poursuivre le devis") : offer?.state === "accepted" ? "Attendre la décision d'Oppe" : "Consulter le dossier";
@@ -105,9 +106,9 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   return (
     <div className="space-y-8">
     <Link to="/atelier/leads" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#5f1b27] underline underline-offset-4">← Tous les projets</Link>
-    <BinderPageHeader eyebrow={`${data.view.reference} · ${sourceLabel(data.acquisitionOrigin)}${data.preferredLanguage ? ` · ${data.preferredLanguage.toUpperCase()}` : ""}`} title={data.view.title} description="Le contexte du projet, la décision attendue et les échanges au même endroit." action={headerAction} />
+    <BinderPageHeader eyebrow={`${data.view.reference} · ${sourceLabel(data.acquisitionOrigin, data.brand)}${data.preferredLanguage ? ` · ${data.preferredLanguage.toUpperCase()}` : ""}`} title={data.view.title} description="Le contexte du projet, la décision attendue et les échanges au même endroit." action={headerAction} />
     <section aria-label="Synthèse du dossier" className="grid divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8] sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
-      <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Qui</p><p className="mt-1 text-sm font-semibold">{data.view.contact?.name ?? (data.ownClient ? "Votre client" : "Client transmis par Ma Reliure")}</p></div>
+      <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Qui</p><p className="mt-1 text-sm font-semibold">{data.view.contact?.name ?? (data.ownClient ? "Votre client" : `Client transmis par ${brandName}`)}</p></div>
       <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Quoi</p><p className="mt-1 text-sm font-semibold">{data.view.title}</p></div>
       <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Statut</p><p className="mt-1 text-sm font-semibold text-[#7a2230]">{offerLabel}</p></div>
       <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Prochaine action</p><p className="mt-1 text-sm font-semibold">{nextAction}</p></div>
@@ -140,7 +141,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
             </>
           ) : (
             <p className="mt-3 text-sm text-muted-foreground">
-              Cette sollicitation historique ne contient pas de rémunération validée. Ma Reliure
+              Cette sollicitation historique ne contient pas de rémunération validée. {brandName}
               doit la reprendre avant toute réponse.
             </p>
           )}
@@ -261,7 +262,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
         </section>
         )}
         {(oppeOrder || data.assigned) && <><DecisionsPanel caseId={caseId} role="binder" />
-        <ConversationPanel caseId={caseId} viewerRole="binder" /></>}
+        <ConversationPanel caseId={caseId} viewerRole="binder" senderBrandName={brandName} /></>}
       </>
     )}
     </div>

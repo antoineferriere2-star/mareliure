@@ -2,7 +2,9 @@
 
 ## Périmètre et état
 
-Suite du 6 octobre : PR #89 fusionnée (`4eebb775`), adaptation Accounts v2 et branchements du lot 7 publiés par #90 (`a692363`, Worker `6283a91b`, 111 migrations). Les preuves et limites actuelles figurent dans [le journal du lot 7](OPPE_LOT7_CONNECTED_JOURNEYS_20261006.md). Les paragraphes de recette du lot 6 restent des preuves historiques distinctes.
+Recette A complémentaire du 6 octobre : deux nouveaux dossiers Ma Reliure/Fine Bindery, paiement test, facture, suivi, facture fournisseur et règlement déclaré, deux remboursements partiels MR et un remboursement intégral FB. Échec de confirmation repris par les vrais événements Stripe puis livraison simulée Resend sans doublon. Les corrections et preuves propres au lot 9 figurent dans [le journal A](OPPE_LOT9_A_RECIPE_20261006.md) ; les validations fiscales/juridiques fictives de QA ne valent pas en production.
+
+Suite du 6 octobre : PR #89 fusionnée (`4eebb775`), lot 7 publié par #90, puis lot 8 publié par #91 (`fee7c827`, Worker `656dabba`, 115 migrations). La recette B hébergée couvre paiement, renouvellement, échec, reprise, résiliation effective, événements anciens/dupliqués et téléchargement historique après résiliation. Les clients de vitrine disposent du devis, de la facture atelier, de deux avoirs, du journal manuel et du transport aller/retour privé dans leur portail. Les preuves et limites actuelles figurent dans [le journal du lot 8](OPPE_LOT8_OWN_CLIENT_JOURNEYS_20261006.md). B/C restent fermés ; le succès du paiement C applicatif n'est pas attesté tant que l'onboarding Stripe test du titulaire reste incomplet. Les paragraphes de recette des lots précédents restent des preuves historiques distinctes.
 
 Le propriétaire a demandé de poursuivre tous les chantiers à la suite de la passation.
 Branche : `feat/oppe-b-c-completion`, base `43f9110` (PR #85 fusionnée).

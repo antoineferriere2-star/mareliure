@@ -66,8 +66,8 @@ export function fineBinderyProfilePath(slug: string): string {
   return `/en/${slug}`;
 }
 
-export function sourceLabel(origin: string): string {
+export function sourceLabel(origin: string, brand?: string | null): string {
   if (origin === "FINEBINDERY_PROFILE") return "Page FineBindery";
   if (origin === "BINDER_REFERRED") return "Mon atelier";
-  return "Ma Reliure";
+  return brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure";
 }
