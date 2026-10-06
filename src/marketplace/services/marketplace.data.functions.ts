@@ -34,10 +34,11 @@ import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
 import { isMarketplaceBrand, marketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
-import { loadCustomerCommerce } from "@/marketplace/services/customerCommerce.server";
+import { loadCustomerCommerce, NO_OPPE_COMMERCE } from "@/marketplace/services/customerCommerce.server";
 import { publicCopy } from "@/build/pages/public/publicLocaleContext";
 import { CASE_ANSWER_KEYS } from "@/marketplace/cases/caseProfile";
 import { customerJourney } from "@/marketplace/shipping/customerJourney";
+import { commercialOriginOf, workshopDirectMessaging } from "@/marketplace/cases/commercialOrigin";
 
 /** zod needs a literal tuple; WORK_FAMILIES stays the one place the list is written. */
 /**
@@ -1225,7 +1226,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     const caseIds = matches.map((m) => m.case_id);
     const { data: cases, error: caseError } = await sb
       .from("marketplace_cases")
-      .select("id, reference, status, dossier_id, brand, acquisition_origin, preferred_language, submission_locale, created_at")
+      .select("id, reference, status, dossier_id, brand, acquisition_origin, referred_binder_id, preferred_language, submission_locale, created_at")
       .in("id", caseIds);
     if (caseError) fail(500, caseError.message);
 
@@ -1271,16 +1272,18 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
     const readableByCase = new Map<string, readonly string[]>();
     for (const match of matches) {
       if (match.state !== "selected") continue;
-      const brandRaw = (cases ?? []).find((c) => c.id === match.case_id)?.brand;
+      const matchedCase = (cases ?? []).find((c) => c.id === match.case_id);
+      if (!matchedCase || (commercialOriginOf(matchedCase.acquisition_origin) === "workshop_client" && matchedCase.referred_binder_id !== binder!.id)) continue;
+      const brandRaw = matchedCase.brand;
       const brand = isMarketplaceBrand(brandRaw ?? "") ? (brandRaw as "MA_RELIURE" | "FINE_BINDERY") : "MA_RELIURE";
       readableByCase.set(
         match.case_id,
-        readableAudiences("binder", marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
+        readableAudiences("binder", workshopDirectMessaging(matchedCase.acquisition_origin, marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging)),
       );
     }
     const unread = await unreadCountsByCase(sb, caseIds, context.userId, readableByCase);
 
-    return matches.map((match) => {
+    return matches.filter(match => { const row = (cases ?? []).find(c => c.id === match.case_id); return !!row && (commercialOriginOf(row.acquisition_origin) === "oppe" || row.referred_binder_id === binder!.id); }).map((match) => {
       const row = (cases ?? []).find((c) => c.id === match.case_id);
       const offer = (offers ?? []).find((candidate) => candidate.case_id === match.case_id);
       return {
@@ -1296,7 +1299,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
         submissionLocale: row?.submission_locale ?? null,
         createdAt: row?.created_at ?? match.invited_at,
         title: titles.get(match.case_id) ?? row?.reference ?? "",
-        clientName: match.state === "selected" && row ? dossierById.get(row.dossier_id)?.visitor_name ?? null : null,
+        clientName: row && (match.state === "selected" || (commercialOriginOf(row.acquisition_origin) === "workshop_client" && row.referred_binder_id === binder!.id)) ? dossierById.get(row.dossier_id)?.visitor_name ?? null : null,
         summary: summaries.get(match.case_id) ?? "",
         photoCount: photoCount.get(match.case_id) ?? 0,
         unreadCount: unread.get(match.case_id) ?? 0,
@@ -1330,7 +1333,8 @@ export const getBinderCase = createServerFn({ method: "GET" })
     // Answered on the server, from rows, never from anything the client sent.
     if (!canViewCase(viewer, facts)) fail(403, "Ce dossier ne vous a pas été confié.");
 
-    const disclosure = caseDisclosure(viewer, facts);
+    const ownClient = commercialOriginOf(caseContext.row.acquisition_origin) === "workshop_client" && caseContext.row.referred_binder_id === binder!.id;
+    const disclosure = ownClient ? "full" : caseDisclosure(viewer, facts);
     const view = await buildCaseView(sb, caseContext, disclosure);
 
     const { data: offer } = await sb
@@ -1344,13 +1348,15 @@ export const getBinderCase = createServerFn({ method: "GET" })
 
     return {
       view,
-      offer: offer ?? null,
+      offer: ownClient ? null : offer ?? null,
+      ownClient,
+      assigned: caseContext.selectedBinderId === binder!.id,
       caseStatus: caseContext.row.status,
       brand: caseContext.row.brand,
       acquisitionOrigin: caseContext.row.acquisition_origin,
       preferredLanguage: caseContext.row.preferred_language,
       submissionLocale: caseContext.row.submission_locale,
-      canRespond: offer?.state === "offered",
+      canRespond: !ownClient && offer?.state === "offered",
     };
   });
 
@@ -1466,7 +1472,7 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
     const { data: cases } = await sb
       .from("marketplace_cases")
       .select(
-        "id, reference, status, brand, dossier_id, created_at, customer_price_cents, pricing_status, pricing_currency",
+        "id, reference, status, brand, acquisition_origin, dossier_id, created_at, customer_price_cents, pricing_status, pricing_currency",
       )
       .eq("customer_user_id", context.userId)
       .order("created_at", { ascending: false });
@@ -1479,7 +1485,7 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
         const brand = isMarketplaceBrand(row.brand) ? row.brand : "MA_RELIURE";
         return [
           row.id,
-          readableAudiences("customer", marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging),
+          readableAudiences("customer", workshopDirectMessaging(row.acquisition_origin, marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging)),
         ] as const;
       }),
     );
@@ -1502,15 +1508,17 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
         (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
       );
       // Même règle que le détail : un prix n'est montré que validé par un humain.
-      const priceValidated = row.pricing_status === "validated";
+      const ownClient = commercialOriginOf(row.acquisition_origin) === "workshop_client";
+      const priceValidated = !ownClient && row.pricing_status === "validated";
       const [commerce, thumbnailUrl] = await Promise.all([
-        loadCustomerCommerce(sb, row.id, { priceValidated, customerPriceCents: row.customer_price_cents, caseStatus: row.status }),
+        ownClient ? Promise.resolve(NO_OPPE_COMMERCE) : loadCustomerCommerce(sb, row.id, { priceValidated, customerPriceCents: row.customer_price_cents, caseStatus: row.status }),
         caseContext ? signFirstCasePhoto(sb, caseContext.answers) : Promise.resolve(null),
       ]);
       const validatedPriceCents = priceValidated ? row.customer_price_cents : null;
       const amountCents = commerce.proposal?.totalTtcCents ?? validatedPriceCents;
       results.push({
         id: row.id,
+        commercialOrigin: commercialOriginOf(row.acquisition_origin),
         status: row.status,
         createdAt: row.created_at,
         title:
@@ -1556,11 +1564,13 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     const locale: CaseLocale = brand === "FINE_BINDERY" ? "en-US" : "fr-FR";
     const view = await buildCaseView(sb, caseContext, caseDisclosure(viewer, facts), locale);
 
+    const ownClient = commercialOriginOf(caseContext.row.acquisition_origin) === "workshop_client";
     const { data: selected } = await sb
       .from("marketplace_case_matches")
       .select("binder_id, selected_at")
       .eq("case_id", data.caseId)
       .eq("state", "selected")
+      .eq("binder_id", caseContext.selectedBinderId ?? "00000000-0000-0000-0000-000000000000")
       .maybeSingle();
     const { data: binder } = selected
       ? await sb
@@ -1579,7 +1589,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     // (`checkoutEligibility`, voir customerCommerce.server.ts), relu ici,
     // jamais recalculé côté navigateur. `commerce.proposal` est la vue client
     // en liste blanche : ni rémunération d'atelier, ni marge, ni règle.
-    const commerce = await loadCustomerCommerce(sb, data.caseId, {
+    const commerce = ownClient ? NO_OPPE_COMMERCE : await loadCustomerCommerce(sb, data.caseId, {
       priceValidated: caseContext.row.pricing_status === "validated",
       customerPriceCents: caseContext.row.customer_price_cents,
       caseStatus: caseContext.row.status,
@@ -1608,7 +1618,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
       (line) => line.fieldKey === CASE_ANSWER_KEYS.intent,
     );
     // La commande payée a son propre cycle (réalisation, fin, annulation) : son statut, rien d'autre.
-    const { data: oppeOrder } = await sb
+    const { data: oppeOrder } = ownClient ? {data:null} : await sb
       .from("marketplace_oppe_orders")
       .select("status")
       .eq("case_id", data.caseId)
@@ -1622,14 +1632,17 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
     return {
       case: {
         id: caseContext.row.id,
+        commercialOrigin: commercialOriginOf(caseContext.row.acquisition_origin),
+        preferredLanguage: caseContext.row.preferred_language,
+        workshopAssigned: caseContext.selectedBinderId !== null,
         reference: caseContext.row.reference,
         status: caseContext.row.status,
         customerPriceCents:
-          caseContext.row.pricing_status === "validated"
+          !ownClient && caseContext.row.pricing_status === "validated"
             ? caseContext.row.customer_price_cents
             : null,
         currency: caseContext.row.pricing_currency,
-        priceIncludes: caseContext.row.price_includes,
+        priceIncludes: ownClient ? [] : caseContext.row.price_includes,
         createdAt: caseContext.row.created_at,
         projectType: intentLine ? publicCopy(locale, intentLine.value) : null,
         paymentEligible: commerce.paymentEligible,
@@ -1638,7 +1651,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
         orderStatus: (oppeOrder?.status ?? null) as "paid" | "in_production" | "completed" | "cancelled" | null,
         openDecisions: openDecisions ?? 0,
         // `concierge` : le client n'écrit jamais à l'atelier (Fine Bindery).
-        messagingChannel: marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging
+        messagingChannel: workshopDirectMessaging(caseContext.row.acquisition_origin, marketplaceBrandConfig(brand).messaging.customerWorkshopDirectMessaging)
           ? ("direct" as const)
           : ("concierge" as const),
       },

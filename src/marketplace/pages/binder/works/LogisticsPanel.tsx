@@ -6,6 +6,7 @@ import {
   appendWorkLogistics,
   readWorkLogistics,
   uploadLogisticsPhoto,
+  uploadWorkTransportLabel,
 } from "@/marketplace/services/workLogistics.data.functions";
 import {
   logisticsActions,
@@ -18,6 +19,9 @@ import { useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspace
 import { logisticsCopy } from "@/marketplace/works/logisticsCopy";
 import { isNoWorkshopError } from "@/marketplace/i18n/noWorkshopCopy";
 import { NoWorkshopNotice } from "../NoWorkshopNotice";
+import { WorkshopParcelFields } from "./WorkshopParcelFields";
+import { emptyWorkshopParcelPlan, useWorkshopTransportCopy } from "@/marketplace/works/workshopTransportCopy";
+import { workshopParcelPlan } from "@/marketplace/works/workshopTransport";
 
 export function LogisticsPanel({ workId }: { workId: string }) {
   const { locale } = useFineBinderyWorkspace();
@@ -25,6 +29,7 @@ export function LogisticsPanel({ workId }: { workId: string }) {
   const read = useServerFn(readWorkLogistics),
     append = useServerFn(appendWorkLogistics),
     upload = useServerFn(uploadLogisticsPhoto);
+  const uploadLabel = useServerFn(uploadWorkTransportLabel);
   const loadOrders = useServerFn(getWorkTransportOrders);
   const orders = useQuery({
     queryKey: ["work-transport-orders", workId],
@@ -52,6 +57,16 @@ export function LogisticsPanel({ workId }: { workId: string }) {
         reader.readAsDataURL(file);
       });
       return upload({ data: { workId, eventId, base64 } });
+    },
+    onSettled: () => cache.invalidateQueries({ queryKey: key }),
+  });
+  const label = useMutation({
+    mutationFn: async ({ eventId, file }: { eventId: string; file: File }) => {
+      if (file.type !== "application/pdf" || file.size > 5242880) throw new Error("PDF 5 Mo maximum");
+      const base64 = await new Promise<string>((resolve, reject) => {
+        const reader = new FileReader(); reader.onload = () => resolve(String(reader.result).split(",")[1]); reader.onerror = reject; reader.readAsDataURL(file);
+      });
+      return uploadLabel({ data: { workId, eventId, base64 } });
     },
     onSettled: () => cache.invalidateQueries({ queryKey: key }),
   });
@@ -83,9 +98,12 @@ export function LogisticsPanel({ workId }: { workId: string }) {
             await photo.mutateAsync({ eventId, file });
           }}
           uploading={photo.isPending}
+          uploadLabel={(eventId, file) => label.mutateAsync({ eventId, file }).then(() => undefined)}
+          uploadingLabel={label.isPending}
         />
       )}
       {(mutation.isError || photo.isError) && <ErrorNote>{t.saveError}</ErrorNote>}
+      {label.isError && <ErrorNote>Étiquette PDF non confirmée. Relisez le trajet puis réessayez avec un PDF de 5 Mo maximum.</ErrorNote>}
     </section>
   );
 }
@@ -105,6 +123,8 @@ export function LogisticsEditor({
   upload,
   uploading,
   transportOrders,
+  uploadLabel,
+  uploadingLabel,
 }: {
   workId: string;
   journal: LogisticsJournal;
@@ -112,6 +132,8 @@ export function LogisticsEditor({
   save: (entry: Entry) => Promise<void>;
   upload: (eventId: string, file: File) => Promise<void>;
   uploading: boolean;
+  uploadLabel?: (eventId: string, file: File) => Promise<void>;
+  uploadingLabel?: boolean;
   transportOrders?: {
     ownClient: boolean;
     invoices: { id: string; invoice_number: string | null }[];
@@ -119,6 +141,8 @@ export function LogisticsEditor({
 }) {
   const { locale } = useFineBinderyWorkspace();
   const t = logisticsCopy[locale];
+  const transportCopy = useWorkshopTransportCopy();
+  const [parcelPlan, setParcelPlan] = useState(emptyWorkshopParcelPlan);
   const [invoiceId, setInvoiceId] = useState("");
   const [payer, setPayer] = useState<"customer" | "workshop">("customer");
   const [cost, setCost] = useState("");
@@ -150,6 +174,9 @@ export function LogisticsEditor({
         details.invoiceId = invoiceId;
         details.payer = payer;
         if (mode === "parcel") {
+          const parsed = workshopParcelPlan.safeParse(parcelPlan);
+          if (!parsed.success) { setError("invalid"); return; }
+          Object.assign(details, parsed.data);
           details.transportCostCents = Math.round(Number(cost.replace(",", ".")) * 100);
           details.coverageEvidence = coverage.trim();
         }
@@ -217,6 +244,12 @@ export function LogisticsEditor({
                 {t.proof} : {event.details.proof}
               </p>
             )}
+            {event.details.fromAddress && event.details.toAddress && <p>{event.details.fromAddress.name} · {event.details.fromAddress.postalCode} → {event.details.toAddress.name} · {event.details.toAddress.postalCode}</p>}
+            {event.details.parcel && <p>{event.details.parcel.weightGrams} g · {event.details.parcel.lengthMm} × {event.details.parcel.widthMm} × {event.details.parcel.heightMm} mm</p>}
+            {event.labels?.map(label => label.url && <a key={label.id} href={label.url} target="_blank" rel="noreferrer" className="my-2 block underline">{transportCopy.label}</a>)}
+            {uploadLabel && transportOrders?.ownClient && ["outbound", "return"].includes(event.kind) && event.details.mode === "parcel" && <label className="my-3 block">{transportCopy.upload}
+              <input className="block max-w-full" type="file" accept="application/pdf" disabled={uploadingLabel} onChange={e => { const file = e.target.files?.[0]; if (file) void uploadLabel(event.id, file).catch(() => setError("actionUnconfirmed")); e.target.value = ""; }} />
+            </label>}
             {event.kind === "completed" && <p>{t.finalDeclaration}</p>}
             <div className="mt-2 grid grid-cols-2 gap-2 sm:grid-cols-4">
               {event.photos.map((photo) =>
@@ -305,6 +338,7 @@ export function LogisticsEditor({
             </label>
             {mode === "parcel" && (
               <>
+                <WorkshopParcelFields workId={workId} invoiceId={invoiceId} value={parcelPlan} change={setParcelPlan} outbound={kind === "return" ? (() => { const prior = journal.events.find(e => e.kind === "outbound"); const parsed = workshopParcelPlan.safeParse(prior?.details && { fromAddress: prior.details.fromAddress, toAddress: prior.details.toAddress, parcel: prior.details.parcel }); return parsed.success ? parsed.data : undefined; })() : undefined} />
                 <label className="block">
                   Coût de ce transport TTC (€)
                   <input

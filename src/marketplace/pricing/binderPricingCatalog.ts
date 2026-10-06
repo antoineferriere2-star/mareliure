@@ -42,8 +42,9 @@ export function buildBinderPricingCatalog(
   const baseByKey = new Map(baseRows.map((row) => [row.pricing_key, row]));
   const preferenceByKey = new Map(preferences.map((row) => [row.pricing_key, row]));
   return WORK_ITEMS.flatMap((work) => {
-    const base = baseByKey.get(work.key);
-    if (!base) return [];
+    // An incomplete reference must not disable drafting a workshop's own quote.
+    // Missing prices remain unpriced and require an explicit workshop decision.
+    const base = baseByKey.get(work.key) ?? {default_unit_price_cents:null,unit:"ouvrage",pricing_mode:"manual_review" as const};
     const preference = preferenceByKey.get(work.key);
     const hasOverride =
       preference?.custom_unit_price_cents !== null &&

@@ -27,6 +27,7 @@ import {
   PROJECT_PHOTOS_MAX_FILE_SIZE_MB,
 } from "@/build/storage/projectPhotosBucket";
 import { runtimeSessionMetadataError } from "@/build/runtime/sessionMetadata";
+import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
 
 type Supa = SupabaseClient<Database>;
 
@@ -282,6 +283,18 @@ async function findExistingDossier(supabase: Supa, sessionId: string) {
   if (error) throw error;
   if (!data) return null;
   const { visitor_email_sent_at, ...rest } = data;
+  // A resumed personal request uses the same deployment projection as a fresh submission.
+  // Keep the stored snapshot intact; its session is already authenticated by each caller.
+  if (isMaReliure && rest.visitor_summary) {
+    const { data: session, error: sessionError } = await supabase.from("build_runtime_sessions")
+      .select("mission_id, answers").eq("id", sessionId).maybeSingle();
+    if (sessionError) throw sessionError;
+    if (session) {
+      const { workshopSubmissionProjection } = await import("@/marketplace/services/workshopIntakeSummary.server");
+      const projection = await workshopSubmissionProjection(supabase, session.mission_id, session.answers as Answers, rest.visitor_summary as unknown as VisitorProjectSummary);
+      rest.visitor_summary = projection.summary as unknown as Json;
+    }
+  }
   return { ...rest, emailSent: visitor_email_sent_at !== null };
 }
 
@@ -467,7 +480,7 @@ export async function handleSubmitSession(
     return json(409, { error: "Session already submitted" });
   }
 
-  const brief = generateProjectBrief(schema, updatedSession.answers as Answers, mission);
+  let brief = generateProjectBrief(schema, updatedSession.answers as Answers, mission);
   const missingCount = brief.missingInformation.length;
   const dossierStatus = missingCount > 0 ? "draft" : "ready";
   // The stored summary is the visitor's project, never the workflow state:
@@ -511,7 +524,7 @@ export async function handleSubmitSession(
     };
   }
 
-  const visitorSummary = buildVisitorProjectSummary(brief, proposal, {
+  let visitorSummary = buildVisitorProjectSummary(brief, proposal, {
     businessName,
     locale,
     measurementSystem: DEFAULT_MEASUREMENT_SYSTEM,
@@ -519,6 +532,12 @@ export async function handleSubmitSession(
     submittedAt: update.submitted_at,
     visualPreview,
   });
+  if (isMaReliure) {
+    const { workshopSubmissionProjection } = await import("@/marketplace/services/workshopIntakeSummary.server");
+    const projected = await workshopSubmissionProjection(supabase, mission.id, finalAnswersTyped, visitorSummary, brief);
+    visitorSummary = projected.summary;
+    brief = projected.brief!;
+  }
   const visitorEmail =
     typeof finalAnswersTyped.email === "string" ? finalAnswersTyped.email.trim() || null : null;
   const visitorName =
@@ -581,7 +600,10 @@ export async function handleSubmitSession(
       expires_at: accessTokenExpiryFromNow(),
     });
     if (tokenError) throw tokenError;
-    summaryUrl = `${PUBLIC_SITE_URL}/project-summary/${rawToken}`;
+    const summaryOrigin = process.env.PUBLIC_SITE_ORIGIN || PUBLIC_SITE_URL;
+    const parsedOrigin = new URL(summaryOrigin);
+    if (parsedOrigin.protocol !== "https:" || parsedOrigin.username || parsedOrigin.password || parsedOrigin.pathname !== "/") throw new Error("invalid_public_site_origin");
+    summaryUrl = `${parsedOrigin.origin}/project-summary/${rawToken}`;
   } catch (err) {
     logOperationalError("visitor-summary.token-mint-failed", err, { dossierId: dossier.id });
   }

@@ -31,6 +31,7 @@ import {
   type CaseViewPhoto,
 } from "@/marketplace/cases/dossierProjection";
 import type { CaseDisclosure } from "@/marketplace/permissions";
+import { commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
 
 type Supa = SupabaseClient<Database>;
 
@@ -167,8 +168,8 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
     customerUserId: row.customer_user_id,
     customerEmail: dossier.visitor_email,
     customerName: dossier.visitor_name,
-    invitedBinderIds: (matches ?? []).map((m) => m.binder_id),
-    selectedBinderId: (matches ?? []).find((m) => m.state === "selected")?.binder_id ?? null,
+    invitedBinderIds: (matches ?? []).filter(m => commercialOriginOf(row.acquisition_origin) === "oppe" || m.binder_id === row.referred_binder_id).map((m) => m.binder_id),
+    selectedBinderId: (matches ?? []).find((m) => m.state === "selected" && (commercialOriginOf(row.acquisition_origin) === "oppe" || m.binder_id === row.referred_binder_id))?.binder_id ?? null,
   };
 }
 
@@ -357,7 +358,7 @@ export async function buildCaseView(
 ): Promise<CaseView> {
   return projectCase({
     reference: context.row.reference,
-    brief: context.brief,
+    brief: commercialOriginOf(context.row.acquisition_origin) === "workshop_client" ? { ...context.brief, constraints: context.brief.constraints.map(line => line.label === "Prix Ma Reliure" ? { ...line, label: "Devis atelier", value: "L’atelier établit son devis et facture directement son client." } : line) } : context.brief,
     profile: context.profile,
     disclosure,
     photos: await signCasePhotos(sb, context.answers),
@@ -384,6 +385,11 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
   // too rather than allocating references from two places.
   const { error: repairError } = await sb.rpc("marketplace_ingest_missing_cases");
   if (repairError) throw repairError;
+
+  // A lost match response or an older personal-link case must remain visible to
+  // its recorded workshop. The server-only repair never changes an existing match.
+  const { error: referralRepairError } = await (sb as unknown as SupabaseClient).rpc("marketplace_repair_workshop_referral_matches");
+  if (referralRepairError) throw referralRepairError;
 
   const { data: pending, error } = await sb
     .from("marketplace_cases")
@@ -419,7 +425,9 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
           ? await resolvePublishedFineBinderyBinderBySlug(sb, referralSlug.trim())
           : await resolveApprovedBinderBySlug(sb, referralSlug.trim())
         : null;
-    const fromFineBinderyProfile = Boolean(referral && requestedFineBinderyProfile);
+    const fromFineBinderyProfile = requestedFineBinderyProfile;
+    const workshopIntent = requestedFineBinderyProfile || (typeof referralSlug === "string" && !!referralSlug.trim());
+    const unresolvedReferral = workshopIntent && !referral;
     const supportedLanguages = new Set(["en", "fr", "de", "it", "es"]);
     const rawSubmissionLocale = answers[FINE_BINDERY_SUBMISSION_LOCALE_KEY];
     const rawPreferredLanguage = answers[FINE_BINDERY_PREFERRED_LANGUAGE_KEY];
@@ -429,19 +437,19 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
     const { error: updateError } = await sb
       .from("marketplace_cases")
       .update({
-        manual_review_required: triage.manualReviewRequired,
+        manual_review_required: triage.manualReviewRequired || unresolvedReferral,
         heritage_flag: triage.heritageFlag,
         declared_value_band: triage.declaredValueBand,
         // Stable codes, never sentences. `admin_notes` stays what a human
         // wrote: an earlier version stuffed generated French in there and the
         // back-office split it back apart on newlines — prose used as an API.
-        triage_flags: triage.flags,
+        triage_flags: unresolvedReferral ? [...triage.flags, "unresolved_workshop_referral"] : triage.flags,
         triaged_at: new Date().toISOString(),
         ...(requestedFineBinderyProfile ? { submission_locale: submissionLocale, preferred_language: preferredLanguage } : {}),
-        ...(referral
+        ...(workshopIntent
           ? {
               acquisition_origin: fromFineBinderyProfile ? "FINEBINDERY_PROFILE" : "BINDER_REFERRED",
-              referred_binder_id: referral.binderId,
+              referred_binder_id: referral?.binderId ?? null,
             }
           : {}),
       })
@@ -451,7 +459,7 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
     triaged += 1;
 
     if (referral) {
-      if (fromFineBinderyProfile) {
+      {
         const { error: matchError } = await sb.from("marketplace_case_matches").upsert({
           case_id: row.id,
           binder_id: referral.binderId,

@@ -65,9 +65,10 @@ export type ServerErrorCode =
   | "seller_identity_completion_required"
   | "seller_changed"
   | "no_binder"
+  | "workshop_subscription_required"
   | "other";
 
-const KNOWN_CODES = ["agreement_required", "seller_identity_completion_required", "seller_changed", "no_binder"] as const;
+const KNOWN_CODES = ["agreement_required", "seller_identity_completion_required", "seller_changed", "no_binder", "workshop_subscription_required"] as const;
 
 export function parseServerError(error: unknown): { code: ServerErrorCode; missing: string[] } {
   const message = error instanceof Error ? error.message : String(error ?? "");

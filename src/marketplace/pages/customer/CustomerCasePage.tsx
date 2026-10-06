@@ -13,6 +13,7 @@
  * en page. Aucun message d'erreur du serveur n'est affiché.
  */
 import { CustomerOppeDocuments } from "./CustomerOppeDocuments";
+import { WorkshopCustomerCasePage } from "./WorkshopCustomerCasePage";
 import { ORDER_STAGE_LABELS } from "@/marketplace/orders/orderStatus";
 import { useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
@@ -445,11 +446,11 @@ export function CustomerCasePage({
   const copy = customerCopy(locale);
   const fetchCase = useServerFn(getMyCustomerCase);
   // Avant tout retour anticipé : un hook ne s'appelle jamais conditionnellement.
-  const logisticsActionPending = useLogisticsCustomerAction(caseId);
   const { data, isPending, error, refetch, isFetching } = useQuery({
     queryKey: ["marketplace", "customer", "case", caseId] as const,
     queryFn: () => fetchCase({ data: { caseId } }),
   });
+  const logisticsActionPending = useLogisticsCustomerAction(caseId,data?.case.commercialOrigin === "oppe");
 
   const back = (
     <nav aria-label={copy.backNavLabel}>
@@ -483,6 +484,7 @@ export function CustomerCasePage({
       </div>
     );
   if (!data) return null;
+  if (data.case.commercialOrigin === "workshop_client") return <WorkshopCustomerCasePage caseId={caseId} view={data.view} language={data.case.preferredLanguage ?? (brand==="FINE_BINDERY"?"en":"fr")} assigned={data.case.workshopAssigned} />;
 
   const { view, proposal, selectedBinder } = data;
   const shippingJourney = data.shippingJourney ?? [];

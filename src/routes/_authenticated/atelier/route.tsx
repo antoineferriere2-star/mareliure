@@ -91,7 +91,7 @@ function AtelierLayoutContent() {
           <div><Link to="/atelier" className="font-editorial text-xl leading-none">{isFineBindery ? "FineBindery" : "Ma Reliure"}</Link><p className="mt-1 text-[0.58rem] font-semibold uppercase tracking-[0.18em] text-[#7a2230]">{copy.space}</p></div>
           <SignOutButton label={copy.signOut} signedInAs={copy.signedIn} className="inline-flex min-h-11 items-center px-2 text-xs font-semibold underline-offset-4 hover:underline" />
         </header>
-        <main id="atelier-main" className="mx-auto min-h-[calc(100vh-4rem)] max-w-[76rem] px-4 py-7 pb-28 sm:px-6 sm:py-10 lg:px-10 lg:pb-14 xl:px-14">
+        <main id="atelier-main" className="mx-auto min-h-[calc(100vh-4rem)] max-w-[76rem] px-4 py-7 pb-28 sm:px-6 sm:py-10 sm:pb-28 lg:px-10 lg:pb-14 xl:px-14">
           {profile.data && profile.data.status !== "approved" && (
             <div role="status" className="mb-7 border-l-4 border-amber-700 bg-amber-50 px-5 py-4 text-sm text-amber-950"><strong className="block">{copy.pending}</strong><p className="mt-1 leading-6">{copy.pendingBody}</p></div>
           )}

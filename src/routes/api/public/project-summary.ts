@@ -11,6 +11,9 @@ import type { Database } from "@/integrations/supabase/types";
 import { hashAccessToken, ACCESS_TOKEN_BYTES } from "@/build/services/dossierAccessToken.server";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
+import { isMaReliure } from "@/brand";
+import type { Answers } from "@/build/schema/answers";
+import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
 
 type Supa = SupabaseClient<Database>;
 
@@ -93,7 +96,7 @@ export async function handleGetSummary(supabase: Supa, rawToken: string) {
 
   const { data: dossier, error: dossierError } = await supabase
     .from("build_dossiers")
-    .select("visitor_summary")
+    .select("visitor_summary,mission_id,session_id")
     .eq("id", tokenRow.dossier_id)
     .maybeSingle();
   if (dossierError) throw dossierError;
@@ -105,10 +108,17 @@ export async function handleGetSummary(supabase: Supa, rawToken: string) {
     .update({ last_accessed_at: new Date().toISOString() })
     .eq("id", tokenRow.id);
 
-  const summary = dossier.visitor_summary as {
+  let summary = dossier.visitor_summary as {
     photos: { path: string; caption?: string }[];
     [key: string]: unknown;
   };
+  if (isMaReliure && dossier.session_id && dossier.mission_id) {
+    const { data: session, error: sessionError } = await supabase.from("build_runtime_sessions").select("answers").eq("id",dossier.session_id).maybeSingle();
+    if (sessionError) throw sessionError;
+    const { workshopSubmissionProjection } = await import("@/marketplace/services/workshopIntakeSummary.server");
+    const projected = await workshopSubmissionProjection(supabase,dossier.mission_id,(session?.answers ?? {}) as Answers,summary as unknown as VisitorProjectSummary);
+    summary = projected.summary as unknown as typeof summary;
+  }
   const photos = await resolvePhotoUrls(supabase, summary.photos ?? []);
 
   return json(200, { summary: { ...summary, photos } });

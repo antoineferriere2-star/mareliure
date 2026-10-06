@@ -1,0 +1,57 @@
+# Lot 8 — clients propres, vitrine et transport, 6 octobre 2026
+
+## État de publication
+
+Recette hébergée effectuée sur `mareliure-oppe-lot7-qa.aferriere.workers.dev`, Supabase isolé `qwfhebtxeubfmvvdsqdt`, Stripe test `acct_1UGISJKB3EBc6Slh`. Version QA finale `d43237f8-292f-4403-b62b-4c8e5286b2d9`. Les paramètres fiscaux et juridiques de recette sont simulés ; ils ne valent aucune validation live et ne sont jamais copiés en production.
+
+Au moment de cette revue, production encore sur le lot 7 : merge `a6923630600d5484c8be3e2202bb1d2e8def8cef`, Worker `6283a91b-1a56-4fac-ba3f-9e96e9896fbe`, 111 migrations. Publication du présent lot et reçu de sauvegarde définitif à consigner après vérification. B/C restent fermés et les quatre ateliers historiques gratuits.
+
+## Parcours atelier et client réellement vérifié
+
+- Vitrine fictive : aperçu et publication déjà vérifiés au lot 7 ; modification enregistrée par l'interface au lot 8, puis nouvelle présentation lue publiquement. Vues bureau 1280 × 720 et mobile 390 × 844 mesurées dans le DOM, sans débordement horizontal.
+- Demande depuis cette vitrine, formulaire public normal et photos autorisées : dossier `270f62f5-642a-4867-b22a-9874f5bea4ae` (`RL-056`), marque Ma Reliure, origine `BINDER_REFERRED`, atelier référent `48acc311-9997-4ab1-94a2-9ef312f626c0`. Aucun passage en commande Oppe. Les textes de demandes propres, récapitulatifs et reprises sont adaptés dans les cinq langues ; tests Ma Reliure/Fine Bindery.
+- Import normal « créer un devis » : ouvrage `1bce1397-b474-4be2-91a3-3dcefd93611a` et contact `c5417d49-58ad-4a9e-95c8-7fdf1fb36b55`, tous deux `workshop_platform`, liés au dossier exact. Une seconde action retourne les mêmes identifiants, sans doublon. La création est atomique et soumise aux droits B ; la récupération d'un import existant reste possible après résiliation.
+- Devis `D-2026-0001`, 100 € fictifs : création, envoi, accord référencé fictif et préparation de facture par l'interface. L'atelier est le vendeur, commission manuelle 0 €. Le défaut de `contract_epoch` de l'ancienne RPC, reproduit sur restauration de production, est corrigé sans toucher aux devis historiques. Les accords des demandes propres issues des vitrines sont désormais éligibles sous contrôle de la provenance exacte et du même vendeur.
+- Facture `F-2026-0001` (`2ad44e85-b39b-432e-b13b-ee3c16e5f55d`) émise par l'interface avec profil et mentions clairement fictifs. Vendeur atelier, 100 € ; aucun document commercial réel. Actions PDF atelier et client exécutées sans erreur applicative. L'événement automatisé de téléchargement du navigateur intégré a expiré, mais le PDF effectivement téléchargé dans le dossier de téléchargements a ensuite été retrouvé, identifié par le client et les mentions fictives du lot 8, extrait et inspecté visuellement : une page, vendeur atelier et montant corrects. Le même service de lecture/rendu a aussi été vérifié en lecture seule sur la facture enregistrée.
+- Règlement déclaré fictif de 100 €, deux avoirs partiels conservés (`A-2026-0001` : 20 €, `A-2026-0002` : 10 €), remboursement déclaré fictif de 30 €, litige déclaré ouvert puis clos. Le bouton de règlement est bloqué pendant le litige. Facture originale toujours émise à 100 €, encaissement net déclaré 70 €, avoirs cumulés 30 €. Aucun paiement Stripe et aucun mouvement bancaire déclenchés.
+- Aller manuel lié à cette facture : adresses et colis 450 g, 250 × 180 × 60 mm, payeur client, coût simulé 0 €, couverture explicitement fictive, suivi fictif. Consultation Sendcloud sans achat : tarifs indisponibles, aucun secret accessible et aucun tarif inventé.
+- Dépôt d'une étiquette PDF clairement « FICTIVE / NE PAS EXPÉDIER », lien privé à durée limitée ; livraison transporteur déclarée, réception physique distincte, refus d'écart sans description puis constat documenté et incident. Retour avec adresses inversées, payeur atelier, second dépôt PDF privé puis remise finale déclarée avec preuve. Six événements conservés, deux étiquettes ; aucune expédition réelle.
+- Connexion normale du client fictif dont l'adresse est vérifiée : rattachement automatique au dossier, devis, facture, deux avoirs, déclarations et six étapes visibles dans son espace. Les payeurs aller/retour sont distincts. Aucun devis, bouton de paiement ni facture Oppe sur ce circuit. Message client fictif enregistré ; les justificatifs bancaires internes, adresses privées des événements et secrets des liens de paiement ne sont pas exposés.
+- Vues client réelles 390 × 844 et 1280 × 900, sans débordement horizontal. Connexion normale d'un second atelier : facture étrangère « introuvable », dossier client étranger refusé sans documents ni historique divulgués. Tests de service supplémentaires sur identité, documents archivés, origine de contact immuable, liens expirés et pièces étrangères.
+
+Les captures et reçus détaillés sont dans les opérations privées, hors Git. Les courriels de recette sont rendus/capturés et ne sont pas annoncés comme livrés à des destinataires réels.
+
+## Abonnement B — renouvellement et résiliation réellement testés
+
+Deuxième atelier fictif `cbb7976b-db04-4eb0-986a-b731b98a5a7c`, horloge Stripe `clock_1UNVkeKB3EBc6SlhUBsocWMv`, configuration client v2 initiale avec horloge, compte `acct_1UNVkeKB3EvOCN8c`. Checkout normal hébergé depuis l'application, carte de test uniquement, abonnement `sub_1UNWvcKB3EBc6Slh7GiPjEC2`.
+
+1. Facture initiale `RMMBUAFO-0003` payée : 1 500 centimes HT, 1 800 TTC, droits acquis uniquement après webhook et relecture Stripe.
+2. Novembre simulé : brouillon sans paiement, puis finalisation automatique une heure plus tard ; facture `RMMBUAFO-0004` effectivement payée, droits actifs et deuxième document/notification.
+3. Décembre simulé : moyen de paiement de test officiel refusant les débits ultérieurs, facture `RMMBUAFO-0005` ouverte, tentative réellement échouée, abonnement `past_due`, droits de création retirés, trois documents historiques conservés.
+4. Reprise sur la même facture avec le moyen de test valide : paiement effectué, statut actif et droits restaurés. Pas de quatrième facture fabriquée.
+5. Résiliation dans le portail normal depuis l'application : échéance du 6 janvier 2027 simulé, droits conservés jusqu'à cette date. Avance de l'horloge au-delà : abonnement Stripe et base `canceled`, droits retirés, trois factures payées toujours accessibles et six notifications capturées. Facture historique `RMMBUAFO-0005` effectivement téléchargée depuis cet espace après résiliation, puis PDF inspecté.
+6. Renvoi réel par Stripe CLI des anciens événements `invoice.payment_failed`, `invoice.paid`, puis doublon du même événement payé, après résiliation. La relecture confirme encore `canceled`, droits refusés, trois documents et six notifications sans doublon. Aucun événement financier synthétique utilisé comme preuve de paiement.
+
+Une tentative normale de devis après résiliation a révélé la création inutile du contact avant le refus SQL. Le contrôle des droits est désormais effectué avant cette écriture, avec un message indiquant que les documents historiques restent accessibles. Nouvelle tentative complète par l'interface finale : refus explicite « Un abonnement actif est nécessaire », puis relecture confirmant zéro devis/facture et aucun nouveau contact. L'ancien contact fictif de la première tentative refusée est conservé dans l'historique de recette. Tests de garde avant écriture ajoutés.
+
+## Paiement C — blocage précis et séparation attestée
+
+Le compte existant du premier atelier, `acct_1UNTDkKB3EC6OVAY`, est réutilisé. Relecture Stripe au 6 octobre : compte test v2, Dashboard complet, 14 exigences restantes, capacités carte et virements `restricted`. Depuis la facture atelier effectivement émise, action normale « générer le lien » refusée ; zéro paiement C enregistré pour cette facture.
+
+Stripe collecte les exigences de ce modèle de compte et refuse l'acceptation des conditions à la place du titulaire. Après lancement de l'onboarding, les modifications d'identité par la plateforme sont refusées. Le parcours nécessite les identifiants personnels du titulaire du Dashboard Stripe et sa validation. Aucun nouveau mot de passe Stripe, identité inventée ou consentement transmis par l'agent.
+
+Le paiement C réussi, le remboursement et le litige Stripe depuis notre application **ne sont pas attestés** tant que ces capacités ne sont pas actives. Les tests d'intégration du lot 7 couvrent reprise d'échec terminal de Checkout, réservations/concurrence, rapprochement du vendeur, montant/devise, frais 3 % et frais Stripe, remboursement/avoir, doublons, signatures et litiges. Une démonstration Stripe isolée reste distincte de cette recette. Aucune activation live avant résolution des exigences personnelles, qualification fiscale et revue juridique.
+
+## Vérification, migration et retour arrière
+
+Suite stable du lot : **3 606 tests, 290 fichiers**, réussis. TypeScript réussi, lint sans erreur (19 avertissements préexistants). Exécution locale à un worker et 20 secondes pour les analyses du système de fichiers Windows ; CI conserve ses délais et assertions. Build de production vérifié sur Supabase `hljxohondjvrkzqicexl` seul, sans interopérabilité tslib connue pour casser workerd. Configuration Worker conservée : compatibilité `2026-09-25`, CPU 1 000 ms et bindings historiques.
+
+Quatre migrations additives : `20261007140000` (étiquettes privées, colis et adresses), `20261007150000` (import atomique), `20261007160000` (epoch des nouveaux devis) et `20261007170000` (accords des demandes propres référées). Toutes appliquées une seule fois à la base de recette après sauvegardes distinctes, 115 migrations. Transaction entière répétée sur `rehearsal_lot8_complete`, copie restaurée de production PostgreSQL 17 : COMMIT confirmé, douze empreintes métier inchangées, offres fermées, quatre gratuités conservées. Huit diagnostics Vault et six changements de propriétaire d'event triggers spécifiques à Supabase sont explicitement exclus de la restauration locale ; aucun autre défaut accepté. Ceci n'est pas une restauration complète de l'environnement Supabase.
+
+Sauvegarde préparatoire : `production-before-lot8.dump`, 1 298 068 octets, 1 741 entrées, SHA256 `4913dfece78d01180ec8462e83264c9875a3b46f64a4e02569e27aa8917793f4`. Une sauvegarde fraîche et nouvelle répétition précèdent l'application finale ; aucun secret ni archive dans Git.
+
+Retour arrière compatible : conserver les migrations et documents, fermer B/C et revenir au Worker du lot 7 `6283a91b-1a56-4fac-ba3f-9e96e9896fbe`. Ses nouvelles déclarations C par colis seront refusées si les adresses obligatoires ne sont pas transmises ; A et les historiques restent accessibles, B/C étant fermés. Ne pas revenir aux anciennes versions supposant un seul avoir, ne pas inverser les migrations, ne pas tourner les secrets des webhooks ni la clé stable des liens C.
+
+## Dépendances externes inchangées
+
+Identité Stripe live personnelle (pièce d'identité/selfie), capacités et onboarding du titulaire du compte connecté, validation TVA/immatriculations par l'expert-comptable, revue juridique, secrets Sendcloud et aller-retour physique, premier paiement réel préparé puis remboursement. Aucun de ces prérequis n'est présenté comme obtenu. La recette A complète de la passation n'est pas attribuée à ce lot ; ses contrôles de séparation et non-régression sont inclus, la nouvelle recette A hébergée est traitée séparément.

@@ -1,8 +1,10 @@
+import {workshopIntakeGuidance} from "@/marketplace/pages/customer/workshopIntakeGuidance";
 import { useMemo, type ReactNode } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
 import type { IntakeGuidance } from "@/build/pages/public/intakeGuidance";
 import { CustomerSpaceOffer } from "@/marketplace/pages/customer/CustomerSpaceOffer";
+import { WorkshopIntakeNotice } from "@/marketplace/pages/customer/WorkshopIntakeCopy";
 import {
   ReliureIntakeIntro,
   ReliureNextSteps,
@@ -90,7 +92,7 @@ function RuntimePage() {
   const afterSubmission = isMaReliure
     ? ({ visitorEmail }: { visitorEmail: string | null }): ReactNode => (
         <>
-          {isReliureIntake && <ReliureNextSteps />}
+          {ref ? <WorkshopIntakeNotice stage="next" /> : isReliureIntake && <ReliureNextSteps />}
           <CustomerSpaceOffer email={visitorEmail} publicToken={publicToken} />
         </>
       )
@@ -100,7 +102,7 @@ function RuntimePage() {
       publicToken={publicToken}
       renderAfterSubmission={afterSubmission}
       seedAnswers={seedAnswers}
-      guidance={isReliureIntake ? RELIURE_GUIDANCE : undefined}
+      guidance={ref ? workshopIntakeGuidance() : isReliureIntake ? RELIURE_GUIDANCE : undefined}
       initialLocale={isReliureIntake || isFrenchFineBinderyProfileIntake ? "fr-FR" : undefined}
     />
   );

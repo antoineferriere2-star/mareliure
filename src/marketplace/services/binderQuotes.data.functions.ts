@@ -63,6 +63,7 @@ import { QUOTE_OPERATION_PHOTO_MIME_TYPES } from "@/marketplace/quotes/quotePhot
 import { DOCUMENT_LOGO_MIME_TYPES } from "@/marketplace/quotes/documentBranding";
 import { invoiceDraftInput } from "@/marketplace/invoices/invoiceCompliance";
 import { circuitRefusal } from "@/marketplace/cases/commercialOrigin";
+import { loadWorkshopSubscription } from "./workshopSubscription.server";
 
 const MESSAGES: Record<BinderQuotesErrorCode, string> = {
   no_binder: "Aucun atelier n'est associé à ce compte.",
@@ -261,7 +262,11 @@ export const createMyQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((data: unknown) => quoteInput.parse(data))
   .handler(({ context, data }) =>
-    run(context.userId, (binderId, sb) => createQuote(sb, binderId, data, todayInParis())),
+    run(context.userId, async (binderId, sb) => {
+      if (!(await loadWorkshopSubscription(sb, binderId)).canCreate)
+        fail(409, "workshop_subscription_required");
+      return createQuote(sb, binderId, data, todayInParis());
+    }),
   );
 
 export const updateMyQuote = createServerFn({ method: "POST" })

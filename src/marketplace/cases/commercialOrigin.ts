@@ -17,6 +17,11 @@ export function commercialOriginOf(acquisitionOrigin: string | null | undefined)
   return acquisitionOrigin && WORKSHOP_ORIGINS.includes(acquisitionOrigin) ? "workshop_client" : "oppe";
 }
 
+/** Own clients communicate with their seller, including when they arrived through Fine Bindery. */
+export function workshopDirectMessaging(acquisitionOrigin: string | null | undefined, brandDefault: boolean): boolean {
+  return commercialOriginOf(acquisitionOrigin) === "workshop_client" || brandDefault;
+}
+
 /** Provenance d'une fiche atelier (contact ou ouvrage), telle que la base la fige. */
 export type BinderProvenance = "mon_client" | "ma_reliure" | "workshop_platform";
 

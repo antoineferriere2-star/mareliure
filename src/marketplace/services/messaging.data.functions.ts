@@ -31,6 +31,7 @@ import {
   type MessageAudience,
 } from "@/marketplace/messaging/audience";
 import { resolveViewer } from "./marketplace.data.functions";
+import { commercialOriginOf, workshopDirectMessaging } from "@/marketplace/cases/commercialOrigin";
 
 const MESSAGE_BODY_MAX = 4000;
 const uuid = z.object({ caseId: z.string().uuid() });
@@ -44,11 +45,11 @@ const listInput = z.object({ caseId: z.string().uuid(), audience: z.enum(MESSAGE
 async function loadConversationFacts(sb: Supa, caseId: string): Promise<ConversationAccessFacts> {
   const [{ data: matches }, { data: row }] = await Promise.all([
     sb.from("marketplace_case_matches").select("binder_id, state").eq("case_id", caseId),
-    sb.from("marketplace_cases").select("customer_user_id").eq("id", caseId).maybeSingle(),
+    sb.from("marketplace_cases").select("customer_user_id, acquisition_origin, referred_binder_id").eq("id", caseId).maybeSingle(),
   ]);
   // ONLY the selected workshop enters — an invited (`offered`) or available (`accepted`) one has no
   // right to the customer's conversation yet, and one that was passed over never regains it.
-  const selected = (matches ?? []).find((m) => m.state === "selected")?.binder_id ?? null;
+  const selected = (matches ?? []).find((m) => m.state === "selected" && (commercialOriginOf(row?.acquisition_origin) === "oppe" || m.binder_id === row?.referred_binder_id))?.binder_id ?? null;
   let selectedBinderId: string | null = null;
   if (selected) {
     const { data: binder } = await sb.from("marketplace_binders").select("status").eq("id", selected).maybeSingle();
@@ -60,7 +61,7 @@ async function loadConversationFacts(sb: Supa, caseId: string): Promise<Conversa
 
 /** `null` brand (row missing/unrecognized) falls back to Ma Reliure — never Fine Bindery by default, same rule as brandConfig.ts. */
 async function loadCaseBrand(sb: Supa, caseId: string) {
-  const { data } = await sb.from("marketplace_cases").select("brand, preferred_language").eq("id", caseId).maybeSingle();
+  const { data } = await sb.from("marketplace_cases").select("brand, preferred_language, acquisition_origin").eq("id", caseId).maybeSingle();
   const { isMarketplaceBrand, marketplaceBrandConfig, canonicalHome } = await import(
     "@/marketplace/brand/brandConfig"
   );
@@ -71,7 +72,7 @@ async function loadCaseBrand(sb: Supa, caseId: string) {
     brand,
     brandName: config.displayName,
     locale: data?.preferred_language === "de" ? "de-DE" : data?.preferred_language === "it" ? "it-IT" : data?.preferred_language === "es" ? "es-ES" : data?.preferred_language === "fr" ? "fr-FR" : config.defaultLocale,
-    directWorkshopMessaging: config.messaging.customerWorkshopDirectMessaging,
+    directWorkshopMessaging: workshopDirectMessaging(data?.acquisition_origin, config.messaging.customerWorkshopDirectMessaging),
     origin: canonicalHome(brand).replace(/\/+$/, ""),
   };
 }

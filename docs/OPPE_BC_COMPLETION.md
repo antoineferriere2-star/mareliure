@@ -2,7 +2,7 @@
 
 ## Périmètre et état
 
-Suite du 6 octobre : PR #89 fusionnée (`4eebb775`), adaptation Accounts v2 et branchements du lot 7 en cours de publication. Les preuves et limites actuelles figurent dans [le journal du lot 7](OPPE_LOT7_CONNECTED_JOURNEYS_20261006.md). Les paragraphes de recette du lot 6 restent des preuves historiques distinctes.
+Suite du 6 octobre : PR #89 fusionnée (`4eebb775`), adaptation Accounts v2 et branchements du lot 7 publiés par #90 (`a692363`, Worker `6283a91b`, 111 migrations). Les preuves et limites actuelles figurent dans [le journal du lot 7](OPPE_LOT7_CONNECTED_JOURNEYS_20261006.md). Les paragraphes de recette du lot 6 restent des preuves historiques distinctes.
 
 Le propriétaire a demandé de poursuivre tous les chantiers à la suite de la passation.
 Branche : `feat/oppe-b-c-completion`, base `43f9110` (PR #85 fusionnée).

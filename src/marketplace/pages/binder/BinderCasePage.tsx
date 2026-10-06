@@ -95,9 +95,9 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
   // Un atelier n'a de conversation et de décisions qu'une fois retenu — pas
   // seulement sollicité. Avant ça, il n'y a rien à demander ni à discuter, et
   // canAccessConversation (côté serveur) refuserait de toute façon.
-  const isSelected = offer?.state === "selected";
-  const offerLabel = offer?.state === "offered" || offer?.state === "invited" ? "À examiner" : offer?.state === "accepted" ? "Disponibilité confirmée" : offer?.state === "selected" ? "Atelier retenu" : offer?.state === "declined" ? "Refusé" : offer?.state === "cancelled" ? "Clôturé" : "En attente";
   const oppeOrder = commercialOriginOf(data.acquisitionOrigin) === "oppe";
+  const isSelected = data.ownClient || offer?.state === "selected";
+  const offerLabel = data.ownClient ? "Demande à votre atelier" : offer?.state === "offered" || offer?.state === "invited" ? "À examiner" : offer?.state === "accepted" ? "Disponibilité confirmée" : offer?.state === "selected" ? "Atelier retenu" : offer?.state === "declined" ? "Refusé" : offer?.state === "cancelled" ? "Clôturé" : "En attente";
   const nextAction = data.canRespond ? "Accepter ou refuser la proposition" : isSelected ? (oppeOrder ? "Suivre la réalisation" : "Créer ou poursuivre le devis") : offer?.state === "accepted" ? "Attendre la décision d'Oppe" : "Consulter le dossier";
   const headerAction = !isSelected ? undefined : oppeOrder
     ? (linked ? undefined : <button type="button" className="min-h-11 rounded-sm bg-[#241a12] px-5 text-sm font-semibold text-white disabled:opacity-50" disabled={createFromCase.isPending || works.isPending} onClick={() => createFromCase.mutate()}>{createFromCase.isPending ? "Ouverture…" : "Créer la fiche ouvrage"}</button>)
@@ -107,7 +107,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
     <Link to="/atelier/leads" className="inline-flex min-h-11 items-center text-sm font-semibold text-[#5f1b27] underline underline-offset-4">← Tous les projets</Link>
     <BinderPageHeader eyebrow={`${data.view.reference} · ${sourceLabel(data.acquisitionOrigin)}${data.preferredLanguage ? ` · ${data.preferredLanguage.toUpperCase()}` : ""}`} title={data.view.title} description="Le contexte du projet, la décision attendue et les échanges au même endroit." action={headerAction} />
     <section aria-label="Synthèse du dossier" className="grid divide-y divide-[#d8d0c4] border-y border-[#cfc5b6] bg-[#fffdf8] sm:grid-cols-2 sm:divide-x sm:divide-y-0 lg:grid-cols-4">
-      <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Qui</p><p className="mt-1 text-sm font-semibold">{data.view.contact?.name ?? "Client transmis par Ma Reliure"}</p></div>
+      <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Qui</p><p className="mt-1 text-sm font-semibold">{data.view.contact?.name ?? (data.ownClient ? "Votre client" : "Client transmis par Ma Reliure")}</p></div>
       <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Quoi</p><p className="mt-1 text-sm font-semibold">{data.view.title}</p></div>
       <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Statut</p><p className="mt-1 text-sm font-semibold text-[#7a2230]">{offerLabel}</p></div>
       <div className="px-4 py-4"><p className="text-[0.64rem] font-semibold uppercase tracking-[0.14em] text-[#8b8175]">Prochaine action</p><p className="mt-1 text-sm font-semibold">{nextAction}</p></div>
@@ -120,6 +120,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
     <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,420px)]">
       <CaseBriefPanel view={data.view} />
       <aside className="space-y-6">
+        {oppeOrder ? <>
         <section className="rounded-lg border border-border bg-card p-5">
           <h2 className="font-serif text-lg">Proposition de projet</h2>
           {offer?.binder_payout_cents ? (
@@ -234,6 +235,11 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
         )}
         {isSelected && oppeOrder && <WorkshopOrderProgress caseId={caseId} />}
         <WorkshopReceptionPanel caseId={caseId} />
+        </> : <section className="rounded-lg border border-border bg-card p-5">
+          <h2 className="font-serif text-lg">Votre client</h2>
+          <p className="mt-3 text-sm leading-6">Cette demande vous est adressée depuis votre lien ou votre vitrine. Vous établissez le devis, convenez du prix et du transport, puis facturez votre client. Oppe fournit l’outil et le suivi.</p>
+          <p className="mt-3 text-sm">La création du devis ouvre une fiche ouvrage avec son origine et sa marque conservées.</p>
+        </section>}
       </aside>
     </div>
     </div>
@@ -254,8 +260,8 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
           {linkedWork.data?.quotes.length ? <ul className="mt-2 space-y-2">{linkedWork.data.quotes.map((quote) => <li key={quote.id}><Link to="/atelier/devis/$quoteId" params={{ quoteId: quote.id }} className="inline-flex min-h-11 items-center underline">{quote.number} · {quote.status}</Link></li>)}</ul> : <p className="mt-2 text-sm text-muted-foreground">Aucun devis lié à ce dossier.</p>}
         </section>
         )}
-        <DecisionsPanel caseId={caseId} role="binder" />
-        <ConversationPanel caseId={caseId} viewerRole="binder" />
+        {(oppeOrder || data.assigned) && <><DecisionsPanel caseId={caseId} role="binder" />
+        <ConversationPanel caseId={caseId} viewerRole="binder" /></>}
       </>
     )}
     </div>

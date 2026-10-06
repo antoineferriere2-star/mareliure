@@ -48,6 +48,7 @@ vi.mock("@/marketplace/services/decisions.data.functions", () => ({
 vi.mock("@/marketplace/stripe/checkoutSession.server", () => ({ createCommercialCheckoutSession: vi.fn() }));
 vi.mock("@/marketplace/services/customerProposalAcceptance.data.functions", () => ({ acceptMyProposal: vi.fn() }));
 vi.mock("@/marketplace/services/oppeBilling.data.functions", () => ({ getMyOppeDocuments: vi.fn(), downloadMyOppeDocument: vi.fn() }));
+vi.mock("@/marketplace/services/workshopCustomerCase.data.functions", () => ({ getMyWorkshopCustomerCase: vi.fn(), getMyWorkshopCustomerDocument: vi.fn() }));
 // Acheminement : dossier historique sans plan, le panneau reste masqué (couvert par la recette navigateur).
 vi.mock("@/marketplace/services/caseLogistics.data.functions", () => ({
   getMyCaseLogistics: vi.fn(async () => ({ plan: null, locked: true, next: "choose_mode" })),
@@ -137,6 +138,13 @@ const RAW_LEAKS = [
 ];
 
 describe("retour vers la liste", () => {
+  it.each(BRANDS)("%s : un client propre ne reçoit ni proposition ni facturation Oppe", brand => {
+    const html=detail(brand,"F",{caseFacts:{commercialOrigin:"workshop_client",preferredLanguage:brand==="FINE_BINDERY"?"en":"fr",workshopAssigned:false}});
+    expect(html).toContain(brand==="FINE_BINDERY"?"This workshop is your seller":"Cet atelier est votre vendeur");
+    expect(html).not.toContain(brand==="FINE_BINDERY"?"Pay securely":"Payer en ligne");
+    expect(html).not.toContain(brand==="FINE_BINDERY"?"Accept the quote":"Accepter le devis");
+    expect(html).not.toContain("OPPE SAS");
+  });
   it("chaque page détail a un bouton de retour déterministe vers /mes-livres", () => {
     for (const brand of BRANDS) {
       for (const scenario of SCENARIOS) {

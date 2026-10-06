@@ -1,6 +1,6 @@
 # Lot 7 — parcours B/C reliés, 6 octobre 2026
 
-État de publication : préparé, non déployé à la rédaction de ce bloc. B/C restent fermés en production. PR #89 documentaire fusionnée après relance verte ; merge `4eebb7757866901c44b81257589bcc6c22322bde`.
+Publié le 6 octobre 2026 : PR [#90](https://github.com/antoineferriere2-star/mareliure/pull/90), code `9d67ddb`, merge `a6923630600d5484c8be3e2202bb1d2e8def8cef`, Worker `6283a91b-1a56-4fac-ba3f-9e96e9896fbe` à 100 %, déploiement `e4ff1bbc-18d2-4fc7-aff9-299fccb5d4c8`. Les quatre migrations sont confirmées en production : 111 migrations, dernière `20261007130000`. B/C restent fermés, quatre ateliers historiques gratuits. PR #89 documentaire fusionnée après relance verte ; merge `4eebb7757866901c44b81257589bcc6c22322bde`.
 
 ## Changements vérifiés
 
@@ -28,9 +28,11 @@ Vitrine du même atelier fictif : enregistrement du profil, aperçu privé, refu
 
 Suite complète : 3 548 tests / 283 fichiers réussis, exécution à un worker local pour éviter les délais d'analyse des fichiers sous Windows. Aucun délai d'assertion affaibli. Tests significatifs de notifications, doublons, concurrence, reprise Checkout, remboursements, signatures et récupération de compte inclus. TypeScript réussi ; lint sans erreur, 19 avertissements préexistants.
 
-Quatre migrations additives, dans l'ordre : `20261007100000`, `20261007110000`, `20261007120000`, `20261007130000`. Répétées sur restauration PostgreSQL 17 de la production puis appliquées à qwf ; aucun document métier historique modifié. Extension Supabase Vault indisponible dans la restauration locale : huit diagnostics limités à cette extension et ses objets, sans effet sur les douze empreintes métier contrôlées. Transaction finale de production préparée avec garde des 107 migrations attendues, offres fermées et comparaison des empreintes historiques ; non appliquée à la rédaction.
+Quatre migrations additives, dans l'ordre : `20261007100000`, `20261007110000`, `20261007120000`, `20261007130000`. Répétées sur restauration PostgreSQL 17 de la production puis appliquées à qwf ; aucun document métier historique modifié. Extension Supabase Vault indisponible dans la restauration locale : huit diagnostics limités à cette extension et ses objets, sans effet sur les douze empreintes métier contrôlées. Transaction complète de production répétée sur une seconde restauration de la sauvegarde fraîche puis appliquée une seule fois, avec garde des 107 migrations attendues, offres fermées et comparaison des empreintes historiques ; COMMIT confirmé. Relecture de production : 111 migrations, offres fermées et quatre ateliers gratuits.
 
 Sauvegarde production avant lot 7 : 1 270 567 octets, 1 696 entrées, SHA256 `e30d7e529133b2015db27666d1766a8205a5bdd7745a773810b026081656f1db`. Archives, secrets, accès test et reçus détaillés dans `oppe-model-operation`, hors Git.
+
+Sauvegarde fraîche immédiatement avant application : 1 270 567 octets, 1 696 entrées, SHA256 `9f28bb6096bce2ae6af29048899b21af83b2083c9e4f5af8d4e1202c678b42eb`. Build production vérifié : référence Supabase `hljxohondjvrkzqicexl` seule dans le client, compatibilité workerd et CPU 1 000 ms conservés. Empreinte de code identique entre version uploadée et version avec les deux nouveaux secrets ; tous les secrets historiques conservés. Destination live v2 thin `ed_61VWrvm5wr8DZ5xbT16VPg0QA1DPv2rtG6rZlIVhI9t2`, secret de signature distinct et clé stable des liens C installés. Douze contrôles HTTP réussis sur les deux marques : refus sans signature, refus de signature invalide, vérification de la signature Connect historique et redirection HTTP vers HTTPS. Aucun débit réel ni nouveau compte atelier live.
 
 ## Conditions d'ouverture
 

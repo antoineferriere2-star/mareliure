@@ -114,7 +114,8 @@ describe("public marketing surface - marketing proposition", () => {
     );
 
     expect(source).toContain("usePublicLocale");
-    expect(source).toContain("localizeField(field, copy)");
+    // Optional presentation overrides still pass through the selected language.
+    expect(source).toMatch(/field=\{localizeField\(\{ \.\.\.field,[^\n]+\}, copy\)\}/);
     expect(source).toContain('copy("Continue")');
     expect(source).toContain('copy("Send my project")');
   });

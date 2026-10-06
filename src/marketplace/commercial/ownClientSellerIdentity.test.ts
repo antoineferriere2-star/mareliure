@@ -90,6 +90,37 @@ beforeAll(async () => {
 }, 60000);
 afterAll(async () => { await published.db.close(); await fixed.db.close(); });
 
+describe("création de devis après ajout de l'époque contractuelle", () => {
+  const input = { issue_date:"2026-10-06",valid_until:"2026-11-06",client_name:"Client fictif",client_id:id(3),
+    currency:"EUR",issuer:seller(),vat_regime:"FRANCHISE",subtotal_cents:10000,total_ht_cents:10000,total_vat_cents:0,total_ttc_cents:10000,
+    discount_type:"NONE",discount_value:0,discount_cents:0,vat_breakdown:[],deposit_type:"NONE",deposit_value:0,deposit_cents:0,
+    payment_snapshot:{circuit:"own_client"} };
+  const line = { line_key:"test",label:"Reliure fictive",quantity:1,unit_price_cents:10000,vat_rate_bps:0,total_ht_cents:10000,
+    block_key:"format-principal",block_label:"Format principal",block_book_count:1 };
+  const create = (extra: object = {}, items: unknown[] = [line]) => fixed.db.query<{id:string}>(
+    "SELECT marketplace_binder_create_quote($1,$2::jsonb,$3::jsonb) id",[id(2),JSON.stringify({...input,...extra}),JSON.stringify(items)]);
+  it("reproduit le refus du RPC publié et corrige sans réécrire l'historique", async () => {
+    await expect(create()).rejects.toThrow("contract_epoch_immutable");
+    const before = await fixed.db.query("SELECT md5(jsonb_agg(to_jsonb(q) ORDER BY id)::text) hash FROM marketplace_binder_quotes q");
+    await fixed.db.exec(migration("20261007160000_workshop_quote_contract_epoch"));
+    expect((await fixed.db.query("SELECT md5(jsonb_agg(to_jsonb(q) ORDER BY id)::text) hash FROM marketplace_binder_quotes q")).rows).toEqual(before.rows);
+  });
+  it("fixe l'époque côté base même pour un ancien Worker ou une époque falsifiée", async () => {
+    for (const extra of [{},{contract_epoch:"pre_external_v1"}]) {
+      const quote = (await create(extra)).rows[0].id;
+      expect((await fixed.db.query<{epoch:string}>("SELECT contract_epoch epoch FROM marketplace_binder_quotes WHERE id=$1",[quote])).rows[0].epoch).toBe("external_v1");
+      await expect(fixed.db.query("UPDATE marketplace_binder_quotes SET status='accepted' WHERE id=$1",[quote])).rejects.toThrow("own_agreement_required");
+    }
+  });
+  it("conserve l'atomicité et la numérotation lorsque les lignes sont invalides", async () => {
+    const before = await fixed.db.query("SELECT count(*) n FROM marketplace_binder_quotes");
+    const counters = await fixed.db.query("SELECT * FROM marketplace_binder_document_counters ORDER BY binder_id,kind,year");
+    await expect(create({},[{...line,quantity:0}])).rejects.toThrow();
+    expect((await fixed.db.query("SELECT count(*) n FROM marketplace_binder_quotes")).rows).toEqual(before.rows);
+    expect((await fixed.db.query("SELECT * FROM marketplace_binder_document_counters ORDER BY binder_id,kind,year")).rows).toEqual(counters.rows);
+  });
+});
+
 describe("C1 — identité vendeur figée à l'accord", () => {
   it("reproduit l'impasse sur la version publiée", async () => {
     await expect(published.issue(10, invoiceSeller("123 456 789 00012"))).rejects.toThrow("invoice_seller_changed_new_agreement_required");
