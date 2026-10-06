@@ -61,5 +61,8 @@ describe("facture de vente Oppe", () => {
     expect(text).toContain("MR-AV-2026-00001");
     expect(text).toContain("MR-2026-00001");
     expect(text).toContain("Remboursement du transport");
+    expect(text).toContain("pour le montant indiqué");
+    expect(text).not.toContain("annule intégralement");
+    expect(text).not.toContain("par l’atelier");
   });
 });
