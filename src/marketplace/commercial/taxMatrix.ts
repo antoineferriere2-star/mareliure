@@ -1,5 +1,7 @@
 /**
- * Matrice de qualification fiscale des prestations Oppe — SUGGESTIONS À FAIRE VALIDER.
+ * Matrice de qualification fiscale des prestations Oppe.
+ * Taux approuvés administrativement par le propriétaire le 6 octobre 2026 :
+ * voir administrativeTaxApproval.ts. Aucun avis d'expert-comptable ou de juriste n'est obtenu.
  *
  * Rien ici n'applique un taux : la matrice pré-remplit le formulaire de validation d'un devis, que
  * l'administration confirme (ou corrige) en justifiant sa décision. Le taux dépend de la nature
@@ -56,7 +58,7 @@ export const TAX_MATRIX: Record<ServiceTaxCategory, TaxSuggestion> = {
 export const SHIPPING_SUGGESTION = {
   suggestedRateBps: 2000,
   source: "BOI-TVA-LIQ-30-10-40 § 110 (transport de valeur minime ou marginale, inclus dans le taux réduit) ; forfait aller-retour de 12,50 € HT facturé 15 € TTC",
-  caveat: "Base distincte ou accessoire de la prestation principale : à faire valider.",
+  caveat: "Le taux approuvé de 20 % concerne la ligne distincte ; le caractère accessoire à la prestation principale reste à qualifier.",
 } as const;
 
 export const TAX_QUESTIONS_FOR_ACCOUNTANT: readonly string[] = [

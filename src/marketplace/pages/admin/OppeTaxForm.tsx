@@ -12,6 +12,7 @@ import { Label } from "@/components/ui/label";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { SHIPPING_SUGGESTION, TAX_MATRIX, computeLineTax, SERVICE_TAX_CATEGORIES, type ServiceTaxCategory } from "@/marketplace/commercial/taxMatrix";
 import { suggestTaxPolicyForCountry } from "@/marketplace/commercial/taxPolicy";
+import { ADMINISTRATIVE_TAX_APPROVAL } from "@/marketplace/commercial/administrativeTaxApproval";
 import { validateOppeProposalTax } from "@/marketplace/services/commercialProposal.data.functions";
 
 const pct = (bps: number) => (bps / 100).toString().replace(".", ",");
@@ -71,7 +72,9 @@ export function OppeTaxForm({
     <div className="mt-2 rounded-md border border-dashed border-border p-3">
       <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Valider la fiscalité — v{proposal.version}</p>
       <p className="mt-1 text-xs leading-5 text-muted-foreground">
-        Le taux dépend de la nature de la prestation et de l'ouvrage. La matrice suggère, vous confirmez et justifiez ; à faire valider par l'expert-comptable.
+        Taux de la matrice approuvés administrativement par le propriétaire le 6 octobre 2026
+        ({ADMINISTRATIVE_TAX_APPROVAL.id}). Cette décision ne constitue pas une validation par un expert-comptable ou un juriste.
+        Qualifiez l'ouvrage et la prestation, puis justifiez l'application du taux à ce devis.
       </p>
       <div className="mt-3 grid gap-3 sm:grid-cols-2">
         <div>
@@ -120,8 +123,8 @@ export function OppeTaxForm({
       </div>
       {suggestion && (
         <p className="mt-2 text-xs leading-5 text-amber-800">
-          Suggestion à valider : {pct(suggestion.suggestedRateBps)} % — {suggestion.source}. {suggestion.caveat}
-          {hasShipping ? ` Transport : ${pct(SHIPPING_SUGGESTION.suggestedRateBps)} % suggéré (${SHIPPING_SUGGESTION.caveat})` : ""}
+          Taux approuvé pour cette catégorie : {pct(suggestion.suggestedRateBps)} % — {suggestion.source}. {suggestion.caveat}
+          {hasShipping ? ` Transport distinct : ${pct(SHIPPING_SUGGESTION.suggestedRateBps)} % approuvé. ${SHIPPING_SUGGESTION.caveat}` : ""}
         </p>
       )}
       <div className="mt-3">
@@ -131,7 +134,7 @@ export function OppeTaxForm({
           className="mt-1 min-h-16 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
           value={justification}
           onChange={(e) => setJustification(e.target.value)}
-          placeholder="Ouvrage répondant à la définition fiscale du livre ; reliure complète ; validation de l'expert-comptable du…"
+          placeholder="Décrivez l'ouvrage et l'opération pour justifier la catégorie et les taux retenus pour ce devis."
         />
       </div>
       {preview && (

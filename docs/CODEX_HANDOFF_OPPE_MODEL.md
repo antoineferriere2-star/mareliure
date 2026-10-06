@@ -1,5 +1,11 @@
 # Passation Codex — modèle Oppe, état du 6 octobre 2026
 
+**Mise à jour administrative du 6 octobre 2026 :** lire d'abord
+[l'approbation du propriétaire et les exceptions live B/C](OPPE_ADMINISTRATIVE_APPROVAL_20261006.md).
+Les taux A configurés sont approuvés administrativement ; aucun avis comptable ou juridique n'est
+présumé. Le compte Stripe Oppe live n'a désormais aucune exigence d'identité restante : la demande
+de pièce/selfie ci-dessous est périmée. L'onboarding du compte atelier test reste incomplet.
+
 Le [bilan final vérifié](OPPE_FINAL_PUBLICATION_20261006.md) remplace l'état de reprise du lot 6. Les journaux datés restent des preuves historiques distinctes.
 
 ## Production
