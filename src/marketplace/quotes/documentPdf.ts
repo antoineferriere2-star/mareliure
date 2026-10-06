@@ -328,7 +328,7 @@ export async function renderDocumentPdf(document: DocumentView | CreditNoteDocum
     if (!isQuote && !isCredit && document.issuer.iban) section("RÈGLEMENT", `IBAN ${document.issuer.iban}`);
     if (document.kind === "credit_note") {
       section("MOTIF DE L’AVOIR", document.reason);
-      section("SUIVI", "Cet avoir annule intégralement la facture référencée. Il ne constitue pas une preuve de remboursement. Les remboursements effectués sont déclarés séparément par l’atelier.");
+      section("SUIVI", "Cet avoir rectifie la facture référencée pour le montant indiqué. Il ne constitue pas une preuve de remboursement. Les remboursements sont suivis séparément.");
     }
     if (document.notes) section(isQuote ? "CONDITIONS" : "MENTIONS", document.notes);
     if (isQuote) {
