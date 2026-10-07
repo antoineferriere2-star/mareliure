@@ -1253,7 +1253,7 @@ export async function getInvoice(
     .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!row) throw new BinderQuotesError("not_found");
-  const [items, quote, photos, creditNote] = await Promise.all([
+  const [items, quote, photos, creditNote, onlinePayment] = await Promise.all([
     sb
       .from("marketplace_binder_invoice_items")
       .select("*")
@@ -1273,9 +1273,12 @@ export async function getInvoice(
       .eq("invoice_id", invoiceId)
       .eq("binder_id", binderId)
       .order("created_at"),
+    sb.from("marketplace_workshop_online_payments").select("id")
+      .eq("invoice_id", invoiceId).eq("binder_id", binderId).maybeSingle(),
   ]);
   if (items.error) throw new BinderQuotesError("failed");
   if (creditNote.error) throw new BinderQuotesError("failed");
+  if (onlinePayment.error) throw new BinderQuotesError("failed");
   const notes = creditNote.data ?? [];
   const full =
     notes.reduce((total, note) => total + note.total_ttc_cents, 0) >= row.total_ttc_cents
@@ -1288,6 +1291,10 @@ export async function getInvoice(
     photos,
     full,
   );
+  if (view.payment && onlinePayment.data) {
+    view.payment.declaredExternal = false;
+    view.payment.processedByStripe = true;
+  }
   view.creditNotes = notes.map((note) => ({
     id: note.id,
     number: note.credit_note_number,

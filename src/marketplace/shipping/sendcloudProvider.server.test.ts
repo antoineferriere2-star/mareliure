@@ -18,7 +18,7 @@ function provider(responses: (Response | Error)[], calls: { url: string; init?: 
 }
 const ok = (status: number, body: unknown) => new Response(JSON.stringify(body), { status });
 
-describe("adaptateur Sendcloud v3 (non activé)", () => {
+describe("adaptateur Sendcloud v3 (achat protégé)", () => {
   it("refuse de s'instancier sans clés", () => {
     expect(() => createSendcloudProvider({ publicKey: "", secretKey: "" })).toThrow("sendcloud_keys_missing");
   });
@@ -59,11 +59,19 @@ describe("adaptateur Sendcloud v3 (non activé)", () => {
     });
 });
 
-describe("méthodes disponibles (fetch-shipping-options)", () => {
+describe("méthodes disponibles (shipping-options)", () => {
+  it.each([undefined, "", " ", "invalid", "-1"])("ne transforme pas un tarif absent ou invalide en livraison gratuite : %s", async (value) => {
+    const { fetchSendcloudShippingOptions } = await import("./sendcloudProvider.server");
+    const fetchImpl = (async () => ok(200, { data: [{ code: "fixture", quotes: [{ price: { total: { value, currency: "EUR" } } }] }] })) as typeof fetch;
+    const result = await fetchSendcloudShippingOptions({ publicKey: "p", secretKey: "s", fetchImpl },
+      { fromCountry: "FR", fromPostalCode: "75001", toCountry: "FR", toPostalCode: "69001", weightGrams: 500, dimensionsMm: [350, 250, 80] });
+    expect(result).toEqual([expect.objectContaining({ priceCents: null })]);
+  });
   it("n'envoie que pays, codes postaux, poids et dimensions ; lit code, kilomètres, prix et facturation", async () => {
     const { fetchSendcloudShippingOptions } = await import("./sendcloudProvider.server");
     let sent: Record<string, unknown> = {};
-    const fetchImpl = (async (_url: string, init: RequestInit) => {
+    const fetchImpl = (async (url: string, init: RequestInit) => {
+      expect(url).toBe("https://panel.sendcloud.sc/api/v3/shipping-options");
       sent = JSON.parse(String(init.body));
       return new Response(JSON.stringify({ data: [{ code: "mondial_relay:home/domestic", name: "Mondial Relay Home", carrier: { code: "mondial_relay", name: "Mondial Relay" },
         functionalities: { first_mile: "dropoff", last_mile: "home_delivery", returns: false }, charging_type: "first_scan",
@@ -71,7 +79,12 @@ describe("méthodes disponibles (fetch-shipping-options)", () => {
     }) as unknown as typeof fetch;
     const result = await fetchSendcloudShippingOptions({ publicKey: "p", secretKey: "s", fetchImpl },
       { fromCountry: "FR", fromPostalCode: "75011", toCountry: "FR", toPostalCode: "69002", weightGrams: 480, dimensionsMm: [340, 240, 60] });
-    expect(Object.keys(sent).sort()).toEqual(["dimensions", "from_country_code", "from_postal_code", "to_country_code", "to_postal_code", "weight"]);
+    expect(sent).toMatchObject({ calculate_quotes: true,
+      from_address: { country_code: "FR", postal_code: "75011" },
+      to_address: { country_code: "FR", postal_code: "69002" } });
+    expect(sent.parcels).toEqual([{ weight: { value: "480", unit: "g" },
+      dimensions: { length: "340", width: "240", height: "60", unit: "mm" } }]);
+    expect(Object.keys(sent).sort()).toEqual(["calculate_quotes", "from_address", "parcels", "to_address"]);
     expect(result).toEqual([{ code: "mondial_relay:home/domestic", name: "Mondial Relay Home", carrier: "Mondial Relay", firstMile: "dropoff",
       lastMile: "home_delivery", returns: false, servicePointRequired: false, chargingType: "first_scan", priceCents: 517, currency: "EUR" }]);
   });

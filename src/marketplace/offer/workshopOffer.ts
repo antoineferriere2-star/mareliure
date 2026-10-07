@@ -9,14 +9,15 @@
  *   charge de l'atelier. Un règlement direct ne coûte rien.
  *
  * `subscriptionOpen` et `onlinePaymentOpen` passent à `true` quand la configuration externe
- * correspondante est faite et vérifiée (produit Stripe de l'abonnement ; compte Connect de
- * l'atelier). Tant qu'ils valent `false`, les pages le disent et rien ne s'achète.
+ * correspondante est faite et vérifiée (produit Stripe de l'abonnement ; plateforme Connect
+ * et recette hébergée). Chaque atelier doit activer ses capacités Stripe avant d'encaisser.
+ * Tant qu'ils valent `false`, les pages le disent et rien ne s'achète.
  */
 export const WORKSHOP_OFFER = {
   subscriptionHtCents: 1_500,
   subscriptionOpen: true,
   platformFeeBps: 300,
-  onlinePaymentOpen: false,
+  onlinePaymentOpen: true,
   /** Délai de règlement d'un atelier par Oppe, à compter de l'émission d'une facture conforme. */
   workshopPaymentDays: 30,
 } as const;

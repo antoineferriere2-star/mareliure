@@ -1904,6 +1904,20 @@ describe("photos d'exemple par opération", () => {
 });
 
 describe("avoir PDF immuable et isolé", () => {
+  it("distingue le circuit Stripe de la déclaration atelier sans modifier le snapshot d’accord", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
+    const invoice = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
+    const row = world.tables.marketplace_binder_invoices[0];
+    row.payment_snapshot = { agreement_version: "own-external-v1" };
+    expect((await getInvoice(world.sb, BINDER_A, invoice.id)).payment?.declaredExternal).toBe(true);
+    world.tables.marketplace_workshop_online_payments = [{ id: "payment-test", invoice_id: invoice.id, binder_id: BINDER_B }];
+    expect((await getInvoice(world.sb, BINDER_A, invoice.id)).payment?.declaredExternal).toBe(true);
+    world.tables.marketplace_workshop_online_payments[0].binder_id = BINDER_A;
+    expect((await getInvoice(world.sb, BINDER_A, invoice.id)).payment).toMatchObject({declaredExternal: false, processedByStripe: true});
+    expect(row.payment_snapshot).toEqual({ agreement_version: "own-external-v1" });
+  });
   it("imprime le snapshot, la facture d’origine et le motif sans demander un paiement", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput());
     const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);

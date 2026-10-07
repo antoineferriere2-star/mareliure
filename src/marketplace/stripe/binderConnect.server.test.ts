@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ensureBinderStripeAccount,
   readWorkshopConnectAccount,
@@ -22,6 +22,7 @@ vi.mock("./stripeClient.server", () => ({
   }),
 }));
 let account: Record<string, unknown>;
+afterEach(() => vi.unstubAllEnvs());
 beforeEach(() => {
   vi.clearAllMocks();
   account = {
@@ -51,6 +52,43 @@ beforeEach(() => {
     },
   };
   h.retrieve.mockImplementation(async () => account);
+});
+
+describe("fixture complémentaire hébergée strictement isolée", () => {
+  beforeEach(() => {
+    vi.stubEnv("WORKSHOP_CONNECT_TEST_ACCOUNT_ID", "acct_recipe");
+    vi.stubEnv("STRIPE_SECRET_KEY", "sk_test_fixture");
+    vi.stubEnv("STRIPE_EXPECTED_ACCOUNT_ID", "acct_1UGISJKB3EBc6Slh");
+    vi.stubEnv("SUPABASE_URL", "https://qwfhebtxeubfmvvdsqdt.supabase.co");
+    account.id = "acct_recipe";
+    account.livemode = false;
+    account.dashboard = "express";
+    account.metadata = { qa_recipe: "oppe-c-official-fixtures-20261007" };
+  });
+  it("garde les capacités actives et Stripe responsable des frais et pertes", async () => {
+    expect((await readWorkshopConnectAccount("acct_recipe")).onboarded).toBe(true);
+  });
+  it.each([
+    ["STRIPE_SECRET_KEY", "sk_live_fixture"],
+    ["STRIPE_EXPECTED_ACCOUNT_ID", "acct_live"],
+    ["SUPABASE_URL", "https://hljxohondjvrkzqicexl.supabase.co"],
+    ["WORKSHOP_CONNECT_TEST_ACCOUNT_ID", "acct_other"],
+  ])("refuse l'environnement incompatible %s", async (key, value) => {
+    vi.stubEnv(key, value);
+    expect((await readWorkshopConnectAccount("acct_recipe")).onboarded).toBe(false);
+  });
+  it("refuse une fixture live, un compte non marqué et une capacité inactive", async () => {
+    account.livemode = true;
+    expect((await readWorkshopConnectAccount("acct_recipe")).onboarded).toBe(false);
+    account.livemode = false;
+    account.metadata = {};
+    expect((await readWorkshopConnectAccount("acct_recipe")).onboarded).toBe(false);
+    account.metadata = { qa_recipe: "oppe-c-official-fixtures-20261007" };
+    account.configuration = { merchant: { capabilities: {
+      card_payments: { status: "restricted" }, stripe_balance: { payouts: { status: "active" } },
+    } } };
+    expect((await readWorkshopConnectAccount("acct_recipe")).onboarded).toBe(false);
+  });
 });
 describe("atelier vendeur Accounts v2", () => {
   it("autorise seulement les capacités actives et les responsabilités contractuelles", async () => {

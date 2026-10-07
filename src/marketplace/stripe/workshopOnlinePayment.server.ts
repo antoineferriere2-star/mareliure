@@ -35,7 +35,7 @@ export async function createWorkshopInvoicePaymentLink(
   if (result.error) throw result.error;
   const row = result.data as { token_hash: string; id: string; status: string; sealed_token: string | null };
   const marked = await sb.from("marketplace_workshop_online_payments").update({ fee_brand: brand })
-    .eq("id", row.id).is("fee_brand", null).is("paid_at", null);
+    .eq("id", row.id).eq("token_hash", row.token_hash).is("paid_at", null).is("checkout_session_id", null);
   if (marked.error) throw marked.error;
   if (!row.sealed_token) {
     const sealed = await sealWorkshopPaymentToken(token, binderId, row.id);
@@ -444,6 +444,10 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
     feeRefunded = fee.amount_refunded;
     verifiedFeeId = fee.id;
   }
+  // Stripe peut publier la réussite avant que les frais d'application soient lisibles.
+  // Le webhook sera repris ; ne projeter aucun règlement ni frais de l'ancienne tentative.
+  if (intent.status === "succeeded" && p.fee_tax_basis === "vat_inclusive_fr_20" &&
+    p.fee_cents > 0 && !verifiedFeeId) throw new Error("connect_collected_fee_not_verified");
   let disputed = false;
   let disputeLost = false;
   const disputeStates: string[] = [];
@@ -550,7 +554,6 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
   if (saved.error) throw saved.error;
   if (!saved.data) return;
   if (intent.status === "succeeded" && p.fee_tax_basis === "vat_inclusive_fr_20") {
-    if (p.fee_cents > 0 && !verifiedFeeId) throw new Error("connect_collected_fee_not_verified");
     await issueWorkshopFeeDocuments(sb, p, verifiedFeeId, feeRefunded ?? 0);
   }
   if (
@@ -562,6 +565,7 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
     await notifyWorkshop(sb, {
       id: `payment-${p.id}-${intent.id}-${patch.status}-${refunded}-${patch.disputed}-${disputeStates.sort().join("_")}`,
       binderId: p.binder_id,
+      brand: p.fee_brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE",
       heading: disputeLost
         ? "Litige clos : rapprochement à vérifier"
         : patch.disputed

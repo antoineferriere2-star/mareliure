@@ -1,12 +1,15 @@
 import type { Supa } from "@/build/services/adminAuth.server";
 import { workshopOrigin } from "@/marketplace/billing/workshopSubscription";
 import { assertExpectedStripeAccount } from "@/marketplace/stripe/stripeClient.server";
+import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 
 /** The persisted notice stays visible even if delivery fails. Webhook retries resume the email. */
 export async function notifyWorkshop(
   sb: Supa,
-  notice: { id: string; binderId: string; heading: string; intro: string },
+  notice: { id: string; binderId: string; heading: string; intro: string; brand?: MarketplaceBrand },
 ) {
+  const brand = notice.brand ?? "MA_RELIURE";
+  const brandName = brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure";
   const inserted = await sb.from("marketplace_workshop_notices").upsert(
     {
       id: notice.id,
@@ -46,7 +49,7 @@ export async function notifyWorkshop(
       ]);
       const text = await render(
         React.createElement(template.component, {
-          brandName: "Ma Reliure",
+          brandName,
           locale: "fr-FR",
           heading: notice.heading,
           intro: notice.intro,
@@ -79,10 +82,10 @@ export async function notifyWorkshop(
     if (owner.error || !owner.data.user?.email) throw new Error("workshop_owner_email_missing");
     const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
     const result = await sendTemplateEmail("case-activity", owner.data.user.email, {
-      brand: "MA_RELIURE",
+      brand,
       idempotencyKey: `workshop-${notice.id}`,
       templateData: {
-        brandName: "Ma Reliure",
+        brandName,
         locale: "fr-FR",
         heading: notice.heading,
         intro: notice.intro,
