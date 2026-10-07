@@ -67,6 +67,18 @@ beforeEach(() => {
   h.document.mockResolvedValue({ error: null });
 });
 describe("abonnement B : droits et factures issus de preuves Stripe", () => {
+  it("refuse les droits de la nouvelle offre si la facture ne collecte pas exactement 20 %", async () => {
+    subscription.metadata.tax_decision = "oppe-workshop-tax-2026-10-07";
+    invoice.total = 1500; invoice.amount_paid = 1500;
+    await expect(syncWorkshopSubscriptionEvent(sb,event())).rejects.toThrow("workshop_subscription_vat_mismatch");
+    expect(h.rpc).not.toHaveBeenCalled();
+  });
+  it("refuse une double taxation automatique sur la nouvelle offre manuelle", async () => {
+    subscription.metadata.tax_decision = "oppe-workshop-tax-2026-10-07";
+    invoice.automatic_tax = { enabled: true } as Stripe.Invoice.AutomaticTax;
+    await expect(syncWorkshopSubscriptionEvent(sb,event())).rejects.toThrow("workshop_subscription_vat_mismatch");
+    expect(h.rpc).not.toHaveBeenCalled();
+  });
   it("enregistre la facture et les droits du customer_account après paiement vérifié", async () => {
     expect(await syncWorkshopSubscriptionEvent(sb, event())).toBe(true);
     expect(h.rpc).toHaveBeenCalledWith(

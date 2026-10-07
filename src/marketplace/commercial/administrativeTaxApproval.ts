@@ -19,6 +19,7 @@ export function administrativeRateApproval(input: {
   serviceRateBps: number;
   shippingCents: number;
   shippingRateBps: number | null;
+  shippingNature?: "autonomous" | "accessory" | "manual_review" | null;
 }) {
   return {
     decision_id: ADMINISTRATIVE_TAX_APPROVAL.id,
@@ -28,7 +29,9 @@ export function administrativeRateApproval(input: {
     legally_validated: ADMINISTRATIVE_TAX_APPROVAL.legallyValidated,
     service_rate_approved: input.serviceRateBps === ADMINISTRATIVE_TAX_APPROVAL.serviceRatesBps[input.category],
     shipping_rate_approved: input.shippingCents > 0
-      ? input.shippingRateBps === ADMINISTRATIVE_TAX_APPROVAL.shippingRateBps
+      ? (input.shippingNature === "autonomous" && input.shippingRateBps === ADMINISTRATIVE_TAX_APPROVAL.shippingRateBps) ||
+        (input.shippingNature === "accessory" && input.shippingRateBps === input.serviceRateBps &&
+          input.serviceRateBps === ADMINISTRATIVE_TAX_APPROVAL.serviceRatesBps[input.category])
       : null,
   };
 }

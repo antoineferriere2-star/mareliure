@@ -36,6 +36,7 @@ export interface OppeCustomerSnapshot {
   name: string;
   business_name: string | null;
   vat_number: string | null;
+  siren?: string | null;
   address_line1: string | null;
   address_line2: string | null;
   postal_code: string | null;
@@ -199,7 +200,7 @@ export function oppeInvoiceDocument(invoice: OppeInvoiceRecord, items: OppeInvoi
       billingPostalCode: customer.postal_code,
       billingCity: customer.city,
       billingCountry: customer.country,
-      clientSiren: null,
+      clientSiren: customer.siren ?? null,
       clientVatNumber: customer.vat_number,
       purchaseOrderNumber: null,
       publicServiceCode: null,

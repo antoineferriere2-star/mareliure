@@ -1,5 +1,15 @@
 # TVA des prestations Oppe — approbation administrative du 6 octobre 2026
 
+**Mise à jour opérationnelle du 7 octobre 2026 :** le propriétaire confirme qu'OPPE
+est redevable et collecte la TVA. L'[analyse documentaire et décision administrative
+du 7 octobre](OPPE_FISCAL_DECISION_20261007.md) fixe B à 15 € HT + 3 € de TVA
+(20 %), soit 18 € TTC mensuels, pour les professionnels établis en France
+métropolitaine, et C à 3 % du TTC encaissé, TVA comprise : sur 100 € encaissés,
+2,50 € HT + 0,50 € de TVA. Les établissements hors de ce périmètre restent à
+qualifier individuellement. Il ne s'agit pas d'un avis obtenu d'un expert-comptable
+ou d'un juriste. Les exceptions B/C constatées le 6 octobre ci-dessous sont un
+constat historique, résolu pour ce périmètre par cette nouvelle décision.
+
 **Statut : taux déjà configurés approuvés par le propriétaire le 6 octobre 2026.**
 Décision `oppe-administrative-tax-2026-10-06`, consignée sur instruction directe du propriétaire.
 Elle ne constitue pas une validation obtenue d'un expert-comptable ou d'un juriste.
@@ -26,13 +36,13 @@ propositions et factures historiques ne sont pas modifiées.
 | --- | --- | --- | --- |
 | Reliure d'un livre (au sens fiscal) | 5,5 % | BOI-TVA-LIQ-30-10-40 § 150 | Seulement si l'ouvrage répond aux quatre critères du livre (§ 10) |
 | Réparation, restauration, conservation d'un livre | 20 % | § 180 | Frontière avec la reliure à qualifier au cas par cas |
-| Autre ouvrage ou objet (boîte, carnet, album) | 20 % | § 120 pour un étui conçu pour un livre déterminé, livré avec lui | Vendu seul : taux normal |
-| Transport | 20 % | § 110 (valeur minime ou marginale) | Base distincte ou accessoire : à valider ; le forfait aller-retour est facturé 15 € TTC (12,50 € HT + 20 %) |
+| Autre ouvrage ou objet | 20 % hors qualification particulière | § 10 à 60, 120 | L'étiquette « album » ou « carnet » ne suffit pas : vérifier la définition fiscale du livre et, pour l'étui, son caractère accessoire |
+| Transport | Qualification préalable | § 110 ; BOI-TVA-CHAMP-60-20 | La ligne séparée ne prouve pas l'autonomie. Autonome en France : 20 % ; accessoire : taux de la prestation ; ambigu : décision motivée. Le forfait existant de 15 € TTC (12,50 € HT + 20 %) nécessite la qualification autonome ; sinon nouveau prix individuellement validé |
 
-Sources : BOFiP BOI-TVA-LIQ-30-10-40 (version du 21/08/2024) ; BOI-TVA-CHAMP-20-50-40 et art. 259 A du CGI
+Sources actualisées le 7 octobre : BOFiP BOI-TVA-LIQ-30-10-40 et BOI-TVA-CHAMP-60-20 (versions du 29/07/2026) ; BOI-TVA-CHAMP-20-50-40 et art. 259 A du CGI
 (travaux sur biens meubles corporels pour un non-assujetti, imposables au lieu d'exécution matérielle).
 
-## Exceptions B/C constatées en live le 6 octobre 2026
+## Constat historique B/C en live le 6 octobre 2026 (avant la décision du 7 octobre)
 
 - B : prix existant `price_1UNGCtK0Q47WbZPfij57EdX6`, 1 500 centimes EUR mensuels,
   TVA exclusive. Produit `oppe_workshop_subscription_v1` sans code fiscal ; Stripe Tax actif

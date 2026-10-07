@@ -79,6 +79,11 @@ async function ensurePaymentJournal(
 }
 
 async function processEvent(sb: Supa, event: StripeEventLike, eventId: string): Promise<Outcome> {
+  if (["application_fee.refunded", "application_fee.refund.updated"].includes(event.type)) {
+    const { processWorkshopPlatformFeeEvent } = await import("./workshopOnlinePayment.server");
+    if (await processWorkshopPlatformFeeEvent(sb, event as unknown as import("stripe").default.Event))
+      return { ok: true };
+  }
   const { syncWorkshopSubscriptionEvent } =
     await import("@/marketplace/services/workshopSubscription.server");
   if (await syncWorkshopSubscriptionEvent(sb, event as unknown as import("stripe").default.Event))

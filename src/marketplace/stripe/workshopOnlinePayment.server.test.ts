@@ -2,6 +2,7 @@ import { beforeEach, describe, it, expect, vi } from "vitest";
 import type Stripe from "stripe";
 import {
   processWorkshopConnectEvent,
+  processWorkshopPlatformFeeEvent,
   assertWorkshopDirectChargeAccount,
 } from "./workshopOnlinePayment.server";
 const h = vi.hoisted(() => ({
@@ -16,12 +17,14 @@ const h = vi.hoisted(() => ({
     applicationFees: { retrieve: vi.fn() },
   },
   guard: vi.fn(),
+  feeDocuments: vi.fn(),
 }));
 vi.mock("./stripeClient.server", () => ({
   getMarketplaceStripeClient: () => h.stripe,
   assertExpectedStripeAccount: h.guard,
 }));
 vi.mock("@/marketplace/notifications/workshopNotices.server", () => ({ notifyWorkshop: vi.fn() }));
+vi.mock("@/marketplace/services/workshopFeeDocuments.server", () => ({ issueWorkshopFeeDocuments: h.feeDocuments }));
 let p: Record<string, unknown>;
 let intent: Record<string, unknown>;
 let session: Record<string, unknown>;
@@ -107,6 +110,28 @@ beforeEach(() => {
   h.stripe.disputes.list.mockReturnValue((async function* () {})());
 });
 describe("C : preuves de paiement du bon compte connecté", () => {
+  it("rapproche le remboursement tardif de frais plateforme depuis le vrai compte connecté", async () => {
+    p.fee_tax_basis = "vat_inclusive_fr_20";
+    (intent.latest_charge as Record<string, unknown>).application_fee = "fee_test";
+    h.stripe.applicationFees.retrieve.mockResolvedValue({ id: "fee_test", charge: "ch_qa", account: "acct_workshop", amount: 300, currency: "eur", amount_refunded: 50 });
+    const platformEvent = event("application_fee.refunded", { id: "fee_test" });
+    delete platformEvent.account;
+    expect(await processWorkshopPlatformFeeEvent(db(), platformEvent)).toBe(true);
+    expect(h.stripe.charges.retrieve).toHaveBeenCalledWith("ch_qa", { expand: ["payment_intent"] }, { stripeAccount: "acct_workshop" });
+    expect(h.feeDocuments).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "payment_qa" }), "fee_test", 50);
+  });
+  it("ne facture les frais de la nouvelle offre qu'après preuve de la retenue réelle Stripe", async () => {
+    p.fee_tax_basis = "vat_inclusive_fr_20";
+    (intent.latest_charge as Record<string, unknown>).application_fee = "fee_test";
+    h.stripe.applicationFees.retrieve.mockResolvedValue({ id: "fee_test", amount: 300, currency: "eur", account: "acct_workshop", amount_refunded: 50 });
+    await processWorkshopConnectEvent(db(), event("checkout.session.completed", session));
+    expect(h.feeDocuments).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ id: "payment_qa" }), "fee_test", 50);
+  });
+  it("n'émet pas une facture de frais sans preuve Stripe et laisse le webhook être repris", async () => {
+    p.fee_tax_basis = "vat_inclusive_fr_20";
+    await expect(processWorkshopConnectEvent(db(), event("checkout.session.completed", session))).rejects.toThrow("connect_collected_fee_not_verified");
+    expect(h.feeDocuments).not.toHaveBeenCalled();
+  });
   it("confirme la facture atelier avec 3 % et frais Stripe distincts", async () => {
     await processWorkshopConnectEvent(db(), event("checkout.session.completed", session));
     expect(p).toMatchObject({ status: "paid", payment_intent_id: "pi_qa", stripe_fee_cents: 175 });

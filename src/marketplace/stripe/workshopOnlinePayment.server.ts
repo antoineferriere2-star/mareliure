@@ -10,11 +10,15 @@ import {
 import { inspectWorkshopCheckout, recoverWorkshopCheckout } from "./checkoutRecovery.server";
 import { notifyWorkshop } from "@/marketplace/notifications/workshopNotices.server";
 import { openWorkshopPaymentToken, sealWorkshopPaymentToken } from "./workshopPaymentToken.server";
+import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { issueWorkshopFeeDocuments } from "@/marketplace/services/workshopFeeDocuments.server";
+import { WORKSHOP_SUBSCRIPTION_TERMS } from "@/marketplace/billing/workshopSubscription";
 
 export async function createWorkshopInvoicePaymentLink(
   sb: Supa,
   binderId: string,
   invoiceId: string,
+  brand: MarketplaceBrand = "MA_RELIURE",
 ) {
   if (!process.env.WORKSHOP_PAYMENT_LINK_KEY) throw new Error("workshop_payment_link_key_missing");
   const existing = await sb.from("marketplace_workshop_online_payments").select("id,sealed_token")
@@ -30,6 +34,9 @@ export async function createWorkshopInvoicePaymentLink(
   });
   if (result.error) throw result.error;
   const row = result.data as { token_hash: string; id: string; status: string; sealed_token: string | null };
+  const marked = await sb.from("marketplace_workshop_online_payments").update({ fee_brand: brand })
+    .eq("id", row.id).is("fee_brand", null).is("paid_at", null);
+  if (marked.error) throw marked.error;
   if (!row.sealed_token) {
     const sealed = await sealWorkshopPaymentToken(token, binderId, row.id);
     const rotated = await sb
@@ -85,8 +92,8 @@ export async function createWorkshopInvoiceCheckout(sb: Supa, token: string) {
   const settings = await sb.from("marketplace_workshop_offer_settings").select("online_payment_open").eq("id", true).single();
   if (settings.error) throw settings.error;
   if (!settings.data.online_payment_open) throw new Error("online_payment_closed");
-  if (process.env.WORKSHOP_CONNECT_LEGAL_APPROVED !== "true")
-    throw new Error("workshop_online_payment_terms_not_approved");
+  if (process.env.WORKSHOP_CONNECT_TERMS_READY !== WORKSHOP_SUBSCRIPTION_TERMS)
+    throw new Error("workshop_online_payment_terms_not_ready");
   const row = await paymentByToken(sb, token);
   if (row.paid_at || !["ready", "failed"].includes(row.status))
     throw new Error("payment_pending_reconciliation");
@@ -293,6 +300,27 @@ export async function refundWorkshopInvoice(
   return { id: refund.id };
 }
 
+/** Platform fee refunds can arrive after the connected charge refund. Re-read
+ * the actual fee and charge so the later return also emits its credit note. */
+export async function processWorkshopPlatformFeeEvent(sb: Supa, event: Stripe.Event): Promise<boolean> {
+  if (event.account || !["application_fee.refunded", "application_fee.refund.updated"].includes(event.type)) return false;
+  await assertExpectedStripeAccount();
+  const stripe = getMarketplaceStripeClient();
+  const refund = event.data.object as Stripe.FeeRefund;
+  const feeId = event.type === "application_fee.refunded" ? event.data.object.id :
+    typeof refund.fee === "string" ? refund.fee : refund.fee?.id;
+  if (!feeId) throw new Error("connect_fee_event_missing_fee");
+  const fee = await stripe.applicationFees.retrieve(feeId);
+  const account = typeof fee.account === "string" ? fee.account : fee.account.id;
+  const chargeId = typeof fee.charge === "string" ? fee.charge : fee.charge.id;
+  const charge = await stripe.charges.retrieve(chargeId, { expand: ["payment_intent"] }, { stripeAccount: account });
+  const intent = charge.payment_intent;
+  const verifiedIntent = typeof intent === "string" ? await stripe.paymentIntents.retrieve(intent, {}, { stripeAccount: account }) : intent;
+  if (verifiedIntent?.metadata.activity !== "workshop_online_payment") return false;
+  await processWorkshopConnectEvent(sb, { ...event, account, type: "charge.refunded", data: { object: charge } });
+  return true;
+}
+
 export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event) {
   if (!event.account) throw new Error("connect_event_account_required");
   await assertExpectedStripeAccount();
@@ -401,6 +429,7 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
       .reduce((total, fee) => total + fee.amount, 0) ?? null;
   const refunded = charge?.amount_refunded ?? 0;
   let feeRefunded: number | null = p.fee_refunded_cents;
+  let verifiedFeeId: string | null = null;
   if (charge?.application_fee) {
     const fee =
       typeof charge.application_fee === "string"
@@ -413,6 +442,7 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
     )
       throw new Error("connect_fee_mismatch");
     feeRefunded = fee.amount_refunded;
+    verifiedFeeId = fee.id;
   }
   let disputed = false;
   let disputeLost = false;
@@ -519,6 +549,10 @@ export async function processWorkshopConnectEvent(sb: Supa, event: Stripe.Event)
     .maybeSingle();
   if (saved.error) throw saved.error;
   if (!saved.data) return;
+  if (intent.status === "succeeded" && p.fee_tax_basis === "vat_inclusive_fr_20") {
+    if (p.fee_cents > 0 && !verifiedFeeId) throw new Error("connect_collected_fee_not_verified");
+    await issueWorkshopFeeDocuments(sb, p, verifiedFeeId, feeRefunded ?? 0);
+  }
   if (
     patch.status === "paid" ||
     patch.status === "refunded" ||

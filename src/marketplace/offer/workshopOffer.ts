@@ -5,7 +5,7 @@
  * - Activité B : abonnement de 15 € HT par mois, page vitrine incluse, pour les NOUVEAUX ateliers.
  *   Les ateliers déjà inscrits restent gratuits tant qu'ils n'ont pas accepté expressément la
  *   transition. Aucun volume de commandes du réseau n'est garanti.
- * - Activité C : frais plateforme de 3 % du TTC encaissé en ligne ; frais Stripe séparés, à la
+ * - Activité C : frais plateforme de 3 % du TTC encaissé en ligne, TVA comprise ; frais Stripe séparés, à la
  *   charge de l'atelier. Un règlement direct ne coûte rien.
  *
  * `subscriptionOpen` et `onlinePaymentOpen` passent à `true` quand la configuration externe
@@ -14,7 +14,7 @@
  */
 export const WORKSHOP_OFFER = {
   subscriptionHtCents: 1_500,
-  subscriptionOpen: false,
+  subscriptionOpen: true,
   platformFeeBps: 300,
   onlinePaymentOpen: false,
   /** Délai de règlement d'un atelier par Oppe, à compter de l'émission d'une facture conforme. */

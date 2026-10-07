@@ -15,6 +15,8 @@ import {
 import { recoverWorkshopCheckout } from "@/marketplace/stripe/checkoutRecovery.server";
 import { notifyWorkshop } from "@/marketplace/notifications/workshopNotices.server";
 import { findWorkshopCustomerAccount } from "@/marketplace/stripe/workshopAccountRecovery.server";
+import { frenchWorkshopTaxEligibility, isFrenchSubscriptionTaxRate, WORKSHOP_TAX_DECISION } from "@/marketplace/billing/workshopTax";
+import { MARELIURE_PUBLISHER, MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
 
 export async function workshopBillingOwner(sb: Supa, userId: string) {
   const member = await findActiveBinderMembership(sb, userId);
@@ -41,20 +43,20 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   if (!accepted) fail(400, "Votre accord explicite aux conditions de l’abonnement est requis.");
   const binderId = await workshopBillingOwner(sb, userId);
   const workshop = await sb
-    .from("marketplace_binders")
-    .select("country_code")
-    .eq("id", binderId)
-    .single();
+    .from("marketplace_binder_billing_profiles")
+    .select("country,postal_code,city,address_line1,legal_name,workshop_name,vat_regime,vat_number,siren")
+    .eq("binder_id", binderId)
+    .maybeSingle();
   if (workshop.error) throw workshop.error;
-  if (workshop.data.country_code !== "FR")
-    fail(409, "L’abonnement n’est pas encore ouvert dans votre pays.");
+  const eligibility = frenchWorkshopTaxEligibility(workshop.data);
+  if (eligibility) fail(409, eligibility);
   if (
     process.env.WORKSHOP_SUBSCRIPTION_TAX_APPROVED !== "true" ||
-    !process.env.WORKSHOP_SUBSCRIPTION_TAX_CODE
+    !process.env.WORKSHOP_SUBSCRIPTION_VAT_RATE_ID
   )
     fail(503, "La configuration fiscale de l’abonnement reste à valider.");
-  if (process.env.WORKSHOP_SUBSCRIPTION_LEGAL_APPROVED !== "true")
-    fail(503, "Les conditions de l’abonnement restent à valider.");
+  if (process.env.WORKSHOP_SUBSCRIPTION_TERMS_READY !== WORKSHOP_SUBSCRIPTION_TERMS)
+    fail(503, "Les conditions publiées de l’abonnement doivent correspondre à la version proposée.");
   await assertExpectedStripeAccount();
   const stripe = getMarketplaceStripeClient();
   const { data: prices } = await stripe.prices.list({
@@ -74,20 +76,9 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   ) {
     fail(503, "Le prix de l’abonnement n’est pas configuré.");
   }
-  const product =
-    typeof price.product === "object" && !price.product.deleted ? price.product : null;
-  const taxCode =
-    product && (typeof product.tax_code === "string" ? product.tax_code : product.tax_code?.id);
-  const [taxSettings, registrations] = await Promise.all([
-    stripe.tax.settings.retrieve(),
-    stripe.tax.registrations.list({ status: "active", limit: 100 }),
-  ]);
-  if (
-    taxCode !== process.env.WORKSHOP_SUBSCRIPTION_TAX_CODE ||
-    taxSettings.status !== "active" ||
-    !registrations.data.some((registration) => registration.country === "FR")
-  )
-    fail(503, "La configuration fiscale de l’abonnement reste à valider.");
+  const taxRate = await stripe.taxRates.retrieve(process.env.WORKSHOP_SUBSCRIPTION_VAT_RATE_ID!);
+  if (!isFrenchSubscriptionTaxRate(taxRate))
+    fail(503, "Le taux manuel français de TVA de l’abonnement doit être actif, à 20 %, hors taxes.");
   const current = await loadWorkshopSubscription(sb, binderId);
   if (!current.settings.subscription_open)
     fail(409, "L’abonnement payant n’est pas encore ouvert.");
@@ -111,7 +102,12 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   }
   if (previousSession) {
     const previous = await stripe.checkout.sessions.retrieve(previousSession);
-    if (previous.status === "open" && previous.url) return { url: previous.url };
+    if (previous.status === "open" && previous.url) {
+      if (currentWorkshopCheckout(previous, taxRate.id)) return { url: previous.url };
+      // An older reservation must not bypass the newly accepted fiscal terms.
+      await stripe.checkout.sessions.expire(previous.id);
+      previous.status = "expired";
+    }
     let reason: "expired" | "subscription_ended" | null =
       previous.status === "expired" ? "expired" : null;
     const subId =
@@ -143,7 +139,8 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   };
   if (reserved.checkout_session_id) {
     const existing = await stripe.checkout.sessions.retrieve(reserved.checkout_session_id);
-    if (existing.status === "open" && existing.url) return { url: existing.url };
+    if (existing.status === "open" && existing.url && currentWorkshopCheckout(existing, taxRate.id))
+      return { url: existing.url };
     fail(409, "Le paiement est en cours de rapprochement. Réessayez dans quelques instants.");
   }
   let customer = reserved.stripe_customer_id;
@@ -178,18 +175,36 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
     binder_id: binderId,
     activity: "workshop_subscription",
     terms_version: WORKSHOP_SUBSCRIPTION_TERMS,
+    tax_decision: WORKSHOP_TAX_DECISION.id,
+    manual_tax_rate_id: taxRate.id,
+    establishment_country: workshop.data!.country!,
+    establishment_postal_code: workshop.data!.postal_code!,
+    professional_customer: "true",
+    customer_vat_regime: workshop.data!.vat_regime!,
   };
+  const invoiceSettings = {
+    footer: `${MARELIURE_PUBLISHER.name} — ${MARELIURE_PUBLISHER.legalForm} — capital ${MARELIURE_PUBLISHER.capital} — ${MARELIURE_PUBLISHER.address} — ${MARELIURE_PUBLISHER.rcs} — SIRET ${MARELIURE_PUBLISHER.siret} — TVA ${MARELIURE_PUBLISHER.vat} — ${MARELIURE_CONTACT_EMAIL}`,
+    ...(workshop.data!.siren ? { custom_fields: [{ name: "SIREN client", value: workshop.data!.siren }] } : {}),
+  };
+  if (customer.startsWith("acct_")) {
+    await stripe.v2.core.accounts.update(customer, { configuration: { customer: { billing: { invoice: invoiceSettings } } } });
+  } else {
+    await stripe.customers.update(customer, { invoice_settings: invoiceSettings });
+  }
   const origin = workshopOrigin();
   const session = await stripe.checkout.sessions.create(
     {
       ...(customer.startsWith("acct_") ? { customer_account: customer } : { customer }),
       mode: "subscription",
       integration_identifier: "oppe_workshop_subscription_cfjmkpwa",
-      line_items: [{ price: price.id, quantity: 1 }],
-      automatic_tax: { enabled: true },
+      line_items: [{ price: price.id, quantity: 1, tax_rates: [taxRate.id] }],
+      automatic_tax: { enabled: false },
       billing_address_collection: "required",
       customer_update: { address: "auto", name: "auto" },
-      tax_id_collection: { enabled: true },
+      name_collection: { business: { enabled: true, optional: false } },
+      // A professional in franchise has no VAT ID to enter. Its identity is
+      // still required, and OPPE still collects the same 20 % VAT.
+      tax_id_collection: { enabled: workshop.data!.vat_regime !== "FRANCHISE" },
       metadata,
       subscription_data: { metadata },
       expires_at: Math.floor(Date.parse(reserved.checkout_expires_at) / 1000),
@@ -207,6 +222,15 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   if (saved.error) throw saved.error;
   if (!session.url) throw new Error("checkout_url_missing");
   return { url: session.url };
+}
+
+function currentWorkshopCheckout(session: Stripe.Checkout.Session, rateId: string) {
+  return session.metadata?.terms_version === WORKSHOP_SUBSCRIPTION_TERMS &&
+    session.metadata?.tax_decision === WORKSHOP_TAX_DECISION.id &&
+    session.metadata?.manual_tax_rate_id === rateId &&
+    session.name_collection?.business?.enabled === true &&
+    !session.automatic_tax?.enabled && session.amount_total === 1800 &&
+    session.total_details?.amount_tax === 300;
 }
 
 export async function syncWorkshopSubscriptionEvent(
@@ -289,6 +313,10 @@ export async function syncWorkshopSubscriptionEvent(
           (checkedInvoice.amount_paid_off_stripe ?? 0) > 0))
     )
       throw new Error("workshop_subscription_invoice_mismatch");
+    if (subscription.metadata.tax_decision === WORKSHOP_TAX_DECISION.id &&
+        (checkedInvoice.total !== 1800 || checkedInvoice.automatic_tax?.enabled ||
+         checkedInvoice.total - checkedInvoice.subtotal_excluding_tax! !== 300))
+      throw new Error("workshop_subscription_vat_mismatch");
   }
   if (
     ["active", "trialing"].includes(subscription.status) &&

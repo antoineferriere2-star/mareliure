@@ -6,8 +6,8 @@ describe("portée de l'approbation administrative des taux", () => {
     ["book_binding", 550],
     ["book_repair_restoration", 2000],
     ["non_book_object", 2000],
-  ] as const)("reconnaît le taux configuré de %s et le transport distinct", (category, serviceRateBps) => {
-    expect(administrativeRateApproval({ category, serviceRateBps, shippingCents: 1250, shippingRateBps: 2000 }))
+  ] as const)("reconnaît le taux configuré de %s et le transport autonome", (category, serviceRateBps) => {
+    expect(administrativeRateApproval({ category, serviceRateBps, shippingCents: 1250, shippingRateBps: 2000, shippingNature: "autonomous" }))
       .toMatchObject({ approved_on: "2026-10-06", service_rate_approved: true, shipping_rate_approved: true,
         accountant_validated: false, legally_validated: false });
   });

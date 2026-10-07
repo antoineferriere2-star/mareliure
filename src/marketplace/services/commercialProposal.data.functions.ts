@@ -35,6 +35,7 @@ import {
 } from "@/marketplace/commercial/taxPolicy";
 import { SERVICE_TAX_CATEGORIES, computeLineTax } from "@/marketplace/commercial/taxMatrix";
 import { administrativeRateApproval } from "@/marketplace/commercial/administrativeTaxApproval";
+import { shippingTaxQualificationError } from "@/marketplace/commercial/shippingTaxQualification";
 import { getPaymentPreflight as loadPaymentPreflight } from "@/marketplace/stripe/paymentPreflight.server";
 import { loadCaseContext } from "./caseRepository.server";
 import { ROUND_TRIP_HT_CENTS, ROUND_TRIP_PRODUCT, logisticsErrorCode } from "@/marketplace/shipping/logisticsPlan";
@@ -459,6 +460,7 @@ const validateLineTaxInput = z
     serviceVatRateBps: z.number().int().min(0).max(3000),
     /** Taux de la ligne de transport ; obligatoire quand le devis comporte du transport. */
     shippingVatRateBps: z.number().int().min(0).max(3000).nullable(),
+    shippingTaxNature: z.enum(["autonomous", "accessory", "manual_review"]).nullable().optional(),
     justification: z.string().trim().min(12).max(1000),
     customerType: z.enum(["CUSTOMER", "BUSINESS"]).default("CUSTOMER"),
     businessName: z.string().trim().min(1).nullable().default(null),
@@ -481,6 +483,12 @@ export async function validateOppeProposalTaxCore(context: AdminCallContext, dat
   if (proposal.acceptedAt) fail(409, "Cette proposition est déjà acceptée et donc immuable.");
   if (!proposal.contractVersion) fail(409, "Cette proposition historique suit l'ancienne validation fiscale.");
   if (proposal.shippingTotalCents > 0 && data.shippingVatRateBps === null) fail(422, "Indiquez le taux de la ligne de transport.");
+  const shippingError = shippingTaxQualificationError({ shippingCents: proposal.shippingTotalCents,
+    nature: data.shippingTaxNature, serviceRateBps: data.serviceVatRateBps,
+    shippingRateBps: data.shippingVatRateBps, country: data.taxCountry });
+  if (shippingError) fail(422, shippingError);
+  if (proposal.shippingOfferKind === ROUND_TRIP_PRODUCT && data.shippingTaxNature !== "autonomous")
+    fail(409, "Le forfait existant de 12,50 € HT/15 € TTC exige un transport qualifié d’autonome. Pour un accessoire ou un cas ambigu, créez une version sans ce forfait avec un transport chiffré et qualifié individuellement.");
   if (proposal.shippingOfferKind === ROUND_TRIP_PRODUCT && (data.shippingVatRateBps !== 2000 || data.taxCountry.toUpperCase() !== "FR"))
     fail(409, "Le forfait de transport aller-retour à 15 € TTC suppose 20 % sur sa ligne et une exécution facturée en France.");
   const tax = computeLineTax({
@@ -506,7 +514,8 @@ export async function validateOppeProposalTaxCore(context: AdminCallContext, dat
     billingCountry: data.taxCountry.toUpperCase(),
     shippingVatRateBps: data.shippingVatRateBps,
     serviceTaxCategory: data.serviceTaxCategory,
-    taxJustification: data.justification,
+    taxJustification: proposal.shippingTotalCents > 0
+      ? `[Transport ${data.shippingTaxNature}] ${data.justification}` : data.justification,
   });
   await sb.from("marketplace_events").insert({
     case_id: updated.caseId,
@@ -514,13 +523,15 @@ export async function validateOppeProposalTaxCore(context: AdminCallContext, dat
     event_type: "commercial_proposal_tax_validated",
     metadata: {
       proposal_id: updated.id, tax_policy: taxPolicy, tax_country: updated.taxCountry, service_tax_category: data.serviceTaxCategory,
-      service_vat_rate_bps: data.serviceVatRateBps, shipping_vat_rate_bps: data.shippingVatRateBps, justification: data.justification,
+      service_vat_rate_bps: data.serviceVatRateBps, shipping_vat_rate_bps: data.shippingVatRateBps,
+      shipping_tax_nature: data.shippingTaxNature ?? null, justification: data.justification,
       total_ttc_cents: tax.totalTtcCents,
       administrative_rate_approval: administrativeRateApproval({
         category: data.serviceTaxCategory,
         serviceRateBps: data.serviceVatRateBps,
         shippingCents: proposal.shippingTotalCents,
         shippingRateBps: data.shippingVatRateBps,
+        shippingNature: data.shippingTaxNature,
       }),
     },
   });

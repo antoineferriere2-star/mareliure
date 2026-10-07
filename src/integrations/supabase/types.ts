@@ -39,6 +39,12 @@ export type Database = {
   }
   public: {
     Tables: {
+      marketplace_workshop_fee_documents: {
+        Row: { id: string; binder_id: string; payment_id: string; invoice_document_id: string | null; kind: string; number: string; brand: string; issued_at: string; stripe_application_fee_id: string | null; refunded_fee_cumulative_cents: number; total_ht_cents: number; total_vat_cents: number; total_ttc_cents: number; document: Json }
+        Insert: { id?: string; binder_id: string; payment_id: string; invoice_document_id?: string | null; kind: string; number: string; brand: string; issued_at?: string; stripe_application_fee_id?: string | null; refunded_fee_cumulative_cents?: number; total_ht_cents: number; total_vat_cents: number; total_ttc_cents: number; document: Json }
+        Update: never
+        Relationships: []
+      }
       marketplace_workshop_checkout_attempts: {
         Row: { checkout_session_id: string; payment_id: string | null; binder_id: string; payment_intent_id: string | null; terminal_reason: string; archived_at: string }
         Insert: { checkout_session_id: string; payment_id?: string | null; binder_id: string; payment_intent_id?: string | null; terminal_reason: string; archived_at?: string }
@@ -59,6 +65,7 @@ export type Database = {
       }
       marketplace_workshop_connect_consents: {
         Row: {
+          fee_tax_basis: string | null
           accepted_at: string
           accepted_by: string
           binder_id: string
@@ -66,6 +73,7 @@ export type Database = {
           terms_version: string
         }
         Insert: {
+          fee_tax_basis?: string | null
           accepted_at?: string
           accepted_by: string
           binder_id: string
@@ -73,6 +81,7 @@ export type Database = {
           terms_version: string
         }
         Update: {
+          fee_tax_basis?: string | null
           accepted_at?: string
           accepted_by?: string
           binder_id?: string
@@ -83,6 +92,9 @@ export type Database = {
       }
       marketplace_workshop_online_payments: {
         Row: {
+          fee_customer_snapshot: Json | null
+          fee_brand: string | null
+          fee_tax_basis: string | null
           amount_cents: number
           binder_id: string
           checkout_expires_at: string | null
@@ -107,6 +119,9 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          fee_customer_snapshot?: Json | null
+          fee_brand?: string | null
+          fee_tax_basis?: string | null
           amount_cents: number
           binder_id: string
           checkout_expires_at?: string | null
@@ -131,6 +146,9 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          fee_customer_snapshot?: Json | null
+          fee_brand?: string | null
+          fee_tax_basis?: string | null
           amount_cents?: number
           binder_id?: string
           checkout_expires_at?: string | null
@@ -195,16 +213,19 @@ export type Database = {
 
       marketplace_workshop_offer_settings: {
         Row: {
+          connect_onboarding_open: boolean
           id: boolean
           online_payment_open: boolean
           subscription_open: boolean
         }
         Insert: {
+          connect_onboarding_open?: boolean
           id?: boolean
           online_payment_open?: boolean
           subscription_open?: boolean
         }
         Update: {
+          connect_onboarding_open?: boolean
           id?: boolean
           online_payment_open?: boolean
           subscription_open?: boolean
@@ -4878,6 +4899,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      marketplace_issue_workshop_fee_documents: {
+        Args: { p_payment_id: string; p_fee_id: string | null; p_fee_amount: number; p_fee_refunded: number; p_brand: string; p_seller: Json; p_customer: Json }
+        Returns: undefined
+      }
 
       // Migration 20260928090000, local schema contract; production is not migrated.
       marketplace_accept_proposal_as_customer: {
