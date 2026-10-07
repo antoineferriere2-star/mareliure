@@ -1,6 +1,6 @@
 # Passation Codex — modèle Oppe, état courant du 7 octobre 2026
 
-Lire en premier [la décision fiscale du propriétaire](OPPE_FISCAL_DECISION_20261007.md) et [le lot 12 : recette et publication](OPPE_LOT12_FISCAL_JOURNEYS_20261007.md). B est techniquement prêt à 18 EUR TTC et sa recette hébergée est complète ; C reste fermé à cause du compte atelier test existant, sans remettre en cause le compte OPPE live. Le bloc Latest handoff est la mémoire opérationnelle courante. Les bilans ci-dessous décrivent exclusivement les étapes historiques du 6 octobre ; leurs exceptions B/C, la fiscalité transport et leurs demandes de validation ne remplacent pas la décision du 7 octobre.
+Lire en premier [la décision fiscale du propriétaire](OPPE_FISCAL_DECISION_20261007.md) et [le lot 12 : recette et publication](OPPE_LOT12_FISCAL_JOURNEYS_20261007.md). **B est ouvert en production à 18 EUR TTC**, quatre gratuités préservées, et sa recette hébergée est complète ; C reste fermé à cause du compte atelier test existant, sans remettre en cause le compte OPPE live. Merge applicatif f4415c89, Worker 911386c8 à 100 %, 116 migrations, CI PR/main verte et 14 contrôles HTTP réussis. Le bloc Latest handoff est la mémoire opérationnelle courante. Les bilans ci-dessous décrivent exclusivement les étapes historiques du 6 octobre ; leurs exceptions B/C, la fiscalité transport et leurs demandes de validation ne remplacent pas la décision du 7 octobre.
 
 ## État historique du 6 octobre 2026
 
