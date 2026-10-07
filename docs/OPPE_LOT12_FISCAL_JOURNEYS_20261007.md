@@ -90,10 +90,49 @@ La copie locale ne reproduit pas Supabase Vault et ses déclencheurs de gestion 
 les diagnostics de restauration connus sont consignés, sans prétendre à une
 copie complète de l'infrastructure Supabase.
 
-L'ouverture B en production doit suivre le déploiement de ce lot, les contrôles
-réussis et une vérification du taux live. C et les transports non opérationnels
-ne doivent pas être activés. Les preuves opérationnelles `lot12-*`, sauvegardes,
-captures, reçus et secrets sont privés hors Git dans
-`D:/CodexProjects/oppe-model-operation`. Compléter la passation après publication
-avec le commit, le Worker, les résultats de CI et les indicateurs effectivement
-relus en production.
+Les preuves opérationnelles lot12-*, sauvegardes, captures, reçus et secrets
+sont privés hors Git dans D:/CodexProjects/oppe-model-operation.
+
+## Production vérifiée — 7 octobre 2026
+
+PR #96 fusionnée après CI verte : code f237e7840b21dd792cb975d59a95ade6a2b16e33,
+merge applicatif **f4415c89f3c878292736fa5684b94f294b7f338a**. CI PR et main vertes :
+**3 645 tests / 296 fichiers**, 19 garde-fous de publication, TypeScript sans erreur,
+lint sans erreur (19 avertissements existants), build réussi.
+
+Worker **911386c8-7f72-4c45-afbd-280eab5a0858**, 100 %, déploiement
+8fa10237-b956-4943-87a5-24fb500d90ba, publié à 2026-10-07T08:47:02.353966Z. Dix-huit bindings existants conservés,
+quatre variables fiscales ajoutées et vérifiées ; runtime inchangé, aucune simulation
+mail en production. **116 migrations**, dernière 20261007180000.
+
+État relu en base après publication : **B ouvert**, onboarding Connect reprenable,
+**C fermé**, **quatre ateliers historiques gratuits**, dix empreintes historiques
+strictement identiques avant/après. A reste ouvert avec qualification fiscale explicite.
+Transport Sendcloud réel et international non activés ; aucun débit live effectué.
+
+Quatorze contrôles HTTP verts sur les deux marques : signatures Stripe absentes/invalides,
+événements correctement signés hors périmètre rejetés, HTTP → HTTPS.
+Les pages conditions-ateliers et partenaires-relieurs des deux domaines servent
+18 EUR TTC, TVA 20 %, frais C à 3 % et indisponibilité du paiement C.
+Inspection navigateur des conditions publiées sur les deux marques réalisée.
+
+Dernière sauvegarde immédiatement avant publication :
+production-before-lot12-publication.dump, SHA-256
+358285d8e2f7430b69cf899d9313c81b6cf5c602234309ecbee6eb6f817e08de,
+1 317 360 octets, 1 762 entrées. Migration et ouverture appliquées chacune une seule
+fois par transaction TLS épinglée, commit confirmé, aucune réécriture historique.
+
+**Intervention personnelle indispensable pour C uniquement :** reprendre la
+configuration du compte atelier **de test existant** acct_1UNTDkKB3EC6OVAY.
+Stripe présente la création du mot de passe du titulaire ; utiliser au besoin
+« Utiliser une autre adresse e-mail » pour la connexion Stripe existante appropriée,
+puis compléter identité, activité, banque et acceptation dans Stripe.
+Ne pas refaire l'onboarding OPPE live. Aucun identifiant personnel, mot de passe
+nouveau, KYC ou acceptation Stripe inventé par Codex. Après capacités actives,
+terminer la recette C hébergée : succès, échec/reprise, remboursements partiel/intégral,
+litige, frais, factures et avoirs, avant ouverture du paiement.
+
+Reprise technique : conserver migration, documents, clé de liens C et webhooks.
+Fermer B et la reprise d'onboarding en base avant un rollback du code au Worker
+précédent 892add69-9222-4675-915d-6d86e34681c4. Les anciens bilans ne remplacent
+ni la décision administrative actuelle ni cet état vérifié.
