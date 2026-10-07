@@ -932,6 +932,7 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
           <span className="rounded-full border border-border bg-muted px-2.5 py-0.5 text-xs font-semibold">
             {doc.creditNote ? PAYMENT_LABELS.credited : PAYMENT_LABELS[doc.payment.status]}
             {doc.payment.declaredExternal ? " · déclaration atelier" : ""}
+            {doc.payment.processedByStripe ? " · suivi Stripe" : ""}
           </span>
         )}
       </header>

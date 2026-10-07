@@ -131,6 +131,8 @@ describe("C : preuves de paiement du bon compte connecté", () => {
     p.fee_tax_basis = "vat_inclusive_fr_20";
     await expect(processWorkshopConnectEvent(db(), event("checkout.session.completed", session))).rejects.toThrow("connect_collected_fee_not_verified");
     expect(h.feeDocuments).not.toHaveBeenCalled();
+    expect(patches).toEqual([]);
+    expect(p).toMatchObject({ status: "ready", paid_at: null });
   });
   it("confirme la facture atelier avec 3 % et frais Stripe distincts", async () => {
     await processWorkshopConnectEvent(db(), event("checkout.session.completed", session));

@@ -48,6 +48,13 @@ it("réutilise la clé fournisseur et ne marque livré qu'après succès", async
   expect(h.send).toHaveBeenCalledWith("case-activity", "owner@example.com", expect.objectContaining({ idempotencyKey: "workshop-invoice-paid-fixture" }));
   expect(f.writes).toEqual([expect.objectContaining({ sent_at: expect.any(String), claim_token: null })]);
 });
+it("adresse la notification C avec la marque Fine Bindery de la facture de frais", async () => {
+  const f = fixture();
+  await notifyWorkshop(f.sb, { ...notice, brand: "FINE_BINDERY" });
+  expect(h.send).toHaveBeenCalledWith("case-activity", "owner@example.com", expect.objectContaining({
+    brand: "FINE_BINDERY", templateData: expect.objectContaining({ brandName: "Fine Bindery" }),
+  }));
+});
 it("libère le bail après un échec et permet une reprise avec la même clé", async () => {
   const f = fixture();
   h.send.mockResolvedValueOnce({ sent: false });

@@ -114,6 +114,7 @@ export interface DocumentView {
     amountPaidCents: number;
     depositPaidCents: number;
     declaredExternal?: boolean;
+    processedByStripe?: boolean;
   } | null;
   invoiceCompliance: {
     serviceDate: string | null;

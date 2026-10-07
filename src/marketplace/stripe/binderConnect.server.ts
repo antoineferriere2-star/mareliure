@@ -27,7 +27,7 @@ export async function readWorkshopConnectAccount(accountId: string) {
   const payoutsEnabled = capabilities?.stripe_balance?.payouts?.status === "active";
   const configurationCompatible =
     !account.closed &&
-    account.dashboard === "full" &&
+    (account.dashboard === "full" || isIsolatedConnectRecipeAccount(account)) &&
     responsibilities?.fees_collector === "stripe" &&
     responsibilities?.losses_collector === "stripe" &&
     responsibilities?.requirements_collector === "stripe";
@@ -41,6 +41,20 @@ export async function readWorkshopConnectAccount(accountId: string) {
       .filter((entry) => entry.awaiting_action_from === "user")
       .map((entry) => entry.description),
   };
+}
+
+/** The supplementary official Express fixture preserves direct-charge fee and
+ * risk ownership. Its Dashboard differs only in the isolated hosted QA recipe;
+ * every actual capability is still required. This cannot authorize live use. */
+function isIsolatedConnectRecipeAccount(account: {
+  id: string; livemode: boolean; dashboard?: string | null; metadata?: Record<string, string> | null;
+}) {
+  return account.livemode === false && account.dashboard === "express" &&
+    account.id === process.env.WORKSHOP_CONNECT_TEST_ACCOUNT_ID &&
+    account.metadata?.qa_recipe === "oppe-c-official-fixtures-20261007" &&
+    process.env.STRIPE_SECRET_KEY?.startsWith("sk_test_") === true &&
+    process.env.STRIPE_EXPECTED_ACCOUNT_ID === "acct_1UGISJKB3EBc6Slh" &&
+    process.env.SUPABASE_URL === "https://qwfhebtxeubfmvvdsqdt.supabase.co";
 }
 
 /**
