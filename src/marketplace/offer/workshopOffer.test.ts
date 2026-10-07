@@ -14,9 +14,11 @@ describe("l'offre atelier", () => {
     expect(WORKSHOP_OFFER.workshopPaymentDays).toBe(30);
   });
 
-  it("n'annonce pas comme ouvert un service dont la configuration externe manque", () => {
+  it("ouvre B après recette et conserve C fermé et les gratuités historiques", () => {
     const faq = PARTNER_FAQ.map((item) => item.answer).join(" ");
-    expect(WORKSHOP_OFFER.subscriptionOpen).toBe(false);
+    expect(WORKSHOP_OFFER.subscriptionOpen).toBe(true);
+    expect(WORKSHOP_OFFER.onlinePaymentOpen).toBe(false);
+    expect(faq).toContain("18 € TTC");
     expect(faq).toContain("n'est pas encore ouvert");
     expect(faq).toContain("gardent la gratuité tant qu'ils n'ont pas accepté expressément");
   });

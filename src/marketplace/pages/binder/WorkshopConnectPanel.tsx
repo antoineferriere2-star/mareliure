@@ -7,7 +7,8 @@ import {
   resumeMyWorkshopConnect,
 } from "@/marketplace/services/workshopOnlinePayment.data.functions";
 import { CARD, ErrorNote, PRIMARY_BUTTON } from "./quotes/quoteUi";
-export function WorkshopConnectPanel({ open, isOwner }: { open: boolean; isOwner: boolean }) {
+export function WorkshopConnectPanel({ open, onboardingOpen, isOwner }: { open: boolean; onboardingOpen: boolean; isOwner: boolean }) {
+  const canConfigure = open || onboardingOpen;
   const [accepted, setAccepted] = useState(false);
   const start = useServerFn(startMyWorkshopConnect);
   const refresh = useServerFn(refreshMyWorkshopConnect);
@@ -19,8 +20,8 @@ export function WorkshopConnectPanel({ open, isOwner }: { open: boolean; isOwner
   const status = useQuery({
     queryKey: ["workshop", "connect"],
     queryFn: () => refresh(),
-    enabled: open && isOwner,
-    refetchInterval: open ? 30_000 : false,
+    enabled: canConfigure && isOwner,
+    refetchInterval: canConfigure ? 30_000 : false,
   });
   const restart = useMutation({
     mutationFn: () => resume(),
@@ -28,7 +29,7 @@ export function WorkshopConnectPanel({ open, isOwner }: { open: boolean; isOwner
   });
   useEffect(() => {
     if (
-      open &&
+      canConfigure &&
       isOwner &&
       new URLSearchParams(window.location.search).get("connect") === "refresh"
     ) {
@@ -36,17 +37,16 @@ export function WorkshopConnectPanel({ open, isOwner }: { open: boolean; isOwner
       window.history.replaceState(null, "", window.location.pathname);
       restart.mutate();
     }
-  }, [open, isOwner]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [canConfigure, isOwner]); // eslint-disable-line react-hooks/exhaustive-deps
   return (
     <section className={CARD}>
       <h2 className="font-serif text-xl">Paiements de vos clients</h2>
       <p className="mt-3">
-        Vous restez le vendeur et émettez la facture. Frais Oppe : 3 % du TTC encaissé en ligne. Les
+        Vous restez le vendeur et émettez la facture. Frais Oppe : 3 % du montant encaissé, TVA comprise, hors frais Stripe. Les
         frais Stripe sont distincts et à votre charge. Les règlements directs restent gratuits.
       </p>
-      {!open ? (
-        <p className="mt-4">Le paiement en ligne n’est pas encore ouvert.</p>
-      ) : (
+      {!open && <p className="mt-4">Le paiement en ligne n’est pas encore ouvert. La configuration Stripe ne permet pas encore d’encaisser.</p>}
+      {canConfigure && (
         isOwner && (
           <div className="mt-5 space-y-4">
             <label className="flex gap-3">
@@ -60,8 +60,9 @@ export function WorkshopConnectPanel({ open, isOwner }: { open: boolean; isOwner
                 <a href="/conditions-ateliers" className="underline">
                   conditions ateliers
                 </a>
-                , les frais de 3 % et les frais Stripe distincts, et je configure le compte Stripe
-                de mon atelier.
+                , les frais de 3 % du montant encaissé, TVA comprise, hors frais Stripe.
+                Je confirme agir pour mon activité professionnelle établie en France métropolitaine
+                à l’adresse de mon profil de facturation et je configure le compte Stripe de mon atelier.
               </span>
             </label>
             <button
@@ -82,7 +83,7 @@ export function WorkshopConnectPanel({ open, isOwner }: { open: boolean; isOwner
               <div role="status">
                 <p>
                   {status.data.onboarded
-                    ? "Compte prêt pour les paiements de vos clients."
+                    ? open ? "Compte prêt pour les paiements de vos clients." : "Compte Stripe configuré ; les encaissements restent fermés jusqu’à l’ouverture du service."
                     : "La configuration Stripe reste à compléter ou le type de compte doit être adapté."}
                 </p>
                 {status.data.requirements.length > 0 && (

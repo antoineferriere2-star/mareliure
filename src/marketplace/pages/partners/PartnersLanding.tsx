@@ -265,6 +265,8 @@ function Pricing() {
               <span className="font-editorial text-[4.5rem] leading-none tracking-[-0.03em] sm:text-[5.5rem]">{formatHtPrice(WORKSHOP_OFFER.subscriptionHtCents).replace(" HT", "")}</span>
               <span className="mr-lead">HT par mois, sans engagement</span>
             </p>
+            <p className="mr-small mt-3">France métropolitaine : TVA 20 % (3 €), soit 18 € TTC par mois, vitrine incluse.
+              Même TVA si l’atelier est en franchise en base. Autres territoires : qualification individuelle.</p>
             <p className="mr-small mt-4 max-w-[28rem]">
               {WORKSHOP_OFFER.subscriptionOpen
                 ? "Pour les nouveaux ateliers."
@@ -292,7 +294,7 @@ function Pricing() {
                 term="Paiement en ligne"
                 detail={`Facultatif : votre client paie votre devis ou votre facture par carte, vous restez le vendeur. ${WORKSHOP_OFFER.onlinePaymentOpen ? "" : "Pas encore ouvert."}`}
                 value={PLATFORM_FEE_LABEL}
-                note="du TTC encaissé en ligne ; frais Stripe en plus, à votre charge"
+                note="du montant encaissé, TVA comprise, hors frais Stripe ; frais Stripe à votre charge"
               />
               <PriceRow term="Projets confiés par Ma Reliure" detail="Oppe vend et facture le client ; vous facturez Oppe la rémunération annoncée, réglée sous 30 jours." value="Annoncée" />
             </dl>

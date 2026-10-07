@@ -6,6 +6,9 @@ import { fail } from "@/build/services/serverError";
 import { requireWorkshopAccess } from "./workshopAccess.server";
 import { getInvoice, getCreditNote } from "./binderQuotes.server";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
+import { getRequestHost } from "@tanstack/react-start/server";
+import { resolveMarketplaceBrandForRequest } from "@/marketplace/brand/resolveRequestBrand.server";
+import { frenchWorkshopTaxEligibility } from "@/marketplace/billing/workshopTax";
 import { workshopBillingOwner, loadWorkshopSubscription } from "./workshopSubscription.server";
 import {
   workshopOrigin,
@@ -34,14 +37,26 @@ export const startMyWorkshopConnect = createServerFn({ method: "POST" })
     const sb = await admin();
     const binderId = await workshopBillingOwner(sb, context.userId);
     const { settings } = await loadWorkshopSubscription(sb, binderId);
-    if (!settings.online_payment_open) fail(409, "Le paiement en ligne n’est pas encore ouvert.");
+    if (!settings.online_payment_open && !settings.connect_onboarding_open) fail(409, "La configuration des paiements n’est pas encore ouverte.");
+    const profile = await sb.from("marketplace_binder_billing_profiles").select("*").eq("binder_id", binderId).maybeSingle();
+    if (profile.error) throw profile.error;
+    const eligibility = frenchWorkshopTaxEligibility(profile.data);
+    if (eligibility) fail(409, eligibility);
+    const previous = await sb.from("marketplace_workshop_connect_consents").select("*").eq("binder_id", binderId).maybeSingle();
+    if (previous.error) throw previous.error;
+    if (previous.data?.fee_tax_basis === "explicit_ht_legacy")
+      fail(409, "Votre convention prévoit des frais HT. Contactez Oppe pour une transition administrative explicite avant toute modification.");
+    if (previous.data?.terms_version !== WORKSHOP_SUBSCRIPTION_TERMS) {
     const consent = await sb.from("marketplace_workshop_connect_consents").upsert({
       binder_id: binderId,
       accepted_by: context.userId,
+      accepted_at: new Date().toISOString(),
       terms_version: WORKSHOP_SUBSCRIPTION_TERMS,
       fee_bps: 300,
+      fee_tax_basis: "vat_inclusive_fr_20",
     });
     if (consent.error) throw consent.error;
+    }
     const url = `${workshopOrigin()}/atelier/abonnement`;
     return createBinderOnboardingLink(sb, binderId, {
       returnUrl: `${url}?connect=returned`,
@@ -54,7 +69,7 @@ export const resumeMyWorkshopConnect = createServerFn({ method: "POST" })
     const sb = await admin();
     const binderId = await workshopBillingOwner(sb, context.userId);
     const { settings } = await loadWorkshopSubscription(sb, binderId);
-    if (!settings.online_payment_open) fail(409, "Le paiement en ligne n’est pas encore ouvert.");
+    if (!settings.online_payment_open && !settings.connect_onboarding_open) fail(409, "La configuration des paiements n’est pas encore ouverte.");
     const consent = await sb
       .from("marketplace_workshop_connect_consents")
       .select("binder_id")
@@ -89,7 +104,8 @@ export const createMyInvoicePaymentLink = createServerFn({ method: "POST" })
       const status = await refreshBinderConnectStatus(sb, binderId);
       if (!status.onboarded) fail(409, "Terminez la configuration Stripe de votre atelier.");
     }
-    return createWorkshopInvoicePaymentLink(sb, binderId, data.invoiceId);
+    return createWorkshopInvoicePaymentLink(sb, binderId, data.invoiceId,
+      resolveMarketplaceBrandForRequest(getRequestHost(), process.env.MARKETPLACE_BRAND_OVERRIDE));
   });
 export const getMyInvoiceOnlinePayment = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -102,7 +118,7 @@ export const getMyInvoiceOnlinePayment = createServerFn({ method: "GET" })
     const result = await sb
       .from("marketplace_workshop_online_payments")
       .select(
-        "id,status,amount_cents,fee_cents,fee_refunded_cents,stripe_fee_cents,refunded_cents,disputed,reconciliation_required,paid_at",
+        "id,status,amount_cents,fee_cents,fee_tax_basis,fee_refunded_cents,stripe_fee_cents,refunded_cents,disputed,reconciliation_required,paid_at",
       )
       .eq("invoice_id", data.invoiceId)
       .eq("binder_id", binderId)

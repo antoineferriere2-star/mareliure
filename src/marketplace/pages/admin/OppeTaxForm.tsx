@@ -13,6 +13,7 @@ import { formatEuros } from "@/marketplace/pricing/money";
 import { SHIPPING_SUGGESTION, TAX_MATRIX, computeLineTax, SERVICE_TAX_CATEGORIES, type ServiceTaxCategory } from "@/marketplace/commercial/taxMatrix";
 import { suggestTaxPolicyForCountry } from "@/marketplace/commercial/taxPolicy";
 import { ADMINISTRATIVE_TAX_APPROVAL } from "@/marketplace/commercial/administrativeTaxApproval";
+import type { ShippingTaxNature } from "@/marketplace/commercial/shippingTaxQualification";
 import { validateOppeProposalTax } from "@/marketplace/services/commercialProposal.data.functions";
 
 const pct = (bps: number) => (bps / 100).toString().replace(".", ",");
@@ -30,7 +31,8 @@ export function OppeTaxForm({
   const queryClient = useQueryClient();
   const [category, setCategory] = useState<ServiceTaxCategory | "">("");
   const [serviceRate, setServiceRate] = useState("");
-  const [shippingRate, setShippingRate] = useState(proposal.shippingTotalCents > 0 ? pct(SHIPPING_SUGGESTION.suggestedRateBps) : "");
+  const [shippingRate, setShippingRate] = useState("");
+  const [shippingNature, setShippingNature] = useState<ShippingTaxNature | "">("");
   const [country, setCountry] = useState(defaultCountry);
   const [customerType, setCustomerType] = useState<"CUSTOMER" | "BUSINESS">("CUSTOMER");
   const [businessName, setBusinessName] = useState("");
@@ -40,7 +42,7 @@ export function OppeTaxForm({
   const serviceBps = toBps(serviceRate);
   const shippingBps = hasShipping ? toBps(shippingRate) : null;
   const ready =
-    category !== "" && Number.isFinite(serviceBps) && (!hasShipping || Number.isFinite(shippingBps ?? Number.NaN)) &&
+    category !== "" && Number.isFinite(serviceBps) && (!hasShipping || (shippingNature !== "" && Number.isFinite(shippingBps ?? Number.NaN))) &&
     country.trim().length === 2 && justification.trim().length >= 12 && (customerType !== "BUSINESS" || businessName.trim() !== "");
   const preview = ready
     ? computeLineTax({ serviceCents: proposal.customerServicePriceCents, shippingCents: proposal.shippingTotalCents, serviceRateBps: serviceBps, shippingRateBps: shippingBps })
@@ -56,6 +58,7 @@ export function OppeTaxForm({
           serviceTaxCategory: category as ServiceTaxCategory,
           serviceVatRateBps: serviceBps,
           shippingVatRateBps: shippingBps,
+          shippingTaxNature: hasShipping ? shippingNature as ShippingTaxNature : null,
           justification,
           customerType,
           businessName: customerType === "BUSINESS" ? businessName.trim() : null,
@@ -103,6 +106,18 @@ export function OppeTaxForm({
         </div>
         {hasShipping && (
           <div>
+            <Label htmlFor={`tax-ship-nature-${proposal.id}`} className="text-xs">Qualification du transport (justifier ci-dessous)</Label>
+            <select id={`tax-ship-nature-${proposal.id}`} className="mt-1 h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+              value={shippingNature} onChange={(e) => {
+                const next = e.target.value as ShippingTaxNature | "";
+                setShippingNature(next);
+                setShippingRate(next === "autonomous" && country === "FR" ? "20" : next === "accessory" ? serviceRate : "");
+              }}>
+              <option value="">Choisir…</option>
+              <option value="autonomous">Prestation de transport autonome</option>
+              <option value="accessory">Accessoire de la prestation principale</option>
+              <option value="manual_review">Cas ambigu — décision individuelle motivée</option>
+            </select>
             <Label htmlFor={`tax-ship-${proposal.id}`} className="text-xs">Taux du transport (%)</Label>
             <Input id={`tax-ship-${proposal.id}`} className="mt-1" inputMode="decimal" value={shippingRate} onChange={(e) => setShippingRate(e.target.value)} />
           </div>
@@ -124,7 +139,7 @@ export function OppeTaxForm({
       {suggestion && (
         <p className="mt-2 text-xs leading-5 text-amber-800">
           Taux approuvé pour cette catégorie : {pct(suggestion.suggestedRateBps)} % — {suggestion.source}. {suggestion.caveat}
-          {hasShipping ? ` Transport distinct : ${pct(SHIPPING_SUGGESTION.suggestedRateBps)} % approuvé. ${SHIPPING_SUGGESTION.caveat}` : ""}
+          {hasShipping ? ` ${SHIPPING_SUGGESTION.caveat}` : ""}
         </p>
       )}
       <div className="mt-3">

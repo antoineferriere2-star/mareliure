@@ -6,15 +6,20 @@ import {
   createMyWorkshopBillingPortal,
   createMyWorkshopCheckout,
   getMyWorkshopSubscription,
+  getMyWorkshopFeeDocumentPdf,
 } from "@/marketplace/services/workshopSubscription.data.functions";
 import { BinderPageHeader, BinderLoading } from "./BinderPageUi";
 import { CARD, ErrorNote, PRIMARY_BUTTON } from "./quotes/quoteUi";
 import { SUBSCRIPTION_LABEL } from "@/marketplace/offer/workshopOffer";
+import { downloadPdf, euros } from "@/marketplace/quotes/quoteFormat";
 
 export function WorkshopSubscriptionPage() {
   const load = useServerFn(getMyWorkshopSubscription);
   const checkout = useServerFn(createMyWorkshopCheckout);
   const portal = useServerFn(createMyWorkshopBillingPortal);
+  const feePdf = useServerFn(getMyWorkshopFeeDocumentPdf);
+  const feeDownload = useMutation({ mutationFn: (documentId: string) => feePdf({ data: { documentId } }),
+    onSuccess: ({ filename, base64 }) => downloadPdf(filename, base64) });
   const query = useQuery({
     queryKey: ["workshop", "subscription"],
     queryFn: () => load(),
@@ -38,6 +43,10 @@ export function WorkshopSubscriptionPage() {
       />
       <section className={CARD}>
         <h2 className="font-serif text-xl">{SUBSCRIPTION_LABEL}</h2>
+        <p className="mt-3">France métropolitaine : TVA 20 % (3 €), soit 18 € TTC par mois, vitrine incluse.
+          Cette TVA est collectée par OPPE même si votre atelier est en franchise en base.
+          Renseignez votre identité professionnelle et votre adresse d’établissement dans les paramètres de facturation.
+          Pour les autres territoires, contactez Oppe pour une qualification individuelle.</p>
         <p className="mt-3">
           {s.legacy_free
             ? "Votre atelier bénéficie de la gratuité. Aucun prélèvement sans votre accord explicite."
@@ -67,7 +76,9 @@ export function WorkshopSubscriptionPage() {
                   onChange={(event) => setAccepted(event.target.checked)}
                 />
                 <span>
-                  J’accepte de souscrire à {SUBSCRIPTION_LABEL}, hors taxes applicables, avec
+                  Je confirme agir exclusivement pour mon activité professionnelle et être établi en France
+                  métropolitaine à l’adresse de mon profil de facturation. J’accepte de souscrire à
+                  15 € HT + 3 € de TVA à 20 %, soit 18 € TTC par mois, avec
                   renouvellement mensuel et résiliation pour la fin de la période en cours.
                   J’accepte les{" "}
                   <a
@@ -108,6 +119,16 @@ export function WorkshopSubscriptionPage() {
           </ErrorNote>
         )}
       </section>
+      {query.data.feeDocuments.length > 0 && <section className={CARD}>
+        <h2 className="font-serif text-xl">Factures et avoirs des frais plateforme</h2>
+        <p className="mt-3">Frais déjà retenus par Stripe sur les paiements de vos clients. Aucun second paiement.</p>
+        <ul className="mt-4 space-y-3">{query.data.feeDocuments.map((document) => <li key={document.id}>
+          {document.number} · {new Date(document.issued_at).toLocaleDateString("fr-FR")} ·
+          {euros(document.total_ht_cents)} HT + {euros(document.total_vat_cents)} TVA = {euros(document.total_ttc_cents)} TTC
+          <button className="ml-3 underline" disabled={feeDownload.isPending} onClick={() => feeDownload.mutate(document.id)}>Télécharger le PDF</button>
+        </li>)}</ul>
+        {feeDownload.isError && <ErrorNote>Le document n’a pas pu être téléchargé.</ErrorNote>}
+      </section>}
       {query.data.documents.length > 0 && (
         <section className={CARD}>
           <h2 className="font-serif text-xl">Factures d’abonnement</h2>
@@ -169,7 +190,7 @@ export function WorkshopSubscriptionPage() {
           </ul>
         </section>
       )}
-      <WorkshopConnectPanel open={settings.online_payment_open} isOwner={isOwner} />
+      <WorkshopConnectPanel open={settings.online_payment_open} onboardingOpen={settings.connect_onboarding_open} isOwner={isOwner} />
     </div>
   );
 }

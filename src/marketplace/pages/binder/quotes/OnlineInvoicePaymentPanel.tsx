@@ -9,6 +9,7 @@ import {
 import { CARD, ErrorNote, PRIMARY_BUTTON } from "./quoteUi";
 import type { DocumentView } from "@/marketplace/quotes/quoteViews";
 import { euros } from "@/marketplace/quotes/quoteFormat";
+import { workshopFeeTax } from "@/marketplace/billing/workshopTax";
 export function OnlineInvoicePaymentPanel({ doc }: { doc: DocumentView }) {
   const load = useServerFn(getMyInvoiceOnlinePayment);
   const link = useServerFn(createMyInvoicePaymentLink);
@@ -51,6 +52,13 @@ export function OnlineInvoicePaymentPanel({ doc }: { doc: DocumentView }) {
                 : "Paiement à recevoir"}{" "}
             · {euros(p.amount_cents)}
           </p>
+          {p.fee_tax_basis === "vat_inclusive_fr_20" && <p className="text-sm">
+            Frais Oppe TTC {euros(p.fee_cents)} : HT {euros(workshopFeeTax(p.fee_cents).netCents)} +
+            TVA 20 % {euros(workshopFeeTax(p.fee_cents).vatCents)}. Facture et avoirs dans votre espace abonnement.
+          </p>}
+          {p.paid_at && p.stripe_fee_cents !== null && !p.disputed && !p.reconciliation_required &&
+            <p className="text-sm">Net atelier rapproché : {euros(p.amount_cents - p.refunded_cents -
+              (p.fee_cents - (p.fee_refunded_cents ?? 0)) - p.stripe_fee_cents)}.</p>}
           <p className="text-sm">
             Frais Oppe : {euros(p.fee_cents)} · Frais Stripe :{" "}
             {p.stripe_fee_cents === null ? "en cours de rapprochement" : euros(p.stripe_fee_cents)}{" "}

@@ -7,8 +7,8 @@
  * l'administration confirme (ou corrige) en justifiant sa décision. Le taux dépend de la nature
  * de l'opération et de l'ouvrage, jamais du vendeur.
  *
- * Sources officielles consultées le 5 octobre 2026 :
- * - BOI-TVA-LIQ-30-10-40 (livres), version du 21/08/2024 : § 10 définition du livre (quatre
+ * Sources officielles actualisées le 7 octobre 2026 :
+ * - BOI-TVA-LIQ-30-10-40 (livres), version du 29/07/2026 : § 10 définition du livre (quatre
  *   critères cumulatifs) ; § 120 étuis/emboîtages conçus pour un livre déterminé, accessoires au
  *   taux réduit ; § 150 travaux de reliure, livres d'occasion compris : 5,5 % ; § 180 réparation et
  *   désinfection de livres : taux normal ; § 110 transport minime accessoire au livre.
@@ -36,7 +36,7 @@ export const TAX_MATRIX: Record<ServiceTaxCategory, TaxSuggestion> = {
     label: "Reliure d'un livre (au sens fiscal)",
     suggestedRateBps: 550,
     source: "BOI-TVA-LIQ-30-10-40 § 150 (travaux de reliure, livres d'occasion compris)",
-    caveat: "Vaut seulement si l'ouvrage répond aux quatre critères du livre (§ 10). Un registre, un carnet, un album à compléter n'en est pas un.",
+    caveat: "Vaut seulement si l'ouvrage répond aux critères du livre (§ 10 à 60). Examiner le contenu et les pages vierges : la seule appellation carnet ou album ne suffit pas à qualifier l'ouvrage.",
   },
   book_repair_restoration: {
     category: "book_repair_restoration",
@@ -54,11 +54,11 @@ export const TAX_MATRIX: Record<ServiceTaxCategory, TaxSuggestion> = {
   },
 };
 
-/** Transport : suggéré au taux normal ; le forfait aller-retour à 15 € TTC suppose 20 % sur sa ligne. */
+/** Aucun taux automatique : qualifier autonome/accessoire avant de proposer un taux. */
 export const SHIPPING_SUGGESTION = {
   suggestedRateBps: 2000,
   source: "BOI-TVA-LIQ-30-10-40 § 110 (transport de valeur minime ou marginale, inclus dans le taux réduit) ; forfait aller-retour de 12,50 € HT facturé 15 € TTC",
-  caveat: "Le taux approuvé de 20 % concerne la ligne distincte ; le caractère accessoire à la prestation principale reste à qualifier.",
+  caveat: "Une ligne distincte ne justifie pas à elle seule 20 %. Un transport autonome relève du taux normal ; un accessoire suit la prestation principale. Un cas ambigu exige une décision motivée. Le forfait existant à 15 € TTC/12,50 € HT ne convient qu'à un transport expressément qualifié d'autonome à 20 % ; sinon établir une version sans ce forfait avec un transport chiffré et qualifié individuellement.",
 } as const;
 
 export const TAX_QUESTIONS_FOR_ACCOUNTANT: readonly string[] = [

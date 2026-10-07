@@ -1,4 +1,4 @@
-export const WORKSHOP_SUBSCRIPTION_TERMS = "oppe-workshop-2026-10-05-v1";
+export const WORKSHOP_SUBSCRIPTION_TERMS = "oppe-workshop-2026-10-07-v2";
 export const WORKSHOP_PRICE_LOOKUP_KEY = "oppe_workshop_monthly_15_eur_v1";
 
 export function workshopCanCreate(
