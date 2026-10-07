@@ -12,7 +12,7 @@ import type { Supa } from "@/build/services/adminAuth.server";
 import { effectiveReturnAddress, logisticsErrorCode, planFromRow, type PostalAddress } from "@/marketplace/shipping/logisticsPlan";
 import { purchaseLeg, type LegResult } from "@/marketplace/shipping/labelOrchestrator";
 import type { LabelDirection, LabelProvider, LabelRequest, PostalParty } from "@/marketplace/shipping/labelProvider";
-import { createSendcloudProvider, fetchSendcloudShippingOptions } from "@/marketplace/shipping/sendcloudProvider.server";
+import { createSendcloudProvider, fetchSendcloudShippingOptions, type ShippingOptionView } from "@/marketplace/shipping/sendcloudProvider.server";
 import { supabaseLabelStore } from "@/marketplace/shipping/roundTripLabelStore.server";
 import { LogisticsError, automationState } from "./caseLogistics.server";
 import { loadAcceptedCommercialProposal } from "./commercialProposalRepository.server";
@@ -53,6 +53,10 @@ export async function recordRateApproval(sb: Supa, actor: string, caseId: string
   if (!proposal || proposal.shippingOfferKind !== "book_round_trip_fr") throw new LogisticsError("round_trip_offer_required");
   const back = effectiveReturnAddress(plan);
   if (!plan.contact || !back || !plan.parcel || !plan.workshop) throw new LogisticsError("logistics_plan_required");
+  // Le code saisi doit sortir du devis réel de ce dossier : l'achat n'envoie aucun point relais.
+  const live = await liveShippingOptions(plan);
+  if (!isPurchasableMethod(live.outbound, input.outboundOptionCode) || !isPurchasableMethod(live.return, input.returnOptionCode))
+    throw new LogisticsError("rate_method_unavailable");
   const dims = (p: { lengthMm: number; widthMm: number; heightMm: number }) => [p.lengthMm, p.widthMm, p.heightMm].sort((a, b) => b - a);
   const returnParcel = plan.returnReady?.parcel ?? plan.parcel;
   const { error } = await raw(sb).from("marketplace_round_trip_rate_approvals").insert({
@@ -60,7 +64,7 @@ export async function recordRateApproval(sb: Supa, actor: string, caseId: string
     outbound_address_sha256: await addressSha256(plan.contact), return_address_sha256: await addressSha256(back),
     outbound_weight_grams: plan.parcel.weightGrams, return_weight_grams: returnParcel.weightGrams,
     outbound_dimensions_mm: dims(plan.parcel), return_dimensions_mm: dims(returnParcel),
-    outbound_method: input.outboundOptionCode, return_method: input.returnOptionCode,
+    outbound_method: input.outboundOptionCode.trim(), return_method: input.returnOptionCode.trim(),
     provider_quote_reference: input.providerQuoteReference, coverage_evidence_reference: input.coverageEvidenceReference,
     outbound_cost_ttc_cents: input.outboundCostTtcCents, return_cost_ttc_cents: input.returnCostTtcCents,
     all_other_costs_ttc_cents: input.allOtherCostsTtcCents, estimated_economic_cost_cents: input.estimatedEconomicCostCents,
@@ -117,9 +121,18 @@ export async function purchaseAutomatically(sb: Supa, caseId: string, direction:
  * et à vérifier le coût complet avant toute ouverture.
  */
 export async function roundTripShippingOptions(sb: Supa, caseId: string) {
+  return { ...(await liveShippingOptions(await loadPlanRow(sb, caseId))), queriedAt: new Date().toISOString() };
+}
+
+/** Achetable par `purchaseAutomatically` : présent au devis, chiffré en EUR, sans point relais à désigner. */
+export function isPurchasableMethod(options: ShippingOptionView[], code: string): boolean {
+  const option = options.find((o) => o.code === code.trim());
+  return Boolean(option && !option.servicePointRequired && option.priceCents !== null && option.currency?.toUpperCase() === "EUR");
+}
+
+async function liveShippingOptions(plan: Awaited<ReturnType<typeof loadPlanRow>>) {
   const publicKey = process.env.SENDCLOUD_PUBLIC_KEY, secretKey = process.env.SENDCLOUD_SECRET_KEY;
   if (!publicKey || !secretKey) throw new LogisticsError("provider_unavailable", 503);
-  const plan = await loadPlanRow(sb, caseId);
   const back = effectiveReturnAddress(plan);
   const reception = plan.workshop?.reception;
   if (!plan.contact || !back || !reception || !plan.parcel) throw new LogisticsError("logistics_plan_required");
@@ -132,5 +145,5 @@ export async function roundTripShippingOptions(sb: Supa, caseId: string) {
       toCountry: back.countryCode, toPostalCode: back.postalCode, weightGrams: returnParcel.weightGrams, dimensionsMm: dims(returnParcel) }),
   ]);
   if (outbound === "unavailable" || back2 === "unavailable") throw new LogisticsError("provider_unavailable", 503);
-  return { outbound, return: back2, queriedAt: new Date().toISOString() };
+  return { outbound, return: back2 };
 }

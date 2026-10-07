@@ -8,7 +8,7 @@ vi.mock("./caseLogistics.server", async (original) => ({
 }));
 vi.mock("@/build/services/adminAuth.server", () => ({ admin: async () => ({ from: () => ({}), rpc: h.rpc }) }));
 
-import { addressSha256, purchaseAutomatically } from "./roundTripAutomation.server";
+import { addressSha256, isPurchasableMethod, purchaseAutomatically } from "./roundTripAutomation.server";
 import { LogisticsError } from "./caseLogistics.server";
 import { handleRoundTripWebhookRequest } from "./roundTripWebhook.server";
 
@@ -44,5 +44,29 @@ describe("empreinte d'adresse", () => {
     expect(await addressSha256(a)).toBe(await addressSha256({ ...a, name: " qa client ", line1: "1 RUE DE LA RECETTE" }));
     expect(await addressSha256(a)).not.toBe(await addressSha256({ ...a, postalCode: "75012" }));
     expect(await addressSha256(a)).toMatch(/^[0-9a-f]{64}$/);
+  });
+});
+
+describe("méthode retenue pour le tarif revu", () => {
+  // Extrait du devis réel du 7 octobre 2026 (Paris 75011 → Lyon 69002, 500 g).
+  const option = (code: string, priceCents: number | null, servicePointRequired: boolean, currency: string | null = "EUR") =>
+    ({ code, name: code, carrier: "", firstMile: null, lastMile: null, returns: false, servicePointRequired, chargingType: null, priceCents, currency });
+  const quote = [
+    option("mondial_relay:service_point,dualapi/size=l,c2c", 391, true),
+    option("mondial_relay:home_domestic,dualapi/c2c", 517, false),
+    option("colissimo:home/fr", 885, false),
+    option("chronopost:18", null, false),
+    option("colissimo:home/signature,fr", 1005, false, "GBP"),
+  ];
+  it("accepte une méthode chiffrée en EUR sans point relais, espaces autour tolérés", () => {
+    expect(isPurchasableMethod(quote, "mondial_relay:home_domestic,dualapi/c2c")).toBe(true);
+    expect(isPurchasableMethod(quote, " colissimo:home/fr ")).toBe(true);
+  });
+  it("refuse un point relais, un prix absent, une autre devise ou un code hors devis", () => {
+    expect(isPurchasableMethod(quote, "mondial_relay:service_point,dualapi/size=l,c2c")).toBe(false);
+    expect(isPurchasableMethod(quote, "chronopost:18")).toBe(false);
+    expect(isPurchasableMethod(quote, "colissimo:home/signature,fr")).toBe(false);
+    expect(isPurchasableMethod(quote, "mondial_relay:home_domestic")).toBe(false);
+    expect(isPurchasableMethod([], "colissimo:home/fr")).toBe(false);
   });
 });
