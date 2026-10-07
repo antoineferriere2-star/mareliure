@@ -91,7 +91,7 @@ npx wrangler secret put SENDCLOUD_SECRET_KEY --name mareliure
 npx wrangler secret put SENDCLOUD_WEBHOOK_SECRET --name mareliure
 ```
 
-Chaque commande demande la valeur de façon masquée. `SENDCLOUD_WEBHOOK_SECRET` = la clé secrète de l'intégration, ou la Webhook Signature Key si une telle clé est configurée dans Sendcloud (Réglages → Intégrations → « mareliure » → Configurer). URL du webhook à saisir au même endroit : `https://mareliure.fr/api/marketplace/sendcloud-webhook` (« Webhook feedback enabled »). Un `secret put` crée une nouvelle version du Worker avec le même code : à faire **après** la publication de #54.
+Posés le 7 octobre 2026 depuis l'intégration `633076` : voir `SENDCLOUD_WIRING_20261007.md`. Chaque commande demande la valeur de façon masquée. `SENDCLOUD_WEBHOOK_SECRET` = la clé secrète de l'intégration, ou la Webhook Signature Key si une telle clé est configurée dans Sendcloud (Réglages → Intégrations → « mareliure » → Configurer). URL du webhook à saisir au même endroit : `https://mareliure.fr/api/marketplace/sendcloud-webhook` (« Webhook feedback enabled »). Un `secret put` crée une nouvelle version du Worker avec le même code : à faire **après** la publication de #54.
 
 ## 6. Publication
 
