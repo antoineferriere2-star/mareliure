@@ -43,6 +43,7 @@ const ERRORS: Record<string, string> = {
   label_reference_duplicate: "Cette référence d'achat est déjà enregistrée sur une autre étiquette : vérifiez la saisie (référence ou numéro de suivi).",
   provider_unavailable: "Enregistrement non confirmé (stockage ou base indisponible). Réessayez : aucune étiquette n'est dupliquée.",
   accepted_workshop_required: "Aucun atelier retenu ayant accepté l'offre.",
+  rate_method_unavailable: "Code de méthode absent du devis Sendcloud actuel de ce dossier, sans prix en EUR, ou exigeant un point relais : choisissez une méthode achetable de la liste.",
 };
 const errorText = (e: unknown) => {
   const code = e instanceof Error ? e.message.split(":")[0] : "";
@@ -325,7 +326,7 @@ function ShippingOptions({ caseId }: { caseId: string }) {
     <div className="mt-2">
       <p className="text-xs font-medium">{title}</p>
       <ul className="mt-1 space-y-1 text-xs [overflow-wrap:anywhere]">
-        {rows.map((o) => <li key={o.code}><code>{o.code}</code> · {o.carrier} · {o.name} · {o.firstMile ?? "?"} → {o.lastMile ?? "?"}{o.servicePointRequired ? " · point relais requis" : ""} · {o.priceCents === null ? "prix non communiqué" : `${(o.priceCents / 100).toFixed(2)} ${o.currency ?? ""}`} · facturé {o.chargingType === "first_scan" ? "au premier scan" : o.chargingType === "label_creation" ? "à la création" : "?"}</li>)}
+        {rows.map((o) => <li key={o.code}><code>{o.code}</code> · {o.carrier} · {o.name} · {o.firstMile ?? "?"} → {o.lastMile ?? "?"}{o.servicePointRequired ? " · point relais requis (non achetable ici)" : ""} · {o.priceCents === null ? "prix non communiqué" : `${(o.priceCents / 100).toFixed(2)} ${o.currency ?? ""}`} · facturé {o.chargingType === "first_scan" ? "au premier scan" : o.chargingType === "label_creation" ? "à la création" : "?"}</li>)}
         {!rows.length && <li>Aucune méthode proposée.</li>}
       </ul>
     </div>
