@@ -180,4 +180,20 @@ it("la liste admin partage les libellés actuels du pilotage", () => {
   expect(caseStageLabel("received_by_binder")).toBe("Payés / en cours");
   expect(caseStageLabel("cancelled")).toBe("Clos / sans suite");
   expect(caseStageLabel("futur")).toBe("Statut non reconnu");
+
 });
+
+describe("derniers dossiers du pilotage", () => {
+  it("derniers dossiers : du plus récent au plus ancien, bornés, filtrés par marque, sans donnée client", () => {
+    const base = rows();
+    const many = Array.from({ length: 12 }, (_, i) => ({ id: `m${i}`, reference: `RL-1${String(i).padStart(2, "0")}`, brand: "MA_RELIURE" as const,
+      status: i === 0 ? "cancelled" : "under_review", created_at: new Date(Date.parse("2026-10-01T00:00:00.000Z") + i * 3_600_000).toISOString() }));
+    const d = buildAdminDashboard({ ...base, cases: [...base.cases, ...many] }, { brand: "MA_RELIURE", since: null });
+    expect(d.cases.recent).toHaveLength(8);
+    expect(d.cases.recent.every((row) => row.brand === "MA_RELIURE")).toBe(true);
+    const times = d.cases.recent.map((row) => Date.parse(row.createdAt));
+    expect([...times].sort((a, b) => b - a)).toEqual(times);
+    expect(Object.keys(d.cases.recent[0]).sort()).toEqual(["brand", "createdAt", "id", "reference", "stage", "stageLabel"]);
+    const fb = buildAdminDashboard(base, { brand: "FINE_BINDERY", since: null });
+    expect(fb.cases.recent.map((row) => row.reference)).toEqual(expect.arrayContaining(["FB-001", "FB-002"]));
+  });});

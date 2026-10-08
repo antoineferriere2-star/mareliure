@@ -71,6 +71,10 @@ const LATE_SUBSCRIPTION = new Set(["past_due", "unpaid", "incomplete"]);
 export const SUBSCRIPTION_MONTHLY_HT_CENTS = 1500;
 const STALE_CLAIM_MS = 60 * 60 * 1000;
 
+/** Derniers dossiers de la marque : référence et étape seulement, jamais le client. */
+export interface RecentCase { id: string; reference: string; brand: MarketplaceBrand; stage: CaseStage; stageLabel: string; createdAt: string }
+export const RECENT_CASES_LIMIT = 8;
+
 export interface DashboardAlert { key: string; label: string; count: number; tone: "urgent" | "todo" }
 export interface RecentPayment { at: string; circuit: "A" | "C"; brand: MarketplaceBrand | null; reference: string | null; amountCents: number }
 
@@ -80,7 +84,7 @@ export interface AdminDashboard {
   brand: DashboardBrand;
   since: string | null;
   alerts: DashboardAlert[];
-  cases: { created: number; byStage: { key: CaseStage; label: string; count: number }[]; acceptanceRate: number | null };
+  cases: { created: number; byStage: { key: CaseStage; label: string; count: number }[]; acceptanceRate: number | null; recent: RecentCase[] };
   onboarding: {
     applications: { created: number; pending: number; accepted: number; rejected: number };
     workshops: { approved: number; pendingReview: number; suspended: number; published: number };
@@ -183,6 +187,8 @@ export function buildAdminDashboard(rows: DashboardRows, options: { brand: Dashb
       created: cases.filter((row) => inPeriod(row.created_at)).length,
       byStage,
       acceptanceRate: proposedOrBeyond ? reachedAcceptance / proposedOrBeyond : null,
+      recent: [...cases].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at)).slice(0, RECENT_CASES_LIMIT)
+        .map((row) => ({ id: row.id, reference: row.reference, brand: row.brand, stage: caseStage(row.status), stageLabel: caseStageLabel(row.status), createdAt: row.created_at })),
     },
     onboarding: {
       applications: {

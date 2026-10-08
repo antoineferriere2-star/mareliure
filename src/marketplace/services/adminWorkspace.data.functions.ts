@@ -5,6 +5,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin, assertAdmin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 
+/** Les deux marques de la plateforme : OPPE vend sur Ma Reliure et sert de concierge sur Fine Bindery. */
+const PLATFORM_BRANDS: string[] = ["MA_RELIURE", "FINE_BINDERY"];
+
 export const listAdminWorkshopSummaries = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
@@ -73,7 +76,7 @@ export const getAdminWorkshopDetail = createServerFn({ method: "GET" })
       ? await sb.from("marketplace_cases").select("id, reference, status, brand").in("id", caseIds)
       : { data: [], error: null };
     if (caseError) fail(500, "Les dossiers n'ont pas pu être chargés.");
-    const marketplaceCaseIds = new Set((cases ?? []).filter((row) => row.brand === "MA_RELIURE").map((row) => row.id));
+    const marketplaceCaseIds = new Set((cases ?? []).filter((row) => PLATFORM_BRANDS.includes(row.brand)).map((row) => row.id));
     // Ouvrages « plateforme » : dossiers Ma Reliure et Fine Bindery (la provenance stockée reste « ma_reliure »).
     const brandOf = new Map((cases ?? []).map((row) => [row.id, row.brand] as const));
     const platformWorks = (works.data ?? []).filter((work) => work.source === "ma_reliure" && work.case_id && (brandOf.get(work.case_id) === "MA_RELIURE" || brandOf.get(work.case_id) === "FINE_BINDERY"));
@@ -102,7 +105,7 @@ export const listAdminConversationPreviews = createServerFn({ method: "GET" })
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
     const { data: cases, error: caseError } = await sb.from("marketplace_cases")
-      .select("id, reference").eq("brand", "MA_RELIURE").order("created_at", { ascending: false }).limit(200);
+      .select("id, reference, brand").in("brand", [...PLATFORM_BRANDS]).order("created_at", { ascending: false }).limit(200);
     if (caseError) fail(500, "Les conversations n'ont pas pu être chargées.");
     const ids = (cases ?? []).map((row) => row.id);
     if (!ids.length) return [];
@@ -123,6 +126,6 @@ export const listAdminConversationPreviews = createServerFn({ method: "GET" })
     return (cases ?? []).filter((row) => latest.has(row.id)).map((row) => {
       const binderId = (matches.data ?? []).find((match) => match.case_id === row.id)?.binder_id;
       const binder = (binders ?? []).find((item) => item.id === binderId);
-      return { caseId: row.id, reference: row.reference, latest: latest.get(row.id)!, binderName: binder?.workshop_name || binder?.display_name || "Non attribué" };
+      return { caseId: row.id, reference: row.reference, brand: row.brand, latest: latest.get(row.id)!, binderName: binder?.workshop_name || binder?.display_name || "Non attribué" };
     }).sort((a, b) => b.latest.at.localeCompare(a.latest.at));
   });
