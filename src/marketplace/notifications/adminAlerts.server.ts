@@ -14,7 +14,11 @@ import { logOperationalError } from "@/build/services/operationalLog.server";
 import { MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
 
 export interface AdminAlert {
-  caseId: string;
+  /** Dossier concerné : le lien de l'alerte l'ouvre dans l'admin. */
+  caseId?: string;
+  /** Lien explicite quand l'alerte ne porte pas sur un dossier (atelier, abonnement). */
+  ctaUrl?: string;
+  ctaLabel?: string;
   heading: string;
   intro: string;
   /** Une même alerte n'est envoyée qu'une fois (relance, double webhook). */
@@ -22,7 +26,11 @@ export interface AdminAlert {
 }
 
 export function adminCaseUrl(caseId: string): string {
-  return `https://mareliure.fr/marketplace/cases/${caseId}`;
+  return `https://mareliure.fr/admin/leads/${caseId}`;
+}
+
+export function adminWorkshopUrl(binderId: string): string {
+  return `https://mareliure.fr/admin/ateliers/${binderId}`;
 }
 
 export function formatEurosForAlert(cents: number | null | undefined): string | null {
@@ -44,8 +52,8 @@ export async function notifyAdmin(alert: AdminAlert): Promise<boolean> {
         locale: "fr-FR",
         heading: alert.heading,
         intro: alert.intro,
-        ctaLabel: "Ouvrir le dossier",
-        ctaUrl: adminCaseUrl(alert.caseId),
+        ctaLabel: alert.ctaLabel ?? (alert.caseId ? "Ouvrir le dossier" : "Ouvrir l'admin"),
+        ctaUrl: alert.ctaUrl ?? (alert.caseId ? adminCaseUrl(alert.caseId) : "https://mareliure.fr/admin"),
       },
       brand: "MA_RELIURE",
       idempotencyKey: alert.idempotencyKey,

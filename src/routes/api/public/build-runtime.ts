@@ -582,6 +582,17 @@ export async function handleSubmitSession(
     nextQuestions: (dossier.next_questions as string[] | null) ?? [],
   });
 
+  // Alerte équipe Ma Reliure : un nouveau livre confié. Même discipline que la notification ci-dessus :
+  // une seule fois, à la création, jamais bloquante.
+  if (isMaReliure) {
+    try {
+      const { alertNewCase } = await import("@/marketplace/notifications/adminEventAlerts.server");
+      await alertNewCase(supabase, dossier.id);
+    } catch (err) {
+      logOperationalError("admin-alert.new-case-failed", err, { dossierId: dossier.id });
+    }
+  }
+
   // Mint the visitor's secure summary access token — only ever attempted
   // here, in the one-time dossier-creation branch (same idempotency
   // guarantee as the email below: a resubmitted/duplicate request can

@@ -2,6 +2,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
 import { findWorkshopCustomerAccount } from "./workshopAccountRecovery.server";
+import { alertWorkshopPaymentsActivated } from "@/marketplace/notifications/adminEventAlerts.server";
 
 type Supa = SupabaseClient<Database>;
 
@@ -168,7 +169,7 @@ export async function refreshBinderConnectStatus(
 ): Promise<BinderConnectStatus> {
   const { data: binder, error } = await sb
     .from("marketplace_binders")
-    .select("id, stripe_account_id")
+    .select("id, stripe_account_id, stripe_connect_charges_enabled, workshop_name, display_name")
     .eq("id", binderId)
     .maybeSingle();
   if (error) throw error;
@@ -197,6 +198,8 @@ export async function refreshBinderConnectStatus(
     })
     .eq("id", binderId);
   if (updateError) throw updateError;
+  await alertWorkshopPaymentsActivated(binderId, binder.workshop_name || binder.display_name || "Atelier",
+    Boolean(binder.stripe_connect_charges_enabled), chargesEnabled);
 
   return {
     binderId,

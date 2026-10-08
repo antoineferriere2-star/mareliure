@@ -12,6 +12,7 @@
  * `build_*` at all — their RLS denies anon and authenticated outright, and this
  * migration changed none of it.
  */
+import { alertCustomerSpaceOpened } from "@/marketplace/notifications/adminEventAlerts.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import type { ProjectBrief } from "@/build/schema/brief";
@@ -234,7 +235,9 @@ export async function assignCaseOwner(
     .eq("id", caseId)
     .is("customer_user_id", null)
     .select("id");
-  return (data ?? []).length > 0;
+  const claimed = (data ?? []).length > 0;
+  if (claimed) await alertCustomerSpaceOpened(sb, [caseId]);
+  return claimed;
 }
 
 /**
@@ -277,6 +280,7 @@ export async function claimCasesByVerifiedEmail(
     .in("dossier_id", dossierIds)
     .is("customer_user_id", null)
     .select("id");
+  await alertCustomerSpaceOpened(sb, (claimed ?? []).map((row) => row.id as string));
   return (claimed ?? []).length;
 }
 
