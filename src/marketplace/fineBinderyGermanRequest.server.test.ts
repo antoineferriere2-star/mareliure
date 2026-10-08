@@ -3,7 +3,7 @@ import { reconcileCaseTriage } from "./services/caseRepository.server";
 
 type Row = Record<string, unknown>;
 
-function germanRequestClient(source: string | null = "finebindery_profile", found = true) {
+function germanRequestClient(source: string | null = "finebindery_profile", found = true, status = "under_review") {
   const updates: Row[] = [];
   const matches: Row[] = [];
   const events: Row[] = [];
@@ -15,6 +15,7 @@ function germanRequestClient(source: string | null = "finebindery_profile", foun
   };
 
   class Query implements PromiseLike<{ data: unknown; error: null }> {
+    private exclusions: Array<[string, unknown]> = [];
     private operation: "select" | "update" | "upsert" | "insert" = "select";
     constructor(private table: string) {}
     select() { this.operation = "select"; return this; }
@@ -23,6 +24,7 @@ function germanRequestClient(source: string | null = "finebindery_profile", foun
     insert(value: Row) { this.operation = "insert"; events.push(value); return this; }
     eq() { return this; }
     is() { return this; }
+    neq(column: string, value: unknown) { this.exclusions.push([column, value]); return this; }
     limit() { return this; }
     async maybeSingle() {
       if (this.table === "build_dossiers") return { data: { session_id: "session-de" }, error: null };
@@ -35,7 +37,7 @@ function germanRequestClient(source: string | null = "finebindery_profile", foun
       onrejected?: ((reason: unknown) => TResult2 | PromiseLike<TResult2>) | null,
     ): Promise<TResult1 | TResult2> {
       const data = this.table === "marketplace_cases" && this.operation === "select"
-        ? [{ id: "case-de", dossier_id: "dossier-de" }]
+        ? [{ id: "case-de", dossier_id: "dossier-de", status }].filter((row) => this.exclusions.every(([column, value]) => (row as Row)[column] !== value))
         : null;
       return Promise.resolve({ data, error: null }).then(onfulfilled, onrejected);
     }
@@ -49,6 +51,13 @@ function germanRequestClient(source: string | null = "finebindery_profile", foun
 }
 
 describe("FineBindery German project routing", () => {
+  it("ne réattribue pas un dossier annulé encore sans tri", async () => {
+    const { client, updates, matches, events } = germanRequestClient("finebindery_profile", true, "cancelled");
+    await expect(reconcileCaseTriage(client as never)).resolves.toBe(0);
+    expect(updates).toEqual([]);
+    expect(matches).toEqual([]);
+    expect(events).toEqual([]);
+  });
   it("rattache aussi une demande du lien personnel Ma Reliure au seul atelier référent", async () => {
     const { client, updates, matches } = germanRequestClient(null);
     await reconcileCaseTriage(client as never);

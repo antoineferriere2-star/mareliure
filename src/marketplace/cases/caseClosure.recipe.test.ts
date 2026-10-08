@@ -8,15 +8,17 @@ beforeAll(async()=>{
   await db.exec(`CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;
     CREATE SCHEMA auth; CREATE TABLE auth.users(id uuid PRIMARY KEY);
     CREATE TABLE public.user_roles(user_id uuid REFERENCES auth.users(id),role text);
-    CREATE TABLE public.marketplace_cases(id uuid PRIMARY KEY,status text NOT NULL);
-    CREATE TABLE public.marketplace_case_matches(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),case_id uuid REFERENCES marketplace_cases(id));
+    CREATE TABLE public.marketplace_cases(id uuid PRIMARY KEY,status text NOT NULL,acquisition_origin text,referred_binder_id uuid);
+    CREATE TABLE public.marketplace_binders(id uuid PRIMARY KEY,status text);
+    CREATE TABLE public.marketplace_case_matches(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),case_id uuid REFERENCES marketplace_cases(id),binder_id uuid,state text,invited_at timestamptz,UNIQUE(case_id,binder_id));
     CREATE TABLE public.marketplace_commercial_proposals(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),case_id uuid REFERENCES marketplace_cases(id));
     CREATE TABLE public.marketplace_events(id uuid PRIMARY KEY DEFAULT gen_random_uuid(),case_id uuid REFERENCES marketplace_cases(id),actor_user_id uuid REFERENCES auth.users(id),event_type text,metadata jsonb);
     GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role; INSERT INTO auth.users VALUES('${id(1)}'),('${id(2)}'); INSERT INTO user_roles VALUES('${id(1)}','admin'),('${id(2)}','customer');`);
   await db.exec(readFileSync(new URL('../../../supabase/migrations/20261008100000_case_closure_atomic.sql',import.meta.url),'utf8'));
+  await db.exec(readFileSync(new URL('../../../supabase/migrations/20261008110000_closed_case_reconciliation.sql',import.meta.url),'utf8'));
 },30000);
 afterAll(async()=>{await db?.close();});
-async function create(n:number,status="pricing"){await db.query("INSERT INTO marketplace_cases VALUES($1,$2)",[id(n),status]);return id(n);}
+async function create(n:number,status="pricing"){await db.query("INSERT INTO marketplace_cases(id,status) VALUES($1,$2)",[id(n),status]);return id(n);}
 async function close(caseId:string,actor:string|null=id(1),reason="Dossier de test interne",expected:string|null=null){return (await db.query<{r:string}>("SELECT marketplace_close_case_without_follow_up($1,$2,$3,$4) r",[caseId,actor,reason,expected])).rows[0].r;}
 async function state(caseId:string){return (await db.query<{status:string;events:number}>("SELECT status,(SELECT count(*)::int FROM marketplace_events WHERE case_id=c.id) events FROM marketplace_cases c WHERE id=$1",[caseId])).rows[0];}
 describe("clôture SQL atomique",()=>{
@@ -56,6 +58,17 @@ describe("clôture SQL atomique",()=>{
     const caseId=await create(70);await close(caseId);
     for(const table of ["marketplace_case_matches","marketplace_commercial_proposals"]){await expect(db.query(`INSERT INTO ${table}(case_id) VALUES($1)`,[caseId])).rejects.toThrow("case_cancelled");}
     expect(await state(caseId)).toEqual({status:"cancelled",events:1});
+  });
+  it("la réparation ignore les dossiers clos et les invitations déjà présentes",async()=>{
+    const binder=id(100);await db.query("INSERT INTO marketplace_binders VALUES($1,'approved')",[binder]);
+    const old=await create(90);await db.query("INSERT INTO marketplace_case_matches(case_id,binder_id,state) VALUES($1,$2,'invited')",[old,binder]);
+    await db.query("UPDATE marketplace_cases SET status='cancelled',acquisition_origin='BINDER_REFERRED',referred_binder_id=$2 WHERE id=$1",[old,binder]);
+    const closed=await create(91,'cancelled'),open=await create(92);
+    for(const c of [closed,open])await db.query("UPDATE marketplace_cases SET acquisition_origin='FINEBINDERY_PROFILE',referred_binder_id=$2 WHERE id=$1",[c,binder]);
+    const repair=async()=> (await db.query<{n:number}>("SELECT marketplace_repair_workshop_referral_matches() n")).rows[0].n;
+    expect(await repair()).toBe(1);expect(await repair()).toBe(0);
+    expect((await db.query<{case_id:string}>("SELECT case_id FROM marketplace_case_matches WHERE binder_id=$1 ORDER BY case_id",[binder])).rows.map(r=>r.case_id)).toEqual([old,open]);
+    expect((await state(closed)).status).toBe('cancelled');
   });
   it("retire l'exécution directe aux rôles publics et interdit l'acteur NULL via service_role",async()=>{
     const grants=(await db.query<{role:string;allowed:boolean}>(`SELECT r role,has_function_privilege(r,'marketplace_close_case_without_follow_up(uuid,uuid,text,text)','EXECUTE') allowed FROM unnest(ARRAY['anon','authenticated','service_role']) r`)).rows;
