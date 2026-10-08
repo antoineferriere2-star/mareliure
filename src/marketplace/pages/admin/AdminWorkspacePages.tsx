@@ -8,26 +8,6 @@ import { CARD, FIELD } from "@/marketplace/pages/binder/quotes/quoteUi";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { AdminWorkshopAccessControl, AdminWorkshopReviewSummary, WorkshopStatusText } from "@/marketplace/pages/admin/AdminWorkshopAccessControl";
 
-export function AdminTodayPage() {
-  const fetchCases = useServerFn(listMarketplaceCases);
-  const fetchWorkshops = useServerFn(listAdminWorkshopSummaries);
-  const cases = useQuery({ queryKey: ["admin", "cases"], queryFn: () => fetchCases() });
-  const workshops = useQuery({ queryKey: ["admin", "workshops"], queryFn: () => fetchWorkshops() });
-  if (cases.isPending || workshops.isPending) return <p role="status">Chargement du pilotage…</p>;
-  if (cases.isError || workshops.isError) return <p role="alert">Le pilotage n'a pas pu être chargé.</p>;
-  const rows = (cases.data ?? []).filter((row) => row.brand === "MA_RELIURE");
-  const cards = [
-    ["Nouveaux leads", rows.filter((row) => row.status === "under_review").length, "/admin/leads"],
-    ["Projets sans réponse", rows.filter((row) => row.status === "sent_to_binders" && row.acceptedCount === 0).length, "/admin/leads"],
-    ["Messages en attente", rows.reduce((total, row) => total + row.unreadMessages, 0), "/admin/messages"],
-    ["Devis en cours", rows.filter((row) => row.status === "quotes_received").length, "/admin/leads"],
-    ["Devis envoyés", rows.filter((row) => row.status === "awaiting_approval").length, "/admin/leads"],
-    ["Projets acceptés", rows.filter((row) => row.status === "binder_selected").length, "/admin/leads"],
-    ["Ateliers actifs", (workshops.data ?? []).filter((row) => row.status === "approved").length, "/admin/ateliers"],
-  ] as const;
-  return <div className="space-y-5"><header><h1 className="font-serif text-2xl">Pilotage Ma Reliure</h1><p className="text-sm text-muted-foreground">Les dossiers et ateliers à suivre.</p></header><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">{cards.map(([label, count, to]) => <Link key={label} to={to} className={`${CARD} block`}><span className="text-sm text-muted-foreground">{label}</span><strong className="mt-2 block text-3xl">{count}</strong></Link>)}</div></div>;
-}
-
 export function AdminWorkshopsPage() {
   const fetchRows = useServerFn(listAdminWorkshopSummaries);
   const rows = useQuery({ queryKey: ["admin", "workshops"], queryFn: () => fetchRows() });
