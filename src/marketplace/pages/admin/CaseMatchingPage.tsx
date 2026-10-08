@@ -12,12 +12,14 @@ import { SupplierInvoicesPanel } from "./SupplierInvoicesPanel";
 import { OppeBillingPanel } from "./OppeBillingPanel";
 import { OppeOrderPanel } from "./OppeOrderPanel";
 import { commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
+import { isClosableCaseStatus } from "@/marketplace/cases/closeCase";
 import { OperatorLogisticsPanel } from "./OperatorLogisticsPanel";
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   clearCaseManualReview,
+  closeCaseWithoutFollowUp,
   generateMarketplacePricing,
   getMarketplaceCase,
   saveMarketplacePricing,
@@ -945,6 +947,33 @@ function CommercialProposalPanel({ caseId, onSent }: { caseId: string; onSent: (
   );
 }
 
+/** Classer sans suite : dossier encore interne seulement, motif obligatoire, aucun message au visiteur. */
+function CloseCaseForm({ caseId }: { caseId: string }) {
+  const close = useServerFn(closeCaseWithoutFollowUp);
+  const queryClient = useQueryClient();
+  const [reason, setReason] = useState("");
+  const mutation = useMutation({
+    mutationFn: () => close({ data: { caseId, reason } }),
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId] });
+      await queryClient.invalidateQueries({ queryKey: ["marketplace", "cases"] });
+      await queryClient.invalidateQueries({ queryKey: ["admin"] });
+    },
+  });
+  return (
+    <details className="mt-3 rounded-md border border-border p-3 text-sm">
+      <summary className="cursor-pointer font-medium">Classer sans suite</summary>
+      <p className="mt-2 text-xs text-muted-foreground">Pour un test, un doublon ou une demande vide. Le dossier passe à « Annulé », rien n'est supprimé et le visiteur n'est pas prévenu. Impossible une fois un atelier sollicité.</p>
+      <Label htmlFor={`close-reason-${caseId}`} className="mt-2 block text-xs">Motif (journalisé)</Label>
+      <Input id={`close-reason-${caseId}`} className="mt-1" value={reason} maxLength={300} placeholder="Dossier de test interne" onChange={(event) => setReason(event.target.value)} />
+      {mutation.isError && <p className="mt-2 text-xs text-destructive">{mutation.error instanceof Error ? mutation.error.message : "Le dossier n'a pas pu être classé."}</p>}
+      <Button size="sm" variant="outline" className="mt-2" disabled={reason.trim().length < 5 || mutation.isPending} onClick={() => mutation.mutate()}>
+        Classer sans suite
+      </Button>
+    </details>
+  );
+}
+
 export function CaseMatchingPage({ caseId }: { caseId: string }) {
   const fetchCase = useServerFn(getMarketplaceCase);
   const send = useServerFn(sendCaseToBinders);
@@ -1025,6 +1054,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
               ? CASE_STATUS_LABELS[data.case.status]
               : data.case.status}
           </p>
+          {isClosableCaseStatus(data.case.status) && <CloseCaseForm caseId={caseId} />}
           {commercialOriginOf(data.case.acquisition_origin) === "workshop_client" ? (
             <p className="mt-3 rounded-md border border-emerald-700/30 bg-emerald-50 p-3 text-sm leading-6 text-emerald-900">
               Client propre de l'atelier (lien personnel ou vitrine) : l'atelier vend et facture. Aucune proposition Oppe n'est possible.

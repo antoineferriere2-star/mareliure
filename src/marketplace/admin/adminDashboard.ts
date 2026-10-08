@@ -36,21 +36,26 @@ export interface DashboardRows {
   unreadByCase?: { case_id: string; count: number }[];
 }
 
-/** Étapes d'un dossier dans l'ordre du parcours ; tout statut inconnu tombe dans « Clos ». */
+/**
+ * Étapes d'un dossier dans l'ordre du parcours, d'après la contrainte `marketplace_cases_status_check`
+ * (`sent_to_binders` et `quotes_received` : dossiers antérieurs, lecture seule). Seul `cancelled`
+ * est clos ; un statut inconnu reste visible à part, jamais rangé en clos.
+ */
 export const CASE_STAGES = [
   ["new", "Nouveaux", ["under_review"]],
-  ["qualifying", "À qualifier", ["matching"]],
-  ["sent", "Envoyés aux ateliers", ["sent_to_binders"]],
-  ["quotes", "Devis reçus", ["quotes_received"]],
-  ["proposed", "Proposition envoyée", ["awaiting_approval"]],
-  ["accepted", "Acceptés, à payer", ["binder_selected", "awaiting_payment"]],
-  ["production", "Payés / en production", ["paid", "in_progress"]],
-  ["done", "Terminés", ["completed", "delivered"]],
+  ["pricing", "Prix à valider", ["pricing"]],
+  ["qualifying", "Sélection des ateliers", ["matching"]],
+  ["sent", "Envoyés aux ateliers", ["awaiting_binder_response", "sent_to_binders"]],
+  ["workshop", "Atelier disponible", ["binder_accepted", "quotes_received"]],
+  ["accepted", "Atelier retenu, à payer", ["binder_selected", "awaiting_payment"]],
+  ["production", "Payés / en cours", ["paid", "shipping_to_binder", "received_by_binder", "in_progress", "awaiting_approval", "shipping_to_customer"]],
+  ["done", "Terminés", ["delivered", "completed"]],
+  ["closed", "Clos / sans suite", ["cancelled"]],
 ] as const;
-export type CaseStage = (typeof CASE_STAGES)[number][0] | "closed";
+export type CaseStage = (typeof CASE_STAGES)[number][0] | "other";
 
 export function caseStage(status: string): CaseStage {
-  return CASE_STAGES.find(([, , statuses]) => (statuses as readonly string[]).includes(status))?.[0] ?? "closed";
+  return CASE_STAGES.find(([, , statuses]) => (statuses as readonly string[]).includes(status))?.[0] ?? "other";
 }
 
 const OPEN_DISPUTE = new Set(["warning_needs_response", "needs_response", "warning_under_review", "under_review"]);
@@ -106,9 +111,10 @@ export function buildAdminDashboard(rows: DashboardRows, options: { brand: Dashb
   const stageCounts = new Map<CaseStage, number>();
   for (const row of cases) stageCounts.set(caseStage(row.status), (stageCounts.get(caseStage(row.status)) ?? 0) + 1);
   const byStage = [...CASE_STAGES.map(([key, label]) => ({ key: key as CaseStage, label, count: stageCounts.get(key) ?? 0 })),
-    { key: "closed" as const, label: "Clos / abandonnés", count: stageCounts.get("closed") ?? 0 }];
+    ...(stageCounts.get("other") ? [{ key: "other" as const, label: "Statut non reconnu", count: stageCounts.get("other")! }] : [])];
+  // Acceptation : dossiers où un atelier s'est rendu disponible, puis retenu et au-delà.
   const reachedAcceptance = cases.filter((row) => ["accepted", "production", "done"].includes(caseStage(row.status))).length;
-  const proposedOrBeyond = reachedAcceptance + (stageCounts.get("proposed") ?? 0);
+  const proposedOrBeyond = reachedAcceptance + (stageCounts.get("workshop") ?? 0);
 
   // Circuit A : encaissements OPPE, marque de la proposition.
   const aPayments = rows.proposalPayments.filter((row) => inPeriod(row.paid_at) && inBrand(proposals.get(row.proposal_id)?.brand));
@@ -155,7 +161,7 @@ export function buildAdminDashboard(rows: DashboardRows, options: { brand: Dashb
     { key: "refunds", label: "Remboursements en échec", count: rows.oppeRefunds.filter((row) => row.status === "failed" && inBrand(caseBrand(row.case_id))).length
       + rows.onlineRefunds.filter((row) => ["failed", "requires_action"].includes(row.status) && cBrandIds.has(row.payment_id)).length, tone: "urgent" as const },
     { key: "subscriptions", label: "Abonnements impayés", count: brand === "ALL" ? subscriptions.filter((row) => !row.legacy_free && LATE_SUBSCRIPTION.has(row.status)).length : 0, tone: "urgent" as const },
-    { key: "newCases", label: "Nouveaux dossiers à qualifier", count: (stageCounts.get("new") ?? 0) + (stageCounts.get("qualifying") ?? 0), tone: "todo" as const },
+    { key: "newCases", label: "Nouveaux dossiers à qualifier", count: (stageCounts.get("new") ?? 0) + (stageCounts.get("pricing") ?? 0) + (stageCounts.get("qualifying") ?? 0), tone: "todo" as const },
     { key: "applications", label: "Candidatures d'ateliers à examiner", count: brand === "ALL" ? rows.applications.filter((row) => row.status === "new").length : 0, tone: "todo" as const },
     { key: "workshopReview", label: "Ateliers en attente de validation", count: brand === "ALL" ? binders.filter((row) => row.status === "pending_review").length : 0, tone: "todo" as const },
     { key: "shipping", label: "Envois à préparer (retour prêt sans étiquette)", count: returnReadyWithoutLabel, tone: "todo" as const },
