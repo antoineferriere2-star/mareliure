@@ -33,7 +33,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
   );
 }
 
-function Stat({ label, value, detail, to }: { label: string; value: ReactNode; detail?: ReactNode; to?: "/admin/ateliers" | "/admin/leads" }) {
+function Stat({ label, value, detail, to }: { label: string; value: ReactNode; detail?: ReactNode; to?: "/admin/ateliers" | "/admin/leads" | "/marketplace/binders" }) {
   const body = <><span className="text-sm text-muted-foreground">{label}</span><strong className="mt-1 block text-2xl tabular-nums">{value}</strong>
     {detail && <span className="mt-1 block text-xs text-muted-foreground">{detail}</span>}</>;
   return to ? <Link to={to} className={`${CARD} block hover:border-foreground/40`}>{body}</Link> : <div className={CARD}>{body}</div>;
@@ -43,6 +43,13 @@ function State({ open, label }: { open: boolean; label: string }) {
   return <span className={`inline-flex items-center gap-1 border px-2 py-1 text-xs ${open ? "border-emerald-700 text-emerald-800" : "border-border text-muted-foreground"}`}>
     {label} : {open ? "ouvert" : "fermé"}</span>;
 }
+
+/** Chaque alerte mène à la liste où elle se traite. */
+const ALERT_TARGETS: Record<string, "/admin/leads" | "/admin/ateliers" | "/admin/messages" | "/marketplace/binders"> = {
+  newCases: "/admin/leads", disputes: "/admin/leads", refunds: "/admin/leads", labels: "/admin/leads", shipping: "/admin/leads",
+  // Les candidatures se traitent dans « Relieurs » (back-office), pas sur la liste des ateliers.
+  applications: "/marketplace/binders", workshopReview: "/admin/ateliers", subscriptions: "/admin/ateliers", messages: "/admin/messages",
+};
 
 const percent = (value: number | null) => (value === null ? "—" : `${Math.round(value * 100)} %`);
 
@@ -73,7 +80,10 @@ export function AdminDashboardPage() {
 function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread: number; periodLabel: string }) {
   const { cases, onboarding, payments, shipping } = data;
   const allBrands = data.brand === "ALL";
-  const maxStage = Math.max(1, ...cases.byStage.map((stage) => stage.count));
+  // Le parcours actif d'abord ; les dossiers clos à part, pour qu'ils n'écrasent pas l'échelle.
+  const activeStages = cases.byStage.filter((stage) => stage.key !== "closed");
+  const closedStage = cases.byStage.find((stage) => stage.key === "closed");
+  const maxStage = Math.max(1, ...activeStages.map((stage) => stage.count));
   const alerts = [...data.alerts, ...(unread ? [{ key: "messages", label: "Messages non lus", count: unread, tone: "todo" as const }] : [])];
   return (
     <>
@@ -81,9 +91,11 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
         {alerts.length === 0 ? <p className={CARD}>Rien en attente.</p> : (
           <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {alerts.map((alert) => (
-              <li key={alert.key} className={`${CARD} ${alert.tone === "urgent" ? "border-[#7a2230]" : ""}`}>
-                <span className={`text-sm ${alert.tone === "urgent" ? "font-medium text-[#7a2230]" : "text-muted-foreground"}`}>{alert.label}</span>
-                <strong className="mt-1 block text-2xl tabular-nums">{alert.count}</strong>
+              <li key={alert.key}>
+                <Link to={ALERT_TARGETS[alert.key] ?? "/admin/leads"} className={`${CARD} block h-full hover:border-foreground/40 ${alert.tone === "urgent" ? "border-[#7a2230]" : ""}`}>
+                  <span className={`text-sm ${alert.tone === "urgent" ? "font-medium text-[#7a2230]" : "text-muted-foreground"}`}>{alert.label}</span>
+                  <span className="mt-1 flex items-baseline justify-between gap-2"><strong className="text-2xl tabular-nums">{alert.count}</strong><span className="text-xs underline">Traiter →</span></span>
+                </Link>
               </li>
             ))}
           </ul>
@@ -93,7 +105,7 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
       <Section title="Dossiers" hint={`${cases.created} dossier(s) créé(s) ${periodLabel}. Entonnoir : état actuel de tous les dossiers.`}>
         <div className={CARD}>
           <ol className="space-y-2">
-            {cases.byStage.map((stage) => (
+            {activeStages.map((stage) => (
               <li key={stage.key} className="grid grid-cols-[minmax(0,1fr)_5.5rem_2rem] items-center gap-3 text-sm sm:grid-cols-[minmax(0,16rem)_1fr_2.5rem]">
                 <span className="truncate">{stage.label}</span>
                 <span className="h-3 rounded-sm bg-muted" aria-hidden="true"><span className="block h-3 rounded-sm bg-[#7a2230]" style={{ width: `${(stage.count / maxStage) * 100}%` }} /></span>
@@ -101,8 +113,32 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
               </li>
             ))}
           </ol>
+          {closedStage && (
+            <div className="mt-3 grid grid-cols-[minmax(0,1fr)_5.5rem_2rem] items-center gap-3 border-t border-border pt-3 text-sm text-muted-foreground sm:grid-cols-[minmax(0,16rem)_1fr_2.5rem]">
+              <span className="truncate">{closedStage.label}</span>
+              <span className="h-3 rounded-sm bg-muted" aria-hidden="true"><span className="block h-3 rounded-sm bg-muted-foreground/40" style={{ width: `${Math.min(100, (closedStage.count / maxStage) * 100)}%` }} /></span>
+              <span className="text-right tabular-nums">{closedStage.count}</span>
+            </div>
+          )}
           <p className="mt-3 text-xs text-muted-foreground">Atelier retenu parmi les dossiers ayant trouvé un atelier : {percent(cases.acceptanceRate)}. <Link to="/admin/leads" className="underline">Voir les dossiers</Link></p>
         </div>
+      </Section>
+
+      <Section title="Derniers dossiers">
+        {cases.recent.length === 0 ? <p className={CARD}>Aucun dossier pour cette marque.</p> : (
+          <ul className={`${CARD} divide-y divide-border p-0 sm:p-0`}>
+            {cases.recent.map((row) => (
+              <li key={row.id}>
+                <Link to="/admin/leads/$leadId" params={{ leadId: row.id }} className="flex min-h-11 flex-wrap items-center gap-x-3 gap-y-1 px-4 py-2 text-sm hover:bg-muted sm:px-5">
+                  <strong className="tabular-nums">{row.reference}</strong>
+                  <span className={`text-xs ${row.stage === "closed" ? "text-muted-foreground" : ""}`}>{row.stageLabel}</span>
+                  {data.brand === "ALL" && <span className="text-xs text-muted-foreground">{BRAND_LABEL[row.brand]}</span>}
+                  <time dateTime={row.createdAt} className="ml-auto text-xs text-muted-foreground">{new Date(row.createdAt).toLocaleDateString("fr-FR")}</time>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </Section>
 
       <Section title="Paiements" hint={`Encaissements ${periodLabel}, rapprochés des événements Stripe.`}>
@@ -135,7 +171,7 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
 
       <Section title="Onboarding des ateliers" hint={allBrands ? "Les ateliers servent les deux marques." : "Les ateliers servent les deux marques : chiffres communs."}>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <Stat label="Candidatures" value={onboarding.applications.created} to="/admin/ateliers"
+          <Stat label="Candidatures" value={onboarding.applications.created} to="/marketplace/binders"
             detail={<>{periodLabel} · {onboarding.applications.pending} en attente · {onboarding.applications.accepted} acceptée(s) · {onboarding.applications.rejected} refusée(s)</>} />
           <Stat label="Ateliers validés" value={onboarding.workshops.approved} to="/admin/ateliers"
             detail={<>{onboarding.workshops.pendingReview} à valider · {onboarding.workshops.suspended} suspendu(s) · {onboarding.workshops.published} profil(s) publié(s)</>} />

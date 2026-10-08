@@ -18,7 +18,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 
 const NAV = [
   ["/admin", "Pilotage"], ["/admin/ateliers", "Ateliers"],
-  ["/admin/leads", "Leads"], ["/admin/messages", "Messages"],
+  ["/admin/leads", "Dossiers"], ["/admin/messages", "Messages"],
   ["/marketplace/pricing", "Tarifs"],
 ] as const;
 

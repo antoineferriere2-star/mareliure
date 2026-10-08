@@ -18,9 +18,10 @@ describe("confidentialité de la supervision atelier", () => {
     expect(detail).not.toMatch(/client_(name|email|phone)|sender_user_id|body/);
   });
 
-  it("borne les conversations admin aux dossiers Ma Reliure", () => {
+  it("borne les conversations admin aux dossiers des deux marques de la plateforme", () => {
     const messages = source.slice(source.indexOf("listAdminConversationPreviews"));
-    expect(messages).toContain('.eq("brand", "MA_RELIURE")');
+    expect(source).toContain('const PLATFORM_BRANDS: string[] = ["MA_RELIURE", "FINE_BINDERY"];');
+    expect(messages).toContain('.in("brand", [...PLATFORM_BRANDS])');
     expect(messages).toContain('.in("case_id", ids)');
   });
 });
