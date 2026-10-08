@@ -395,6 +395,7 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
     .from("marketplace_cases")
     .select("id, dossier_id")
     .is("triaged_at", null)
+    .neq("status", "cancelled")
     .limit(200);
   if (error) throw error;
   if (!pending || pending.length === 0) return 0;
