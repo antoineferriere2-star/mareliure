@@ -1,3 +1,4 @@
+import { alertWorkshopSubscriptionSynced, readWorkshopSubscriptionStatus } from "@/marketplace/notifications/adminEventAlerts.server";
 import type Stripe from "stripe";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
@@ -331,6 +332,7 @@ export async function syncWorkshopSubscriptionEvent(
     item.current_period_end,
     subscription.cancel_at ?? item.current_period_end,
   );
+  const previousStatus = await readWorkshopSubscriptionStatus(sb, binderId);
   const { error } = await sb.rpc("marketplace_sync_workshop_subscription", {
     p_binder_id: binderId,
     p_event_created: event.created,
@@ -343,6 +345,7 @@ export async function syncWorkshopSubscriptionEvent(
     },
   });
   if (error) throw error;
+  await alertWorkshopSubscriptionSynced(sb, binderId, subscription.id, previousStatus);
   if (invoice?.status) {
     const saved = await sb.from("marketplace_workshop_billing_documents").upsert({
       stripe_invoice_id: invoice.id,

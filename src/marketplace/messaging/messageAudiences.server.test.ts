@@ -13,6 +13,8 @@ const state = vi.hoisted(() => ({
   sb: null as unknown,
   viewer: { role: "anonymous" } as unknown,
   sent: [] as { to: string }[],
+  /** Alertes adressées à l'équipe (contact@oppe.fr), tenues à part des e-mails client et atelier. */
+  team: [] as string[],
 }));
 
 vi.mock("@tanstack/react-start", () => ({
@@ -34,7 +36,7 @@ vi.mock("@/build/services/adminAuth.server", () => ({ admin: async () => state.s
 vi.mock("@/build/services/operationalLog.server", () => ({ logOperationalError: vi.fn() }));
 vi.mock("@/marketplace/services/marketplace.data.functions", () => ({ resolveViewer: async () => state.viewer }));
 vi.mock("@/lib/email-templates/send-email", () => ({
-  sendTemplateEmail: async (_name: string, to: string) => void state.sent.push({ to }),
+  sendTemplateEmail: async (_name: string, to: string) => void (to === "contact@oppe.fr" ? state.team.push(to) : state.sent.push({ to })),
 }));
 
 const { listCaseMessages, sendCaseMessage, markConversationRead, unreadCountsByCase } = await import("@/marketplace/services/messaging.data.functions");
@@ -122,6 +124,7 @@ const platform: Viewer = { role: "admin" };
 
 beforeEach(() => {
   state.sent = [];
+  state.team = [];
   state.viewer = customer;
 });
 
@@ -282,6 +285,7 @@ describe("parcours réel : atelier retenu → message privé à la plateforme �
       audience: "workshop_platform",
     });
     expect(state.sent).toHaveLength(0); // le client n'est pas notifié d'un message qu'il ne peut pas lire
+    expect(state.team).toHaveLength(1); // l'équipe est alertée : le message lui est adressé
 
     // 2. Le concierge (admin) LIT ce message dans le canal atelier — et pas dans celui du client.
     as(platform);
@@ -305,6 +309,7 @@ describe("parcours réel : atelier retenu → message privé à la plateforme �
       audience: "workshop_platform",
     });
     expect(state.sent).toHaveLength(0); // ni e-mail au client pour un message interne
+    expect(state.team).toHaveLength(1); // ni nouvelle alerte : c'est l'équipe qui répond
 
     // 5. L'atelier retenu lit la réponse.
     as(workshop);

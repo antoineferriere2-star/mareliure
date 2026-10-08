@@ -8,6 +8,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
+import { alertWorkshopJoined } from "@/marketplace/notifications/adminEventAlerts.server";
 
 type Supa = SupabaseClient<Database>;
 
@@ -38,6 +39,7 @@ export async function createPendingBinderWorkspace(
   const { data: ownedBinder, error: lookupError } = await findOwned();
   if (lookupError) throw lookupError;
   let binder = ownedBinder;
+  let created = false;
   if (!binder) {
     const inserted = await sb.from("marketplace_binders")
       .insert({
@@ -56,6 +58,7 @@ export async function createPendingBinderWorkspace(
     } else {
       if (inserted.error) throw inserted.error;
       binder = inserted.data;
+      created = true;
     }
   }
   if (!binder) throw new Error("Impossible de retrouver cet atelier.");
@@ -88,5 +91,6 @@ export async function createPendingBinderWorkspace(
   if (confirmed.account_status !== "active") {
     throw new Error("Cet accès atelier n'est pas actif. Contactez Ma Reliure.");
   }
+  if (created) await alertWorkshopJoined(binder.id, input.workshopName || input.displayName, "self_registration");
   return { binderId: binder.id, status: binder.status };
 }

@@ -9,6 +9,7 @@
  * and only the SELECTED workshop, still in good standing, ever enters a
  * conversation (an invited or available one has no right to the customer yet).
  */
+import { alertTeamMessage } from "@/marketplace/notifications/adminEventAlerts.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -276,6 +277,7 @@ export const sendCaseMessage = createServerFn({ method: "POST" })
 
     await notifyCustomerOfNewMessage(sb, data.caseId, facts.customerUserId, role!, audience);
     await notifyWorkshopOfNewMessage(sb, data.caseId, facts.selectedBinderId, role!, audience);
+    await alertTeamMessage(sb, data.caseId, inserted!.id, role!, audience);
 
     return { id: inserted!.id, createdAt: inserted!.created_at };
   });

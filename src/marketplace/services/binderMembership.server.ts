@@ -7,6 +7,7 @@
  * is the only place that reads or writes marketplace_binder_members and
  * marketplace_binder_invitations.
  */
+import { alertInvitedWorkshopJoined } from "@/marketplace/notifications/adminEventAlerts.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import {
@@ -279,6 +280,8 @@ async function activateInvitation(
       metadata: {},
     },
   ]);
+
+  await alertInvitedWorkshopJoined(sb, invitation.binder_id);
 
   return { ok: true, binderId: invitation.binder_id };
 }

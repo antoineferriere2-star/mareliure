@@ -18,6 +18,8 @@ const state = vi.hoisted(() => ({
   sb: null as unknown,
   viewer: { role: "anonymous" } as unknown,
   sent: [] as { to: string; templateData: Record<string, unknown>; brand: string }[],
+  /** Alertes adressées à l'équipe (contact@oppe.fr), tenues à part des e-mails client et atelier. */
+  team: [] as string[],
 }));
 
 vi.mock("@tanstack/react-start", () => ({
@@ -40,7 +42,8 @@ vi.mock("@/build/services/operationalLog.server", () => ({ logOperationalError: 
 vi.mock("@/marketplace/services/marketplace.data.functions", () => ({ resolveViewer: async () => state.viewer }));
 vi.mock("@/lib/email-templates/send-email", () => ({
   sendTemplateEmail: async (_name: string, to: string, options: { templateData: Record<string, unknown>; brand: string }) => {
-    state.sent.push({ to, templateData: options.templateData, brand: options.brand });
+    if (to === "contact@oppe.fr") state.team.push(String(options.templateData.heading));
+    else state.sent.push({ to, templateData: options.templateData, brand: options.brand });
   },
 }));
 
@@ -146,6 +149,7 @@ const bodies = (result: { messages: { body: string | null }[] }) => result.messa
 
 beforeEach(() => {
   state.sent = [];
+  state.team = [];
   state.viewer = asCustomer();
 });
 
@@ -294,6 +298,9 @@ describe("sendCaseMessage : la notification e-mail du client", () => {
     await send(CASE_FB, asCustomer(), CUSTOMER);
     await send(CASE_MR, asCustomer(), CUSTOMER);
     expect(state.sent).toHaveLength(0);
+    // L'équipe, elle, est alertée de chaque message client qui lui est adressé.
+    expect(state.team).toHaveLength(2);
+    expect(state.team.every((heading) => heading.startsWith("Nouveau message du client"))).toBe(true);
   });
 });
 
