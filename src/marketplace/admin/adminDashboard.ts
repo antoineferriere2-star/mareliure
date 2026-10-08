@@ -27,12 +27,13 @@ export interface DashboardRows {
   onlinePayments: { id: string; amount_cents: number; paid_at: string | null; stripe_fee_cents: number | null; fee_refunded_cents: number | null; fee_brand: MarketplaceBrand | null }[];
   feeDocuments: { payment_id: string; kind: string; brand: MarketplaceBrand; total_ttc_cents: number }[];
   onlineRefunds: { payment_id: string; amount_cents: number; status: string; created_at: string }[];
-  onlineDisputes: { status: string }[];
+  onlineDisputes: { payment_id: string; status: string }[];
   plans: { case_id: string; mode: string; workshop_decision: string | null; return_ready_at: string | null; submitted_at: string | null }[];
   labelJobs: { case_id: string; direction: string; status: string; fulfilment: string; charged_cost_ttc_cents: number | null; created_at: string; updated_at: string }[];
   automation: { enabled: boolean; changed_at: string | null } | null;
   ownClientLabels: number;
   providerConfigured: boolean;
+  unreadByCase?: { case_id: string; count: number }[];
 }
 
 /** Étapes d'un dossier dans l'ordre du parcours ; tout statut inconnu tombe dans « Clos ». */
@@ -64,6 +65,7 @@ export interface RecentPayment { at: string; circuit: "A" | "C"; brand: Marketpl
 
 export interface AdminDashboard {
   generatedAt: string;
+  unreadMessages: number;
   brand: DashboardBrand;
   since: string | null;
   alerts: DashboardAlert[];
@@ -93,7 +95,7 @@ const sum = <T>(rows: T[], pick: (row: T) => number | null | undefined) => rows.
 export function buildAdminDashboard(rows: DashboardRows, options: { brand: DashboardBrand; since: string | null }): AdminDashboard {
   const { brand, since } = options;
   const inBrand = (value: MarketplaceBrand | null | undefined) => brand === "ALL" || value === brand;
-  const inPeriod = (at: string | null | undefined) => Boolean(at) && (!since || at! >= since);
+  const inPeriod = (at: string | null | undefined) => Boolean(at) && Number.isFinite(Date.parse(at!)) && (!since || Date.parse(at!) >= Date.parse(since));
 
   const caseById = new Map(rows.cases.map((row) => [row.id, row]));
   const caseBrand = (caseId: string) => caseById.get(caseId)?.brand;
@@ -117,10 +119,9 @@ export function buildAdminDashboard(rows: DashboardRows, options: { brand: Dashb
   // Circuit C : encaissements atelier, retenue OPPE lue sur sa facture, frais remboursés déduits.
   const feeInvoice = new Map(rows.feeDocuments.filter((row) => row.kind === "invoice").map((row) => [row.payment_id, row]));
   const cPayments = rows.onlinePayments.filter((row) => inPeriod(row.paid_at) && inBrand(row.fee_brand ?? feeInvoice.get(row.id)?.brand));
-  const cPaymentIds = new Set(cPayments.map((row) => row.id));
   const cBrandIds = new Set(rows.onlinePayments.filter((row) => inBrand(row.fee_brand ?? feeInvoice.get(row.id)?.brand)).map((row) => row.id));
   const cRefunds = rows.onlineRefunds.filter((row) => row.status === "succeeded" && inPeriod(row.created_at) && cBrandIds.has(row.payment_id));
-  const cOpenDisputes = brand === "ALL" ? rows.onlineDisputes.filter((row) => OPEN_DISPUTE.has(row.status)).length : 0;
+  const cOpenDisputes = rows.onlineDisputes.filter((row) => OPEN_DISPUTE.has(row.status) && cBrandIds.has(row.payment_id)).length;
 
   const recent: RecentPayment[] = [
     ...aPayments.map((row) => {
@@ -130,7 +131,7 @@ export function buildAdminDashboard(rows: DashboardRows, options: { brand: Dashb
     }),
     ...cPayments.map((row) => ({ at: row.paid_at!, circuit: "C" as const, brand: row.fee_brand ?? feeInvoice.get(row.id)?.brand ?? null,
       reference: null, amountCents: row.amount_cents })),
-  ].sort((a, b) => b.at.localeCompare(a.at)).slice(0, 10);
+  ].sort((a, b) => Date.parse(b.at) - Date.parse(a.at)).slice(0, 10);
 
   // Onboarding : les ateliers ne relèvent d'aucune marque ; les comptes de démonstration sont écartés.
   const binders = rows.binders.filter((row) => !row.is_demo);
@@ -162,6 +163,7 @@ export function buildAdminDashboard(rows: DashboardRows, options: { brand: Dashb
 
   return {
     generatedAt: rows.now,
+    unreadMessages: sum(rows.unreadByCase ?? [], (row) => cases.some((c) => c.id === row.case_id) ? row.count : 0),
     brand,
     since,
     alerts,

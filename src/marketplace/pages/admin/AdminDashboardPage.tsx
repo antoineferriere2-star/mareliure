@@ -1,9 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getAdminDashboard } from "@/marketplace/services/adminDashboard.data.functions";
-import { listMarketplaceCases } from "@/marketplace/services/marketplace.data.functions";
 import type { AdminDashboard, DashboardBrand } from "@/marketplace/admin/adminDashboard";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { CARD } from "@/marketplace/pages/binder/quotes/quoteUi";
@@ -51,10 +50,7 @@ export function AdminDashboardPage() {
   const [brand, setBrand] = useState<DashboardBrand>("ALL");
   const [days, setDays] = useState<7 | 30 | 90 | null>(30);
   const fetchDashboard = useServerFn(getAdminDashboard);
-  const fetchCases = useServerFn(listMarketplaceCases);
-  const dashboard = useQuery({ queryKey: ["admin", "dashboard", brand, days], queryFn: () => fetchDashboard({ data: { brand, days } }), placeholderData: keepPreviousData });
-  const cases = useQuery({ queryKey: ["admin", "cases"], queryFn: () => fetchCases() });
-  const unread = (cases.data ?? []).filter((row) => brand === "ALL" || row.brand === brand).reduce((total, row) => total + row.unreadMessages, 0);
+  const dashboard = useQuery({ queryKey: ["admin", "dashboard", brand, days], queryFn: () => fetchDashboard({ data: { brand, days } }) });
   const periodLabel = days === null ? "depuis l'ouverture" : `sur les ${days} derniers jours`;
 
   return (
@@ -69,7 +65,7 @@ export function AdminDashboardPage() {
       </header>
       {dashboard.isPending && <p role="status">Chargement du pilotage…</p>}
       {dashboard.isError && <p role="alert">Le tableau de bord n'a pas pu être chargé.</p>}
-      {dashboard.data && <Dashboard data={dashboard.data} unread={unread} periodLabel={periodLabel} />}
+      {dashboard.data && <Dashboard data={dashboard.data} unread={dashboard.data.unreadMessages} periodLabel={periodLabel} />}
     </div>
   );
 }

@@ -52,7 +52,7 @@ function rows(overrides: Partial<DashboardRows> = {}): DashboardRows {
       { payment_id: "op2", kind: "invoice", brand: "FINE_BINDERY", total_ttc_cents: 300 },
     ],
     onlineRefunds: [{ payment_id: "op1", amount_cents: 2000, status: "succeeded", created_at: RECENT }],
-    onlineDisputes: [{ status: "under_review" }],
+    onlineDisputes: [{ payment_id: "op2", status: "under_review" }],
     plans: [
       { case_id: "c2", mode: "organized_round_trip", workshop_decision: "accepted", return_ready_at: RECENT, submitted_at: OLD },
       { case_id: "c3", mode: "organized_round_trip", workshop_decision: null, return_ready_at: null, submitted_at: RECENT },
@@ -97,7 +97,7 @@ describe("tableau de bord admin", () => {
     expect(d.cases.created).toBe(2);
     expect(d.payments.a.count).toBe(0);
     expect(d.payments.a.openDisputes).toBe(1);
-    expect(d.payments.c).toMatchObject({ count: 1, grossCents: 10000, platformFeeCents: 300, refundedCents: 0, openDisputes: 0 });
+    expect(d.payments.c).toMatchObject({ count: 1, grossCents: 10000, platformFeeCents: 300, refundedCents: 0, openDisputes: 1 });
     expect(d.shipping.plans).toMatchObject({ roundTrip: 1, awaitingWorkshop: 1, returnReadyWithoutLabel: 0 });
     expect(d.shipping.ownClientLabels).toBe(0);
   });
@@ -134,5 +134,30 @@ describe("tableau de bord admin", () => {
     expect(d.payments.a.grossCents + d.payments.c.grossCents).toBe(0);
     expect(d.onboarding.offer).toBeNull();
     expect(d.shipping.automation.enabled).toBe(false);
+  });
+});
+
+describe("régressions du pilotage", () => {
+  it("rattache les litiges C à leur marque même si le paiement est antérieur à la période", () => {
+    const facts = rows(); facts.onlinePayments[1].paid_at = OLD;
+    const fb = buildAdminDashboard(facts, { brand: "FINE_BINDERY", since: SINCE_30 });
+    expect(fb.payments.c.count).toBe(0);
+    expect(fb.payments.c.openDisputes).toBe(1);
+    expect(fb.alerts.find(a => a.key === "disputes")?.count).toBe(2);
+    expect(buildAdminDashboard(facts, { brand: "MA_RELIURE", since: SINCE_30 }).payments.c.openDisputes).toBe(0);
+  });
+  it("compare les instants et trie les encaissements malgré des fuseaux différents", () => {
+    const facts = rows();
+    facts.onlinePayments[0].paid_at = "2026-10-05T11:00:00+02:00";
+    facts.onlinePayments[1].paid_at = "2026-10-05T10:30:00Z";
+    const d = buildAdminDashboard(facts, { brand: "ALL", since: "2026-10-05T09:30:00Z" });
+    expect(d.payments.c.count).toBe(1);
+    expect(d.payments.recent.map(p => p.brand)).toEqual(["FINE_BINDERY", "MA_RELIURE"]);
+  });
+  it("filtre les messages non lus par les dossiers de la marque, sans les limiter à la période", () => {
+    const facts = rows({ unreadByCase: [{ case_id: "c2", count: 5 }, { case_id: "c3", count: 2 }, { case_id: "absent", count: 99 }] });
+    expect(buildAdminDashboard(facts, { brand: "ALL", since: SINCE_30 }).unreadMessages).toBe(7);
+    expect(buildAdminDashboard(facts, { brand: "FINE_BINDERY", since: SINCE_30 }).unreadMessages).toBe(2);
+    expect(buildAdminDashboard(facts, { brand: "MA_RELIURE", since: SINCE_30 }).unreadMessages).toBe(5);
   });
 });
