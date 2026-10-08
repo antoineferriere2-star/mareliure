@@ -2,13 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import type {} from "@tanstack/react-start";
 import { isMaReliure } from "@/brand";
 import { MARKETPLACE_BRAND_CONFIGS } from "@/marketplace/brand/brandConfig";
+import { FINE_BINDERY_ENTRIES, MARELIURE_ENTRIES, type SitemapEntry } from "@/marketplace/brand/brandPages";
 import { resolveMarketplaceBrandForRequest } from "@/marketplace/brand/resolveRequestBrand.server";
-
-interface SitemapEntry {
-  path: string;
-  changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
-  priority?: string;
-}
 
 // Public, indexable routes only — authenticated (/build, /portal), API,
 // visitor-token and demo-session routes are intentionally excluded.
@@ -31,43 +26,11 @@ const METRE_ENTRIES: SitemapEntry[] = [
   { path: "/terms", changefreq: "yearly", priority: "0.3" },
 ];
 
-/**
- * Ma Reliure et Fine Bindery partagent ce déploiement (audit multi-brand,
- * 12 septembre 2026) mais jamais un sitemap : chaque marque n'a de sens que
- * sous son propre domaine, avec ses propres pages (audit express SEO/GEO,
- * 15 septembre 2026, action commune aux deux — le fichier servait jusqu'ici
- * les URL de metre-pro.com sur les trois domaines, sans distinction).
- */
-const MARELIURE_ENTRIES: SitemapEntry[] = [
-  { path: "/", changefreq: "weekly", priority: "1.0" },
-  { path: "/tarifs", changefreq: "monthly", priority: "0.8" },
-  // Les pages par besoin (pages/crafts/craftPages.ts).
-  { path: "/reparation-de-livres", changefreq: "monthly", priority: "0.8" },
-  { path: "/restauration-de-livres-anciens", changefreq: "monthly", priority: "0.8" },
-  { path: "/reliure-de-livres", changefreq: "monthly", priority: "0.8" },
-  { path: "/dorure-et-finitions", changefreq: "monthly", priority: "0.8" },
-  { path: "/reliure-de-creation", changefreq: "monthly", priority: "0.8" },
-  { path: "/etuis-et-boites", changefreq: "monthly", priority: "0.8" },
-  { path: "/partenaires-relieurs", changefreq: "monthly", priority: "0.7" },
-  { path: "/candidature-atelier", changefreq: "monthly", priority: "0.6" },
-  { path: "/mentions-legales", changefreq: "yearly", priority: "0.3" },
-  { path: "/confidentialite", changefreq: "yearly", priority: "0.3" },
-  { path: "/conditions", changefreq: "yearly", priority: "0.3" },
-  { path: "/conditions-generales-de-vente", changefreq: "yearly", priority: "0.3" },
-];
-
-// La racine sert l'accueil anglais, identique à /en : elle n'est pas listée
-// et déclare /en pour adresse canonique (routes/index.tsx).
-const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
-  ...(["en", "fr", "de", "it", "es"] as const).flatMap((locale) => [
-    { path: `/${locale}`, changefreq: "weekly" as const, priority: locale === "en" ? "1.0" : "0.9" },
-    { path: `/${locale}/professionals`, changefreq: "weekly" as const, priority: "0.9" },
-  ]),
-  { path: "/legal-notice", changefreq: "yearly", priority: "0.3" },
-  { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },
-  { path: "/terms-of-use", changefreq: "yearly", priority: "0.3" },
-  { path: "/terms-of-sale", changefreq: "yearly", priority: "0.3" },
-];
+// Ma Reliure et Fine Bindery partagent ce déploiement (audit multi-brand,
+// 12 septembre 2026) mais jamais un sitemap : chaque marque n'a de sens que
+// sous son propre domaine, avec ses propres pages (audit express SEO/GEO,
+// 15 septembre 2026). Les listes vivent dans brandPages.ts, partagées avec la
+// redirection inter-domaines.
 
 /**
  * One lastmod for the whole file: the build date.

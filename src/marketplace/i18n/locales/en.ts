@@ -8,7 +8,7 @@ import type { FineBinderyPublicCopy } from "./types";
  */
 export const en: FineBinderyPublicCopy = {
   seo: {
-    homeTitle: "Fine Bindery — The European network for bookbinding & book conservation",
+    homeTitle: "Fine Bindery — European bookbinding & book conservation",
     homeDescription: "Discover skilled bookbinders and book conservators, present your project and work with the right atelier. The network opens in France.",
     directoryTitle: "Bookbinders & book conservators — Fine Bindery",
     directoryDescription: "Browse independent ateliers for bookbinding, restoration, conservation and gilding, and present your project directly to one of them.",

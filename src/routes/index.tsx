@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
+import { useForwardStrayAuthHash } from "@/hooks/use-forward-stray-auth-hash";
 import { ReliureLanding } from "@/marketplace/pages/ReliureLanding";
 import { FineBinderyLandingPage } from "@/marketplace/pages/fineBindery/FineBinderyLanding";
 import { faqPageSchema, jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
@@ -100,9 +101,10 @@ const fineBinderyDescription =
 
 /**
  * La racine de finebindery.com affiche l'accueil anglais, mot pour mot celui de
- * /en. Deux adresses indexables pour une même page se faisaient concurrence :
- * la racine déclare donc /en pour adresse canonique (c'est aussi le x-default
- * des versions de langue) et ne figure plus au plan du site.
+ * /en. En production elle redirige en 301 vers /en (wwwRedirect.ts) : le seul
+ * canonical n'avait pas suffi, Google avait retenu la racine et laissé /en
+ * hors de l'index (8 octobre 2026). Cet en-tête ne sert plus qu'en local et
+ * en prévisualisation, où l'hôte n'est pas un domaine de marque.
  */
 function fineBinderyHead() {
   const canonical = `${MARKETPLACE_BRAND_CONFIGS.FINE_BINDERY.seo.canonicalOrigin}/en`;
@@ -146,12 +148,6 @@ export const Route = createFileRoute("/")({
   component: HomeRoute,
 });
 
-// Supabase's configured Site URL sends magic-link / email-confirmation
-// redirects here instead of the app page we requested via `emailRedirectTo`
-// (its Redirect URLs allowlist needs that page added - a dashboard config
-// fix, not something this code can control). Until then, catch a stray
-// unprocessed session token in the hash and hand it to /auth, which already
-// knows how to detect the session and route to /build or /portal.
 /**
  * La page d'accueil Métré Build, chargée à la demande. Importée statiquement,
  * elle et ses démos (icônes, Project Canvas, schéma de Playbook) restaient dans
@@ -164,11 +160,7 @@ const BuildPublicHome = lazy(() =>
 
 function HomeRoute() {
   const { brand } = Route.useLoaderData();
-  useEffect(() => {
-    if (window.location.hash.includes("access_token")) {
-      window.location.replace(`/auth${window.location.hash}`);
-    }
-  }, []);
+  useForwardStrayAuthHash();
   if (!isMaReliure) return <Suspense fallback={null}><BuildPublicHome /></Suspense>;
   return brand === "FINE_BINDERY" ? <FineBinderyLandingPage /> : <ReliureLanding />;
 }
