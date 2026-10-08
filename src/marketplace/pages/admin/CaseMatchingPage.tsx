@@ -954,7 +954,7 @@ function CloseCaseForm({ caseId }: { caseId: string }) {
   const [reason, setReason] = useState("");
   const mutation = useMutation({
     mutationFn: () => close({ data: { caseId, reason } }),
-    onSuccess: async () => {
+    onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: ["marketplace", "case", caseId] });
       await queryClient.invalidateQueries({ queryKey: ["marketplace", "cases"] });
       await queryClient.invalidateQueries({ queryKey: ["admin"] });
@@ -963,7 +963,7 @@ function CloseCaseForm({ caseId }: { caseId: string }) {
   return (
     <details className="mt-3 rounded-md border border-border p-3 text-sm">
       <summary className="cursor-pointer font-medium">Classer sans suite</summary>
-      <p className="mt-2 text-xs text-muted-foreground">Pour un test, un doublon ou une demande vide. Le dossier passe à « Annulé », rien n'est supprimé et le visiteur n'est pas prévenu. Impossible une fois un atelier sollicité.</p>
+      <p className="mt-2 text-xs text-muted-foreground">Pour un test, un doublon ou une demande vide. Le dossier passe à « Annulé », rien n'est supprimé et le visiteur n'est pas prévenu. Impossible une fois un atelier sollicité ou une proposition créée.</p>
       <Label htmlFor={`close-reason-${caseId}`} className="mt-2 block text-xs">Motif (journalisé)</Label>
       <Input id={`close-reason-${caseId}`} className="mt-1" value={reason} maxLength={300} placeholder="Dossier de test interne" onChange={(event) => setReason(event.target.value)} />
       {mutation.isError && <p className="mt-2 text-xs text-destructive">{mutation.error instanceof Error ? mutation.error.message : "Le dossier n'a pas pu être classé."}</p>}

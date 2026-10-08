@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAdminDashboard, caseStage, type DashboardRows } from "./adminDashboard";
+import { buildAdminDashboard, caseStage, caseStageLabel, type DashboardRows } from "./adminDashboard";
 
 const NOW = "2026-10-08T12:00:00.000Z";
 const SINCE_30 = "2026-09-08T12:00:00.000Z";
@@ -172,4 +172,12 @@ describe("régressions du pilotage", () => {
     expect(buildAdminDashboard(facts, { brand: "FINE_BINDERY", since: SINCE_30 }).unreadMessages).toBe(2);
     expect(buildAdminDashboard(facts, { brand: "MA_RELIURE", since: SINCE_30 }).unreadMessages).toBe(5);
   });
+});
+
+it("la liste admin partage les libellés actuels du pilotage", () => {
+  expect(caseStageLabel("pricing")).toBe("Prix à valider");
+  expect(caseStageLabel("binder_accepted")).toBe("Atelier disponible");
+  expect(caseStageLabel("received_by_binder")).toBe("Payés / en cours");
+  expect(caseStageLabel("cancelled")).toBe("Clos / sans suite");
+  expect(caseStageLabel("futur")).toBe("Statut non reconnu");
 });

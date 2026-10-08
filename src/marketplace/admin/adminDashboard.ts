@@ -58,6 +58,12 @@ export function caseStage(status: string): CaseStage {
   return CASE_STAGES.find(([, , statuses]) => (statuses as readonly string[]).includes(status))?.[0] ?? "other";
 }
 
+/** Même libellé de statut pour l'entonnoir et les filtres de la liste admin. */
+export function caseStageLabel(status: string): string {
+  const stage = caseStage(status);
+  return CASE_STAGES.find(([key]) => key === stage)?.[1] ?? "Statut non reconnu";
+}
+
 const OPEN_DISPUTE = new Set(["warning_needs_response", "needs_response", "warning_under_review", "under_review"]);
 const PAYING_SUBSCRIPTION = new Set(["active", "trialing"]);
 const LATE_SUBSCRIPTION = new Set(["past_due", "unpaid", "incomplete"]);

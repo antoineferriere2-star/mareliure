@@ -1,3 +1,4 @@
+import { CASE_STAGES, caseStageLabel } from "@/marketplace/admin/adminDashboard";
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -45,7 +46,7 @@ export function AdminWorkshopPage({ binderId }: { binderId: string }) {
   </div>;
 }
 
-const FILTERS = ["Tous", "Nouveau", "À qualifier", "Assigné", "En discussion", "Devis en cours", "Devis envoyé", "Accepté", "Clos"] as const;
+const FILTERS = ["Tous", ...CASE_STAGES.map(([, label]) => label), "Statut non reconnu"] as const;
 export function AdminLeadsPage() {
   const fetchCases = useServerFn(listMarketplaceCases);
   const cases = useQuery({ queryKey: ["admin", "cases"], queryFn: () => fetchCases() });
@@ -55,16 +56,7 @@ export function AdminLeadsPage() {
   return <div className="space-y-5"><header><h1 className="font-serif text-2xl">Projets Ma Reliure</h1><p className="text-sm text-muted-foreground">Tous les projets apportés par la plateforme.</p></header><input aria-label="Rechercher un projet" className={`${FIELD} w-full sm:max-w-sm`} placeholder="Ouvrage, référence…" value={search} onChange={(event) => setSearch(event.target.value)} /><div className="flex flex-wrap gap-2">{FILTERS.map((name) => <button key={name} type="button" aria-pressed={filter === name} onClick={() => setFilter(name)} className={`min-h-11 rounded-full border px-3 text-sm ${filter === name ? "bg-foreground text-background" : "border-border"}`}>{name}</button>)}</div>{cases.isPending && <p role="status">Chargement…</p>}{cases.isError && <p role="alert">Les dossiers n'ont pas pu être chargés.</p>}{cases.data && !rows.length && <p>Aucun dossier dans cette vue.</p>}<ul className="grid gap-3 md:grid-cols-2">{rows.map((row) => <li key={row.id}><Link to="/admin/leads/$leadId" params={{ leadId: row.id }} className={`${CARD} block`}><strong className="font-serif text-lg">{row.title}</strong><span className="mt-1 block text-sm text-muted-foreground">{row.reference} · {adminCaseGroup(row.status)} · {row.invitedCount} atelier(s) sollicité(s)</span>{row.unreadMessages > 0 && <span className="mt-2 block text-xs">{row.unreadMessages} message(s) non lu(s)</span>}</Link></li>)}</ul></div>;
 }
 
-function adminCaseGroup(status: string): (typeof FILTERS)[number] {
-  if (status === "under_review") return "Nouveau";
-  if (status === "matching") return "À qualifier";
-  if (status === "sent_to_binders") return "Assigné";
-  if (status === "quotes_received") return "Devis en cours";
-  if (status === "binder_selected" || status === "awaiting_payment" || status === "paid" || status === "in_progress") return "En discussion";
-  if (status === "awaiting_approval") return "Devis envoyé";
-  if (status === "completed" || status === "delivered") return "Accepté";
-  return "Clos";
-}
+const adminCaseGroup = caseStageLabel;
 
 export function AdminMessagesPage() {
   const fetchRows = useServerFn(listAdminConversationPreviews);
