@@ -9,6 +9,7 @@
  * much of a case is disclosed.
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { isClosableCaseStatus } from "@/marketplace/cases/closeCase";
 import { CLOSE_CASE_REFUSALS, closeCase } from "@/marketplace/services/caseClosure.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -379,9 +380,16 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
         : match;
     });
 
+    // Mêmes règles que la clôture : le bouton n'apparaît que si elle peut aboutir (la base revérifie).
+    const proposals = await (sb as unknown as SupabaseClient).from("marketplace_commercial_proposals")
+      .select("id", { count: "exact", head: true }).eq("case_id", data.caseId);
+    if (proposals.error) fail(500, "Le dossier n'a pas pu être chargé.");
+    const closable = isClosableCaseStatus(caseContext.row.status) && !(matches ?? []).length && !(proposals.count ?? 0);
+
     return {
       case: caseContext.row,
       view,
+      closable,
       // Rendered from the stored codes, never from stored prose.
       triageMessages: triageMessages(caseContext.row.triage_flags ?? []),
       requiredSkills: caseContext.profile.requiredSkills,
