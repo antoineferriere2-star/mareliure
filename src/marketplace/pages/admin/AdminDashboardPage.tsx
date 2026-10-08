@@ -101,7 +101,7 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
               </li>
             ))}
           </ol>
-          <p className="mt-3 text-xs text-muted-foreground">Taux d'acceptation des propositions envoyées : {percent(cases.acceptanceRate)}. <Link to="/admin/leads" className="underline">Voir les dossiers</Link></p>
+          <p className="mt-3 text-xs text-muted-foreground">Atelier retenu parmi les dossiers ayant trouvé un atelier : {percent(cases.acceptanceRate)}. <Link to="/admin/leads" className="underline">Voir les dossiers</Link></p>
         </div>
       </Section>
 

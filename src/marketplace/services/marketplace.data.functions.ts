@@ -8,6 +8,8 @@
  * `build_*`, so this file is the only way in — and it decides, per caller, how
  * much of a case is disclosed.
  */
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { CLOSE_CASE_REFUSALS, closeCase } from "@/marketplace/services/caseClosure.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -404,6 +406,21 @@ export const clearCaseManualReview = createServerFn({ method: "POST" })
       .eq("id", data.caseId)
       .eq("status", "under_review");
     if (error) fail(500, error.message);
+    return { ok: true };
+  });
+
+/**
+ * Classer sans suite un dossier resté interne (test, doublon, demande vide). Décision humaine tracée :
+ * le motif va au journal du dossier, rien n'est supprimé, aucun message n'est envoyé au visiteur.
+ * Un dossier déjà envoyé à un atelier ou portant une proposition n'est jamais clos ici.
+ */
+export const closeCaseWithoutFollowUp = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => uuid.extend({ reason: z.string().trim().min(5).max(300) }).parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const outcome = await closeCase((await admin()) as unknown as SupabaseClient, context.userId, data.caseId, data.reason);
+    if (outcome !== "closed") fail(CLOSE_CASE_REFUSALS[outcome].status, CLOSE_CASE_REFUSALS[outcome].message);
     return { ok: true };
   });
 

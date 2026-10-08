@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildAdminDashboard, caseStage, type DashboardRows } from "./adminDashboard";
+import { buildAdminDashboard, caseStage, caseStageLabel, type DashboardRows } from "./adminDashboard";
 
 const NOW = "2026-10-08T12:00:00.000Z";
 const SINCE_30 = "2026-09-08T12:00:00.000Z";
@@ -12,7 +12,7 @@ function rows(overrides: Partial<DashboardRows> = {}): DashboardRows {
     cases: [
       { id: "c1", reference: "RL-001", brand: "MA_RELIURE", status: "under_review", created_at: RECENT },
       { id: "c2", reference: "RL-002", brand: "MA_RELIURE", status: "paid", created_at: OLD },
-      { id: "c3", reference: "FB-001", brand: "FINE_BINDERY", status: "awaiting_approval", created_at: RECENT },
+      { id: "c3", reference: "FB-001", brand: "FINE_BINDERY", status: "binder_accepted", created_at: RECENT },
       { id: "c4", reference: "FB-002", brand: "FINE_BINDERY", status: "cancelled", created_at: RECENT },
     ],
     binders: [
@@ -70,12 +70,24 @@ function rows(overrides: Partial<DashboardRows> = {}): DashboardRows {
 }
 
 describe("tableau de bord admin", () => {
-  it("classe les statuts dans l'ordre du parcours, l'inconnu en clos", () => {
-    expect(caseStage("under_review")).toBe("new");
-    expect(caseStage("awaiting_payment")).toBe("accepted");
-    expect(caseStage("delivered")).toBe("done");
-    expect(caseStage("cancelled")).toBe("closed");
-    expect(caseStage("statut_futur")).toBe("closed");
+  it("range chaque statut de la contrainte SQL, seul cancelled est clos, l'inconnu reste à part", () => {
+    const expected: Record<string, string> = {
+      under_review: "new", pricing: "pricing", matching: "qualifying", awaiting_binder_response: "sent", sent_to_binders: "sent",
+      binder_accepted: "workshop", quotes_received: "workshop", binder_selected: "accepted", awaiting_payment: "accepted",
+      paid: "production", shipping_to_binder: "production", received_by_binder: "production", in_progress: "production",
+      awaiting_approval: "production", shipping_to_customer: "production", delivered: "done", completed: "done", cancelled: "closed",
+    };
+    for (const [status, stage] of Object.entries(expected)) expect(caseStage(status), status).toBe(stage);
+    expect(caseStage("statut_futur")).toBe("other");
+  });
+
+  it("un statut inconnu apparaît comme non reconnu, jamais comme clos", () => {
+    const base = rows();
+    const d = buildAdminDashboard({ ...base, cases: [...base.cases, { id: "c9", reference: "RL-009", brand: "MA_RELIURE", status: "statut_futur", created_at: RECENT }] },
+      { brand: "ALL", since: null });
+    expect(d.cases.byStage.find((s) => s.key === "other")?.count).toBe(1);
+    expect(d.cases.byStage.find((s) => s.key === "closed")?.count).toBe(1);
+    expect(buildAdminDashboard(base, { brand: "ALL", since: null }).cases.byStage.some((s) => s.key === "other")).toBe(false);
   });
 
   it("deux marques sur 30 jours : flux de la période, états actuels", () => {
@@ -83,7 +95,7 @@ describe("tableau de bord admin", () => {
     expect(d.cases.created).toBe(3);
     expect(d.cases.byStage.find((s) => s.key === "new")?.count).toBe(1);
     expect(d.cases.byStage.find((s) => s.key === "closed")?.count).toBe(1);
-    // Proposé (c3) + accepté ou au-delà (c2) : 1 sur 2.
+    // Atelier disponible (c3) + retenu ou au-delà (c2) : 1 sur 2.
     expect(d.cases.acceptanceRate).toBe(0.5);
     // A : seul le paiement de la période compte ; remboursement réussi seulement.
     expect(d.payments.a).toMatchObject({ count: 1, grossCents: 21100, stripeFeeCents: 345, refundedCents: 2000, openDisputes: 1, disputedCents: 28930 });
@@ -160,4 +172,12 @@ describe("régressions du pilotage", () => {
     expect(buildAdminDashboard(facts, { brand: "FINE_BINDERY", since: SINCE_30 }).unreadMessages).toBe(2);
     expect(buildAdminDashboard(facts, { brand: "MA_RELIURE", since: SINCE_30 }).unreadMessages).toBe(5);
   });
+});
+
+it("la liste admin partage les libellés actuels du pilotage", () => {
+  expect(caseStageLabel("pricing")).toBe("Prix à valider");
+  expect(caseStageLabel("binder_accepted")).toBe("Atelier disponible");
+  expect(caseStageLabel("received_by_binder")).toBe("Payés / en cours");
+  expect(caseStageLabel("cancelled")).toBe("Clos / sans suite");
+  expect(caseStageLabel("futur")).toBe("Statut non reconnu");
 });
