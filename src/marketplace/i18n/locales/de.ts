@@ -2,7 +2,7 @@ import type { FineBinderyPublicCopy } from "./types";
 
 export const de: FineBinderyPublicCopy = {
   seo: {
-    homeTitle: "Fine Bindery — Das europäische Netzwerk für Buchbinderei und Buchrestaurierung",
+    homeTitle: "Fine Bindery — Buchbinderei und Buchrestaurierung in Europa",
     homeDescription: "Entdecken Sie erfahrene Buchbinder und Restauratoren, stellen Sie Ihr Projekt vor und arbeiten Sie mit der passenden Werkstatt. Das Netzwerk startet in Frankreich.",
     directoryTitle: "Buchbinder und Buchrestauratoren — Fine Bindery",
     directoryDescription: "Entdecken Sie unabhängige Werkstätten für Buchbinderei, Restaurierung, Konservierung und Vergoldung und stellen Sie Ihr Projekt direkt einer von ihnen vor.",

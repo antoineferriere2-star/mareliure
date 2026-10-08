@@ -3,6 +3,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
+import { MARELIURE_ENTRIES } from "@/marketplace/brand/brandPages";
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8").replace(/\r\n/g, "\n");
 /** Les commentaires racontent l'historique (« Page not found »…) : seul le code rendu compte. */
@@ -67,7 +68,7 @@ describe("la candidature atelier", () => {
 
   it("est rendue côté serveur, puisqu'elle figure au plan du site", () => {
     expect(ROUTE).not.toMatch(/ssr:\s*false/);
-    expect(read("src/routes/sitemap[.]xml.ts")).toContain("candidature-atelier");
+    expect(MARELIURE_ENTRIES.map((entry) => entry.path)).toContain("/candidature-atelier");
   });
 
   it("déclare son adresse canonique", () => {

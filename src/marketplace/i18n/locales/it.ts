@@ -2,7 +2,7 @@ import type { FineBinderyPublicCopy } from "./types";
 
 export const it: FineBinderyPublicCopy = {
   seo: {
-    homeTitle: "Fine Bindery — La rete europea della legatoria e del restauro del libro",
+    homeTitle: "Fine Bindery — Legatoria e restauro del libro in Europa",
     homeDescription: "Scopri legatori e restauratori esperti, presenta il tuo progetto e lavora con il laboratorio giusto. La rete apre in Francia.",
     directoryTitle: "Legatori e restauratori di libri — Fine Bindery",
     directoryDescription: "Scopri laboratori indipendenti di legatoria, restauro, conservazione e doratura, e presenta il tuo progetto direttamente a uno di loro.",
