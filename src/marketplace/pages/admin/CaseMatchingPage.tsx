@@ -12,7 +12,6 @@ import { SupplierInvoicesPanel } from "./SupplierInvoicesPanel";
 import { OppeBillingPanel } from "./OppeBillingPanel";
 import { OppeOrderPanel } from "./OppeOrderPanel";
 import { commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
-import { isClosableCaseStatus } from "@/marketplace/cases/closeCase";
 import { OperatorLogisticsPanel } from "./OperatorLogisticsPanel";
 import { useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -1054,7 +1053,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
               ? CASE_STATUS_LABELS[data.case.status]
               : data.case.status}
           </p>
-          {isClosableCaseStatus(data.case.status) && <CloseCaseForm caseId={caseId} />}
+          {data.closable && <CloseCaseForm caseId={caseId} />}
           {commercialOriginOf(data.case.acquisition_origin) === "workshop_client" ? (
             <p className="mt-3 rounded-md border border-emerald-700/30 bg-emerald-50 p-3 text-sm leading-6 text-emerald-900">
               Client propre de l'atelier (lien personnel ou vitrine) : l'atelier vend et facture. Aucune proposition Oppe n'est possible.
