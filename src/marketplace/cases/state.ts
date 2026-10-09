@@ -39,10 +39,10 @@ export type CaseStatus = (typeof CASE_STATUSES)[number];
 export const CASE_STATUS_LABELS: Record<CaseStatus, string> = {
   under_review: "À examiner",
   pricing: "Prix à valider",
-  matching: "Sélection des relieurs",
+  matching: "Sélection des ateliers",
   awaiting_binder_response: "Réponse des ateliers attendue",
   binder_accepted: "Atelier disponible",
-  binder_selected: "Relieur choisi",
+  binder_selected: "Atelier retenu",
   awaiting_payment: "En attente de paiement",
   paid: "Payé",
   shipping_to_binder: "En route vers l'atelier",
