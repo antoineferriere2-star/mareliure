@@ -5,13 +5,13 @@ const admin = () => Promise.resolve({ ok: true });
 const notAdmin = () => Promise.reject(new Error("403"));
 
 describe("où atterrit un compte Ma Reliure après connexion", () => {
-  it("envoie un administrateur au back-office", async () => {
+  it("envoie un administrateur au pilotage", async () => {
     const dest = await resolveMarketplacePostAuthDestination({
       checkAdmin: admin,
       getBinderProfile: () => Promise.resolve(null),
       getPendingBinderInvitations: () => Promise.resolve([]),
     });
-    expect(dest).toEqual({ to: "/marketplace/cases" });
+    expect(dest).toEqual({ to: "/admin" });
   });
 
   it("envoie un relieur à son atelier", async () => {
@@ -62,7 +62,7 @@ describe("où atterrit un compte Ma Reliure après connexion", () => {
       getBinderProfile,
       getPendingBinderInvitations: () => Promise.resolve([]),
     });
-    expect(dest).toEqual({ to: "/marketplace/cases" });
+    expect(dest).toEqual({ to: "/admin" });
     expect(getBinderProfile).not.toHaveBeenCalled();
   });
 

@@ -19,7 +19,7 @@ export const Route = createFileRoute("/_authenticated/admin")({
 const NAV = [
   ["/admin", "Pilotage"], ["/admin/ateliers", "Ateliers"],
   ["/admin/leads", "Dossiers"], ["/admin/messages", "Messages"],
-  ["/marketplace/pricing", "Tarifs"],
+  ["/marketplace/binders", "Candidatures"], ["/marketplace/pricing", "Tarifs"],
 ] as const;
 
 function AdminLayout() {

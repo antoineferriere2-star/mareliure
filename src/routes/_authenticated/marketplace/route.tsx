@@ -37,6 +37,9 @@ function MarketplaceAdminLayout() {
           <Link to="/marketplace/cases" className="font-serif text-lg">
             Ma Reliure · back-office
           </Link>
+          <Link to="/admin" className="rounded-md border border-border px-3 py-1.5 text-sm hover:bg-muted">
+            ← Pilotage
+          </Link>
           <nav className="flex gap-1">
             {NAV.map((item) => (
               <Link
