@@ -26,7 +26,7 @@ function AdminLayout() {
   return <div className="min-h-screen bg-background text-foreground">
     <header className="border-b border-border bg-card"><div className="mx-auto flex max-w-7xl flex-wrap items-center gap-3 px-5 py-3">
       <Link to="/admin" className="mr-2 font-serif text-lg">Ma Reliure · admin</Link>
-      <nav aria-label="Administration Ma Reliure" className="flex flex-wrap gap-1">{NAV.map(([to, label]) => <Link key={to} to={to} className="inline-flex min-h-11 items-center rounded-md px-3 text-sm hover:bg-muted [&.active]:bg-muted [&.active]:font-medium">{label}</Link>)}</nav>
+      <nav aria-label="Administration Ma Reliure" className="flex flex-wrap gap-1">{NAV.map(([to, label]) => <Link key={to} to={to} activeOptions={{ exact: to === "/admin" }} className="inline-flex min-h-11 items-center rounded-md px-3 text-sm hover:bg-muted [&.active]:bg-muted [&.active]:font-medium">{label}</Link>)}</nav>
       <div className="ml-auto"><SignOutButton label="Se déconnecter" signedInAs="Connecté en tant que" /></div>
     </div></header>
     <main className="mx-auto max-w-7xl px-5 py-8"><Outlet /></main>

@@ -1,4 +1,6 @@
 /** Platform operations without silent access to an atelier's private customer content. */
+import type { SupabaseClient } from "@supabase/supabase-js";
+import { workshopOnboarding, type WorkshopOnboardingInput } from "@/marketplace/admin/workshopOnboarding";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -13,16 +15,20 @@ export const listAdminWorkshopSummaries = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
-    const [binders, matches, works, quotes, invoices, skills, portfolio] = await Promise.all([
-      sb.from("marketplace_binders").select("id, display_name, workshop_name, city, country_code, status, public_profile_status, personal_referral_slug, updated_at").order("display_name"),
+    const raw = sb as unknown as SupabaseClient;
+    const [binders, matches, works, quotes, invoices, skills, portfolio, subscriptions, consents] = await Promise.all([
+      sb.from("marketplace_binders").select("id, display_name, workshop_name, city, country_code, status, public_profile_status, personal_referral_slug, updated_at, is_demo, stripe_account_id, stripe_connect_charges_enabled, stripe_connect_payouts_enabled").order("display_name"),
       sb.from("marketplace_case_matches").select("binder_id, case_id, state, invited_at"),
       sb.from("marketplace_binder_works").select("binder_id, source, updated_at"),
       sb.from("marketplace_binder_quotes").select("binder_id, status, updated_at"),
       sb.from("marketplace_binder_invoices").select("binder_id, created_at"),
       sb.from("marketplace_binder_skills").select("binder_id, skill_slug"),
       sb.from("marketplace_binder_portfolio").select("binder_id, is_published"),
+      raw.from("marketplace_binder_subscriptions").select("binder_id, status, legacy_free, cancel_at_period_end"),
+      raw.from("marketplace_workshop_connect_consents").select("binder_id"),
     ]);
-    if (binders.error || matches.error || works.error || quotes.error || invoices.error || skills.error || portfolio.error) fail(500, "Le suivi des ateliers n'a pas pu être chargé.");
+    if (binders.error || matches.error || works.error || quotes.error || invoices.error || skills.error || portfolio.error || subscriptions.error || consents.error) fail(500, "Le suivi des ateliers n'a pas pu être chargé.");
+    const consentIds = new Set((consents.data ?? []).map((row) => row.binder_id as string));
     return (binders.data ?? []).map((binder) => {
       const bm = (matches.data ?? []).filter((m) => m.binder_id === binder.id);
       const bw = (works.data ?? []).filter((w) => w.binder_id === binder.id);
@@ -35,6 +41,14 @@ export const listAdminWorkshopSummaries = createServerFn({ method: "GET" })
         city: binder.city,
         countryCode: binder.country_code,
         status: binder.status,
+        isDemo: Boolean(binder.is_demo),
+        onboarding: workshopOnboarding({
+          subscription: ((subscriptions.data ?? []).find((row) => row.binder_id === binder.id) as WorkshopOnboardingInput["subscription"] | undefined) ?? null,
+          stripeAccountId: binder.stripe_account_id,
+          chargesEnabled: binder.stripe_connect_charges_enabled,
+          payoutsEnabled: binder.stripe_connect_payouts_enabled,
+          hasConnectConsent: consentIds.has(binder.id),
+        }),
         publicProfileStatus: binder.public_profile_status,
         publicSlug: binder.personal_referral_slug,
         specialties: (skills.data ?? []).filter((row) => row.binder_id === binder.id).map((row) => row.skill_slug),
