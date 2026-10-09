@@ -7,16 +7,41 @@ import { listMarketplaceCases } from "@/marketplace/services/marketplace.data.fu
 import { getAdminWorkshopDetail, listAdminConversationPreviews, listAdminWorkshopSummaries } from "@/marketplace/services/adminWorkspace.data.functions";
 import { CARD, FIELD } from "@/marketplace/pages/binder/quotes/quoteUi";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
+import { listBinderApplications } from "@/marketplace/services/binderApplications.data.functions";
+import { ONLINE_PAYMENT_LABELS, SUBSCRIPTION_LABELS, onboardingTone } from "@/marketplace/admin/workshopOnboarding";
 import { AdminWorkshopAccessControl, AdminWorkshopReviewSummary, WorkshopStatusText } from "@/marketplace/pages/admin/AdminWorkshopAccessControl";
+
+type WorkshopSummary = Awaited<ReturnType<typeof listAdminWorkshopSummaries>>[number];
+
+const TONE_CLASS = { ok: "border-emerald-700 text-emerald-800", attention: "border-[#7a2230] text-[#7a2230]", neutral: "border-border text-muted-foreground" } as const;
+
+function OnboardingBadges({ row }: { row: WorkshopSummary }) {
+  const { subscription, onlinePayment } = row.onboarding;
+  return <span className="mt-2 flex flex-wrap gap-1.5 text-[0.7rem]">
+    <span className={`border px-2 py-0.5 ${TONE_CLASS[onboardingTone(subscription)]}`}>{SUBSCRIPTION_LABELS[subscription]}</span>
+    <span className={`border px-2 py-0.5 ${TONE_CLASS[onboardingTone(onlinePayment)]}`}>{ONLINE_PAYMENT_LABELS[onlinePayment]}</span>
+  </span>;
+}
+
+function WorkshopCard({ row }: { row: WorkshopSummary }) {
+  return <Link to="/admin/ateliers/$binderId" params={{ binderId: row.id }} className={`${CARD} block hover:border-foreground/40`}><span className="flex items-start justify-between gap-3"><strong className="font-serif text-lg">{row.name}</strong><span className="flex flex-wrap justify-end gap-1">{row.isDemo && <span className="border border-border px-2 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.1em] text-muted-foreground">Démo</span>}<span className={`border px-2 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.1em] ${row.publicProfileStatus === "published" ? "border-emerald-700 text-emerald-800" : "border-amber-700 text-amber-800"}`}>{row.publicProfileStatus === "published" ? "Profil publié" : "Profil non publié"}</span></span></span><span className="mt-1 block text-sm text-muted-foreground">{row.relieur} · {row.city || "Ville non renseignée"} · {row.countryCode} · <WorkshopStatusText status={row.status} /></span><OnboardingBadges row={row} /><span className="mt-2 block text-sm">{row.quoteCount} devis · {row.workCount} ouvrages · {row.invoiceCount} factures · {row.portfolioCount} réalisation(s)</span><span className="mt-2 block text-xs text-muted-foreground">{row.specialties.map(binderSkillLabel).join(" · ") || "Aucune spécialité déclarée"}</span><time className="mt-1 block text-xs text-muted-foreground" dateTime={row.lastActivity}>Dernière activité : {new Date(row.lastActivity).toLocaleString("fr-FR")}</time></Link>;
+}
 
 export function AdminWorkshopsPage() {
   const fetchRows = useServerFn(listAdminWorkshopSummaries);
+  const fetchApplications = useServerFn(listBinderApplications);
   const rows = useQuery({ queryKey: ["admin", "workshops"], queryFn: () => fetchRows() });
+  const applications = useQuery({ queryKey: ["admin", "binder-applications"], queryFn: () => fetchApplications() });
+  const pendingApplications = (applications.data ?? []).filter((row) => row.status === "new").length;
+  const real = (rows.data ?? []).filter((row) => !row.isDemo);
+  const demo = (rows.data ?? []).filter((row) => row.isDemo);
   return <div className="space-y-5"><h1 className="font-serif text-2xl">Ateliers</h1>
     {rows.isPending && <p role="status">Chargement…</p>}{rows.isError && <p role="alert">Les ateliers n'ont pas pu être chargés.</p>}
-    <AdminWorkshopReviewSummary statuses={(rows.data ?? []).map((row) => row.status)} />
-    {rows.data?.length === 0 && <p>Aucun atelier pour le moment.</p>}
-    <ul className="grid gap-3 md:grid-cols-2">{rows.data?.map((row) => <li key={row.id}><Link to="/admin/ateliers/$binderId" params={{ binderId: row.id }} className={`${CARD} block hover:border-foreground/40`}><span className="flex items-start justify-between gap-3"><strong className="font-serif text-lg">{row.name}</strong><span className={`border px-2 py-1 text-[0.62rem] font-semibold uppercase tracking-[0.1em] ${row.publicProfileStatus === "published" ? "border-emerald-700 text-emerald-800" : "border-amber-700 text-amber-800"}`}>{row.publicProfileStatus === "published" ? "Profil publié" : "Profil non publié"}</span></span><span className="mt-1 block text-sm text-muted-foreground">{row.relieur} · {row.city || "Ville non renseignée"} · {row.countryCode} · <WorkshopStatusText status={row.status} /></span><span className="mt-2 block text-sm">{row.quoteCount} devis · {row.workCount} ouvrages · {row.invoiceCount} factures · {row.portfolioCount} réalisation(s)</span><span className="mt-2 block text-xs text-muted-foreground">{row.specialties.map(binderSkillLabel).join(" · ") || "Aucune spécialité déclarée"}</span><time className="mt-1 block text-xs text-muted-foreground" dateTime={row.lastActivity}>Dernière activité : {new Date(row.lastActivity).toLocaleString("fr-FR")}</time></Link></li>)}</ul>
+    {pendingApplications > 0 && <p className="border border-amber-700 bg-amber-50 p-4 text-sm text-amber-950" role="status"><strong>{pendingApplications} candidature{pendingApplications > 1 ? "s" : ""} à examiner.</strong>{" "}<Link to="/marketplace/binders" className="underline">Ouvrir les candidatures</Link></p>}
+    <AdminWorkshopReviewSummary statuses={real.map((row) => row.status)} />
+    {rows.data && !real.length && <p>Aucun atelier réel pour le moment.</p>}
+    <ul className="grid gap-3 md:grid-cols-2">{real.map((row) => <li key={row.id}><WorkshopCard row={row} /></li>)}</ul>
+    {demo.length > 0 && <details className="rounded-sm border border-border p-4"><summary className="cursor-pointer text-sm text-muted-foreground">Ateliers de démonstration ({demo.length}) — exclus des compteurs du pilotage</summary><ul className="mt-3 grid gap-3 md:grid-cols-2">{demo.map((row) => <li key={row.id}><WorkshopCard row={row} /></li>)}</ul></details>}
   </div>;
 }
 
