@@ -18,7 +18,7 @@
  */
 
 export type MarketplacePostAuthDestination =
-  { to: "/marketplace/cases" } | { to: "/atelier" } | { to: "/activer-mon-atelier" } | { to: "/mes-livres" };
+  { to: "/admin" } | { to: "/atelier" } | { to: "/activer-mon-atelier" } | { to: "/mes-livres" };
 
 export interface MarketplacePostAuthDeps {
   /** Lève une erreur si le compte n'est pas administrateur. */
@@ -46,7 +46,8 @@ export async function resolveMarketplacePostAuthDestination(
 ): Promise<MarketplacePostAuthDestination> {
   try {
     await deps.checkAdmin();
-    return { to: "/marketplace/cases" };
+    // Le pilotage (8 octobre 2026) remplace l'ancien back-office comme page d'arrivée de l'équipe.
+    return { to: "/admin" };
   } catch {
     // pas administrateur — on continue
   }
