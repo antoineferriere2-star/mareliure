@@ -1,4 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+
+// L'alerte équipe est testée à part (adminEventAlerts.server.test.ts) : ici, elle n'envoie rien et
+// ne charge pas le module d'e-mail, dont l'import ralentissait ce test sous charge.
+const alerts = vi.hoisted(() => ({ joined: [] as unknown[][] }));
+vi.mock("@/marketplace/notifications/adminEventAlerts.server", () => ({
+  alertWorkshopJoined: async (...args: unknown[]) => { alerts.joined.push(args); return true; },
+}));
+
 import { createPendingBinderWorkspace } from "./binderSelfRegistration.server";
 
 type Row = Record<string, unknown>;
@@ -55,6 +63,8 @@ describe("création autonome d'un espace atelier", () => {
       binder_id: "new-workshop", user_id: userId, role: "OWNER", account_status: "active",
     }]);
     expect(db.writes).toHaveLength(2);
+    // Un atelier réellement créé alerte l'équipe, une seule fois.
+    expect(alerts.joined.filter((call) => call[0] === "new-workshop").map((call) => call[2])).toEqual(["self_registration"]);
   });
 
   it("réutilise un atelier déjà actif sans créer de doublon", async () => {

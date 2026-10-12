@@ -45,6 +45,25 @@ describe("canonicalRedirectUrl", () => {
     expect(canonicalRedirectUrl("https://mareliure.fr/")).toBeNull();
   });
 
+  it("redirige les anciennes adresses vers leur page actuelle, sur les deux domaines (audit SEO du 12 octobre 2026)", () => {
+    for (const host of ["https://mareliure.fr", "https://finebindery.com", "http://www.finebindery.com"]) {
+      expect(canonicalRedirectUrl(`${host}/reliure`)).toBe("https://mareliure.fr/");
+      expect(canonicalRedirectUrl(`${host}/professionnels`)).toBe("https://finebindery.com/fr/professionals");
+      expect(canonicalRedirectUrl(`${host}/fine-bindery/`)).toBe("https://finebindery.com/en");
+    }
+    expect(canonicalRedirectUrl("https://mareliure.fr/reliure?utm_source=x")).toBe("https://mareliure.fr/?utm_source=x");
+  });
+
+  it("rattache les conditions ateliers à Ma Reliure", () => {
+    expect(canonicalRedirectUrl("https://finebindery.com/conditions-ateliers")).toBe("https://mareliure.fr/conditions-ateliers");
+    expect(canonicalRedirectUrl("https://mareliure.fr/conditions-ateliers")).toBeNull();
+  });
+
+  it("n'applique les anciennes adresses qu'aux domaines connus", () => {
+    expect(canonicalRedirectUrl("http://localhost:8080/reliure")).toBeNull();
+    expect(canonicalRedirectUrl("https://metre-pro.com/professionnels")).toBeNull();
+  });
+
   it("ne redirige pas un hôte www. inconnu — jamais deviner une marque", () => {
     expect(canonicalRedirectUrl("https://www.example.com/")).toBeNull();
     expect(canonicalRedirectUrl("https://www.metre-pro.com/")).toBeNull();

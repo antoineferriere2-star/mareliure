@@ -15,7 +15,7 @@
  * connue ne doit jamais recevoir une redirection vers un domaine réel.
  */
 import { MARKETPLACE_BRAND_CONFIGS } from "./brandConfig";
-import { publicPageOwner, type PageOwner } from "./brandPages";
+import { LEGACY_PAGE_REDIRECTS, publicPageOwner, type PageOwner } from "./brandPages";
 
 const APEX_HOST_BY_BRAND: Record<PageOwner, string> = {
   MA_RELIURE: new URL(MARKETPLACE_BRAND_CONFIGS.MA_RELIURE.seo.canonicalOrigin).hostname,
@@ -60,9 +60,10 @@ export function canonicalRedirectUrl(requestUrl: string): string | null {
   const host = url.hostname.toLowerCase();
   const apex = host.startsWith("www.") ? host.slice(4) : host;
   if (!KNOWN_APEX_HOSTS.has(apex)) return null;
-  const owner = publicPageOwner(url.pathname);
+  const legacy = LEGACY_PAGE_REDIRECTS[url.pathname.length > 1 ? url.pathname.replace(/\/+$/, "") : url.pathname];
+  const owner = legacy?.owner ?? publicPageOwner(url.pathname);
   const targetHost = owner ? APEX_HOST_BY_BRAND[owner] : apex;
-  const targetPath = targetHost === APEX_HOST_BY_BRAND.FINE_BINDERY && url.pathname === "/" ? "/en" : url.pathname;
+  const targetPath = legacy?.path ?? (targetHost === APEX_HOST_BY_BRAND.FINE_BINDERY && url.pathname === "/" ? "/en" : url.pathname);
   if (host === targetHost && url.protocol === "https:" && targetPath === url.pathname) return null;
   url.protocol = "https:";
   url.hostname = targetHost;
