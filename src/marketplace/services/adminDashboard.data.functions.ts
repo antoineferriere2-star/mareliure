@@ -5,6 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin, assertAdmin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { readAdminDashboard } from "./adminDashboard.server";
+import { sendAdminAlertTest } from "@/marketplace/notifications/adminAlerts.server";
 
 const dashboardInput = z.object({ brand: z.enum(["ALL", "MA_RELIURE", "FINE_BINDERY"]), days: z.union([z.literal(7), z.literal(30), z.literal(90), z.null()]) });
 
@@ -22,4 +23,12 @@ export const getAdminDashboard = createServerFn({ method: "GET" })
       console.error("admin_dashboard_unreadable", error instanceof Error ? error.message : error);
       fail(500, "Le tableau de bord n'a pas pu être chargé.");
     }
+  });
+
+/** Envoie une alerte de test à l'équipe : vérifie la chaîne e-mail sans créer de dossier. */
+export const sendTeamAlertTest = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    await assertAdmin(context.supabase, context.userId);
+    return sendAdminAlertTest();
   });
