@@ -2,7 +2,13 @@ import { createFileRoute } from "@tanstack/react-router";
 import { MARELIURE_CONTACT_EMAIL, MARELIURE_PUBLISHER } from "@/marketplace/legal/legalEntity";
 import { WORKSHOP_OFFER } from "@/marketplace/offer/workshopOffer";
 export const Route = createFileRoute("/conditions-ateliers")({
-  head: () => ({ meta: [{ title: "Conditions ateliers — Oppe" }] }),
+  head: () => ({
+    meta: [
+      { title: "Conditions ateliers — Ma Reliure" },
+      { name: "description", content: "Abonnement, paiement en ligne et prestations confiées : les conditions applicables aux ateliers de reliure et de restauration partenaires de Ma Reliure et Fine Bindery." },
+    ],
+    links: [{ rel: "canonical", href: "https://mareliure.fr/conditions-ateliers" }],
+  }),
   component: Terms,
 });
 function Terms() {

@@ -50,6 +50,21 @@ export const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
 
 export type PageOwner = "MA_RELIURE" | "FINE_BINDERY";
 
+/**
+ * Anciennes adresses encore servies en 200 et désormais redirigées (301) vers leur page actuelle
+ * (audit SEO du 12 octobre 2026) : `/reliure` doublait l'accueil Ma Reliure sur les deux domaines,
+ * `/professionnels` était l'ancien annuaire indexable, `/fine-bindery` l'ancien lien de
+ * prévisualisation de Fine Bindery.
+ */
+export const LEGACY_PAGE_REDIRECTS: Record<string, { owner: PageOwner; path: string }> = {
+  "/reliure": { owner: "MA_RELIURE", path: "/" },
+  "/professionnels": { owner: "FINE_BINDERY", path: "/fr/professionals" },
+  "/fine-bindery": { owner: "FINE_BINDERY", path: "/en" },
+};
+
+/** Pages d'une marque hors sitemap (documents contractuels), redirigées comme les autres vers leur domaine. */
+const MARELIURE_UNLISTED_PATHS = new Set(["/conditions-ateliers"]);
+
 const MARELIURE_ONLY_PATHS = new Set(MARELIURE_ENTRIES.map((entry) => entry.path).filter((path) => path !== "/"));
 const FINE_BINDERY_ONLY_PATHS = new Set(FINE_BINDERY_ENTRIES.map((entry) => entry.path));
 // /en, /fr/professionals, /de/<atelier>… : tout chemin ouvert par une langue
@@ -64,7 +79,7 @@ const FINE_BINDERY_LOCALE_PREFIX = new RegExp(`^/(${FINE_BINDERY_LOCALES.join("|
  */
 export function publicPageOwner(pathname: string): PageOwner | null {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  if (MARELIURE_ONLY_PATHS.has(path)) return "MA_RELIURE";
+  if (MARELIURE_ONLY_PATHS.has(path) || MARELIURE_UNLISTED_PATHS.has(path)) return "MA_RELIURE";
   if (FINE_BINDERY_ONLY_PATHS.has(path) || FINE_BINDERY_LOCALE_PREFIX.test(path)) return "FINE_BINDERY";
   return null;
 }
