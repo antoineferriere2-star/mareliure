@@ -1,8 +1,8 @@
 import { useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
-import { getAdminDashboard } from "@/marketplace/services/adminDashboard.data.functions";
+import { getAdminDashboard, sendTeamAlertTest } from "@/marketplace/services/adminDashboard.data.functions";
 import type { AdminDashboard, DashboardBrand } from "@/marketplace/admin/adminDashboard";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { CARD } from "@/marketplace/pages/binder/quotes/quoteUi";
@@ -203,7 +203,27 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
           {shipping.automation.changedAt && <span className="inline-flex items-center px-2 py-1 text-xs text-muted-foreground">Verrou modifié le {new Date(shipping.automation.changedAt).toLocaleString("fr-FR")}</span>}
         </div>
       </Section>
+      <AlertTest />
       <p className="text-xs text-muted-foreground">Calculé le {new Date(data.generatedAt).toLocaleString("fr-FR")}. Aucun nom ni adresse de client n'est affiché ici.</p>
     </>
+  );
+}
+
+/** Vérifie en un clic que les alertes e-mail de l'équipe partent (clé Resend, domaine, modèle). */
+function AlertTest() {
+  const send = useServerFn(sendTeamAlertTest);
+  const test = useMutation({ mutationFn: () => send() });
+  return (
+    <div className={`${CARD} flex flex-wrap items-center gap-3 text-sm`}>
+      <span className="text-muted-foreground">Alertes e-mail de l'équipe (contact@oppe.fr)</span>
+      <button type="button" disabled={test.isPending} onClick={() => test.mutate()}
+        className="min-h-11 rounded-full border border-border px-3 hover:bg-muted disabled:opacity-50">
+        {test.isPending ? "Envoi…" : "Envoyer une alerte de test"}
+      </button>
+      {test.data && (test.data.sent
+        ? <span role="status" className="text-emerald-800">Acceptée par le service d'envoi : vérifiez la boîte de réception.</span>
+        : <span role="alert" className="text-[#7a2230]">Non envoyée : {test.data.reason ?? "raison inconnue"}.</span>)}
+      {test.isError && <span role="alert" className="text-[#7a2230]">Le test n'a pas pu être lancé.</span>}
+    </div>
   );
 }
