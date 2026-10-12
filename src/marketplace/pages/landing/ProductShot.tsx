@@ -45,6 +45,9 @@ export function ProductShot({
           height={height}
           alt={alt}
           loading={priority ? "eager" : "lazy"}
+          // Image principale d'une page : priorité réseau haute, sinon elle attend derrière la police et
+          // le JavaScript (LCP 11,2 s sur /partenaires-relieurs, Lighthouse mobile, 12 octobre 2026).
+          fetchPriority={priority ? "high" : undefined}
           decoding="async"
           className="block h-auto w-full"
         />

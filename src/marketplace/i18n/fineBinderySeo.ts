@@ -1,3 +1,4 @@
+import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 import { faqPageSchema, jsonLdScript } from "@/lib/structured-data";
 import { fineBinderyCopy } from "./fineBinderyCopy";
 import { fineBinderyAlternates, HTML_LOCALE, type FineBinderyLocale } from "./fineBinderyLocale";
@@ -19,6 +20,9 @@ export function fineBinderyLocalizedHead(locale: FineBinderyLocale, options: { t
     links: [
       { rel: "canonical", href: canonical },
       ...fineBinderyAlternates(options.pathWithoutLocale).map((item) => ({ rel: "alternate", hrefLang: item.locale, href: item.href })),
+      // Même police éditoriale que Ma Reliure : sans préchargement, le titre principal attendait la
+      // Fraunces ~3,9 s (Lighthouse mobile, finebindery.com/fr, 12 octobre 2026).
+      EDITORIAL_FONT_PRELOAD,
     ],
   };
 }
