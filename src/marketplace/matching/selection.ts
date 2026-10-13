@@ -14,6 +14,8 @@ import { MAX_BINDERS_PER_CASE } from "@/marketplace/config";
 export interface SelectionCandidate {
   id: string;
   status: string;
+  /** Atelier de démonstration : visible dans l'admin, jamais destinataire d'un dossier. */
+  is_demo?: boolean | null;
 }
 
 export interface SelectionDecision {
@@ -48,6 +50,10 @@ export function planBinderSelection(input: {
   const notApproved = unique.filter((id) => byId.get(id) && byId.get(id)!.status !== "approved");
   if (notApproved.length > 0) {
     problems.push("Seuls les relieurs approuvés peuvent recevoir une demande.");
+  }
+
+  if (unique.some((id) => byId.get(id)?.is_demo)) {
+    problems.push("Un atelier de démonstration ne peut pas recevoir de dossier.");
   }
 
   const duplicates = unique.filter((id) => input.alreadyInvitedIds.includes(id));

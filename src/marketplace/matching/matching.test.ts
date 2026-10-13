@@ -285,3 +285,23 @@ describe("defaultBinderSelection — l'atelier par défaut est coché, jamais im
     expect(defaultBinderSelection({ defaultId: "ferriere", candidates, remaining: 0 })).toEqual([]);
   });
 });
+
+describe("un atelier de démonstration ne reçoit jamais de dossier", () => {
+  it("refuse l'envoi à un atelier marqué démo, même approuvé", () => {
+    const decision = planBinderSelection({
+      selectedIds: ["demo"],
+      candidates: [{ id: "demo", status: "approved", is_demo: true }],
+      alreadyInvitedIds: [],
+    });
+    expect(decision.allowed).toBe(false);
+    expect(decision.problems).toContain("Un atelier de démonstration ne peut pas recevoir de dossier.");
+  });
+
+  it("accepte un atelier réel", () => {
+    expect(planBinderSelection({
+      selectedIds: ["real"],
+      candidates: [{ id: "real", status: "approved", is_demo: false }],
+      alreadyInvitedIds: [],
+    }).allowed).toBe(true);
+  });
+});
