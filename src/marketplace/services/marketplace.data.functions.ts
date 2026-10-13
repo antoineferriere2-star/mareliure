@@ -17,9 +17,9 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import type { Json } from "@/integrations/supabase/types";
 import { admin, assertAdmin, type Supa } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
-import { MARKETPLACE_CURRENCY, MAX_BINDERS_PER_CASE } from "@/marketplace/config";
+import { DEFAULT_WORKSHOP_ID, MARKETPLACE_CURRENCY, MAX_BINDERS_PER_CASE } from "@/marketplace/config";
 import { canSendToBinders, isCaseStatus, type CaseStatus } from "@/marketplace/cases/state";
-import { canSendCaseToBinders, planBinderSelection } from "@/marketplace/matching/selection";
+import { canSendCaseToBinders, defaultBinderSelection, planBinderSelection } from "@/marketplace/matching/selection";
 import { rankBinders, type BinderMatchProfile } from "@/marketplace/matching/score";
 import { caseDisclosure, canViewCase, type Viewer } from "@/marketplace/permissions";
 import {
@@ -347,8 +347,11 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
         breakdown: entry.breakdown,
         missingSkills: entry.missingSkills,
         alreadyInvited: caseContext.invitedBinderIds.includes(row.id),
+        status: row.status,
+        isDefault: row.id === DEFAULT_WORKSHOP_ID,
       };
-    });
+    }).sort((a, b) => Number(b.isDefault) - Number(a.isDefault));
+    const remainingInvitations = Math.max(0, MAX_BINDERS_PER_CASE - caseContext.invitedBinderIds.length);
 
     const { data: matches } = await sb
       .from("marketplace_case_matches")
@@ -396,7 +399,8 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
       candidates: ranked,
       matches: managedMatches,
       offers: offers ?? [],
-      remainingInvitations: Math.max(0, MAX_BINDERS_PER_CASE - caseContext.invitedBinderIds.length),
+      remainingInvitations,
+      defaultSelection: defaultBinderSelection({ defaultId: DEFAULT_WORKSHOP_ID, candidates: ranked, remaining: remainingInvitations }),
     };
   });
 

@@ -67,6 +67,21 @@ export function planBinderSelection(input: {
     : { allowed: true, binderIds: unique, problems: [] };
 }
 
+/**
+ * La présélection de l'écran d'envoi : l'atelier par défaut, s'il figure parmi
+ * les candidats, n'a pas encore été invité et que le dossier peut encore en
+ * recevoir un. Jamais plus d'un, jamais un atelier non approuvé.
+ */
+export function defaultBinderSelection(input: {
+  defaultId: string | null;
+  candidates: readonly (SelectionCandidate & { alreadyInvited: boolean })[];
+  remaining: number;
+}): string[] {
+  if (!input.defaultId || input.remaining <= 0) return [];
+  const candidate = input.candidates.find((c) => c.id === input.defaultId);
+  return candidate && candidate.status === "approved" && !candidate.alreadyInvited ? [candidate.id] : [];
+}
+
 /** How many more invitations this case can still carry. */
 export function remainingInvitations(alreadyInvitedCount: number): number {
   return Math.max(0, MAX_BINDERS_PER_CASE - alreadyInvitedCount);
