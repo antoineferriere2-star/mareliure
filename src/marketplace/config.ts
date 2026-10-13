@@ -12,6 +12,14 @@
  */
 export const MAX_BINDERS_PER_CASE = 3;
 
+/**
+ * L'atelier coché d'office sur l'écran d'envoi aux ateliers, tant que le réseau
+ * n'en compte qu'un en activité (Reliure Ferrière, décidé le 13 octobre 2026).
+ * Une présélection seulement : l'admin peut le décocher, rien ne part sans
+ * son clic. `null` pour revenir à une liste vierge.
+ */
+export const DEFAULT_WORKSHOP_ID: string | null = "2619269f-a422-4612-9bb7-d8df52a5d5e8";
+
 export const MARKETPLACE_CURRENCY = "EUR";
 
 /** The Métré vertical this marketplace consumes. */

@@ -13,7 +13,7 @@ import { OppeBillingPanel } from "./OppeBillingPanel";
 import { OppeOrderPanel } from "./OppeOrderPanel";
 import { commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
 import { OperatorLogisticsPanel } from "./OperatorLogisticsPanel";
-import { useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -990,6 +990,15 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
     queryFn: () => fetchCase({ data: { caseId } }),
   });
 
+  // L'atelier par défaut est coché une fois, au premier chargement : un
+  // décochage de l'admin n'est jamais annulé par un rechargement.
+  const prefilled = useRef(false);
+  useEffect(() => {
+    if (!data || prefilled.current) return;
+    prefilled.current = true;
+    if (data.defaultSelection.length > 0) setSelected(data.defaultSelection);
+  }, [data]);
+
   const invite = useMutation({
     mutationFn: () => send({ data: { caseId, binderIds: selected, serviceDescription } }),
     onSuccess: async () => {
@@ -1214,6 +1223,11 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
                         <span className="flex items-baseline justify-between gap-2">
                           <span className="truncate font-medium">
                             {candidate.workshopName ?? candidate.displayName}
+                            {candidate.isDefault && (
+                              <span className="ml-2 rounded-full border border-border px-2 py-0.5 text-[11px] font-normal text-muted-foreground">
+                                Par défaut
+                              </span>
+                            )}
                           </span>
                           <span className="shrink-0 text-sm tabular-nums text-muted-foreground">
                             {candidate.score}/100

@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { buildCaseProfile } from "@/marketplace/cases/caseProfile";
 import { MAX_BINDERS_PER_CASE } from "@/marketplace/config";
 import { rankBinders, scoreBinder, type BinderMatchProfile } from "./score";
-import { canSendCaseToBinders, planBinderSelection, remainingInvitations } from "./selection";
+import { canSendCaseToBinders, defaultBinderSelection, planBinderSelection, remainingInvitations } from "./selection";
 
 function binder(overrides: Partial<BinderMatchProfile> = {}): BinderMatchProfile {
   return {
@@ -261,5 +261,27 @@ describe("canSendCaseToBinders — a BINDER_REFERRED case never enters general m
     // cannot set marketplace_cases.referred_binder_id itself, only request a
     // binderIds array, which the two prior tests show is checked against it.
     expect(attemptedForgery.allowed).toBe(true);
+  });
+});
+
+describe("defaultBinderSelection — l'atelier par défaut est coché, jamais imposé", () => {
+  const candidates = [
+    { id: "ferriere", status: "approved", alreadyInvited: false },
+    { id: "other", status: "approved", alreadyInvited: false },
+  ];
+
+  it("coche l'atelier par défaut quand il est candidat", () => {
+    expect(defaultBinderSelection({ defaultId: "ferriere", candidates, remaining: 3 })).toEqual(["ferriere"]);
+  });
+
+  it("ne coche rien sans atelier par défaut, ni s'il est absent des candidats", () => {
+    expect(defaultBinderSelection({ defaultId: null, candidates, remaining: 3 })).toEqual([]);
+    expect(defaultBinderSelection({ defaultId: "absent", candidates, remaining: 3 })).toEqual([]);
+  });
+
+  it("ne coche pas un atelier déjà invité, non approuvé, ou un dossier sans invitation restante", () => {
+    expect(defaultBinderSelection({ defaultId: "ferriere", candidates: [{ ...candidates[0], alreadyInvited: true }], remaining: 2 })).toEqual([]);
+    expect(defaultBinderSelection({ defaultId: "ferriere", candidates: [{ ...candidates[0], status: "pending" }], remaining: 3 })).toEqual([]);
+    expect(defaultBinderSelection({ defaultId: "ferriere", candidates, remaining: 0 })).toEqual([]);
   });
 });
