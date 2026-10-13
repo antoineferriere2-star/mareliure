@@ -303,7 +303,9 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
     const { data: binders } = await sb
       .from("marketplace_binders")
       .select(BINDER_LIST_COLUMNS)
-      .eq("status", "approved");
+      .eq("status", "approved")
+      // Les ateliers de démonstration ne reçoivent jamais un vrai dossier.
+      .eq("is_demo", false);
     const binderRows = binders ?? [];
     const ids = binderRows.map((b) => b.id);
     const [skills, load] = await Promise.all([
