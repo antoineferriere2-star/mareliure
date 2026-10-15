@@ -36,6 +36,10 @@ describe("adaptateur Sendcloud v3 (achat protégé)", () => {
     }
     expect(announceBody(req).from_address).not.toHaveProperty("email");
   });
+  it("envoi refusé par le transporteur (ANNOUNCEMENT_FAILED, sans suivi) : refus net, pas une attente", async () => {
+    const failed = { ...shipment, parcels: [{ id: 43, tracking_number: "", status: { code: "ANNOUNCEMENT_FAILED", message: "Announcement failed" }, documents: [] }] };
+    expect(await provider([ok(200, { data: failed })]).create(req)).toEqual({ kind: "rejected", code: "announcement_failed" });
+  });
   it("traite le 409 comme l'envoi existant (aucun second achat)", async () => {
     expect((await provider([ok(409, { data: shipment })]).create(req)).kind).toBe("created");
   });

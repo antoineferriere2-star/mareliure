@@ -188,7 +188,11 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
       } catch { return { kind: "ambiguous", code: "network_or_timeout" }; }
       if (response.ok || response.status === 409) {
         try {
-          const label = toLabel(((await response.json()) as { data?: ShipmentJson }).data ?? {});
+          const shipment = ((await response.json()) as { data?: ShipmentJson }).data ?? {};
+          // Envoi créé mais refusé par le transporteur (constaté le 15/10 : téléphone invalide) : sans
+          // suivi ni étiquette, il n'est pas facturé. Un échec net, pas une attente sans fin.
+          if (/ANNOUNCEMENT_FAILED/i.test(shipment.parcels?.[0]?.status?.code ?? "")) return { kind: "rejected", code: "announcement_failed" };
+          const label = toLabel(shipment);
           return label ? { kind: "created", label } : { kind: "ambiguous", code: "incomplete_response" };
         } catch { return { kind: "ambiguous", code: "unreadable_response" }; }
       }

@@ -183,7 +183,7 @@ const fr: LogisticsCustomerCopy = {
   returnConfirmed: "Adresse de retour confirmée.",
   errors: {
     logistics_plan_locked: "Ces informations sont figées par la proposition en cours. Écrivez-nous pour les modifier.",
-    invalid_input: "Vérifiez les champs : adresse, code postal à 5 chiffres, mesures et conditions.",
+    invalid_input: "Vérifiez les champs : adresse, code postal à 5 chiffres, téléphone français (ex. 06 12 34 56 78), mesures et conditions.",
     forbidden: "Ce projet n'est pas le vôtre.",
     return_not_ready: "Le retour n'est pas encore prêt.",
   },
@@ -307,7 +307,7 @@ const en: LogisticsCustomerCopy = {
   returnConfirmed: "Return address confirmed.",
   errors: {
     logistics_plan_locked: "These details are fixed by the current proposal. Message us to change them.",
-    invalid_input: "Please check the fields: address, postcode, measurements and terms.",
+    invalid_input: "Please check the fields: address, postcode, French phone number (e.g. 06 12 34 56 78), measurements and terms.",
     forbidden: "This project is not yours.",
     return_not_ready: "The return is not ready yet.",
   },
