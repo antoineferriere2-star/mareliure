@@ -46,8 +46,12 @@ import { Route as TermsOfSaleRouteImport } from './routes/terms-of-sale'
 import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as LocaleIndexRouteImport } from './routes/$locale.index'
 import { Route as LocaleSlugRouteImport } from './routes/$locale.$slug'
+import { Route as LocaleLegalNoticeRouteImport } from './routes/$locale.legal-notice'
+import { Route as LocalePrivacyPolicyRouteImport } from './routes/$locale.privacy-policy'
 import { Route as LocaleProfessionalsRouteImport } from './routes/$locale.professionals'
 import { Route as LocaleProjectRouteImport } from './routes/$locale.project'
+import { Route as LocaleTermsOfSaleRouteImport } from './routes/$locale.terms-of-sale'
+import { Route as LocaleTermsOfUseRouteImport } from './routes/$locale.terms-of-use'
 import { Route as AuthenticatedActiverMonAtelierRouteImport } from './routes/_authenticated/activer-mon-atelier'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
@@ -329,6 +333,16 @@ const LocaleSlugRoute = LocaleSlugRouteImport.update({
   path: '/$locale/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocaleLegalNoticeRoute = LocaleLegalNoticeRouteImport.update({
+  id: '/$locale/legal-notice',
+  path: '/$locale/legal-notice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalePrivacyPolicyRoute = LocalePrivacyPolicyRouteImport.update({
+  id: '/$locale/privacy-policy',
+  path: '/$locale/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LocaleProfessionalsRoute = LocaleProfessionalsRouteImport.update({
   id: '/$locale/professionals',
   path: '/$locale/professionals',
@@ -337,6 +351,16 @@ const LocaleProfessionalsRoute = LocaleProfessionalsRouteImport.update({
 const LocaleProjectRoute = LocaleProjectRouteImport.update({
   id: '/$locale/project',
   path: '/$locale/project',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleTermsOfSaleRoute = LocaleTermsOfSaleRouteImport.update({
+  id: '/$locale/terms-of-sale',
+  path: '/$locale/terms-of-sale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleTermsOfUseRoute = LocaleTermsOfUseRouteImport.update({
+  id: '/$locale/terms-of-use',
+  path: '/$locale/terms-of-use',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedActiverMonAtelierRoute =
@@ -927,8 +951,12 @@ export interface FileRoutesByFullPath {
   '/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/legal-notice': typeof LocaleLegalNoticeRoute
+  '/$locale/privacy-policy': typeof LocalePrivacyPolicyRoute
   '/$locale/professionals': typeof LocaleProfessionalsRoute
   '/$locale/project': typeof LocaleProjectRoute
+  '/$locale/terms-of-sale': typeof LocaleTermsOfSaleRoute
+  '/$locale/terms-of-use': typeof LocaleTermsOfUseRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/ateliers/$slug': typeof AteliersSlugRoute
@@ -1055,8 +1083,12 @@ export interface FileRoutesByTo {
   '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/legal-notice': typeof LocaleLegalNoticeRoute
+  '/$locale/privacy-policy': typeof LocalePrivacyPolicyRoute
   '/$locale/professionals': typeof LocaleProfessionalsRoute
   '/$locale/project': typeof LocaleProjectRoute
+  '/$locale/terms-of-sale': typeof LocaleTermsOfSaleRoute
+  '/$locale/terms-of-use': typeof LocaleTermsOfUseRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/ateliers/$slug': typeof AteliersSlugRoute
@@ -1190,8 +1222,12 @@ export interface FileRoutesById {
   '/_authenticated/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/legal-notice': typeof LocaleLegalNoticeRoute
+  '/$locale/privacy-policy': typeof LocalePrivacyPolicyRoute
   '/$locale/professionals': typeof LocaleProfessionalsRoute
   '/$locale/project': typeof LocaleProjectRoute
+  '/$locale/terms-of-sale': typeof LocaleTermsOfSaleRoute
+  '/$locale/terms-of-use': typeof LocaleTermsOfUseRoute
   '/_authenticated/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/ateliers/$slug': typeof AteliersSlugRoute
@@ -1326,8 +1362,12 @@ export interface FileRouteTypes {
     | '/mes-livres'
     | '/portal'
     | '/$locale/$slug'
+    | '/$locale/legal-notice'
+    | '/$locale/privacy-policy'
     | '/$locale/professionals'
     | '/$locale/project'
+    | '/$locale/terms-of-sale'
+    | '/$locale/terms-of-use'
     | '/activer-mon-atelier'
     | '/a/$slug'
     | '/ateliers/$slug'
@@ -1454,8 +1494,12 @@ export interface FileRouteTypes {
     | '/terms-of-sale'
     | '/terms-of-use'
     | '/$locale/$slug'
+    | '/$locale/legal-notice'
+    | '/$locale/privacy-policy'
     | '/$locale/professionals'
     | '/$locale/project'
+    | '/$locale/terms-of-sale'
+    | '/$locale/terms-of-use'
     | '/activer-mon-atelier'
     | '/a/$slug'
     | '/ateliers/$slug'
@@ -1588,8 +1632,12 @@ export interface FileRouteTypes {
     | '/_authenticated/mes-livres'
     | '/_authenticated/portal'
     | '/$locale/$slug'
+    | '/$locale/legal-notice'
+    | '/$locale/privacy-policy'
     | '/$locale/professionals'
     | '/$locale/project'
+    | '/$locale/terms-of-sale'
+    | '/$locale/terms-of-use'
     | '/_authenticated/activer-mon-atelier'
     | '/a/$slug'
     | '/ateliers/$slug'
@@ -1718,8 +1766,12 @@ export interface RootRouteChildren {
   TermsOfSaleRoute: typeof TermsOfSaleRoute
   TermsOfUseRoute: typeof TermsOfUseRoute
   LocaleSlugRoute: typeof LocaleSlugRoute
+  LocaleLegalNoticeRoute: typeof LocaleLegalNoticeRoute
+  LocalePrivacyPolicyRoute: typeof LocalePrivacyPolicyRoute
   LocaleProfessionalsRoute: typeof LocaleProfessionalsRoute
   LocaleProjectRoute: typeof LocaleProjectRoute
+  LocaleTermsOfSaleRoute: typeof LocaleTermsOfSaleRoute
+  LocaleTermsOfUseRoute: typeof LocaleTermsOfUseRoute
   ASlugRoute: typeof ASlugRoute
   AteliersSlugRoute: typeof AteliersSlugRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
@@ -2009,6 +2061,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleSlugRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$locale/legal-notice': {
+      id: '/$locale/legal-notice'
+      path: '/$locale/legal-notice'
+      fullPath: '/$locale/legal-notice'
+      preLoaderRoute: typeof LocaleLegalNoticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/privacy-policy': {
+      id: '/$locale/privacy-policy'
+      path: '/$locale/privacy-policy'
+      fullPath: '/$locale/privacy-policy'
+      preLoaderRoute: typeof LocalePrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$locale/professionals': {
       id: '/$locale/professionals'
       path: '/$locale/professionals'
@@ -2021,6 +2087,20 @@ declare module '@tanstack/react-router' {
       path: '/$locale/project'
       fullPath: '/$locale/project'
       preLoaderRoute: typeof LocaleProjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/terms-of-sale': {
+      id: '/$locale/terms-of-sale'
+      path: '/$locale/terms-of-sale'
+      fullPath: '/$locale/terms-of-sale'
+      preLoaderRoute: typeof LocaleTermsOfSaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/terms-of-use': {
+      id: '/$locale/terms-of-use'
+      path: '/$locale/terms-of-use'
+      fullPath: '/$locale/terms-of-use'
+      preLoaderRoute: typeof LocaleTermsOfUseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/activer-mon-atelier': {
@@ -3001,8 +3081,12 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfSaleRoute: TermsOfSaleRoute,
   TermsOfUseRoute: TermsOfUseRoute,
   LocaleSlugRoute: LocaleSlugRoute,
+  LocaleLegalNoticeRoute: LocaleLegalNoticeRoute,
+  LocalePrivacyPolicyRoute: LocalePrivacyPolicyRoute,
   LocaleProfessionalsRoute: LocaleProfessionalsRoute,
   LocaleProjectRoute: LocaleProjectRoute,
+  LocaleTermsOfSaleRoute: LocaleTermsOfSaleRoute,
+  LocaleTermsOfUseRoute: LocaleTermsOfUseRoute,
   ASlugRoute: ASlugRoute,
   AteliersSlugRoute: AteliersSlugRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
