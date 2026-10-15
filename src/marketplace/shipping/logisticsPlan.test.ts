@@ -30,6 +30,11 @@ describe("saisie du plan", () => {
     expect(planInput.safeParse({ ...validInput, acceptConditions: false }).success).toBe(false);
     expect(planInput.safeParse({ ...validInput, returnSameAddress: false }).success).toBe(false);
     expect(planInput.safeParse({ ...validInput, binderId: "x" }).success).toBe(false);
+    // Mondial Relay refuse d'annoncer une étiquette au numéro invalide (15/10/2026).
+    for (const bad of ["1671223171", "0071223171", "06712231", "+44 7700 900123"])
+      expect(planInput.safeParse({ ...validInput, contact: { ...validInput.contact, phone: bad } }).success).toBe(false);
+    for (const good of ["06 71 22 31 71", "0671223171", "+33671223171", "0033 6 71 22 31 71", "02.38.62.75.47"])
+      expect(planInput.safeParse({ ...validInput, contact: { ...validInput.contact, phone: good } }).success).toBe(true);
   });
   it("la remise en main propre n'enregistre ni adresse ni colis", () => {
     const parsed = planInput.parse({ ...validInput, mode: "hand_delivery" });
