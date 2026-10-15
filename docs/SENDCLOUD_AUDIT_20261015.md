@@ -118,7 +118,7 @@ Lecture de `https://app.sendcloud.com/v2/settings/integrations/api/633076` : nom
 | P1 | Revalider les mesures/adresses exactes pour un nouvel achat | P1-3 : coût approuvé susceptible de ne plus correspondre au colis envoyé. |
 | P1 | Projeter les annulations/rejets rapprochés et rattraper les événements reçus avant rattachement | P1-4 : étiquette annulée encore présentée comme disponible ; perte d'un premier événement. |
 | P1 | Distinguer demande d'annulation fournisseur et constat opérateur ; traiter les méthodes Retour séparément | P1-5 : une entrée du journal n'annule rien chez Sendcloud. |
-| P2 | Afficher tarif/échéance, cause de blocage et action de reprise ; rendre le bouton de reprise distinct du bouton de nouvel achat | Un code brut ou une note n'indique pas la marche à suivre. Le Pilotage compte notamment les retours prêts sans étiquette, pas toutes les ambiguïtés. |
+| P2 | Afficher tarif/échéance, cause de blocage et action de reprise ; rendre le bouton de reprise distinct du bouton de nouvel achat | Un code brut ou une note n'indique pas la marche à suivre. Le Pilotage compte les jobs claimed/ambiguous dans « en cours » et les retours prêts sans étiquette, sans fournir une action propre à chaque cause de blocage. |
 | P2 | Prévoir une correction logistique versionnée après accord et un rapprochement par identifiant si la recherche par référence est indisponible | Préserver le contrat, les preuves et la séparation réception physique / livraison. |
 | Vérifié | Ancien feedback 621399 déjà désactivé | Aucune modification à demander sur ce point au vu du panneau lu. |
 
