@@ -3596,3 +3596,13 @@ Publié depuis le bloc précédent, sur accord explicite du propriétaire :
 Données : « h » et « ok » marqués `is_demo=true` le 8 octobre au soir sur accord explicite (journal privé `oppe-model-operation/demo-mark-h-ok-20261008.log`) ; seul atelier réel compté : Reliure Ferrière. PR #50 et #38 fermées, branches supprimées (récupérables via `pull/50/head`, `pull/38/head`).
 
 En cours (PR de ce bloc) : un admin atterrit sur `/admin` après connexion au lieu de l'ancien back-office ; liens croisés pilotage ↔ back-office ; filtres d'étape de la liste Dossiers avec leur nombre, étapes vides masquées. Transport automatique Sendcloud toujours fermé.
+
+## Latest handoff
+
+Codex — 15 octobre 2026, branche `docs/sendcloud-audit-20261015`, base `origin/main` fb32fe1 (inclut #123 déjà fusionnée). Audit documentaire uniquement, `docs/SENDCLOUD_AUDIT_20261015.md` ; aucun fichier transport/configuration modifié, aucune opération de production ni achat.
+
+Constats prioritaires : tarif expiré impossible à renouveler (INSERT + unique dossier/proposition), job ambigu sans adoption/clôture manuelle accessible, colis retour non comparé aux mesures approuvées, annulation/rejet webhook laissant l'étiquette confirmed, primitive d'annulation non branchée au site. Méthodes Sendcloud Retour toujours désactivées ; limites de récupération/annulation à corriger avant réouverture. Recommandations uniquement : Claude Code conserve l'implémentation.
+
+Panneaux Sendcloud consultés après connexion du propriétaire : 621399 feedback décoché, 633076 coché et URL attendue. Aucun enregistrement/test webhook/régénération. Réponses des notifications de 13:58, rattachement des suivis et fin réelle des annulations non vérifiés ; pas de succès hébergé prétendu.
+
+Validation : suite complète de base lancée, 3764/3769 réussis avec cinq timeouts de scans et deux erreurs de délai internes Vitest ; trois fichiers repris passent (73 tests) puis les deux derniers passent (14 tests) avec `--maxWorkers=1 --testTimeout=120000`. Aucun changement d'assertion/configuration versionnée. 83 tests ciblés transport/audit passent, dont six sondes temporaires sur migrations réelles PGlite et fournisseur simulé : expiration/unique, absence de sortie ambiguë, mesures retour divergentes, webhook annulé/livré/refusé rejoué. Sondes et journaux conservés hors Git dans `D:/CodexProjects/outputs/mareliure-*20261015*`. `npm run typecheck` réussi sur la base audit. Aucun build requis pour la PR documentaire. Pas de fusion ni déploiement.
