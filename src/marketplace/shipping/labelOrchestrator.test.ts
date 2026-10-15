@@ -3,10 +3,10 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 // PostgreSQL réel (PGlite) : chaque test recrée la base ; la CI parallèle dépasse les 5 s par défaut.
 vi.setConfig({ testTimeout: 30_000 });
-import { cancelLeg, purchaseLeg, type LabelJobStore, type TransitionKind } from "./labelOrchestrator";
+import { adoptLeg, cancelLeg, declareLegAbsent, isUnusableProviderStatus, purchaseLeg, type LabelJobStore, type TransitionKind } from "./labelOrchestrator";
 import type { CancelOutcome, CreateOutcome, LabelProvider, LabelRequest, ProviderLabel } from "./labelProvider";
 import { handleSendcloudWebhook, verifySendcloudSignature } from "./sendcloudWebhook";
-import { putLabelObject, reserveLeg, roundTripDb } from "./roundTripTestDb.fixture";
+import { putLabelObject, reserveLeg, roundTripDb, RT } from "./roundTripTestDb.fixture";
 
 // L'orchestrateur sur la VRAIE machine d'états SQL ; fournisseur simulé qui compte les étiquettes
 // réellement créées. Aucun appel réseau, aucune étiquette achetée.
@@ -226,5 +226,50 @@ describe("webhook Sendcloud", () => {
     provider.findByReference = async (reference: string, hint?: { shippingOptionCode?: string }) => { hints.push(hint); return original(reference); };
     await purchaseLeg(provider, store(), job, request);
     expect(hints).toContainEqual({ shippingOptionCode: "qa:option" });
+  });
+  it("statut relu annulé ou refusé : l'étiquette confirmée passe « annulée », sans remboursement présumé", async () => {
+    const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
+    await purchaseLeg(provider, store(), job, request);
+    provider.status = { code: "CANCELLED", message: "Cancelled" };
+    const body = JSON.stringify({ action: "parcel_status_changed", timestamp: 5, parcel: { id: provider.labels.get(job)!.labelId } });
+    expect((await deliver(provider, body)).status).toBe(200);
+    expect(await status(job)).toBe("cancelled");
+    const refunded = await db.query<{ r: number | null }>("SELECT refunded_cost_ttc_cents r FROM marketplace_round_trip_label_jobs WHERE id=$1", [job]);
+    expect(refunded.rows[0].r).toBeNull();
+    expect((await deliver(provider, body)).status).toBe(200);
+  });
+});
+
+describe("résolution opérateur d'une réservation ambiguë (audit P1-2)", () => {
+  const ambiguous = async (provider: FakeProvider) => {
+    provider.script = ["timeout_nothing"]; const job = await reserveLeg(db, "outbound");
+    await purchaseLeg(provider, store(), job, request);
+    expect(await status(job)).toBe("ambiguous");
+    return job;
+  };
+  it("adopte l'étiquette retrouvée par son n° de colis, sans nouvel achat", async () => {
+    const provider = new FakeProvider(); const job = await ambiguous(provider);
+    const found = { provider: "sendcloud", labelId: "777", carrier: "mondial_relay", tracking: "QA777", chargedTtcCents: null, status: null, pdf: async () => PDF };
+    Object.assign(provider, { findByLabelId: async (id: string) => (id === "777" ? found : null) });
+    expect(await adoptLeg(provider, store(), job, "778")).toEqual({ state: "review_required", code: "label_not_found" });
+    expect(await adoptLeg(provider, store(), job, "777")).toMatchObject({ state: "confirmed" });
+    expect(await status(job)).toBe("confirmed");
+    expect(provider.createCalls).toBe(1);
+  });
+  it("constat d'absence : échec tracé, puis remplacement manuel explicite possible", async () => {
+    const provider = new FakeProvider(); const job = await ambiguous(provider);
+    await expect(store().transition(job, "purchase_failed", { provider: "sendcloud" })).rejects.toThrow(/label_transition_invalid/);
+    await expect(store().transition(job, "purchase_failed", { provider: "sendcloud", resolution: "absent_confirmed", actor: RT.admin, evidence: "court" }))
+      .rejects.toThrow(/label_transition_invalid/);
+    expect(await declareLegAbsent(store(), job, "sendcloud", RT.admin, "Panneau Sendcloud consulté, aucun envoi")).toEqual({ state: "failed", code: "absent_confirmed" });
+    expect(await status(job)).toBe("failed");
+    const manual = await db.query<{ r: { outcome: string } }>("SELECT marketplace_reserve_round_trip_label_manual($1,'outbound',$2,true) r", [RT.case, RT.admin]);
+    expect(manual.rows[0].r.outcome).toBe("claim");
+  });
+  it("reconnaît les statuts fournisseur inutilisables, et eux seuls", () => {
+    for (const s of [{ code: "CANCELLED", message: "" }, { code: "ANNOUNCEMENT_FAILED", message: "" }, { code: "2000", message: "Cancelled" }, { code: "1002", message: "" }])
+      expect(isUnusableProviderStatus(s)).toBe(true);
+    for (const s of [null, { code: "READY_TO_SEND", message: "" }, { code: "11", message: "Delivered" }, { code: "1000", message: "" }])
+      expect(isUnusableProviderStatus(s)).toBe(false);
   });
 });

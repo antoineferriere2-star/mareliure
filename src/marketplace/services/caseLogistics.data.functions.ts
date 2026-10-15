@@ -15,7 +15,7 @@ import {
   LogisticsError, operatorConfirmManual, operatorLogistics, operatorRecordJobEvent, operatorSetAutomation,
   saveCustomerPlan, workshopLogistics,
 } from "./caseLogistics.server";
-import { purchaseAutomatically, recordRateApproval, roundTripShippingOptions } from "./roundTripAutomation.server";
+import { operatorAdoptLabel, operatorCancelLabel, operatorDeclareLabelAbsent, purchaseAutomatically, recordRateApproval, roundTripShippingOptions } from "./roundTripAutomation.server";
 
 const caseId = z.string().uuid();
 const direction = z.enum(["outbound", "return"]);
@@ -211,4 +211,31 @@ export const getRoundTripShippingOptions = createServerFn({ method: "GET" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     return guarded(async () => roundTripShippingOptions(await admin(), data.caseId));
+  });
+
+/** Réservation ambiguë : adopter l'étiquette retrouvée (identifiant de colis relu chez le fournisseur). */
+export const adoptRoundTripLabel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ caseId, jobId: z.string().uuid(), labelId: z.string().trim().regex(/^[0-9]{1,20}$/) }).strict().parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    return guarded(async () => operatorAdoptLabel(await admin(), data.caseId, data.jobId, data.labelId));
+  });
+
+/** Réservation ambiguë : constat écrit qu'aucune étiquette n'existe chez le fournisseur. */
+export const declareRoundTripLabelAbsent = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ caseId, jobId: z.string().uuid(), evidence: z.string().trim().min(8).max(500) }).strict().parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    return guarded(async () => operatorDeclareLabelAbsent(await admin(), context.userId, data.caseId, data.jobId, data.evidence));
+  });
+
+/** Étiquette automatique confirmée : demande d'annulation réelle chez le fournisseur. */
+export const cancelRoundTripLabel = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((data: unknown) => z.object({ caseId, jobId: z.string().uuid() }).strict().parse(data))
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    return guarded(async () => operatorCancelLabel(await admin(), data.caseId, data.jobId));
   });

@@ -11,7 +11,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { SENDCLOUD_RETURN_METHODS_ENABLED } from "@/marketplace/config";
 import { effectiveReturnAddress, logisticsErrorCode, planFromRow, type PostalAddress } from "@/marketplace/shipping/logisticsPlan";
-import { purchaseLeg, type LegResult } from "@/marketplace/shipping/labelOrchestrator";
+import { adoptLeg, cancelLeg, declareLegAbsent, purchaseLeg, type CancelResult, type LegResult } from "@/marketplace/shipping/labelOrchestrator";
 import type { LabelDirection, LabelProvider, LabelRequest, PostalParty } from "@/marketplace/shipping/labelProvider";
 import { createSendcloudProvider, fetchSendcloudShippingOptions, isReturnOptionCode, type ShippingOptionView } from "@/marketplace/shipping/sendcloudProvider.server";
 import { supabaseLabelStore } from "@/marketplace/shipping/roundTripLabelStore.server";
@@ -159,4 +159,39 @@ async function liveShippingOptions(plan: Awaited<ReturnType<typeof loadPlanRow>>
   if (outbound === "unavailable" || back2 === "unavailable") throw new LogisticsError("provider_unavailable", 503);
   const extra = outboundReturns === "unavailable" ? [] : outboundReturns.filter((o) => !outbound.some((x) => x.code === o.code));
   return { outbound: [...outbound, ...extra], return: back2 };
+}
+
+// ---------------------------------------------------------------------------
+// Résolutions opérateur (audit du 15/10 : P1-2 et P1-5). Le job doit appartenir au dossier et
+// relever de l'achat automatique ; l'admin est vérifié par la server function appelante.
+// ---------------------------------------------------------------------------
+async function automaticJob(sb: Supa, caseId: string, jobId: string) {
+  const { data, error } = await raw(sb).from("marketplace_round_trip_label_jobs")
+    .select("id,case_id,fulfilment,status").eq("id", jobId).maybeSingle();
+  if (error) throw new LogisticsError("provider_unavailable", 503);
+  if (!data || data.case_id !== caseId) throw new LogisticsError("not_found", 404);
+  if (data.fulfilment !== "automatic") throw new LogisticsError("invalid_input", 400);
+  return data as { id: string; status: string };
+}
+
+/** Adopte l'étiquette retrouvée chez le fournisseur pour une réservation ambiguë, après relecture du colis. */
+export async function operatorAdoptLabel(sb: Supa, caseId: string, jobId: string, labelId: string,
+  provider: LabelProvider | null = providerFromEnv()): Promise<LegResult> {
+  if (!provider) throw new LogisticsError("provider_unavailable", 503);
+  await automaticJob(sb, caseId, jobId);
+  return adoptLeg(provider, supabaseLabelStore(sb), jobId, labelId);
+}
+
+/** Constat écrit de l'opérateur : aucune étiquette chez le fournisseur ; la réservation ambiguë devient « échouée ». */
+export async function operatorDeclareLabelAbsent(sb: Supa, actor: string, caseId: string, jobId: string, evidence: string): Promise<LegResult> {
+  await automaticJob(sb, caseId, jobId);
+  return declareLegAbsent(supabaseLabelStore(sb), jobId, providerFromEnv()?.name ?? "sendcloud", actor, evidence);
+}
+
+/** Demande réelle d'annulation chez le fournisseur ; « en file » reste confirmé jusqu'au statut relu par webhook. */
+export async function operatorCancelLabel(sb: Supa, caseId: string, jobId: string,
+  provider: LabelProvider | null = providerFromEnv()): Promise<CancelResult> {
+  if (!provider) throw new LogisticsError("provider_unavailable", 503);
+  await automaticJob(sb, caseId, jobId);
+  return cancelLeg(provider, supabaseLabelStore(sb), jobId);
 }

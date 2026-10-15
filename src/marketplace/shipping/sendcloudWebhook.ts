@@ -8,7 +8,7 @@
  * n'est jamais une réception physique : l'atelier la confirme séparément.
  */
 import type { LabelProvider } from "./labelProvider";
-import type { LabelJobStore } from "./labelOrchestrator";
+import { isUnusableProviderStatus, type LabelJobStore } from "./labelOrchestrator";
 
 const encoder = new TextEncoder();
 const hex = (bytes: ArrayBuffer) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -52,5 +52,11 @@ export async function handleSendcloudWebhook(request: Request, deps: WebhookDeps
   await deps.store.transition(job.id, "tracking_update",
     { provider: deps.provider.name, provider_label_id: parcelId, code: current.status?.code ?? "unknown", message: (current.status?.message ?? "").slice(0, 200) },
     `${parcelId}:${payload.timestamp}`);
+  // Annulée ou refusée chez le fournisseur (statut relu, pas celui de la notification) : l'étiquette ne
+  // doit plus être présentée comme utilisable. Aucun remboursement présumé.
+  if (isUnusableProviderStatus(current.status) && (await deps.store.job(job.id))?.status === "confirmed") {
+    await deps.store.transition(job.id, "cancelled", { provider: deps.provider.name, reference: parcelId,
+      source: "provider_status", code: current.status?.code ?? "unknown" });
+  }
   return json(200, { ok: true });
 }

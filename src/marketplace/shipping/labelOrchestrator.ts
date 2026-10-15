@@ -109,3 +109,34 @@ export async function cancelLeg(provider: LabelProvider, store: LabelJobStore, j
       return { state: "pending", code: outcome.code };
   }
 }
+
+/**
+ * Résolution opérateur d'une réservation ambiguë (audit du 15/10, P1-2) : adoption d'une étiquette
+ * retrouvée chez le fournisseur, relue par son identifiant de colis — jamais sur simple déclaration.
+ */
+export async function adoptLeg(provider: LabelProvider, store: LabelJobStore, jobId: string, labelId: string): Promise<LegResult> {
+  const job = await store.job(jobId);
+  if (!job || job.status !== "ambiguous") return { state: "review_required", code: job ? `job_${job.status}` : "job_not_found" };
+  if (!provider.findByLabelId) return { state: "review_required", code: "provider_lookup_unsupported" };
+  const label = await provider.findByLabelId(labelId.trim());
+  if (label === "unknown") return { state: "pending", code: "provider_unreadable" };
+  if (!label) return { state: "review_required", code: "label_not_found" };
+  return persist(store, jobId, label);
+}
+
+/** Constat écrit qu'aucune étiquette n'existe chez le fournisseur : la réservation ambiguë devient « échouée ». */
+export async function declareLegAbsent(store: LabelJobStore, jobId: string, provider: string, actor: string, evidence: string): Promise<LegResult> {
+  const job = await store.job(jobId);
+  if (!job || job.status !== "ambiguous") return { state: "review_required", code: job ? `job_${job.status}` : "job_not_found" };
+  await store.transition(jobId, "purchase_failed", { provider, resolution: "absent_confirmed", actor, evidence: evidence.trim().slice(0, 500) });
+  return { state: "failed", code: "absent_confirmed" };
+}
+
+/**
+ * Statut fournisseur qui rend l'étiquette inutilisable (annulée, ou refusée par le transporteur après coup) :
+ * codes v3 (`CANCELLED`, `ANNOUNCEMENT_FAILED`) et v2 (2000 annulé, 1002 annonce échouée).
+ */
+export function isUnusableProviderStatus(status: { code: string; message: string } | null): boolean {
+  if (!status) return false;
+  return /^(2000|1002)$/.test(status.code) || /CANCEL|ANNOUNCEMENT_FAILED/i.test(status.code);
+}
