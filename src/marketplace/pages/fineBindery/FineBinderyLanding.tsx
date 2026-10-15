@@ -7,7 +7,7 @@ import { FineBinderyFooter, FineBinderyHeader, FineBinderyIntakeCta } from "./Fi
 import { FEATURED_WORKSHOP } from "./content";
 import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
 import { ENGINE_LOCALE, fineBinderyDirectoryPath, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
-import { specialtyName } from "@/marketplace/i18n/fineBinderyGlossary";
+import { specialtyName } from "@/marketplace/i18n/fineBinderyPublicGlossary";
 import { useFineBinderyDocumentLocale } from "@/marketplace/i18n/FineBinderyLanguageSwitch";
 import {
   FERRIERE_FINE_BINDERY_OFFER_KEYS,
