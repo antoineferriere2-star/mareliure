@@ -51,6 +51,7 @@ export async function roundTripSchema(): Promise<PGlite> {
   await db.exec(migration("20261001160000_book_round_trip_shipping.sql"));
   await db.exec(migration("20261002090000_book_round_trip_journey.sql"));
   await db.exec(migration("20261015100000_round_trip_rate_versions.sql"));
+  await db.exec(migration("20261016100000_round_trip_label_resolution.sql"));
   return db;
 }
 

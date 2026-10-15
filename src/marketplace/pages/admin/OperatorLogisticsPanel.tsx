@@ -9,7 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getOperatorCaseLogistics, getOperatorLabel, getRoundTripShippingOptions, purchaseRoundTripLabel, recordLabelEvent, recordManualLabel,
-  recordRoundTripRateApproval, setRoundTripAutomation,
+  recordRoundTripRateApproval, setRoundTripAutomation, adoptRoundTripLabel, declareRoundTripLabelAbsent, cancelRoundTripLabel,
 } from "@/marketplace/services/caseLogistics.data.functions";
 import type { OperatorLogisticsView } from "@/marketplace/services/caseLogistics.server";
 import { ROUND_TRIP_TTC_CENTS } from "@/marketplace/shipping/logisticsPlan";
@@ -136,6 +136,7 @@ function Leg({ caseId, direction, view }: { caseId: string; direction: "outbound
             {job.events.map((e, i) => <li key={i}>{new Date(e.created_at).toLocaleString("fr-FR")} · {e.kind}
               {Object.entries(e.details).filter(([k]) => !["actor", "provider"].includes(k)).map(([k, v]) => ` · ${k}=${v}`).join("")}</li>)}
           </ul>
+          {job.fulfilment === "automatic" && <ProviderResolution caseId={caseId} job={job} />}
           <JobActions caseId={caseId} job={job} />
         </div>
       ))}
@@ -185,6 +186,51 @@ function JobActions({ caseId, job }: { caseId: string; job: OperatorLogisticsVie
       <Button size="sm" className="mt-2" disabled={mutation.isPending} onClick={() => mutation.mutate()}>Enregistrer</Button>
     </details>
   );
+}
+
+/**
+ * Issues réelles d'une étiquette automatique (audit du 15/10) : réservation ambiguë → adopter l'étiquette
+ * retrouvée chez Sendcloud (n° de colis relu) ou constater son absence ; étiquette confirmée → annulation
+ * réellement demandée à Sendcloud (« en file » reste confirmée jusqu'au statut annulé relu par webhook).
+ */
+function ProviderResolution({ caseId, job }: { caseId: string; job: OperatorLogisticsView["jobs"][number] }) {
+  const adopt = useServerFn(adoptRoundTripLabel);
+  const absent = useServerFn(declareRoundTripLabelAbsent);
+  const cancel = useServerFn(cancelRoundTripLabel);
+  const cache = useQueryClient();
+  const [labelId, setLabelId] = useState("");
+  const [evidence, setEvidence] = useState("");
+  const refresh = () => cache.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "logistics"] });
+  const mutation = useMutation({
+    mutationFn: async (action: "adopt" | "absent" | "cancel"): Promise<{ state: string; code?: string }> => {
+      if (action === "adopt") return adopt({ data: { caseId, jobId: job.id, labelId } });
+      if (action === "absent") return absent({ data: { caseId, jobId: job.id, evidence } });
+      return cancel({ data: { caseId, jobId: job.id } });
+    },
+    onSettled: refresh,
+  });
+  const result = mutation.data;
+  if (job.status === "ambiguous") return (
+    <div className="mt-2 rounded border border-amber-400 bg-amber-50 p-2 text-xs text-amber-900">
+      <p>Achat sans réponse certaine. Cherchez le colis dans Sendcloud (référence {job.id}) puis :</p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <label>N° de colis Sendcloud retrouvé<input className={FIELD} inputMode="numeric" value={labelId} onChange={(e) => setLabelId(e.target.value)} /></label>
+        <Button size="sm" className="self-end" disabled={mutation.isPending || !/^[0-9]{1,20}$/.test(labelId.trim())} onClick={() => mutation.mutate("adopt")}>Adopter cette étiquette</Button>
+        <label>Constat : aucune étiquette chez Sendcloud (preuve)<input className={FIELD} value={evidence} maxLength={500} placeholder="Recherche panneau Sendcloud le …, aucun envoi" onChange={(e) => setEvidence(e.target.value)} /></label>
+        <Button size="sm" variant="outline" className="self-end" disabled={mutation.isPending || evidence.trim().length < 8} onClick={() => mutation.mutate("absent")}>Déclarer absente</Button>
+      </div>
+      {result && <p className="mt-1">Résultat : {result.state}{result.code ? ` (${result.code})` : ""}</p>}
+      {mutation.isError && <p className="mt-1 text-destructive">{errorText(mutation.error)}</p>}
+    </div>
+  );
+  if (job.status === "confirmed" && job.provider === "sendcloud") return (
+    <div className="mt-2 text-xs">
+      <Button size="sm" variant="outline" disabled={mutation.isPending} onClick={() => { if (window.confirm("Demander à Sendcloud d'annuler cette étiquette ?")) mutation.mutate("cancel"); }}>Annuler chez Sendcloud</Button>
+      {result && <span className="ml-2">Résultat : {result.state === "queued" ? "annulation en file, confirmée au prochain statut Sendcloud" : result.state}{result.code ? ` (${result.code})` : ""}</span>}
+      {mutation.isError && <p className="mt-1 text-destructive">{errorText(mutation.error)}</p>}
+    </div>
+  );
+  return null;
 }
 
 function ManualLabelForm({ caseId, direction, chargedOther, replace }: { caseId: string; direction: "outbound" | "return"; chargedOther: number; replace: boolean }) {
