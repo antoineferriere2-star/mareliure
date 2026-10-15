@@ -1,16 +1,11 @@
 import type { FineBinderyPublicCopy } from "./types";
+import { deSeo, deHomeFaq, deProjectStart, deDirectoryLabel, deProfileNotFound } from "./deHead";
+
 
 export const de: FineBinderyPublicCopy = {
-  seo: {
-    homeTitle: "Fine Bindery — Buchbinderei und Buchrestaurierung in Europa",
-    homeDescription: "Entdecken Sie erfahrene Buchbinder und Restauratoren, stellen Sie Ihr Projekt vor und arbeiten Sie mit der passenden Werkstatt. Das Netzwerk startet in Frankreich.",
-    directoryTitle: "Buchbinder und Buchrestauratoren — Fine Bindery",
-    directoryDescription: "Entdecken Sie unabhängige Werkstätten für Buchbinderei, Restaurierung, Konservierung und Vergoldung und stellen Sie Ihr Projekt direkt einer von ihnen vor.",
-    profileTitle: (w) => `${w} — Buchbinderei und Restaurierung | Fine Bindery`,
-    profileDescription: (w, c) => `Entdecken Sie ${w}, eine unabhängige Werkstatt für Buchbinderei und Restaurierung in ${c}.`,
-  },
-  nav: { how: "Ablauf", services: "Fachgebiete", workshops: "Werkstätten", faq: "Fragen", signIn: "Anmelden", language: "Sprache", menu: "Menü" },
-  common: { start: "Projekt vorstellen", project: "Projekt", france: "Frankreich", skills: "Fachgebiete", languages: "Sprachen", techniques: "Techniken und Materialien", originalText: "Werkstatttext in der Originalsprache." },
+  seo: deSeo,
+  nav: { how: "Ablauf", services: "Fachgebiete", workshops: deDirectoryLabel, faq: "Fragen", signIn: "Anmelden", language: "Sprache", menu: "Menü" },
+  common: { start: deProjectStart, project: "Projekt", france: "Frankreich", skills: "Fachgebiete", languages: "Sprachen", techniques: "Techniken und Materialien", originalText: "Werkstatttext in der Originalsprache." },
   footer: { summary: "Das europäische Netzwerk für Buchbinderei und Buchrestaurierung.", information: "Informationen", legal: "Impressum", privacy: "Datenschutz", terms: "Nutzungsbedingungen", sales: "Verkaufsbedingungen", closing: "Buchbinderei, Restaurierung und Vergoldung aus unabhängigen Werkstätten." },
   home: {
     eyebrow: "Buchbinderei · Restaurierung · Vergoldung",
@@ -33,14 +28,7 @@ export const de: FineBinderyPublicCopy = {
     networkNote: "Das Netzwerk startet mit Werkstätten in Frankreich und wird Buchbinder und Restauratoren aus ganz Europa aufnehmen.",
     trustEyebrow: "Ihr Buch reist", trustTitle: "Ihr Buch reist. Seine Geschichte geht nicht verloren.", trust: ["Zustand dokumentiert", "Eine Ansprechperson", "Geprüfte Werkstätten", "Begleiteter Weg"],
     shippingEyebrow: "Versand", shippingTitle: "Ein Weg, der zum Buch passt.", shippingLead: "Der Weg wird nach Art und Wert des Buches organisiert und getrennt von der Arbeit selbst berechnet.",
-    faqEyebrow: "Antworten auf Ihre Fragen", faqTitle: "Vor dem Start.", faq: [
-      { question: "Kann ich eine Werkstatt direkt kontaktieren?", answer: "Ja. Ein Projekt, das Sie auf der Seite einer Werkstatt vorstellen, erreicht diese Werkstatt direkt." },
-      { question: "Wer verkauft mir die Leistung und wer stellt die Rechnung?", answer: "Das hängt vom Ausgangspunkt ab. Ein Projekt, das Sie auf der Seite einer Werkstatt vorstellen, macht diese Werkstatt zu Ihrem Verkäufer: Sie sendet ihr eigenes Angebot und stellt Ihnen die Rechnung. Ein Projekt, das Sie Fine Bindery vorstellen, wird von OPPE SAS unter der Marke Fine Bindery verkauft; sie wählt die Werkstatt, erstellt Angebot und Rechnung und nimmt die Zahlung entgegen. Die Werkstatt stellt dann OPPE SAS die Rechnung, nie Ihnen." },
-      { question: "Wie werden die Werkstätten ausgewählt?", answer: "Fine Bindery prüft jede Werkstatt vor der Veröffentlichung ihrer Seite: Fachgebiete, Erfahrung und die Art der Arbeiten, die sie übernehmen möchte. Es gibt weder ein Ranking noch bezahlte Platzierungen." },
-      { question: "Muss ich die Sprache der Werkstatt sprechen?", answer: "Nein. Jede Werkstatt nennt die Sprachen, die sie spricht, und Fine Bindery bleibt Ihre Ansprechperson, wenn Sie uns ein Projekt vorstellen." },
-      { question: "Ist der Versand enthalten?", answer: "Nein. Er wird je nach Ziel, Wert und erforderlicher Sorgfalt separat berechnet." },
-      { question: "Kann ich wertvolle oder alte Bücher anvertrauen?", answer: "Ja, nach individueller Prüfung und mit geeigneter Logistik." },
-    ],
+    faqEyebrow: "Antworten auf Ihre Fragen", faqTitle: "Vor dem Start.", faq: deHomeFaq,
     finalTitle: "Ihr Buch verdient die richtigen Hände.", finalLead: "Entdecken Sie die Werkstätten des Netzwerks – oder stellen Sie Ihr Projekt vor und lassen Sie uns die passende finden.", established: "seit",
   },
   directory: {
@@ -60,6 +48,6 @@ export const de: FineBinderyPublicCopy = {
     training: "Ausbildung und Erfahrung", approach: "Arbeitsweise", portfolio: "Ausgewählte Arbeiten", work: "Arbeiten der Werkstatt.", before: "Vorher", after: "Nachher",
     finalEyebrow: "Ein Buch, ein Gespräch", finalTitle: (w) => `Besprechen Sie Ihr Projekt direkt mit ${w}.`,
     website: "Website der Werkstatt", call: "Werkstatt anrufen", email: "E-Mail an die Werkstatt",
-    notFound: "Werkstatt nicht gefunden", notFoundBody: "Diese Seite ist nicht veröffentlicht oder nicht mehr vorhanden.", back: "Werkstätten ansehen",
+    notFound: deProfileNotFound, notFoundBody: "Diese Seite ist nicht veröffentlicht oder nicht mehr vorhanden.", back: "Werkstätten ansehen",
   },
 };
