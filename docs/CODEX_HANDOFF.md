@@ -3596,3 +3596,20 @@ Publié depuis le bloc précédent, sur accord explicite du propriétaire :
 Données : « h » et « ok » marqués `is_demo=true` le 8 octobre au soir sur accord explicite (journal privé `oppe-model-operation/demo-mark-h-ok-20261008.log`) ; seul atelier réel compté : Reliure Ferrière. PR #50 et #38 fermées, branches supprimées (récupérables via `pull/50/head`, `pull/38/head`).
 
 En cours (PR de ce bloc) : un admin atterrit sur `/admin` après connexion au lieu de l'ancien back-office ; liens croisés pilotage ↔ back-office ; filtres d'étape de la liste Dossiers avec leur nombre, étapes vides masquées. Transport automatique Sendcloud toujours fermé.
+
+## Latest handoff
+
+Claude Code (Opus 5.5) — 15 octobre 2026. Production : `main` fb32fe1, Worker `660e5807-89d9-4ed8-903b-127d1ceb9a78` à 100 % (retour `40a00f3d`, puis `35371e55`). 120 migrations, aucune nouvelle. Même procédure de publication (worktree propre, `wrangler.json` aligné, runtime et 25 bindings identiques comparés, sonde sans session sur prévisualisation puis domaines). `wrangler versions upload` publie mais peut ne pas rendre la main : le lancer avec une limite de temps.
+
+Publié sur accord explicite du propriétaire depuis le bloc précédent : #112 à #118 (admin sur `/admin`, filtres Dossiers, SEO : redirections héritées `LEGACY_PAGE_REDIRECTS` et `/conditions-ateliers` canonique, LCP mobile, alerte e-mail de test depuis le pilotage — réception à contact@oppe.fr confirmée par le propriétaire le 13/10) ; #119 Reliure Ferrière cochée par défaut à l'envoi (`DEFAULT_WORKSHOP_ID`, présélection seulement) ; #120 ateliers `is_demo` exclus de l'envoi (liste et serveur) ; #121 achat des méthodes Sendcloud « Retour » par `POST /returns/announce-synchronously` + relecture `GET /api/v2/parcels/{id}`, repli webhook par identifiant de colis ; #122 méthodes Retour masquées (`SENDCLOUD_RETURN_METHODS_ENABLED = false`) ; #123 `ANNOUNCEMENT_FAILED` ⇒ refus net (`announcement_failed`), téléphone client français exigé.
+
+Sendcloud (intégration `633076`) :
+- 14/10 : adresse de retour « Reliure Dorure Ferrière », 9 rue Pothier 45000 Orléans, par défaut ; point relais + Mondial Relay cochés dans l'intégration.
+- **15/10 08:11 UTC : achat automatique OUVERT** par le propriétaire depuis l'admin (RL-006), cinq preuves tracées, recette API déclarée « PARTIELLE ». Fermeture immédiate possible depuis tout dossier.
+- Chrono 2Shop Retour : refusé deux fois (« Unable to announce labels ») ; Mondial Relay Retour : activation par le support seulement. Méthodes à retenir au tarif : `mondial_relay:home_domestic,dualapi/c2c` dans les deux sens (≈ 5,17 € HT par trajet).
+- 15/10 : moyen de paiement Sendcloud ajouté par le propriétaire (avant : `no_valid_payment_method`). Paire réelle par `scripts/sendcloudLabelPairTest.mjs` (clés saisies par le propriétaire) : 1er essai deux envois `ANNOUNCEMENT_FAILED` (téléphone invalide ; envois 8d8a01c5…/9d0f2193…, colis 728107433/728107471, sans suivi), 2e essai deux étiquettes Mondial Relay créées, suivi 73095350 / 73095353, PDF, puis annulation HTTP 202 (en file). Deux webhooks reçus à 13:58 sans exception ; **code de réponse non lu** (le tail JSON n'écrit rien avant sa fin, l'interface Sendcloud ne répondait plus). Signature déjà prouvée le 07/10 par « Tester l'API Webhook ».
+- Aucune expédition physique ; aucun dossier réel n'a encore d'étiquette.
+
+Fine Bindery : profil de Reliure Ferrière vide (aucune présentation ni spécialité) ; sa publication revient au compte de l'atelier (justine.ferriere@gmail.com), texte proposé au propriétaire. Nom affiché à trancher (« Reliure Ferrière » / « Reliure Dorure Ferrière »).
+
+Brief Codex du 15/10 (fourni au propriétaire) : audit transport (rapport `docs/SENDCLOUD_AUDIT_20261015.md`), pages légales Fine Bindery traduites, poids JS des pages publiques. Claude Code garde `src/marketplace/shipping/**`, `roundTrip*`, `caseLogistics*`, `config.ts`.
