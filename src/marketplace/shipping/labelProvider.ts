@@ -59,8 +59,13 @@ export type CancelOutcome =
 export interface LabelProvider {
   readonly name: string;
   create(request: LabelRequest): Promise<CreateOutcome>;
-  /** `null` = le fournisseur confirme l'absence ; `"unknown"` = lecture impossible. */
-  findByReference(reference: string): Promise<ProviderLabel | null | "unknown">;
+  /**
+   * `null` = le fournisseur confirme l'absence ; `"unknown"` = lecture impossible. Le code de la méthode
+   * achetée, quand il est connu, dit où chercher : une étiquette Retour ne se retrouve pas par référence.
+   */
+  findByReference(reference: string, hint?: { shippingOptionCode?: string }): Promise<ProviderLabel | null | "unknown">;
+  /** Relecture par identifiant de colis (clé des webhooks), quand le fournisseur la permet. */
+  findByLabelId?(labelId: string): Promise<ProviderLabel | null | "unknown">;
   cancel(reference: string): Promise<CancelOutcome>;
 }
 

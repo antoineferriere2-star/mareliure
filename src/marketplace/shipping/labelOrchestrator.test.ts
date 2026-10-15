@@ -205,4 +205,26 @@ describe("webhook Sendcloud", () => {
     const body = JSON.stringify({ action: "parcel_status_changed", timestamp: 3, parcel: { id: provider.labels.get(job)!.labelId } });
     expect((await deliver(provider, body)).status).toBe(503);
   });
+  it("retour introuvable par référence : relit le colis par son identifiant", async () => {
+    const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
+    await purchaseLeg(provider, store(), job, request);
+    const label = provider.labels.get(job)!;
+    provider.status = { code: "1000", message: "Ready to send" };
+    provider.findByReference = async () => null;
+    Object.assign(provider, { findByLabelId: async (id: string) => (id === label.labelId ? label : null) });
+    const body = JSON.stringify({ action: "parcel_status_changed", timestamp: 4, parcel: { id: label.labelId } });
+    expect((await deliver(provider, body)).status).toBe(200);
+    const rows = (await db.query<{ details: { code: string } }>("SELECT details FROM marketplace_round_trip_label_events WHERE job_id=$1 AND kind='tracking_update'", [job])).rows;
+    expect(rows.map((r) => r.details.code)).toEqual(["1000"]);
+  });
+  it("transmet le code de la méthode à la relecture après une réponse perdue", async () => {
+    const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
+    provider.script = ["lose_response"];
+    await purchaseLeg(provider, store(), job, request);
+    const hints: unknown[] = [];
+    const original = provider.findByReference.bind(provider);
+    provider.findByReference = async (reference: string, hint?: { shippingOptionCode?: string }) => { hints.push(hint); return original(reference); };
+    await purchaseLeg(provider, store(), job, request);
+    expect(hints).toContainEqual({ shippingOptionCode: "qa:option" });
+  });
 });

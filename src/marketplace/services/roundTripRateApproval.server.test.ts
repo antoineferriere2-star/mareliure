@@ -3,7 +3,9 @@ import { fetchSendcloudShippingOptions, type ShippingOptionView } from "@/market
 import { loadAcceptedCommercialProposal } from "./commercialProposalRepository.server";
 import { recordRateApproval, type RateApprovalInput } from "./roundTripAutomation.server";
 
-vi.mock("@/marketplace/shipping/sendcloudProvider.server", () => ({ fetchSendcloudShippingOptions: vi.fn(), createSendcloudProvider: vi.fn() }));
+vi.mock("@/marketplace/shipping/sendcloudProvider.server", async (importOriginal) => ({
+  isReturnOptionCode: (await importOriginal<typeof import("@/marketplace/shipping/sendcloudProvider.server")>()).isReturnOptionCode,
+  fetchSendcloudShippingOptions: vi.fn(), createSendcloudProvider: vi.fn() }));
 vi.mock("./commercialProposalRepository.server", () => ({ loadAcceptedCommercialProposal: vi.fn() }));
 
 const option = (code: string, overrides: Partial<ShippingOptionView> = {}): ShippingOptionView => ({
@@ -41,6 +43,13 @@ beforeEach(() => {
 });
 afterEach(() => { vi.unstubAllEnvs(); vi.resetAllMocks(); });
 
+type Quote = ShippingOptionView[] | "unavailable";
+/** Devis simulés par trajet : vers l'atelier (69002), méthodes Retour sur demande, puis retour client. */
+function quotes(outbound: Quote, back: Quote, returns: Quote = []) {
+  vi.mocked(fetchSendcloudShippingOptions).mockImplementation(async (_keys, q) =>
+    q.returns ? returns : q.toPostalCode === "69002" ? outbound : back);
+}
+
 describe("enregistrement du tarif contre les deux devis fournisseur", () => {
   it.each([
     ["aller relais", [option("outbound-home", { servicePointRequired: true })], [option("return-home")]],
@@ -49,25 +58,28 @@ describe("enregistrement du tarif contre les deux devis fournisseur", () => {
     ["retour sans prix", [option("outbound-home")], [option("return-home", { priceCents: null })]],
     ["retour autre devise", [option("outbound-home")], [option("return-home", { currency: "GBP" })]],
   ])("%s : aucune approbation écrite", async (_name, outbound, back) => {
-    vi.mocked(fetchSendcloudShippingOptions).mockResolvedValueOnce(outbound).mockResolvedValueOnce(back);
+    quotes(outbound, back);
     const c = client();
     await expect(recordRateApproval(c.sb as never, "fixture-actor", "fixture-case", input)).rejects.toMatchObject({ code: "rate_method_unavailable" });
     expect(c.insert).not.toHaveBeenCalled();
   });
   it("une réponse fournisseur indisponible ne valide pas le tarif", async () => {
-    vi.mocked(fetchSendcloudShippingOptions).mockResolvedValueOnce([option("outbound-home")]).mockResolvedValueOnce("unavailable");
+    quotes([option("outbound-home")], "unavailable");
     const c = client();
     await expect(recordRateApproval(c.sb as never, "fixture-actor", "fixture-case", input)).rejects.toMatchObject({ code: "provider_unavailable" });
     expect(c.insert).not.toHaveBeenCalled();
   });
   it("utilise les trajets et colis distincts puis enregistre les codes normalisés", async () => {
-    vi.mocked(fetchSendcloudShippingOptions).mockResolvedValueOnce([option("outbound-home")]).mockResolvedValueOnce([option("return-home")]);
+    quotes([option("outbound-home")], [option("return-home")]);
     const c = client();
     await recordRateApproval(c.sb as never, "fixture-actor", "fixture-case", input);
     expect(fetchSendcloudShippingOptions).toHaveBeenNthCalledWith(1, { publicKey: "test-only", secretKey: "test-only" }, {
       fromCountry: "FR", fromPostalCode: "75011", toCountry: "FR", toPostalCode: "69002", weightGrams: 500, dimensionsMm: [350, 250, 80],
     });
     expect(fetchSendcloudShippingOptions).toHaveBeenNthCalledWith(2, { publicKey: "test-only", secretKey: "test-only" }, {
+      fromCountry: "FR", fromPostalCode: "75011", toCountry: "FR", toPostalCode: "69002", weightGrams: 500, dimensionsMm: [350, 250, 80], returns: true,
+    });
+    expect(fetchSendcloudShippingOptions).toHaveBeenNthCalledWith(3, { publicKey: "test-only", secretKey: "test-only" }, {
       fromCountry: "FR", fromPostalCode: "69002", toCountry: "FR", toPostalCode: "33000", weightGrams: 700, dimensionsMm: [360, 260, 90],
     });
     expect(c.insert).toHaveBeenCalledOnce();
@@ -75,5 +87,20 @@ describe("enregistrement du tarif contre les deux devis fournisseur", () => {
       binder_id: "fixture-binder", reviewed_by: "fixture-actor", outbound_method: "outbound-home", return_method: "return-home",
       outbound_weight_grams: 500, return_weight_grams: 700, outbound_dimensions_mm: [350, 250, 80], return_dimensions_mm: [360, 260, 90],
     }));
+  });
+  it("accepte une méthode Retour pour l'aller vers l'atelier, issue du devis des retours", async () => {
+    const retour = "chrono:2shopretour/return,dropoff";
+    quotes([option("outbound-home")], [option("return-home")], [option(retour, { returns: true, priceCents: 441 })]);
+    const c = client();
+    await recordRateApproval(c.sb as never, "fixture-actor", "fixture-case", { ...input, outboundOptionCode: retour });
+    expect(c.insert).toHaveBeenCalledWith(expect.objectContaining({ outbound_method: retour }));
+  });
+  it("refuse une méthode Retour pour le retour vers le client, même proposée au devis", async () => {
+    const retour = "colissimo:home/fr,return";
+    quotes([option("outbound-home")], [option(retour, { returns: true })]);
+    const c = client();
+    await expect(recordRateApproval(c.sb as never, "fixture-actor", "fixture-case", { ...input, returnOptionCode: retour }))
+      .rejects.toMatchObject({ code: "rate_method_unavailable" });
+    expect(c.insert).not.toHaveBeenCalled();
   });
 });

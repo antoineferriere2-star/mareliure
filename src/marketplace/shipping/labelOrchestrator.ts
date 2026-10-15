@@ -51,16 +51,17 @@ export async function purchaseLeg(provider: LabelProvider, store: LabelJobStore,
   if (job.status === "confirmed") return { state: "confirmed", costReviewRequired: false };
   if (job.status === "failed" || job.status === "cancelled") return { state: "review_required", code: `job_${job.status}` };
 
-  // Reprise : relire le fournisseur avant tout nouvel appel.
+  // Reprise : relire le fournisseur avant tout nouvel appel (la méthode dit où chercher).
+  const hint = async () => ({ shippingOptionCode: (await request()).shippingOptionCode });
   if (job.status === "ambiguous") {
-    const existing = await provider.findByReference(jobId);
+    const existing = await provider.findByReference(jobId, await hint());
     if (existing === "unknown") return { state: "pending", code: "provider_unreadable" };
     if (existing) return persist(store, jobId, existing);
   }
   const started = await store.transition(jobId, "request_started", { provider: provider.name });
   // Une tentative précédente sans issue enregistrée : la base a basculé en ambigu.
   if (started.status === "ambiguous" && job.status === "claimed") {
-    const existing = await provider.findByReference(jobId);
+    const existing = await provider.findByReference(jobId, await hint());
     if (existing === "unknown") return { state: "pending", code: "provider_unreadable" };
     if (existing) return persist(store, jobId, existing);
   }
