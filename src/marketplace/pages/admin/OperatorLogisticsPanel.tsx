@@ -143,7 +143,7 @@ function Leg({ caseId, direction, view }: { caseId: string; direction: "outbound
       {active?.status === "confirmed" && <Button size="sm" variant="outline" onClick={() => opening.mutate()}>Ouvrir l'étiquette</Button>}
       {opening.isError && <p className="text-xs text-destructive">{errorText(opening.error)}</p>}
       {view.automation.enabled && view.automation.providerConfigured && view.paid && active?.status !== "confirmed" && (
-        <AutomaticPurchase caseId={caseId} direction={direction} />
+        <AutomaticPurchase caseId={caseId} direction={direction} resume={active?.fulfilment === "automatic" && (active.status === "claimed" || active.status === "ambiguous")} />
       )}
       {direction === "return" && !returnReady && <p className="text-xs text-muted-foreground">Étiquette retour possible après « retour prêt » déclaré par l'atelier et adresse reconfirmée par le client.</p>}
       {(!active || (active.status === "claimed" && active.fulfilment === "manual")) && view.paid && (direction === "outbound" || returnReady) && (
@@ -330,7 +330,22 @@ function Automation({ view, caseId }: { view: OperatorLogisticsView; caseId: str
   );
 }
 
-function AutomaticPurchase({ caseId, direction }: { caseId: string; direction: "outbound" | "return" }) {
+/** Résultat d'un achat ou d'une reprise, en mots d'opérateur plutôt qu'en code. */
+const LEG_RESULT: Record<string, string> = {
+  confirmed: "Étiquette confirmée et stockée.",
+  failed: "Refus net du fournisseur : aucune étiquette, aucun débit. Choisissez une autre méthode (nouveau tarif) ou passez en manuel.",
+  pending: "En attente : aucune étiquette confirmée. Réessayez « Reprendre » plus tard, ou résolvez l'achat ci-dessus.",
+  review_required: "Action manuelle nécessaire : voir le journal de l'étiquette.",
+};
+const RESULT_CODES: Record<string, string> = {
+  announcement_failed: "le transporteur a refusé l'étiquette (coordonnées ?)",
+  provider_unreadable: "Sendcloud illisible pour l'instant",
+  network_or_timeout: "pas de réponse de Sendcloud",
+  label_storage: "étiquette créée, PDF non stocké : la reprise le récupère",
+  job_failed: "achat précédent échoué", job_cancelled: "étiquette précédente annulée",
+};
+
+function AutomaticPurchase({ caseId, direction, resume }: { caseId: string; direction: "outbound" | "return"; resume: boolean }) {
   const purchase = useServerFn(purchaseRoundTripLabel);
   const cache = useQueryClient();
   const mutation = useMutation({
@@ -339,8 +354,11 @@ function AutomaticPurchase({ caseId, direction }: { caseId: string; direction: "
   });
   return (
     <div className="space-y-1">
-      <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>Acheter l'étiquette automatiquement (facturable)</Button>
-      {mutation.data && <p className="text-xs">Résultat : {mutation.data.state}{"code" in mutation.data ? ` (${mutation.data.code})` : ""}</p>}
+      <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+        {resume ? "Reprendre l'achat en cours (aucun second achat)" : "Acheter l'étiquette automatiquement (facturable)"}
+      </Button>
+      {mutation.data && <p className="text-xs">{LEG_RESULT[mutation.data.state] ?? mutation.data.state}
+        {"code" in mutation.data && mutation.data.code ? ` (${RESULT_CODES[mutation.data.code] ?? mutation.data.code})` : ""}</p>}
       {mutation.isError && <p className="text-xs text-destructive">{errorText(mutation.error)}</p>}
     </div>
   );
