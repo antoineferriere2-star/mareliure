@@ -9,6 +9,7 @@
  */
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Supa } from "@/build/services/adminAuth.server";
+import { SENDCLOUD_RETURN_METHODS_ENABLED } from "@/marketplace/config";
 import { effectiveReturnAddress, logisticsErrorCode, planFromRow, type PostalAddress } from "@/marketplace/shipping/logisticsPlan";
 import { purchaseLeg, type LegResult } from "@/marketplace/shipping/labelOrchestrator";
 import type { LabelDirection, LabelProvider, LabelRequest, PostalParty } from "@/marketplace/shipping/labelProvider";
@@ -57,7 +58,7 @@ export async function recordRateApproval(sb: Supa, actor: string, caseId: string
   const live = await liveShippingOptions(plan);
   // Le retour vers le client part de l'atelier : jamais une méthode « Retour ».
   if (!isPurchasableMethod(live.outbound, input.outboundOptionCode) || !isPurchasableMethod(live.return, input.returnOptionCode)
-    || isReturnOptionCode(input.returnOptionCode))
+    || isReturnOptionCode(input.returnOptionCode) || (!SENDCLOUD_RETURN_METHODS_ENABLED && isReturnOptionCode(input.outboundOptionCode)))
     throw new LogisticsError("rate_method_unavailable");
   const dims = (p: { lengthMm: number; widthMm: number; heightMm: number }) => [p.lengthMm, p.widthMm, p.heightMm].sort((a, b) => b - a);
   const returnParcel = plan.returnReady?.parcel ?? plan.parcel;
@@ -142,11 +143,12 @@ async function liveShippingOptions(plan: Awaited<ReturnType<typeof loadPlanRow>>
   const returnParcel = plan.returnReady?.parcel ?? plan.parcel;
   const toWorkshop = { fromCountry: plan.contact.countryCode, fromPostalCode: plan.contact.postalCode,
     toCountry: reception.countryCode, toPostalCode: reception.postalCode, weightGrams: plan.parcel.weightGrams, dimensionsMm: dims(plan.parcel) };
-  // L'aller vers l'atelier admet aussi les méthodes « Retour » (dépôt client, livraison à l'atelier) ;
-  // le retour vers le client reste un envoi ordinaire.
+  // L'aller vers l'atelier admet aussi les méthodes « Retour » (dépôt client, livraison à l'atelier)
+  // quand elles sont ouvertes ; le retour vers le client reste un envoi ordinaire.
   const [outbound, outboundReturns, back2] = await Promise.all([
     fetchSendcloudShippingOptions({ publicKey, secretKey }, toWorkshop),
-    fetchSendcloudShippingOptions({ publicKey, secretKey }, { ...toWorkshop, returns: true }),
+    SENDCLOUD_RETURN_METHODS_ENABLED
+      ? fetchSendcloudShippingOptions({ publicKey, secretKey }, { ...toWorkshop, returns: true }) : Promise.resolve([] as ShippingOptionView[]),
     fetchSendcloudShippingOptions({ publicKey, secretKey }, { fromCountry: reception.countryCode, fromPostalCode: reception.postalCode,
       toCountry: back.countryCode, toPostalCode: back.postalCode, weightGrams: returnParcel.weightGrams, dimensionsMm: dims(returnParcel) }),
   ]);

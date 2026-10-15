@@ -13,6 +13,14 @@
 export const MAX_BINDERS_PER_CASE = 3;
 
 /**
+ * Méthodes Sendcloud « Retour » (ex. Chrono 2Shop Retour) pour l'aller vers l'atelier. Fermé :
+ * Sendcloud refuse de les créer sur ce compte (« Unable to announce labels », 14 et 15 octobre 2026,
+ * contrat direct transporteur probablement requis). Fermé, l'admin ne les voit pas et le tarif les
+ * refuse ; le code d'achat par l'API des retours reste prêt pour le jour où Sendcloud les active.
+ */
+export const SENDCLOUD_RETURN_METHODS_ENABLED = false;
+
+/**
  * L'atelier coché d'office sur l'écran d'envoi aux ateliers, tant que le réseau
  * n'en compte qu'un en activité (Reliure Ferrière, décidé le 13 octobre 2026).
  * Une présélection seulement : l'admin peut le décocher, rien ne part sans
