@@ -8,11 +8,60 @@
  * l'approbation tarifaire du trajet restent requises avant tout achat.
  * Une étiquette ordinaire peut être facturée dès sa création : aucun appel réel sans accord.
  * Jamais testé contre l'API réelle (aucune clé disponible) ; tests sur réponses simulées.
+ *
+ * Méthodes « Retour » (constat du 14 octobre 2026 : `/shipments/announce` les refuse) : création
+ * par `POST /returns/announce-synchronously` (réponse `return_id` + `parcel_id`), puis relecture du
+ * colis par `GET /api/v2/parcels/{id}` (suivi, transporteur, étiquette). L'API des retours ne permet
+ * pas de retrouver un retour par référence : après une réponse ambiguë, la reprise passe par
+ * l'opérateur (« illisible »), jamais par un second achat. Les webhooks relisent le colis par son id.
  */
 import type { CancelOutcome, CreateOutcome, LabelProvider, LabelRequest, PostalParty, ProviderLabel } from "./labelProvider";
 
 const BASE = "https://panel.sendcloud.sc/api/v3";
+const BASE_V2 = "https://panel.sendcloud.sc/api/v2";
 type Fetch = typeof fetch;
+
+/**
+ * Méthode « Retour » d'après son code Sendcloud, où la fonctionnalité figure en clair
+ * (`chronopost:2shopretour/return,dropoff`, `colissimo:home/fr,return`).
+ */
+export function isReturnOptionCode(code: string): boolean {
+  return /[/,]return(?=[,/]|$)/.test(code.trim());
+}
+
+/** Format des retours (exemple officiel) : numéro de rue à part, téléphone international. */
+const returnParty = (p: PostalParty) => {
+  const street = p.addressLine1.trim().match(/^(\d+[a-zA-Z]?(?:\s?(?:bis|ter))?)[\s,]+(.+)$/i);
+  const phone = p.phone?.replace(/[\s.-]/g, "");
+  const intl = phone && p.countryCode === "FR" ? phone.replace(/^0(?=\d{9}$)/, "+33") : phone;
+  return {
+    name: p.name, address_line_1: street ? street[2] : p.addressLine1, ...(street ? { house_number: street[1] } : {}),
+    ...(p.addressLine2 ? { address_line_2: p.addressLine2 } : {}),
+    postal_code: p.postalCode, city: p.city, country_code: p.countryCode,
+    ...(p.email ? { email: p.email } : {}), ...(intl ? { phone_number: intl } : {}),
+  };
+};
+
+export function returnAnnounceBody(request: LabelRequest) {
+  const [length, width, height] = request.parcel.dimensionsMm;
+  return {
+    from_address: returnParty(request.from),
+    to_address: returnParty(request.to),
+    ship_with: { type: "shipping_option_code", shipping_option_code: request.shippingOptionCode },
+    weight: { value: request.parcel.weightGrams, unit: "g" },
+    dimensions: { length, width, height, unit: "mm" },
+    collo_count: 1,
+    send_tracking_emails: false,
+    external_reference: request.reference,
+    order_number: request.reference,
+  };
+}
+
+interface ParcelV2Json {
+  id?: number | string; tracking_number?: string | null; carrier?: { code?: string } | null;
+  status?: { id?: number | string; message?: string } | null;
+  label?: { label_printer?: string | null; normal_printer?: string[] | null } | null;
+}
 
 interface ShipmentJson {
   id?: string;
@@ -48,7 +97,7 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? 20000);
     try {
-      return await fetchImpl(`${BASE}${path}`, { ...init, signal: controller.signal,
+      return await fetchImpl(path.startsWith("https://") ? path : `${BASE}${path}`, { ...init, signal: controller.signal,
         headers: { Authorization: auth, Accept: "application/json", ...(init.body ? { "Content-Type": "application/json" } : {}) } });
     } finally { clearTimeout(timer); }
   };
@@ -71,7 +120,54 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
     };
   };
 
-  const find = async (reference: string): Promise<ProviderLabel | null | "unknown"> => {
+  const parcelLabel = (parcel: ParcelV2Json): ProviderLabel | null => {
+    if (!parcel.id || !parcel.tracking_number || !parcel.carrier?.code) return null;
+    const link = parcel.label?.label_printer ?? parcel.label?.normal_printer?.[0] ?? null;
+    return {
+      provider: "sendcloud", labelId: String(parcel.id), carrier: parcel.carrier.code, tracking: parcel.tracking_number,
+      chargedTtcCents: null,
+      status: parcel.status?.id !== undefined ? { code: String(parcel.status.id), message: parcel.status.message ?? "" } : null,
+      pdf: async () => {
+        if (!link || !link.startsWith("https://")) throw new Error("label_link_missing");
+        const response = await fetchImpl(link, { headers: { Authorization: auth } });
+        if (!response.ok) throw new Error(`label_download_${response.status}`);
+        return new Uint8Array(await response.arrayBuffer());
+      },
+    };
+  };
+
+  /** Colis par identifiant (API v2) : `null` seulement sur un 404 franc. */
+  const readParcel = async (labelId: string): Promise<ProviderLabel | null | "unknown"> => {
+    try {
+      const response = await call(`${BASE_V2}/parcels/${encodeURIComponent(labelId)}`);
+      if (response.status === 404) return null;
+      if (!response.ok) return "unknown";
+      return parcelLabel(((await response.json()) as { parcel?: ParcelV2Json }).parcel ?? {}) ?? "unknown";
+    } catch { return "unknown"; }
+  };
+
+  const createReturn = async (request: LabelRequest): Promise<CreateOutcome> => {
+    let response: Response;
+    try {
+      response = await call("/returns/announce-synchronously", { method: "POST", body: JSON.stringify(returnAnnounceBody(request)) });
+    } catch { return { kind: "ambiguous", code: "network_or_timeout" }; }
+    if (response.status === 400 || response.status === 422) return { kind: "rejected", code: `return_http_${response.status}` };
+    if (response.status === 401 || response.status === 403 || response.status === 429) return { kind: "not_created", code: `return_http_${response.status}` };
+    if (!response.ok) return { kind: "ambiguous", code: `return_http_${response.status}` };
+    let parcelId: string;
+    try {
+      const body = (await response.json()) as { parcel_id?: number | string };
+      if (body.parcel_id === undefined || body.parcel_id === null) return { kind: "ambiguous", code: "return_incomplete_response" };
+      parcelId = String(body.parcel_id);
+    } catch { return { kind: "ambiguous", code: "return_unreadable_response" }; }
+    // Le retour existe : une lecture du colis qui échoue reste ambiguë, jamais un refus (pas de second achat).
+    const label = await readParcel(parcelId);
+    return label && label !== "unknown" ? { kind: "created", label } : { kind: "ambiguous", code: "return_parcel_unreadable" };
+  };
+
+  const find = async (reference: string, hint?: { shippingOptionCode?: string }): Promise<ProviderLabel | null | "unknown"> => {
+    // Un retour ne se recherche pas par référence : ne jamais conclure à son absence.
+    if (hint?.shippingOptionCode && isReturnOptionCode(hint.shippingOptionCode)) return "unknown";
     try {
       const response = await call(`/shipments?external_reference_id=${encodeURIComponent(reference)}`);
       if (!response.ok) return "unknown";
@@ -85,6 +181,7 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
   return {
     name: "sendcloud",
     async create(request): Promise<CreateOutcome> {
+      if (isReturnOptionCode(request.shippingOptionCode)) return createReturn(request);
       let response: Response;
       try {
         response = await call("/shipments/announce", { method: "POST", body: JSON.stringify(announceBody(request)) });
@@ -100,6 +197,7 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
       return { kind: "ambiguous", code: `http_${response.status}` };
     },
     findByReference: find,
+    findByLabelId: readParcel,
     async cancel(reference): Promise<CancelOutcome> {
       let shipmentId: string | undefined;
       try {
@@ -149,7 +247,9 @@ interface OptionJson {
 export async function fetchSendcloudShippingOptions(
   options: { publicKey: string; secretKey: string; fetchImpl?: Fetch; timeoutMs?: number },
   query: { fromCountry: string; fromPostalCode: string; toCountry: string; toPostalCode: string;
-    weightGrams: number; dimensionsMm: [number, number, number] },
+    weightGrams: number; dimensionsMm: [number, number, number];
+    /** Méthodes « Retour » seulement : Sendcloud ne les renvoie que sur demande explicite. */
+    returns?: boolean },
 ): Promise<ShippingOptionView[] | "unavailable"> {
   if (!options.publicKey || !options.secretKey) return "unavailable";
   const fetchImpl = options.fetchImpl ?? fetch;
@@ -166,6 +266,7 @@ export async function fetchSendcloudShippingOptions(
         calculate_quotes: true,
         parcels: [{ weight: { value: String(query.weightGrams), unit: "g" },
           dimensions: { length: String(length), width: String(width), height: String(height), unit: "mm" } }],
+        ...(query.returns ? { functionalities: { returns: true } } : {}),
       }),
     });
     if (!response.ok) return "unavailable";

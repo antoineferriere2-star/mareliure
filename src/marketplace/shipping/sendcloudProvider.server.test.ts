@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { announceBody, createSendcloudProvider } from "./sendcloudProvider.server";
+import { announceBody, createSendcloudProvider, isReturnOptionCode, returnAnnounceBody } from "./sendcloudProvider.server";
 import type { LabelRequest } from "./labelProvider";
 
 // Réponses HTTP simulées selon la documentation publique v3 ; aucun appel réseau réel.
@@ -93,5 +93,59 @@ describe("méthodes disponibles (shipping-options)", () => {
     const q = { fromCountry: "FR", fromPostalCode: "75011", toCountry: "FR", toPostalCode: "69002", weightGrams: 480, dimensionsMm: [340, 240, 60] as [number, number, number] };
     expect(await fetchSendcloudShippingOptions({ publicKey: "", secretKey: "" }, q)).toBe("unavailable");
     expect(await fetchSendcloudShippingOptions({ publicKey: "p", secretKey: "s", fetchImpl: (async () => new Response("", { status: 401 })) as unknown as typeof fetch }, q)).toBe("unavailable");
+  });
+});
+
+describe("méthodes « Retour » (API des retours)", () => {
+  const ret: LabelRequest = { ...req, shippingOptionCode: "chronopost:2shopretour/return,dropoff",
+    from: { ...req.from, addressLine1: "705 route du Montclair", phone: "06 71 22 31 71" } };
+  const parcelV2 = { parcel: { id: 77, tracking_number: "XR77", carrier: { code: "chronopost" }, status: { id: 1000, message: "Ready to send" },
+    label: { label_printer: "https://panel.sendcloud.sc/api/v2/labels/label_printer/77" } } };
+
+  it("reconnaît une méthode Retour à son code, et seulement elle", () => {
+    expect(isReturnOptionCode("chronopost:2shopretour/return,dropoff")).toBe(true);
+    expect(isReturnOptionCode("colissimo:home/fr,return")).toBe(true);
+    expect(isReturnOptionCode("mondial_relay:home_domestic,dualapi/c2c")).toBe(false);
+    expect(isReturnOptionCode("chronopost:shop2shop")).toBe(false);
+    expect(isReturnOptionCode("qa:returnless/home")).toBe(false);
+  });
+
+  it("annonce par /returns/announce-synchronously au format des retours, puis relit le colis en v2", async () => {
+    const calls: { url: string; init?: RequestInit }[] = [];
+    const result = await provider([ok(201, { return_id: 9, parcel_id: 77 }), ok(200, parcelV2)], calls).create(ret);
+    expect(calls[0].url).toBe("https://panel.sendcloud.sc/api/v3/returns/announce-synchronously");
+    expect(JSON.parse(String(calls[0].init?.body))).toMatchObject({
+      ship_with: { type: "shipping_option_code", shipping_option_code: "chronopost:2shopretour/return,dropoff" },
+      from_address: { address_line_1: "route du Montclair", house_number: "705", phone_number: "+33671223171" },
+      weight: { value: 500, unit: "g" }, dimensions: { length: 350, width: 250, height: 80, unit: "mm" },
+      external_reference: "job-1", send_tracking_emails: false });
+    expect(calls[1].url).toBe("https://panel.sendcloud.sc/api/v2/parcels/77");
+    expect(result).toMatchObject({ kind: "created", label: { labelId: "77", carrier: "chronopost", tracking: "XR77", status: { code: "1000" } } });
+  });
+
+  it("retour créé mais colis illisible : ambigu, jamais un refus qui permettrait un second achat", async () => {
+    expect(await provider([ok(201, { return_id: 9, parcel_id: 77 }), ok(500, {})]).create(ret)).toMatchObject({ kind: "ambiguous" });
+    expect(await provider([ok(201, {})]).create(ret)).toMatchObject({ kind: "ambiguous" });
+    expect(await provider([ok(400, { error: {} })]).create(ret)).toMatchObject({ kind: "rejected" });
+    expect(await provider([new Error("timeout")]).create(ret)).toMatchObject({ kind: "ambiguous" });
+  });
+
+  it("ne conclut jamais à l'absence d'un retour cherché par référence", async () => {
+    const calls: { url: string }[] = [];
+    expect(await provider([], calls).findByReference("job-1", { shippingOptionCode: ret.shippingOptionCode })).toBe("unknown");
+    expect(calls).toHaveLength(0);
+  });
+
+  it("relit un colis par identifiant : présent, absent (404) ou illisible", async () => {
+    const p = (r: Response) => provider([r]).findByLabelId!("77");
+    expect(await p(ok(200, parcelV2))).toMatchObject({ labelId: "77" });
+    expect(await p(ok(404, {}))).toBeNull();
+    expect(await p(ok(500, {}))).toBe("unknown");
+  });
+
+  it("garde l'adresse telle quelle sans numéro en tête", () => {
+    expect(returnAnnounceBody({ ...ret, from: { ...ret.from, addressLine1: "Lieu-dit Le Bourg" } }).from_address)
+      .toMatchObject({ address_line_1: "Lieu-dit Le Bourg" });
+    expect(returnAnnounceBody({ ...ret, from: { ...ret.from, addressLine1: "Lieu-dit Le Bourg" } }).from_address).not.toHaveProperty("house_number");
   });
 });

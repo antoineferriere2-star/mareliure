@@ -12,7 +12,7 @@ import type { Supa } from "@/build/services/adminAuth.server";
 import { effectiveReturnAddress, logisticsErrorCode, planFromRow, type PostalAddress } from "@/marketplace/shipping/logisticsPlan";
 import { purchaseLeg, type LegResult } from "@/marketplace/shipping/labelOrchestrator";
 import type { LabelDirection, LabelProvider, LabelRequest, PostalParty } from "@/marketplace/shipping/labelProvider";
-import { createSendcloudProvider, fetchSendcloudShippingOptions, type ShippingOptionView } from "@/marketplace/shipping/sendcloudProvider.server";
+import { createSendcloudProvider, fetchSendcloudShippingOptions, isReturnOptionCode, type ShippingOptionView } from "@/marketplace/shipping/sendcloudProvider.server";
 import { supabaseLabelStore } from "@/marketplace/shipping/roundTripLabelStore.server";
 import { LogisticsError, automationState } from "./caseLogistics.server";
 import { loadAcceptedCommercialProposal } from "./commercialProposalRepository.server";
@@ -55,7 +55,9 @@ export async function recordRateApproval(sb: Supa, actor: string, caseId: string
   if (!plan.contact || !back || !plan.parcel || !plan.workshop) throw new LogisticsError("logistics_plan_required");
   // Le code saisi doit sortir du devis réel de ce dossier : l'achat n'envoie aucun point relais.
   const live = await liveShippingOptions(plan);
-  if (!isPurchasableMethod(live.outbound, input.outboundOptionCode) || !isPurchasableMethod(live.return, input.returnOptionCode))
+  // Le retour vers le client part de l'atelier : jamais une méthode « Retour ».
+  if (!isPurchasableMethod(live.outbound, input.outboundOptionCode) || !isPurchasableMethod(live.return, input.returnOptionCode)
+    || isReturnOptionCode(input.returnOptionCode))
     throw new LogisticsError("rate_method_unavailable");
   const dims = (p: { lengthMm: number; widthMm: number; heightMm: number }) => [p.lengthMm, p.widthMm, p.heightMm].sort((a, b) => b - a);
   const returnParcel = plan.returnReady?.parcel ?? plan.parcel;
@@ -138,12 +140,17 @@ async function liveShippingOptions(plan: Awaited<ReturnType<typeof loadPlanRow>>
   if (!plan.contact || !back || !reception || !plan.parcel) throw new LogisticsError("logistics_plan_required");
   const dims = (p: { lengthMm: number; widthMm: number; heightMm: number }): [number, number, number] => [p.lengthMm, p.widthMm, p.heightMm];
   const returnParcel = plan.returnReady?.parcel ?? plan.parcel;
-  const [outbound, back2] = await Promise.all([
-    fetchSendcloudShippingOptions({ publicKey, secretKey }, { fromCountry: plan.contact.countryCode, fromPostalCode: plan.contact.postalCode,
-      toCountry: reception.countryCode, toPostalCode: reception.postalCode, weightGrams: plan.parcel.weightGrams, dimensionsMm: dims(plan.parcel) }),
+  const toWorkshop = { fromCountry: plan.contact.countryCode, fromPostalCode: plan.contact.postalCode,
+    toCountry: reception.countryCode, toPostalCode: reception.postalCode, weightGrams: plan.parcel.weightGrams, dimensionsMm: dims(plan.parcel) };
+  // L'aller vers l'atelier admet aussi les méthodes « Retour » (dépôt client, livraison à l'atelier) ;
+  // le retour vers le client reste un envoi ordinaire.
+  const [outbound, outboundReturns, back2] = await Promise.all([
+    fetchSendcloudShippingOptions({ publicKey, secretKey }, toWorkshop),
+    fetchSendcloudShippingOptions({ publicKey, secretKey }, { ...toWorkshop, returns: true }),
     fetchSendcloudShippingOptions({ publicKey, secretKey }, { fromCountry: reception.countryCode, fromPostalCode: reception.postalCode,
       toCountry: back.countryCode, toPostalCode: back.postalCode, weightGrams: returnParcel.weightGrams, dimensionsMm: dims(returnParcel) }),
   ]);
   if (outbound === "unavailable" || back2 === "unavailable") throw new LogisticsError("provider_unavailable", 503);
-  return { outbound, return: back2 };
+  const extra = outboundReturns === "unavailable" ? [] : outboundReturns.filter((o) => !outbound.some((x) => x.code === o.code));
+  return { outbound: [...outbound, ...extra], return: back2 };
 }
