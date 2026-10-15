@@ -54,15 +54,13 @@ describe("sitemapFor", () => {
     const { baseUrl, entries } = sitemapFor("www.finebindery.com");
     expect(baseUrl).toBe("https://finebindery.com");
     expect(entries.map((e) => e.path)).toEqual([
-      "/en", "/en/professionals",
-      "/fr", "/fr/professionals",
-      "/de", "/de/professionals",
-      "/it", "/it/professionals",
-      "/es", "/es/professionals",
-      "/legal-notice",
-      "/privacy-policy",
-      "/terms-of-use",
-      "/terms-of-sale",
+      ...["en", "fr", "de", "it", "es"].flatMap((locale) => [
+        `/${locale}`,
+        `/${locale}/professionals`,
+        ...["legal-notice", "privacy-policy", "terms-of-use", "terms-of-sale"].map(
+          (slug) => `/${locale}/${slug}`,
+        ),
+      ]),
     ]);
   });
 
@@ -88,6 +86,8 @@ describe("la date de construction", () => {
   it("est injectée par Vite et reconnue par le contrôle de format du plan du site", () => {
     const source = readFileSync(join(process.cwd(), "src/routes/sitemap[.]xml.ts"), "utf8");
     expect(source).toContain(String.raw`/^\d{4}-\d{2}-\d{2}$/.test(BUILD_DATE)`);
-    expect(readFileSync(join(process.cwd(), "vite.config.ts"), "utf8")).toContain('"import.meta.env.VITE_BUILD_DATE"');
+    expect(readFileSync(join(process.cwd(), "vite.config.ts"), "utf8")).toContain(
+      '"import.meta.env.VITE_BUILD_DATE"',
+    );
   });
 });

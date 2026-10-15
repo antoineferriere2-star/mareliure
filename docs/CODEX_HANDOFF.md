@@ -3596,3 +3596,13 @@ Publié depuis le bloc précédent, sur accord explicite du propriétaire :
 Données : « h » et « ok » marqués `is_demo=true` le 8 octobre au soir sur accord explicite (journal privé `oppe-model-operation/demo-mark-h-ok-20261008.log`) ; seul atelier réel compté : Reliure Ferrière. PR #50 et #38 fermées, branches supprimées (récupérables via `pull/50/head`, `pull/38/head`).
 
 En cours (PR de ce bloc) : un admin atterrit sur `/admin` après connexion au lieu de l'ancien back-office ; liens croisés pilotage ↔ back-office ; filtres d'étape de la liste Dossiers avec leur nombre, étapes vides masquées. Transport automatique Sendcloud toujours fermé.
+
+## Latest handoff
+
+Codex — 15 octobre 2026, branche indépendante `feat/finebindery-legal-locales`, base origin/main fb32fe1. **Traduction à relire par un juriste avant publication.** Quatre documents Fine Bindery traduits FR/DE/IT/ES depuis les textes anglais existants, sans révision juridique ; réserves de revue et absence de médiateur conservées. Identité, contact, prestataires et délai du récapitulatif partagés via legalEntity. Date juridique d’origine conservée, pas de validation juridique prétendue.
+
+Vingt routes `/{locale}/{document}`, en-têtes via fineBinderyLocalizedHead, lang régional existant de la racine, canonical et hreflang réciproques. Anciens liens anglais redirigés en 301 vers /en, pied de page, liens internes et sélecteur dans la langue active ; sitemap avec vingt documents. Gabarit légal existant. Détails : `docs/FINE_BINDERY_LEGAL_TRANSLATIONS_20261015.md`.
+
+Validation locale : 46 tests ciblés réussis ; suite complète 308 fichiers / 3773 assertions réussies, mais processus terminé en échec à cause d’une erreur interne `[vitest-worker]: Timeout calling onTaskUpdate` sous charge. Ce lancement n’est pas présenté comme entièrement vert ; CI distante à consulter. TypeScript réussi après génération des routes ; lint zéro erreur et 19 avertissements historiques ; build Ma Reliure réussi avec vérification des références Supabase publiques et absence du motif tslib/CommonJS interdit. Aucun test navigateur des vingt routes revendiqué. Nombre de sections/paragraphes, identité/chiffres/réserves et métadonnées vérifiés par rendu React statique. Journaux privés hors Git dans D:/CodexProjects/outputs/mareliure-legal-*.
+
+Aucun contrat accepté modifié, aucun transport/configuration changé, aucune écriture production, fusion ou déploiement. La relecture juridique est une condition de publication, pas une revue effectuée par Codex.
