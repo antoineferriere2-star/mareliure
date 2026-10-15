@@ -6,6 +6,11 @@ import { recordRateApproval, type RateApprovalInput } from "./roundTripAutomatio
 vi.mock("@/marketplace/shipping/sendcloudProvider.server", async (importOriginal) => ({
   isReturnOptionCode: (await importOriginal<typeof import("@/marketplace/shipping/sendcloudProvider.server")>()).isReturnOptionCode,
   fetchSendcloudShippingOptions: vi.fn(), createSendcloudProvider: vi.fn() }));
+const flags = vi.hoisted(() => ({ returns: true }));
+vi.mock("@/marketplace/config", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/marketplace/config")>()),
+  get SENDCLOUD_RETURN_METHODS_ENABLED() { return flags.returns; },
+}));
 vi.mock("./commercialProposalRepository.server", () => ({ loadAcceptedCommercialProposal: vi.fn() }));
 
 const option = (code: string, overrides: Partial<ShippingOptionView> = {}): ShippingOptionView => ({
@@ -41,7 +46,7 @@ beforeEach(() => {
   vi.stubEnv("SENDCLOUD_PUBLIC_KEY", "test-only"); vi.stubEnv("SENDCLOUD_SECRET_KEY", "test-only");
   vi.mocked(loadAcceptedCommercialProposal).mockResolvedValue({ id: "fixture-proposal", shippingOfferKind: "book_round_trip_fr" } as never);
 });
-afterEach(() => { vi.unstubAllEnvs(); vi.resetAllMocks(); });
+afterEach(() => { vi.unstubAllEnvs(); vi.resetAllMocks(); flags.returns = true; });
 
 type Quote = ShippingOptionView[] | "unavailable";
 /** Devis simulés par trajet : vers l'atelier (69002), méthodes Retour sur demande, puis retour client. */
@@ -102,5 +107,15 @@ describe("enregistrement du tarif contre les deux devis fournisseur", () => {
     await expect(recordRateApproval(c.sb as never, "fixture-actor", "fixture-case", { ...input, returnOptionCode: retour }))
       .rejects.toMatchObject({ code: "rate_method_unavailable" });
     expect(c.insert).not.toHaveBeenCalled();
+  });
+  it("interrupteur fermé : aucune méthode Retour interrogée ni acceptée pour l'aller", async () => {
+    flags.returns = false;
+    const retour = "chrono:2shopretour/return,dropoff";
+    quotes([option("outbound-home"), option(retour, { returns: true })], [option("return-home")], [option(retour, { returns: true })]);
+    const c = client();
+    await expect(recordRateApproval(c.sb as never, "fixture-actor", "fixture-case", { ...input, outboundOptionCode: retour }))
+      .rejects.toMatchObject({ code: "rate_method_unavailable" });
+    expect(c.insert).not.toHaveBeenCalled();
+    expect(vi.mocked(fetchSendcloudShippingOptions).mock.calls.some(([, q]) => q.returns)).toBe(false);
   });
 });

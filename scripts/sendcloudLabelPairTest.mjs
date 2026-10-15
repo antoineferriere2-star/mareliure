@@ -73,15 +73,15 @@ async function options(from, to, extra = {}) {
 const cheapest = (list) => list.filter((o) => o.price !== null && o.currency === "EUR" && !o.servicePoint)
   .sort((a, b) => Number(a.price) - Number(b.price))[0];
 
-// Les méthodes Retour ne sortent que si on les demande explicitement.
-const outOpts = await options(OPPE, ATELIER, { functionalities: { returns: true } });
-console.log("Méthodes de retour proposées (aller) :", outOpts.map((o) => `${o.code} ${o.price ?? "—"} relais=${o.servicePoint}`));
-const outbound = cheapest(outOpts.filter((o) => /chronopost/i.test(o.code) && o.returns));
+// Aller ordinaire, comme le site le 15/10 : Mondial Relay domicile (dépôt en relais, livraison à l'atelier).
+// Les méthodes « Retour » (Chrono 2Shop Retour) sont refusées par Sendcloud sur ce compte (14 et 15/10).
+const outOpts = await options(OPPE, ATELIER);
+const outbound = cheapest(outOpts.filter((o) => /mondial/i.test(o.code) && !o.returns));
 const backOpts = await options(ATELIER, OPPE);
 const back = cheapest(backOpts.filter((o) => /mondial/i.test(o.code) && !o.returns));
 if (!outbound || !back) {
   console.log("Méthode introuvable au devis : rien n'est acheté.");
-  console.log("Aller (2Shop Retour) :", outOpts.filter((o) => /chrono|2shop/i.test(o.code)).map((o) => `${o.code} ${o.price ?? "—"} retour=${o.returns} relais=${o.servicePoint}`));
+  console.log("Aller (Mondial Relay) :", outOpts.filter((o) => /mondial/i.test(o.code)).map((o) => `${o.code} ${o.price ?? "—"} retour=${o.returns} relais=${o.servicePoint}`));
   console.log("Retour (Mondial Relay) :", backOpts.filter((o) => /mondial/i.test(o.code)).map((o) => `${o.code} ${o.price ?? "—"} relais=${o.servicePoint}`));
   process.exit(1);
 }
@@ -95,7 +95,7 @@ console.log("\nRécapitulatif (colis 500 g, 35×25×8 cm, aucun dépôt prévu) 
 for (const l of legs) console.log(` ${l.direction.padEnd(6)} ${l.from.postal_code} → ${l.to.postal_code}  ${l.option.name} (${l.option.code})  ${l.option.price} € HT`);
 console.log(` Total ≈ ${(Number(outbound.price) + Number(back.price)).toFixed(2)} € HT, débité par Sendcloud sur le moyen de paiement du compte.`);
 const go = await ask("\nTapez ACHETER pour acheter ces deux étiquettes (autre chose = abandon) : ", false);
-if (go !== "ACHETER") { console.log("Abandon : rien n'est acheté."); process.exit(0); }
+if (go.toUpperCase() !== "ACHETER") { console.log("Abandon : rien n'est acheté."); process.exit(0); }
 
 // ---------- Achat, un trajet après l'autre ----------
 mkdirSync(OUT, { recursive: true });
