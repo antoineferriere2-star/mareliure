@@ -330,11 +330,22 @@ export async function automationState(sb: Supa) {
   };
 }
 
+/** Dernier tarif revu du dossier (versions immuables, la plus récente fait foi) et son échéance. */
+async function currentRate(sb: Supa, caseId: string) {
+  const { data, error } = await raw(sb).from("marketplace_round_trip_rate_approvals")
+    .select("outbound_method,return_method,outbound_cost_ttc_cents,return_cost_ttc_cents,valid_until,reviewed_at")
+    .eq("case_id", caseId).order("reviewed_at", { ascending: false }).limit(1).maybeSingle();
+  if (error || !data) return null;
+  const r = data as { outbound_method: string; return_method: string; outbound_cost_ttc_cents: number; return_cost_ttc_cents: number; valid_until: string; reviewed_at: string };
+  return { outboundMethod: r.outbound_method, returnMethod: r.return_method, outboundCostTtcCents: r.outbound_cost_ttc_cents,
+    returnCostTtcCents: r.return_cost_ttc_cents, validUntil: r.valid_until, reviewedAt: r.reviewed_at, expired: new Date(r.valid_until) <= new Date() };
+}
+
 export async function operatorLogistics(sb: Supa, caseId: string) {
   const context = await loadCaseContext(sb, caseId);
   if (!context) refuse("not_found", 404);
-  const [plan, money, jobs, automation] = await Promise.all([
-    loadPlan(sb, caseId), commerce(sb, caseId), loadJobs(sb, caseId), automationState(sb)]);
+  const [plan, money, jobs, automation, rate] = await Promise.all([
+    loadPlan(sb, caseId), commerce(sb, caseId), loadJobs(sb, caseId), automationState(sb), currentRate(sb, caseId)]);
   const events = await loadEvents(sb, jobs.map((j) => j.id));
   const journal = await journalKinds(sb, caseId, context!.selectedBinderId);
   return {
@@ -348,6 +359,7 @@ export async function operatorLogistics(sb: Supa, caseId: string) {
     })),
     journal,
     automation,
+    rate,
   };
 }
 export type OperatorLogisticsView = Awaited<ReturnType<typeof operatorLogistics>>;

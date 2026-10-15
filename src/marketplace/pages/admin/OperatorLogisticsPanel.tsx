@@ -43,6 +43,11 @@ const ERRORS: Record<string, string> = {
   label_reference_duplicate: "Cette référence d'achat est déjà enregistrée sur une autre étiquette : vérifiez la saisie (référence ou numéro de suivi).",
   provider_unavailable: "Enregistrement non confirmé (stockage ou base indisponible). Réessayez : aucune étiquette n'est dupliquée.",
   accepted_workshop_required: "Aucun atelier retenu ayant accepté l'offre.",
+  current_rate_approval_required: "Aucun tarif en vigueur pour ce dossier (absent ou échu) : enregistrez un nouveau tarif revu ci-dessous.",
+  address_changed_review_required: "Une adresse a changé depuis le tarif : enregistrez un nouveau tarif revu.",
+  parcel_changed_rate_review_required: "Le colis de ce trajet (poids ou dimensions) n'est pas celui du tarif : enregistrez un nouveau tarif avec les mesures actuelles.",
+  return_parcel_review_required: "Le colis retour dépasse le plafond du forfait (500 g, 35 × 25 × 8 cm) : traitement manuel.",
+  reservation_conflict: "Une étiquette existe déjà pour une autre proposition ou un autre paiement : vérifiez le journal.",
   rate_method_unavailable: "Code de méthode absent du devis Sendcloud actuel de ce dossier, sans prix en EUR, ou exigeant un point relais : choisissez une méthode achetable de la liste.",
 };
 const errorText = (e: unknown) => {
@@ -256,6 +261,13 @@ function Automation({ view, caseId }: { view: OperatorLogisticsView; caseId: str
       </summary>
       <p className="mt-2 text-xs text-muted-foreground">Fermé : seul le traitement manuel achète des étiquettes. Fermer est immédiat et toujours possible ; ouvrir exige les cinq preuves, tracées.</p>
       {a.providerConfigured && view.plan?.mode === "organized_round_trip" && <ShippingOptions caseId={caseId} />}
+      {view.rate && (
+        <p className={`mt-2 text-xs ${view.rate.expired ? "text-amber-700" : "text-muted-foreground"}`}>
+          Tarif en vigueur : aller <code>{view.rate.outboundMethod}</code> ({formatEuros(view.rate.outboundCostTtcCents)}), retour <code>{view.rate.returnMethod}</code> ({formatEuros(view.rate.returnCostTtcCents)}) ·
+          {view.rate.expired ? " échu le " : " valable jusqu'au "}{new Date(view.rate.validUntil).toLocaleDateString("fr-FR")}
+          {view.rate.expired ? " : enregistrez un nouveau tarif avant tout nouvel achat (un achat déjà commencé se reprend)." : "."}
+        </p>
+      )}
       {a.enabled && view.offerKind === "book_round_trip_fr" && view.accepted && <RateApprovalForm caseId={caseId} />}
       {a.enabled ? (
         <Button size="sm" variant="destructive" className="mt-2" disabled={mutation.isPending} onClick={() => mutation.mutate(false)}>Fermer l'achat automatique</Button>

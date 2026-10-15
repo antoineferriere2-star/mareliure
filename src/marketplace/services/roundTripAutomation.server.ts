@@ -104,8 +104,12 @@ export async function purchaseAutomatically(sb: Supa, caseId: string, direction:
   // Seule une réservation automatique en attente se reprend ; un échec ou une annulation passe par l'opérateur.
   if (outcome.outcome === "review_required" && !(outcome.fulfilment === "automatic" && ["claimed", "ambiguous"].includes(outcome.status ?? "")))
     return { state: "review_required", code: `job_${outcome.status}` };
+  // Tarifs versionnés : la méthode est celle du tarif attaché à la réservation, pas la dernière revue.
+  const { data: job, error: jobError } = await raw(sb).from("marketplace_round_trip_label_jobs")
+    .select("rate_approval_id").eq("id", outcome.id).maybeSingle();
+  if (jobError || !job?.rate_approval_id) throw new LogisticsError("provider_unavailable", 503);
   const { data: rate, error: rateError } = await raw(sb).from("marketplace_round_trip_rate_approvals")
-    .select("outbound_method,return_method").eq("case_id", caseId).maybeSingle();
+    .select("outbound_method,return_method").eq("id", job.rate_approval_id).maybeSingle();
   if (rateError || !rate) throw new LogisticsError("provider_unavailable", 503);
   const parcel = direction === "outbound" ? plan.parcel : plan.returnReady!.parcel;
   const request = async (): Promise<LabelRequest> => ({
