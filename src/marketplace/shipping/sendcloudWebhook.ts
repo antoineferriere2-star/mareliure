@@ -29,6 +29,8 @@ export interface WebhookDeps {
   store: LabelJobStore;
   /** Réservation correspondant à un colis du fournisseur, ou `null` (colis étranger au circuit). */
   jobByProviderLabel(labelId: string): Promise<{ id: string } | null>;
+  /** Prévenir l'équipe qu'une étiquette vient de devenir inutilisable (jamais bloquant). */
+  onLabelUnusable?(jobId: string, code: string): Promise<unknown>;
 }
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -57,6 +59,7 @@ export async function handleSendcloudWebhook(request: Request, deps: WebhookDeps
   if (isUnusableProviderStatus(current.status) && (await deps.store.job(job.id))?.status === "confirmed") {
     await deps.store.transition(job.id, "cancelled", { provider: deps.provider.name, reference: parcelId,
       source: "provider_status", code: current.status?.code ?? "unknown" });
+    await deps.onLabelUnusable?.(job.id, current.status?.code ?? "unknown");
   }
   return json(200, { ok: true });
 }

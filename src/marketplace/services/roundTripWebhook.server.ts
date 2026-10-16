@@ -4,6 +4,7 @@ import { admin } from "@/build/services/adminAuth.server";
 import { handleSendcloudWebhook } from "@/marketplace/shipping/sendcloudWebhook";
 import { supabaseLabelStore } from "@/marketplace/shipping/roundTripLabelStore.server";
 import { providerFromEnv } from "./roundTripAutomation.server";
+import { alertRoundTripLabelUnusable } from "@/marketplace/notifications/adminEventAlerts.server";
 
 export async function handleRoundTripWebhookRequest(request: Request): Promise<Response> {
   const secret = process.env.SENDCLOUD_WEBHOOK_SECRET;
@@ -20,5 +21,6 @@ export async function handleRoundTripWebhookRequest(request: Request): Promise<R
       if (error) throw new Error("label_job_unreadable");
       return data ? { id: data.id as string } : null;
     },
+    onLabelUnusable: (jobId, code) => alertRoundTripLabelUnusable(sb, jobId, code),
   });
 }

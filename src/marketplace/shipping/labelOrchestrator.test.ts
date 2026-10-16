@@ -238,6 +238,20 @@ describe("webhook Sendcloud", () => {
     expect(refunded.rows[0].r).toBeNull();
     expect((await deliver(provider, body)).status).toBe(200);
   });
+  it("prévient l'équipe une seule fois quand l'étiquette devient inutilisable", async () => {
+    const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
+    await purchaseLeg(provider, store(), job, request);
+    provider.status = { code: "ANNOUNCEMENT_FAILED", message: "" };
+    const alerts: string[] = [];
+    const body = JSON.stringify({ action: "parcel_status_changed", timestamp: 6, parcel: { id: provider.labels.get(job)!.labelId } });
+    const send = async () => (await handleSendcloudWebhook(new Request("https://qa.invalid/webhook", { method: "POST", body, headers: { "Sendcloud-Signature": await sign(body) } }), {
+      secret, provider, store: store(), onLabelUnusable: async (id, code) => { alerts.push(`${id}:${code}`); },
+      jobByProviderLabel: async (labelId) => (await db.query<{ id: string }>("SELECT id FROM marketplace_round_trip_label_jobs WHERE provider_label_id=$1", [labelId])).rows[0] ?? null,
+    })).status;
+    expect(await send()).toBe(200);
+    expect(await send()).toBe(200);
+    expect(alerts).toEqual([`${job}:ANNOUNCEMENT_FAILED`]);
+  });
 });
 
 describe("résolution opérateur d'une réservation ambiguë (audit P1-2)", () => {
