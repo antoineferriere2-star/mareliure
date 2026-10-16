@@ -1,0 +1,2126 @@
+[
+  {
+    "file": "src/marketplace/brand/resolveRequestBrand.server.ts",
+    "name": "getRequestMarketplaceBrand",
+    "line": 29,
+    "auth": false,
+    "guards": [],
+    "source_sha256": "2b7776ec135d597173c6da2a3f52dc7e20e763df2d4e8633dcf4edd80b0e4f4b"
+  },
+  {
+    "file": "src/marketplace/i18n/resolveFineBinderyLocale.server.ts",
+    "name": "getRequestFineBinderyLocale",
+    "line": 10,
+    "auth": false,
+    "guards": [],
+    "source_sha256": "fbeff9e4e2cc6df3a72b991d1f1b5e7b03ba4ba706c5c0c6a35353469b73bbfa"
+  },
+  {
+    "file": "src/marketplace/services/adminDashboard.data.functions.ts",
+    "name": "getAdminDashboard",
+    "line": 12,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "return await readAdminDashboard(sb, context.userId, data, {"
+    ],
+    "source_sha256": "77c58897205d80690c0f942f805a8bebf6a262d1d19861ed00e917659310f860"
+  },
+  {
+    "file": "src/marketplace/services/adminDashboard.data.functions.ts",
+    "name": "sendTeamAlertTest",
+    "line": 29,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "6fd7c49357e49d5cfc4121657af7270a1f538a33af6ad155b5b75f98967c6690"
+  },
+  {
+    "file": "src/marketplace/services/adminWorkspace.data.functions.ts",
+    "name": "listAdminWorkshopSummaries",
+    "line": 13,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "sb.from(\"marketplace_case_matches\").select(\"binder_id, case_id, state, invited_at\"),",
+      "sb.from(\"marketplace_binder_works\").select(\"binder_id, source, updated_at\"),",
+      "sb.from(\"marketplace_binder_quotes\").select(\"binder_id, status, updated_at\"),",
+      "sb.from(\"marketplace_binder_invoices\").select(\"binder_id, created_at\"),",
+      "sb.from(\"marketplace_binder_skills\").select(\"binder_id, skill_slug\"),",
+      "sb.from(\"marketplace_binder_portfolio\").select(\"binder_id, is_published\"),",
+      "raw.from(\"marketplace_binder_subscriptions\").select(\"binder_id, status, legacy_free, cancel_at_period_end\"),",
+      "raw.from(\"marketplace_workshop_connect_consents\").select(\"binder_id\"),",
+      "const consentIds = new Set((consents.data ?? []).map((row) => row.binder_id as string));",
+      "const bm = (matches.data ?? []).filter((m) => m.binder_id === binder.id);",
+      "const bw = (works.data ?? []).filter((w) => w.binder_id === binder.id);",
+      "const bq = (quotes.data ?? []).filter((q) => q.binder_id === binder.id);",
+      "const bi = (invoices.data ?? []).filter((i) => i.binder_id === binder.id);",
+      "subscription: ((subscriptions.data ?? []).find((row) => row.binder_id === binder.id) as WorkshopOnboardingInput[\"subscription\"] | undefined) ?? null,",
+      "specialties: (skills.data ?? []).filter((row) => row.binder_id === binder.id).map((row) => row.skill_slug),",
+      "portfolioCount: (portfolio.data ?? []).filter((row) => row.binder_id === binder.id && row.is_published).length,"
+    ],
+    "source_sha256": "0e6c23b175873f122d4fd9a2a62236c895cd4b646a7c7f3f2257c56275829462"
+  },
+  {
+    "file": "src/marketplace/services/adminWorkspace.data.functions.ts",
+    "name": "getAdminWorkshopDetail",
+    "line": 68,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "sb.from(\"marketplace_case_matches\").select(\"case_id, state, invited_at\").eq(\"binder_id\", data.binderId),",
+      "sb.from(\"marketplace_binder_works\").select(\"id, case_id, source, title, reference, updated_at\").eq(\"binder_id\", data.binderId),",
+      "sb.from(\"marketplace_binder_quotes\").select(\"id, work_id, quote_number, status, total_ttc_cents, created_at\").eq(\"binder_id\", data.binderId),",
+      "sb.from(\"marketplace_binder_invoices\").select(\"id, quote_id, invoice_number, payment_status, created_at\").eq(\"binder_id\", data.binderId),",
+      "sb.from(\"marketplace_binder_services\").select(\"id\").eq(\"binder_id\", data.binderId),",
+      "sb.from(\"marketplace_events\").select(\"id, case_id, event_type, created_at\").eq(\"binder_id\", data.binderId).order(\"created_at\", { ascending: false }).limit(30),",
+      "sb.from(\"marketplace_binder_skills\").select(\"skill_slug\").eq(\"binder_id\", data.binderId),",
+      "sb.from(\"marketplace_binder_portfolio\").select(\"id, is_published\").eq(\"binder_id\", data.binderId),"
+    ],
+    "source_sha256": "18f17414a96234be6dec36a3d933455669014caa232101bb5e07df9a9231e3af"
+  },
+  {
+    "file": "src/marketplace/services/adminWorkspace.data.functions.ts",
+    "name": "listAdminConversationPreviews",
+    "line": 116,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "sb.from(\"marketplace_case_matches\").select(\"case_id, binder_id\").in(\"case_id\", ids).eq(\"state\", \"selected\"),",
+      "const binderIds = [...new Set((matches.data ?? []).map((row) => row.binder_id))];",
+      "const binderId = (matches.data ?? []).find((match) => match.case_id === row.id)?.binder_id;"
+    ],
+    "source_sha256": "ec69d116e5552c288d91483b42c45f88f2063180280f953aeabcd291a909ec2b"
+  },
+  {
+    "file": "src/marketplace/services/binderApplications.data.functions.ts",
+    "name": "submitBinderApplication",
+    "line": 49,
+    "auth": false,
+    "guards": [],
+    "source_sha256": "9ac37cf9aa3b32d4a42e7ab034ad3976e5b63e4e7d91ecb0eda551a2e0f2ca8c"
+  },
+  {
+    "file": "src/marketplace/services/binderApplications.data.functions.ts",
+    "name": "listBinderApplications",
+    "line": 94,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "c4c2d27f447d44c9461e6aae98cb752de377f3e9183c7132f8cfbb4c940881d5"
+  },
+  {
+    "file": "src/marketplace/services/binderApplications.data.functions.ts",
+    "name": "markBinderApplicationStatus",
+    "line": 107,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "reviewed_by: context.userId,"
+    ],
+    "source_sha256": "9d39d31e8e50956ac56e5b2807957fe7383f1eda808e3924974d1fd879b386a5"
+  },
+  {
+    "file": "src/marketplace/services/binderCaseWorkspace.data.functions.ts",
+    "name": "ensureMyCaseWork",
+    "line": 20,
+    "auth": true,
+    "guards": [
+      "const binderId = await requireLeadApprovedBinderId(sb, context.userId);",
+      "const ownClient = !!caseContext && commercialOriginOf(caseContext.row.acquisition_origin) === \"workshop_client\" && caseContext.row.referred_binder_id === binderId && caseContext.invitedBinderIds.includes(binderId);",
+      "p_binder_id: binderId,",
+      "...(ownClient ? { p_actor: context.userId } : {}),"
+    ],
+    "source_sha256": "91b276bfb2d0ee3123e6a992070336b498f0d59074f90da7e9e64c25925374b0"
+  },
+  {
+    "file": "src/marketplace/services/binderConversations.data.functions.ts",
+    "name": "listMyConversationPreviews",
+    "line": 11,
+    "auth": true,
+    "guards": [
+      "const binderId = await requireLeadApprovedBinderId(sb, context.userId);",
+      ".select(\"case_id\").eq(\"binder_id\", binderId).eq(\"state\", \"selected\");",
+      ".select(\"id, brand, acquisition_origin, referred_binder_id\").in(\"id\", ids);",
+      "const ownedCases = (cases ?? []).filter(row => commercialOriginOf(row.acquisition_origin) === \"oppe\" || row.referred_binder_id === binderId);",
+      "const ownedIds = ownedCases.map(row => row.id);",
+      "if (!ownedIds.length) return [];",
+      "const audiences = new Map(ownedCases.map((row) => {",
+      ".in(\"case_id\", ownedIds).order(\"created_at\", { ascending: false }).limit(1000);",
+      "return ownedIds.map((caseId) => ({ caseId, latest: latest.get(caseId) ?? null }));"
+    ],
+    "source_sha256": "f5f3edd649ccb0f57f0a5d425da046118fe97152bf919c27c385753844c1e350"
+  },
+  {
+    "file": "src/marketplace/services/binderPricingCatalog.data.functions.ts",
+    "name": "getMyPricingCatalog",
+    "line": 52,
+    "auth": true,
+    "guards": [
+      ".handler(({ context }) => run(context.userId, (binderId, sb) => listBinderPricingCatalog(sb, binderId)))"
+    ],
+    "source_sha256": "62dc3647727f1ea004127540e3d3bee16a8f1e088f82f24b5f6d6f398b384819"
+  },
+  {
+    "file": "src/marketplace/services/binderPricingCatalog.data.functions.ts",
+    "name": "saveMyPriceOverride",
+    "line": 56,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => saveBinderPriceOverride(sb, binderId, data)),"
+    ],
+    "source_sha256": "b1376013cef387e2a68456b88221fe8383adc8e39e920af9c7f5db42641b08cb"
+  },
+  {
+    "file": "src/marketplace/services/binderPricingCatalog.data.functions.ts",
+    "name": "setMyBasePriceFavorite",
+    "line": 71,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => setBinderPriceFavorite(sb, binderId, data)),"
+    ],
+    "source_sha256": "885853806574c983c7eee2392a8829ae200f9edebcc67ce1232285039894fdb2"
+  },
+  {
+    "file": "src/marketplace/services/binderPricingCatalog.data.functions.ts",
+    "name": "bulkAdjustMyPrices",
+    "line": 80,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => bulkAdjustBinderPrices(sb, binderId, data)),"
+    ],
+    "source_sha256": "ce16330af2759526666f4d845e0352e7ab4074e1996a47d3be0f7635abce6517"
+  },
+  {
+    "file": "src/marketplace/services/binderPricingCatalog.data.functions.ts",
+    "name": "resetMyPrices",
+    "line": 96,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => resetBinderPrices(sb, binderId, data.pricingKeys)),"
+    ],
+    "source_sha256": "7520683424dc0428b4af16f88366376e1b066170c0b5b0f5b2fc93716a66210b"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getBillingProfile",
+    "line": 109,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => loadBillingProfile(sb, binderId)),"
+    ],
+    "source_sha256": "14a0503876f30a094e82abbfdfd1a42f2d7c7fbafc0129c57b469e2103a82690"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "saveMyBillingProfile",
+    "line": 115,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => saveBillingProfile(sb, binderId, data)),"
+    ],
+    "source_sha256": "9870c50f13204247003e1a8b19cebba8bbc37643c73e97f34714b88e191e288c"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "uploadMyDocumentLogo",
+    "line": 129,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => uploadDocumentLogo(sb, binderId, data)),"
+    ],
+    "source_sha256": "e1d54e1a9788f6b787260fced4b90dddd5e31dc0040cb5f52703d256756c4fdd"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "clearMyDocumentLogo",
+    "line": 136,
+    "auth": true,
+    "guards": [
+      ".handler(({ context }) => run(context.userId, (binderId, sb) => clearDocumentLogo(sb, binderId)))"
+    ],
+    "source_sha256": "c088f7c51ec93c0abd1fb744633b902ea4b4f8cec497c9fff5612c0d9d1f998e"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyCatalog",
+    "line": 140,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) =>"
+    ],
+    "source_sha256": "3209e6b7e3dfb035afa53a2b2f0ec9fa58c398b3ec90a6e370c51de31950011c"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyBasePriceServices",
+    "line": 159,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) =>"
+    ],
+    "source_sha256": "f539765e9ad0dd98640b36e503b31ecff76af5653a1e61ac560c9871a50a531c"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "saveMyCategory",
+    "line": 174,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => saveCategory(sb, binderId, data)),"
+    ],
+    "source_sha256": "357955c30c60c159dfb8ccb48445d3c915b4e4aa53a9b8c916c49ee72385a642"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "saveMyService",
+    "line": 181,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => saveService(sb, binderId, data)),"
+    ],
+    "source_sha256": "3de4ac82863505109d57387d419f1e6e2832e9297c251db40d4916aa83828fcf"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "archiveMyService",
+    "line": 188,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {"
+    ],
+    "source_sha256": "8d0a163fb3d9b4ec1364ac5e848280f5ed6b5c822528d8eee39f625e5f820920"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyClients",
+    "line": 198,
+    "auth": true,
+    "guards": [
+      ".handler(({ context }) => run(context.userId, (binderId, sb) => listClients(sb, binderId)))"
+    ],
+    "source_sha256": "8a73040025b53f698472538045b1bf34e4a7fe2a6bd1554773b04b87b3315f44"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "saveMyClient",
+    "line": 202,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => saveClient(sb, binderId, data)),"
+    ],
+    "source_sha256": "6387859c4bdc710704438616d66ece4c8b32c891fe1f98e057cb1e9008bb95a3"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyQuotes",
+    "line": 211,
+    "auth": true,
+    "guards": [
+      ".handler(({ context }) => run(context.userId, (binderId, sb) => listQuotes(sb, binderId)))"
+    ],
+    "source_sha256": "f032c6e152c96fac23c36bbbd0d3722a04320049a06fc97963ea25274b819eb2"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyRecentServiceIds",
+    "line": 216,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {",
+      ".eq(\"binder_id\", binderId)",
+      ".eq(\"binder_id\", binderId)"
+    ],
+    "source_sha256": "e352f88e95a9905df58b349d681960aa861f4adb182c4baf0f5665a9c43126a1"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyQuote",
+    "line": 254,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => getQuote(sb, binderId, data.id)),"
+    ],
+    "source_sha256": "915fb6668abb6badd45d839699762020fd5dbfa204aa2459868320f2cad45d24"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "createMyQuote",
+    "line": 261,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {"
+    ],
+    "source_sha256": "bf8be76ed4c882f580ae4dfe2b2bb3ee56d1872ebd5ca6039bb6bc0ae1f5e0f6"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "updateMyQuote",
+    "line": 272,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => updateQuote(sb, binderId, data.id, data.quote)),"
+    ],
+    "source_sha256": "a093ceb1784a02def3c3e18a665847d5bef38c08685f6b169e6d2906dc87dfb5"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "uploadMyQuoteItemPhoto",
+    "line": 293,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => uploadQuoteItemPhoto(sb, binderId, data)),"
+    ],
+    "source_sha256": "58400b9c1ded6e4dda33910522c87daac1f62caf72426636a059f9c02b0c03a9"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyOperationPhotos",
+    "line": 307,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => listOperationPhotos(sb, binderId)),"
+    ],
+    "source_sha256": "83bf5ca21b1233aea36f31fe9d185912a1b2c46b67501c5db4cb88988f91af74"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "uploadMyOperationPhoto",
+    "line": 313,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => uploadOperationPhoto(sb, binderId, data)),"
+    ],
+    "source_sha256": "770ad659e64dadc499e03a23044c95814ad157ec7b431c8a2de09013f3b03a90"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "updateMyOperationPhoto",
+    "line": 330,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {"
+    ],
+    "source_sha256": "42590bf9fcfddc16b288b6e08fcf8244c187536d9f8b6f90204d20df64052052"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "deleteMyOperationPhoto",
+    "line": 345,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {"
+    ],
+    "source_sha256": "19f76794ea729106e3b048ae0d9a9d290ec77a40bbde5c87cd26c5fe92ccb56b"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "attachMyOperationPhoto",
+    "line": 356,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => attachOperationPhotoToQuoteItem(sb, binderId, data)),"
+    ],
+    "source_sha256": "0bf0cfe46f107dc1f169d6bf423dcf32c10db532bb3620b8b26c7f1d2cec67e5"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "deleteMyQuoteItemPhoto",
+    "line": 374,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {"
+    ],
+    "source_sha256": "20d5b3770b8044a7bfc37c347f5b74e78531fde5ac3151db2df16d753963e00c"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "duplicateMyQuote",
+    "line": 385,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {"
+    ],
+    "source_sha256": "cf4e3304627a9055f826ae0ffb6f949fd1f33334b98215af42459138344c5a97"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "setMyQuoteStatus",
+    "line": 394,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => setQuoteStatus(sb, binderId, data.id, data.status)),"
+    ],
+    "source_sha256": "1bdf2ab5bdf81e44733440428201ec9ae7d89afcc70248ba6c65fe0defd0c367"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "convertMyQuoteToInvoice",
+    "line": 405,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) =>"
+    ],
+    "source_sha256": "359591576056f7447d442834dfd581281c804dd36fd5233007649d8a2f84f855"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyInvoices",
+    "line": 414,
+    "auth": true,
+    "guards": [
+      ".handler(({ context }) => run(context.userId, (binderId, sb) => listInvoices(sb, binderId)))"
+    ],
+    "source_sha256": "ebc474467740eae0d8f9a0e68b3ca3da030260383ea01fd437a74f0a0e510275"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyInvoice",
+    "line": 418,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => getInvoice(sb, binderId, data.id)),"
+    ],
+    "source_sha256": "6d9fdf42d224e0da5da84c76f14e72398c2a7037476eb11fa3e931053dda7bef"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "updateMyInvoiceDraft",
+    "line": 425,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => updateInvoiceDraft(sb, binderId, data.id, data.draft)),"
+    ],
+    "source_sha256": "c09d59781e45d80fba0bbb62c62bbc93dc3ffabf730e628a24942972bf3fd2a5"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "issueMyInvoice",
+    "line": 434,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => issueInvoice(sb, binderId, data.id)),"
+    ],
+    "source_sha256": "8d755142fe1e87c2cafa9e8e8d78a64b99cd01875600cb381d3b56e0e6ced98f"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "createMyFullCreditNote",
+    "line": 441,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) =>"
+    ],
+    "source_sha256": "b5796a7e1dbee518b006b1125dd1cce29e88438baab3eb0c203a8fe821f7edf3"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "createMyPartialCreditNote",
+    "line": 455,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {",
+      "p_binder_id: binderId,"
+    ],
+    "source_sha256": "9fd7ee69b2b20d2500a1b9bc4e80be3a382a55db92fc9f7acd9ea5a24d6c0432"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyQuotePdf",
+    "line": 497,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {"
+    ],
+    "source_sha256": "a2d7ada8cbab3ac95c31b8f048b50376bc84ff5092353710281f7d622804e6f1"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyInvoicePdf",
+    "line": 508,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {"
+    ],
+    "source_sha256": "308a5b7c3cc1268da61f5fa28e90ecce20dfb2900eca92d7e2295b6a41b03501"
+  },
+  {
+    "file": "src/marketplace/services/binderQuotes.data.functions.ts",
+    "name": "getMyCreditNotePdf",
+    "line": 520,
+    "auth": true,
+    "guards": [
+      "run(context.userId, async (binderId, sb) => {"
+    ],
+    "source_sha256": "20d3b56ca330675e3f459cadd359bfa11a3b708ad0cfa23467b2c38fa95958dd"
+  },
+  {
+    "file": "src/marketplace/services/binderReferenceCatalog.data.functions.ts",
+    "name": "addMyReferenceService",
+    "line": 37,
+    "auth": true,
+    "guards": [
+      ".handler(({ context, data }) => run(context.userId, (binderId, sb) => addReferenceService(sb, binderId, data)))"
+    ],
+    "source_sha256": "8986cb5de43527e68e61862f72d6c64bace2a798e75d3f67229cc2e598d4a575"
+  },
+  {
+    "file": "src/marketplace/services/binderReferenceCatalog.data.functions.ts",
+    "name": "setMyServiceFavorite",
+    "line": 42,
+    "auth": true,
+    "guards": [
+      ".handler(({ context, data }) => run(context.userId, (binderId, sb) => setServiceFavorite(sb, binderId, data)))"
+    ],
+    "source_sha256": "4dc6aaf6f51db57344b18fae9cdcaae5f2b202b9857123a682d4f754e23cabfb"
+  },
+  {
+    "file": "src/marketplace/services/binderWorks.data.functions.ts",
+    "name": "getMyContacts",
+    "line": 59,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => listContacts(sb, binderId, { includeArchived: data.includeArchived })),"
+    ],
+    "source_sha256": "31b27c54825e52392f619d4f426b126def40a1fc2f86f55a22aaf56e1a6e1751"
+  },
+  {
+    "file": "src/marketplace/services/binderWorks.data.functions.ts",
+    "name": "getMyContact",
+    "line": 66,
+    "auth": true,
+    "guards": [
+      ".handler(({ context, data }) => run(context.userId, (binderId, sb) => getContact(sb, binderId, data.id)))"
+    ],
+    "source_sha256": "d093a013b8d5c14ae67636c546f6a7fe40b81453b44d942c09371126e4336615"
+  },
+  {
+    "file": "src/marketplace/services/binderWorks.data.functions.ts",
+    "name": "saveMyContact",
+    "line": 71,
+    "auth": true,
+    "guards": [
+      ".handler(({ context, data }) => run(context.userId, (binderId, sb) => saveContact(sb, binderId, data)))"
+    ],
+    "source_sha256": "6e4e09b3e1b749dc3b881d654e9510e14192668746af2a61b9638189b2ac524f"
+  },
+  {
+    "file": "src/marketplace/services/binderWorks.data.functions.ts",
+    "name": "setMyContactArchived",
+    "line": 76,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => setContactArchived(sb, binderId, data.id, data.archived)),"
+    ],
+    "source_sha256": "7172f1108f9c249049ee9d37eccfd3b7435092d87680f6a40fd29aab95eed9d5"
+  },
+  {
+    "file": "src/marketplace/services/binderWorks.data.functions.ts",
+    "name": "getMyWorks",
+    "line": 85,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) =>"
+    ],
+    "source_sha256": "4223c2e8a9f47abb88c102f23f3960d538ef353484d6c8ee7e738fd34cb6d8ba"
+  },
+  {
+    "file": "src/marketplace/services/binderWorks.data.functions.ts",
+    "name": "getMyWork",
+    "line": 94,
+    "auth": true,
+    "guards": [
+      ".handler(({ context, data }) => run(context.userId, (binderId, sb) => getWork(sb, binderId, data.id)))"
+    ],
+    "source_sha256": "33f2d9e20a497ce572db533cb8d81bc6f689a4d158044fcc115ccb90f19cd162"
+  },
+  {
+    "file": "src/marketplace/services/binderWorks.data.functions.ts",
+    "name": "saveMyWork",
+    "line": 99,
+    "auth": true,
+    "guards": [
+      ".handler(({ context, data }) => run(context.userId, (binderId, sb) => saveWork(sb, binderId, data)))"
+    ],
+    "source_sha256": "df552e00af7589b67d44e36a1c3d1e4a2e95dbe5a0a8efcafc4c2aff16c10c44"
+  },
+  {
+    "file": "src/marketplace/services/binderWorks.data.functions.ts",
+    "name": "setMyWorkArchived",
+    "line": 104,
+    "auth": true,
+    "guards": [
+      "run(context.userId, (binderId, sb) => setWorkArchived(sb, binderId, data.id, data.archived)),"
+    ],
+    "source_sha256": "e76f894675dc536cb7379c7d822b76804d7a2947e5836f382b0683de25395f16"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "getMyCaseLogistics",
+    "line": 34,
+    "auth": true,
+    "guards": [
+      ".handler(async ({ context, data }) => guarded(async () => customerLogistics(await admin(), context.userId, data.caseId)))"
+    ],
+    "source_sha256": "55513f441d6d987e6d635b2e2aaa33b510ee8a23c5c999e3fc21f9a766df6db3"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "saveMyCaseLogistics",
+    "line": 39,
+    "auth": true,
+    "guards": [
+      "await saveCustomerPlan(await admin(), context.userId, data.caseId, data.plan);"
+    ],
+    "source_sha256": "bd6ee0e2db7e789829db19e3e45e78f925c386868b8956e4c2d3c6eef0e24bf2"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "confirmMyReturnAddress",
+    "line": 52,
+    "auth": true,
+    "guards": [
+      "await confirmCustomerReturnAddress(await admin(), context.userId, data.caseId);"
+    ],
+    "source_sha256": "076308bb0a6d74ce34d1966b4541f49f6a1156f4a064f0e13c5306e522099c73"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "getMyOutboundLabel",
+    "line": 60,
+    "auth": true,
+    "guards": [
+      "guarded(async () => labelUrl(await admin(), { role: \"customer\", userId: context.userId }, data.caseId, \"outbound\")))"
+    ],
+    "source_sha256": "5a6aac64ab1f27568f8064905f3063d5d62e4de564ad68998a238dd25b5174f8"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "getWorkshopCaseLogistics",
+    "line": 67,
+    "auth": true,
+    "guards": [
+      ".handler(async ({ context, data }) => guarded(async () => workshopLogistics(await admin(), context.userId, data.caseId)))"
+    ],
+    "source_sha256": "833bf99c8ca831ad2df4a2f44118c835364bf6f7229da34d7e99608675fff3ad"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "decideCaseReception",
+    "line": 72,
+    "auth": true,
+    "guards": [
+      "await decideWorkshopReception(await admin(), context.userId, data.caseId, { decision: data.decision, reception: data.reception });"
+    ],
+    "source_sha256": "1d9aaf6e25297531ee1cb072ce642cae210974fa017ca059e8f4197f5cfa6609"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "declareCaseReturnReady",
+    "line": 87,
+    "auth": true,
+    "guards": [
+      ".handler(async ({ context, data }) => guarded(async () => declareReturnReady(await admin(), context.userId, data.caseId, data.parcel)))"
+    ],
+    "source_sha256": "b76c52fc077684a595388c576689225f63d76b95334ab4bbf1a2cafdefc11782"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "getWorkshopReturnLabel",
+    "line": 97,
+    "auth": true,
+    "guards": [
+      "guarded(async () => labelUrl(await admin(), { role: \"workshop\", userId: context.userId }, data.caseId, \"return\")))"
+    ],
+    "source_sha256": "3e5539829b963ad6901ede49cd7e0248dd24ac52c17e6898ea262a90b8f48e84"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "getOperatorCaseLogistics",
+    "line": 104,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "bb82e7ac6f99684c134545ac65edd629376f65b2b0280a3ab7c1cad9dff8b30b"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "getOperatorLabel",
+    "line": 112,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "8153b19fb604e827f3b84f516e3dc2ed2db3a0844a0d56eb185a16ca3659d9a4"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "recordManualLabel",
+    "line": 121,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "return guarded(async () => operatorConfirmManual(await admin(), context.userId, data.caseId, data.direction,"
+    ],
+    "source_sha256": "ba9526984d6edf67f6c3fcb48576dc5a85d5ef1e4d24504fa6590dfeea2d2da6"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "recordLabelEvent",
+    "line": 145,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "await operatorRecordJobEvent(await admin(), context.userId, data.caseId, data.jobId, data.kind, data);"
+    ],
+    "source_sha256": "1a48b1039523db0a5117469652e63cfcd8585066a8183352180533f0d0cea7b7"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "setRoundTripAutomation",
+    "line": 163,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "await operatorSetAutomation(await admin(), context.userId, data.enabled, data.evidence);"
+    ],
+    "source_sha256": "b4da5bb6f96541ccff136f8c38671a0a495da7de83ed9686af4783ce1c87c208"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "recordRoundTripRateApproval",
+    "line": 177,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "await recordRateApproval(await admin(), context.userId, data.caseId, data);"
+    ],
+    "source_sha256": "c4b6234493ff8c5fb7bdca7811464de9b190630df6b701bef45224694a719e3e"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "purchaseRoundTripLabel",
+    "line": 200,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "d93e8fd5344a401f5be9de6ce6fbd5281538179af253ce92c08600c2d2b85b10"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "getRoundTripShippingOptions",
+    "line": 208,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "06b1834bf88b24adffa3d8b7b68962c4807d1932024f3fc19d2d1e8e4643ebc8"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "adoptRoundTripLabel",
+    "line": 217,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "16fccf7dd663323b29ed1e6845e2dd1b85366a713480ac90d3e2a176deda56a0"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "declareRoundTripLabelAbsent",
+    "line": 226,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "return guarded(async () => operatorDeclareLabelAbsent(await admin(), context.userId, data.caseId, data.jobId, data.evidence));"
+    ],
+    "source_sha256": "9b0b589419c8e4c448d4f8febcae83581f2cd47c91407f66ea1524bacf18efcb"
+  },
+  {
+    "file": "src/marketplace/services/caseLogistics.data.functions.ts",
+    "name": "cancelRoundTripLabel",
+    "line": 235,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "0a1c345143a947132fa16a9b7a2d8f6af75bfe76e17d42b7a98fdc0a04c64fda"
+  },
+  {
+    "file": "src/marketplace/services/commercialProposal.data.functions.ts",
+    "name": "createCommercialProposal",
+    "line": 319,
+    "auth": true,
+    "guards": [],
+    "source_sha256": "e439a150f1184475aeb18539481453b0aaf41446ef066b1fa35ea4c2c35bb97b"
+  },
+  {
+    "file": "src/marketplace/services/commercialProposal.data.functions.ts",
+    "name": "listCaseCommercialProposals",
+    "line": 324,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "f6b8944224e877d712daf7e37c4e1fd8d47ae69839b4dc930ece71e6b03f598c"
+  },
+  {
+    "file": "src/marketplace/services/commercialProposal.data.functions.ts",
+    "name": "getAcceptedCommercialProposal",
+    "line": 337,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "08e68e77d02d3cd7e87f46092fc09a2ec85b2941fbeed74d5546a1e977e1e575"
+  },
+  {
+    "file": "src/marketplace/services/commercialProposal.data.functions.ts",
+    "name": "validateCommercialProposalTax",
+    "line": 370,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "validatedBy: context.userId,",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "f7ffd325e9210d68294094ae65c545afa2f1c6bcf91d648656dcb4aeb3f26718"
+  },
+  {
+    "file": "src/marketplace/services/commercialProposal.data.functions.ts",
+    "name": "validateOppeProposalTax",
+    "line": 541,
+    "auth": true,
+    "guards": [],
+    "source_sha256": "32f0613dd6529a05a3e337e30baafd58f287d64847c06ce098a66fa7ed77f19c"
+  },
+  {
+    "file": "src/marketplace/services/commercialProposal.data.functions.ts",
+    "name": "applyAutomaticFranceTaxPolicy",
+    "line": 628,
+    "auth": true,
+    "guards": [],
+    "source_sha256": "15dd7a8f8b891534ddefd754e8b292cd7589ace17f79a253a714f6ed6b27283c"
+  },
+  {
+    "file": "src/marketplace/services/commercialProposal.data.functions.ts",
+    "name": "resetProposalTaxToManualReview",
+    "line": 639,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "30254f7c512adb4a06db9a30735c1a8ee18f5eec693f8c5216d946786157a058"
+  },
+  {
+    "file": "src/marketplace/services/commercialProposal.data.functions.ts",
+    "name": "getPaymentPreflight",
+    "line": 666,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "9118bbea558e4fdc23bbe544189db03bacffa8a7bbfbbb8a9d25be737205da2c"
+  },
+  {
+    "file": "src/marketplace/services/customerProposalAcceptance.data.functions.ts",
+    "name": "acceptMyProposal",
+    "line": 29,
+    "auth": true,
+    "guards": [
+      "userId: context.userId,"
+    ],
+    "source_sha256": "f8f8f794399f24e56a1727d6f344be04e8da37aef95eeb6ef87ba6ae1dc41425"
+  },
+  {
+    "file": "src/marketplace/services/decisions.data.functions.ts",
+    "name": "listCaseDecisions",
+    "line": 91,
+    "auth": true,
+    "guards": [
+      "const viewer = await resolveViewer(context.supabase, sb, context.userId);",
+      "// Same access as the case itself (permissions.ts' canViewCase would also"
+    ],
+    "source_sha256": "2e80c65ac505ac393fa6a1b07fbeea61d08661284c61817614b7b5c398429f55"
+  },
+  {
+    "file": "src/marketplace/services/decisions.data.functions.ts",
+    "name": "requestCaseDecision",
+    "line": 121,
+    "auth": true,
+    "guards": [
+      "const viewer = await resolveViewer(context.supabase, sb, context.userId);",
+      "requested_by: context.userId,",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "1837f3718724daa44d31953d51dea9014f191cd12484bc77aca71f39071f5a52"
+  },
+  {
+    "file": "src/marketplace/services/decisions.data.functions.ts",
+    "name": "answerCaseDecision",
+    "line": 168,
+    "auth": true,
+    "guards": [
+      "const viewer = await resolveViewer(context.supabase, sb, context.userId);",
+      "answered_by: context.userId,",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "7c58d26d2ebf935676c5c0b6064c93ae61fb08af533d87c9a1606a21439791b6"
+  },
+  {
+    "file": "src/marketplace/services/decisions.data.functions.ts",
+    "name": "cancelCaseDecision",
+    "line": 227,
+    "auth": true,
+    "guards": [
+      "const viewer = await resolveViewer(context.supabase, sb, context.userId);"
+    ],
+    "source_sha256": "6dcdaf5cdfb343134503a4e3545c6597d9cab0fa6938badcb4d0cdfa387f2708"
+  },
+  {
+    "file": "src/marketplace/services/decisions.data.functions.ts",
+    "name": "reviseCaseDecision",
+    "line": 258,
+    "auth": true,
+    "guards": [
+      "const viewer = await resolveViewer(context.supabase, sb, context.userId);",
+      "requested_by: context.userId,",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "26fed64a3e77d9511bde1c88426780366d42aad7dca3ef0f4eada043adbf116e"
+  },
+  {
+    "file": "src/marketplace/services/externalSettlement.data.functions.ts",
+    "name": "getOwnContract",
+    "line": 40,
+    "auth": true,
+    "guards": [
+      "const { sb, binderId } = await scope(context.userId);",
+      "const result = await sb.rpc(\"marketplace_own_contract\", { p_quote: data.id, p_binder: binderId, p_actor: context.userId });"
+    ],
+    "source_sha256": "f62a625821f13ffce8c5fbe16eac4a049ddc7e5a81b7dd9f4fbeb6a053b3605e"
+  },
+  {
+    "file": "src/marketplace/services/externalSettlement.data.functions.ts",
+    "name": "acceptOwnQuote",
+    "line": 47,
+    "auth": true,
+    "guards": [
+      "const { sb, binderId } = await scope(context.userId);",
+      "const result = await sb.rpc(\"marketplace_accept_own_quote\", { p_quote: data.id, p_binder: binderId, p_actor: context.userId, p_evidence: data.evidence, p_revision: data.revision });"
+    ],
+    "source_sha256": "70e945fe27c118f63293301d9e52be0a568bc28a44b29cd244cffb82bcbe461e"
+  },
+  {
+    "file": "src/marketplace/services/externalSettlement.data.functions.ts",
+    "name": "getAgreementIdentity",
+    "line": 55,
+    "auth": true,
+    "guards": [
+      "const { sb, binderId } = await scope(context.userId);",
+      "const result = await sb.rpc(\"marketplace_own_agreement_identity\", { p_quote: data.id, p_binder: binderId, p_actor: context.userId });"
+    ],
+    "source_sha256": "eb922e99bd71fc462bfe0d48fc084ff58a4149a61564e2d4c4e8f4ad858aaa8b"
+  },
+  {
+    "file": "src/marketplace/services/externalSettlement.data.functions.ts",
+    "name": "completeAgreementIdentity",
+    "line": 66,
+    "auth": true,
+    "guards": [
+      "const { sb, binderId } = await scope(context.userId);",
+      "const result = await sb.rpc(\"marketplace_complete_own_agreement_identity\", { p_quote: data.id, p_binder: binderId, p_actor: context.userId, p_attestation: data.attestation });"
+    ],
+    "source_sha256": "bc3fe95a54c434e8fb598a487cc37c7452b539eddc1db8efae85e01bde176fce"
+  },
+  {
+    "file": "src/marketplace/services/externalSettlement.data.functions.ts",
+    "name": "getExternalSettlements",
+    "line": 73,
+    "auth": true,
+    "guards": [
+      "const { sb, binderId } = await scope(context.userId);",
+      "const result = await sb.rpc(\"marketplace_external_settlement_state\", { p_invoice: data.id, p_binder: binderId, p_actor: context.userId });"
+    ],
+    "source_sha256": "df4e62038803b3e2d0824698aec16186ec2e7def2ab119249f3c429fd1a5747d"
+  },
+  {
+    "file": "src/marketplace/services/externalSettlement.data.functions.ts",
+    "name": "recordExternalSettlement",
+    "line": 80,
+    "auth": true,
+    "guards": [
+      "const { sb, binderId } = await scope(context.userId);",
+      "p_binder: binderId, p_actor: context.userId, p_kind: data.kind, p_amount: data.amountCents, p_evidence: data.evidence });"
+    ],
+    "source_sha256": "11913f4868726149a9fea315ffb9b99a23c017cbc7dfd979d9a973fa7fd684a7"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "getMyFineBinderyProfile",
+    "line": 165,
+    "auth": true,
+    "guards": [
+      "return projectProfile(sb, await myBinder(sb, context.userId));"
+    ],
+    "source_sha256": "195b18b28973e6d3e97452f0140db8d07f07f11e9705624499e13a72e0e26829"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "saveMyFineBinderyProfile",
+    "line": 172,
+    "auth": true,
+    "guards": [
+      "const binder = await myBinder(sb, context.userId);",
+      ".eq(\"binder_id\", binder.id).in(\"skill_slug\", removed);",
+      "const result = await sb.from(\"marketplace_binder_skills\").insert(added.map((skill) => ({ binder_id: binder.id, skill_slug: skill })));",
+      "return projectProfile(sb, await myBinder(sb, context.userId));"
+    ],
+    "source_sha256": "b71293ac755afb274a9d22e1391a78405734d9fdd28a58899e02a79c34fee629"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "setMyFineBinderyProfilePublication",
+    "line": 215,
+    "auth": true,
+    "guards": [
+      "let binder = await myBinder(sb, context.userId);",
+      "binder = await myBinder(sb, context.userId);"
+    ],
+    "source_sha256": "c49717960fa0fcdff9b9f2ff910de1f4c6323b7ddbb4fd152edbb801194c6c8f"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "uploadMyFineBinderyProfileImage",
+    "line": 252,
+    "auth": true,
+    "guards": [
+      "const binder = await myBinder(sb, context.userId);",
+      "return projectProfile(sb, await myBinder(sb, context.userId));"
+    ],
+    "source_sha256": "2e95977bbfc2369a83c3009636fd457aa160d12ff4c22f7f83fc3290a466dcfe"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "createMyFineBinderyPortfolioItem",
+    "line": 275,
+    "auth": true,
+    "guards": [
+      "const binder = await myBinder(sb, context.userId);",
+      ".eq(\"id\", data.sourceWorkId).eq(\"binder_id\", binder.id).maybeSingle();",
+      ".eq(\"binder_id\", binder.id).order(\"position\", { ascending: false }).limit(1).maybeSingle();",
+      "binder_id: binder.id,"
+    ],
+    "source_sha256": "e597159ce2e3063f9cf9589e6ee0fbb0032c0a8b5831f5be886f81c04f8f8005"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "saveMyFineBinderyPortfolioItem",
+    "line": 301,
+    "auth": true,
+    "guards": [
+      "const binder = await myBinder(sb, context.userId);",
+      ".select(\"id, before_photo_path, after_photo_path\").eq(\"id\", data.id).eq(\"binder_id\", binder.id).maybeSingle();",
+      "}).eq(\"id\", data.id).eq(\"binder_id\", binder.id);",
+      "return projectProfile(sb, await myBinder(sb, context.userId));"
+    ],
+    "source_sha256": "51a180188a13c2cd72cfd59b2ce5b633a26b1f734954e794ea7403070529faf2"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "uploadMyFineBinderyPortfolioPhoto",
+    "line": 334,
+    "auth": true,
+    "guards": [
+      "const binder = await myBinder(sb, context.userId);",
+      ".select(\"id, before_photo_path, after_photo_path\").eq(\"id\", data.id).eq(\"binder_id\", binder.id).maybeSingle();",
+      ".eq(\"id\", data.id).eq(\"binder_id\", binder.id);",
+      "return projectProfile(sb, await myBinder(sb, context.userId));"
+    ],
+    "source_sha256": "525d5bf693f21880b5d14966b8ce4f77f201f92f4724b0185a5616f617e96258"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "deleteMyFineBinderyPortfolioItem",
+    "line": 363,
+    "auth": true,
+    "guards": [
+      "const binder = await myBinder(sb, context.userId);",
+      ".select(\"id, before_photo_path, after_photo_path\").eq(\"id\", data.id).eq(\"binder_id\", binder.id).maybeSingle();",
+      "const { error } = await sb.from(\"marketplace_binder_portfolio\").delete().eq(\"id\", data.id).eq(\"binder_id\", binder.id);"
+    ],
+    "source_sha256": "d12fcf3e1918b767ea0fbc4f1b8a4b2a5803064b2782b3385293be89df3e628b"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "listPublicFineBinderyProfiles",
+    "line": 389,
+    "auth": false,
+    "guards": [],
+    "source_sha256": "bccb8e48e8da8f59e7f1b65b0ca2754a3e3affd7af8589a70cbfce9524581480"
+  },
+  {
+    "file": "src/marketplace/services/fineBinderyProfile.data.functions.ts",
+    "name": "getPublicFineBinderyProfile",
+    "line": 410,
+    "auth": false,
+    "guards": [],
+    "source_sha256": "ad713e069d51b6a488110d2f34499c92c8f3722d117c49936042cfe1e1681e76"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "listMarketplaceCases",
+    "line": 225,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "context.userId,"
+    ],
+    "source_sha256": "e3516c75446161b4ad1c4a49f8595a4844551e07f2a3682bfeccef370d679cf9"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "getMarketplaceCase",
+    "line": 291,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "\"binder_id, state, match_score, binder_payout_cents, currency, offered_at, expires_at, accepted_at, declined_at, selected_at, responded_at, decline_reason_code, decline_reason_detail\",",
+      "const offer = (offers ?? []).find((candidate) => candidate.binder_id === match.binder_id);"
+    ],
+    "source_sha256": "5d82093b6249c557e3ee0fef09ec9cd3286e8bd6b1083cc3e43b58752fb2f6e8"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "clearCaseManualReview",
+    "line": 409,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "204dadbc405f6407538c4239c8f4c5219452999134e16e260ae7f441db626b0c"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "closeCaseWithoutFollowUp",
+    "line": 431,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "const outcome = await closeCase((await admin()) as unknown as SupabaseClient, context.userId, data.caseId, data.reason);"
+    ],
+    "source_sha256": "865c848e9f9bcd1cbe2c311754ac5f3554b1345960501fa918e1770d1d168a51"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "generateMarketplacePricing",
+    "line": 441,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "4d9ecee7b02e63f46ccdbde25d982463f7461e526ca230edb7aa5f8b3ffcf0a8"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "saveMarketplacePricing",
+    "line": 582,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "50af59dff59c51e74d7638024c71179e2db0ed66435bfef8ac6a6d32c26cbd66"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "validateMarketplacePricing",
+    "line": 673,
+    "auth": true,
+    "guards": [],
+    "source_sha256": "ec61018cdff26d24ab52119d8b88d3064b7299e1045513fcb75a09ccd7d34ec8"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "sendCaseToBinders",
+    "line": 678,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "referredBinderId: caseContext.row.referred_binder_id,",
+      "binder_id: binderId,",
+      "binder_id: binderId,",
+      "binder_id: binderId,",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "7b31f0a5f757cd04c293036fdc1c89d4dfba4f625a0b9c97df06a10a70009336"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "selectBinderOffer",
+    "line": 853,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "p_binder_id: data.binderId,",
+      "p_actor_user_id: context.userId,"
+    ],
+    "source_sha256": "bb06459fbbc4b7ccce55ffaf6c58aa04260edbbb67de9ee6a8d7cdcd70b21642"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "listMarketplaceBinders",
+    "line": 870,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "238fe2b24cdcacd5b669fd3eca3e06551b052a4aeb3f3e9903518b7ba924b703"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "setBinderStatus",
+    "line": 887,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "82a631e04f1cce817414d545062a3eacbb2c6066dd900f2ee6626426820f0e32"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "createBinderFromApplication",
+    "line": 915,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "reviewed_by: context.userId,",
+      "converted_binder_id: binder!.id,"
+    ],
+    "source_sha256": "f2ade84dfd2d07e9c482c5ce8305e9a98305a55825769d75716fa35759228215"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "setBinderReferralSlug",
+    "line": 977,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "668bd451cfd18577e0b13d5edf596599b43ed83c12604eb47dcbba8076c1583e"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "listBinderCommercialTerms",
+    "line": 1006,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      ".eq(\"binder_id\", data.binderId)"
+    ],
+    "source_sha256": "79da649dc9989c20f7056738d92a58d2cf12209a440ac1486a340d59b8faedb0"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "setBinderCommercialTerm",
+    "line": 1031,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      ".eq(\"binder_id\", data.binderId)",
+      "binder_id: data.binderId,",
+      "created_by: context.userId,"
+    ],
+    "source_sha256": "a070d2e377be1bf64d3287cd9de00f0916327864b25a9b028fc90ba8338d3b25"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "inviteBinderMember",
+    "line": 1074,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "invitedBy: context.userId,"
+    ],
+    "source_sha256": "5c2b0a5b2af6f0fd5967c0d472422b806b6c4d7862cf0cceb4a9b8567cedfe56"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "getBinderInvitationEmail",
+    "line": 1126,
+    "auth": false,
+    "guards": [],
+    "source_sha256": "0966bb4fd13ed94e9e1e1fd4f25341c945c67ac251d9aeab5bac5649aabc3f2c"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "acceptBinderInvitation",
+    "line": 1142,
+    "auth": true,
+    "guards": [
+      "userId: context.userId,"
+    ],
+    "source_sha256": "b028d333c74bc0292e5ac0815cb6b79465f5e9f21c6bb1d61e7d741991b5c202"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "getMyPendingBinderInvitations",
+    "line": 1175,
+    "auth": true,
+    "guards": [
+      "const email = await confirmedEmailForUser(sb, context.userId);"
+    ],
+    "source_sha256": "6d8d6078ecd20ea475f48d1cee0f644fe9fb0fdb43d29584cf72f21fc9f7d312"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "activateMyBinderInvitation",
+    "line": 1184,
+    "auth": true,
+    "guards": [
+      "const email = await confirmedEmailForUser(sb, context.userId);",
+      "userId: context.userId,"
+    ],
+    "source_sha256": "65dbe1060506290b562f5eca44e8dc2794972f6f9051b154deb2e0688ee83199"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "createMyBinderWorkspace",
+    "line": 1203,
+    "auth": true,
+    "guards": [
+      "const email = await confirmedEmailForUser(sb, context.userId);",
+      "return createPendingBinderWorkspace(sb, context.userId, data);"
+    ],
+    "source_sha256": "bf5a1890523743069ec4d6aa351da90d362eff81e6bd8c46fc929a8522c1baeb"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "getMyBinderProfile",
+    "line": 1225,
+    "auth": true,
+    "guards": [
+      "const binder = await findBinderForUser(sb, context.userId);",
+      ".eq(\"binder_id\", binder.id)"
+    ],
+    "source_sha256": "c7ea936fe9e89b887f136e21b5256160e4c986edd84ac25cf0f3bb94ec922424"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "listMyBinderCases",
+    "line": 1240,
+    "auth": true,
+    "guards": [
+      "const binder = await findBinderForUser(sb, context.userId);",
+      ".eq(\"binder_id\", binder!.id)",
+      ".select(\"id, reference, status, dossier_id, brand, acquisition_origin, referred_binder_id, preferred_language, submission_locale, created_at\")",
+      "`case_id, binder_id, ${BINDER_OFFER_COLUMNS}`,",
+      ".eq(\"binder_id\", binder!.id);",
+      "if (!matchedCase || (commercialOriginOf(matchedCase.acquisition_origin) === \"workshop_client\" && matchedCase.referred_binder_id !== binder!.id)) continue;",
+      "const unread = await unreadCountsByCase(sb, caseIds, context.userId, readableByCase);",
+      "return matches.filter(match => { const row = (cases ?? []).find(c => c.id === match.case_id); return !!row && (commercialOriginOf(row.acquisition_origin) === \"oppe\" || row.referred_binder_id === binder!.id); }).map((match) => {",
+      "clientName: row && (match.state === \"selected\" || (commercialOriginOf(row.acquisition_origin) === \"workshop_client\" && row.referred_binder_id === binder!.id)) ? dossierById.get(row.dossier_id)?.visitor_name ?? null : null,"
+    ],
+    "source_sha256": "1259aeabfefa7d9b4f485329584749580157a90a9a01f65a64f591a10b455950"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "getBinderCase",
+    "line": 1341,
+    "auth": true,
+    "guards": [
+      "const binder = await findBinderForUser(sb, context.userId);",
+      "if (!canViewCase(viewer, facts)) fail(403, \"Ce dossier ne vous a pas été confié.\");",
+      "const ownClient = commercialOriginOf(caseContext.row.acquisition_origin) === \"workshop_client\" && caseContext.row.referred_binder_id === binder!.id;",
+      ".eq(\"binder_id\", binder!.id)"
+    ],
+    "source_sha256": "585442bc82dc90b35de20635c2debad3327cacb51872193866598ef00233bb88"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "respondToBinderOffer",
+    "line": 1394,
+    "auth": true,
+    "guards": [
+      "const binder = await findBinderForUser(sb, context.userId);",
+      "p_binder_id: binder!.id,",
+      "p_actor_user_id: context.userId,",
+      "p_binder_id: binder!.id,",
+      "p_actor_user_id: context.userId,",
+      ".eq(\"binder_id\", binder!.id);",
+      "binder_id: binder!.id,",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "eddfc2e1481b1036a3a846f944f92aae84f5d727dca0a1330b2f75c773fd678b"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "listMyCustomerCases",
+    "line": 1495,
+    "auth": true,
+    "guards": [
+      "await attachVerifiedEmailCases(sb, context.userId, context.claims);",
+      ".eq(\"customer_user_id\", context.userId)",
+      "unreadCountsByCase(sb, caseIds, context.userId, readableAudiencesByCase),"
+    ],
+    "source_sha256": "0de920ad2588b4f4a47a678dbefccd0182b64f25ddc49317df2f13cbeaa2126e"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "getMyCustomerCase",
+    "line": 1576,
+    "auth": true,
+    "guards": [
+      "const viewer: Viewer = { role: \"customer\", userId: context.userId };",
+      "if (!canViewCase(viewer, facts)) fail(403, \"Ce dossier n'est pas le vôtre.\");",
+      ".select(\"binder_id, selected_at\")",
+      ".eq(\"binder_id\", caseContext.selectedBinderId ?? \"00000000-0000-0000-0000-000000000000\")",
+      ".eq(\"id\", selected.binder_id)"
+    ],
+    "source_sha256": "41017eb0d6517c69226dd3a6762e870d9349078cdd117d26b307e271791dc642"
+  },
+  {
+    "file": "src/marketplace/services/marketplace.data.functions.ts",
+    "name": "claimMarketplaceCase",
+    "line": 1715,
+    "auth": true,
+    "guards": [
+      "requesterId: context.userId,",
+      "const won = await assignCaseOwner(sb, found!.caseId, context.userId, \"access_token\");"
+    ],
+    "source_sha256": "a3760d570b35ba7aaaa3084124f4c55dda688d7c7c2054397468f51d2d0c922c"
+  },
+  {
+    "file": "src/marketplace/services/messaging.data.functions.ts",
+    "name": "listCaseMessages",
+    "line": 168,
+    "auth": true,
+    "guards": [
+      "const viewer = await resolveViewer(context.supabase, sb, context.userId);",
+      ".eq(\"user_id\", context.userId)",
+      "isMine: row.sender_user_id === context.userId,"
+    ],
+    "source_sha256": "8bea812d9c3dfa4dd5d6d2a5c88833a0e33dbce7205bc4a65dbbd23d80000d1d"
+  },
+  {
+    "file": "src/marketplace/services/messaging.data.functions.ts",
+    "name": "sendCaseMessage",
+    "line": 220,
+    "auth": true,
+    "guards": [
+      "const viewer = await resolveViewer(context.supabase, sb, context.userId);",
+      ".insert({ case_id: data.caseId, sender_user_id: context.userId, sender_role: role!, body: data.body, audience })",
+      "{ case_id: data.caseId, user_id: context.userId, last_read_at: inserted!.created_at },",
+      "actor_user_id: context.userId,"
+    ],
+    "source_sha256": "d6c26087894a93c06aa714bff2c4dfb0b3b94ccc04ffe1e11cf7ab09e2c21f22"
+  },
+  {
+    "file": "src/marketplace/services/messaging.data.functions.ts",
+    "name": "markConversationRead",
+    "line": 285,
+    "auth": true,
+    "guards": [
+      "const viewer = await resolveViewer(context.supabase, sb, context.userId);",
+      "{ case_id: data.caseId, user_id: context.userId, last_read_at: new Date().toISOString() },"
+    ],
+    "source_sha256": "d0f5cb76ca555662ecc40bc184db2ceaddccd61f4019b22f41424fdb1bcaec62"
+  },
+  {
+    "file": "src/marketplace/services/oppeBilling.data.functions.ts",
+    "name": "getMyOppeDocuments",
+    "line": 53,
+    "auth": true,
+    "guards": [
+      "await assertCaseOwner(sb, data.caseId, context.userId);"
+    ],
+    "source_sha256": "6ce22e1789f7535fba73b47698c522c53ee0f9a4910544a2e208cb06a5ec951a"
+  },
+  {
+    "file": "src/marketplace/services/oppeBilling.data.functions.ts",
+    "name": "downloadMyOppeDocument",
+    "line": 78,
+    "auth": true,
+    "guards": [
+      "await assertCaseOwner(sb, data.caseId, context.userId);"
+    ],
+    "source_sha256": "ee8ce24a8c138329808b4a8838d9e4237c1aaab434463943c8b3a9292699b820"
+  },
+  {
+    "file": "src/marketplace/services/oppeBilling.data.functions.ts",
+    "name": "downloadOppeDocument",
+    "line": 87,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "5b0ffb2f14b68bd74d3672029699b8bba56419ee2785b8a79b97f8af27aabb57"
+  },
+  {
+    "file": "src/marketplace/services/oppeBilling.data.functions.ts",
+    "name": "getOppeBilling",
+    "line": 96,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "f87bf9facd0db8e87565a11601f8cc79400bcb49d1e36f03bb72391a6d6a9a88"
+  },
+  {
+    "file": "src/marketplace/services/oppeBilling.data.functions.ts",
+    "name": "refundOppeOrder",
+    "line": 136,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "reason: data.reason, requested_by: context.userId, idempotency_key: idempotencyKey,",
+      "case_id: data.caseId, actor_user_id: context.userId, event_type: \"oppe_refund_created\","
+    ],
+    "source_sha256": "ca6c8db1047f6820c48ccc4484ba45f293db0fb63eea3577b6e1a7cec048d658"
+  },
+  {
+    "file": "src/marketplace/services/oppeOrders.data.functions.ts",
+    "name": "getOppeOrder",
+    "line": 102,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "c8babea536d336436cd08d0f8dfa3d090ec33c5ac3da566efe852fe310e2c5ce"
+  },
+  {
+    "file": "src/marketplace/services/oppeOrders.data.functions.ts",
+    "name": "advanceOppeOrderAsAdmin",
+    "line": 110,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "p_actor_user_id: context.userId,"
+    ],
+    "source_sha256": "21d22158d595c160958f71c85d9428a3bbf894a278bfabc3e419bdf748065795"
+  },
+  {
+    "file": "src/marketplace/services/oppeOrders.data.functions.ts",
+    "name": "advanceMyOppeOrder",
+    "line": 135,
+    "auth": true,
+    "guards": [
+      "p_actor_user_id: context.userId,"
+    ],
+    "source_sha256": "3eae1c2b0e443d1d12e25a663a6aea06d35adb426ac1f2aa84927c60721cd401"
+  },
+  {
+    "file": "src/marketplace/services/oppeOrders.data.functions.ts",
+    "name": "getMyOppeOrder",
+    "line": 154,
+    "auth": true,
+    "guards": [
+      "const membership = await findActiveBinderMembership(sb, context.userId);"
+    ],
+    "source_sha256": "90c182613c1e3217fb11707d297a0a66023e900adb4660d687dde935a3678f17"
+  },
+  {
+    "file": "src/marketplace/services/oppeOrders.data.functions.ts",
+    "name": "offerOppeOrderToWorkshop",
+    "line": 181,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      ".eq(\"binder_id\", data.binderId)",
+      "case_id: data.caseId, binder_id: data.binderId, description: \"Offre Oppe (réattribution)\",",
+      "{ case_id: data.caseId, binder_id: data.binderId, state: existing?.agreement_version ? \"accepted\" : \"offered\", binder_payout_cents: data.payoutCents, currency: \"EUR\", offered_at: now },",
+      "{ onConflict: \"case_id,binder_id\" },",
+      "case_id: data.caseId, binder_id: data.binderId, actor_user_id: context.userId,"
+    ],
+    "source_sha256": "695236d894a6b55ca3687195d92488eae84dc4e6db2e92fc055fcc6279d70618"
+  },
+  {
+    "file": "src/marketplace/services/oppeOrders.data.functions.ts",
+    "name": "reassignOppeOrder",
+    "line": 236,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "p_new_binder_id: data.binderId,",
+      "p_actor_user_id: context.userId,"
+    ],
+    "source_sha256": "670d6e9e62fe1ecf3d9f847393d16564b7ec695402bf05d1713eda11350e6c54"
+  },
+  {
+    "file": "src/marketplace/services/paymentCircuit.data.functions.ts",
+    "name": "reviewCasePaymentCircuit",
+    "line": 8,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "p_actor: context.userId, p_notes: data.notes,"
+    ],
+    "source_sha256": "1498424fe7b2bee9331e746d176199adb145bf32d9b64e2332dd0cc202661754"
+  },
+  {
+    "file": "src/marketplace/services/pricing.data.functions.ts",
+    "name": "getWorkCatalogue",
+    "line": 82,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "77f6bfb5e02a4eaf64662c267f5de3af0db86b27286053d1a3bda9d3aeb4874a"
+  },
+  {
+    "file": "src/marketplace/services/pricing.data.functions.ts",
+    "name": "getBasePriceReference",
+    "line": 102,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "39e396cf5a14f8db466def69ad4b58d912735db59f877618a42f495ca49560df"
+  },
+  {
+    "file": "src/marketplace/services/pricing.data.functions.ts",
+    "name": "saveBasePrice",
+    "line": 139,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "validated_by: published ? context.userId : null,"
+    ],
+    "source_sha256": "0cb0b4e32635e9194a953a469478dd91e813f7c1596aaa08b26015618df6ea47"
+  },
+  {
+    "file": "src/marketplace/services/pricing.data.functions.ts",
+    "name": "getRateAggregates",
+    "line": 202,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "5b4b6d4ae3eb73a0d8b366fcb28fd0dc15205f4115ac71cbcba86032399d150e"
+  },
+  {
+    "file": "src/marketplace/services/pricing.data.functions.ts",
+    "name": "getBinderRateCard",
+    "line": 226,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "248a6a3577ddd283a49fedb49f56f030d1b8014264d400e9ca458891204aa726"
+  },
+  {
+    "file": "src/marketplace/services/pricing.data.functions.ts",
+    "name": "saveBinderRate",
+    "line": 268,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      ".eq(\"binder_id\", data.binderId)",
+      "binder_id: data.binderId,",
+      "verified_by: data.verified ? context.userId : null,",
+      "created_by: context.userId,"
+    ],
+    "source_sha256": "40a3d70cec42e5ad0d9dfeb092942e3fc219711cfd839b62fdb3000045729acb"
+  },
+  {
+    "file": "src/marketplace/services/pricing.data.functions.ts",
+    "name": "removeBinderRate",
+    "line": 312,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "49568688905c89674cac6efef18b5c9b278473c66c4ad40e95e200aa7624aa7e"
+  },
+  {
+    "file": "src/marketplace/services/pricing.data.functions.ts",
+    "name": "simulatePricing",
+    "line": 334,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "efd7e38e36d94b7a87acde4d3ae725382888ee6703b444ac61d72cf3f5373c76"
+  },
+  {
+    "file": "src/marketplace/services/pricing.data.functions.ts",
+    "name": "publishPricebookEntry",
+    "line": 434,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "validated_by: context.userId,"
+    ],
+    "source_sha256": "70d2284862b1b5475cccb044d4626dd2146ce4350cfcd3b9fda96003f79cb28d"
+  },
+  {
+    "file": "src/marketplace/services/referral.public.functions.ts",
+    "name": "resolveBinderReferral",
+    "line": 16,
+    "auth": false,
+    "guards": [],
+    "source_sha256": "b5651b67fc433a7b124d97997fac2ceb66f716f46914f8c16b58f4d4389b8a75"
+  },
+  {
+    "file": "src/marketplace/services/sendPriceToCustomer.data.functions.ts",
+    "name": "sendPriceToCustomer",
+    "line": 180,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "const ctx = { supabase: context.supabase, userId: context.userId };"
+    ],
+    "source_sha256": "ff530d50e6d36469efde1fb5b2bffb6c21b998974e40ee654c3e94c5fae123c1"
+  },
+  {
+    "file": "src/marketplace/services/sendPriceToCustomer.data.functions.ts",
+    "name": "sendProposalToCustomer",
+    "line": 199,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "return sendDraft(sb, { supabase: context.supabase, userId: context.userId }, row, proposal.id);"
+    ],
+    "source_sha256": "63daba020d2cfc27b08296df2274fcdfe3e481b1397faf37e4983727929e0d50"
+  },
+  {
+    "file": "src/marketplace/services/supplierInvoices.data.functions.ts",
+    "name": "createSupplierInvoiceFromTool",
+    "line": 106,
+    "auth": true,
+    "guards": [
+      "const binderId = await requireBinder(sb, context.userId);",
+      "if (!assignment || assignment.binder_id !== binderId) refuse(\"forbidden\");",
+      "const id = await submit(sb, context.userId, { caseId: data.caseId, binderId, source: \"tool\", number, issueDate: data.issueDate, vatRegime: data.vatRegime, vatRateBps: data.vatRateBps, vatMention: data.vatMention, path });"
+    ],
+    "source_sha256": "1ed36359cb3aef1df3b5a302feaadf084c54e55356ec58d6a40a2a6de1619d00"
+  },
+  {
+    "file": "src/marketplace/services/supplierInvoices.data.functions.ts",
+    "name": "uploadExternalSupplierInvoice",
+    "line": 135,
+    "auth": true,
+    "guards": [
+      "const binderId = await requireBinder(sb, context.userId);",
+      "if (!assignment || assignment.binder_id !== binderId) refuse(\"forbidden\");",
+      "const id = await submit(sb, context.userId, { caseId: data.caseId, binderId, source: \"external\", number: data.number, issueDate: data.issueDate, vatRegime: data.vatRegime, vatRateBps: data.vatRateBps, vatMention: data.vatMention, path });"
+    ],
+    "source_sha256": "1795ddde3b707ee7ba36e8bc864504fca85c19ad8003f4830b61817b812d0a67"
+  },
+  {
+    "file": "src/marketplace/services/supplierInvoices.data.functions.ts",
+    "name": "getMySupplierInvoice",
+    "line": 178,
+    "auth": true,
+    "guards": [
+      "const binderId = await requireBinder(sb, context.userId);",
+      "const { data: invoices, error } = await sb.from(\"marketplace_oppe_supplier_invoices\").select(rowFields).eq(\"case_id\", data.caseId).eq(\"binder_id\", binderId).order(\"created_at\");",
+      "return (invoices ?? []).map(({ document_path: _path, binder_id: _binder, ...rest }) => ({ ...rest, paidCents: payments.get(rest.id)?.paid ?? 0, payments: payments.get(rest.id)?.list ?? [] }));"
+    ],
+    "source_sha256": "6081f96da6d93e133b81ffe5ee89b651a3f87172817c8720e2ffbbd6bbd92447"
+  },
+  {
+    "file": "src/marketplace/services/supplierInvoices.data.functions.ts",
+    "name": "getSupplierInvoices",
+    "line": 191,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);"
+    ],
+    "source_sha256": "c0e0951625b3b6bdad6c9502e17a2f90e0a134c2c0c14867d7af989478404031"
+  },
+  {
+    "file": "src/marketplace/services/supplierInvoices.data.functions.ts",
+    "name": "reviewSupplierInvoice",
+    "line": 203,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "const { data: result, error } = await sb.rpc(\"marketplace_review_supplier_invoice\", { p_invoice: data.invoiceId, p_decision: data.decision, p_reason: (data.reason ?? \"\") as never, p_actor: context.userId });"
+    ],
+    "source_sha256": "b6241968bbee61dff449135ba082e22673e1295116533a5994a48fa1e9e40ac2"
+  },
+  {
+    "file": "src/marketplace/services/supplierInvoices.data.functions.ts",
+    "name": "recordSupplierPayment",
+    "line": 216,
+    "auth": true,
+    "guards": [
+      "await assertAdmin(context.supabase, context.userId);",
+      "p_invoice: data.invoiceId, p_paid_on: data.paidOn, p_amount: data.amountCents, p_reference: data.reference, p_actor: context.userId,"
+    ],
+    "source_sha256": "705a045fc085a60ade7e8ef3771f3571da292ae6d00794f9f4d32759fdb9b31a"
+  },
+  {
+    "file": "src/marketplace/services/supplierInvoices.data.functions.ts",
+    "name": "getSupplierInvoiceLink",
+    "line": 237,
+    "auth": true,
+    "guards": [
+      "const { data: invoice, error } = await sb.from(\"marketplace_oppe_supplier_invoices\").select(\"document_path, binder_id\").eq(\"id\", data.invoiceId).maybeSingle();",
+      "if (data.asAdmin) await assertAdmin(context.supabase, context.userId);",
+      "else if ((await requireBinder(sb, context.userId)) !== invoice!.binder_id) fail(404, \"Facture introuvable.\");"
+    ],
+    "source_sha256": "a8e94ddb534523073635ce82c9e66ad74512108047ff4945f1a932c0856f433e"
+  },
+  {
+    "file": "src/marketplace/services/workLogistics.data.functions.ts",
+    "name": "getWorkTransportOrders",
+    "line": 19,
+    "auth": true,
+    "guards": [
+      "const { sb, binder } = await access(context.userId);",
+      ".eq(\"binder_id\", binder)",
+      ".eq(\"binder_id\", binder)",
+      ".eq(\"binder_id\", binder)"
+    ],
+    "source_sha256": "a474db1593dacce506fa1f82e525cbc9b39d9f0bfad8d4b252cca9cde8261df7"
+  },
+  {
+    "file": "src/marketplace/services/workLogistics.data.functions.ts",
+    "name": "readWorkLogistics",
+    "line": 77,
+    "auth": true,
+    "guards": [
+      "const { sb, value } = await journal(context.userId, data.workId, \"read\");"
+    ],
+    "source_sha256": "edb836bd4c5acbf3472a8859149dc4b1b98890006f1bdd929bb2bef6feeecf77"
+  },
+  {
+    "file": "src/marketplace/services/workLogistics.data.functions.ts",
+    "name": "getWorkshopTransportOptions",
+    "line": 102,
+    "auth": true,
+    "guards": [
+      "const { sb, binder } = await access(context.userId);"
+    ],
+    "source_sha256": "1ddfe66d71d8eecbd689f55c37513f6ea278880dc8669aaa4c2edb20edd430fa"
+  },
+  {
+    "file": "src/marketplace/services/workLogistics.data.functions.ts",
+    "name": "uploadWorkTransportLabel",
+    "line": 112,
+    "auth": true,
+    "guards": [
+      "const { sb, binder, value } = await journal(context.userId, data.workId, \"read\");",
+      "const work = await sb.from(\"marketplace_binder_works\").select(\"source\").eq(\"id\", data.workId).eq(\"binder_id\", binder).single();",
+      "const id = await logisticsPhotoId(`label/${binder}/${data.workId}/${data.eventId}/${context.userId}`, bytes);",
+      "const attached = await (sb as unknown as SupabaseClient).rpc(\"marketplace_attach_work_transport_label\", { p_work: data.workId, p_binder: binder, p_actor: context.userId, p_event: data.eventId, p_id: id });"
+    ],
+    "source_sha256": "27cc0af82b5ec5206b7887cacedc72d732ec1522bdba2097d91dce39af74badb"
+  },
+  {
+    "file": "src/marketplace/services/workLogistics.data.functions.ts",
+    "name": "appendWorkLogistics",
+    "line": 135,
+    "auth": true,
+    "guards": [
+      "await journal(context.userId, data.workId, \"append\", {"
+    ],
+    "source_sha256": "f080edef0d5984be7a1c5e4f62c2b0522a10bc72b2d9e1a3aa29665c7dddfee3"
+  },
+  {
+    "file": "src/marketplace/services/workLogistics.data.functions.ts",
+    "name": "uploadLogisticsPhoto",
+    "line": 147,
+    "auth": true,
+    "guards": [
+      "const { sb, binder, value } = await journal(context.userId, data.workId, \"read\");",
+      "`${binder}/${data.workId}/${data.eventId}/${context.userId}`,",
+      "() => journal(context.userId, data.workId, \"photo\", { id, event: data.eventId }),",
+      "const current = await journal(context.userId, data.workId, \"read\");"
+    ],
+    "source_sha256": "0848eccb6b250d20ea028d45f716b671eef8ab8673d3212a74c3f03bfd0de7c3"
+  },
+  {
+    "file": "src/marketplace/services/workshopCustomerCase.data.functions.ts",
+    "name": "getMyWorkshopCustomerCase",
+    "line": 7,
+    "auth": true,
+    "guards": [
+      "createServerFn({method:\"GET\"}).middleware([requireSupabaseAuth]).inputValidator((data:unknown)=>input.parse(data)).handler(async({context,data})=>workshopCustomerCase(await admin(),context.userId,data.caseId))"
+    ],
+    "source_sha256": "9b83d2a6266f074f7a39e38189c2c0e7cdff4dd9aff323c5dcf3114b124b5016"
+  },
+  {
+    "file": "src/marketplace/services/workshopCustomerCase.data.functions.ts",
+    "name": "getMyWorkshopCustomerDocument",
+    "line": 8,
+    "auth": true,
+    "guards": [
+      "createServerFn({method:\"GET\"}).middleware([requireSupabaseAuth]).inputValidator((data:unknown)=>input.extend({id:z.string().uuid(),kind:z.enum([\"quote\",\"invoice\",\"credit\"])}).strict().parse(data)).handler(async({context,data})=>workshopCustomerDocument(await admin(),context.userId,data.caseId,data.kind,data.id))"
+    ],
+    "source_sha256": "1d9fc9e346365b7a64d85dea83abd6868335a14efad5f750cef411984271feb4"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "startMyWorkshopConnect",
+    "line": 28,
+    "auth": true,
+    "guards": [
+      "const binderId = await workshopBillingOwner(sb, context.userId);",
+      "const profile = await sb.from(\"marketplace_binder_billing_profiles\").select(\"*\").eq(\"binder_id\", binderId).maybeSingle();",
+      "const previous = await sb.from(\"marketplace_workshop_connect_consents\").select(\"*\").eq(\"binder_id\", binderId).maybeSingle();",
+      "binder_id: binderId,",
+      "accepted_by: context.userId,"
+    ],
+    "source_sha256": "368a5b72640ea630183a66250d1746435735db814b67b19181e21c8d6690407c"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "resumeMyWorkshopConnect",
+    "line": 66,
+    "auth": true,
+    "guards": [
+      "const binderId = await workshopBillingOwner(sb, context.userId);",
+      ".select(\"binder_id\")",
+      ".eq(\"binder_id\", binderId)"
+    ],
+    "source_sha256": "79a1cdf173c784dbd53ea2cf683348e0747905e734d3e84bb43f8a157154ae70"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "refreshMyWorkshopConnect",
+    "line": 86,
+    "auth": true,
+    "guards": [
+      "return refreshBinderConnectStatus(sb, await workshopBillingOwner(sb, context.userId));"
+    ],
+    "source_sha256": "cc15eb1baf9f7efc3f81e46c3badf21b6bbb1aa743eb2f49cc70dc4ceac82121"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "createMyInvoicePaymentLink",
+    "line": 92,
+    "auth": true,
+    "guards": [
+      "const binderId = await workshopBillingOwner(sb, context.userId);",
+      ".eq(\"binder_id\", binderId).eq(\"invoice_id\", data.invoiceId).maybeSingle();"
+    ],
+    "source_sha256": "4249050b04a62ab20f3c352293b443369c63647da8d8f54ff697ffba84dc3b8c"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "getMyInvoiceOnlinePayment",
+    "line": 110,
+    "auth": true,
+    "guards": [
+      "const binderId = await requireWorkshopAccess(sb, context.userId);",
+      ".eq(\"binder_id\", binderId)"
+    ],
+    "source_sha256": "786baecef93af094a904fca68d2d766716151eaf181334e069c6e222cc847941"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "refundMyWorkshopOnlinePayment",
+    "line": 141,
+    "auth": true,
+    "guards": [
+      "await workshopBillingOwner(sb, context.userId),"
+    ],
+    "source_sha256": "18e7a78e50e9846fe11a0e8c7581138752bd1450c073fc0cb3d9d7aa7f5b0c92"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "getWorkshopPublicPayment",
+    "line": 156,
+    "auth": false,
+    "guards": [
+      ".eq(\"binder_id\", p.binder_id)",
+      ".eq(\"binder_id\", p.binder_id)"
+    ],
+    "source_sha256": "bc5309a3b15002c7644803f7bec033a66ea0ec6e624e71fc5e007340225e0dd9"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "getWorkshopPublicInvoicePdf",
+    "line": 188,
+    "auth": false,
+    "guards": [
+      "const invoice = await getInvoice(sb, p.binder_id, p.invoice_id);"
+    ],
+    "source_sha256": "9f4a2ea2d7ba1951ad29fb971bdcf761449e7a805087dc5d9e0cc1728a2e7bf5"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "getWorkshopPublicCreditPdf",
+    "line": 198,
+    "auth": false,
+    "guards": [
+      ".eq(\"binder_id\", p.binder_id)",
+      "const credit = await getCreditNote(sb, p.binder_id, data.creditId);"
+    ],
+    "source_sha256": "f304b6a011f9f9a991c11873ae8e852d2e02f3059836138fed8b1a564a6da485"
+  },
+  {
+    "file": "src/marketplace/services/workshopOnlinePayment.data.functions.ts",
+    "name": "createPublicWorkshopCheckout",
+    "line": 221,
+    "auth": false,
+    "guards": [],
+    "source_sha256": "f7586e270e7f9ed7d738ba75e681dd38537cfc1e6e22531eddfe8dd3ad5a52d2"
+  },
+  {
+    "file": "src/marketplace/services/workshopSubscription.data.functions.ts",
+    "name": "getMyWorkshopSubscription",
+    "line": 21,
+    "auth": true,
+    "guards": [
+      "const member = await findActiveBinderMembership(sb, context.userId);",
+      ".eq(\"binder_id\", member!.binderId)",
+      ".eq(\"binder_id\", member!.binderId)",
+      ".eq(\"binder_id\", member!.binderId).order(\"issued_at\", { ascending: false }).limit(100),"
+    ],
+    "source_sha256": "593de858eaba406c212cc584f28410a8b90ba37beee4f3ef96e11f504f15d090"
+  },
+  {
+    "file": "src/marketplace/services/workshopSubscription.data.functions.ts",
+    "name": "getMyWorkshopFeeDocumentPdf",
+    "line": 57,
+    "auth": true,
+    "guards": [
+      "const binderId = await requireWorkshopAccess(sb, context.userId);",
+      ".eq(\"id\", data.documentId).eq(\"binder_id\", binderId).single();",
+      ".eq(\"id\", row.data.invoice_document_id).eq(\"binder_id\", binderId).single()"
+    ],
+    "source_sha256": "c560d69a31b256bf76f72a15fdd5dd7e366cfd27b27098505ef4f45e8f36e51a"
+  },
+  {
+    "file": "src/marketplace/services/workshopSubscription.data.functions.ts",
+    "name": "createMyWorkshopCheckout",
+    "line": 75,
+    "auth": true,
+    "guards": [
+      "createWorkshopCheckout(await admin(), context.userId, data.accepted),"
+    ],
+    "source_sha256": "70cdd09f29f3baed84341f336fe64d6ec5720f1346edcbe2362b59117ebaec72"
+  },
+  {
+    "file": "src/marketplace/services/workshopSubscription.data.functions.ts",
+    "name": "createMyWorkshopBillingPortal",
+    "line": 87,
+    "auth": true,
+    "guards": [
+      "const binderId = await workshopBillingOwner(sb, context.userId);"
+    ],
+    "source_sha256": "596717de1ed5f38a7f80b10331cb4363d061683fd1bd5e3c3d3fc755dbf2ae54"
+  },
+  {
+    "file": "src/marketplace/stripe/checkoutSession.server.ts",
+    "name": "createCommercialCheckoutSession",
+    "line": 52,
+    "auth": true,
+    "guards": [
+      "userId: context.userId,",
+      "isAdmin: await isAdminCaller(context.supabase, context.userId),"
+    ],
+    "source_sha256": "95382c0143f2c45c830710a60b895ec46c4bcea6cae573c8ddaa83bcb356af34"
+  }
+]
