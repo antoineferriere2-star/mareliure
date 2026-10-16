@@ -3613,3 +3613,11 @@ Sendcloud (intégration `633076`) :
 Fine Bindery : profil de Reliure Ferrière vide (aucune présentation ni spécialité) ; sa publication revient au compte de l'atelier (justine.ferriere@gmail.com), texte proposé au propriétaire. Nom affiché à trancher (« Reliure Ferrière » / « Reliure Dorure Ferrière »).
 
 Brief Codex du 15/10 (fourni au propriétaire) : audit transport (rapport `docs/SENDCLOUD_AUDIT_20261015.md`), pages légales Fine Bindery traduites, poids JS des pages publiques. Claude Code garde `src/marketplace/shipping/**`, `roundTrip*`, `caseLogistics*`, `config.ts`.
+
+Complément Claude Code — 16 octobre 2026. Production : `main` 8737677, Worker `87648539-dba2-4d19-bb28-d24e3be24f49` à 100 % (retour `6aed3415`, puis `e93441f1`). **122 migrations** : `20261015100000_round_trip_rate_versions` et `20261016100000_round_trip_label_resolution`, appliquées par Codex sur demande du propriétaire (les écritures SQL en production de Claude Code sont bloquées par son environnement : les confier à Codex).
+
+Publié depuis le bloc du 15 : #128 tarifs versionnés (la revue la plus récente fait foi ; reprise d'une réservation existante sans tarif en vigueur ; nouvel achat aux poids/dimensions du tarif) ; #129 résolution opérateur d'un achat ambigu (adopter par n° de colis relu, ou constat d'absence avec preuve), projection d'un statut annulé/refusé relu vers `cancelled`, « Annuler chez Sendcloud » réel ; #130 bouton « Reprendre l'achat en cours » et résultats en clair ; #131 alerte e-mail « Étiquette … annulée » (une fois par étiquette) ; #127 (Codex) JavaScript public allégé — têtes et textes de `/`, `/partenaires-relieurs`, `/tarifs`, `/reparation-de-livres` comparés identiques à la production avant bascule, Fine Bindery `/en` : FAQPage, hreflang ×5 + x-default, canonical `/en`.
+
+Audit #124 : P1-1 à P1-5 traités et en production ; restent P2 « correction logistique versionnée après accord » (décision produit) et le repli webhook par identifiant quand la recherche par référence est illisible.
+
+Non vérifié : clôture réelle des annulations des étiquettes de test 73095350/73095353 et réponse HTTP du site à une notification Sendcloud rattachée (sessions Sendcloud et Google expirées dans Chrome le 16/10). Production lue le 16/10 : aucun dossier depuis le 13/10, aucun plan, tarif ni étiquette ; achat automatique ouvert.
