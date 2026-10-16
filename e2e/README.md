@@ -76,7 +76,8 @@ rather than done partially and left half-safe.
 
 ## Local customer journey with mocked server functions
 
-`npm run test:e2e:customer` selects only `e2e/customer`, starts its own local
+Use Node 24, matching the existing quality workflow. `npm run test:e2e:customer`
+selects only `e2e/customer`, starts its own local
 Vite server and uses synthetic Auth/RPC data. It needs no Supabase or vendor
 credentials. It exercises the real request and customer UI in French and
 English, at iframe widths 1280 and 375 CSS pixels. Unknown server functions

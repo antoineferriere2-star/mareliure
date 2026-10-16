@@ -10,6 +10,8 @@ Le test vérifie le dépôt des réponses, la consultation du dossier, le refus 
 
 ## Exécution et isolation
 
+Utiliser Node 24, comme le workflow qualité existant du dépôt et l'exécution locale. Le premier lancement du workflow dédié avec Node 22/npm 10 a refusé le lockfile (`lru-cache` manquant) avant les tests ; le workflow a été aligné sur Node 24/npm 11, où l'installation du même lockfile est vérifiée par le workflow standard.
+
 ```sh
 npm ci
 npx playwright install chromium
