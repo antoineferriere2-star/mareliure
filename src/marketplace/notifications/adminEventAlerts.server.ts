@@ -9,6 +9,7 @@
  * Contenu minimal : référence, marque, nom d'atelier, jamais le texte d'un message ni les
  * coordonnées d'un client — le détail se lit dans l'admin, derrière l'authentification.
  */
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Supa } from "@/build/services/adminAuth.server";
 import type { MessageAudience } from "@/marketplace/messaging/audience";
 import type { SenderRole } from "@/marketplace/messaging/conversation";
@@ -160,4 +161,25 @@ export async function alertWorkshopSubscriptionSynced(sb: Supa, binderId: string
 
 export async function alertInvitedWorkshopJoined(sb: Supa, binderId: string): Promise<boolean> {
   return bestEffort("workshop-invitation", false, async () => alertWorkshopJoined(binderId, await workshopName(sb, binderId), "invitation"));
+}
+
+/**
+ * Étiquette d'aller-retour devenue inutilisable chez Sendcloud (annulée, ou refusée par le transporteur
+ * après coup) : le site l'a passée « annulée », mais le livre n'a plus d'étiquette valable.
+ */
+export async function alertRoundTripLabelUnusable(sb: Supa, jobId: string, code: string): Promise<boolean> {
+  return bestEffort("label-unusable", false, async () => {
+    // Table hors des types générés : lecture brute, comme le circuit de transport.
+    const { data: job } = await (sb as unknown as SupabaseClient).from("marketplace_round_trip_label_jobs").select("case_id, direction").eq("id", jobId).maybeSingle();
+    const row = job as { case_id: string; direction: string } | null;
+    if (!row) return false;
+    const { data: kase } = await sb.from("marketplace_cases").select("reference").eq("id", row.case_id).maybeSingle();
+    const leg = row.direction === "outbound" ? "aller (client → atelier)" : "retour (atelier → client)";
+    return notifyAdmin({
+      caseId: row.case_id,
+      heading: `Étiquette ${row.direction === "outbound" ? "aller" : "retour"} annulée — ${kase?.reference ?? "dossier"}`,
+      intro: `Sendcloud signale l'étiquette ${leg} comme inutilisable (statut ${code}). Le site l'a passée « annulée » ; aucun remboursement n'est présumé. Prévenez le client et achetez une nouvelle étiquette si le livre n'est pas encore parti.`,
+      idempotencyKey: `label-unusable-${jobId}`,
+    });
+  });
 }
