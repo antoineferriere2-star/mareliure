@@ -4,9 +4,6 @@ on:
     paths:
       - "scripts/audits/sendcloudP1Review.test.ts"
       - "vitest.sendcloud-review.config.ts"
-      - "src/marketplace/shipping/**"
-      - "supabase/migrations/*round_trip*"
-      - "package*.json"
       - ".github/workflows/sendcloud-review.yml"
   workflow_dispatch:
 jobs:

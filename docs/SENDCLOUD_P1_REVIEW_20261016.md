@@ -6,6 +6,8 @@ Les PR [#128](https://github.com/antoineferriere2-star/mareliure/pull/128) et [#
 
 Les 15 tests de cette revue passent : ce sont des **tests de caractérisation**, dont certains affirment un comportement incorrect reproduit. « Tests verts » ne signifie donc pas « transport validé ». Aucun achat, appel Sendcloud réel, paiement, compte, e-mail, correctif, fusion ou déploiement n'a été effectué.
 
+Le workflow dédié s'exécute pour les changements de cette suite/configuration ou sur demande manuelle. Il n'est pas ajouté aux contrôles de chaque changement de transport : les assertions décrivant un défaut devront être actualisées lors de son correctif, et ne doivent pas imposer de conserver ce défaut.
+
 ## Sources et méthode
 
 - #128 : tête `dce423f3dd5efaf4ef1746f5b8baa6e8347c2cd8`, fusion `ad8d88389ca48eaccfe7da6867b45240fe410096`.
