@@ -1,16 +1,11 @@
 import type { FineBinderyPublicCopy } from "./types";
+import { esSeo, esHomeFaq, esProjectStart, esDirectoryLabel, esProfileNotFound } from "./esHead";
+
 
 export const es: FineBinderyPublicCopy = {
-  seo: {
-    homeTitle: "Fine Bindery — Encuadernación y restauración de libros en Europa",
-    homeDescription: "Descubre encuadernadores y restauradores con oficio, presenta tu proyecto y trabaja con el taller adecuado. La red abre en Francia.",
-    directoryTitle: "Encuadernadores y restauradores de libros — Fine Bindery",
-    directoryDescription: "Descubre talleres independientes de encuadernación, restauración, conservación y dorado, y presenta tu proyecto directamente a uno de ellos.",
-    profileTitle: (w) => `${w} — Encuadernación y restauración | Fine Bindery`,
-    profileDescription: (w, c) => `Descubre ${w}, taller independiente de encuadernación y conservación en ${c}.`,
-  },
-  nav: { how: "Cómo funciona", services: "Oficios", workshops: "Talleres", faq: "Preguntas", signIn: "Iniciar sesión", language: "Idioma", menu: "Menú" },
-  common: { start: "Presenta tu proyecto", project: "Proyecto", france: "Francia", skills: "Oficios", languages: "Idiomas", techniques: "Técnicas y materiales", originalText: "Texto del taller en su idioma original." },
+  seo: esSeo,
+  nav: { how: "Cómo funciona", services: "Oficios", workshops: esDirectoryLabel, faq: "Preguntas", signIn: "Iniciar sesión", language: "Idioma", menu: "Menú" },
+  common: { start: esProjectStart, project: "Proyecto", france: "Francia", skills: "Oficios", languages: "Idiomas", techniques: "Técnicas y materiales", originalText: "Texto del taller en su idioma original." },
   footer: { summary: "La red europea de encuadernación y conservación del libro.", information: "Información", legal: "Aviso legal", privacy: "Privacidad", terms: "Condiciones de uso", sales: "Condiciones de venta", closing: "Encuadernación, conservación y dorado, por talleres independientes." },
   home: {
     eyebrow: "Encuadernación · Conservación · Dorado",
@@ -33,14 +28,7 @@ export const es: FineBinderyPublicCopy = {
     networkNote: "La red abre con talleres en Francia y acogerá a encuadernadores y restauradores de toda Europa.",
     trustEyebrow: "Tu libro viaja", trustTitle: "Tu libro viaja. Su historia no se pierde.", trust: ["Estado documentado", "Un solo interlocutor", "Talleres revisados", "Un trayecto acompañado"],
     shippingEyebrow: "Envío", shippingTitle: "Un trayecto adaptado al libro.", shippingLead: "El trayecto se organiza según la naturaleza y el valor del libro, y se presupuesta aparte del trabajo.",
-    faqEyebrow: "Tus preguntas", faqTitle: "Antes de empezar.", faq: [
-      { question: "¿Puedo contactar directamente con un taller?", answer: "Sí. Un proyecto presentado desde la página de un taller llega directamente a ese taller." },
-      { question: "¿Quién me vende el servicio y quién me factura?", answer: "Depende de cómo empiece. Un proyecto presentado desde la página de un taller convierte a ese taller en su vendedor: le envía su propio presupuesto y le factura. Un proyecto presentado a Fine Bindery lo vende OPPE SAS bajo la marca Fine Bindery, que elige el taller, emite el presupuesto y la factura y cobra; el taller factura entonces a OPPE SAS, nunca a usted." },
-      { question: "¿Cómo se eligen los talleres?", answer: "Fine Bindery revisa cada taller antes de publicar su página: su oficio, su trayectoria y el tipo de trabajo que desea recibir. No hay clasificaciones ni posiciones de pago." },
-      { question: "¿Tengo que hablar el idioma del taller?", answer: "No. Cada taller indica los idiomas que habla, y Fine Bindery sigue siendo tu interlocutor cuando nos presentas un proyecto." },
-      { question: "¿El envío está incluido?", answer: "No. Se presupuesta aparte, según el destino, el valor y el cuidado que requiere el libro." },
-      { question: "¿Puedo confiar un libro antiguo o valioso?", answer: "Sí, tras un estudio individual y con una logística adecuada." },
-    ],
+    faqEyebrow: "Tus preguntas", faqTitle: "Antes de empezar.", faq: esHomeFaq,
     finalTitle: "Tu libro merece las manos adecuadas.", finalLead: "Descubre los talleres de la red, o presenta tu proyecto y deja que encontremos el adecuado.", established: "desde",
   },
   directory: {
@@ -60,6 +48,6 @@ export const es: FineBinderyPublicCopy = {
     training: "Formación y trayectoria", approach: "Enfoque", portfolio: "Trabajos seleccionados", work: "El trabajo del taller.", before: "Antes", after: "Después",
     finalEyebrow: "Un libro, una conversación", finalTitle: (w) => `Habla de tu proyecto directamente con ${w}.`,
     website: "Web del taller", call: "Llamar al taller", email: "Escribir al taller",
-    notFound: "Taller no encontrado", notFoundBody: "Esta página no está publicada o ya no existe.", back: "Ver los talleres",
+    notFound: esProfileNotFound, notFoundBody: "Esta página no está publicada o ya no existe.", back: "Ver los talleres",
   },
 };

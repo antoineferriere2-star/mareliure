@@ -3596,3 +3596,13 @@ Publié depuis le bloc précédent, sur accord explicite du propriétaire :
 Données : « h » et « ok » marqués `is_demo=true` le 8 octobre au soir sur accord explicite (journal privé `oppe-model-operation/demo-mark-h-ok-20261008.log`) ; seul atelier réel compté : Reliure Ferrière. PR #50 et #38 fermées, branches supprimées (récupérables via `pull/50/head`, `pull/38/head`).
 
 En cours (PR de ce bloc) : un admin atterrit sur `/admin` après connexion au lieu de l'ancien back-office ; liens croisés pilotage ↔ back-office ; filtres d'étape de la liste Dossiers avec leur nombre, étapes vides masquées. Transport automatique Sendcloud toujours fermé.
+
+## Latest handoff
+
+Codex — 15 octobre 2026, branche indépendante perf/public-js-20261015, base origin/main fb32fe1. JavaScript public réduit sur les quatre routes : / — Ma Reliure 10,3 % ; /partenaires-relieurs 4,7 % ; /tarifs 4,8 % ; /en — Fine Bindery 1,9 %. Métadonnées/FAQ partagées dans des modules légers, loaders différés, contenu Fine Bindery différé sur l’accueil Ma Reliure, glossaire public séparé du catalogue sans changer son API.
+
+Preuves : docs/PUBLIC_JS_20261015.md et .json, 24 passages finaux Lighthouse 12.8.2 (trois avant/après pour chaque page). Serveurs Node locaux sans compression CDN, mêmes réglages mobiles, pings et Supabase bloqués. Corps HTML hors scripts/commentaires et empreintes CSS identiques sur les quatre pages ; aucun font-display optional, changement d’image ou de transport/configuration. Les temps locaux ne sont pas présentés comme ceux de production ; TBT variable et un échantillon CLS Fine Bindery à environ 0,027 (médiane nulle) consignés.
+
+Validation : 98 tests ciblés locaux réussis, build Node local final réussi. CI complète du code 065b785 verte : garde-fous, TypeScript, lint (0 erreur, 19 avertissements historiques), 308 fichiers de tests et build (run 38750051467). Les contrôles locaux complets concurrents ont été interrompus ; pas de succès complet local prétendu. Commits suivants documentaires ; consulter leur CI avant fusion.
+
+Autres chantiers du brief : PR124 audit documentaire Sendcloud, PR125 traductions légales (relecture par un juriste avant publication), CI vertes sur leurs commits de livraison. Aucune fusion, publication, écriture en production ni opération payante. Captures/HTML/Lighthouse complets privés dans D:/CodexProjects/outputs/mareliure-perf-before et mareliure-perf-after-final.

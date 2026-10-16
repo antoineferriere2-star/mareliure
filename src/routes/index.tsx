@@ -2,9 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 import { useForwardStrayAuthHash } from "@/hooks/use-forward-stray-auth-hash";
 import { ReliureLanding } from "@/marketplace/pages/ReliureLanding";
-import { FineBinderyLandingPage } from "@/marketplace/pages/fineBindery/FineBinderyLanding";
 import { faqPageSchema, jsonLdScript, ORGANIZATION_ID, SITE_URL, WEBSITE_ID } from "@/lib/structured-data";
-import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
+import { fineBinderyHeadCopy } from "@/marketplace/i18n/fineBinderyHeadCopy";
 import { isMaReliure } from "@/brand";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 import { MARKETPLACE_BRAND_CONFIGS, type MarketplaceBrand } from "@/marketplace/brand/brandConfig";
@@ -127,7 +126,7 @@ function fineBinderyHead() {
     // Les 8 questions de la section "Questions, answered" — le même tableau
     // que FineBinderyLandingPage rend, jamais une copie à part qui pourrait
     // diverger (audit express SEO/GEO, 15 septembre 2026, action 5).
-    scripts: [jsonLdScript(faqPageSchema(fineBinderyCopy("en").home.faq))],
+    scripts: [jsonLdScript(faqPageSchema(fineBinderyHeadCopy("en").faq))],
   };
 }
 
@@ -158,9 +157,12 @@ const BuildPublicHome = lazy(() =>
   import("@/build/pages/public/BuildPublicHome").then((module) => ({ default: module.BuildPublicHome })),
 );
 
+// Le contenu Fine Bindery ne doit pas être chargé par l'accueil Ma Reliure.
+const FineBinderyLandingPage = lazy(() => import("@/marketplace/pages/fineBindery/FineBinderyLanding").then((module) => ({ default: module.FineBinderyLandingPage })));
+
 function HomeRoute() {
   const { brand } = Route.useLoaderData();
   useForwardStrayAuthHash();
   if (!isMaReliure) return <Suspense fallback={null}><BuildPublicHome /></Suspense>;
-  return brand === "FINE_BINDERY" ? <FineBinderyLandingPage /> : <ReliureLanding />;
+  return brand === "FINE_BINDERY" ? <Suspense fallback={null}><FineBinderyLandingPage /></Suspense> : <ReliureLanding />;
 }

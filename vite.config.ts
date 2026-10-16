@@ -83,6 +83,10 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
     // Co-located *.test.ts files under src/routes/** are not routes.
-    router: { routeFileIgnorePattern: "\\.test\\.ts$" },
+    router: {
+      routeFileIgnorePattern: "\\.test\\.ts$",
+      // Un loader privé n'est requis qu'à l'ouverture de sa route.
+      codeSplittingOptions: { defaultBehavior: [["loader"], ["component"], ["pendingComponent"], ["errorComponent"], ["notFoundComponent"]] },
+    },
   },
 });

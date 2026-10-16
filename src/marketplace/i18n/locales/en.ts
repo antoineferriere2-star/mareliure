@@ -1,4 +1,6 @@
 import type { FineBinderyPublicCopy } from "./types";
+import { enSeo, enHomeFaq, enProjectStart, enDirectoryLabel, enProfileNotFound } from "./enHead";
+
 
 /**
  * English is the reference copy of Fine Bindery: plain, premium English —
@@ -7,16 +9,9 @@ import type { FineBinderyPublicCopy } from "./types";
  * roster that does not exist yet.
  */
 export const en: FineBinderyPublicCopy = {
-  seo: {
-    homeTitle: "Fine Bindery — European bookbinding & book conservation",
-    homeDescription: "Discover skilled bookbinders and book conservators, present your project and work with the right atelier. The network opens in France.",
-    directoryTitle: "Bookbinders & book conservators — Fine Bindery",
-    directoryDescription: "Browse independent ateliers for bookbinding, restoration, conservation and gilding, and present your project directly to one of them.",
-    profileTitle: (w) => `${w} — Bookbinding and restoration | Fine Bindery`,
-    profileDescription: (w, c) => `Discover ${w}, an independent bookbinding and conservation atelier in ${c}.`,
-  },
-  nav: { how: "How it works", services: "Disciplines", workshops: "Ateliers", faq: "FAQ", signIn: "Sign in", language: "Language", menu: "Menu" },
-  common: { start: "Present your project", project: "Project", france: "France", skills: "Skills", languages: "Languages", techniques: "Techniques & materials", originalText: "Atelier text shown in its original language." },
+  seo: enSeo,
+  nav: { how: "How it works", services: "Disciplines", workshops: enDirectoryLabel, faq: "FAQ", signIn: "Sign in", language: "Language", menu: "Menu" },
+  common: { start: enProjectStart, project: "Project", france: "France", skills: "Skills", languages: "Languages", techniques: "Techniques & materials", originalText: "Atelier text shown in its original language." },
   footer: { summary: "The European network for bookbinding and book conservation.", information: "Information", legal: "Legal notice", privacy: "Privacy policy", terms: "Terms of use", sales: "Terms of sale", closing: "Bookbinding, conservation and gilding, by independent ateliers." },
   home: {
     eyebrow: "Bookbinding · Conservation · Gilding",
@@ -39,14 +34,7 @@ export const en: FineBinderyPublicCopy = {
     networkNote: "The network opens with ateliers in France, and will welcome bookbinders and conservators from across Europe.",
     trustEyebrow: "Your book travels", trustTitle: "Your book travels. Its story does not get lost.", trust: ["Documented condition", "One point of contact", "Reviewed ateliers", "A followed journey"],
     shippingEyebrow: "Shipping", shippingTitle: "A journey adapted to the book.", shippingLead: "The journey is organised according to the nature and value of the book, and quoted separately from the work itself.",
-    faqEyebrow: "Questions, answered", faqTitle: "Before you start.", faq: [
-      { question: "Can I contact an atelier directly?", answer: "Yes. A project presented from an atelier’s page reaches that atelier directly." },
-      { question: "Who sells to me and who invoices me?", answer: "It depends on how you start. A project presented from an atelier’s page makes that atelier your seller: it sends its own quote and invoices you. A project presented to Fine Bindery is sold by OPPE SAS under the Fine Bindery brand, which chooses the atelier, issues the quote and the invoice, and takes payment; the atelier then invoices OPPE SAS, never you." },
-      { question: "How are ateliers chosen for the network?", answer: "Fine Bindery reviews each atelier before publishing its page: its skills, its experience and the kind of work it wishes to receive. There is no ranking and no paid placement." },
-      { question: "Do I need to speak French?", answer: "No. Each atelier lists the languages it speaks, and Fine Bindery remains your point of contact when you present a project to us." },
-      { question: "Is shipping included?", answer: "No. Shipping is quoted separately, according to destination, value and the level of care the book requires." },
-      { question: "Can valuable or antique books be entrusted?", answer: "Yes, subject to an individual review and suitable logistics." },
-    ],
+    faqEyebrow: "Questions, answered", faqTitle: "Before you start.", faq: enHomeFaq,
     finalTitle: "Your book deserves the right hands.", finalLead: "Browse the ateliers of the network, or present your project and let us find the right one.", established: "established",
   },
   directory: {
@@ -66,6 +54,6 @@ export const en: FineBinderyPublicCopy = {
     training: "Training & experience", approach: "Approach", portfolio: "Selected work", work: "Work from the atelier.", before: "Before", after: "After",
     finalEyebrow: "One book, one conversation", finalTitle: (w) => `Discuss your project directly with ${w}.`,
     website: "Atelier website", call: "Call the atelier", email: "Email the atelier",
-    notFound: "Atelier not found", notFoundBody: "This page is not published or no longer exists.", back: "Browse the ateliers",
+    notFound: enProfileNotFound, notFoundBody: "This page is not published or no longer exists.", back: "Browse the ateliers",
   },
 };

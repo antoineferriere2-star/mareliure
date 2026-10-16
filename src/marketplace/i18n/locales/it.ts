@@ -1,16 +1,11 @@
 import type { FineBinderyPublicCopy } from "./types";
+import { itSeo, itHomeFaq, itProjectStart, itDirectoryLabel, itProfileNotFound } from "./itHead";
+
 
 export const it: FineBinderyPublicCopy = {
-  seo: {
-    homeTitle: "Fine Bindery — Legatoria e restauro del libro in Europa",
-    homeDescription: "Scopri legatori e restauratori esperti, presenta il tuo progetto e lavora con il laboratorio giusto. La rete apre in Francia.",
-    directoryTitle: "Legatori e restauratori di libri — Fine Bindery",
-    directoryDescription: "Scopri laboratori indipendenti di legatoria, restauro, conservazione e doratura, e presenta il tuo progetto direttamente a uno di loro.",
-    profileTitle: (w) => `${w} — Legatoria e restauro | Fine Bindery`,
-    profileDescription: (w, c) => `Scopri ${w}, laboratorio indipendente di legatoria e conservazione a ${c}.`,
-  },
-  nav: { how: "Come funziona", services: "Competenze", workshops: "Laboratori", faq: "Domande", signIn: "Accedi", language: "Lingua", menu: "Menu" },
-  common: { start: "Presenta il tuo progetto", project: "Progetto", france: "Francia", skills: "Competenze", languages: "Lingue", techniques: "Tecniche e materiali", originalText: "Testo del laboratorio nella lingua originale." },
+  seo: itSeo,
+  nav: { how: "Come funziona", services: "Competenze", workshops: itDirectoryLabel, faq: "Domande", signIn: "Accedi", language: "Lingua", menu: "Menu" },
+  common: { start: itProjectStart, project: "Progetto", france: "Francia", skills: "Competenze", languages: "Lingue", techniques: "Tecniche e materiali", originalText: "Testo del laboratorio nella lingua originale." },
   footer: { summary: "La rete europea della legatoria e del restauro del libro.", information: "Informazioni", legal: "Note legali", privacy: "Privacy", terms: "Condizioni d’uso", sales: "Condizioni di vendita", closing: "Legatoria, conservazione e doratura, da laboratori indipendenti." },
   home: {
     eyebrow: "Legatoria · Conservazione · Doratura",
@@ -33,14 +28,7 @@ export const it: FineBinderyPublicCopy = {
     networkNote: "La rete apre con laboratori in Francia e accoglierà legatori e restauratori di tutta Europa.",
     trustEyebrow: "Il tuo libro viaggia", trustTitle: "Il tuo libro viaggia. La sua storia non si perde.", trust: ["Stato documentato", "Un solo interlocutore", "Laboratori verificati", "Un viaggio accompagnato"],
     shippingEyebrow: "Spedizione", shippingTitle: "Un viaggio adatto al libro.", shippingLead: "Il viaggio è organizzato secondo la natura e il valore del libro, e preventivato a parte rispetto al lavoro.",
-    faqEyebrow: "Le tue domande", faqTitle: "Prima di iniziare.", faq: [
-      { question: "Posso contattare direttamente un laboratorio?", answer: "Sì. Un progetto presentato dalla pagina di un laboratorio arriva direttamente a quel laboratorio." },
-      { question: "Chi mi vende il servizio e chi mi fattura?", answer: "Dipende da come iniziate. Un progetto presentato dalla pagina di un laboratorio rende quel laboratorio il vostro venditore: invia il proprio preventivo e vi fattura. Un progetto presentato a Fine Bindery è venduto da OPPE SAS con il marchio Fine Bindery, che sceglie il laboratorio, emette preventivo e fattura e incassa; il laboratorio fattura poi OPPE SAS, mai voi." },
-      { question: "Come vengono scelti i laboratori?", answer: "Fine Bindery verifica ogni laboratorio prima di pubblicarne la pagina: competenze, esperienza e tipo di lavori che desidera ricevere. Non ci sono classifiche né posizionamenti a pagamento." },
-      { question: "Devo parlare la lingua del laboratorio?", answer: "No. Ogni laboratorio indica le lingue che parla, e Fine Bindery resta il tuo interlocutore quando ci presenti un progetto." },
-      { question: "La spedizione è inclusa?", answer: "No. Viene preventivata a parte, secondo destinazione, valore e cura richiesta." },
-      { question: "Posso affidare un libro antico o prezioso?", answer: "Sì, dopo una valutazione individuale e con una logistica adeguata." },
-    ],
+    faqEyebrow: "Le tue domande", faqTitle: "Prima di iniziare.", faq: itHomeFaq,
     finalTitle: "Il tuo libro merita le mani giuste.", finalLead: "Sfoglia i laboratori della rete, oppure presenta il tuo progetto e lascia che troviamo quello giusto.", established: "dal",
   },
   directory: {
@@ -60,6 +48,6 @@ export const it: FineBinderyPublicCopy = {
     training: "Formazione ed esperienza", approach: "Approccio", portfolio: "Lavori scelti", work: "Il lavoro del laboratorio.", before: "Prima", after: "Dopo",
     finalEyebrow: "Un libro, un dialogo", finalTitle: (w) => `Parla del tuo progetto direttamente con ${w}.`,
     website: "Sito del laboratorio", call: "Chiama il laboratorio", email: "Scrivi al laboratorio",
-    notFound: "Laboratorio non trovato", notFoundBody: "Questa pagina non è pubblicata o non esiste più.", back: "Sfoglia i laboratori",
+    notFound: itProfileNotFound, notFoundBody: "Questa pagina non è pubblicata o non esiste più.", back: "Sfoglia i laboratori",
   },
 };

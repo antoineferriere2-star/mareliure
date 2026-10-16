@@ -1,0 +1,558 @@
+{
+  "date": "2026-10-15",
+  "baseCommit": "fb32fe1a8f5438baa307441f9ddb613ab85d4da6",
+  "candidateCodeCommit": "065b785",
+  "lighthouseVersion": "12.8.2",
+  "browser": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/151.0.0.0 Safari/537.36",
+  "settings": {
+    "formFactor": "mobile",
+    "screenEmulation": {
+      "mobile": true,
+      "width": 412,
+      "height": 823,
+      "deviceScaleFactor": 1.75,
+      "disabled": false
+    },
+    "throttlingMethod": "simulate",
+    "throttling": {
+      "rttMs": 150,
+      "throughputKbps": 1638.4,
+      "requestLatencyMs": 562.5,
+      "downloadThroughputKbps": 1474.5600000000002,
+      "uploadThroughputKbps": 675,
+      "cpuSlowdownMultiplier": 4
+    },
+    "blockedUrlPatterns": [
+      "*/api/public/track-view",
+      "*supabase.co/*"
+    ]
+  },
+  "server": "Nitro node-server, ressources sans compression CDN, même configuration avant/après",
+  "comparison": [
+    {
+      "id": "home",
+      "page": "/ — Ma Reliure",
+      "before": {
+        "id": "home",
+        "jsBytes": 562032,
+        "jsTransferBytes": 578009,
+        "scriptCount": 48,
+        "lcpMs": 6348.309125000001,
+        "fcpMs": 5633.0473,
+        "tbtMs": 27,
+        "cls": 0,
+        "speedIndexMs": 5633.0473,
+        "score": 0.63
+      },
+      "after": {
+        "id": "home",
+        "jsBytes": 504070,
+        "jsTransferBytes": 518708,
+        "scriptCount": 44,
+        "lcpMs": 6043.598875,
+        "fcpMs": 5328.079099999998,
+        "tbtMs": 16,
+        "cls": 0,
+        "speedIndexMs": 5328.079099999998,
+        "score": 0.64
+      },
+      "jsReductionPercent": 10.31293591823953
+    },
+    {
+      "id": "partners",
+      "page": "/partenaires-relieurs",
+      "before": {
+        "id": "partners",
+        "jsBytes": 530412,
+        "jsTransferBytes": 544386,
+        "scriptCount": 42,
+        "lcpMs": 6606.952000000001,
+        "fcpMs": 5706.952000000002,
+        "tbtMs": 11,
+        "cls": 0,
+        "speedIndexMs": 5706.952000000002,
+        "score": 0.63
+      },
+      "after": {
+        "id": "partners",
+        "jsBytes": 505292,
+        "jsTransferBytes": 519598,
+        "scriptCount": 43,
+        "lcpMs": 6218.358000000004,
+        "fcpMs": 5318.358000000001,
+        "tbtMs": 13,
+        "cls": 0,
+        "speedIndexMs": 5318.358000000001,
+        "score": 0.64
+      },
+      "jsReductionPercent": 4.735941117470944
+    },
+    {
+      "id": "pricing",
+      "page": "/tarifs",
+      "before": {
+        "id": "pricing",
+        "jsBytes": 522590,
+        "jsTransferBytes": 535901,
+        "scriptCount": 40,
+        "lcpMs": 5920.754000000001,
+        "fcpMs": 5470.754,
+        "tbtMs": 9,
+        "cls": 0,
+        "speedIndexMs": 5470.754,
+        "score": 0.65
+      },
+      "after": {
+        "id": "pricing",
+        "jsBytes": 497475,
+        "jsTransferBytes": 511118,
+        "scriptCount": 41,
+        "lcpMs": 5777.200000000001,
+        "fcpMs": 5327.200000000001,
+        "tbtMs": 6,
+        "cls": 0,
+        "speedIndexMs": 5327.200000000001,
+        "score": 0.65
+      },
+      "jsReductionPercent": 4.805870759103692
+    },
+    {
+      "id": "finebindery-en",
+      "page": "/en — Fine Bindery",
+      "before": {
+        "id": "finebindery-en",
+        "jsBytes": 543296,
+        "jsTransferBytes": 558604,
+        "scriptCount": 46,
+        "lcpMs": 6120.650000000001,
+        "fcpMs": 5336.1939999999995,
+        "tbtMs": 24.5,
+        "cls": 0,
+        "speedIndexMs": 5336.1939999999995,
+        "score": 0.64
+      },
+      "after": {
+        "id": "finebindery-en",
+        "jsBytes": 532923,
+        "jsTransferBytes": 548229,
+        "scriptCount": 46,
+        "lcpMs": 5968.351249999999,
+        "fcpMs": 5028.481,
+        "tbtMs": 22.5,
+        "cls": 0,
+        "speedIndexMs": 5028.481,
+        "score": 0.65
+      },
+      "jsReductionPercent": 1.9092722935563633
+    }
+  ],
+  "beforeRuns": [
+    {
+      "id": "home",
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.59,
+      "lcpMs": 6345.401250000001,
+      "fcpMs": 5630.121,
+      "tbtMs": 231,
+      "cls": 0,
+      "speedIndexMs": 5630.121,
+      "jsBytes": 562032,
+      "jsTransferBytes": 578009,
+      "scriptCount": 48,
+      "warnings": []
+    },
+    {
+      "id": "partners",
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.63,
+      "lcpMs": 6606.952000000001,
+      "fcpMs": 5706.952000000002,
+      "tbtMs": 4.5,
+      "cls": 0,
+      "speedIndexMs": 5706.952000000002,
+      "jsBytes": 530412,
+      "jsTransferBytes": 544386,
+      "scriptCount": 42,
+      "warnings": []
+    },
+    {
+      "id": "pricing",
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.65,
+      "lcpMs": 5923.904,
+      "fcpMs": 5473.904000000001,
+      "tbtMs": 4.5,
+      "cls": 0,
+      "speedIndexMs": 5473.904000000001,
+      "jsBytes": 522590,
+      "jsTransferBytes": 535901,
+      "scriptCount": 40,
+      "warnings": []
+    },
+    {
+      "id": "finebindery-en",
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.64,
+      "lcpMs": 6120.650000000001,
+      "fcpMs": 5329.720000000001,
+      "tbtMs": 11,
+      "cls": 0,
+      "speedIndexMs": 5329.720000000001,
+      "jsBytes": 543296,
+      "jsTransferBytes": 558604,
+      "scriptCount": 46,
+      "warnings": []
+    },
+    {
+      "id": "home",
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.63,
+      "lcpMs": 6355.093375000002,
+      "fcpMs": 5643.874700000001,
+      "tbtMs": 16,
+      "cls": 0,
+      "speedIndexMs": 5643.874700000001,
+      "jsBytes": 562032,
+      "jsTransferBytes": 578009,
+      "scriptCount": 48,
+      "warnings": []
+    },
+    {
+      "id": "partners",
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.63,
+      "lcpMs": 6461.4569999999985,
+      "fcpMs": 5636.457000000001,
+      "tbtMs": 15.5,
+      "cls": 0,
+      "speedIndexMs": 5636.457000000001,
+      "jsBytes": 530412,
+      "jsTransferBytes": 544386,
+      "scriptCount": 42,
+      "warnings": []
+    },
+    {
+      "id": "pricing",
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.65,
+      "lcpMs": 5911.185999999998,
+      "fcpMs": 5461.185999999999,
+      "tbtMs": 9,
+      "cls": 0,
+      "speedIndexMs": 5461.185999999999,
+      "jsBytes": 522590,
+      "jsTransferBytes": 535901,
+      "scriptCount": 40,
+      "warnings": []
+    },
+    {
+      "id": "finebindery-en",
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.64,
+      "lcpMs": 6117.6174999999985,
+      "fcpMs": 5398.693999999999,
+      "tbtMs": 24.5,
+      "cls": 0,
+      "speedIndexMs": 5398.693999999999,
+      "jsBytes": 543296,
+      "jsTransferBytes": 558604,
+      "scriptCount": 46,
+      "warnings": []
+    },
+    {
+      "id": "home",
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.63,
+      "lcpMs": 6348.309125000001,
+      "fcpMs": 5633.0473,
+      "tbtMs": 27,
+      "cls": 0,
+      "speedIndexMs": 5633.0473,
+      "jsBytes": 562032,
+      "jsTransferBytes": 578009,
+      "scriptCount": 48,
+      "warnings": []
+    },
+    {
+      "id": "partners",
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.63,
+      "lcpMs": 6612.509500000002,
+      "fcpMs": 5712.509500000001,
+      "tbtMs": 11,
+      "cls": 0,
+      "speedIndexMs": 5712.509500000001,
+      "jsBytes": 530412,
+      "jsTransferBytes": 544386,
+      "scriptCount": 42,
+      "warnings": []
+    },
+    {
+      "id": "pricing",
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.65,
+      "lcpMs": 5920.754000000001,
+      "fcpMs": 5470.754,
+      "tbtMs": 13.5,
+      "cls": 0,
+      "speedIndexMs": 5470.754,
+      "jsBytes": 522590,
+      "jsTransferBytes": 535901,
+      "scriptCount": 40,
+      "warnings": []
+    },
+    {
+      "id": "finebindery-en",
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.64,
+      "lcpMs": 6124.2425,
+      "fcpMs": 5336.1939999999995,
+      "tbtMs": 32.5,
+      "cls": 0,
+      "speedIndexMs": 5336.1939999999995,
+      "jsBytes": 543296,
+      "jsTransferBytes": 558604,
+      "scriptCount": 46,
+      "warnings": []
+    }
+  ],
+  "afterRuns": [
+    {
+      "id": "home",
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.41,
+      "lcpMs": 5853.635000000001,
+      "fcpMs": 5253.635,
+      "tbtMs": 1296.3412500000022,
+      "cls": 0,
+      "speedIndexMs": 5253.635,
+      "jsBytes": 504070,
+      "jsTransferBytes": 518708,
+      "scriptCount": 44,
+      "warnings": []
+    },
+    {
+      "id": "partners",
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.64,
+      "lcpMs": 6218.358000000004,
+      "fcpMs": 5318.358000000001,
+      "tbtMs": 17,
+      "cls": 0,
+      "speedIndexMs": 5318.358000000001,
+      "jsBytes": 505292,
+      "jsTransferBytes": 519598,
+      "scriptCount": 43,
+      "warnings": []
+    },
+    {
+      "id": "pricing",
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.65,
+      "lcpMs": 5777.200000000001,
+      "fcpMs": 5327.200000000001,
+      "tbtMs": 15,
+      "cls": 0,
+      "speedIndexMs": 5327.200000000001,
+      "jsBytes": 497475,
+      "jsTransferBytes": 511118,
+      "scriptCount": 41,
+      "warnings": []
+    },
+    {
+      "id": "finebindery-en",
+      "run": 1,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.65,
+      "lcpMs": 5977.590000000001,
+      "fcpMs": 5034.072000000002,
+      "tbtMs": 22.5,
+      "cls": 0,
+      "speedIndexMs": 5034.072000000002,
+      "jsBytes": 532923,
+      "jsTransferBytes": 548229,
+      "scriptCount": 46,
+      "warnings": []
+    },
+    {
+      "id": "home",
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.64,
+      "lcpMs": 6048.076125,
+      "fcpMs": 5336.4609,
+      "tbtMs": 16,
+      "cls": 0,
+      "speedIndexMs": 5336.4609,
+      "jsBytes": 504070,
+      "jsTransferBytes": 518708,
+      "scriptCount": 44,
+      "warnings": []
+    },
+    {
+      "id": "partners",
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.64,
+      "lcpMs": 6218.092000000001,
+      "fcpMs": 5318.091999999999,
+      "tbtMs": 13,
+      "cls": 0,
+      "speedIndexMs": 5318.091999999999,
+      "jsBytes": 505292,
+      "jsTransferBytes": 519598,
+      "scriptCount": 43,
+      "warnings": []
+    },
+    {
+      "id": "pricing",
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.65,
+      "lcpMs": 5785.2111,
+      "fcpMs": 5335.2110999999995,
+      "tbtMs": 3.5,
+      "cls": 0,
+      "speedIndexMs": 5335.2110999999995,
+      "jsBytes": 497475,
+      "jsTransferBytes": 511118,
+      "scriptCount": 41,
+      "warnings": []
+    },
+    {
+      "id": "finebindery-en",
+      "run": 2,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.66,
+      "lcpMs": 5846.176999999998,
+      "fcpMs": 5021.176999999999,
+      "tbtMs": 24,
+      "cls": 0.02659388646863285,
+      "speedIndexMs": 5021.176999999999,
+      "jsBytes": 532923,
+      "jsTransferBytes": 548229,
+      "scriptCount": 46,
+      "warnings": []
+    },
+    {
+      "id": "home",
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.65,
+      "lcpMs": 6043.598875,
+      "fcpMs": 5328.079099999998,
+      "tbtMs": 10,
+      "cls": 0,
+      "speedIndexMs": 5328.079099999998,
+      "jsBytes": 504070,
+      "jsTransferBytes": 518708,
+      "scriptCount": 44,
+      "warnings": []
+    },
+    {
+      "id": "partners",
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.64,
+      "lcpMs": 6237.14,
+      "fcpMs": 5337.140000000001,
+      "tbtMs": 9,
+      "cls": 0,
+      "speedIndexMs": 5337.140000000001,
+      "jsBytes": 505292,
+      "jsTransferBytes": 519598,
+      "scriptCount": 43,
+      "warnings": []
+    },
+    {
+      "id": "pricing",
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.65,
+      "lcpMs": 5771.978,
+      "fcpMs": 5321.978,
+      "tbtMs": 6,
+      "cls": 0,
+      "speedIndexMs": 5321.978,
+      "jsBytes": 497475,
+      "jsTransferBytes": 511118,
+      "scriptCount": 41,
+      "warnings": []
+    },
+    {
+      "id": "finebindery-en",
+      "run": 3,
+      "lighthouseVersion": "12.8.2",
+      "score": 0.65,
+      "lcpMs": 5968.351249999999,
+      "fcpMs": 5028.481,
+      "tbtMs": 19,
+      "cls": 0,
+      "speedIndexMs": 5028.481,
+      "jsBytes": 532923,
+      "jsTransferBytes": 548229,
+      "scriptCount": 46,
+      "warnings": []
+    }
+  ],
+  "render": {
+    "pages": [
+      {
+        "id": "home",
+        "identicalBody": true
+      },
+      {
+        "id": "partners",
+        "identicalBody": true
+      },
+      {
+        "id": "pricing",
+        "identicalBody": true
+      },
+      {
+        "id": "finebindery-en",
+        "identicalBody": true
+      }
+    ],
+    "identicalCss": true,
+    "bodyHashes": [
+      {
+        "id": "home",
+        "sha256": "48a8d87b0428db863bfe63b2bd9c37c28fa1643cb68e0874220eb56af3aa74ae"
+      },
+      {
+        "id": "partners",
+        "sha256": "34426e4944706662422f6af50c057af8107e35b844748bcabfe011f5adac8d2e"
+      },
+      {
+        "id": "pricing",
+        "sha256": "b012dd28929d892882d1d9645ed7d88e9c2a749d4c5a1678725dcbb773afbee8"
+      },
+      {
+        "id": "finebindery-en",
+        "sha256": "db23c58ca1474dd6f0fcb68c2a223813e0399e4d3e160e90e0bc362111f4a3a4"
+      }
+    ],
+    "styles": [
+      {
+        "file": "styles-DJcyKPmt.css",
+        "sha256": "a02e706efb3d5a4e22ce443c69bcb80408946cbe3170b6ce2248bd1a7ac0a2de"
+      }
+    ]
+  }
+}
