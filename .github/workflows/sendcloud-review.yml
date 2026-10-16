@@ -1,0 +1,23 @@
+name: Independent Sendcloud review
+on:
+  pull_request:
+    paths:
+      - "scripts/audits/sendcloudP1Review.test.ts"
+      - "vitest.sendcloud-review.config.ts"
+      - "src/marketplace/shipping/**"
+      - "supabase/migrations/*round_trip*"
+      - "package*.json"
+      - ".github/workflows/sendcloud-review.yml"
+  workflow_dispatch:
+jobs:
+  characterization:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run test:sendcloud-review
