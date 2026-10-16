@@ -20,6 +20,7 @@
     "configure:mareliure-auth": "tsx scripts/configureMareliureAuth.ts",
     "setup:stripe-portal": "tsx scripts/setupStripeBillingPortal.ts",
     "test:e2e": "playwright test",
+    "test:e2e:customer": "playwright test --config playwright.customer.config.ts",
     "test:e2e:ui": "playwright test --ui",
     "deploy:mareliure": "npm run build:mareliure && npx wrangler deploy --name mareliure",
     "secrets:mareliure": "npx wrangler secret bulk --name mareliure",
@@ -110,7 +111,8 @@
     "typescript": "^5.8.3",
     "typescript-eslint": "^8.56.1",
     "vite": "^8.0.16",
-    "vitest": "^3.2.4"
+    "vitest": "^3.2.4",
+    "seroval": "1.5.6"
   },
   "pnpm": {
     "overrides": {

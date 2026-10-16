@@ -73,3 +73,18 @@ just more test code:
 
 Building that harness is a separate, deliberate piece of work — flagged here
 rather than done partially and left half-safe.
+
+## Local customer journey with mocked server functions
+
+`npm run test:e2e:customer` selects only `e2e/customer`, starts its own local
+Vite server and uses synthetic Auth/RPC data. It needs no Supabase or vendor
+credentials. It exercises the real request and customer UI in French and
+English, at iframe widths 1280 and 375 CSS pixels. Unknown server functions
+and unexpected external requests fail the test. It never runs the live tests
+described above. Install Chromium with `npx playwright install chromium` first.
+
+See [the dated recipe and screenshots](../docs/CUSTOMER_JOURNEY_20261016.md)
+for coverage, mocked validation limits and wording findings. The dedicated CI
+workflow retains the Playwright report and attachments. A custom local browser
+can be selected through `E2E_CHROMIUM_EXECUTABLE_PATH`; server reuse requires
+the explicit opt-in `E2E_CUSTOMER_REUSE_SERVER=1`.
