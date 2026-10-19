@@ -215,8 +215,10 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
         shipmentId = found?.id;
         // Le colis trouvé par référence doit être celui rattaché à la réservation : une identité
         // contradictoire n’est jamais annulée (revue Codex du 19/10, P1).
-        const foundParcel = found?.parcels?.[0]?.id;
-        if (shipmentId && labelId && foundParcel !== undefined && String(foundParcel) !== String(labelId))
+        // Exactement un colis, d’identité lisible et égale au colis rattaché : sinon rien n’est annulé.
+        const parcels = found?.parcels ?? [];
+        if (shipmentId && labelId && (parcels.length !== 1 || parcels[0]?.id === undefined || parcels[0]?.id === null
+          || String(parcels[0].id) !== String(labelId)))
           return { kind: "refused", code: "parcel_identity_mismatch" };
       } catch { return { kind: "ambiguous", code: "lookup_failed" }; }
       // Colis adopté ou retour : introuvable par référence, annulé par son identifiant (API v2,

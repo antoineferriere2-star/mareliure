@@ -305,6 +305,18 @@ describe("résolution opérateur d'une réservation ambiguë (audit P1-2)", () =
     expect(await status(job)).toBe("ambiguous");
     expect(provider.createCalls).toBe(1);
   });
+  it("webhook qui annule entre la lecture d'état et l'écriture : pas d'erreur, statut annulé", async () => {
+    const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
+    const base = store();
+    let raced = false;
+    const racing: LabelJobStore = { ...base, async transition(id, kind, details, eventId) {
+      if (kind === "cancelled" && !raced) { raced = true; await base.transition(id, "cancelled", { provider: "sendcloud", reference: "webhook", source: "provider_status" }); }
+      return base.transition(id, kind, details, eventId);
+    } };
+    Object.assign(provider, { findByLabelId: async () => ({ ...provider.labels.get(job)!, status: { code: "2000", message: "Cancelled" } }) });
+    expect(await purchaseLeg(provider, racing, job, request)).toEqual({ state: "review_required", code: "label_unusable" });
+    expect(await status(job)).toBe("cancelled");
+  });
   it("relecture après confirmation idempotente quand le webhook a déjà annulé", async () => {
     const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
     Object.assign(provider, { findByLabelId: async () => {

@@ -145,8 +145,13 @@ async function reconcileAfterConfirm(provider: LabelProvider, store: LabelJobSto
   if (!current || current === "unknown" || !isUnusableProviderStatus(current.status)) return result;
   // Idempotent : le webhook a pu enregistrer l’annulation pendant la relecture (revue du 19/10, P2).
   if ((await store.job(jobId))?.status === "confirmed") {
-    await store.transition(jobId, "cancelled", { provider: provider.name, reference: labelId, source: "provider_status_recheck",
-      code: current.status?.code ?? "unknown" });
+    try {
+      await store.transition(jobId, "cancelled", { provider: provider.name, reference: labelId, source: "provider_status_recheck",
+        code: current.status?.code ?? "unknown" });
+    } catch (error) {
+      // Le webhook a annulé entre la lecture et l’écriture : l’issue voulue est atteinte. Toute autre erreur remonte.
+      if ((await store.job(jobId))?.status !== "cancelled") throw error;
+    }
   }
   return { state: "review_required", code: "label_unusable" };
 }

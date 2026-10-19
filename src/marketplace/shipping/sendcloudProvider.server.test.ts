@@ -182,6 +182,15 @@ describe("annulation : identité du colis (revue du 19/10)", () => {
     expect(await provider([ok(200, { data: [other] })], calls).cancel("job-1", "701")).toEqual({ kind: "refused", code: "parcel_identity_mismatch" });
     expect(calls).toHaveLength(1);
   });
+  it.each([
+    ["identité absente", [{ ...shipment.parcels[0], id: undefined }]],
+    ["colis supplémentaire", [shipment.parcels[0], { ...shipment.parcels[0], id: 43 }]],
+    ["aucun colis", []],
+  ] as const)("refuse d'annuler un envoi v3 : %s", async (_name, parcels) => {
+    const calls: { url: string }[] = [];
+    expect(await provider([ok(200, { data: [{ ...shipment, parcels }] })], calls).cancel("job-1", "42")).toEqual({ kind: "refused", code: "parcel_identity_mismatch" });
+    expect(calls).toHaveLength(1);
+  });
   it("annule l'envoi v3 quand son colis est bien celui rattaché", async () => {
     const calls: { url: string }[] = [];
     expect((await provider([ok(200, { data: [shipment] }), ok(200, {})], calls).cancel("job-1", "42")).kind).toBe("cancelled");
