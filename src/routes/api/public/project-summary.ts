@@ -11,6 +11,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { hashAccessToken, ACCESS_TOKEN_BYTES } from "@/build/services/dossierAccessToken.server";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 import { INSPIRATION_PHOTOS_BUCKET } from "@/build/storage/inspirationPhotosBucket";
+import { isSessionPhotoPath } from "@/build/engine/visitorSummary";
 import { isMaReliure } from "@/brand";
 import type { Answers } from "@/build/schema/answers";
 import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
@@ -61,15 +62,21 @@ const NOT_AVAILABLE = { error: "This summary link is not available." };
  * bucket name are server-side implementation details that must never
  * reach a visitor's browser, so they are dropped here rather than passed
  * through and filtered later.
+ *
+ * Only photos of the Dossier's own session are signed: a stored summary is not
+ * trusted to have been filtered when it was written (revue Codex du 19/10, P1).
+ * Each photo is signed in its own bucket — project photos are not inspiration photos.
  */
 async function resolvePhotoUrls(
   supabase: Supa,
-  photos: { path: string; caption?: string }[],
+  photos: { path: string; caption?: string; bucket?: string }[],
+  sessionId: string | null,
 ): Promise<{ url: string | null; caption?: string }[]> {
+  const own = sessionId ? photos.filter((photo) => typeof photo.path === "string" && isSessionPhotoPath(photo.path, sessionId)) : [];
   return Promise.all(
-    photos.map(async ({ path, caption }) => {
+    own.map(async ({ path, caption, bucket }) => {
       const { data, error } = await supabase.storage
-        .from(INSPIRATION_PHOTOS_BUCKET)
+        .from(bucket ?? INSPIRATION_PHOTOS_BUCKET)
         .createSignedUrl(path, 3600);
       if (error) {
         logOperationalError("project-summary.photo-sign-failed", error, {});
@@ -109,7 +116,7 @@ export async function handleGetSummary(supabase: Supa, rawToken: string) {
     .eq("id", tokenRow.id);
 
   let summary = dossier.visitor_summary as {
-    photos: { path: string; caption?: string }[];
+    photos: { path: string; caption?: string; bucket?: string }[];
     [key: string]: unknown;
   };
   if (isMaReliure && dossier.session_id && dossier.mission_id) {
@@ -119,7 +126,7 @@ export async function handleGetSummary(supabase: Supa, rawToken: string) {
     const projected = await workshopSubmissionProjection(supabase,dossier.mission_id,(session?.answers ?? {}) as Answers,summary as unknown as VisitorProjectSummary);
     summary = projected.summary as unknown as typeof summary;
   }
-  const photos = await resolvePhotoUrls(supabase, summary.photos ?? []);
+  const photos = await resolvePhotoUrls(supabase, summary.photos ?? [], dossier.session_id);
 
   return json(200, { summary: { ...summary, photos } });
 }
