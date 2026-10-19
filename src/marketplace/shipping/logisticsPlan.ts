@@ -98,8 +98,11 @@ const text = (min: number, max: number) => z.string().trim().min(min).max(max);
 const country = z.string().trim().toUpperCase().regex(/^[A-Z]{2}$/);
 // Numéro français réel (0X, +33 ou 0033, puis 9 chiffres) : Mondial Relay refuse d'annoncer une
 // étiquette au numéro invalide (15/10, « 1671223171 »), et le client resterait sans étiquette.
-const phone = z.string().trim().regex(/^\+?[0-9 .()-]{6,24}$/)
-  .refine((value) => /^(?:0|\+33|0033)[1-9]\d{8}$/.test(value.replace(/[\s.()-]/g, "")), "invalid_phone");
+// Partagé avec le formulaire client, qui peut ainsi cibler le téléphone au lieu de tout lister.
+export function isFrenchPhone(value: string): boolean {
+  return /^\+?[0-9 .()-]{6,24}$/.test(value.trim()) && /^(?:0|\+33|0033)[1-9]\d{8}$/.test(value.replace(/[\s.()-]/g, ""));
+}
+const phone = z.string().trim().refine(isFrenchPhone, "invalid_phone");
 const millimetres = z.number().int().min(1).max(2000);
 const addressBase = z.object({
   name: text(2, 120), line1: text(3, 160), line2: z.string().trim().max(160).nullable().default(null),
