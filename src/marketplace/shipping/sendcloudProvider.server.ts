@@ -211,7 +211,13 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
       try {
         const response = await call(`/shipments?external_reference_id=${encodeURIComponent(reference)}`);
         if (!response.ok) return { kind: "ambiguous", code: `lookup_${response.status}` };
-        shipmentId = ((await response.json()) as { data?: ShipmentJson[] }).data?.[0]?.id;
+        const found = ((await response.json()) as { data?: ShipmentJson[] }).data?.[0];
+        shipmentId = found?.id;
+        // Le colis trouvé par référence doit être celui rattaché à la réservation : une identité
+        // contradictoire n’est jamais annulée (revue Codex du 19/10, P1).
+        const foundParcel = found?.parcels?.[0]?.id;
+        if (shipmentId && labelId && foundParcel !== undefined && String(foundParcel) !== String(labelId))
+          return { kind: "refused", code: "parcel_identity_mismatch" };
       } catch { return { kind: "ambiguous", code: "lookup_failed" }; }
       // Colis adopté ou retour : introuvable par référence, annulé par son identifiant (API v2,
       // revue Codex du 16/10, P1-C). 202 = en file (14 jours), 400/410 = refusé, jamais un remboursement présumé.

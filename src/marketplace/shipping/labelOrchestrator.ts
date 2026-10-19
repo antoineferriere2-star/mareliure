@@ -56,14 +56,14 @@ export async function purchaseLeg(provider: LabelProvider, store: LabelJobStore,
   if (job.status === "ambiguous") {
     const existing = await provider.findByReference(jobId, await hint());
     if (existing === "unknown") return { state: "pending", code: "provider_unreadable" };
-    if (existing) return persist(store, jobId, existing);
+    if (existing) return resumeExisting(provider, store, jobId, existing);
   }
   const started = await store.transition(jobId, "request_started", { provider: provider.name });
   // Une tentative précédente sans issue enregistrée : la base a basculé en ambigu.
   if (started.status === "ambiguous" && job.status === "claimed") {
     const existing = await provider.findByReference(jobId, await hint());
     if (existing === "unknown") return { state: "pending", code: "provider_unreadable" };
-    if (existing) return persist(store, jobId, existing);
+    if (existing) return resumeExisting(provider, store, jobId, existing);
   }
   const outcome = await provider.create({ ...(await request()), reference: jobId });
   switch (outcome.kind) {
@@ -143,9 +143,24 @@ async function reconcileAfterConfirm(provider: LabelProvider, store: LabelJobSto
   if (result.state !== "confirmed" || !provider.findByLabelId) return result;
   const current = await provider.findByLabelId(labelId);
   if (!current || current === "unknown" || !isUnusableProviderStatus(current.status)) return result;
-  await store.transition(jobId, "cancelled", { provider: provider.name, reference: labelId, source: "provider_status_recheck",
-    code: current.status?.code ?? "unknown" });
+  // Idempotent : le webhook a pu enregistrer l’annulation pendant la relecture (revue du 19/10, P2).
+  if ((await store.job(jobId))?.status === "confirmed") {
+    await store.transition(jobId, "cancelled", { provider: provider.name, reference: labelId, source: "provider_status_recheck",
+      code: current.status?.code ?? "unknown" });
+  }
   return { state: "review_required", code: "label_unusable" };
+}
+
+/**
+ * Reprise d’un achat dont l’étiquette existe déjà chez le fournisseur (retrouvée par la référence de
+ * la réservation) : mêmes garde-fous que l’achat et l’adoption (revue du 19/10, P1). Une étiquette
+ * annulée ou refusée n’est jamais mise à disposition ; la réservation reste ambiguë pour l’opérateur
+ * (« Déclarer absente » avec la preuve de l’annulation, puis remplacement).
+ */
+async function resumeExisting(provider: LabelProvider, store: LabelJobStore, jobId: string, label: ProviderLabel): Promise<LegResult> {
+  if (label.reference && label.reference !== jobId) return { state: "review_required", code: "reference_mismatch" };
+  if (isUnusableProviderStatus(label.status)) return { state: "review_required", code: "label_unusable" };
+  return reconcileAfterConfirm(provider, store, jobId, await persist(store, jobId, label), label.labelId);
 }
 
 /** Constat écrit qu'aucune étiquette n'existe chez le fournisseur : la réservation ambiguë devient « échouée ». */

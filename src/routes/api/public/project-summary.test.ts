@@ -68,7 +68,7 @@ function createFakeSupabase(seed: Record<string, Row[]> = {}) {
         from(_bucket: string) {
           return {
             async createSignedUrl(path: string) {
-              return { data: { signedUrl: `https://signed.example/${path}` }, error: null };
+              return { data: { signedUrl: signedFor(path) }, error: null };
             },
           };
         },
@@ -76,6 +76,11 @@ function createFakeSupabase(seed: Record<string, Row[]> = {}) {
     } as unknown as Parameters<typeof handleGetSummary>[0],
   };
 }
+
+/** Une URL signée réelle contient le chemin ; ici il est encodé pour que les tests d'identifiants internes restent probants. */
+const signedFor = (path: string) => `https://signed.example/${Buffer.from(path).toString("base64url")}`;
+const SESSION_A = "11111111-1111-4111-8111-111111111111";
+const PHOTO_A = `sessions/${SESSION_A}/22222222-2222-4222-8222-222222222222.jpg`;
 
 const workspaceASummary = {
   version: 1,
@@ -87,7 +92,7 @@ const workspaceASummary = {
   calculatedItems: [],
   itemsToConfirm: [],
   budgetAndTimingItems: [],
-  photos: [{ path: "workspace-a/photo.jpg" }],
+  photos: [{ path: PHOTO_A }],
   confirmationText: null,
   submittedAt: "2026-07-29T00:00:00.000Z",
 };
@@ -99,6 +104,26 @@ async function jsonOf(res: Response) {
 }
 
 describe("handleGetSummary", () => {
+  // Revue Codex du 19/10 : un résumé enregistré n'est pas présumé filtré ; seule la session du Dossier est signée.
+  it("ne signe jamais une photo d'une autre session présente dans un résumé enregistré", async () => {
+    const dossierId = randomUUID();
+    const rawToken = generateAccessToken();
+    const signed: string[] = [];
+    const { client } = createFakeSupabase({
+      build_dossier_access_tokens: [{ id: randomUUID(), dossier_id: dossierId, token_hash: hashAccessToken(rawToken),
+        expires_at: new Date(Date.now() + 86_400_000).toISOString(), revoked_at: null }],
+      build_dossiers: [{ id: dossierId, session_id: SESSION_A, visitor_summary: { ...workspaceASummary,
+        photos: [{ path: PHOTO_A }, { path: "sessions/99999999-9999-4999-8999-999999999999/44444444-4444-4444-8444-444444444444.jpg" }] } }],
+    });
+    const storage = (client as unknown as { storage: { from: (b: string) => { createSignedUrl: (p: string) => Promise<unknown> } } }).storage;
+    const original = storage.from;
+    storage.from = (bucket: string) => ({ createSignedUrl: async (path: string) => { signed.push(path); return original(bucket).createSignedUrl(path); } });
+    const res = await handleGetSummary(client, rawToken);
+    expect(res.status).toBe(200);
+    expect(signed).toEqual([PHOTO_A]);
+    expect(((await jsonOf(res)).summary as { photos: unknown[] }).photos).toHaveLength(1);
+  });
+
   it("returns the summary for a valid, unexpired, unrevoked token", async () => {
     const dossierAId = randomUUID();
     const rawToken = generateAccessToken();
@@ -112,7 +137,7 @@ describe("handleGetSummary", () => {
           revoked_at: null,
         },
       ],
-      build_dossiers: [{ id: dossierAId, visitor_summary: workspaceASummary }],
+      build_dossiers: [{ id: dossierAId, session_id: SESSION_A, visitor_summary: workspaceASummary }],
     });
     const res = await handleGetSummary(client, rawToken);
     expect(res.status).toBe(200);
@@ -120,9 +145,7 @@ describe("handleGetSummary", () => {
     const summary = body.summary as Record<string, unknown>;
     expect(summary.businessName).toBe("Workspace A Decks");
     // Photo path resolved to a signed URL, never left as a bare storage path.
-    expect((summary.photos as { url: string }[])[0].url).toBe(
-      "https://signed.example/workspace-a/photo.jpg",
-    );
+    expect((summary.photos as { url: string }[])[0].url).toBe(signedFor(PHOTO_A));
     // Never a dossier id anywhere in the response.
     expect(JSON.stringify(body)).not.toContain(dossierAId);
   });
@@ -133,7 +156,7 @@ describe("handleGetSummary", () => {
     const missionId = randomUUID();
     const sessionId = randomUUID();
     const rawToken = generateAccessToken();
-    const storagePath = "workspace-a/secret-photo-path.jpg";
+    const storagePath = `sessions/${sessionId}/33333333-3333-4333-8333-333333333333.jpg`;
     const { client } = createFakeSupabase({
       build_dossier_access_tokens: [
         {
@@ -179,7 +202,7 @@ describe("handleGetSummary", () => {
     // reusable, unsigned reference to it.)
     const photo = (body.summary as Record<string, unknown>).photos as Record<string, unknown>[];
     expect(Object.keys(photo[0]).sort()).toEqual(["caption", "url"]);
-    expect(photo[0].url).toBe("https://signed.example/" + storagePath);
+    expect(photo[0].url).toBe(signedFor(storagePath));
   });
 
   it("rejects an unknown token with the generic not-available response", async () => {

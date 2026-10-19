@@ -174,3 +174,17 @@ describe("annulation d'un colis introuvable par référence (revue du 16/10, P1-
     expect(v3).toMatchObject({ reference: "job-1" });
   });
 });
+
+describe("annulation : identité du colis (revue du 19/10)", () => {
+  it("refuse d'annuler un envoi v3 dont le colis n'est pas celui rattaché", async () => {
+    const calls: { url: string }[] = [];
+    const other = { ...shipment, id: "shp-x", parcels: [{ ...shipment.parcels[0], id: 999 }] };
+    expect(await provider([ok(200, { data: [other] })], calls).cancel("job-1", "701")).toEqual({ kind: "refused", code: "parcel_identity_mismatch" });
+    expect(calls).toHaveLength(1);
+  });
+  it("annule l'envoi v3 quand son colis est bien celui rattaché", async () => {
+    const calls: { url: string }[] = [];
+    expect((await provider([ok(200, { data: [shipment] }), ok(200, {})], calls).cancel("job-1", "42")).kind).toBe("cancelled");
+    expect(calls[1].url).toBe("https://panel.sendcloud.sc/api/v3/shipments/shp-1/cancel");
+  });
+});
