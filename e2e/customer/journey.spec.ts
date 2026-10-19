@@ -146,7 +146,7 @@ for (const language of ["fr", "en"] as Language[]) {
     await expect(logistics.getByRole("alert")).toContainText(
       language === "fr" ? "téléphone français" : "French phone number",
     );
-    await expect.poll(() => scenario.phoneRefusals).toBe(1);
+    await expect.poll(() => scenario.phoneRefusals).toBe(0);
     await expect(save).toBeEnabled();
     expect(scenario.savedPlan).toBe(false);
     await phone.fill("+12025550123");
@@ -154,7 +154,7 @@ for (const language of ["fr", "en"] as Language[]) {
     await expect(logistics.getByRole("alert")).toContainText(
       language === "fr" ? "téléphone français" : "French phone number",
     );
-    await expect.poll(() => scenario.phoneRefusals).toBe(2);
+    await expect.poll(() => scenario.phoneRefusals).toBe(0);
     await expect(save).toBeEnabled();
     expect(scenario.savedPlan).toBe(false);
     await capture(frame, info, `${language}-phone-error`);

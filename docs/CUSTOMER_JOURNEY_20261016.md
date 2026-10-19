@@ -46,3 +46,7 @@ Les 16 PNG proviennent de la dernière exécution réussie et montrent le cadre 
 | EN — mobile 375 px | [Capture](customer-journey-20261016/mobile-375-en-submitted.png) | [Capture](customer-journey-20261016/mobile-375-en-phone-error.png) | [Capture](customer-journey-20261016/mobile-375-en-label-preparing.png) | [Capture](customer-journey-20261016/mobile-375-en-label-ready.png) |
 
 Inspection visuelle locale : étiquette FR et EN mobile, dépôt FR bureau, erreur EN bureau. Les autres captures sont conservées et les quatre parcours ont leurs assertions automatisées ; aucune inspection humaine exhaustive de chaque écran n'est prétendue.
+
+## Mise à jour du 19 octobre 2026 (après #137)
+
+Depuis #137, un téléphone vide ou non français est refusé **dans le navigateur, avant tout appel serveur**, avec un message rattaché au téléphone. La recette attend donc zéro refus serveur simulé (`phoneRefusals` = 0) au lieu de un puis deux ; le message localisé et l'absence d'enregistrement restent vérifiés. Le constat du paragraphe « Textes à clarifier » sur le message groupé est traité par #137. Recette rejouée localement sur `main 0b46cc8` fusionné : 4/4 réussis (FR/EN, bureau 1 280 px et mobile 375 px). Les captures jointes datent du 16 octobre et montrent l'ancien message.
