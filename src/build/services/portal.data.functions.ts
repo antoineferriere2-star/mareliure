@@ -401,7 +401,7 @@ export const getWorkspaceDossierPhotos = createServerFn({ method: "GET" })
       .select("answers")
       .eq("id", dossier.session_id)
       .maybeSingle();
-    const refs = extractPhotoReferences((session?.answers ?? {}) as Answers);
+    const refs = extractPhotoReferences((session?.answers ?? {}) as Answers, dossier.session_id);
     if (refs.length === 0) return { photos: [] as DisplayPhotoReference[] };
 
     const photos: DisplayPhotoReference[] = [];
