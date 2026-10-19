@@ -3606,3 +3606,11 @@ Preuves : docs/PUBLIC_JS_20261015.md et .json, 24 passages finaux Lighthouse 12.
 Validation : 98 tests ciblés locaux réussis, build Node local final réussi. CI complète du code 065b785 verte : garde-fous, TypeScript, lint (0 erreur, 19 avertissements historiques), 308 fichiers de tests et build (run 38750051467). Les contrôles locaux complets concurrents ont été interrompus ; pas de succès complet local prétendu. Commits suivants documentaires ; consulter leur CI avant fusion.
 
 Autres chantiers du brief : PR124 audit documentaire Sendcloud, PR125 traductions légales (relecture par un juriste avant publication), CI vertes sur leurs commits de livraison. Aucune fusion, publication, écriture en production ni opération payante. Captures/HTML/Lighthouse complets privés dans D:/CodexProjects/outputs/mareliure-perf-before et mareliure-perf-after-final.
+
+## Latest handoff
+
+Codex — **19 octobre 2026**, chantier 3 du brief n° 3, branche `docs/search-console-20261019` créée depuis `origin/main 8737677`, actualisée sur `9d7ac9d` après les fusions externes #135–137. Rapport : `docs/SEARCH_CONSOLE_20261019.md`. Consultation directe de Search Console avec le compte propriétaire connecté par le propriétaire ; connecteur GSC Wizard refusé pour abonnement expiré, sans souscription.
+
+`https://finebindery.com/en` non indexée, doublon, canonique déclarée `/en` mais Google retient la racine. Exploration `/en` : 13 octobre 10:47:48 ; racine indexée, exploration 7 octobre 03:54:48 (heures affichées, sans conversion). Rapport Pages daté du 12 octobre : Ma Reliure 12 indexées / 4 exclues ; Fine Bindery 13 / 23. Motifs et cinq redirections Fine Bindery détaillés dans le rapport. Core Web Vitals datés du 17 octobre : données terrain insuffisantes sur les deux domaines, mobile et ordinateur.
+
+Aucune demande d'indexation, validation de correction, test d'URL active, modification de propriété, e-mail, achat ou déploiement. Pas de diagnostic des codes HTTP actuels à partir de données historiques. Validation du dépôt partagée avec la source commune du chantier SQL ; la CI standard de cette PR reste consultable avant toute fusion, qui n'est pas effectuée ici.
