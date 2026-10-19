@@ -238,6 +238,17 @@ describe("webhook Sendcloud", () => {
     expect(refunded.rows[0].r).toBeNull();
     expect((await deliver(provider, body)).status).toBe(200);
   });
+  it("recherche par référence illisible : relit le colis rattaché par son identifiant (revue P2-E)", async () => {
+    const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
+    await purchaseLeg(provider, store(), job, request);
+    const label = provider.labels.get(job)!;
+    provider.findUnknown = true;
+    provider.status = { code: "CANCELLED", message: "" };
+    Object.assign(provider, { findByLabelId: async (id: string) => (id === label.labelId ? label : null) });
+    const body = JSON.stringify({ action: "parcel_status_changed", timestamp: 7, parcel: { id: label.labelId } });
+    expect((await deliver(provider, body)).status).toBe(200);
+    expect(await status(job)).toBe("cancelled");
+  });
   it("prévient l'équipe une seule fois quand l'étiquette devient inutilisable", async () => {
     const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
     await purchaseLeg(provider, store(), job, request);
@@ -263,12 +274,65 @@ describe("résolution opérateur d'une réservation ambiguë (audit P1-2)", () =
   };
   it("adopte l'étiquette retrouvée par son n° de colis, sans nouvel achat", async () => {
     const provider = new FakeProvider(); const job = await ambiguous(provider);
-    const found = { provider: "sendcloud", labelId: "777", carrier: "mondial_relay", tracking: "QA777", chargedTtcCents: null, status: null, pdf: async () => PDF };
+    const found = { provider: "sendcloud", labelId: "777", carrier: "mondial_relay", tracking: "QA777", chargedTtcCents: null, status: null, reference: job, pdf: async () => PDF };
     Object.assign(provider, { findByLabelId: async (id: string) => (id === "777" ? found : null) });
     expect(await adoptLeg(provider, store(), job, "778")).toEqual({ state: "review_required", code: "label_not_found" });
     expect(await adoptLeg(provider, store(), job, "777")).toMatchObject({ state: "confirmed" });
     expect(await status(job)).toBe("confirmed");
     expect(provider.createCalls).toBe(1);
+  });
+  // Revue Codex du 16/10 : P1-B (appartenance), P1-A (statut inutilisable).
+  it("refuse un colis d'une autre réservation, invérifiable ou déjà annulé", async () => {
+    const provider = new FakeProvider(); const job = await ambiguous(provider);
+    const label = (over: Record<string, unknown>) => ({ provider: "sendcloud", labelId: "888", carrier: "mondial_relay", tracking: "QA888", chargedTtcCents: null, status: null, reference: job, pdf: async () => PDF, ...over });
+    let current: Record<string, unknown> = label({ reference: "autre-reservation" });
+    Object.assign(provider, { findByLabelId: async () => current });
+    expect(await adoptLeg(provider, store(), job, "888")).toEqual({ state: "review_required", code: "reference_mismatch" });
+    current = label({ reference: null });
+    expect(await adoptLeg(provider, store(), job, "888")).toEqual({ state: "review_required", code: "reference_unverifiable" });
+    current = label({ status: { code: "2000", message: "Cancelled" } });
+    expect(await adoptLeg(provider, store(), job, "888")).toEqual({ state: "review_required", code: "label_unusable" });
+    expect(await status(job)).toBe("ambiguous");
+  });
+  // Revue Codex du 19/10 : la reprise d'un achat passe par les mêmes garde-fous que l'adoption.
+  it("reprise d'achat : une étiquette retrouvée mais annulée n'est jamais mise à disposition", async () => {
+    const provider = new FakeProvider(); provider.script = ["lose_response"];
+    const job = await reserveLeg(db, "outbound");
+    await purchaseLeg(provider, store(), job, request);
+    expect(await status(job)).toBe("ambiguous");
+    provider.status = { code: "2000", message: "Cancelled" };
+    expect(await purchaseLeg(provider, store(), job, request)).toEqual({ state: "review_required", code: "label_unusable" });
+    expect(await status(job)).toBe("ambiguous");
+    expect(provider.createCalls).toBe(1);
+  });
+  it("webhook qui annule entre la lecture d'état et l'écriture : pas d'erreur, statut annulé", async () => {
+    const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
+    const base = store();
+    let raced = false;
+    const racing: LabelJobStore = { ...base, async transition(id, kind, details, eventId) {
+      if (kind === "cancelled" && !raced) { raced = true; await base.transition(id, "cancelled", { provider: "sendcloud", reference: "webhook", source: "provider_status" }); }
+      return base.transition(id, kind, details, eventId);
+    } };
+    Object.assign(provider, { findByLabelId: async () => ({ ...provider.labels.get(job)!, status: { code: "2000", message: "Cancelled" } }) });
+    expect(await purchaseLeg(provider, racing, job, request)).toEqual({ state: "review_required", code: "label_unusable" });
+    expect(await status(job)).toBe("cancelled");
+  });
+  it("relecture après confirmation idempotente quand le webhook a déjà annulé", async () => {
+    const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
+    Object.assign(provider, { findByLabelId: async () => {
+      await store().transition(job, "cancelled", { provider: "sendcloud", reference: "webhook", source: "provider_status" });
+      return { ...provider.labels.get(job)!, status: { code: "2000", message: "Cancelled" } };
+    } });
+    expect(await purchaseLeg(provider, store(), job, request)).toEqual({ state: "review_required", code: "label_unusable" });
+    expect(await status(job)).toBe("cancelled");
+  });
+  it("relit le statut après confirmation : une annulation arrivée pendant l'adoption est rattrapée", async () => {
+    const provider = new FakeProvider(); const job = await ambiguous(provider);
+    let reads = 0;
+    const base = { provider: "sendcloud", labelId: "999", carrier: "mondial_relay", tracking: "QA999", chargedTtcCents: null, reference: job, pdf: async () => PDF };
+    Object.assign(provider, { findByLabelId: async () => (++reads === 1 ? { ...base, status: null } : { ...base, status: { code: "2000", message: "Cancelled" } }) });
+    expect(await adoptLeg(provider, store(), job, "999")).toEqual({ state: "review_required", code: "label_unusable" });
+    expect(await status(job)).toBe("cancelled");
   });
   it("constat d'absence : échec tracé, puis remplacement manuel explicite possible", async () => {
     const provider = new FakeProvider(); const job = await ambiguous(provider);

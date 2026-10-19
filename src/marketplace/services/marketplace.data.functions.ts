@@ -1543,7 +1543,7 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       const priceValidated = !ownClient && row.pricing_status === "validated";
       const [commerce, thumbnailUrl] = await Promise.all([
         ownClient ? Promise.resolve(NO_OPPE_COMMERCE) : loadCustomerCommerce(sb, row.id, { priceValidated, customerPriceCents: row.customer_price_cents, caseStatus: row.status }),
-        caseContext ? signFirstCasePhoto(sb, caseContext.answers) : Promise.resolve(null),
+        caseContext ? signFirstCasePhoto(sb, caseContext.answers, caseContext.sessionId) : Promise.resolve(null),
       ]);
       const validatedPriceCents = priceValidated ? row.customer_price_cents : null;
       const amountCents = commerce.proposal?.totalTtcCents ?? validatedPriceCents;

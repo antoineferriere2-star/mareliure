@@ -12,7 +12,7 @@ import {
 import type { CustomerLogisticsView } from "@/marketplace/services/caseLogistics.server";
 import { carrierEventLabel, logisticsCustomerCopy, type LogisticsCustomerCopy } from "@/marketplace/customer/logisticsCustomerCopy";
 import { formatCustomerDate, type CustomerLocale } from "@/marketplace/customer/customerPresentation";
-import { LOGISTICS_MODES, type BookKind, type LogisticsMode, type PostalAddress } from "@/marketplace/shipping/logisticsPlan";
+import { isFrenchPhone, LOGISTICS_MODES, type BookKind, type LogisticsMode, type PostalAddress } from "@/marketplace/shipping/logisticsPlan";
 import { Button } from "@/components/ui/button";
 
 const CARD = "rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-5 sm:p-6";
@@ -179,6 +179,8 @@ function PlanForm({ view, caseId, copy, onDone, onCancel }: {
       const address = (a: AddressDraft) => ({ name: a.name, line1: a.line1, line2: a.line2.trim() || null,
         postalCode: a.postalCode.trim(), city: a.city, countryCode: a.countryCode });
       const organized = mode === "organized_round_trip";
+      // Même règle que le serveur, pour nommer le champ fautif plutôt que tous les champs.
+      if (organized && !isFrenchPhone(phone)) throw new Error("invalid_phone");
       return save({ data: { caseId, plan: {
         mode,
         contact: organized ? { ...address(contact), phone } : null,

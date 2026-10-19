@@ -56,18 +56,18 @@ export async function purchaseLeg(provider: LabelProvider, store: LabelJobStore,
   if (job.status === "ambiguous") {
     const existing = await provider.findByReference(jobId, await hint());
     if (existing === "unknown") return { state: "pending", code: "provider_unreadable" };
-    if (existing) return persist(store, jobId, existing);
+    if (existing) return resumeExisting(provider, store, jobId, existing);
   }
   const started = await store.transition(jobId, "request_started", { provider: provider.name });
   // Une tentative précédente sans issue enregistrée : la base a basculé en ambigu.
   if (started.status === "ambiguous" && job.status === "claimed") {
     const existing = await provider.findByReference(jobId, await hint());
     if (existing === "unknown") return { state: "pending", code: "provider_unreadable" };
-    if (existing) return persist(store, jobId, existing);
+    if (existing) return resumeExisting(provider, store, jobId, existing);
   }
   const outcome = await provider.create({ ...(await request()), reference: jobId });
   switch (outcome.kind) {
-    case "created": return persist(store, jobId, outcome.label);
+    case "created": return reconcileAfterConfirm(provider, store, jobId, await persist(store, jobId, outcome.label), outcome.label.labelId);
     case "rejected": {
       const current = await store.job(jobId);
       if (current?.status === "claimed") {
@@ -89,11 +89,11 @@ export async function purchaseLeg(provider: LabelProvider, store: LabelJobStore,
 export type CancelResult = { state: "cancelled" | "queued" | "refused" | "pending" | "review_required"; code?: string };
 
 /** Demande l'annulation d'une étiquette confirmée. Aucun remboursement n'est présumé. */
-export async function cancelLeg(provider: LabelProvider, store: LabelJobStore, jobId: string): Promise<CancelResult> {
+export async function cancelLeg(provider: LabelProvider, store: LabelJobStore, jobId: string, labelId?: string | null): Promise<CancelResult> {
   const job = await store.job(jobId);
   if (!job || job.status !== "confirmed") return { state: "review_required", code: job ? `job_${job.status}` : "job_not_found" };
   await store.transition(jobId, "cancellation_requested", { provider: provider.name });
-  const outcome = await provider.cancel(jobId);
+  const outcome = await provider.cancel(jobId, labelId);
   switch (outcome.kind) {
     case "cancelled":
       await store.transition(jobId, "cancelled", { provider: provider.name, reference: outcome.reference });
@@ -121,7 +121,51 @@ export async function adoptLeg(provider: LabelProvider, store: LabelJobStore, jo
   const label = await provider.findByLabelId(labelId.trim());
   if (label === "unknown") return { state: "pending", code: "provider_unreadable" };
   if (!label) return { state: "review_required", code: "label_not_found" };
-  return persist(store, jobId, label);
+  // Revue Codex du 16/10, P1-B : un colis lisible n'est pas forcément celui de cette réservation.
+  if (label.reference && label.reference !== jobId) return { state: "review_required", code: "reference_mismatch" };
+  if (!label.reference) {
+    // Référence absente de la lecture par identifiant : le colis doit être celui que la recherche par
+    // référence de réservation retrouve chez le fournisseur.
+    const byReference = await provider.findByReference(jobId);
+    if (byReference === "unknown") return { state: "pending", code: "provider_unreadable" };
+    if (!byReference || byReference.labelId !== label.labelId) return { state: "review_required", code: "reference_unverifiable" };
+  }
+  // P1-A : une étiquette déjà annulée ou refusée chez le fournisseur n'est jamais mise à disposition.
+  if (isUnusableProviderStatus(label.status)) return { state: "review_required", code: "label_unusable" };
+  return reconcileAfterConfirm(provider, store, jobId, await persist(store, jobId, label), label.labelId);
+}
+
+/**
+ * Après confirmation, relit le statut du colis : une annulation notifiée pendant l'achat ou l'adoption
+ * a été acquittée sans rattachement (revue Codex du 16/10, P1-A). Inutilisable ⇒ « annulée ».
+ */
+async function reconcileAfterConfirm(provider: LabelProvider, store: LabelJobStore, jobId: string, result: LegResult, labelId: string): Promise<LegResult> {
+  if (result.state !== "confirmed" || !provider.findByLabelId) return result;
+  const current = await provider.findByLabelId(labelId);
+  if (!current || current === "unknown" || !isUnusableProviderStatus(current.status)) return result;
+  // Idempotent : le webhook a pu enregistrer l’annulation pendant la relecture (revue du 19/10, P2).
+  if ((await store.job(jobId))?.status === "confirmed") {
+    try {
+      await store.transition(jobId, "cancelled", { provider: provider.name, reference: labelId, source: "provider_status_recheck",
+        code: current.status?.code ?? "unknown" });
+    } catch (error) {
+      // Le webhook a annulé entre la lecture et l’écriture : l’issue voulue est atteinte. Toute autre erreur remonte.
+      if ((await store.job(jobId))?.status !== "cancelled") throw error;
+    }
+  }
+  return { state: "review_required", code: "label_unusable" };
+}
+
+/**
+ * Reprise d’un achat dont l’étiquette existe déjà chez le fournisseur (retrouvée par la référence de
+ * la réservation) : mêmes garde-fous que l’achat et l’adoption (revue du 19/10, P1). Une étiquette
+ * annulée ou refusée n’est jamais mise à disposition ; la réservation reste ambiguë pour l’opérateur
+ * (« Déclarer absente » avec la preuve de l’annulation, puis remplacement).
+ */
+async function resumeExisting(provider: LabelProvider, store: LabelJobStore, jobId: string, label: ProviderLabel): Promise<LegResult> {
+  if (label.reference && label.reference !== jobId) return { state: "review_required", code: "reference_mismatch" };
+  if (isUnusableProviderStatus(label.status)) return { state: "review_required", code: "label_unusable" };
+  return reconcileAfterConfirm(provider, store, jobId, await persist(store, jobId, label), label.labelId);
 }
 
 /** Constat écrit qu'aucune étiquette n'existe chez le fournisseur : la réservation ambiguë devient « échouée ». */

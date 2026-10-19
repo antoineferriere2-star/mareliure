@@ -484,6 +484,23 @@ describe("soumission", () => {
     expect(res.status).toBe(422);
   });
 
+  // Audit sécurité du 16 octobre 2026, P1 : une photo d'une autre session ne doit pas entrer dans un Dossier.
+  it("refuse la soumission (422) d'une référence de photo d'une autre session, même dans un champ inconnu", async () => {
+    const { mission, versionRow } = seedActiveMission();
+    const { client, store } = createFakeSupabase({
+      build_missions: [mission],
+      build_playbook_versions: [versionRow],
+    });
+    const started = await handleStartSession(client, mission.public_token as string, "iphash", "visitorhash");
+    const { session, session_secret } = await started.json();
+    const foreign = "sessions/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333";
+
+    const res = await handleSubmitSession(client, session.id, session_secret, { note: "answer", _extra: { photoPath: foreign } } as never);
+    expect(res.status).toBe(422);
+    expect((await res.json()).fieldErrors).toHaveProperty("_extra");
+    expect((store.get("build_dossiers") ?? []).length).toBe(0);
+  });
+
   it("une double soumission ne crée pas deux dossiers et renvoie le même dossier", async () => {
     const { mission, versionRow } = seedActiveMission();
     const { client, store } = createFakeSupabase({
