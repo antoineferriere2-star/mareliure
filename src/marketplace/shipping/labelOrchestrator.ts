@@ -19,6 +19,8 @@ export interface LabelJobStore {
   transition(id: string, kind: TransitionKind, details: Record<string, unknown>, providerEventId?: string | null): Promise<{ outcome: "applied" | "duplicate"; status: string; cost_review_required?: boolean }>;
   /** Écrit `${id}/label.pdf` dans le bucket privé ; sans écrasement, un objet identique est accepté. */
   savePrivateLabel(id: string, pdf: Uint8Array): Promise<void>;
+  /** Retire `${id}/label.pdf` : seulement pour une réservation devenue « échouée » pendant le stockage. */
+  discardPrivateLabel?(id: string): Promise<void>;
 }
 
 export type LegResult =
@@ -39,8 +41,18 @@ async function persist(store: LabelJobStore, jobId: string, label: ProviderLabel
       code: error instanceof Error ? error.message.slice(0, 80) : "storage_failed" });
     return { state: "pending", code: "label_storage" };
   }
-  const result = await store.transition(jobId, "label_confirmed", { provider: label.provider, provider_label_id: label.labelId,
-    carrier: label.carrier, tracking: label.tracking, charged_cost_ttc_cents: label.chargedTtcCents });
+  let result: Awaited<ReturnType<LabelJobStore["transition"]>>;
+  try {
+    result = await store.transition(jobId, "label_confirmed", { provider: label.provider, provider_label_id: label.labelId,
+      carrier: label.carrier, tracking: label.tracking, charged_cost_ttc_cents: label.chargedTtcCents });
+  } catch (error) {
+    // Course avec un constat d'absence (revue #133, P2-D) : la réservation est échouée, le PDF stocké
+    // n'appartient à aucune étiquette mise à disposition ; il est retiré. Toute autre erreur remonte.
+    const current = await store.job(jobId);
+    if (current?.status !== "failed") throw error;
+    await store.discardPrivateLabel?.(jobId).catch(() => undefined);
+    return { state: "review_required", code: "job_failed" };
+  }
   return { state: "confirmed", costReviewRequired: Boolean(result.cost_review_required) };
 }
 
@@ -172,7 +184,16 @@ async function resumeExisting(provider: LabelProvider, store: LabelJobStore, job
 export async function declareLegAbsent(store: LabelJobStore, jobId: string, provider: string, actor: string, evidence: string): Promise<LegResult> {
   const job = await store.job(jobId);
   if (!job || job.status !== "ambiguous") return { state: "review_required", code: job ? `job_${job.status}` : "job_not_found" };
-  await store.transition(jobId, "purchase_failed", { provider, resolution: "absent_confirmed", actor, evidence: evidence.trim().slice(0, 500) });
+  try {
+    await store.transition(jobId, "purchase_failed", { provider, resolution: "absent_confirmed", actor, evidence: evidence.trim().slice(0, 500) });
+  } catch (error) {
+    // Deux constats simultanés (revue #133, P2-D) : le premier a déjà rendu la réservation échouée.
+    // Une adoption gagnante laisse « confirmée » : jamais présentée comme absente. Toute autre erreur remonte.
+    const current = await store.job(jobId);
+    if (current?.status === "failed") return { state: "failed", code: "absent_confirmed" };
+    if (current && current.status !== "ambiguous") return { state: "review_required", code: `job_${current.status}` };
+    throw error;
+  }
   return { state: "failed", code: "absent_confirmed" };
 }
 
