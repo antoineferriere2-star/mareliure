@@ -3606,3 +3606,13 @@ Preuves : docs/PUBLIC_JS_20261015.md et .json, 24 passages finaux Lighthouse 12.
 Validation : 98 tests ciblés locaux réussis, build Node local final réussi. CI complète du code 065b785 verte : garde-fous, TypeScript, lint (0 erreur, 19 avertissements historiques), 308 fichiers de tests et build (run 38750051467). Les contrôles locaux complets concurrents ont été interrompus ; pas de succès complet local prétendu. Commits suivants documentaires ; consulter leur CI avant fusion.
 
 Autres chantiers du brief : PR124 audit documentaire Sendcloud, PR125 traductions légales (relecture par un juriste avant publication), CI vertes sur leurs commits de livraison. Aucune fusion, publication, écriture en production ni opération payante. Captures/HTML/Lighthouse complets privés dans D:/CodexProjects/outputs/mareliure-perf-before et mareliure-perf-after-final.
+
+## Latest handoff
+
+Codex — **19 octobre 2026**, chantier 1 du brief n° 3. Branche `docs/pr-corrections-review-20261019`, initialement créée depuis `8737677`, actualisée sur `origin/main 9d7ac9d` après fusion externe des PR #135–137. Rapport `docs/REVIEW_135_137_20261019.md`, caractérisations et protocole dans `docs/pr-review-20261019/`.
+
+Verdicts : #135 partielle, signature historique de référence photo étrangère encore reproduite (2 sondes adaptées / 2, plus 50 tests existants) ; #136 partielle, reprise d'étiquette annulée et annulation sans contrôle de l'identifiant attaché encore reproduites, erreur de double annulation après webhook (71 tests / 71 avec caractérisations explicites ; ancien rejeu 13/15, deux attentes obsolètes) ; #137 sans blocage trouvé dans le périmètre, 4 recettes FR/EN bureau/mobile 375 px réussies après adaptation des seuls compteurs de refus RPC devenus locaux. Aucun résultat de simulation présenté comme un achat, une exfiltration ou une annulation réelle.
+
+Un commentaire de verdict par PR est prévu dans la livraison. Aucun fichier produit des PR relues modifié, ni fusion, déploiement, paiement, compte ou e-mail. Vérifications applicatives communes avec la branche SQL ; les tests d'audit documentaires sont exécutés séparément contre les SHA indiqués, hors suite CI de régression.
+
+Validation commune actualisée sur `main 9d7ac9d` avec la migration préparée et ses sept tests supplémentaires dans la branche SQL : **310 fichiers / 3 806 tests réussis**, un worker, délai par test 30 s. Ce résultat inclut les tests ajoutés par #135 et #136. Aucun fichier produit modifié par la présente revue.
