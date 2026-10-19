@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-19T09:22:32.576Z",
+  "localDatabase": "acl_rehearsal_20261019",
+  "migration": "20261020100000",
+  "migrationSha256": "50976985f579266d02bf704ebbf67a812c0af40c120075c8adb3cdbac12ef556",
+  "backupSha256": "55f0c165ed8ff65170ecec3e2da8c31790f8b3cfda839a3d300df4925aa16ea5",
+  "dataTablesPreserved": 98,
+  "marketplaceTables": 78,
+  "triggerFunctionsHardened": 55,
+  "searchPathsFixed": [
+    "marketplace_cases_forbid_brand_change",
+    "marketplace_commercial_proposals_forbid_change_after_acceptance",
+    "marketplace_logistics_immutable",
+    "marketplace_settlement_immutable"
+  ],
+  "engineAndStoragePreserved": true,
+  "policiesPreserved": true,
+  "migrationHistoryCount": 122,
+  "productionApplied": false
+}

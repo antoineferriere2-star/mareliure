@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-19T09:56:33.879Z",
+  "source": "main 9d7ac9d1c8c3548755cedddeb26ed45a6b40bc9a",
+  "nativeRole": "service_role",
+  "nativePlansSavedAndReread": 4,
+  "phone": "synthetic French fixture",
+  "playwright": {
+    "passed": 4,
+    "languages": [
+      "fr",
+      "en"
+    ],
+    "widths": [
+      1280,
+      375
+    ]
+  },
+  "fixtureCasesCleaned": 9,
+  "cleanup": "local copy only; session-local trigger bypass for immutable synthetic history, restored at commit",
+  "dataTablesRestoredToBackup": 98,
+  "nativeSqlFileReplayed": true,
+  "productionApplied": false
+}
