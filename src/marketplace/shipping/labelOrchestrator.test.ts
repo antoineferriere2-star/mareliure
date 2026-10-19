@@ -344,6 +344,41 @@ describe("résolution opérateur d'une réservation ambiguë (audit P1-2)", () =
     const manual = await db.query<{ r: { outcome: string } }>("SELECT marketplace_reserve_round_trip_label_manual($1,'outbound',$2,true) r", [RT.case, RT.admin]);
     expect(manual.rows[0].r.outcome).toBe("claim");
   });
+  it("deux constats d'absence simultanés : même issue propre pour les deux", async () => {
+    const provider = new FakeProvider(); const job = await ambiguous(provider);
+    const declare = () => declareLegAbsent(store(), job, "sendcloud", RT.admin, "Panneau Sendcloud consulté, aucun envoi");
+    expect(await Promise.all([declare(), declare()])).toEqual([{ state: "failed", code: "absent_confirmed" }, { state: "failed", code: "absent_confirmed" }]);
+    expect(await status(job)).toBe("failed");
+  });
+  it("constat d'absence gagnant pendant une adoption : PDF retiré, rien mis à disposition", async () => {
+    const provider = new FakeProvider(); const job = await ambiguous(provider);
+    const base = store();
+    const discarded: string[] = [];
+    const racing: LabelJobStore = { ...base,
+      async savePrivateLabel(id, pdf) {
+        await base.savePrivateLabel(id, pdf);
+        await declareLegAbsent(base, id, "sendcloud", RT.admin, "Constat posé pendant l'adoption");
+      },
+      async discardPrivateLabel(id) { discarded.push(id); saved.delete(`${id}/label.pdf`); } };
+    const label = { provider: "sendcloud", labelId: "999", carrier: "mondial_relay", tracking: "QA999", chargedTtcCents: null, reference: job,
+      status: null, pdf: async () => PDF };
+    Object.assign(provider, { findByLabelId: async () => label });
+    expect(await adoptLeg(provider, racing, job, "999")).toEqual({ state: "review_required", code: "job_failed" });
+    expect(await status(job)).toBe("failed");
+    expect(discarded).toEqual([job]);
+    expect(saved.has(`${job}/label.pdf`)).toBe(false);
+  });
+  it("une erreur de confirmation sans course remonte, sans retirer le PDF", async () => {
+    const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
+    const base = store();
+    const discard = vi.fn(async () => undefined);
+    const broken: LabelJobStore = { ...base, discardPrivateLabel: discard, async transition(id, kind, details, eventId) {
+      if (kind === "label_confirmed") throw new Error("label_transition_failed:network");
+      return base.transition(id, kind, details, eventId);
+    } };
+    await expect(purchaseLeg(provider, broken, job, request)).rejects.toThrow("label_transition_failed:network");
+    expect(discard).not.toHaveBeenCalled();
+  });
   it("reconnaît les statuts fournisseur inutilisables, et eux seuls", () => {
     for (const s of [{ code: "CANCELLED", message: "" }, { code: "ANNOUNCEMENT_FAILED", message: "" }, { code: "2000", message: "Cancelled" }, { code: "1002", message: "" }])
       expect(isUnusableProviderStatus(s)).toBe(true);

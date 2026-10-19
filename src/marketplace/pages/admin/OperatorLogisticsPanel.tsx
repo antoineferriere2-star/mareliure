@@ -342,7 +342,8 @@ const RESULT_CODES: Record<string, string> = {
   provider_unreadable: "Sendcloud illisible pour l'instant",
   network_or_timeout: "pas de réponse de Sendcloud",
   label_storage: "étiquette créée, PDF non stocké : la reprise le récupère",
-  job_failed: "achat précédent échoué", job_cancelled: "étiquette précédente annulée",
+  job_failed: "réservation close sans étiquette (achat échoué ou absence constatée)", job_cancelled: "étiquette précédente annulée",
+  job_confirmed: "une étiquette a déjà été confirmée pour cette réservation",
 };
 
 function AutomaticPurchase({ caseId, direction, resume }: { caseId: string; direction: "outbound" | "return"; resume: boolean }) {

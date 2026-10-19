@@ -2,11 +2,12 @@ import { describe, expect, it, vi } from "vitest";
 import { supabaseLabelStore } from "./roundTripLabelStore.server";
 
 const PDF = new TextEncoder().encode("%PDF-1.4 QA");
-function client(opts: { uploadError?: boolean; existing?: Uint8Array | null } = {}) {
+function client(opts: { uploadError?: boolean; existing?: Uint8Array | null; removeError?: boolean } = {}) {
   const upload = vi.fn(async () => ({ error: opts.uploadError ? { message: "exists" } : null }));
   const download = vi.fn(async () => opts.existing ? { data: new Blob([opts.existing as Uint8Array<ArrayBuffer>]), error: null } : { data: null, error: { message: "missing" } });
   const rpc = vi.fn(async () => ({ data: { outcome: "applied", status: "confirmed" }, error: null }));
-  return { upload, download, rpc, sb: { rpc, storage: { from: () => ({ upload, download }) },
+  const remove = vi.fn(async () => ({ error: opts.removeError ? { message: "denied" } : null }));
+  return { upload, download, remove, rpc, sb: { rpc, storage: { from: () => ({ upload, download, remove }) },
     from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: { id: "j", status: "claimed" }, error: null }) }) }) }) } };
 }
 
@@ -25,6 +26,12 @@ describe("magasin serveur des étiquettes", () => {
     const c = client();
     await expect(supabaseLabelStore(c.sb).savePrivateLabel("job-1", new TextEncoder().encode("<html>"))).rejects.toThrow("label_not_pdf");
     expect(c.upload).not.toHaveBeenCalled();
+  });
+  it("retire seulement le PDF de la réservation, et signale un échec", async () => {
+    const c = client();
+    await supabaseLabelStore(c.sb).discardPrivateLabel!("job-1");
+    expect(c.remove).toHaveBeenCalledWith(["job-1/label.pdf"]);
+    await expect(supabaseLabelStore(client({ removeError: true }).sb).discardPrivateLabel!("job-1")).rejects.toThrow("label_discard_failed");
   });
   it("passe chaque transition par la fonction SQL", async () => {
     const c = client();
