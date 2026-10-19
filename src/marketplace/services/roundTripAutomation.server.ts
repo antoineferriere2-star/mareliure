@@ -167,11 +167,11 @@ async function liveShippingOptions(plan: Awaited<ReturnType<typeof loadPlanRow>>
 // ---------------------------------------------------------------------------
 async function automaticJob(sb: Supa, caseId: string, jobId: string) {
   const { data, error } = await raw(sb).from("marketplace_round_trip_label_jobs")
-    .select("id,case_id,fulfilment,status").eq("id", jobId).maybeSingle();
+    .select("id,case_id,fulfilment,status,provider_label_id").eq("id", jobId).maybeSingle();
   if (error) throw new LogisticsError("provider_unavailable", 503);
   if (!data || data.case_id !== caseId) throw new LogisticsError("not_found", 404);
   if (data.fulfilment !== "automatic") throw new LogisticsError("invalid_input", 400);
-  return data as { id: string; status: string };
+  return data as { id: string; status: string; provider_label_id: string | null };
 }
 
 /** Adopte l'étiquette retrouvée chez le fournisseur pour une réservation ambiguë, après relecture du colis. */
@@ -192,6 +192,6 @@ export async function operatorDeclareLabelAbsent(sb: Supa, actor: string, caseId
 export async function operatorCancelLabel(sb: Supa, caseId: string, jobId: string,
   provider: LabelProvider | null = providerFromEnv()): Promise<CancelResult> {
   if (!provider) throw new LogisticsError("provider_unavailable", 503);
-  await automaticJob(sb, caseId, jobId);
-  return cancelLeg(provider, supabaseLabelStore(sb), jobId);
+  const job = await automaticJob(sb, caseId, jobId);
+  return cancelLeg(provider, supabaseLabelStore(sb), jobId, job.provider_label_id);
 }
