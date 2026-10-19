@@ -36,6 +36,8 @@ export interface ProviderLabel {
   /** Montant facturé connu à la création, `null` si le fournisseur ne le donne pas. */
   chargedTtcCents: number | null;
   status: { code: string; message: string } | null;
+  /** Référence d'achat portée par le colis chez le fournisseur (notre id de réservation), si elle est lisible. */
+  reference?: string | null;
   /** Étiquette PDF, chargée seulement pour la stocker en privé. */
   pdf: () => Promise<Uint8Array>;
 }
@@ -66,7 +68,8 @@ export interface LabelProvider {
   findByReference(reference: string, hint?: { shippingOptionCode?: string }): Promise<ProviderLabel | null | "unknown">;
   /** Relecture par identifiant de colis (clé des webhooks), quand le fournisseur la permet. */
   findByLabelId?(labelId: string): Promise<ProviderLabel | null | "unknown">;
-  cancel(reference: string): Promise<CancelOutcome>;
+  /** `labelId` : colis rattaché, pour l'annuler même s'il est introuvable par référence (adoption). */
+  cancel(reference: string, labelId?: string | null): Promise<CancelOutcome>;
 }
 
 const PDF_MAGIC = [0x25, 0x50, 0x44, 0x46, 0x2d];
