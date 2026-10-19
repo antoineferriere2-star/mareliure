@@ -1,0 +1,30 @@
+name: Local customer journey
+on:
+  pull_request:
+    paths:
+      - "e2e/customer/**"
+      - "playwright.customer.config.ts"
+      - "src/**"
+      - "package*.json"
+      - ".github/workflows/customer-journey.yml"
+  workflow_dispatch:
+jobs:
+  mocked-customer-journey:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:e2e:customer
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: mocked-customer-journey
+          path: |
+            playwright-report/customer
+            test-results
