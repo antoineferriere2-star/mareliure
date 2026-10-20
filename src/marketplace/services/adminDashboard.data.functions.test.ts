@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 const mocks = vi.hoisted(() => ({ assertAdmin: vi.fn(), admin: vi.fn(), read: vi.fn() }));
 vi.mock("@tanstack/react-start", () => ({ createServerFn: () => {
-  const chain = { middleware: () => chain, inputValidator: () => chain, handler: (handler: unknown) => handler };
+  const chain = { middleware: () => chain, validator: () => chain, handler: (handler: unknown) => handler };
   return chain;
 } }));
 vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth: {} }));

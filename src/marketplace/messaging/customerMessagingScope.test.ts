@@ -27,7 +27,7 @@ vi.mock("@tanstack/react-start", () => ({
     const builder: Record<string, unknown> = {};
     let validate: ((data: unknown) => unknown) | null = null;
     builder.middleware = () => builder;
-    builder.inputValidator = (fn: (data: unknown) => unknown) => {
+    builder.validator = (fn: (data: unknown) => unknown) => {
       validate = fn;
       return builder;
     };

@@ -105,7 +105,7 @@ const caseInput = z.object({ caseId: z.string().uuid() });
 /** Facture générée par l'outil, au nom de l'atelier, adressée à OPPE SAS. */
 export const createSupplierInvoiceFromTool = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ caseId: z.string().uuid(), issueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), ...vatFields }).strict().parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -134,7 +134,7 @@ export const createSupplierInvoiceFromTool = createServerFn({ method: "POST" })
 /** Facture externe : le PDF de l'atelier, déposé tel quel. Le montant vient de l'accord, jamais du PDF. */
 export const uploadExternalSupplierInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({
       caseId: z.string().uuid(),
       number: z.string().trim().min(1).max(60),
@@ -177,7 +177,7 @@ async function withPayments(sb: Supa, invoices: { id: string; amount_ttc_cents: 
 /** L'atelier : sa facture pour cette commande, son état et son échéance. */
 export const getMySupplierInvoice = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => caseInput.parse(data))
+  .validator((data: unknown) => caseInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const binderId = await requireBinder(sb, context.userId);
@@ -190,7 +190,7 @@ export const getMySupplierInvoice = createServerFn({ method: "GET" })
 /** L'administration : toutes les factures de l'atelier pour la commande, avec règlements. */
 export const getSupplierInvoices = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => caseInput.parse(data))
+  .validator((data: unknown) => caseInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -202,7 +202,7 @@ export const getSupplierInvoices = createServerFn({ method: "GET" })
 
 export const reviewSupplierInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ invoiceId: z.string().uuid(), decision: z.enum(["accepted", "rejected"]), reason: z.string().trim().max(500).nullable().default(null) }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -215,7 +215,7 @@ export const reviewSupplierInvoice = createServerFn({ method: "POST" })
 
 export const recordSupplierPayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({
       invoiceId: z.string().uuid(),
       paidOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -236,7 +236,7 @@ export const recordSupplierPayment = createServerFn({ method: "POST" })
 /** Lien signé de courte durée vers le PDF : à l'atelier propriétaire, ou à l'administration. */
 export const getSupplierInvoiceLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ invoiceId: z.string().uuid(), asAdmin: z.boolean().default(false) }).parse(data))
+  .validator((data: unknown) => z.object({ invoiceId: z.string().uuid(), asAdmin: z.boolean().default(false) }).parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const { data: invoice, error } = await sb.from("marketplace_oppe_supplier_invoices").select("document_path, binder_id").eq("id", data.invoiceId).maybeSingle();

@@ -36,10 +36,10 @@ async function run<T>(userId: string, work: (binderId: string, sb: Awaited<Retur
 
 export const addMyReferenceService = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => referenceServiceInput.parse(data))
+  .validator((data: unknown) => referenceServiceInput.parse(data))
   .handler(({ context, data }) => run(context.userId, (binderId, sb) => addReferenceService(sb, binderId, data)));
 
 export const setMyServiceFavorite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => favoriteInput.parse(data))
+  .validator((data: unknown) => favoriteInput.parse(data))
   .handler(({ context, data }) => run(context.userId, (binderId, sb) => setServiceFavorite(sb, binderId, data)));
