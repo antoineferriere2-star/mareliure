@@ -11,19 +11,19 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.close();
 });
-// Characterisations: passing tests document both protected forms and current gaps, not a corrected guard.
+// Non-regressions after #154: these assertions require the corrected guard.
 const cases = [
   {
-    name: "P2: dynamic CREATE via format in a single-quoted DO body is missed",
+    name: "single-quoted dynamic DO requires explicit review",
     sql: "DO 'BEGIN EXECUTE format(''CREATE TABLE %I.%I(id int)'', ''public'', ''build_notes''); END';",
-    missing: [],
+    missing: ["<création dynamique (EXECUTE, DO, format) à déclarer>"],
     target: "public.build_notes",
     read: false,
   },
   {
-    name: "P2: SET SCHEMA public imports an undeclared relation",
+    name: "SET SCHEMA public requires a decision for the imported relation",
     sql: "CREATE TABLE audit.build_notes(id int);ALTER TABLE audit.build_notes SET SCHEMA public;",
-    missing: [],
+    missing: ["build_notes"],
     target: "public.build_notes",
     read: false,
   },
@@ -49,9 +49,9 @@ const cases = [
     read: true,
   },
   {
-    name: "P2: quoted uppercase name falsely accepts a grant to another lowercase relation",
+    name: "quoted uppercase table cannot borrow the lowercase relation grant",
     sql: 'CREATE TABLE public."CASE_NOTES"(id int);GRANT SELECT ON public.case_notes TO authenticated;',
-    missing: [],
+    missing: ["CASE_NOTES"],
     target: 'public."CASE_NOTES"',
     read: false,
   },
@@ -63,35 +63,35 @@ const cases = [
     read: true,
   },
   {
-    name: "Unicode creation is blocked, with the wrong diagnostic name",
+    name: "Unicode creation reports the exact relation name",
     sql: 'CREATE TABLE public."Étiquettes"(id int);',
-    missing: ["public"],
+    missing: ["Étiquettes"],
     target: 'public."Étiquettes"',
     read: false,
   },
   {
-    name: "P3: correctly granted Unicode table is falsely rejected",
+    name: "exact Unicode grant is accepted",
     sql: 'CREATE TABLE public."Étiquettes"(id int);GRANT SELECT ON public."Étiquettes" TO authenticated;',
-    missing: ["public"],
+    missing: [],
     target: 'public."Étiquettes"',
     read: true,
   },
   {
-    name: "P2: rename in another schema then SET SCHEMA is missed",
+    name: "rename then SET SCHEMA keeps the undecided relation",
     sql: "CREATE TABLE audit.before_name(id int);ALTER TABLE audit.before_name RENAME TO build_notes;ALTER TABLE audit.build_notes SET SCHEMA public;",
-    missing: [],
+    missing: ["build_notes"],
     target: "public.build_notes",
     read: false,
   },
   {
-    name: "P2: dynamic fragments in a dollar body hide the contiguous CREATE TABLE tokens",
+    name: "fragmented dynamic SQL requires explicit review",
     sql: "DO $$ BEGIN EXECUTE format('%s %s public.%I(id int)', 'CREATE', 'TABLE', 'build_notes'); END $$;",
-    missing: [],
+    missing: ["<création dynamique (EXECUTE, DO, format) à déclarer>"],
     target: "public.build_notes",
     read: false,
   },
 ];
-describe("independent #149 detector counter-review", () => {
+describe("non-regressions of #152 corrected by #154", () => {
   for (const c of cases)
     it(c.name, async () => {
       expect(undeclaredTables(c.sql)).toEqual(c.missing);

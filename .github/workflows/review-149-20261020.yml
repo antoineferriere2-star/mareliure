@@ -1,10 +1,11 @@
-name: Independent review 149 probes
+name: Independent review 149 and 154 probes
 on:
   pull_request:
     paths:
       - "docs/review-149-20261020/**"
       - "src/marketplace/shipping/**"
       - "src/marketplace/security/**"
+      - "src/marketplace/pages/admin/OperatorLogisticsPanel.tsx"
       - "supabase/migrations/**"
       - ".github/workflows/review-149-20261020.yml"
   workflow_dispatch:

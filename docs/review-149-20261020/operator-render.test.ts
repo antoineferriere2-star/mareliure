@@ -1,16 +1,23 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
-const state = vi.hoisted(() => ({ view: {} as Record<string, unknown>, mode: "purchase" }));
+const state = vi.hoisted(() => ({
+  view: {} as Record<string, unknown>,
+  mode: "purchase",
+  result: { state: "review_required", code: "label_orphaned" } as { state: string; code?: string },
+}));
 vi.mock("@tanstack/react-start", () => ({ useServerFn: (fn: unknown) => fn }));
 vi.mock("@tanstack/react-query", () => ({
   useQuery: () => ({ data: state.view, isPending: false, error: null }),
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
   useMutation: (options: { mutationFn: () => unknown }) => {
     const body = options.mutationFn.toString();
-    const chosen = state.mode === "purchase" ? body.includes("purchase(") : body.includes("action");
+    const chosen =
+      state.mode === "purchase"
+        ? body.includes("purchase(")
+        : state.mode === "adopt" && body.includes("action");
     return {
-      data: chosen ? { state: "review_required", code: "label_orphaned" } : undefined,
+      data: chosen ? state.result : undefined,
       isPending: false,
       isError: false,
       mutate: vi.fn(),
@@ -51,6 +58,7 @@ const render = () =>
   renderToStaticMarkup(createElement(OperatorLogisticsPanel, { caseId: "synthetic-case" }));
 beforeEach(() => {
   state.mode = "purchase";
+  state.result = { state: "review_required", code: "label_orphaned" };
   state.view = {
     plan: null,
     jobs: [job("ambiguous")],
@@ -63,18 +71,19 @@ beforeEach(() => {
     automation: { enabled: true, providerConfigured: true },
   };
 });
-describe("real operator component rendered with synthetic query/mutation state", () => {
+describe("operator resolution non-regressions after #154", () => {
   it("automatic purchase renders the French orphan explanation", () => {
     expect(render()).toContain("le PDF stocké n’a pas pu être supprimé");
     expect(render()).toContain("label_discard_failed");
   });
-  it("adoption result renders the raw code without the French explanation", () => {
+  it("adoption translates the manual action and orphan explanation", () => {
     state.mode = "adopt";
     const html = render();
-    expect(html).toContain("label_orphaned");
-    expect(html).not.toContain("le PDF stocké n’a pas pu être supprimé");
+    expect(html).toContain("action manuelle nécessaire");
+    expect(html).toContain("le PDF stocké n’a pas pu être supprimé");
+    expect(html).not.toContain("review_required (");
   });
-  it("after refresh to failed, adoption result disappears but the persisted journal note remains", () => {
+  it("same mounted result remains visible for a failed job alongside the persisted journal note", () => {
     state.mode = "adopt";
     state.view.jobs = [
       job("failed", [
@@ -86,8 +95,46 @@ describe("real operator component rendered with synthetic query/mutation state",
       ]),
     ];
     const html = render();
-    expect(html).not.toContain("label_orphaned");
+    expect(html).toContain("le PDF stocké n’a pas pu être supprimé");
     expect(html).toContain("label_discard_failed");
     expect(html).toContain("synthetic-job/label.pdf");
+  });
+  for (const [status, result, text] of [
+    ["confirmed", { state: "confirmed" }, "étiquette confirmée et stockée"],
+    [
+      "failed",
+      { state: "failed", code: "absent_confirmed" },
+      "constat enregistré : réservation close sans étiquette",
+    ],
+    [
+      "confirmed",
+      { state: "queued" },
+      "annulation en file, confirmée au prochain statut Sendcloud",
+    ],
+    ["cancelled", { state: "cancelled" }, "étiquette annulée chez Sendcloud"],
+    ["confirmed", { state: "refused" }, "annulation refusée par Sendcloud"],
+  ] as const)
+    it("translates resolution " + result.state + " after refresh to " + status, () => {
+      state.mode = "adopt";
+      state.result = result;
+      state.view.jobs = [job(status)];
+      const html = render();
+      expect(html).toContain(text);
+      expect(html).not.toContain("absent_confirmed");
+    });
+  it("a fresh mount has no old mutation result; persisted event remains", () => {
+    state.mode = "none";
+    state.view.jobs = [
+      job("failed", [
+        {
+          created_at: "2026-10-20T12:00:00Z",
+          kind: "operator_note",
+          details: { note: "label_discard_failed" },
+        },
+      ]),
+    ];
+    const html = render();
+    expect(html).not.toContain("Résultat :");
+    expect(html).toContain("label_discard_failed");
   });
 });
