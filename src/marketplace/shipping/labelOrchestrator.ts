@@ -50,7 +50,16 @@ async function persist(store: LabelJobStore, jobId: string, label: ProviderLabel
     // n'appartient à aucune étiquette mise à disposition ; il est retiré. Toute autre erreur remonte.
     const current = await store.job(jobId);
     if (current?.status !== "failed") throw error;
-    await store.discardPrivateLabel?.(jobId).catch(() => undefined);
+    try {
+      await store.discardPrivateLabel?.(jobId);
+    } catch (discardError) {
+      // Revue #147, P2 : un retrait refusé n’est jamais silencieux. La réservation reste échouée ; le
+      // journal nomme l’objet orphelin pour un nettoyage manuel, et l’opérateur reçoit un code distinct.
+      await store.transition(jobId, "operator_note", { provider: label.provider, provider_label_id: label.labelId,
+        note: "label_discard_failed", object: `${jobId}/label.pdf`,
+        code: discardError instanceof Error ? discardError.message.slice(0, 80) : "discard_failed" }).catch(() => undefined);
+      return { state: "review_required", code: "label_orphaned" };
+    }
     return { state: "review_required", code: "job_failed" };
   }
   return { state: "confirmed", costReviewRequired: Boolean(result.cost_review_required) };
