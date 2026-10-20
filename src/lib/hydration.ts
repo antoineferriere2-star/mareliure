@@ -8,10 +8,25 @@
  * rendue par le serveur et hydrate normalement. Ensuite, la redirection du routeur reprend.
  */
 let hydrated = false;
+const readyListeners = new Set<() => void>();
 
 /** Appelé une fois, au premier rendu validé de la racine. */
 export function markHydrated(): void {
   hydrated = true;
+  const listeners = [...readyListeners];
+  readyListeners.clear();
+  listeners.forEach((listener) => listener());
+}
+
+export function whenHydrated(listener: () => void): () => void {
+  if (hydrated) {
+    listener();
+    return () => undefined;
+  }
+  readyListeners.add(listener);
+  return () => {
+    readyListeners.delete(listener);
+  };
 }
 
 export function isHydrated(): boolean {

@@ -7,11 +7,7 @@ type PaintHost = {
 };
 
 /** Gives the existing SSR document a paint before evaluating the hydration runtime. */
-export function startHydration(hydrate: () => void, defer: boolean, host: PaintHost): void {
-  if (!defer) {
-    hydrate();
-    return;
-  }
+export function startHydration(hydrate: () => void, defer: boolean, host: PaintHost): () => void {
   let started = false;
   const unsubscribe: (() => void)[] = [];
   const start = () => {
@@ -20,8 +16,13 @@ export function startHydration(hydrate: () => void, defer: boolean, host: PaintH
     unsubscribe.forEach((stop) => stop());
     hydrate();
   };
+  if (!defer) {
+    start();
+    return start;
+  }
   for (const name of ["pointerdown", "keydown", "focusin", "visibilitychange"] as const) {
     unsubscribe.push(host.listen(name, start));
   }
   host.requestFrame(() => host.requestFrame(start));
+  return start;
 }
