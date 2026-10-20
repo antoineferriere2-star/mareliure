@@ -1,0 +1,151 @@
+{
+  "operation": "marketplace_grants_hardening",
+  "ownerAuthorization": "Brief Codex n° 4 — 19 octobre 2026",
+  "sourceCommit": "0b46cc8adcfe0de76ef3d1e4a24255e2fd2deaca",
+  "migration": "supabase/migrations/20261020100000_marketplace_grants_hardening.sql",
+  "preflight": {
+    "at": "2026-10-19T15:53:42.749Z",
+    "catalogAt": "2026-10-19T15:53:00.085964+00:00",
+    "source": "origin/main 0b46cc8adcfe0de76ef3d1e4a24255e2fd2deaca",
+    "marketplaceTables": 78,
+    "rolesAndOwnersUnchanged": true,
+    "catalogUnchanged": true,
+    "migrations": 122,
+    "mergedSha256": "50976985f579266d02bf704ebbf67a812c0af40c120075c8adb3cdbac12ef556",
+    "regeneratedSha256": "50976985f579266d02bf704ebbf67a812c0af40c120075c8adb3cdbac12ef556",
+    "exactBytes": true,
+    "unresolved": 0,
+    "productionApplied": false
+  },
+  "backup": {
+    "at": "2026-10-19T15:54:35.001Z",
+    "complete": true,
+    "readOnly": true,
+    "sha256": "cb18e8c54e4fa64dd0c2448df5b2a6818d9b39898f4f18de89c496793b3f574c",
+    "bytes": 1364291,
+    "tables": 98
+  },
+  "rehearsal": {
+    "at": "2026-10-19T15:57:04.817Z",
+    "database": "acl_apply_rehearsal_20261019",
+    "restoredTables": 98,
+    "restoreDiagnosticsIdentical": true,
+    "expectedRestoreErrors": 14,
+    "expectedAfterMatched": true,
+    "policiesUnchanged": true,
+    "dataTablesUnchanged": 98,
+    "migrations": 122,
+    "productionApplied": false
+  },
+  "pglite": {
+    "passed": 7,
+    "total": 7
+  },
+  "application": {
+    "at": "2026-10-19T16:00:21.480952+00:00",
+    "applied": true,
+    "historyRegistered": true
+  },
+  "verification": {
+    "at": "2026-10-19T16:00:30.113916+00:00",
+    "applied": true,
+    "history": 123,
+    "latest": "20261020100000",
+    "expectedAfterMatched": true,
+    "tableAndColumnAclsMatched": true,
+    "triggerFunctions": 55,
+    "searchPathsFixed": 4,
+    "defaultsMatched": true,
+    "previousHistoryPreserved": true,
+    "registeredSqlMatches": true,
+    "serviceMaintainRemaining": 0
+  },
+  "registration": {
+    "separateTransactionImmediatelyAfterMigration": true,
+    "version": "20261020100000",
+    "name": "marketplace_grants_hardening",
+    "statements": "one exact full migration SQL string",
+    "previous122RowsPreserved": true
+  },
+  "http": [
+    {
+      "at": "2026-10-19T16:01:33.312Z",
+      "url": "https://mareliure.fr/",
+      "method": "GET",
+      "finalUrl": "https://mareliure.fr/",
+      "redirected": false,
+      "status": 200,
+      "expectedStatus": 200,
+      "bytes": 44314,
+      "sha256": "db5daed06e5ab0a8d70a37e641312d18bbeb00d6a6af6cd9f46b12ab024f13c8"
+    },
+    {
+      "at": "2026-10-19T16:01:34.374Z",
+      "url": "https://finebindery.com/",
+      "method": "GET",
+      "finalUrl": "https://finebindery.com/en",
+      "redirected": true,
+      "status": 200,
+      "expectedStatus": 200,
+      "bytes": 38638,
+      "sha256": "bdc9612781dba90df5b936e092a4bf227527f43ed1535398012f04cc0fd6ca78"
+    },
+    {
+      "at": "2026-10-19T16:01:35.307Z",
+      "url": "https://mareliure.fr/api/public/project-summary",
+      "method": "POST",
+      "finalUrl": "https://mareliure.fr/api/public/project-summary",
+      "redirected": false,
+      "status": 404,
+      "expectedStatus": 404,
+      "bytes": 47,
+      "sha256": "09cae37760513fa603f65ff3f8d18bddb93434176b640bfb81f751b1061d368d",
+      "body": "{\"error\":\"This summary link is not available.\"}"
+    },
+    {
+      "at": "2026-10-19T16:01:35.384Z",
+      "url": "https://finebindery.com/api/public/project-summary",
+      "method": "POST",
+      "finalUrl": "https://finebindery.com/api/public/project-summary",
+      "redirected": false,
+      "status": 404,
+      "expectedStatus": 404,
+      "bytes": 47,
+      "sha256": "09cae37760513fa603f65ff3f8d18bddb93434176b640bfb81f751b1061d368d",
+      "body": "{\"error\":\"This summary link is not available.\"}"
+    },
+    {
+      "at": "2026-10-19T16:01:35.541Z",
+      "url": "https://mareliure.fr/api/marketplace/sendcloud-webhook",
+      "method": "POST",
+      "finalUrl": "https://mareliure.fr/api/marketplace/sendcloud-webhook",
+      "redirected": false,
+      "status": 401,
+      "expectedStatus": 401,
+      "bytes": 29,
+      "sha256": "d686b69b1836ea9a4bf83845068c251c2394e4e8c30b9c79bb42e89f9022cbed",
+      "body": "{\"error\":\"invalid_signature\"}"
+    }
+  ],
+  "workerLogs": {
+    "consulted": false,
+    "reason": "No existing Wrangler client available; no installation or login attempted",
+    "permissionDeniedConclusion": "not established from logs"
+  },
+  "migrationTransaction": {
+    "single": true,
+    "lockTimeout": "5s",
+    "statementTimeout": "120s"
+  },
+  "businessDataWritten": false,
+  "otherMigrationsApplied": false,
+  "workerDeployed": false,
+  "rollbackAttempted": false,
+  "usageSha256": "cb1659e5bd986566474867c2fdce7a5816a25fb1e860c027dab427112db92c3e",
+  "localPostgreSQL": {
+    "stopped": true,
+    "confirmedAt": "2026-10-19T16:04:02.102Z",
+    "initialWaitTimedOutDuringCheckpoint": true,
+    "forcedStop": false
+  }
+}

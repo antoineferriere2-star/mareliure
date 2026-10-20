@@ -51,3 +51,7 @@ Il n'y a donc aucun classement terrain exploitable dans ces rapports. Ce constat
 ## Point à suivre
 
 La priorité documentaire reste le désaccord canonique racine/`/en`, avec une exploration de la racine plus ancienne que celle de `/en`. Lors d'un prochain point demandé par le propriétaire, comparer ces deux dates et canoniques avant de déclarer le problème résolu. Aucun suivi automatique n'est créé et aucune action d'indexation ou de modification n'est effectuée dans ce chantier.
+
+## Complément du 20 octobre 2026 (Claude Code, inspection d'URL en lecture seule)
+
+`https://finebindery.com/en` est désormais **indexée** (« Cette URL est sur Google ») : dernière exploration le 13 octobre 2026, URL canonique déclarée `https://finebindery.com/en`. Le rapport « Pages » (données au 12/10) affiche encore 13 pages indexées, 23 non indexées et l'échec de validation « Page en double » ouvert avant cette exploration. Le seul 404 relevé, `https://finebindery.com/$locale/`, provient du manifeste du routeur sérialisé dans les pages, pas d'un lien ; la réponse 404 est correcte. Aucune demande d'indexation ni modification.

@@ -41,5 +41,9 @@ export function supabaseLabelStore(client: unknown): LabelJobStore {
       const bytes = new Uint8Array(await existing.data.arrayBuffer());
       if (bytes.length !== pdf.length || bytes.some((byte, index) => byte !== pdf[index])) throw new Error("label_object_conflict");
     },
+    async discardPrivateLabel(id) {
+      const { error } = await sb.storage.from(ROUND_TRIP_LABELS_BUCKET).remove([`${id}/label.pdf`]);
+      if (error) throw new Error("label_discard_failed");
+    },
   };
 }
