@@ -28,6 +28,28 @@ import {
 } from "@/build/schema/visitorSummary";
 import type { DeckPreviewSnapshot } from "@/build/visualPreview/deckPreviewParams";
 
+/** A file the upload routes wrote for this session: `sessions/<uuid>/<uuid>[.ext]`, nothing else. */
+export function isSessionPhotoPath(path: string, sessionId: string): boolean {
+  if (!/^[0-9a-f-]{36}$/i.test(sessionId)) return false;
+  const prefix = `sessions/${sessionId}/`;
+  return path.startsWith(prefix) && /^[0-9a-f-]{36}(\.[a-z0-9]{1,8})?$/i.test(path.slice(prefix.length));
+}
+
+/**
+ * True when an answer value carries a Storage path (`storagePath` in a photo list,
+ * `photoPath` on an inspiration answer) that this session did not upload.
+ * Used to refuse the submission outright rather than silently dropping the photo.
+ */
+export function foreignPhotoReference(value: unknown, sessionId: string): boolean {
+  const entries = Array.isArray(value) ? value : [value];
+  return entries.some((entry) => {
+    if (!entry || typeof entry !== "object") return false;
+    const path = (entry as { storagePath?: unknown; photoPath?: unknown }).storagePath
+      ?? (entry as { photoPath?: unknown }).photoPath;
+    return typeof path === "string" && !isSessionPhotoPath(path, sessionId);
+  });
+}
+
 /**
  * Every answer that points at a real file in Storage, from either source: the
  * single InspirationPhotoAnswer the vision agent reads, and the entries of a
@@ -37,8 +59,14 @@ import type { DeckPreviewSnapshot } from "@/build/visualPreview/deckPreviewParam
  *
  * Generic across Playbooks: scans every answer value rather than assuming a
  * specific field key.
+ *
+ * Only files uploaded by THIS session are returned (`sessions/<sessionId>/<file>`,
+ * the only shape the upload routes write). Answers are visitor-supplied: a path
+ * from another session must never reach a service-role signature (audit sécurité
+ * du 16 octobre 2026, P1). No session, no photos.
  */
-export function extractPhotoReferences(answers: Answers): VisitorPhotoReference[] {
+export function extractPhotoReferences(answers: Answers, sessionId: string | null): VisitorPhotoReference[] {
+  if (!sessionId) return [];
   const refs: VisitorPhotoReference[] = [];
   for (const value of Object.values(answers)) {
     if (Array.isArray(value)) {
@@ -49,6 +77,7 @@ export function extractPhotoReferences(answers: Answers): VisitorPhotoReference[
           typeof (entry as { storagePath?: unknown }).storagePath === "string"
         ) {
           const photo = entry as { storagePath: string; filename?: string };
+          if (!isSessionPhotoPath(photo.storagePath, sessionId)) continue;
           refs.push({
             path: photo.storagePath,
             caption: photo.filename,
@@ -66,7 +95,8 @@ export function extractPhotoReferences(answers: Answers): VisitorPhotoReference[
     ) {
       // No bucket: the inspiration bucket is the historical default, and
       // every snapshot already stored relies on that reading.
-      refs.push({ path: (value as { photoPath: string }).photoPath });
+      const path = (value as { photoPath: string }).photoPath;
+      if (isSessionPhotoPath(path, sessionId)) refs.push({ path });
     }
   }
   return refs;

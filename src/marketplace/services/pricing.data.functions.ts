@@ -138,7 +138,7 @@ export const getBasePriceReference = createServerFn({ method: "GET" })
  */
 export const saveBasePrice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => basePriceInput.parse(data))
+  .validator((data: unknown) => basePriceInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const errors = validateBasePriceDraft(data);
@@ -225,7 +225,7 @@ export const getRateAggregates = createServerFn({ method: "GET" })
 
 export const getBinderRateCard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ binderId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ binderId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -267,7 +267,7 @@ const rateInput = z.object({
  */
 export const saveBinderRate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => rateInput.parse(data))
+  .validator((data: unknown) => rateInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const errors = validateRate(data);
@@ -311,7 +311,7 @@ export const saveBinderRate = createServerFn({ method: "POST" })
 
 export const removeBinderRate = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ rateId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ rateId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -333,7 +333,7 @@ export const removeBinderRate = createServerFn({ method: "POST" })
  */
 export const simulatePricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         workItemKeys: z.array(z.string()).min(1).max(20),
@@ -433,7 +433,7 @@ export const simulatePricing = createServerFn({ method: "POST" })
  */
 export const publishPricebookEntry = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         workItemKey: z.string().refine((key) => workItemKeys.has(key), "Travail hors catalogue"),

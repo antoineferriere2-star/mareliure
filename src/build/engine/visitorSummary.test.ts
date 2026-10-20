@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { defaultDeckBrief } from "@/build/pages/public/defaultDeckBrief";
 import type { MissionProposal } from "@/build/schema/missionProposal";
-import { buildVisitorProjectSummary, extractPhotoReferences } from "./visitorSummary";
+import { buildVisitorProjectSummary, extractPhotoReferences, foreignPhotoReference } from "./visitorSummary";
 
 const proposal: MissionProposal = { confirmationText: "Thanks! We'll reach out within 24 hours." };
 
@@ -143,27 +143,55 @@ describe("buildVisitorProjectSummary — Spanish locale", () => {
 });
 
 describe("extractPhotoReferences", () => {
-  it("collects the storage path from an inspiration photo answer", () => {
-    const refs = extractPhotoReferences({
-      inspirationPhoto: {
-        photoPath: "workspace-1/session-1/photo.jpg",
-        hypotheses: { materials: [], elements: [] },
-        confirmed: {},
-        suggestedQuestions: [],
-      },
-    });
-    expect(refs).toEqual([{ path: "workspace-1/session-1/photo.jpg" }]);
+  const session = "11111111-1111-4111-8111-111111111111";
+  const other = "22222222-2222-4222-8222-222222222222";
+  const file = "33333333-3333-4333-8333-333333333333";
+  const inspiration = (photoPath: string) => ({ photoPath, hypotheses: { materials: [], elements: [] }, confirmed: {}, suggestedQuestions: [] });
+
+  it("collects the storage path from an inspiration photo answer of this session", () => {
+    const refs = extractPhotoReferences({ inspirationPhoto: inspiration(`sessions/${session}/${file}.jpg`) }, session);
+    expect(refs).toEqual([{ path: `sessions/${session}/${file}.jpg` }]);
+  });
+
+  it("collects uploaded project photos of this session, in the project bucket", () => {
+    const refs = extractPhotoReferences({ photos: [{ filename: "dos.jpg", storagePath: `sessions/${session}/${file}`, mimeType: "image/jpeg", sizeBytes: 10 }] }, session);
+    expect(refs).toEqual([{ path: `sessions/${session}/${file}`, caption: "dos.jpg", bucket: "build-project-photos" }]);
+  });
+
+  // Audit sécurité du 16 octobre 2026, P1 : une référence d'une autre session ne doit jamais être signée.
+  it("drops a path from another session, an invented path and a path hidden in an extra answer", () => {
+    // Valeurs falsifiées par le visiteur : hors du type Answers, d'où la conversion.
+    const refs = extractPhotoReferences(({
+      photos: [{ filename: "x.jpg", storagePath: `sessions/${other}/${file}`, mimeType: "image/jpeg", sizeBytes: 10 }],
+      inspirationPhoto: inspiration("workspace-1/session-1/photo.jpg"),
+      _extra: { photoPath: `sessions/${other}/${file}.png` },
+      traversal: [{ storagePath: `sessions/${session}/../${other}/${file}` }],
+    }) as never, session);
+    expect(refs).toEqual([]);
+  });
+
+  it("returns nothing without a session", () => {
+    expect(extractPhotoReferences({ inspirationPhoto: inspiration(`sessions/${session}/${file}.jpg`) }, null)).toEqual([]);
   });
 
   it("ignores the plain multi-photo field, which has no storage path", () => {
-    const refs = extractPhotoReferences({
-      photos: [{ filename: "deck.jpg", sizeBytes: 1000, mimeType: "image/jpeg" }],
-    });
+    const refs = extractPhotoReferences({ photos: [{ filename: "deck.jpg", sizeBytes: 1000, mimeType: "image/jpeg" }] }, session);
     expect(refs).toEqual([]);
   });
 
   it("ignores unrelated string/number/boolean answers", () => {
-    const refs = extractPhotoReferences({ length: 18, name: "Jane", consent: true });
-    expect(refs).toEqual([]);
+    expect(extractPhotoReferences({ length: 18, name: "Jane", consent: true }, session)).toEqual([]);
+  });
+});
+
+describe("foreignPhotoReference", () => {
+  const session = "11111111-1111-4111-8111-111111111111";
+  it("flags any photo path this session did not upload, and only those", () => {
+    expect(foreignPhotoReference([{ storagePath: `sessions/22222222-2222-4222-8222-222222222222/33333333-3333-4333-8333-333333333333` }], session)).toBe(true);
+    expect(foreignPhotoReference({ photoPath: "workspace-1/session-1/photo.jpg" }, session)).toBe(true);
+    expect(foreignPhotoReference([{ storagePath: `sessions/${session}/33333333-3333-4333-8333-333333333333` }], session)).toBe(false);
+    expect(foreignPhotoReference({ photoPath: `sessions/${session}/33333333-3333-4333-8333-333333333333.webp` }, session)).toBe(false);
+    expect(foreignPhotoReference([{ filename: "a.jpg" }], session)).toBe(false);
+    expect(foreignPhotoReference("text", session)).toBe(false);
   });
 });

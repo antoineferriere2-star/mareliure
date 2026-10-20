@@ -145,7 +145,7 @@ async function funnelByMission(
  */
 export const listProspectDemos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => workspaceInput.parse(data))
+  .validator((data: unknown) => workspaceInput.parse(data))
   .handler(async ({ context, data }): Promise<ProspectDemo[]> => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
@@ -217,7 +217,7 @@ export const listProspectDemos = createServerFn({ method: "GET" })
  */
 export const updateProspectDemo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     workspaceInput
       .extend({
         demoId: z.string().uuid(),

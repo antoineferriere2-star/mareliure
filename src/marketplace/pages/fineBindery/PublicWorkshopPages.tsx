@@ -11,7 +11,7 @@ import {
   languageName,
   specialtyName,
   techniqueName,
-} from "@/marketplace/i18n/fineBinderyGlossary";
+} from "@/marketplace/i18n/fineBinderyPublicGlossary";
 import {
   fineBinderyDirectoryPath,
   fineBinderyProfilePath,

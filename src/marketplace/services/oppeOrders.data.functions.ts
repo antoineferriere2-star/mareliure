@@ -101,7 +101,7 @@ const caseInput = z.object({ caseId: z.string().uuid() });
 
 export const getOppeOrder = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => caseInput.parse(data))
+  .validator((data: unknown) => caseInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     return loadOppeOrder(await admin(), data.caseId);
@@ -109,7 +109,7 @@ export const getOppeOrder = createServerFn({ method: "GET" })
 
 export const advanceOppeOrderAsAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({
       caseId: z.string().uuid(),
       status: z.enum(["in_production", "completed", "cancelled"]),
@@ -134,7 +134,7 @@ export const advanceOppeOrderAsAdmin = createServerFn({ method: "POST" })
 /** L'atelier affecté déclare le début puis la fin du travail. */
 export const advanceMyOppeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ caseId: z.string().uuid(), status: z.enum(["in_production", "completed"]) }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -153,7 +153,7 @@ export const advanceMyOppeOrder = createServerFn({ method: "POST" })
 /** Ce que l'atelier voit de la commande : son état et son propre engagement, jamais le prix client. */
 export const getMyOppeOrder = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => caseInput.parse(data))
+  .validator((data: unknown) => caseInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const membership = await findActiveBinderMembership(sb, context.userId);
@@ -180,7 +180,7 @@ export const getMyOppeOrder = createServerFn({ method: "GET" })
  */
 export const offerOppeOrderToWorkshop = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({
       caseId: z.string().uuid(),
       binderId: z.string().uuid(),
@@ -235,7 +235,7 @@ export const offerOppeOrderToWorkshop = createServerFn({ method: "POST" })
 /** Réattribution, étape 2 : le nouvel atelier a accepté ; l'administration bascule la commande. */
 export const reassignOppeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ caseId: z.string().uuid(), binderId: z.string().uuid(), reason: z.string().trim().min(12).max(500) }).parse(data),
   )
   .handler(async ({ context, data }) => {

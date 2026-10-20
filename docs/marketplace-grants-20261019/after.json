@@ -1,0 +1,4801 @@
+{
+  "at": "2026-10-19T09:22:31.795162+00:00",
+  "migrations": 122,
+  "latest": "20261016100000",
+  "tables": [
+    {
+      "schema": "public",
+      "name": "marketplace_binder_applications",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_billing_profiles",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_clients",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_commercial_terms",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_credit_note_items",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_credit_notes",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_document_counters",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_invitations",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_invoice_items",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_invoices",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_members",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_operation_photos",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_portfolio",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_price_preferences",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_quote_item_photos",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_quote_items",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_quotes",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_rates",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_service_categories",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_services",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_skills",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_subscriptions",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_work_counters",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_work_photos",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binder_works",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_binders",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_case_logistics_plans",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_case_matches",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_case_payment_circuits",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_cases",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_commercial_proposal_payments",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_commercial_proposals",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_conversation_reads",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_decisions",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_events",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_external_settlements",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_intake_missions",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": false,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_messages",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_credit_notes",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_disputes",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_document_counters",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_invoice_items",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_invoices",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_order_assignments",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_orders",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_refunds",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_supplier_invoices",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_oppe_supplier_payments",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_own_agreement_identity_completions",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_own_client_agreements",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_pricebook",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_proposal_acceptances",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_proposal_billing_details",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_quotes",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_reference_default_prices",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_reference_price_operation_links",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_round_trip_automation",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": false,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_round_trip_automation_changes",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_round_trip_label_events",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_round_trip_label_jobs",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_round_trip_rate_approvals",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_stripe_webhook_events",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_work_items",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_work_logistics_events",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_work_logistics_labels",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_work_logistics_photos",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_billing_documents",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_checkout_attempts",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_connect_consent_history",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_connect_consents",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_fee_counters",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_fee_documents",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_notices",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_offer_settings",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": false,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_online_disputes",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_online_payments",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_online_refund_attempts",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "public",
+      "name": "marketplace_workshop_online_refunds",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": false,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "authenticated": {
+          "delete": false,
+          "insert": false,
+          "select": false,
+          "update": false,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "storage",
+      "name": "buckets",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": true,
+          "truncate": true,
+          "references": true
+        },
+        "authenticated": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    },
+    {
+      "schema": "storage",
+      "name": "objects",
+      "rls": true,
+      "force_rls": false,
+      "grants": {
+        "anon": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        },
+        "service_role": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": true,
+          "truncate": true,
+          "references": true
+        },
+        "authenticated": {
+          "delete": true,
+          "insert": true,
+          "select": true,
+          "update": true,
+          "trigger": false,
+          "truncate": false,
+          "references": false
+        }
+      },
+      "column_acl": null
+    }
+  ],
+  "functions": [
+    {
+      "name": "has_role",
+      "signature": "_user_id uuid, _role app_role",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_accept_own_quote",
+      "signature": "p_quote uuid, p_binder uuid, p_actor uuid, p_evidence text, p_revision text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_accept_proposal_as_customer",
+      "signature": "p_proposal_id uuid, p_customer_user_id uuid, p_terms_version text, p_snapshot_sha256 text, p_ip_address text, p_user_agent text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_accept_proposal_as_customer_v2",
+      "signature": "p_proposal_id uuid, p_customer_user_id uuid, p_terms_version text, p_snapshot_sha256 text, p_ip_address text, p_user_agent text, p_billing jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_accept_workshop_offer",
+      "signature": "p_case_id uuid, p_binder_id uuid, p_lead_time_days integer, p_actor_user_id uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_advance_oppe_order",
+      "signature": "p_case_id uuid, p_status text, p_actor_user_id uuid, p_actor_role text, p_reason text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_archive_connect_consent",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_attach_work_transport_label",
+      "signature": "p_work uuid, p_binder uuid, p_actor uuid, p_event uuid, p_id uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_bind_proposal_to_agreement",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_create_full_credit_note",
+      "signature": "p_binder_id uuid, p_invoice_id uuid, p_issue_date date, p_reason text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_create_invoice_draft",
+      "signature": "p_binder_id uuid, p_quote_id uuid, p_draft jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_create_legacy_full_credit_note",
+      "signature": "p_binder_id uuid, p_invoice_id uuid, p_issue_date date, p_reason text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_create_partial_credit_note",
+      "signature": "p_binder_id uuid, p_invoice_id uuid, p_issue_date date, p_reason text, p_request_id uuid, p_lines jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_create_quote",
+      "signature": "p_binder_id uuid, p_quote jsonb, p_items jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_create_work",
+      "signature": "p_binder_id uuid, p_work jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_credit_limits",
+      "signature": "p_binder_id uuid, p_invoice_id uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_credit_notes_immutable",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_credit_tax_groups",
+      "signature": "p_binder_id uuid, p_invoice_id uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_document_is_oppe_order",
+      "signature": "p_binder uuid, p_work uuid, p_client uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_document_is_own_client",
+      "signature": "p_binder uuid, p_work uuid, p_client uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_import_case",
+      "signature": "p_binder_id uuid, p_case_id uuid, p_contact_name text, p_contact_email text, p_contact_phone text, p_work_title text, p_work_description text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_import_own_case",
+      "signature": "p_binder_id uuid, p_case_id uuid, p_actor uuid, p_contact_name text, p_contact_email text, p_contact_phone text, p_work_title text, p_work_description text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_invoice_items_forbid_change",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_invoices_forbid_content_change",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_invoices_forbid_delete",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_issue_invoice",
+      "signature": "p_binder_id uuid, p_invoice_id uuid, p_legal_mentions jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_next_document_number",
+      "signature": "p_binder_id uuid, p_kind text, p_year integer",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_next_work_reference",
+      "signature": "p_binder_id uuid, p_year integer",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_portfolio_work_same_binder",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_quotes_work_same_binder",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_update_invoice_draft",
+      "signature": "p_binder_id uuid, p_invoice_id uuid, p_draft jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_update_quote",
+      "signature": "p_binder_id uuid, p_quote_id uuid, p_quote jsonb, p_items jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_binder_works_same_binder",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_case_attachment_requires_open",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_cases_forbid_brand_change",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_cases_guard_engagement",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_claim_webhook_event",
+      "signature": "p_id text, p_type text, p_payload jsonb, p_stale_after_seconds integer",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_claim_workshop_notice",
+      "signature": "p_id text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_close_case_without_follow_up",
+      "signature": "p_case_id uuid, p_actor_user_id uuid, p_reason text, p_expected_status text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_commercial_proposals_forbid_change_after_acceptance",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_complete_own_agreement_identity",
+      "signature": "p_quote uuid, p_binder uuid, p_actor uuid, p_attestation text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_dossier_ids_for_verified_email",
+      "signature": "p_email text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_enforce_match_ceiling",
+      "signature": "",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_external_balance_guard",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_external_member",
+      "signature": "p_binder uuid, p_actor uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_external_settlement_state",
+      "signature": "p_invoice uuid, p_binder uuid, p_actor uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_fee_document_immutable",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_forbid_acceptance_changes",
+      "signature": "",
+      "security_definer": false,
+      "config": null,
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_forbid_oppe_document_change",
+      "signature": "",
+      "security_definer": false,
+      "config": null,
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_forbid_supplier_payment_change",
+      "signature": "",
+      "security_definer": false,
+      "config": null,
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_fr_mainland_postal",
+      "signature": "p_country text, p_code text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": true,
+        "service_role": true,
+        "authenticated": true
+      }
+    },
+    {
+      "name": "marketplace_freeze_binder_provenance",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_freeze_proposal_agreement",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_freeze_supplier_invoice_terms",
+      "signature": "",
+      "security_definer": false,
+      "config": null,
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_freeze_workshop_agreement",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_guard_binder_invoice_circuit",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_guard_binder_quote_circuit",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_guard_oppe_sale_origin",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_guard_oppe_tax_validation",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_guard_retired_circuits",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_ingest_dossier",
+      "signature": "",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_ingest_missing_cases",
+      "signature": "",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_init_workshop_subscription",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_invoice_agreed_amount",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_invoice_payment_snapshot",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_issue_oppe_credit_note",
+      "signature": "p_invoice_id uuid, p_amount_ttc_cents integer, p_reason text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_issue_oppe_invoice",
+      "signature": "p_proposal_id uuid, p_seller jsonb, p_customer jsonb, p_payment jsonb, p_service_label text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_issue_workshop_fee_documents",
+      "signature": "p_payment_id uuid, p_fee_id text, p_fee_amount integer, p_fee_refunded integer, p_brand text, p_seller jsonb, p_customer jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_lock_commercial_origin",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_lock_payment_circuit",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_logistics_immutable",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_logistics_plan_guard",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_mark_proposal_paid",
+      "signature": "p_proposal_id uuid, p_payment_intent_id text, p_invoice_id text, p_amount_cents integer, p_currency text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_messages_route_audience",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_next_oppe_number",
+      "signature": "p_series text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_norm_identifier",
+      "signature": "p_value text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_open_oppe_order",
+      "signature": "p_proposal_id uuid, p_paid_at timestamp with time zone",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_own_agreement_identity",
+      "signature": "p_quote uuid, p_binder uuid, p_actor uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_own_contract",
+      "signature": "p_quote uuid, p_binder uuid, p_actor uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_own_quote_eligible",
+      "signature": "p_quote uuid, p_binder uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_preserve_collected_fee_terms",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_preserve_confirmed_online_payment",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_prevent_mixed_settlement",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_project_online_invoice_balance",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_quote_payment_snapshot",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_reassign_oppe_order",
+      "signature": "p_case_id uuid, p_new_binder_id uuid, p_reason text, p_actor_user_id uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_record_case_completion",
+      "signature": "",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_record_external_settlement",
+      "signature": "p_id uuid, p_invoice uuid, p_binder uuid, p_actor uuid, p_kind text, p_amount integer, p_evidence text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_record_supplier_payment",
+      "signature": "p_invoice uuid, p_paid_on date, p_amount integer, p_reference text, p_actor uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_release_workshop_payment_checkout",
+      "signature": "p_payment_id uuid, p_session_id text, p_intent_id text, p_reason text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_release_workshop_subscription_checkout",
+      "signature": "p_binder_id uuid, p_session_id text, p_reason text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_repair_workshop_referral_matches",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_require_customer_acceptance",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_require_own_agreement",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_require_portfolio_subscription",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_require_profile_subscription",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_require_workshop_subscription",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_reserve_round_trip_label",
+      "signature": "p_case uuid, p_direction text, p_outbound_address_sha256 text, p_return_address_sha256 text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_reserve_round_trip_label_manual",
+      "signature": "p_case uuid, p_direction text, p_actor uuid, p_replace boolean",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_reserve_workshop_checkout",
+      "signature": "p_binder_id uuid, p_user_id uuid, p_terms_version text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_reserve_workshop_online_payment",
+      "signature": "p_binder_id uuid, p_invoice_id uuid, p_token_hash text, p_expires_at timestamp with time zone",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_reserve_workshop_payment_checkout",
+      "signature": "p_payment_id uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_reserve_workshop_refund",
+      "signature": "p_binder_id uuid, p_payment_id uuid, p_credit_note_id uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_respond_to_offer",
+      "signature": "p_case_id uuid, p_binder_id uuid, p_accept boolean, p_reason_code text, p_reason_detail text, p_actor_user_id uuid",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_retry_workshop_refund",
+      "signature": "p_binder_id uuid, p_credit_note_id uuid, p_refund_id text, p_status text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_review_supplier_invoice",
+      "signature": "p_invoice uuid, p_decision text, p_reason text, p_actor uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_round_trip_label_transition",
+      "signature": "p_job uuid, p_kind text, p_provider_event_id text, p_details jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_round_trip_leg_context",
+      "signature": "p_case uuid, p_direction text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_round_trip_offer_guard",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_round_trip_parcel_ok",
+      "signature": "p_weight integer, p_a integer, p_b integer, p_c integer",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": true,
+        "service_role": true,
+        "authenticated": true
+      }
+    },
+    {
+      "name": "marketplace_round_trip_plan_block",
+      "signature": "p_plan marketplace_case_logistics_plans, p_brand text, p_selected_binder uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_round_trip_return_ready",
+      "signature": "p_case uuid, p_binder uuid, p_actor uuid, p_weight integer, p_length integer, p_width integer, p_height integer",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_seed_payment_circuit",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_select_binder_offer",
+      "signature": "p_case_id uuid, p_binder_id uuid, p_actor_user_id uuid",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_seller_entity",
+      "signature": "p_issuer jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_set_case_payment_circuit",
+      "signature": "p_case_id uuid, p_circuit text, p_event_id uuid, p_actor uuid, p_notes text",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_set_round_trip_automation",
+      "signature": "p_actor uuid, p_enabled boolean, p_evidence jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_settlement_immutable",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_snapshot_payment_circuit",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_snapshot_workshop_fee_basis",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_submit_supplier_invoice",
+      "signature": "p_case uuid, p_binder uuid, p_source text, p_number text, p_issue_date date, p_vat_regime text, p_vat_rate_bps integer, p_vat_mention text, p_document_path text, p_actor uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_sync_workshop_subscription",
+      "signature": "p_binder_id uuid, p_snapshot jsonb, p_event_created bigint",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_validate_pricing",
+      "signature": "p_case_id uuid, p_customer_price_cents integer, p_binder_payout_cents integer, p_price_includes text[], p_minimum_margin_bps integer, p_minimum_margin_cents integer, p_actor_user_id uuid",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_validate_workshop_transport",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_validate_workshop_transport_plan",
+      "signature": "",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_work_logistics",
+      "signature": "p_work uuid, p_binder uuid, p_actor uuid, p_action text, p_data jsonb",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "marketplace_workshop_can_create",
+      "signature": "p_binder_id uuid",
+      "security_definer": false,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "provision_owner_workspace",
+      "signature": "_user_id uuid, _email text, _workspace_name text",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    },
+    {
+      "name": "publish_workspace_onboarding",
+      "signature": "p_workspace_id uuid, p_playbook_id uuid, p_validated_draft_schema jsonb, p_published_by uuid, p_mission_name text, p_onboarding_id uuid",
+      "security_definer": true,
+      "config": [
+        "search_path=public"
+      ],
+      "execute": {
+        "anon": false,
+        "service_role": true,
+        "authenticated": false
+      }
+    }
+  ],
+  "default_acls": [
+    {
+      "acl": [
+        "postgres=rwU/supabase_auth_admin",
+        "dashboard_user=rwU/supabase_auth_admin"
+      ],
+      "kind": "S",
+      "owner": "supabase_auth_admin",
+      "schema": "auth"
+    },
+    {
+      "acl": [
+        "postgres=X/supabase_auth_admin",
+        "dashboard_user=X/supabase_auth_admin"
+      ],
+      "kind": "f",
+      "owner": "supabase_auth_admin",
+      "schema": "auth"
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/supabase_auth_admin",
+        "dashboard_user=arwdDxtm/supabase_auth_admin"
+      ],
+      "kind": "r",
+      "owner": "supabase_auth_admin",
+      "schema": "auth"
+    },
+    {
+      "acl": [
+        "postgres=r*w*U*/supabase_admin"
+      ],
+      "kind": "S",
+      "owner": "supabase_admin",
+      "schema": "extensions"
+    },
+    {
+      "acl": [
+        "postgres=X*/supabase_admin"
+      ],
+      "kind": "f",
+      "owner": "supabase_admin",
+      "schema": "extensions"
+    },
+    {
+      "acl": [
+        "postgres=a*r*w*d*D*x*t*m*/supabase_admin"
+      ],
+      "kind": "r",
+      "owner": "supabase_admin",
+      "schema": "extensions"
+    },
+    {
+      "acl": [
+        "postgres=rwU/supabase_admin",
+        "anon=rwU/supabase_admin",
+        "authenticated=rwU/supabase_admin",
+        "service_role=rwU/supabase_admin"
+      ],
+      "kind": "S",
+      "owner": "supabase_admin",
+      "schema": "graphql"
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "kind": "r",
+      "owner": "postgres",
+      "schema": "storage"
+    },
+    {
+      "acl": [
+        "postgres=X/supabase_admin",
+        "anon=X/supabase_admin",
+        "authenticated=X/supabase_admin",
+        "service_role=X/supabase_admin"
+      ],
+      "kind": "f",
+      "owner": "supabase_admin",
+      "schema": "graphql"
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "service_role=arwd/postgres"
+      ],
+      "kind": "r",
+      "owner": "postgres",
+      "schema": "public"
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/supabase_admin",
+        "anon=arwdDxtm/supabase_admin",
+        "authenticated=arwdDxtm/supabase_admin",
+        "service_role=arwdDxtm/supabase_admin"
+      ],
+      "kind": "r",
+      "owner": "supabase_admin",
+      "schema": "graphql"
+    },
+    {
+      "acl": [
+        "postgres=rwU/supabase_admin",
+        "anon=rwU/supabase_admin",
+        "authenticated=rwU/supabase_admin",
+        "service_role=rwU/supabase_admin"
+      ],
+      "kind": "S",
+      "owner": "supabase_admin",
+      "schema": "graphql_public"
+    },
+    {
+      "acl": [
+        "postgres=X/supabase_admin",
+        "anon=X/supabase_admin",
+        "authenticated=X/supabase_admin",
+        "service_role=X/supabase_admin"
+      ],
+      "kind": "f",
+      "owner": "supabase_admin",
+      "schema": "graphql_public"
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/supabase_admin",
+        "anon=arwdDxtm/supabase_admin",
+        "authenticated=arwdDxtm/supabase_admin",
+        "service_role=arwdDxtm/supabase_admin"
+      ],
+      "kind": "r",
+      "owner": "supabase_admin",
+      "schema": "graphql_public"
+    },
+    {
+      "acl": [
+        "postgres=rwU/postgres",
+        "anon=rwU/postgres",
+        "authenticated=rwU/postgres",
+        "service_role=rwU/postgres"
+      ],
+      "kind": "S",
+      "owner": "postgres",
+      "schema": "public"
+    },
+    {
+      "acl": [
+        "postgres=rwU/supabase_admin",
+        "anon=rwU/supabase_admin",
+        "authenticated=rwU/supabase_admin",
+        "service_role=rwU/supabase_admin"
+      ],
+      "kind": "S",
+      "owner": "supabase_admin",
+      "schema": "public"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "kind": "f",
+      "owner": "postgres",
+      "schema": "public"
+    },
+    {
+      "acl": [
+        "postgres=X/supabase_admin",
+        "anon=X/supabase_admin",
+        "authenticated=X/supabase_admin",
+        "service_role=X/supabase_admin"
+      ],
+      "kind": "f",
+      "owner": "supabase_admin",
+      "schema": "public"
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/supabase_admin",
+        "anon=arwdDxtm/supabase_admin",
+        "authenticated=arwdDxtm/supabase_admin",
+        "service_role=arwdDxtm/supabase_admin"
+      ],
+      "kind": "r",
+      "owner": "supabase_admin",
+      "schema": "public"
+    },
+    {
+      "acl": [
+        "postgres=rwU/supabase_admin",
+        "dashboard_user=rwU/supabase_admin"
+      ],
+      "kind": "S",
+      "owner": "supabase_admin",
+      "schema": "realtime"
+    },
+    {
+      "acl": [
+        "postgres=X/supabase_admin",
+        "dashboard_user=X/supabase_admin"
+      ],
+      "kind": "f",
+      "owner": "supabase_admin",
+      "schema": "realtime"
+    },
+    {
+      "acl": [
+        "postgres=arwdDxtm/supabase_admin",
+        "dashboard_user=arwdDxtm/supabase_admin"
+      ],
+      "kind": "r",
+      "owner": "supabase_admin",
+      "schema": "realtime"
+    },
+    {
+      "acl": [
+        "postgres=rwU/postgres",
+        "anon=rwU/postgres",
+        "authenticated=rwU/postgres",
+        "service_role=rwU/postgres"
+      ],
+      "kind": "S",
+      "owner": "postgres",
+      "schema": "storage"
+    },
+    {
+      "acl": [
+        "postgres=X/postgres",
+        "anon=X/postgres",
+        "authenticated=X/postgres",
+        "service_role=X/postgres"
+      ],
+      "kind": "f",
+      "owner": "postgres",
+      "schema": "storage"
+    }
+  ]
+}

@@ -47,7 +47,7 @@ const applicationInput = z.object({
  * une candidature n'est ni acceptée ni refusée dans l'instant.
  */
 export const submitBinderApplication = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => applicationInput.parse(data))
+  .validator((data: unknown) => applicationInput.parse(data))
   .handler(async ({ data }) => {
     // Un bot remplit tout ce qu'il trouve, y compris un champ qu'une personne
     // ne voit jamais (masqué en CSS côté formulaire). Faux succès plutôt
@@ -106,7 +106,7 @@ export const listBinderApplications = createServerFn({ method: "GET" })
 
 export const markBinderApplicationStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         applicationId: z.string().uuid(),

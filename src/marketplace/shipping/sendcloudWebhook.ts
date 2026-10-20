@@ -8,7 +8,7 @@
  * n'est jamais une réception physique : l'atelier la confirme séparément.
  */
 import type { LabelProvider } from "./labelProvider";
-import type { LabelJobStore } from "./labelOrchestrator";
+import { isUnusableProviderStatus, type LabelJobStore } from "./labelOrchestrator";
 
 const encoder = new TextEncoder();
 const hex = (bytes: ArrayBuffer) => [...new Uint8Array(bytes)].map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -29,6 +29,8 @@ export interface WebhookDeps {
   store: LabelJobStore;
   /** Réservation correspondant à un colis du fournisseur, ou `null` (colis étranger au circuit). */
   jobByProviderLabel(labelId: string): Promise<{ id: string } | null>;
+  /** Prévenir l'équipe qu'une étiquette vient de devenir inutilisable (jamais bloquant). */
+  onLabelUnusable?(jobId: string, code: string): Promise<unknown>;
 }
 
 const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { "Content-Type": "application/json" } });
@@ -46,11 +48,22 @@ export async function handleSendcloudWebhook(request: Request, deps: WebhookDeps
   // Rapprochement : l'état fait foi chez le fournisseur, pas dans la notification.
   // Un retour ne se retrouve pas par référence : relecture du colis par son identifiant.
   let current = await deps.provider.findByReference(job.id);
-  if (current === null && deps.provider.findByLabelId) current = await deps.provider.findByLabelId(parcelId);
+  // Introuvable OU illisible par référence : relire le colis déjà rattaché par son identifiant (revue du 16/10, P2-E).
+  if ((current === null || current === "unknown") && deps.provider.findByLabelId) {
+    const byId = await deps.provider.findByLabelId(parcelId);
+    if (byId && byId !== "unknown") current = byId;
+  }
   if (current === "unknown") return json(503, { error: "provider_unreadable" });
   if (!current || current.labelId !== parcelId) return json(409, { error: "reconciliation_mismatch" });
   await deps.store.transition(job.id, "tracking_update",
     { provider: deps.provider.name, provider_label_id: parcelId, code: current.status?.code ?? "unknown", message: (current.status?.message ?? "").slice(0, 200) },
     `${parcelId}:${payload.timestamp}`);
+  // Annulée ou refusée chez le fournisseur (statut relu, pas celui de la notification) : l'étiquette ne
+  // doit plus être présentée comme utilisable. Aucun remboursement présumé.
+  if (isUnusableProviderStatus(current.status) && (await deps.store.job(job.id))?.status === "confirmed") {
+    await deps.store.transition(job.id, "cancelled", { provider: deps.provider.name, reference: parcelId,
+      source: "provider_status", code: current.status?.code ?? "unknown" });
+    await deps.onLabelUnusable?.(job.id, current.status?.code ?? "unknown");
+  }
   return json(200, { ok: true });
 }

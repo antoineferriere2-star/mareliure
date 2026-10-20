@@ -9,7 +9,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   getOperatorCaseLogistics, getOperatorLabel, getRoundTripShippingOptions, purchaseRoundTripLabel, recordLabelEvent, recordManualLabel,
-  recordRoundTripRateApproval, setRoundTripAutomation,
+  recordRoundTripRateApproval, setRoundTripAutomation, adoptRoundTripLabel, declareRoundTripLabelAbsent, cancelRoundTripLabel,
 } from "@/marketplace/services/caseLogistics.data.functions";
 import type { OperatorLogisticsView } from "@/marketplace/services/caseLogistics.server";
 import { ROUND_TRIP_TTC_CENTS } from "@/marketplace/shipping/logisticsPlan";
@@ -43,6 +43,11 @@ const ERRORS: Record<string, string> = {
   label_reference_duplicate: "Cette référence d'achat est déjà enregistrée sur une autre étiquette : vérifiez la saisie (référence ou numéro de suivi).",
   provider_unavailable: "Enregistrement non confirmé (stockage ou base indisponible). Réessayez : aucune étiquette n'est dupliquée.",
   accepted_workshop_required: "Aucun atelier retenu ayant accepté l'offre.",
+  current_rate_approval_required: "Aucun tarif en vigueur pour ce dossier (absent ou échu) : enregistrez un nouveau tarif revu ci-dessous.",
+  address_changed_review_required: "Une adresse a changé depuis le tarif : enregistrez un nouveau tarif revu.",
+  parcel_changed_rate_review_required: "Le colis de ce trajet (poids ou dimensions) n'est pas celui du tarif : enregistrez un nouveau tarif avec les mesures actuelles.",
+  return_parcel_review_required: "Le colis retour dépasse le plafond du forfait (500 g, 35 × 25 × 8 cm) : traitement manuel.",
+  reservation_conflict: "Une étiquette existe déjà pour une autre proposition ou un autre paiement : vérifiez le journal.",
   rate_method_unavailable: "Code de méthode absent du devis Sendcloud actuel de ce dossier, sans prix en EUR, ou exigeant un point relais : choisissez une méthode achetable de la liste.",
 };
 const errorText = (e: unknown) => {
@@ -131,13 +136,14 @@ function Leg({ caseId, direction, view }: { caseId: string; direction: "outbound
             {job.events.map((e, i) => <li key={i}>{new Date(e.created_at).toLocaleString("fr-FR")} · {e.kind}
               {Object.entries(e.details).filter(([k]) => !["actor", "provider"].includes(k)).map(([k, v]) => ` · ${k}=${v}`).join("")}</li>)}
           </ul>
+          {job.fulfilment === "automatic" && <ProviderResolution caseId={caseId} job={job} />}
           <JobActions caseId={caseId} job={job} />
         </div>
       ))}
       {active?.status === "confirmed" && <Button size="sm" variant="outline" onClick={() => opening.mutate()}>Ouvrir l'étiquette</Button>}
       {opening.isError && <p className="text-xs text-destructive">{errorText(opening.error)}</p>}
       {view.automation.enabled && view.automation.providerConfigured && view.paid && active?.status !== "confirmed" && (
-        <AutomaticPurchase caseId={caseId} direction={direction} />
+        <AutomaticPurchase caseId={caseId} direction={direction} resume={active?.fulfilment === "automatic" && (active.status === "claimed" || active.status === "ambiguous")} />
       )}
       {direction === "return" && !returnReady && <p className="text-xs text-muted-foreground">Étiquette retour possible après « retour prêt » déclaré par l'atelier et adresse reconfirmée par le client.</p>}
       {(!active || (active.status === "claimed" && active.fulfilment === "manual")) && view.paid && (direction === "outbound" || returnReady) && (
@@ -180,6 +186,51 @@ function JobActions({ caseId, job }: { caseId: string; job: OperatorLogisticsVie
       <Button size="sm" className="mt-2" disabled={mutation.isPending} onClick={() => mutation.mutate()}>Enregistrer</Button>
     </details>
   );
+}
+
+/**
+ * Issues réelles d'une étiquette automatique (audit du 15/10) : réservation ambiguë → adopter l'étiquette
+ * retrouvée chez Sendcloud (n° de colis relu) ou constater son absence ; étiquette confirmée → annulation
+ * réellement demandée à Sendcloud (« en file » reste confirmée jusqu'au statut annulé relu par webhook).
+ */
+function ProviderResolution({ caseId, job }: { caseId: string; job: OperatorLogisticsView["jobs"][number] }) {
+  const adopt = useServerFn(adoptRoundTripLabel);
+  const absent = useServerFn(declareRoundTripLabelAbsent);
+  const cancel = useServerFn(cancelRoundTripLabel);
+  const cache = useQueryClient();
+  const [labelId, setLabelId] = useState("");
+  const [evidence, setEvidence] = useState("");
+  const refresh = () => cache.invalidateQueries({ queryKey: ["marketplace", "case", caseId, "logistics"] });
+  const mutation = useMutation({
+    mutationFn: async (action: "adopt" | "absent" | "cancel"): Promise<{ state: string; code?: string }> => {
+      if (action === "adopt") return adopt({ data: { caseId, jobId: job.id, labelId } });
+      if (action === "absent") return absent({ data: { caseId, jobId: job.id, evidence } });
+      return cancel({ data: { caseId, jobId: job.id } });
+    },
+    onSettled: refresh,
+  });
+  const result = mutation.data;
+  if (job.status === "ambiguous") return (
+    <div className="mt-2 rounded border border-amber-400 bg-amber-50 p-2 text-xs text-amber-900">
+      <p>Achat sans réponse certaine. Cherchez le colis dans Sendcloud (référence {job.id}) puis :</p>
+      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+        <label>N° de colis Sendcloud retrouvé<input className={FIELD} inputMode="numeric" value={labelId} onChange={(e) => setLabelId(e.target.value)} /></label>
+        <Button size="sm" className="self-end" disabled={mutation.isPending || !/^[0-9]{1,20}$/.test(labelId.trim())} onClick={() => mutation.mutate("adopt")}>Adopter cette étiquette</Button>
+        <label>Constat : aucune étiquette chez Sendcloud (preuve)<input className={FIELD} value={evidence} maxLength={500} placeholder="Recherche panneau Sendcloud le …, aucun envoi" onChange={(e) => setEvidence(e.target.value)} /></label>
+        <Button size="sm" variant="outline" className="self-end" disabled={mutation.isPending || evidence.trim().length < 8} onClick={() => mutation.mutate("absent")}>Déclarer absente</Button>
+      </div>
+      {result && <p className="mt-1">Résultat : {result.state}{result.code ? ` (${result.code})` : ""}</p>}
+      {mutation.isError && <p className="mt-1 text-destructive">{errorText(mutation.error)}</p>}
+    </div>
+  );
+  if (job.status === "confirmed" && job.provider === "sendcloud") return (
+    <div className="mt-2 text-xs">
+      <Button size="sm" variant="outline" disabled={mutation.isPending} onClick={() => { if (window.confirm("Demander à Sendcloud d'annuler cette étiquette ?")) mutation.mutate("cancel"); }}>Annuler chez Sendcloud</Button>
+      {result && <span className="ml-2">Résultat : {result.state === "queued" ? "annulation en file, confirmée au prochain statut Sendcloud" : result.state}{result.code ? ` (${result.code})` : ""}</span>}
+      {mutation.isError && <p className="mt-1 text-destructive">{errorText(mutation.error)}</p>}
+    </div>
+  );
+  return null;
 }
 
 function ManualLabelForm({ caseId, direction, chargedOther, replace }: { caseId: string; direction: "outbound" | "return"; chargedOther: number; replace: boolean }) {
@@ -256,6 +307,13 @@ function Automation({ view, caseId }: { view: OperatorLogisticsView; caseId: str
       </summary>
       <p className="mt-2 text-xs text-muted-foreground">Fermé : seul le traitement manuel achète des étiquettes. Fermer est immédiat et toujours possible ; ouvrir exige les cinq preuves, tracées.</p>
       {a.providerConfigured && view.plan?.mode === "organized_round_trip" && <ShippingOptions caseId={caseId} />}
+      {view.rate && (
+        <p className={`mt-2 text-xs ${view.rate.expired ? "text-amber-700" : "text-muted-foreground"}`}>
+          Tarif en vigueur : aller <code>{view.rate.outboundMethod}</code> ({formatEuros(view.rate.outboundCostTtcCents)}), retour <code>{view.rate.returnMethod}</code> ({formatEuros(view.rate.returnCostTtcCents)}) ·
+          {view.rate.expired ? " échu le " : " valable jusqu'au "}{new Date(view.rate.validUntil).toLocaleDateString("fr-FR")}
+          {view.rate.expired ? " : enregistrez un nouveau tarif avant tout nouvel achat (un achat déjà commencé se reprend)." : "."}
+        </p>
+      )}
       {a.enabled && view.offerKind === "book_round_trip_fr" && view.accepted && <RateApprovalForm caseId={caseId} />}
       {a.enabled ? (
         <Button size="sm" variant="destructive" className="mt-2" disabled={mutation.isPending} onClick={() => mutation.mutate(false)}>Fermer l'achat automatique</Button>
@@ -272,7 +330,24 @@ function Automation({ view, caseId }: { view: OperatorLogisticsView; caseId: str
   );
 }
 
-function AutomaticPurchase({ caseId, direction }: { caseId: string; direction: "outbound" | "return" }) {
+/** Résultat d'un achat ou d'une reprise, en mots d'opérateur plutôt qu'en code. */
+const LEG_RESULT: Record<string, string> = {
+  confirmed: "Étiquette confirmée et stockée.",
+  failed: "Refus net du fournisseur : aucune étiquette, aucun débit. Choisissez une autre méthode (nouveau tarif) ou passez en manuel.",
+  pending: "En attente : aucune étiquette confirmée. Réessayez « Reprendre » plus tard, ou résolvez l'achat ci-dessus.",
+  review_required: "Action manuelle nécessaire : voir le journal de l'étiquette.",
+};
+const RESULT_CODES: Record<string, string> = {
+  announcement_failed: "le transporteur a refusé l'étiquette (coordonnées ?)",
+  provider_unreadable: "Sendcloud illisible pour l'instant",
+  network_or_timeout: "pas de réponse de Sendcloud",
+  label_storage: "étiquette créée, PDF non stocké : la reprise le récupère",
+  job_failed: "réservation close sans étiquette (achat échoué ou absence constatée)", job_cancelled: "étiquette précédente annulée",
+  job_confirmed: "une étiquette a déjà été confirmée pour cette réservation",
+  label_orphaned: "réservation échouée, mais le PDF stocké n’a pas pu être supprimé : voir le journal (label_discard_failed)",
+};
+
+function AutomaticPurchase({ caseId, direction, resume }: { caseId: string; direction: "outbound" | "return"; resume: boolean }) {
   const purchase = useServerFn(purchaseRoundTripLabel);
   const cache = useQueryClient();
   const mutation = useMutation({
@@ -281,8 +356,11 @@ function AutomaticPurchase({ caseId, direction }: { caseId: string; direction: "
   });
   return (
     <div className="space-y-1">
-      <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>Acheter l'étiquette automatiquement (facturable)</Button>
-      {mutation.data && <p className="text-xs">Résultat : {mutation.data.state}{"code" in mutation.data ? ` (${mutation.data.code})` : ""}</p>}
+      <Button size="sm" disabled={mutation.isPending} onClick={() => mutation.mutate()}>
+        {resume ? "Reprendre l'achat en cours (aucun second achat)" : "Acheter l'étiquette automatiquement (facturable)"}
+      </Button>
+      {mutation.data && <p className="text-xs">{LEG_RESULT[mutation.data.state] ?? mutation.data.state}
+        {"code" in mutation.data && mutation.data.code ? ` (${RESULT_CODES[mutation.data.code] ?? mutation.data.code})` : ""}</p>}
       {mutation.isError && <p className="text-xs text-destructive">{errorText(mutation.error)}</p>}
     </div>
   );

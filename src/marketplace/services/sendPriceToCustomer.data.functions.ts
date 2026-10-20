@@ -179,7 +179,7 @@ async function loadCaseForSend(sb: Supa, caseId: string) {
 
 export const sendPriceToCustomer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => sendInput.parse(data))
+  .validator((data: unknown) => sendInput.parse(data))
   .handler(async ({ context, data }): Promise<SendPriceResult> => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -198,7 +198,7 @@ export const sendPriceToCustomer = createServerFn({ method: "POST" })
 /** « Envoyer au client » — un devis brouillon (après validation de sa fiscalité), ou un rappel. */
 export const sendProposalToCustomer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ proposalId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ proposalId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }): Promise<SendPriceResult> => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();

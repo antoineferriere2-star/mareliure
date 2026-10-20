@@ -8,7 +8,7 @@ import { WorkshopIntakeNotice } from "@/marketplace/pages/customer/WorkshopIntak
 import { FINE_BINDERY_PREFERRED_LANGUAGE_KEY, FINE_BINDERY_SUBMISSION_LOCALE_KEY, PROFILE_REQUEST_SOURCE, PROFILE_SOURCE_ANSWER_KEY } from "@/marketplace/binders/fineBinderyProfile";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
 import { ENGINE_LOCALE, isFineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
-import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
+import { fineBinderyHeadCopy } from "@/marketplace/i18n/fineBinderyHeadCopy";
 import { fineBinderyLocalizedHead } from "@/marketplace/i18n/fineBinderySeo";
 
 export const Route = createFileRoute("/$locale/project")({
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/$locale/project")({
   validateSearch: (search: Record<string, unknown>): { ref?: string; source?: typeof PROFILE_REQUEST_SOURCE } => ({ ...(typeof search.ref === "string" && search.ref.length <= 64 ? { ref: search.ref } : {}), ...(search.source === PROFILE_REQUEST_SOURCE ? { source: PROFILE_REQUEST_SOURCE } : {}) }),
   // Parcours de saisie, jamais indexé ; titre et description dans la langue de la page (audit SEO du 12 octobre 2026).
   head: ({ params }) => isFineBinderyLocale(params.locale)
-    ? fineBinderyLocalizedHead(params.locale, { title: `${fineBinderyCopy(params.locale).common.start} — Fine Bindery`, description: fineBinderyCopy(params.locale).seo.homeDescription, pathWithoutLocale: "project", noindex: true })
+    ? fineBinderyLocalizedHead(params.locale, { title: `${fineBinderyHeadCopy(params.locale).start} — Fine Bindery`, description: fineBinderyHeadCopy(params.locale).seo.homeDescription, pathWithoutLocale: "project", noindex: true })
     : { meta: [{ title: "Project — Fine Bindery" }, { name: "robots", content: "noindex, nofollow" }] },
   component: FineBinderyProjectRoute,
 });

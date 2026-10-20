@@ -103,6 +103,8 @@ export interface CaseContext {
   brief: ProjectBrief;
   profile: CaseProfile;
   answers: Answers;
+  /** Session runtime du Dossier : seules ses photos sont signées (audit sécurité du 16/10, P1). */
+  sessionId: string | null;
   /** Canonical ownership — the only thing that authorises a customer. */
   customerUserId: string | null;
   /**
@@ -166,6 +168,7 @@ export async function loadCaseContext(sb: Supa, caseId: string): Promise<CaseCon
     brief: dossier.content as unknown as ProjectBrief,
     profile: buildCaseProfile(answers),
     answers,
+    sessionId: dossier.session_id,
     customerUserId: row.customer_user_id,
     customerEmail: dossier.visitor_email,
     customerName: dossier.visitor_name,
@@ -326,8 +329,8 @@ export async function resolvePublishedFineBinderyBinderBySlug(
  * from. Storage paths are never handed to a browser — the URL expires, the
  * path would not.
  */
-export async function signCasePhotos(sb: Supa, answers: Answers): Promise<CaseViewPhoto[]> {
-  const refs = extractPhotoReferences(answers);
+export async function signCasePhotos(sb: Supa, answers: Answers, sessionId: string | null): Promise<CaseViewPhoto[]> {
+  const refs = extractPhotoReferences(answers, sessionId);
   const photos: CaseViewPhoto[] = [];
   for (const ref of refs) {
     const bucket = ref.bucket ?? INSPIRATION_PHOTOS_BUCKET;
@@ -344,8 +347,8 @@ export async function signCasePhotos(sb: Supa, answers: Answers): Promise<CaseVi
  * buckets and same expiring signature as `signCasePhotos`, just not all of them
  * for a screen that only shows the first.
  */
-export async function signFirstCasePhoto(sb: Supa, answers: Answers): Promise<string | null> {
-  const [ref] = extractPhotoReferences(answers);
+export async function signFirstCasePhoto(sb: Supa, answers: Answers, sessionId: string | null): Promise<string | null> {
+  const [ref] = extractPhotoReferences(answers, sessionId);
   if (!ref) return null;
   const { data } = await sb.storage
     .from(ref.bucket ?? INSPIRATION_PHOTOS_BUCKET)
@@ -365,7 +368,7 @@ export async function buildCaseView(
     brief: commercialOriginOf(context.row.acquisition_origin) === "workshop_client" ? { ...context.brief, constraints: context.brief.constraints.map(line => line.label === "Prix Ma Reliure" ? { ...line, label: "Devis atelier", value: "L’atelier établit son devis et facture directement son client." } : line) } : context.brief,
     profile: context.profile,
     disclosure,
-    photos: await signCasePhotos(sb, context.answers),
+    photos: await signCasePhotos(sb, context.answers, context.sessionId),
     manualReviewRequired: context.row.manual_review_required,
     locale,
   });

@@ -50,6 +50,8 @@ export async function roundTripSchema(): Promise<PGlite> {
   `);
   await db.exec(migration("20261001160000_book_round_trip_shipping.sql"));
   await db.exec(migration("20261002090000_book_round_trip_journey.sql"));
+  await db.exec(migration("20261015100000_round_trip_rate_versions.sql"));
+  await db.exec(migration("20261016100000_round_trip_label_resolution.sql"));
   return db;
 }
 
@@ -100,8 +102,8 @@ export async function roundTripDb(): Promise<PGlite> {
       provider_quote_reference,coverage_evidence_reference,outbound_cost_ttc_cents,
       return_cost_ttc_cents,all_other_costs_ttc_cents,estimated_economic_cost_cents,
       economic_cost_evidence_reference,valid_until,reviewed_by)
-    VALUES('${RT.case}','${RT.proposal}','${RT.binder}','${RT_OUT}','${RT_RET}',500,500,
-      ARRAY[350,250,80],ARRAY[350,250,80],'QA outbound','QA return','QA quote only',
+    VALUES('${RT.case}','${RT.proposal}','${RT.binder}','${RT_OUT}','${RT_RET}',480,450,
+      ARRAY[340,240,60],ARRAY[340,240,60],'QA outbound','QA return','QA quote only',
       'QA coverage only',400,400,0,700,'QA net cost only',now()+interval '1 day','${RT.admin}');
     INSERT INTO marketplace_work_logistics_events VALUES('${RT.work}','received');`);
   await db.query("SELECT marketplace_round_trip_return_ready($1,$2,$3,450,340,240,60)", [RT.case, RT.binder, RT.member]);

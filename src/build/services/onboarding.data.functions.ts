@@ -18,7 +18,7 @@ import { fail } from "./serverError";
 
 export const analyzeOnboardingSite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ url: z.string().min(1) }).parse(data))
+  .validator((data: unknown) => z.object({ url: z.string().min(1) }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
 
@@ -47,7 +47,7 @@ export const analyzeOnboardingSite = createServerFn({ method: "POST" })
 /** Published schema for the wizard's preview step — the exact version the Mission would be pinned to, not the mutable draft. */
 export const getPublishedPlaybookSchema = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ playbookId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ playbookId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -85,7 +85,7 @@ export const getPublishedPlaybookSchema = createServerFn({ method: "GET" })
  */
 export const generatePlaybookFromAI = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ businessType: z.string().min(1), product: z.string().min(1) }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -118,7 +118,7 @@ export const generatePlaybookFromAI = createServerFn({ method: "POST" })
 
 export const createAndPublishMissionFromOnboarding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         playbookId: z.string().uuid(),

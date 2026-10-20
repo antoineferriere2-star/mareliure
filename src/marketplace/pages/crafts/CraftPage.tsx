@@ -17,6 +17,7 @@ import {
   ferriereServicePhoto,
 } from "@/marketplace/pages/pricing/ferriereServiceIllustrations";
 import { PRICE_FACTOR_DETAILS } from "@/marketplace/pages/pricing/priceFactors";
+import { CRAFT_GLOSSARY, CRAFT_GLOSSARY_SOURCE } from "./craftGlossary";
 import { CRAFT_PAGES, craftFaq, craftPage, type CraftSlug } from "./craftPages";
 
 export function CraftPage({ slug }: { slug: CraftSlug }) {
@@ -31,6 +32,7 @@ export function CraftPage({ slug }: { slug: CraftSlug }) {
     .map((key) => ({ key, item: WORK_ITEMS.find((candidate) => candidate.key === key)! }));
   const factors = page.priceFactorTitles.map((title) => PRICE_FACTOR_DETAILS.find((factor) => factor.title === title)!);
   const others = CRAFT_PAGES.filter((other) => other.slug !== slug);
+  const glossary = CRAFT_GLOSSARY[slug];
 
   return (
     <div id="top" className="mr-site min-h-screen bg-mr-paper text-mr-graphite">
@@ -125,11 +127,34 @@ export function CraftPage({ slug }: { slug: CraftSlug }) {
           </div>
         </section>
 
+        <section className={SHELL}>
+          <div className="grid gap-12 border-t border-mr-rule py-section-sm sm:py-section lg:grid-cols-12 lg:gap-14">
+            <div className="lg:col-span-5">
+              <SectionHead folio="III" eyebrow="Le vocabulaire de l’atelier" title="Les gestes, avec leurs mots." />
+              <p className="mr-body mt-6">
+                Ce sont les mots qu’emploie un relieur pour décrire le travail. Les connaître aide à dire ce que vous
+                attendez de votre livre ; ce n’est pas une liste à cocher : l’atelier propose les gestes utiles.
+              </p>
+            </div>
+            <div className="lg:col-span-7 lg:pt-14">
+              <dl>
+                {glossary.map((entry) => (
+                  <div key={entry.key} className="border-t border-mr-rule py-5">
+                    <dt className="mr-heading text-mr-ink">{entry.term}</dt>
+                    <dd className="mr-body mt-1.5">{entry.definition}</dd>
+                  </div>
+                ))}
+              </dl>
+              <p className="mr-meta mt-6">{CRAFT_GLOSSARY_SOURCE}</p>
+            </div>
+          </div>
+        </section>
+
         <section className="bg-mr-paper-warm">
           <div className={`${SHELL} py-section-sm sm:py-section`}>
             <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
               <div className="lg:col-span-5">
-                <SectionHead folio="III" eyebrow="Questions fréquentes" title="Avant de présenter votre livre." />
+                <SectionHead folio="IV" eyebrow="Questions fréquentes" title="Avant de présenter votre livre." />
               </div>
               <div className="divide-y divide-mr-rule-strong border-y border-mr-rule-strong lg:col-span-7 lg:mt-14">
                 {craftFaq(page).map((item) => (
