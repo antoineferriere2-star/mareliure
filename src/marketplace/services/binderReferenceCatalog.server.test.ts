@@ -384,7 +384,7 @@ describe("garde-fous de code", () => {
     expect(fns.map((m) => m[1]).sort()).toEqual(["addMyReferenceService", "setMyServiceFavorite"]);
     for (const [, name, body] of fns) {
       expect(body, name).toContain(".middleware([requireSupabaseAuth])");
-      expect(body, name).toContain(".inputValidator(");
+      expect(body, name).toContain(".validator(");
       expect(body, name).toContain("run(context.userId");
       expect(body, name).not.toMatch(/data\.binderId|data\.binder_id/);
     }

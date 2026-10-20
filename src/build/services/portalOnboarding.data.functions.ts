@@ -190,7 +190,7 @@ async function toState(
 /** Members may read the setup state; only owners can change it. */
 export const getMySetup = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => workspaceInput.parse(data))
+  .validator((data: unknown) => workspaceInput.parse(data))
   .handler(async ({ context, data }) => {
     const { role } = await assertWorkspaceMember(
       context.supabase,
@@ -288,7 +288,7 @@ async function logAiRun(
 
 export const analyzeMySite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     workspaceInput
       .extend({
         url: z.string().min(1).max(2048),
@@ -445,7 +445,7 @@ export const analyzeMySite = createServerFn({ method: "POST" })
 
 export const confirmMyDeckProduct = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     workspaceInput
       .extend({
         businessType: z.string().min(1).max(80).optional(),
@@ -485,7 +485,7 @@ export const confirmMyDeckProduct = createServerFn({ method: "POST" })
 
 export const generateMyDeckDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     workspaceInput.extend({ requestId: z.string().min(8).max(64) }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -622,7 +622,7 @@ export const generateMyDeckDraft = createServerFn({ method: "POST" })
 
 export const updateMyBranding = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     workspaceInput
       .extend({
         displayName: z.string().max(200).optional(),
@@ -664,7 +664,7 @@ export const updateMyBranding = createServerFn({ method: "POST" })
 /** Read-only preview of the draft intake. Members can look, nothing is published. */
 export const getMyDraftPreview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => workspaceInput.parse(data))
+  .validator((data: unknown) => workspaceInput.parse(data))
   .handler(async ({ context, data }): Promise<{ schema: PlaybookSchema; published: false }> => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
@@ -713,7 +713,7 @@ function publishRpcStatus(message: string): number {
 
 export const publishMyDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     workspaceInput.extend({ requestId: z.string().min(8).max(64) }).parse(data),
   )
   .handler(async ({ context, data }) => {

@@ -187,7 +187,7 @@ export const listBuildMissions = createServerFn({ method: "GET" })
 
 export const getBuildMission = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -203,7 +203,7 @@ export const getBuildMission = createServerFn({ method: "GET" })
 
 export const createBuildMission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         name: z.string().min(2).max(200),
@@ -237,7 +237,7 @@ export const createBuildMission = createServerFn({ method: "POST" })
 
 export const setMissionWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), workspace_id: z.string().uuid().nullable() }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -256,7 +256,7 @@ export const setMissionWorkspace = createServerFn({ method: "POST" })
 
 export const setMissionStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -334,7 +334,7 @@ export const setMissionStatus = createServerFn({ method: "POST" })
 
 export const deleteBuildMission = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -373,7 +373,7 @@ export const deleteBuildMission = createServerFn({ method: "POST" })
 
 export const revokeMissionPublicToken = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -407,7 +407,7 @@ export const listBuildDossiers = createServerFn({ method: "GET" })
 
 export const getBuildDossier = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -443,7 +443,7 @@ export const getBuildDossier = createServerFn({ method: "GET" })
 /** Signed URL (1h) for an inspiration photo stored during a public session — the bucket is private, admin-only access. */
 export const getInspirationPhotoUrl = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ path: z.string().min(1) }).parse(data))
+  .validator((data: unknown) => z.object({ path: z.string().min(1) }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -462,7 +462,7 @@ export const getInspirationPhotoUrl = createServerFn({ method: "GET" })
  */
 export const analyzeDossierWithAI = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -554,7 +554,7 @@ export const listPublishablePlaybooks = createServerFn({ method: "GET" })
 
 export const getBuildPlaybook = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -578,7 +578,7 @@ export const getBuildPlaybook = createServerFn({ method: "GET" })
 
 export const createBuildPlaybook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         name: z.string().min(2).max(200),
@@ -606,7 +606,7 @@ export const createBuildPlaybook = createServerFn({ method: "POST" })
 
 export const duplicateBuildPlaybook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -642,7 +642,7 @@ export const duplicateBuildPlaybook = createServerFn({ method: "POST" })
 
 export const updatePlaybookDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -680,7 +680,7 @@ export const updatePlaybookDraft = createServerFn({ method: "POST" })
 
 export const publishPlaybookVersion = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -736,7 +736,7 @@ export const publishPlaybookVersion = createServerFn({ method: "POST" })
 
 export const deleteBuildPlaybook = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -769,7 +769,7 @@ export const listKnowledgeNotes = createServerFn({ method: "GET" })
 
 export const createKnowledgeNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         title: z.string().min(1).max(200),
@@ -797,7 +797,7 @@ export const createKnowledgeNote = createServerFn({ method: "POST" })
 
 export const updateKnowledgeNoteStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), status: knowledgeStatus }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -815,7 +815,7 @@ export const updateKnowledgeNoteStatus = createServerFn({ method: "POST" })
 
 export const deleteKnowledgeNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -859,7 +859,7 @@ export const listWorkspaces = createServerFn({ method: "GET" })
 
 export const createWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         name: z.string().min(2).max(200),
@@ -902,7 +902,7 @@ export const createWorkspace = createServerFn({ method: "POST" })
 
 export const updateWorkspacePlan = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         workspaceId: z.string().uuid(),
@@ -934,7 +934,7 @@ export const updateWorkspacePlan = createServerFn({ method: "POST" })
 /** Active-Mission and monthly-Project-Brief usage for a workspace, for the admin usage display. */
 export const getWorkspaceUsage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     return getWorkspaceUsageInternal(data.workspaceId);
@@ -942,7 +942,7 @@ export const getWorkspaceUsage = createServerFn({ method: "GET" })
 
 export const addWorkspaceMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         workspaceId: z.string().uuid(),
@@ -999,7 +999,7 @@ export const addWorkspaceMember = createServerFn({ method: "POST" })
 
 export const removeWorkspaceMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();

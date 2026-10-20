@@ -17,7 +17,7 @@ import { isMaReliure } from "@/brand";
 
 export const ensureMyWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => provisionInputSchema.parse(data ?? {}))
+  .validator((data: unknown) => provisionInputSchema.parse(data ?? {}))
   .handler(async ({ context, data }) => {
     // Les espaces client Métré n'existent pas sur le déploiement Ma Reliure :
     // refus côté serveur, quelle que soit la page qui appelle.

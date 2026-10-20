@@ -16,7 +16,7 @@ import { fail } from "./serverError";
 
 export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         workspaceId: z.string().uuid(),
@@ -82,7 +82,7 @@ export const createWorkspaceCheckoutSession = createServerFn({ method: "POST" })
 
 export const createWorkspaceBillingPortalSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ workspaceId: z.string().uuid(), origin: z.string().url() }).parse(data),
   )
   .handler(async ({ context, data }) => {

@@ -67,7 +67,7 @@ const detailInput = z.object({ binderId: z.string().uuid() }).strict();
 
 export const getAdminWorkshopDetail = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => detailInput.parse(data))
+  .validator((data: unknown) => detailInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();

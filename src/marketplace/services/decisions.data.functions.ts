@@ -90,7 +90,7 @@ async function notifyCustomerOfDecisionRequest(
 
 export const listCaseDecisions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const viewer = await resolveViewer(context.supabase, sb, context.userId);
@@ -120,7 +120,7 @@ export const listCaseDecisions = createServerFn({ method: "GET" })
 
 export const requestCaseDecision = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         caseId: z.string().uuid(),
@@ -167,7 +167,7 @@ export const requestCaseDecision = createServerFn({ method: "POST" })
 
 export const answerCaseDecision = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         decisionId: z.string().uuid(),
@@ -226,7 +226,7 @@ export const answerCaseDecision = createServerFn({ method: "POST" })
 
 export const cancelCaseDecision = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ decisionId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ decisionId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const viewer = await resolveViewer(context.supabase, sb, context.userId);
@@ -257,7 +257,7 @@ export const cancelCaseDecision = createServerFn({ method: "POST" })
  */
 export const reviseCaseDecision = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         decisionId: z.string().uuid(),
