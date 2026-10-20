@@ -159,6 +159,10 @@ for (const language of ["fr", "en"] as Language[]) {
     await expect(logistics.getByRole("alert")).toContainText(
       language === "fr" ? "téléphone français" : "French phone number",
     );
+    await expect(phone).toBeFocused();
+    await expect(phone).toHaveAccessibleDescription(
+      language === "fr" ? /téléphone français/ : /French phone number/,
+    );
     await expect.poll(() => scenario.phoneRefusals).toBe(0);
     await expect(save).toBeEnabled();
     expect(scenario.savedPlan).toBe(false);

@@ -203,7 +203,7 @@ function PlanForm({ view, caseId, copy, onDone, onCancel }: {
     && mutation.error instanceof Error && mutation.error.message === "invalid_phone" && !isFrenchPhone(phone);
   useEffect(() => {
     if (phoneInvalid) phoneRef.current?.focus();
-  }, [phoneInvalid]);
+  }, [phoneInvalid, mutation.error]);
 
   const addressFields = (a: AddressDraft, set: (next: AddressDraft) => void, prefix: string) => (
     <div className="grid gap-3 sm:grid-cols-2">
