@@ -366,11 +366,11 @@ export const ARTISANS: readonly ArtisanProfile[] = [
  * préchargement sans cet attribut télécharge le fichier une seconde fois.
  *
  * Réservé aux pages Ma Reliure : sur une page Métré la police n'est jamais
- * utilisée, la précharger serait 35 Ko jetés.
+ * utilisée, la précharger serait 67 Ko jetés.
  */
 export const EDITORIAL_FONT_PRELOAD = {
   rel: "preload",
-  href: "/fonts/fraunces-latin-regular-opsz.woff2",
+  href: "/fonts/fraunces-latin-var.woff2",
   as: "font",
   fetchPriority: "high",
   type: "font/woff2",

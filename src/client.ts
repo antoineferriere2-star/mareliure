@@ -1,4 +1,3 @@
-import "./styles.css";
 import { isMaReliure } from "./brand";
 import { isPublicPerformancePage } from "./marketplace/performance/publicPages";
 import { startHydration } from "./marketplace/performance/firstPaint";

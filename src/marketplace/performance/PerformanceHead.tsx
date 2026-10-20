@@ -15,8 +15,8 @@ function PublicAssetHead() {
   const nonce = router.options.ssr?.nonce;
   const critical = (tag: (typeof tags)[number]) =>
     tag.tag === "link" &&
-    tag.attrs?.rel === "preload" &&
-    (tag.attrs.as === "font" || tag.attrs.as === "image");
+    (tag.attrs?.rel === "stylesheet" ||
+      (tag.attrs?.rel === "preload" && (tag.attrs.as === "font" || tag.attrs.as === "image")));
   const hints = tags.filter(critical);
   const ordered = tags.filter((tag) => !critical(tag));
   const firstModule = ordered.findIndex(

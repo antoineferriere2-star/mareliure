@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import "../styles.css";
+import appCss from "../styles.css?url";
 import { PerformanceHead } from "@/marketplace/performance/PerformanceHead";
 import { PHOTOS } from "@/marketplace/pages/landing/photos";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -225,6 +225,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             ]),
       ],
       links: [
+        { rel: "stylesheet", href: appCss },
         // Les planches des deux accueils peuvent devenir le LCP mobile.
         // Chaque préchargement reprend exactement le srcset/sizes de son image.
         ...(isMaReliure && matches.some((match) => ["/", "/$locale/"].includes(match.routeId))

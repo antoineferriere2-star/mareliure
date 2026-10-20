@@ -52,6 +52,9 @@ describe("public resource priorities without changing document semantics", () =>
     expect(html.indexOf("/fonts/editorial.woff2")).toBeLessThan(
       html.indexOf("/assets/index-example.js"),
     );
+    expect(html.indexOf("/assets/styles-example.css")).toBeLessThan(
+      html.indexOf("/assets/index-example.js"),
+    );
     expect(html).toMatch(/rel="modulepreload"[^>]*fetchPriority="low"/i);
     expect(html).toContain('href="/assets/styles-example.css"');
     expect(html).toContain('content="Synthetic public description"');
