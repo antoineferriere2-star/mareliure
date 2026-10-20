@@ -7,7 +7,7 @@ import { fail } from "@/build/services/serverError";
 /** Explicit, audited classification only. Does not activate collection or price a contract. */
 export const reviewCasePaymentCircuit = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value: unknown) => z.object({
+  .validator((value: unknown) => z.object({
     caseId: z.string().uuid(),
     circuit: z.enum(["own_client", "network_sale", "concierge"]),
     evidenceEventId: z.string().uuid(),

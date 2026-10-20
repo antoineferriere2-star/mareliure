@@ -344,6 +344,7 @@ const RESULT_CODES: Record<string, string> = {
   label_storage: "étiquette créée, PDF non stocké : la reprise le récupère",
   job_failed: "réservation close sans étiquette (achat échoué ou absence constatée)", job_cancelled: "étiquette précédente annulée",
   job_confirmed: "une étiquette a déjà été confirmée pour cette réservation",
+  label_orphaned: "réservation échouée, mais le PDF stocké n’a pas pu être supprimé : voir le journal (label_discard_failed)",
 };
 
 function AutomaticPurchase({ caseId, direction, resume }: { caseId: string; direction: "outbound" | "return"; resume: boolean }) {

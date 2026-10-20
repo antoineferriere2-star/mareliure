@@ -51,7 +51,7 @@ async function isAdminCaller(sb: Awaited<ReturnType<typeof admin>>, userId: stri
 
 export const createCommercialCheckoutSession = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ caseId: uuid }).parse(data))
+  .validator((data: unknown) => z.object({ caseId: uuid }).parse(data))
   .handler(async ({ context, data }) =>
     createCheckoutForCase({
       sb: await admin(),

@@ -27,7 +27,7 @@ import {
 
 export const startMyWorkshopConnect = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ accepted: z.literal(true) })
       .strict()
@@ -91,7 +91,7 @@ export const refreshMyWorkshopConnect = createServerFn({ method: "POST" })
   });
 export const createMyInvoicePaymentLink = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ invoiceId: z.string().uuid() }).strict().parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -109,7 +109,7 @@ export const createMyInvoicePaymentLink = createServerFn({ method: "POST" })
   });
 export const getMyInvoiceOnlinePayment = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ invoiceId: z.string().uuid() }).strict().parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -140,7 +140,7 @@ export const getMyInvoiceOnlinePayment = createServerFn({ method: "GET" })
   });
 export const refundMyWorkshopOnlinePayment = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ paymentId: z.string().uuid(), creditId: z.string().uuid() }).strict().parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -154,7 +154,7 @@ export const refundMyWorkshopOnlinePayment = createServerFn({ method: "POST" })
   });
 const token = z.object({ token: z.string().regex(/^[a-f0-9]{64}$/) }).strict();
 export const getWorkshopPublicPayment = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) => token.parse(data))
+  .validator((data: unknown) => token.parse(data))
   .handler(async ({ data }) => {
     const sb = await admin();
     const p = await paymentByToken(sb, data.token);
@@ -186,7 +186,7 @@ export const getWorkshopPublicPayment = createServerFn({ method: "GET" })
     };
   });
 export const getWorkshopPublicInvoicePdf = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) => token.parse(data))
+  .validator((data: unknown) => token.parse(data))
   .handler(async ({ data }) => {
     const sb = await admin();
     const p = await paymentByToken(sb, data.token);
@@ -196,7 +196,7 @@ export const getWorkshopPublicInvoicePdf = createServerFn({ method: "GET" })
     return { filename: `facture-${invoice.number.replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`, base64 };
   });
 export const getWorkshopPublicCreditPdf = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ token: z.string().regex(/^[a-f0-9]{64}$/), creditId: z.string().uuid() })
       .strict()
@@ -219,5 +219,5 @@ export const getWorkshopPublicCreditPdf = createServerFn({ method: "GET" })
     return { filename: `avoir-${credit.number.replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`, base64 };
   });
 export const createPublicWorkshopCheckout = createServerFn({ method: "POST" })
-  .inputValidator((data: unknown) => token.parse(data))
+  .validator((data: unknown) => token.parse(data))
   .handler(async ({ data }) => createWorkshopInvoiceCheckout(await admin(), data.token));
