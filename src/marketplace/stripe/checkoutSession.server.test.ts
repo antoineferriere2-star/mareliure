@@ -26,7 +26,7 @@ const h = vi.hoisted(() => ({
 vi.mock("@tanstack/react-start", () => {
   const chain: Record<string, unknown> = {};
   chain.middleware = () => chain;
-  chain.inputValidator = () => chain;
+  chain.validator = () => chain;
   chain.handler = () => () => undefined;
   return { createServerFn: () => chain };
 });
@@ -245,6 +245,6 @@ describe("ce qui ne doit jamais atteindre Stripe", () => {
 
   it("l'entrée du serveur est le seul identifiant de dossier : aucun montant ne vient du navigateur", () => {
     const src = readFileSync(new URL("./checkoutSession.server.ts", import.meta.url), "utf8");
-    expect(src).toMatch(/inputValidator\(\(data: unknown\) => z\.object\(\{ caseId: uuid \}\)\.parse\(data\)\)/);
+    expect(src).toMatch(/validator\(\(data: unknown\) => z\.object\(\{ caseId: uuid \}\)\.parse\(data\)\)/);
   });
 });

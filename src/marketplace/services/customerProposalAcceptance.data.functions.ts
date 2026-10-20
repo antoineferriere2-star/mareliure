@@ -28,7 +28,7 @@ const MESSAGES: Record<CustomerAcceptanceErrorCode, string> = {
 
 export const acceptMyProposal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => acceptProposalInput.parse(data))
+  .validator((data: unknown) => acceptProposalInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     try {

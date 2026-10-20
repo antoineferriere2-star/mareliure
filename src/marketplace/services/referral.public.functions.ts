@@ -14,7 +14,7 @@ import { admin } from "@/build/services/adminAuth.server";
 import { resolveApprovedBinderBySlug } from "./caseRepository.server";
 
 export const resolveBinderReferral = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) => z.object({ slug: z.string().min(1).max(64) }).parse(data))
+  .validator((data: unknown) => z.object({ slug: z.string().min(1).max(64) }).parse(data))
   .handler(async ({ data }) => {
     const sb = await admin();
     const binder = await resolveApprovedBinderBySlug(sb, data.slug);

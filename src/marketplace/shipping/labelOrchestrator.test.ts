@@ -368,6 +368,24 @@ describe("résolution opérateur d'une réservation ambiguë (audit P1-2)", () =
     expect(discarded).toEqual([job]);
     expect(saved.has(`${job}/label.pdf`)).toBe(false);
   });
+  it("retrait du PDF refusé : jamais silencieux, journalisé et signalé à l'opérateur (revue #147)", async () => {
+    const provider = new FakeProvider(); const job = await ambiguous(provider);
+    const base = store();
+    const racing: LabelJobStore = { ...base,
+      async savePrivateLabel(id, pdf) {
+        await base.savePrivateLabel(id, pdf);
+        await declareLegAbsent(base, id, "sendcloud", RT.admin, "Constat posé pendant l'adoption");
+      },
+      async discardPrivateLabel() { throw new Error("label_discard_failed"); } };
+    const label = { provider: "sendcloud", labelId: "999", carrier: "mondial_relay", tracking: "QA999", chargedTtcCents: null, reference: job,
+      status: null, pdf: async () => PDF };
+    Object.assign(provider, { findByLabelId: async () => label });
+    expect(await adoptLeg(provider, racing, job, "999")).toEqual({ state: "review_required", code: "label_orphaned" });
+    expect(await status(job)).toBe("failed");
+    const notes = await db.query<{ d: { note: string; object: string; code: string } }>(
+      "SELECT details d FROM marketplace_round_trip_label_events WHERE job_id=$1 AND kind='operator_note'", [job]);
+    expect(notes.rows.map((r) => r.d)).toContainEqual(expect.objectContaining({ note: "label_discard_failed", object: `${job}/label.pdf`, code: "label_discard_failed" }));
+  });
   it("une erreur de confirmation sans course remonte, sans retirer le PDF", async () => {
     const provider = new FakeProvider(); const job = await reserveLeg(db, "outbound");
     const base = store();
