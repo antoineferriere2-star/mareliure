@@ -12,7 +12,6 @@ Repères terminologiques : [glossaire du Kompetenzzentrum Einbandforschung](http
 
 Périmètre commercial conservé : mêmes prestations et procédure de proposition avant décision, aucun prix, délai, avis ou avantage ajouté. La finalité d’un livre conservé pour les générations est reformulée sans garantie nouvelle. Aucun ajout de traduction aux dictionnaires ou aux autres pages.
 
-Validation locale : les **six tests existants `disciplines.test.ts` passent**, dont les limites titre ≤ 70 / description ≤ 160 et l’absence de montant, délai ou avis ; typecheck réussi. Les descriptions changées font 133–157 caractères et le titre changé 56. Les bornes s’appliquent aussi aux textes conservés, vérifiés par le test. La CI standard contrôle la branche avant remise.
+Validation locale : les **six tests existants `disciplines.test.ts` passent**, dont les limites titre ≤ 70 / description ≤ 160 et l’absence de montant, délai ou avis ; typecheck réussi. Les descriptions changées font 133–157 caractères et le titre changé 56. Les bornes s’appliquent aussi aux textes conservés, vérifiés par le test. CI standard verte sur ff26294 : quality et recette client simulée.
 
 Aucune écriture en production, compte, e-mail, achat, paiement, fusion de PR ou déploiement. La note du propriétaire indiquant #153 fusionnée mais non encore déployée est conservée comme contexte ; aucun déploiement n’est entrepris ici.
-
