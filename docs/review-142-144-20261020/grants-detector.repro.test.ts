@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { PGlite } from "@electric-sql/pglite";
-import { undeclaredTables } from "../../src/marketplace/security/newTableGrants.test";
+import { undeclaredTables } from "../../src/marketplace/security/tableGrants";
 let db: PGlite;
 beforeAll(async () => {
   db = new PGlite();
@@ -13,49 +13,49 @@ const cases = [
   {
     name: "typed CREATE TABLE without column list",
     sql: "CREATE TYPE public.qa_note AS (id int); CREATE TABLE public.build_notes OF public.qa_note;",
-    detected: [],
+    detected: ["build_notes"],
     read: false,
   },
   {
     name: "CREATE TABLE AS",
     sql: "CREATE TABLE public.build_notes AS SELECT 1 AS id;",
-    detected: [],
+    detected: ["build_notes"],
     read: false,
   },
   {
     name: "UNLOGGED",
     sql: "CREATE UNLOGGED TABLE public.build_notes(id int);",
-    detected: [],
+    detected: ["build_notes"],
     read: false,
   },
   {
     name: "quoted schema",
     sql: 'CREATE TABLE "public".build_notes(id int);',
-    detected: [],
+    detected: ["build_notes"],
     read: false,
   },
   {
     name: "quoted schema and table",
     sql: 'CREATE TABLE "public"."build_notes"(id int);',
-    detected: [],
+    detected: ["build_notes"],
     read: false,
   },
   {
     name: "block comment masquerading as grant",
     sql: "CREATE TABLE public.build_notes(id int); /* GRANT SELECT ON public.build_notes TO authenticated; */",
-    detected: [],
+    detected: ["build_notes"],
     read: false,
   },
   {
     name: "SQL string masquerading as grant",
     sql: "CREATE TABLE public.build_notes(id int); SELECT 'GRANT SELECT ON public.build_notes TO authenticated;';",
-    detected: [],
+    detected: ["build_notes"],
     read: false,
   },
   {
     name: "grant to a suffix-matching other table",
     sql: "CREATE TABLE public.other_build_notes(id int); GRANT SELECT ON public.other_build_notes TO authenticated; CREATE TABLE public.build_notes(id int);",
-    detected: [],
+    detected: ["build_notes"],
     read: false,
   },
   {
@@ -65,19 +65,19 @@ const cases = [
     read: true,
   },
   {
-    name: "grant after rename is wrongly rejected",
+    name: "grant after rename is accepted with the exact current table name",
     sql: "CREATE TABLE public.build_old(id int); ALTER TABLE public.build_old RENAME TO build_notes; GRANT SELECT ON public.build_notes TO authenticated;",
-    detected: ["build_old"],
+    detected: [],
     read: true,
   },
   {
     name: "partition without column list",
     sql: "CREATE TABLE public.qa_partition_root(id int) PARTITION BY RANGE(id); GRANT SELECT ON public.qa_partition_root TO authenticated; CREATE TABLE public.build_notes PARTITION OF public.qa_partition_root FOR VALUES FROM(0) TO(10);",
-    detected: [],
+    detected: ["build_notes"],
     read: false,
   },
 ];
-describe("independent review of guard 144 — characterisations, not correction assertions", () => {
+describe("independent regression assertions after guard correction #149", () => {
   for (const c of cases)
     it(c.name, async () => {
       expect(undeclaredTables(c.sql)).toEqual(c.detected);

@@ -19,7 +19,7 @@ import {
 } from "../../src/marketplace/shipping/roundTripTestDb.fixture";
 import type { LabelProvider, ProviderLabel } from "../../src/marketplace/shipping/labelProvider";
 
-// Characterisation for an independent report. Passing assertions also document unsafe observed outcomes.
+// Regression assertions updated on 20 October 2026 after #136, #141, #142 and #149.
 // Provider, PDF bytes and signatures are synthetic. PGlite is one PostgreSQL engine, not two backends.
 let db: PGlite;
 let saved: Map<string, Uint8Array>;
@@ -58,6 +58,13 @@ function store(): LabelJobStore {
       if (!previous) await putLabelObject(db, id);
       saved.set(id, bytes);
     },
+    async discardPrivateLabel(id) {
+      await db.query(
+        "DELETE FROM storage.objects WHERE bucket_id='round-trip-labels-private' AND name=$1",
+        [`${id}/label.pdf`],
+      );
+      saved.delete(id);
+    },
   };
 }
 const status = async (id: string) => (await store().job(id))!.status as string;
@@ -66,10 +73,11 @@ async function ambiguous() {
   await store().transition(id, "response_ambiguous", {});
   return id;
 }
-function label(code = "1000", labelId = "701"): ProviderLabel {
+function label(code = "1000", labelId = "701", reference?: string): ProviderLabel {
   return {
     provider: "sendcloud",
     labelId,
+    reference,
     carrier: "QA",
     tracking: "SYNTHETIC-TRACKING",
     chargedTtcCents: null,
@@ -83,7 +91,7 @@ function provider(current: ProviderLabel, overrides: Partial<LabelProvider> = {}
     create: async () => {
       throw Error("purchase_forbidden_in_audit");
     },
-    findByReference: async () => current,
+    findByReference: async (reference) => (current.reference === reference ? current : null),
     findByLabelId: async () => current,
     cancel: async () => ({ kind: "queued", reference: "synthetic-cancellation" }),
     ...overrides,
@@ -195,8 +203,11 @@ describe("adoption, absence et webhook — ordre des opérations", () => {
       declareLegAbsent(concurrent, id, "sendcloud", RT.admin, "Synthetic absence A"),
       declareLegAbsent(concurrent, id, "sendcloud", RT.admin, "Synthetic absence B"),
     ]);
-    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(1);
-    expect(results.filter((r) => r.status === "rejected")).toHaveLength(1);
+    expect(results.filter((r) => r.status === "fulfilled")).toHaveLength(2);
+    expect(results.filter((r) => r.status === "rejected")).toHaveLength(0);
+    for (const result of results)
+      if (result.status === "fulfilled")
+        expect(result.value).toEqual({ state: "failed", code: "absent_confirmed" });
     expect(await status(id)).toBe("failed");
     expect(
       (
@@ -225,10 +236,10 @@ describe("adoption, absence et webhook — ordre des opérations", () => {
   });
   it("adoption then cancelled webhook ends cancelled, duplicate webhook adds no tracking row", async () => {
     const id = await ambiguous();
-    await adoptLeg(provider(label()), store(), id, "701");
-    expect((await webhook(provider(label("2000")))).status).toBe(200);
+    await adoptLeg(provider(label("1000", "701", id)), store(), id, "701");
+    expect((await webhook(provider(label("2000", "701", id)))).status).toBe(200);
     expect(await status(id)).toBe("cancelled");
-    expect((await webhook(provider(label("2000")))).status).toBe(200);
+    expect((await webhook(provider(label("2000", "701", id)))).status).toBe(200);
     expect(
       (
         await db.query(
@@ -237,8 +248,13 @@ describe("adoption, absence et webhook — ordre des opérations", () => {
       ).rows,
     ).toHaveLength(1);
   });
-  it("documents the lost cancellation when webhook arrives before adoption commits", async () => {
+  it("refuses an already cancelled label and catches a cancellation before adoption commits", async () => {
     const id = await ambiguous();
+    expect(await adoptLeg(provider(label("2000", "701", id)), store(), id, "701")).toEqual({
+      state: "review_required",
+      code: "label_unusable",
+    });
+    expect(saved.has(id)).toBe(false);
     let downloaded!: () => void;
     let resume!: () => void;
     const reading = new Promise<void>((resolve) => {
@@ -247,37 +263,43 @@ describe("adoption, absence et webhook — ordre des opérations", () => {
     const gate = new Promise<void>((resolve) => {
       resume = resolve;
     });
-    const cancelled = {
-      ...label("2000"),
+    const first = {
+      ...label("1000", "701", id),
       pdf: async () => {
         downloaded();
         await gate;
         return pdf;
       },
     };
-    const adoption = adoptLeg(provider(cancelled), store(), id, "701");
+    let reads = 0;
+    const p = provider(first, {
+      findByLabelId: async () => (++reads === 1 ? first : label("2000", "701", id)),
+    });
+    const adoption = adoptLeg(p, store(), id, "701");
     await reading;
-    const notification = await webhook(provider(cancelled));
+    const notification = await webhook(provider(label("2000", "701", id)));
     expect(await notification.json()).toEqual({ ignored: true });
     resume();
-    expect(await adoption).toMatchObject({ state: "confirmed" });
-    expect(await status(id)).toBe("confirmed");
+    expect(await adoption).toEqual({ state: "review_required", code: "label_unusable" });
+    expect(await status(id)).toBe("cancelled");
+    expect(reads).toBe(2);
   });
-  it("documents that adoption accepts any readable provider label, without expected-reference comparison", async () => {
+  it("refuses a readable parcel whose reference belongs to another reservation", async () => {
     const id = await ambiguous();
-    expect(await adoptLeg(provider(label("1000", "999")), store(), id, "999")).toMatchObject({
-      state: "confirmed",
-    });
     expect(
-      (
-        await db.query<{ provider_label_id: string }>(
-          "SELECT provider_label_id FROM marketplace_round_trip_label_jobs WHERE id=$1",
-          [id],
-        )
-      ).rows[0].provider_label_id,
-    ).toBe("999");
+      await adoptLeg(provider(label("1000", "999", "another-reservation")), store(), id, "999"),
+    ).toEqual({ state: "review_required", code: "reference_mismatch" });
+    expect(await status(id)).toBe("ambiguous");
+    expect(saved.has(id)).toBe(false);
+    const row = (
+      await db.query<{ provider_label_id: string | null }>(
+        "SELECT provider_label_id FROM marketplace_round_trip_label_jobs WHERE id=$1",
+        [id],
+      )
+    ).rows[0];
+    expect(row.provider_label_id).toBeNull();
   });
-  it("absence winning over adoption prevents confirmation but leaves the uploaded private PDF", async () => {
+  it("absence winning over adoption prevents confirmation and removes the uploaded private PDF", async () => {
     const id = await ambiguous();
     let started!: () => void;
     let resume!: () => void;
@@ -289,7 +311,7 @@ describe("adoption, absence et webhook — ordre des opérations", () => {
     });
     const adoption = adoptLeg(
       provider({
-        ...label(),
+        ...label("1000", "701", id),
         pdf: async () => {
           started();
           await gate;
@@ -303,16 +325,25 @@ describe("adoption, absence et webhook — ordre des opérations", () => {
     await seen;
     await declareLegAbsent(store(), id, "sendcloud", RT.admin, "Synthetic absence checked");
     resume();
-    await expect(adoption).rejects.toThrow(/label_transition_invalid:failed:label_confirmed/);
+    expect(await adoption).toEqual({ state: "review_required", code: "job_failed" });
     expect(await status(id)).toBe("failed");
-    expect(saved.has(id)).toBe(true);
+    expect(saved.has(id)).toBe(false);
+    expect(
+      (
+        await db.query(
+          "SELECT name FROM storage.objects WHERE bucket_id='round-trip-labels-private'",
+        )
+      ).rows,
+    ).toHaveLength(0);
   });
   it("queued cancellation remains confirmed until a reread cancelled status; no refund is fabricated", async () => {
     const id = await ambiguous();
-    await adoptLeg(provider(label()), store(), id, "701");
-    expect(await cancelLeg(provider(label()), store(), id)).toEqual({ state: "queued" });
+    await adoptLeg(provider(label("1000", "701", id)), store(), id, "701");
+    expect(await cancelLeg(provider(label("1000", "701", id)), store(), id)).toEqual({
+      state: "queued",
+    });
     expect(await status(id)).toBe("confirmed");
-    expect((await webhook(provider(label("2000")), "701", "later")).status).toBe(200);
+    expect((await webhook(provider(label("2000", "701", id)), "701", "later")).status).toBe(200);
     expect(await status(id)).toBe("cancelled");
     const row = (
       await db.query<{ refunded_cost_ttc_cents: number | null }>(
@@ -322,39 +353,38 @@ describe("adoption, absence et webhook — ordre des opérations", () => {
     ).rows[0];
     expect(row.refunded_cost_ttc_cents).toBeNull();
   });
-  it("unknown reference lookup does not fall back to a readable label id", async () => {
+  it("unknown reference lookup falls back to the attached readable label id", async () => {
     const id = await ambiguous();
-    await adoptLeg(provider(label()), store(), id, "701");
+    await adoptLeg(provider(label("1000", "701", id)), store(), id, "701");
     let reads = 0;
     const p = provider(label("2000"), {
       findByReference: async () => "unknown",
       findByLabelId: async () => {
         reads++;
-        return label("2000");
+        return label("2000", "701", id);
       },
     });
-    expect((await webhook(p)).status).toBe(503);
-    expect(reads).toBe(0);
-    expect(await status(id)).toBe("confirmed");
+    expect((await webhook(p)).status).toBe(200);
+    expect(reads).toBe(1);
+    expect(await status(id)).toBe("cancelled");
   });
-  it("an adopted v2 parcel absent from the v3 reference search cannot be cancelled through the adapter", async () => {
-    const calls: string[] = [];
+  it("cancels an attached v2 parcel absent from v3 search, keeping a queued result", async () => {
+    const calls: { url: string; method: string }[] = [];
     const p = createSendcloudProvider({
       publicKey: "synthetic",
       secretKey: "synthetic",
-      fetchImpl: async (input) => {
-        calls.push(String(input));
-        return new Response(JSON.stringify({ data: [] }), {
-          status: 200,
+      fetchImpl: async (input, init) => {
+        calls.push({ url: String(input), method: init?.method ?? "GET" });
+        return new Response(JSON.stringify(init?.method === "POST" ? {} : { data: [] }), {
+          status: init?.method === "POST" ? 202 : 200,
           headers: { "Content-Type": "application/json" },
         });
       },
     });
-    expect(await p.cancel("synthetic-job")).toEqual({
-      kind: "refused",
-      code: "shipment_not_found",
-    });
-    expect(calls).toHaveLength(1);
-    expect(calls[0]).toContain("external_reference_id=synthetic-job");
+    expect(await p.cancel("synthetic-job", "701")).toEqual({ kind: "queued", reference: "701" });
+    expect(calls).toHaveLength(2);
+    expect(calls[0].url).toContain("external_reference_id=synthetic-job");
+    expect(calls[1]).toMatchObject({ method: "POST" });
+    expect(calls[1].url).toContain("/parcels/701/cancel");
   });
 });

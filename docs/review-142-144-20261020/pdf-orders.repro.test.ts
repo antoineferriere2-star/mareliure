@@ -20,7 +20,7 @@ import {
 } from "../../src/marketplace/shipping/roundTripTestDb.fixture";
 import type { LabelProvider, ProviderLabel } from "../../src/marketplace/shipping/labelProvider";
 
-// Characterisation for an independent report. Passing assertions also document unsafe observed outcomes.
+// Independent regression assertions, updated after #149.
 // Provider, PDF bytes and signatures are synthetic. PGlite is one PostgreSQL engine, not two backends.
 let db: PGlite;
 let saved: Map<string, Uint8Array>;
@@ -391,7 +391,7 @@ describe("independent #142 — terminal states and PDF interleavings", () => {
     expect(discarded).toEqual([]);
     await noConfirmedMissingPdf();
   });
-  it("characterises removal failure swallowed by persist: failed job but orphan PDF remains", async () => {
+  it("reports removal failure as label_orphaned and journals the private orphan PDF", async () => {
     const id = await ambiguous(),
       base = store();
     let attempted = false;
@@ -407,8 +407,20 @@ describe("independent #142 — terminal states and PDF interleavings", () => {
       },
     };
     expect(await adoptLeg(provider(ownLabel(id)), s, id, "701")).toMatchObject({
-      code: "job_failed",
+      state: "review_required",
+      code: "label_orphaned",
     });
+    const notes = await db.query<{ details: { note: string; object: string; code: string } }>(
+      "SELECT details FROM marketplace_round_trip_label_events WHERE job_id=$1 AND kind='operator_note'",
+      [id],
+    );
+    expect(notes.rows.map((row) => row.details)).toContainEqual(
+      expect.objectContaining({
+        note: "label_discard_failed",
+        object: `${id}/label.pdf`,
+        code: "label_discard_failed",
+      }),
+    );
     expect(attempted).toBe(true);
     expect(saved.has(id)).toBe(true);
     expect(await status(id)).toBe("failed");
