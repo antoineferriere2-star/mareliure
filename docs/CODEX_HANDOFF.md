@@ -3648,3 +3648,7 @@ Horaires ci-dessous en **heure de Paris (CEST, UTC+2)** ; les reçus JSON garden
 Le serveur PostgreSQL local démarré pour la copie est arrêté à la clôture ; copie et sauvegarde conservées. Aucune autre migration, écriture métier, opération Sendcloud, paiement Stripe, création de compte, e-mail, fusion ou déploiement. Aucun `GRANT ALL` de retour arrière. Les vérifications générales de la PR documentaire restent distinctes de la répétition PostgreSQL et des sept tests PGlite consignés ci-dessus.
 
 Arrêt local confirmé par PostgreSQL à **18:04:02** et par `pg_ctl status` (« no server running »). La première attente de 60 s a expiré pendant un checkpoint ; le serveur a terminé son arrêt normal ensuite, sans arrêt forcé et sans action sur la production.
+
+## Latest handoff
+
+Codex — **20 octobre 2026**, brief n° 5, chantier 2. Branche docs/open-pr-triage-20261020 depuis origin/main 57499b4 ; tri rapporté pour la base produit demandée 6ba5dc9. Rapport docs/OPEN_PR_TRIAGE_20261019.md (nom demandé, contenu daté du 20/10). Recommandations : actualiser #124/#132/#133/#139 ; fermer #126 devenue redondante ; fusionner #138 comme relevé daté, après résolution du conflit. Six simulations merge-tree : conflit uniquement dans CODEX_HANDOFF.md. #125 : état seulement, ouverte/conflictuelle, contrôle quality réussi ; aucune relecture juridique. Aucune fermeture, fusion, modification des PR examinées ni action de production.
