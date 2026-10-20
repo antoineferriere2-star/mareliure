@@ -281,4 +281,4 @@ La minuscule image de dépôt est une fixture PNG 1 pixel définie dans le test.
 
 ### Police éditoriale, optimisation du 20 octobre 2026
 
-`public/fonts/fraunces-latin-regular-opsz.woff2` est une instance partielle (wght=400, opsz conservé) de la variable déjà versionnée. Les autres graisses utilisent toujours la variable originale. Licence et attribution : `public/fonts/OFL-Fraunces.txt` (SIL OFL 1.1). Génération : `scripts/buildEditorialFont.py`, FontTools 4.67.0 et Brotli 1.2.0 ; aucune dépendance ajoutée au site.
+`public/fonts/fraunces-latin-regular-opsz.woff2` est une instance partielle (wght=400, opsz conservé) de la variable déjà versionnée. La demi-grasse `fraunces-latin-semibold-opsz.woff2` fixe wght=600, avec le même axe optique. Les autres graisses utilisent toujours la variable originale. Licence et attribution : `public/fonts/OFL-Fraunces.txt` (SIL OFL 1.1). Génération : `scripts/buildEditorialFont.py`, FontTools 4.67.0 et Brotli 1.2.0 ; aucune dépendance ajoutée au site.

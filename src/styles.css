@@ -342,6 +342,16 @@
   font-display: swap;
 }
 
+/* La demi-grasse éditoriale évite de télécharger la variable entière
+   en plus de la face normale sur les pages publiques. */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-latin-semibold-opsz.woff2") format("woff2-variations");
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ===========================================================================
    Ma Reliure — le système
    ===========================================================================

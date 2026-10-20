@@ -12,8 +12,9 @@ root = Path(__file__).resolve().parent.parent
 source = root / "public/fonts/fraunces-latin-var.woff2"
 assert sha256(source.read_bytes()).hexdigest() == "7234ed860a9cc83045413c4faee63c960a8f2d1917adcf728119307d56e0d783"
 font = TTFont(source, recalcTimestamp=False)
-normal = instantiateVariableFont(font, {"wght": 400}, inplace=False)
-normal.flavor = "woff2"
-destination = root / "public/fonts/fraunces-latin-regular-opsz.woff2"
-normal.save(destination)
-print(destination.name, destination.stat().st_size, sha256(destination.read_bytes()).hexdigest())
+for weight, name in [(400, "regular"), (600, "semibold")]:
+    instance = instantiateVariableFont(font, {"wght": weight}, inplace=False)
+    instance.flavor = "woff2"
+    destination = root / f"public/fonts/fraunces-latin-{name}-opsz.woff2"
+    instance.save(destination)
+    print(destination.name, destination.stat().st_size, sha256(destination.read_bytes()).hexdigest())
