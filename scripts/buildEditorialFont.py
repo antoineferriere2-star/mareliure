@@ -1,4 +1,4 @@
-"""Regenerate the normal-weight editorial font without removing characters.
+"""Regenerate the normal and semibold editorial fonts without removing characters.
 
 Development-only: Python 3.12, fonttools[woff]==4.67.0, brotli==1.2.0.
 The original variable font remains available for all other weights.
