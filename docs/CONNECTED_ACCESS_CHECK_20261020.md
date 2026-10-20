@@ -19,4 +19,10 @@ Le parcours de lecture administrateur demandé fonctionne dans cette session apr
 
 La console et l'interface ont été lues ; les journaux du Worker et une trace exhaustive des réponses réseau n'ont pas été consultés. « Aucun 500 observé » ne signifie donc pas que tous les endpoints de l'application ont été vérifiés. Aucun relevé de contacts, montant, identifiant interne ou capture contenant des données personnelles n'est publié.
 
-Aucune donnée métier modifiée, aucun compte créé, aucun e-mail, achat Sendcloud, paiement, fusion ou déploiement.
+## Réserve sur la lecture seule stricte
+
+La relecture du code **après** cette navigation révèle un effet automatique qui aurait dû être vérifié avant l'ouverture du dossier : `CaseMatchingPage.tsx` monte `AdminConversations`, qui monte `ConversationPanel`. Son effet d'ouverture appelle `markConversationRead` (`src/marketplace/pages/ConversationPanel.tsx`, effet commenté « Opening the panel counts as reading it »). La fonction serveur effectue un `upsert` dans `marketplace_conversation_reads` avec `last_read_at` (`src/marketplace/services/messaging.data.functions.ts`, handler `markConversationRead`). Ce code est présent dans la base produit `6ba5dc9`.
+
+**La navigation demandée peut donc avoir mis à jour un horodatage de lecture. Une lecture seule stricte de la base n'est pas certifiée pour ce contrôle connecté.** Aucun bouton métier n'a été utilisé, mais cela ne supprime pas cet effet de montage. Aucun relevé réseau ou SQL ne permet ici de confirmer l'exécution ou le résultat de l'upsert ; la console vide n'est pas une preuve suffisante. Le propriétaire en a été informé. Un contrôle futur strictement sans écriture devra bloquer cet appel automatique avant d'ouvrir le dossier.
+
+Aucune modification explicite des dossiers, ateliers ou plans, aucun compte créé, aucun e-mail, achat Sendcloud, paiement, fusion ou déploiement.
