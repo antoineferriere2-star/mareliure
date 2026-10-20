@@ -1,3 +1,4 @@
+import "./styles.css";
 import { isMaReliure } from "./brand";
 import { isPublicPerformancePage } from "./marketplace/performance/publicPages";
 import { startHydration } from "./marketplace/performance/firstPaint";
@@ -8,6 +9,8 @@ startHydration(
   },
   isMaReliure &&
     isPublicPerformancePage(window.location.pathname) &&
+    // Le formulaire de candidature doit recevoir ses handlers immédiatement.
+    window.location.pathname !== "/partenaires-relieurs" &&
     document.visibilityState === "visible",
   {
     requestFrame: (callback) => {
