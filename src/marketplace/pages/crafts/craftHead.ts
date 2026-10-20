@@ -1,12 +1,13 @@
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 import { EDITORIAL_FONT_PRELOAD, CRAFTS } from "@/marketplace/pages/landing/content";
-import { breadcrumbSchema, faqPageSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/structured-data";
+import { breadcrumbSchema, definedTermSetSchema, faqPageSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/structured-data";
+import { CRAFT_GLOSSARY } from "./craftGlossary";
 import { craftFaq, craftPage, type CraftSlug } from "./craftPages";
 
 /**
  * L'en-tête d'une page par besoin : titre et description écrits pour la
  * recherche, adresse canonique sur mareliure.fr (la même route répond aussi
- * sur l'hôte Fine Bindery), fil d'Ariane et FAQ balisés depuis les mêmes
+ * sur l'hôte Fine Bindery), fil d'Ariane, FAQ et vocabulaire balisés depuis les mêmes
  * tableaux que ceux que la page affiche.
  */
 export function craftHead(slug: CraftSlug) {
@@ -40,6 +41,7 @@ export function craftHead(slug: CraftSlug) {
         ),
       ),
       jsonLdScript(faqPageSchema(craftFaq(page))),
+      jsonLdScript(definedTermSetSchema(`Vocabulaire de l’atelier — ${CRAFTS[page.craftIndex].title}`, url, CRAFT_GLOSSARY[slug])),
     ],
   };
 }

@@ -16,7 +16,7 @@ export const REQUEST_STATUSES = ["new", "reviewing", "contacted", "closed"] as c
 
 export const listBuildPublicRequests = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         type: z.enum(["audit", "private_beta"]).optional(),
@@ -40,7 +40,7 @@ export const listBuildPublicRequests = createServerFn({ method: "GET" })
 
 export const getBuildPublicRequest = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -56,7 +56,7 @@ export const getBuildPublicRequest = createServerFn({ method: "GET" })
 
 export const updateBuildPublicRequestStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), status: z.enum(REQUEST_STATUSES) }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -81,7 +81,7 @@ export const updateBuildPublicRequestStatus = createServerFn({ method: "POST" })
  */
 export const runSiteAuditForRequest = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();

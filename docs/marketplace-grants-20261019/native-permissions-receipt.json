@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-19T09:35:56.885Z",
+  "database": "acl_rehearsal_20261019",
+  "nativePostgreSQL": "17.11",
+  "role": "service_role",
+  "labelResolutionAssertions": 9,
+  "marketplaceTablesChecked": 78,
+  "anonAndAuthenticatedDenied": true,
+  "serviceTruncateDenied": true,
+  "futureDefaultsChecked": true,
+  "rolledBack": true,
+  "dataFingerprintsPreserved": 98,
+  "productionApplied": false
+}

@@ -102,7 +102,7 @@ export interface WorkspaceDossierRow {
 
 export const listWorkspaceDossiers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }): Promise<WorkspaceDossierRow[]> => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
@@ -187,7 +187,7 @@ function budgetAndTimingLines(content: unknown): string[] {
  */
 export const listWorkspaceMissions = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
@@ -253,7 +253,7 @@ export const listWorkspaceMissions = createServerFn({ method: "GET" })
  */
 export const setMissionPaused = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ workspaceId: z.string().uuid(), missionId: z.string().uuid(), paused: z.boolean() })
       .parse(data),
@@ -303,7 +303,7 @@ export const setMissionPaused = createServerFn({ method: "POST" })
 /** Non-blocking usage display for the portal's own workspace — never gates submission. */
 export const getMyWorkspaceUsage = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
     // Entitlements ride along with usage because the two are always shown
@@ -319,7 +319,7 @@ export const getMyWorkspaceUsage = createServerFn({ method: "GET" })
 /** Billing summary for /portal/billing — never returns the raw Stripe customer id, just whether one exists. */
 export const getMyWorkspaceBilling = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
     await assertBillingSurface(data.workspaceId);
@@ -343,7 +343,7 @@ export const getMyWorkspaceBilling = createServerFn({ method: "GET" })
 
 export const getWorkspaceDossier = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const { data: dossier, error } = await sb
@@ -383,7 +383,7 @@ export const getWorkspaceDossier = createServerFn({ method: "GET" })
  */
 export const getWorkspaceDossierPhotos = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const { data: dossier, error } = await sb
@@ -401,7 +401,7 @@ export const getWorkspaceDossierPhotos = createServerFn({ method: "GET" })
       .select("answers")
       .eq("id", dossier.session_id)
       .maybeSingle();
-    const refs = extractPhotoReferences((session?.answers ?? {}) as Answers);
+    const refs = extractPhotoReferences((session?.answers ?? {}) as Answers, dossier.session_id);
     if (refs.length === 0) return { photos: [] as DisplayPhotoReference[] };
 
     const photos: DisplayPhotoReference[] = [];
@@ -419,7 +419,7 @@ export const getWorkspaceDossierPhotos = createServerFn({ method: "GET" })
 
 export const updateDossierFollowUp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -466,7 +466,7 @@ export const updateDossierFollowUp = createServerFn({ method: "POST" })
 /** Anyone in the workspace may see who else is in it. */
 export const listMyWorkspaceMembers = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertWorkspaceMember(context.supabase, context.userId, data.workspaceId);
     const sb = await admin();
@@ -489,7 +489,7 @@ export const listMyWorkspaceMembers = createServerFn({ method: "GET" })
  */
 export const inviteMyWorkspaceMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ workspaceId: z.string().uuid(), email: z.string().email().max(320) }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -533,7 +533,7 @@ export const inviteMyWorkspaceMember = createServerFn({ method: "POST" })
  */
 export const removeMyWorkspaceMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ workspaceId: z.string().uuid(), memberId: z.string().uuid() }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -583,7 +583,7 @@ export const removeMyWorkspaceMember = createServerFn({ method: "POST" })
  */
 export const assignMyDossier = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), userId: z.string().uuid().nullable() }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -630,7 +630,7 @@ export const assignMyDossier = createServerFn({ method: "POST" })
 
 export const getMyWorkspaceSettings = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ workspaceId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     const { role } = await assertWorkspaceMember(
       context.supabase,
@@ -659,7 +659,7 @@ export const getMyWorkspaceSettings = createServerFn({ method: "GET" })
  */
 export const updateMyWorkspaceSettings = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         workspaceId: z.string().uuid(),

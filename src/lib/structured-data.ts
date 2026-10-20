@@ -85,6 +85,17 @@ export function faqPageSchema(entries: readonly { question: string; answer: stri
   };
 }
 
+/** A glossary shown on the page, as a schema.org DefinedTermSet anchored on that page. */
+export function definedTermSetSchema(name: string, url: string, terms: readonly { term: string; definition: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "DefinedTermSet",
+    name,
+    url,
+    hasDefinedTerm: terms.map((entry) => ({ "@type": "DefinedTerm", name: entry.term, description: entry.definition })),
+  };
+}
+
 /** Convenience: a JSON-LD script entry for a TanStack route `head()`. */
 export function jsonLdScript(schema: unknown) {
   return {
