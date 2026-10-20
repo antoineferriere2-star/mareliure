@@ -29,7 +29,9 @@ function PublicAssetHead() {
         const asset =
           tag.tag === "link" && tag.attrs?.rel === "modulepreload"
             ? { ...tag, attrs: { ...tag.attrs, fetchPriority: "low" } }
-            : tag;
+            : tag.tag === "link" && tag.attrs?.rel === "stylesheet"
+              ? { ...tag, attrs: { ...tag.attrs, precedence: "default" } }
+              : tag;
         return <Asset {...asset} key={`tsr-meta-${JSON.stringify(tag)}`} nonce={nonce} />;
       })}
     </>

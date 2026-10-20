@@ -57,6 +57,7 @@ describe("public resource priorities without changing document semantics", () =>
     );
     expect(html).toMatch(/rel="modulepreload"[^>]*fetchPriority="low"/i);
     expect(html).toContain('href="/assets/styles-example.css"');
+    expect(html).toContain('data-precedence="default"');
     expect(html).toContain('content="Synthetic public description"');
     expect(html).toContain('type="application/ld+json" nonce="synthetic-csp-nonce"');
     expect(html).toContain('crossorigin="anonymous"');
