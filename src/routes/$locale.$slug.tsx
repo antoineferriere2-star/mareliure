@@ -4,9 +4,10 @@ import { getPublicFineBinderyProfile } from "@/marketplace/services/fineBinderyP
 import { fineBinderyHeadCopy } from "@/marketplace/i18n/fineBinderyHeadCopy";
 import { fineBinderyLocalizedHead } from "@/marketplace/i18n/fineBinderySeo";
 import { isFineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
+import { DISCIPLINES } from "@/marketplace/pages/fineBindery/disciplines";
 
 export const Route = createFileRoute("/$locale/$slug")({
-  beforeLoad: ({ params }) => { if (!isFineBinderyLocale(params.locale) || ["professionals", "project"].includes(params.slug)) throw notFound(); },
+  beforeLoad: ({ params }) => { if (!isFineBinderyLocale(params.locale) || ["professionals", "project", ...DISCIPLINES.map((d) => d.slug as string)].includes(params.slug)) throw notFound(); },
   loader: ({ params }) => getPublicFineBinderyProfile({ data: { slug: params.slug } }),
   head: ({ loaderData, params }) => {
     if (!isFineBinderyLocale(params.locale)) return {};
