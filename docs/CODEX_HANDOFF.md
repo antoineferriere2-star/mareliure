@@ -3648,3 +3648,7 @@ Horaires ci-dessous en **heure de Paris (CEST, UTC+2)** ; les reçus JSON garden
 Le serveur PostgreSQL local démarré pour la copie est arrêté à la clôture ; copie et sauvegarde conservées. Aucune autre migration, écriture métier, opération Sendcloud, paiement Stripe, création de compte, e-mail, fusion ou déploiement. Aucun `GRANT ALL` de retour arrière. Les vérifications générales de la PR documentaire restent distinctes de la répétition PostgreSQL et des sept tests PGlite consignés ci-dessus.
 
 Arrêt local confirmé par PostgreSQL à **18:04:02** et par `pg_ctl status` (« no server running »). La première attente de 60 s a expiré pendant un checkpoint ; le serveur a terminé son arrêt normal ensuite, sans arrêt forcé et sans action sur la production.
+
+## Latest handoff
+
+Codex — **20 octobre 2026**, brief n° 5, chantier 4. Branche docs/connected-access-20261020 depuis origin/main 57499b4. Session administrateur du propriétaire déjà connectée réutilisée : tableau de bord, liste des dossiers, dossier de test existant et sa section logistique, liste des ateliers lus sans action métier. Aucun écran vide persistant, permission denied ou 500 visible ; console warn/error vide après chaque étape. Rapport docs/CONNECTED_ACCESS_CHECK_20261020.md. Aucun plan présent : pas de contrôle d'un plan rempli ou d'un PDF ; sessions client/atelier et journaux Worker non examinés. Aucune connexion nouvelle, écriture métier, création de compte, e-mail, achat, paiement, fusion ou déploiement.
