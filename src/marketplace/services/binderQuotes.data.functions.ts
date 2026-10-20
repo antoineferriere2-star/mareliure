@@ -114,7 +114,7 @@ export const getBillingProfile = createServerFn({ method: "GET" })
 
 export const saveMyBillingProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => billingProfileInput.parse(data))
+  .validator((data: unknown) => billingProfileInput.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => saveBillingProfile(sb, binderId, data)),
   );
@@ -128,7 +128,7 @@ const documentLogoInput = z
 
 export const uploadMyDocumentLogo = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => documentLogoInput.parse(data))
+  .validator((data: unknown) => documentLogoInput.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => uploadDocumentLogo(sb, binderId, data)),
   );
@@ -139,7 +139,7 @@ export const clearMyDocumentLogo = createServerFn({ method: "POST" })
 
 export const getMyCatalog = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ includeArchived: z.boolean().optional() })
       .strict()
@@ -173,21 +173,21 @@ export const getMyBasePriceServices = createServerFn({ method: "GET" })
 
 export const saveMyCategory = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => categoryInput.parse(data))
+  .validator((data: unknown) => categoryInput.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => saveCategory(sb, binderId, data)),
   );
 
 export const saveMyService = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => serviceInput.parse(data))
+  .validator((data: unknown) => serviceInput.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => saveService(sb, binderId, data)),
   );
 
 export const archiveMyService = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       await archiveService(sb, binderId, data.id);
@@ -201,7 +201,7 @@ export const getMyClients = createServerFn({ method: "GET" })
 
 export const saveMyClient = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => clientInput.parse(data))
+  .validator((data: unknown) => clientInput.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => saveClient(sb, binderId, data)),
   );
@@ -253,14 +253,14 @@ export const getMyRecentServiceIds = createServerFn({ method: "GET" })
 
 export const getMyQuote = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => getQuote(sb, binderId, data.id)),
   );
 
 export const createMyQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => quoteInput.parse(data))
+  .validator((data: unknown) => quoteInput.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       if (!(await loadWorkshopSubscription(sb, binderId)).canCreate)
@@ -271,7 +271,7 @@ export const createMyQuote = createServerFn({ method: "POST" })
 
 export const updateMyQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), quote: quoteInput }).strict().parse(data),
   )
   .handler(({ context, data }) =>
@@ -292,7 +292,7 @@ const quotePhotoInput = z
 
 export const uploadMyQuoteItemPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => quotePhotoInput.parse(data))
+  .validator((data: unknown) => quotePhotoInput.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => uploadQuoteItemPhoto(sb, binderId, data)),
   );
@@ -312,7 +312,7 @@ export const getMyOperationPhotos = createServerFn({ method: "GET" })
 
 export const uploadMyOperationPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         target: operationTarget,
@@ -329,7 +329,7 @@ export const uploadMyOperationPhoto = createServerFn({ method: "POST" })
 
 export const updateMyOperationPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ id: z.string().uuid(), caption: z.string().trim().max(300).nullable() })
       .strict()
@@ -344,7 +344,7 @@ export const updateMyOperationPhoto = createServerFn({ method: "POST" })
 
 export const deleteMyOperationPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       await deleteOperationPhoto(sb, binderId, data.id);
@@ -355,7 +355,7 @@ export const deleteMyOperationPhoto = createServerFn({ method: "POST" })
 /** Copie un exemple de la bibliothèque sur une ligne d'un brouillon. */
 export const attachMyOperationPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         quoteId: z.string().uuid(),
@@ -373,7 +373,7 @@ export const attachMyOperationPhoto = createServerFn({ method: "POST" })
 
 export const deleteMyQuoteItemPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       await deleteQuoteItemPhoto(sb, binderId, data.id);
@@ -384,7 +384,7 @@ export const deleteMyQuoteItemPhoto = createServerFn({ method: "POST" })
 /** Nouveau brouillon issu du snapshot d'un devis de cet atelier. */
 export const duplicateMyQuote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       return duplicateQuote(sb, binderId, data.id, todayInParis());
@@ -393,7 +393,7 @@ export const duplicateMyQuote = createServerFn({ method: "POST" })
 
 export const setMyQuoteStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), status: z.string() }).strict().parse(data),
   )
   .handler(({ context, data }) =>
@@ -404,7 +404,7 @@ export const setMyQuoteStatus = createServerFn({ method: "POST" })
 
 export const convertMyQuoteToInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) =>
       convertQuoteToInvoice(sb, binderId, data.id, todayInParis()),
@@ -417,14 +417,14 @@ export const getMyInvoices = createServerFn({ method: "GET" })
 
 export const getMyInvoice = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => getInvoice(sb, binderId, data.id)),
   );
 
 export const updateMyInvoiceDraft = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ id: z.string().uuid(), draft: invoiceDraftInput }).strict().parse(data),
   )
   .handler(({ context, data }) =>
@@ -433,14 +433,14 @@ export const updateMyInvoiceDraft = createServerFn({ method: "POST" })
 
 export const issueMyInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => issueInvoice(sb, binderId, data.id)),
   );
 
 export const createMyFullCreditNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(1000) })
       .strict()
@@ -454,7 +454,7 @@ export const createMyFullCreditNote = createServerFn({ method: "POST" })
 
 export const createMyPartialCreditNote = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         id: z.string().uuid(),
@@ -496,7 +496,7 @@ const safeFileName = (number: string) => number.replace(/[^A-Za-z0-9._-]/g, "_")
 
 export const getMyQuotePdf = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       const quote = await getQuote(sb, binderId, data.id);
@@ -507,7 +507,7 @@ export const getMyQuotePdf = createServerFn({ method: "GET" })
 
 export const getMyInvoicePdf = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       const invoice = await getInvoice(sb, binderId, data.id);
@@ -519,7 +519,7 @@ export const getMyInvoicePdf = createServerFn({ method: "GET" })
 
 export const getMyCreditNotePdf = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data))
+  .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       const credit = await getCreditNote(sb, binderId, data.id);

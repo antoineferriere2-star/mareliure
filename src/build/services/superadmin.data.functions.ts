@@ -43,7 +43,7 @@ function countBy<T>(rows: T[], get: (r: T) => string | null | undefined) {
 
 export const getSuperAdminOverview = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ days: z.number().int().min(7).max(90).optional() }).parse(data ?? {}),
   )
   .handler(async ({ context, data }) => {

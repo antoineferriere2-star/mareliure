@@ -58,24 +58,24 @@ const withArchived = worksFilterInput.pick({ includeArchived: true });
 
 export const getMyContacts = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => withArchived.parse(data ?? {}))
+  .validator((data: unknown) => withArchived.parse(data ?? {}))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => listContacts(sb, binderId, { includeArchived: data.includeArchived })),
   );
 
 export const getMyContact = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => idInput.parse(data))
+  .validator((data: unknown) => idInput.parse(data))
   .handler(({ context, data }) => run(context.userId, (binderId, sb) => getContact(sb, binderId, data.id)));
 
 export const saveMyContact = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => contactInput.parse(data))
+  .validator((data: unknown) => contactInput.parse(data))
   .handler(({ context, data }) => run(context.userId, (binderId, sb) => saveContact(sb, binderId, data)));
 
 export const setMyContactArchived = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => idInput.extend({ archived: z.boolean() }).parse(data))
+  .validator((data: unknown) => idInput.extend({ archived: z.boolean() }).parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => setContactArchived(sb, binderId, data.id, data.archived)),
   );
@@ -84,7 +84,7 @@ export const setMyContactArchived = createServerFn({ method: "POST" })
 
 export const getMyWorks = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => worksFilterInput.parse(data ?? {}))
+  .validator((data: unknown) => worksFilterInput.parse(data ?? {}))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) =>
       listWorks(sb, binderId, { contactId: data.contactId, includeArchived: data.includeArchived }),
@@ -93,17 +93,17 @@ export const getMyWorks = createServerFn({ method: "GET" })
 
 export const getMyWork = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => idInput.parse(data))
+  .validator((data: unknown) => idInput.parse(data))
   .handler(({ context, data }) => run(context.userId, (binderId, sb) => getWork(sb, binderId, data.id)));
 
 export const saveMyWork = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => workInput.parse(data))
+  .validator((data: unknown) => workInput.parse(data))
   .handler(({ context, data }) => run(context.userId, (binderId, sb) => saveWork(sb, binderId, data)));
 
 export const setMyWorkArchived = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => idInput.extend({ archived: z.boolean() }).parse(data))
+  .validator((data: unknown) => idInput.extend({ archived: z.boolean() }).parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => setWorkArchived(sb, binderId, data.id, data.archived)),
   );

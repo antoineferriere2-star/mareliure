@@ -11,7 +11,7 @@ const dashboardInput = z.object({ brand: z.enum(["ALL", "MA_RELIURE", "FINE_BIND
 
 export const getAdminDashboard = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => dashboardInput.parse(data))
+  .validator((data: unknown) => dashboardInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = (await admin()) as unknown as SupabaseClient;
