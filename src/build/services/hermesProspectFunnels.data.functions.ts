@@ -19,7 +19,7 @@ const prospectInput = z.object({
 
 export const createHermesProspectFunnels = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         workspaceId: z.string().uuid().optional().nullable(),
@@ -41,7 +41,7 @@ export const createHermesProspectFunnels = createServerFn({ method: "POST" })
 
 export const retryHermesProspectFunnel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();

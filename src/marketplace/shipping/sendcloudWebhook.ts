@@ -48,7 +48,11 @@ export async function handleSendcloudWebhook(request: Request, deps: WebhookDeps
   // Rapprochement : l'état fait foi chez le fournisseur, pas dans la notification.
   // Un retour ne se retrouve pas par référence : relecture du colis par son identifiant.
   let current = await deps.provider.findByReference(job.id);
-  if (current === null && deps.provider.findByLabelId) current = await deps.provider.findByLabelId(parcelId);
+  // Introuvable OU illisible par référence : relire le colis déjà rattaché par son identifiant (revue du 16/10, P2-E).
+  if ((current === null || current === "unknown") && deps.provider.findByLabelId) {
+    const byId = await deps.provider.findByLabelId(parcelId);
+    if (byId && byId !== "unknown") current = byId;
+  }
   if (current === "unknown") return json(503, { error: "provider_unreadable" });
   if (!current || current.labelId !== parcelId) return json(409, { error: "reconciliation_mismatch" });
   await deps.store.transition(job.id, "tracking_update",

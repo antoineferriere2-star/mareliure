@@ -167,7 +167,7 @@ async function notifyWorkshopOfNewMessage(
 
 export const listCaseMessages = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => listInput.parse(data))
+  .validator((data: unknown) => listInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const viewer = await resolveViewer(context.supabase, sb, context.userId);
@@ -219,7 +219,7 @@ export const listCaseMessages = createServerFn({ method: "GET" })
 
 export const sendCaseMessage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         caseId: z.string().uuid(),
@@ -284,7 +284,7 @@ export const sendCaseMessage = createServerFn({ method: "POST" })
 
 export const markConversationRead = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const viewer = await resolveViewer(context.supabase, sb, context.userId);

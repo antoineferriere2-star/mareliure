@@ -318,12 +318,12 @@ export async function createCommercialProposalCore(context: AdminCallContext, da
 
 export const createCommercialProposal = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => createInput.parse(data))
+  .validator((data: unknown) => createInput.parse(data))
   .handler(async ({ context, data }) => createCommercialProposalCore(context, data));
 
 export const listCaseCommercialProposals = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data: caseId }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -336,7 +336,7 @@ export const listCaseCommercialProposals = createServerFn({ method: "GET" })
 
 export const getAcceptedCommercialProposal = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data: caseId }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -369,7 +369,7 @@ const validateTaxInput = z.object({
  */
 export const validateCommercialProposalTax = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => validateTaxInput.parse(data))
+  .validator((data: unknown) => validateTaxInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     if (!isCommercialTaxPolicy(data.taxPolicy)) fail(400, "Politique fiscale inconnue.");
@@ -540,7 +540,7 @@ export async function validateOppeProposalTaxCore(context: AdminCallContext, dat
 
 export const validateOppeProposalTax = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => validateLineTaxInput.parse(data))
+  .validator((data: unknown) => validateLineTaxInput.parse(data))
   .handler(async ({ context, data }) => validateOppeProposalTaxCore(context, data));
 
 const applyAutomaticFranceTaxInput = z.object({
@@ -627,7 +627,7 @@ export async function applyAutomaticFranceTaxPolicyCore(context: AdminCallContex
 
 export const applyAutomaticFranceTaxPolicy = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => applyAutomaticFranceTaxInput.parse(data))
+  .validator((data: unknown) => applyAutomaticFranceTaxInput.parse(data))
   .handler(async ({ context, data }) => applyAutomaticFranceTaxPolicyCore(context, data));
 
 /**
@@ -638,7 +638,7 @@ export const applyAutomaticFranceTaxPolicy = createServerFn({ method: "POST" })
  */
 export const resetProposalTaxToManualReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data: proposalId }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -665,7 +665,7 @@ export const resetProposalTaxToManualReview = createServerFn({ method: "POST" })
  */
 export const getPaymentPreflight = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data: caseId }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();

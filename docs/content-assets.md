@@ -268,3 +268,13 @@ snapshot de document peut encore le référencer.
 ## Captures de l’outil atelier (PR #46) — retirées le 25 septembre 2026
 
 Les six captures `/product/*.webp` de la PR #46 ne sont plus publiées : la page relieurs et le bloc de l’accueil utilisent désormais les captures `/photos/product/*` décrites plus haut (PR #47). Plus aucun fichier `/product/` n’est servi.
+
+## Captures de recette client locale — 16 octobre 2026
+
+`docs/customer-journey-20261016/*.png` : 16 captures produites par Codex avec
+Playwright à la demande du propriétaire pour le chantier 2 du brief n° 2.
+Source : interface du dépôt, réponses et session intégralement synthétiques,
+aucune photographie de client ou d'atelier. Autorisation : demande explicite
+de joindre les captures mobile et bureau à la PR de recette. Usage : preuves
+documentaires de test uniquement, aucune publication dans le site commercial.
+La minuscule image de dépôt est une fixture PNG 1 pixel définie dans le test.

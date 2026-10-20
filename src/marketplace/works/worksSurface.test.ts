@@ -19,7 +19,7 @@ describe("server functions des contacts et ouvrages", () => {
 
   it.each(fns.map((m) => [m[1], m[2], m[3]] as const))("%s : authentifiée, entrée validée, atelier résolu depuis la session", (_name, method, body) => {
     expect(body).toContain(".middleware([requireSupabaseAuth])");
-    expect(body).toContain(".inputValidator(");
+    expect(body).toContain(".validator(");
     expect(body).toContain("run(context.userId");
     // Jamais l'atelier depuis l'entrée du navigateur.
     expect(body).not.toMatch(/data\.binderId|data\.binder_id/);

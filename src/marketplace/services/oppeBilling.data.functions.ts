@@ -52,7 +52,7 @@ const caseInput = z.object({ caseId: z.string().uuid() });
 /** Le client : sa facture et ses avoirs, rien d'autre. */
 export const getMyOppeDocuments = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => caseInput.parse(data))
+  .validator((data: unknown) => caseInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     await assertCaseOwner(sb, data.caseId, context.userId);
@@ -77,7 +77,7 @@ async function renderOppeDocument(sb: Supa, caseId: string, documentId: string) 
 
 export const downloadMyOppeDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => downloadInput.parse(data))
+  .validator((data: unknown) => downloadInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     await assertCaseOwner(sb, data.caseId, context.userId);
@@ -86,7 +86,7 @@ export const downloadMyOppeDocument = createServerFn({ method: "POST" })
 
 export const downloadOppeDocument = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => downloadInput.parse(data))
+  .validator((data: unknown) => downloadInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     return renderOppeDocument(await admin(), data.caseId, data.documentId);
@@ -95,7 +95,7 @@ export const downloadOppeDocument = createServerFn({ method: "POST" })
 /** L'administration : documents, remboursements, litiges, frais et marges de la commande. */
 export const getOppeBilling = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => caseInput.parse(data))
+  .validator((data: unknown) => caseInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -135,7 +135,7 @@ export const getOppeBilling = createServerFn({ method: "GET" })
  */
 export const refundOppeOrder = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ caseId: z.string().uuid(), amountCents: z.number().int().positive(), reason: z.string().trim().min(5).max(500), requestKey: z.string().uuid() }).parse(data),
   )
   .handler(async ({ context, data }) => {

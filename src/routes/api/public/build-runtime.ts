@@ -7,7 +7,7 @@ import type { Database, Json } from "@/integrations/supabase/types";
 import { generateProjectBrief } from "@/build/engine/brief";
 import { computeVisibleSteps, validateField, validateFieldFormat } from "@/build/engine/validation";
 import { evaluatePlaybookConsistency } from "@/build/engine/consistency";
-import { buildVisitorProjectSummary, extractPhotoReferences } from "@/build/engine/visitorSummary";
+import { buildVisitorProjectSummary, extractPhotoReferences, foreignPhotoReference } from "@/build/engine/visitorSummary";
 import type { Answers, AnswerValue } from "@/build/schema/answers";
 import { playbookSchema, type PlaybookField, type PlaybookSchema } from "@/build/schema/playbook";
 import { missionProposalSchema } from "@/build/schema/missionProposal";
@@ -436,6 +436,9 @@ export async function handleSubmitSession(
   for (const [key, value] of Object.entries(finalAnswers)) {
     const metadataError = runtimeSessionMetadataError(key, value);
     if (metadataError) fieldErrors[key] = metadataError;
+    // Toute référence de photo, champ visible ou non, doit désigner un fichier de
+    // CETTE session (audit sécurité du 16 octobre 2026, P1).
+    if (foreignPhotoReference(value, sessionId)) fieldErrors[key] = "A photo does not belong to this session.";
   }
   for (const { visibleFields } of computeVisibleSteps(schema, finalAnswers)) {
     for (const field of visibleFields) {
@@ -528,7 +531,7 @@ export async function handleSubmitSession(
     businessName,
     locale,
     measurementSystem: DEFAULT_MEASUREMENT_SYSTEM,
-    photos: extractPhotoReferences(finalAnswersTyped),
+    photos: extractPhotoReferences(finalAnswersTyped, sessionId),
     submittedAt: update.submitted_at,
     visualPreview,
   });

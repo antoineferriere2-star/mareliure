@@ -153,3 +153,47 @@ describe("méthodes « Retour » (API des retours)", () => {
     expect(returnAnnounceBody({ ...ret, from: { ...ret.from, addressLine1: "Lieu-dit Le Bourg" } }).from_address).not.toHaveProperty("house_number");
   });
 });
+
+describe("annulation d'un colis introuvable par référence (revue du 16/10, P1-C)", () => {
+  it.each([[200, "cancelled"], [202, "queued"], [400, "refused"], [410, "refused"], [404, "refused"], [500, "ambiguous"]] as const)(
+    "annule par identifiant v2 : HTTP %i ⇒ %s", async (status, kind) => {
+      const calls: { url: string; init?: RequestInit }[] = [];
+      expect((await provider([ok(200, { data: [] }), ok(status, {})], calls).cancel("job-1", "728116225")).kind).toBe(kind);
+      expect(calls[1].url).toBe("https://panel.sendcloud.sc/api/v2/parcels/728116225/cancel");
+      expect(calls[1].init?.method).toBe("POST");
+    });
+  it("sans identifiant de colis, reste un refus sans appel d'annulation", async () => {
+    const calls: { url: string }[] = [];
+    expect(await provider([ok(200, { data: [] })], calls).cancel("job-1")).toEqual({ kind: "refused", code: "shipment_not_found" });
+    expect(calls).toHaveLength(1);
+  });
+  it("lit la référence d'achat d'un colis v2 et d'un envoi v3", async () => {
+    const v2 = await provider([ok(200, { parcel: { id: 5, tracking_number: "T5", carrier: { code: "mondial_relay" }, external_reference: "job-9", label: { label_printer: "https://x/l" } } })]).findByLabelId!("5");
+    expect(v2).toMatchObject({ reference: "job-9" });
+    const v3 = await provider([ok(200, { data: [{ ...shipment, external_reference_id: "job-1" }] })]).findByReference("job-1");
+    expect(v3).toMatchObject({ reference: "job-1" });
+  });
+});
+
+describe("annulation : identité du colis (revue du 19/10)", () => {
+  it("refuse d'annuler un envoi v3 dont le colis n'est pas celui rattaché", async () => {
+    const calls: { url: string }[] = [];
+    const other = { ...shipment, id: "shp-x", parcels: [{ ...shipment.parcels[0], id: 999 }] };
+    expect(await provider([ok(200, { data: [other] })], calls).cancel("job-1", "701")).toEqual({ kind: "refused", code: "parcel_identity_mismatch" });
+    expect(calls).toHaveLength(1);
+  });
+  it.each([
+    ["identité absente", [{ ...shipment.parcels[0], id: undefined }]],
+    ["colis supplémentaire", [shipment.parcels[0], { ...shipment.parcels[0], id: 43 }]],
+    ["aucun colis", []],
+  ] as const)("refuse d'annuler un envoi v3 : %s", async (_name, parcels) => {
+    const calls: { url: string }[] = [];
+    expect(await provider([ok(200, { data: [{ ...shipment, parcels }] })], calls).cancel("job-1", "42")).toEqual({ kind: "refused", code: "parcel_identity_mismatch" });
+    expect(calls).toHaveLength(1);
+  });
+  it("annule l'envoi v3 quand son colis est bien celui rattaché", async () => {
+    const calls: { url: string }[] = [];
+    expect((await provider([ok(200, { data: [shipment] }), ok(200, {})], calls).cancel("job-1", "42")).kind).toBe("cancelled");
+    expect(calls[1].url).toBe("https://panel.sendcloud.sc/api/v3/shipments/shp-1/cancel");
+  });
+});

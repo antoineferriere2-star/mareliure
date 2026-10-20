@@ -61,10 +61,12 @@ interface ParcelV2Json {
   id?: number | string; tracking_number?: string | null; carrier?: { code?: string } | null;
   status?: { id?: number | string; message?: string } | null;
   label?: { label_printer?: string | null; normal_printer?: string[] | null } | null;
+  external_reference?: string | null; order_number?: string | null;
 }
 
 interface ShipmentJson {
   id?: string;
+  external_reference_id?: string | null;
   carrier?: { code?: string } | null;
   label_file?: string | null;
   parcels?: { id?: number | string; tracking_number?: string | null; status?: { code?: string; message?: string } | null;
@@ -108,6 +110,7 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
     const link = parcel.documents?.find((d) => d.type === "label")?.link;
     return {
       provider: "sendcloud", labelId: String(parcel.id), carrier: shipment.carrier.code, tracking: parcel.tracking_number,
+      reference: shipment.external_reference_id ?? null,
       chargedTtcCents: null, // le montant facturé vient de la facture Sendcloud, pas de la création
       status: parcel.status?.code ? { code: parcel.status.code, message: parcel.status.message ?? "" } : null,
       pdf: async () => {
@@ -127,6 +130,7 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
       provider: "sendcloud", labelId: String(parcel.id), carrier: parcel.carrier.code, tracking: parcel.tracking_number,
       chargedTtcCents: null,
       status: parcel.status?.id !== undefined ? { code: String(parcel.status.id), message: parcel.status.message ?? "" } : null,
+      reference: parcel.external_reference || parcel.order_number || null,
       pdf: async () => {
         if (!link || !link.startsWith("https://")) throw new Error("label_link_missing");
         const response = await fetchImpl(link, { headers: { Authorization: auth } });
@@ -202,13 +206,32 @@ export function createSendcloudProvider(options: { publicKey: string; secretKey:
     },
     findByReference: find,
     findByLabelId: readParcel,
-    async cancel(reference): Promise<CancelOutcome> {
+    async cancel(reference, labelId): Promise<CancelOutcome> {
       let shipmentId: string | undefined;
       try {
         const response = await call(`/shipments?external_reference_id=${encodeURIComponent(reference)}`);
         if (!response.ok) return { kind: "ambiguous", code: `lookup_${response.status}` };
-        shipmentId = ((await response.json()) as { data?: ShipmentJson[] }).data?.[0]?.id;
+        const found = ((await response.json()) as { data?: ShipmentJson[] }).data?.[0];
+        shipmentId = found?.id;
+        // Le colis trouvé par référence doit être celui rattaché à la réservation : une identité
+        // contradictoire n’est jamais annulée (revue Codex du 19/10, P1).
+        // Exactement un colis, d’identité lisible et égale au colis rattaché : sinon rien n’est annulé.
+        const parcels = found?.parcels ?? [];
+        if (shipmentId && labelId && (parcels.length !== 1 || parcels[0]?.id === undefined || parcels[0]?.id === null
+          || String(parcels[0].id) !== String(labelId)))
+          return { kind: "refused", code: "parcel_identity_mismatch" };
       } catch { return { kind: "ambiguous", code: "lookup_failed" }; }
+      // Colis adopté ou retour : introuvable par référence, annulé par son identifiant (API v2,
+      // revue Codex du 16/10, P1-C). 202 = en file (14 jours), 400/410 = refusé, jamais un remboursement présumé.
+      if (!shipmentId && labelId) {
+        try {
+          const response = await call(`${BASE_V2}/parcels/${encodeURIComponent(labelId)}/cancel`, { method: "POST" });
+          if (response.status === 200) return { kind: "cancelled", reference: labelId };
+          if (response.status === 202) return { kind: "queued", reference: labelId };
+          if ([400, 404, 410].includes(response.status)) return { kind: "refused", code: `parcel_http_${response.status}` };
+          return { kind: "ambiguous", code: `parcel_http_${response.status}` };
+        } catch { return { kind: "ambiguous", code: "network_or_timeout" }; }
+      }
       if (!shipmentId) return { kind: "refused", code: "shipment_not_found" };
       try {
         const response = await call(`/shipments/${encodeURIComponent(shipmentId)}/cancel`, { method: "POST" });

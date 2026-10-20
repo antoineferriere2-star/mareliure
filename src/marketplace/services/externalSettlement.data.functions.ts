@@ -38,14 +38,14 @@ async function scope(userId: string) {
   return { sb, binderId: await requireWorkshopAccess(sb, userId) };
 }
 export const getOwnContract = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data)).handler(async ({ context, data }) => {
+  .validator((data: unknown) => id.parse(data)).handler(async ({ context, data }) => {
     const { sb, binderId } = await scope(context.userId);
     const result = await sb.rpc("marketplace_own_contract", { p_quote: data.id, p_binder: binderId, p_actor: context.userId });
     if (result.error) fail(409, "Conditions du règlement indisponibles.");
     return result.data as unknown as OwnContract;
   });
 export const acceptOwnQuote = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.extend({ evidence, revision: z.string().regex(/^[a-f0-9]{32}$/) }).strict().parse(data)).handler(async ({ context, data }) => {
+  .validator((data: unknown) => id.extend({ evidence, revision: z.string().regex(/^[a-f0-9]{32}$/) }).strict().parse(data)).handler(async ({ context, data }) => {
     const { sb, binderId } = await scope(context.userId);
     const result = await sb.rpc("marketplace_accept_own_quote", { p_quote: data.id, p_binder: binderId, p_actor: context.userId, p_evidence: data.evidence, p_revision: data.revision });
     if (result.error) fail(409, "Accord non enregistré. Vérifiez le devis envoyé, son origine et la référence de l'accord client.");
@@ -53,7 +53,7 @@ export const acceptOwnQuote = createServerFn({ method: "POST" }).middleware([req
   });
 /** État de l'identité vendeur d'un accord déjà enregistré (audit #53, C1). */
 export const getAgreementIdentity = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data)).handler(async ({ context, data }) => {
+  .validator((data: unknown) => id.parse(data)).handler(async ({ context, data }) => {
     const { sb, binderId } = await scope(context.userId);
     const result = await sb.rpc("marketplace_own_agreement_identity", { p_quote: data.id, p_binder: binderId, p_actor: context.userId });
     if (result.error) fail(409, "Identité du vendeur indisponible.");
@@ -64,21 +64,21 @@ export const getAgreementIdentity = createServerFn({ method: "GET" }).middleware
  * L'accord reste intact ; un changement de vendeur exige un nouveau devis et un nouvel accord.
  */
 export const completeAgreementIdentity = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.extend({ attestation: evidence }).strict().parse(data)).handler(async ({ context, data }) => {
+  .validator((data: unknown) => id.extend({ attestation: evidence }).strict().parse(data)).handler(async ({ context, data }) => {
     const { sb, binderId } = await scope(context.userId);
     const result = await sb.rpc("marketplace_complete_own_agreement_identity", { p_quote: data.id, p_binder: binderId, p_actor: context.userId, p_attestation: data.attestation });
     if (result.error) fail(409, "Attestation non enregistrée : l'identité du vendeur a changé ou le profil n'a pas d'identifiant d'entreprise.");
     return { ok: true };
   });
 export const getExternalSettlements = createServerFn({ method: "GET" }).middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => id.parse(data)).handler(async ({ context, data }) => {
+  .validator((data: unknown) => id.parse(data)).handler(async ({ context, data }) => {
     const { sb, binderId } = await scope(context.userId);
     const result = await sb.rpc("marketplace_external_settlement_state", { p_invoice: data.id, p_binder: binderId, p_actor: context.userId });
     if (result.error) fail(409, "Suivi des règlements indisponible.");
     return result.data as unknown as SettlementState;
   });
 export const recordExternalSettlement = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid(), invoiceId: z.string().uuid(),
+  .validator((data: unknown) => z.object({ id: z.string().uuid(), invoiceId: z.string().uuid(),
     kind: z.enum(["receipt", "refund", "dispute_open", "dispute_close"]), amountCents: z.number().int().min(0).max(2147483647), evidence,
   }).strict().parse(data)).handler(async ({ context, data }) => {
     const { sb, binderId } = await scope(context.userId);

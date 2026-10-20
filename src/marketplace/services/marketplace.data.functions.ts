@@ -290,7 +290,7 @@ export const listMarketplaceCases = createServerFn({ method: "GET" })
 
 export const getMarketplaceCase = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -408,7 +408,7 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
 
 export const clearCaseManualReview = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -430,7 +430,7 @@ export const clearCaseManualReview = createServerFn({ method: "POST" })
  */
 export const closeCaseWithoutFollowUp = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.extend({ reason: z.string().trim().min(5).max(300) }).parse(data))
+  .validator((data: unknown) => uuid.extend({ reason: z.string().trim().min(5).max(300) }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const outcome = await closeCase((await admin()) as unknown as SupabaseClient, context.userId, data.caseId, data.reason);
@@ -440,7 +440,7 @@ export const closeCaseWithoutFollowUp = createServerFn({ method: "POST" })
 
 export const generateMarketplacePricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -581,7 +581,7 @@ const managedPriceInput = z.object({
 
 export const saveMarketplacePricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => managedPriceInput.parse(data))
+  .validator((data: unknown) => managedPriceInput.parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const validation = validateManagedPrice(data.customerPriceCents, data.binderPayoutCents, PRICING_POLICY, data.derogationReason);
@@ -672,12 +672,12 @@ export async function validateMarketplacePricingCore(context: AdminCallContext, 
 
 export const validateMarketplacePricing = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => managedPriceInput.parse(data))
+  .validator((data: unknown) => managedPriceInput.parse(data))
   .handler(async ({ context, data }) => validateMarketplacePricingCore(context, data));
 
 export const sendCaseToBinders = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         caseId: z.string().uuid(),
@@ -852,7 +852,7 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
 
 export const selectBinderOffer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ caseId: z.string().uuid(), binderId: z.string().uuid() }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -886,7 +886,7 @@ export const listMarketplaceBinders = createServerFn({ method: "GET" })
 
 export const setBinderStatus = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         binderId: z.string().uuid(),
@@ -914,7 +914,7 @@ export const setBinderStatus = createServerFn({ method: "POST" })
  */
 export const createBinderFromApplication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         applicationId: z.string().uuid(),
@@ -976,7 +976,7 @@ export const createBinderFromApplication = createServerFn({ method: "POST" })
  */
 export const setBinderReferralSlug = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ binderId: z.string().uuid(), slug: z.string().min(3).max(64) }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -1005,7 +1005,7 @@ export const setBinderReferralSlug = createServerFn({ method: "POST" })
  */
 export const listBinderCommercialTerms = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ binderId: z.string().uuid() }).parse(data))
+  .validator((data: unknown) => z.object({ binderId: z.string().uuid() }).parse(data))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const sb = await admin();
@@ -1030,7 +1030,7 @@ export const listBinderCommercialTerms = createServerFn({ method: "GET" })
  */
 export const setBinderCommercialTerm = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         binderId: z.string().uuid(),
@@ -1073,7 +1073,7 @@ export const setBinderCommercialTerm = createServerFn({ method: "POST" })
  */
 export const inviteBinderMember = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ binderId: z.string().uuid(), email: z.string().trim().email() }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -1124,7 +1124,7 @@ export const inviteBinderMember = createServerFn({ method: "POST" })
  * which tokens exist.
  */
 export const getBinderInvitationEmail = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) => z.object({ token: z.string().min(1).max(200) }).parse(data))
+  .validator((data: unknown) => z.object({ token: z.string().min(1).max(200) }).parse(data))
   .handler(async ({ data }) => {
     const sb = await admin();
     const email = await resolvePendingInvitationEmail(sb, data.token);
@@ -1141,7 +1141,7 @@ export const getBinderInvitationEmail = createServerFn({ method: "GET" })
  */
 export const acceptBinderInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ token: z.string().min(1).max(200) }).parse(data))
+  .validator((data: unknown) => z.object({ token: z.string().min(1).max(200) }).parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     // The declared address on the signed-in account, not necessarily
@@ -1183,7 +1183,7 @@ export const getMyPendingBinderInvitations = createServerFn({ method: "GET" })
 
 export const activateMyBinderInvitation = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ invitationId: z.string().uuid() }).parse(data),
   )
   .handler(async ({ context, data }) => {
@@ -1202,7 +1202,7 @@ export const activateMyBinderInvitation = createServerFn({ method: "POST" })
 /** Open a personal workshop workspace; admin approval is still required for leads. */
 export const createMyBinderWorkspace = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({
+  .validator((data: unknown) => z.object({
     displayName: z.string().trim().min(2).max(200),
     workshopName: z.string().trim().min(2).max(200),
     city: z.string().trim().max(100).optional(),
@@ -1340,7 +1340,7 @@ export const listMyBinderCases = createServerFn({ method: "GET" })
 
 export const getBinderCase = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const binder = await findBinderForUser(sb, context.userId);
@@ -1393,7 +1393,7 @@ export const getBinderCase = createServerFn({ method: "GET" })
 
 export const respondToBinderOffer = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         caseId: z.string().uuid(),
@@ -1543,7 +1543,7 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
       const priceValidated = !ownClient && row.pricing_status === "validated";
       const [commerce, thumbnailUrl] = await Promise.all([
         ownClient ? Promise.resolve(NO_OPPE_COMMERCE) : loadCustomerCommerce(sb, row.id, { priceValidated, customerPriceCents: row.customer_price_cents, caseStatus: row.status }),
-        caseContext ? signFirstCasePhoto(sb, caseContext.answers) : Promise.resolve(null),
+        caseContext ? signFirstCasePhoto(sb, caseContext.answers, caseContext.sessionId) : Promise.resolve(null),
       ]);
       const validatedPriceCents = priceValidated ? row.customer_price_cents : null;
       const amountCents = commerce.proposal?.totalTtcCents ?? validatedPriceCents;
@@ -1575,7 +1575,7 @@ export const listMyCustomerCases = createServerFn({ method: "GET" })
 
 export const getMyCustomerCase = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uuid.parse(data))
+  .validator((data: unknown) => uuid.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const caseContext = await loadCaseContext(sb, data.caseId);
@@ -1714,7 +1714,7 @@ export const getMyCustomerCase = createServerFn({ method: "GET" })
  */
 export const claimMarketplaceCase = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     // Accepts the whole link people paste out of their e-mail, not just the
     // bare token. Bounded so pasting an entire message is rejected cheaply.
     z.object({ link: z.string().min(1).max(2000) }).parse(data),
