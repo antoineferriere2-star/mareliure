@@ -19,7 +19,7 @@ const input = z.object({ caseId: z.string().uuid() }).strict();
  */
 export const ensureMyCaseWork = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => input.parse(data))
+  .validator((data: unknown) => input.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const binderId = await requireLeadApprovedBinderId(sb, context.userId);

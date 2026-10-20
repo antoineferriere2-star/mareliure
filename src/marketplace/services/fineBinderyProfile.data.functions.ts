@@ -171,7 +171,7 @@ export const getMyFineBinderyProfile = createServerFn({ method: "GET" })
 
 export const saveMyFineBinderyProfile = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => profileInput.parse(data))
+  .validator((data: unknown) => profileInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const binder = await myBinder(sb, context.userId);
@@ -214,7 +214,7 @@ export const saveMyFineBinderyProfile = createServerFn({ method: "POST" })
 
 export const setMyFineBinderyProfilePublication = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ publish: z.boolean() }).strict().parse(data))
+  .validator((data: unknown) => z.object({ publish: z.boolean() }).strict().parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     let binder = await myBinder(sb, context.userId);
@@ -251,7 +251,7 @@ const uploadInput = z.object({
 
 export const uploadMyFineBinderyProfileImage = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => uploadInput.parse(data))
+  .validator((data: unknown) => uploadInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const binder = await myBinder(sb, context.userId);
@@ -274,7 +274,7 @@ export const uploadMyFineBinderyProfileImage = createServerFn({ method: "POST" }
 
 export const createMyFineBinderyPortfolioItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({
+  .validator((data: unknown) => z.object({
     title: z.string().trim().min(2).max(180),
     sourceWorkId: z.string().uuid().nullable(),
   }).strict().parse(data))
@@ -300,7 +300,7 @@ export const createMyFineBinderyPortfolioItem = createServerFn({ method: "POST" 
 
 export const saveMyFineBinderyPortfolioItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => portfolioInput.parse(data))
+  .validator((data: unknown) => portfolioInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const binder = await myBinder(sb, context.userId);
@@ -333,7 +333,7 @@ const portfolioPhotoInput = z.object({
 
 export const uploadMyFineBinderyPortfolioPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => portfolioPhotoInput.parse(data))
+  .validator((data: unknown) => portfolioPhotoInput.parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const binder = await myBinder(sb, context.userId);
@@ -362,7 +362,7 @@ export const uploadMyFineBinderyPortfolioPhoto = createServerFn({ method: "POST"
 
 export const deleteMyFineBinderyPortfolioItem = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ id: z.string().uuid() }).strict().parse(data))
+  .validator((data: unknown) => z.object({ id: z.string().uuid() }).strict().parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const binder = await myBinder(sb, context.userId);
@@ -408,7 +408,7 @@ export const listPublicFineBinderyProfiles = createServerFn({ method: "GET" })
   });
 
 export const getPublicFineBinderyProfile = createServerFn({ method: "GET" })
-  .inputValidator((data: unknown) => z.object({ slug: z.string().min(3).max(64) }).strict().parse(data))
+  .validator((data: unknown) => z.object({ slug: z.string().min(3).max(64) }).strict().parse(data))
   .handler(async ({ data }) => {
     const sb = await admin();
     const { data: binder, error } = await sb.from("marketplace_binders").select(publicProfileColumns)

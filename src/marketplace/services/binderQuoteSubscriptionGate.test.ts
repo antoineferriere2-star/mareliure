@@ -2,7 +2,7 @@ import { beforeEach, expect, it, vi } from "vitest";
 
 const state = vi.hoisted(() => ({ sb: {}, create: vi.fn(), rights: vi.fn(), binder: vi.fn() }));
 vi.mock("@tanstack/react-start", () => ({ createServerFn: () => {
-  const builder = { middleware: () => builder, inputValidator: () => builder,
+  const builder = { middleware: () => builder, validator: () => builder,
     handler: (fn: unknown) => fn };
   return builder;
 } }));

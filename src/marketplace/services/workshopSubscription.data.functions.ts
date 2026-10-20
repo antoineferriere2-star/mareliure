@@ -56,7 +56,7 @@ export const getMyWorkshopSubscription = createServerFn({ method: "GET" })
 
 export const getMyWorkshopFeeDocumentPdf = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ documentId: z.string().uuid() }).strict().parse(data))
+  .validator((data: unknown) => z.object({ documentId: z.string().uuid() }).strict().parse(data))
   .handler(async ({ context, data }) => {
     const sb = await admin();
     const binderId = await requireWorkshopAccess(sb, context.userId);
@@ -74,7 +74,7 @@ export const getMyWorkshopFeeDocumentPdf = createServerFn({ method: "GET" })
 
 export const createMyWorkshopCheckout = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({ accepted: z.literal(true) })
       .strict()

@@ -55,7 +55,7 @@ export const getMyPricingCatalog = createServerFn({ method: "GET" })
 
 export const saveMyPriceOverride = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         pricingKey,
@@ -70,7 +70,7 @@ export const saveMyPriceOverride = createServerFn({ method: "POST" })
 
 export const setMyBasePriceFavorite = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z.object({ pricingKey, isFavorite: z.boolean() }).strict().parse(data),
   )
   .handler(({ context, data }) =>
@@ -79,7 +79,7 @@ export const setMyBasePriceFavorite = createServerFn({ method: "POST" })
 
 export const bulkAdjustMyPrices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) =>
+  .validator((data: unknown) =>
     z
       .object({
         pricingKeys: keys,
@@ -95,7 +95,7 @@ export const bulkAdjustMyPrices = createServerFn({ method: "POST" })
 
 export const resetMyPrices = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((data: unknown) => z.object({ pricingKeys: keys }).strict().parse(data))
+  .validator((data: unknown) => z.object({ pricingKeys: keys }).strict().parse(data))
   .handler(({ context, data }) =>
     run(context.userId, (binderId, sb) => resetBinderPrices(sb, binderId, data.pricingKeys)),
   );

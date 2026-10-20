@@ -18,7 +18,7 @@ const bucket = "work-logistics-private";
 const workInput = z.object({ workId: z.string().uuid() }).strict();
 export const getWorkTransportOrders = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value: unknown) => workInput.parse(value))
+  .validator((value: unknown) => workInput.parse(value))
   .handler(async ({ context, data }) => {
     const { sb, binder } = await access(context.userId);
     const work = await sb
@@ -76,7 +76,7 @@ async function journal(actor: string, work: string, action: string, data: Json =
 }
 export const readWorkLogistics = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value: unknown) => workInput.parse(value))
+  .validator((value: unknown) => workInput.parse(value))
   .handler(async ({ context, data }) => {
     const { sb, value } = await journal(context.userId, data.workId, "read");
     if (value.events.length) {
@@ -101,7 +101,7 @@ export const readWorkLogistics = createServerFn({ method: "GET" })
 
 export const getWorkshopTransportOptions = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value: unknown) => workshopTransportOptionsInput.parse(value))
+  .validator((value: unknown) => workshopTransportOptionsInput.parse(value))
   .handler(async ({ context, data }) => {
     const { sb, binder } = await access(context.userId);
     const { workshopTransportOptions } = await import("./workshopTransport.server");
@@ -111,7 +111,7 @@ export const getWorkshopTransportOptions = createServerFn({ method: "POST" })
 /** Existing provider label only: this uploads a private PDF, it never purchases transport. */
 export const uploadWorkTransportLabel = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value: unknown) => workInput.extend({ eventId: z.string().uuid(), base64: z.string().min(16).max(6990508) }).strict().parse(value))
+  .validator((value: unknown) => workInput.extend({ eventId: z.string().uuid(), base64: z.string().min(16).max(6990508) }).strict().parse(value))
   .handler(async ({ context, data }) => {
     const { sb, binder, value } = await journal(context.userId, data.workId, "read");
     const event = value.events.find(e => e.id === data.eventId);
@@ -134,7 +134,7 @@ export const uploadWorkTransportLabel = createServerFn({ method: "POST" })
   });
 export const appendWorkLogistics = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value: unknown) => logisticsAppend.parse(value))
+  .validator((value: unknown) => logisticsAppend.parse(value))
   .handler(async ({ context, data }) => {
     await journal(context.userId, data.workId, "append", {
       id: data.id,
@@ -146,7 +146,7 @@ export const appendWorkLogistics = createServerFn({ method: "POST" })
   });
 export const uploadLogisticsPhoto = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .inputValidator((value: unknown) =>
+  .validator((value: unknown) =>
     workInput
       .extend({ eventId: z.string().uuid(), base64: z.string().min(16).max(6990508) })
       .strict()
