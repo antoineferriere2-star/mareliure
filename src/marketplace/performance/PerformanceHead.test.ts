@@ -62,6 +62,8 @@ describe("public resource priorities without changing document semantics", () =>
   for (const pathname of ["/admin", "/espace-client", "/en/fine-binding", "/une-autre-page"])
     it("keeps native head handling for " + pathname, () => {
       fixture.pathname = pathname;
-      expect(renderToStaticMarkup(createElement(PerformanceHead))).toBe('<meta name="native-head"/>');
+      expect(renderToStaticMarkup(createElement(PerformanceHead))).toBe(
+        '<meta name="native-head"/>',
+      );
     });
 });

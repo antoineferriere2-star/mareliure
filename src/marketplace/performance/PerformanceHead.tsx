@@ -1,22 +1,12 @@
 import { Asset, HeadContent, useRouter, useRouterState, useTags } from "@tanstack/react-router";
 import { isMaReliure } from "@/brand";
 
-const MOBILE_PERFORMANCE_PAGES = new Set([
-  "/",
-  "/tarifs",
-  "/reparation-de-livres",
-  "/partenaires-relieurs",
-  "/en",
-]);
+import { isPublicPerformancePage } from "./publicPages";
 
 /** Laisse aux ressources du premier écran leur place avant les modules d'hydratation. */
 export function PerformanceHead() {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
-  return isMaReliure && MOBILE_PERFORMANCE_PAGES.has(pathname) ? (
-    <PublicAssetHead />
-  ) : (
-    <HeadContent />
-  );
+  return isMaReliure && isPublicPerformancePage(pathname) ? <PublicAssetHead /> : <HeadContent />;
 }
 
 function PublicAssetHead() {
