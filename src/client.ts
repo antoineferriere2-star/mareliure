@@ -4,7 +4,7 @@ import { startHydration } from "./marketplace/performance/firstPaint";
 
 startHydration(
   () => {
-    void import("./hydrate-client");
+    void import("./hydrate-client").then(({ hydrateClient }) => hydrateClient());
   },
   isMaReliure &&
     isPublicPerformancePage(window.location.pathname) &&
