@@ -1,0 +1,21 @@
+name: Independent review 149 probes
+on:
+  pull_request:
+    paths:
+      - "docs/review-149-20261020/**"
+      - "src/marketplace/shipping/**"
+      - "src/marketplace/security/**"
+      - "supabase/migrations/**"
+      - ".github/workflows/review-149-20261020.yml"
+  workflow_dispatch:
+jobs:
+  regressions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm test -- --config docs/review-149-20261020/vitest.config.ts
