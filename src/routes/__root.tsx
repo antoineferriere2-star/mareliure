@@ -5,12 +5,13 @@ import {
   createRootRouteWithContext,
   useRouter,
   useRouterState,
-  HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { PerformanceHead } from "@/marketplace/performance/PerformanceHead";
+import { PHOTOS } from "@/marketplace/pages/landing/photos";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { markHydrated } from "../lib/hydration";
 import {
@@ -173,7 +174,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     marketplaceBrand: isMaReliure ? await getRequestMarketplaceBrand() : null,
     fineBinderyLocale: isMaReliure ? await getRequestFineBinderyLocale() : null,
   }),
-  head: ({ loaderData }) => {
+  head: ({ loaderData, matches }) => {
     const BRAND = rootBrand(loaderData?.marketplaceBrand ?? null, loaderData?.fineBinderyLocale ?? null);
     return {
       meta: [
@@ -224,10 +225,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             ]),
       ],
       links: [
-        {
-          rel: "stylesheet",
-          href: appCss,
-        },
+        { rel: "stylesheet", href: appCss },
+        // La planche du cabinet Fine Bindery est le LCP mobile ; les autres pages
+        // gardent leur chargement habituel. Même srcset/sizes que l’image existante.
+        ...(loaderData?.marketplaceBrand === "FINE_BINDERY" && matches.some((match) => String(match.routeId) === "/$locale/")
+          ? [{ rel: "preload", as: "image", imageSrcSet: PHOTOS.ferriereBaudelaire.srcSet,
+              imageSizes: "(min-width: 1024px) 480px, 100vw", fetchPriority: "high" as const }]
+          : []),
         { rel: "icon", href: BRAND.icon, type: "image/svg+xml" },
         { rel: "shortcut icon", href: BRAND.icon, type: "image/svg+xml" },
       ],
@@ -248,7 +252,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang={BRAND.lang} className={BRAND.themeClass}>
       <head>
-        <HeadContent />
+        <PerformanceHead />
       </head>
       <body>
         {children}
