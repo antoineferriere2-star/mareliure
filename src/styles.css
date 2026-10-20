@@ -331,6 +331,17 @@
   font-display: swap;
 }
 
+/* Graisse normale extraite de la variable : mêmes caractères et axe optique,
+   sans embarquer les autres graisses sur les pages éditoriales.
+   La face variable ci-dessus reste disponible pour toute autre graisse. */
+@font-face {
+  font-family: "Fraunces";
+  src: url("/fonts/fraunces-latin-regular-opsz.woff2") format("woff2-variations");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ===========================================================================
    Ma Reliure — le système
    ===========================================================================

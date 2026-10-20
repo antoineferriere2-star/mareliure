@@ -278,3 +278,7 @@ aucune photographie de client ou d'atelier. Autorisation : demande explicite
 de joindre les captures mobile et bureau à la PR de recette. Usage : preuves
 documentaires de test uniquement, aucune publication dans le site commercial.
 La minuscule image de dépôt est une fixture PNG 1 pixel définie dans le test.
+
+### Police éditoriale, optimisation du 20 octobre 2026
+
+`public/fonts/fraunces-latin-regular-opsz.woff2` est une instance partielle (wght=400, opsz conservé) de la variable déjà versionnée. Les autres graisses utilisent toujours la variable originale. Licence et attribution : `public/fonts/OFL-Fraunces.txt` (SIL OFL 1.1). Génération : `scripts/buildEditorialFont.py`, FontTools 4.67.0 et Brotli 1.2.0 ; aucune dépendance ajoutée au site.
