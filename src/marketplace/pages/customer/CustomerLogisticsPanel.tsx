@@ -3,7 +3,7 @@
  * reconfirmation de l'adresse de retour. Rien n'est décidé ici : le serveur renvoie des faits
  * arbitrés (verrou, éligibilité, prochaine action) et refuse ce que la base refuse.
  */
-import { useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
@@ -162,6 +162,8 @@ function PlanForm({ view, caseId, copy, onDone, onCancel }: {
   const [mode, setMode] = useState<LogisticsMode>(plan?.mode ?? (roundTripOffered ? "organized_round_trip" : "hand_delivery"));
   const [contact, setContact] = useState<AddressDraft>(toDraft(plan?.contact));
   const [phone, setPhone] = useState(plan?.contact?.phone ?? "");
+  const phoneRef = useRef<HTMLInputElement>(null);
+  const phoneErrorId = useId();
   const [same, setSame] = useState(plan?.returnSameAddress ?? true);
   const [back, setBack] = useState<AddressDraft>(toDraft(plan?.returnAddress));
   const [parcel, setParcel] = useState({
@@ -197,6 +199,12 @@ function PlanForm({ view, caseId, copy, onDone, onCancel }: {
     onSuccess: async () => { await cache.invalidateQueries({ queryKey: ["marketplace", "customer", "case", caseId] }); onDone(); },
   });
 
+  const phoneInvalid = mode === "organized_round_trip" && mutation.isError
+    && mutation.error instanceof Error && mutation.error.message === "invalid_phone" && !isFrenchPhone(phone);
+  useEffect(() => {
+    if (phoneInvalid) phoneRef.current?.focus();
+  }, [phoneInvalid, mutation.error]);
+
   const addressFields = (a: AddressDraft, set: (next: AddressDraft) => void, prefix: string) => (
     <div className="grid gap-3 sm:grid-cols-2">
       <Field label={copy.name} className="sm:col-span-2"><input className={FIELD} autoComplete={`${prefix} name`} maxLength={120} value={a.name} onChange={(e) => set({ ...a, name: e.target.value })} /></Field>
@@ -231,7 +239,7 @@ function PlanForm({ view, caseId, copy, onDone, onCancel }: {
           <fieldset className="space-y-3">
             <legend className="font-medium text-[#241a12]">{copy.contactLegend}</legend>
             {addressFields(contact, setContact, "shipping")}
-            <Field label={copy.phone}><input className={FIELD} type="tel" autoComplete="tel" maxLength={24} value={phone} onChange={(e) => setPhone(e.target.value)} /></Field>
+            <Field label={copy.phone}><input ref={phoneRef} className={FIELD} type="tel" autoComplete="tel" maxLength={24} value={phone} aria-invalid={phoneInvalid || undefined} aria-describedby={phoneInvalid ? phoneErrorId : undefined} onChange={(e) => setPhone(e.target.value)} /></Field>
             <label className="flex items-center gap-2 text-sm"><input type="checkbox" className="h-4 w-4" checked={same} onChange={(e) => setSame(e.target.checked)} />{copy.returnSame}</label>
           </fieldset>
           {!same && (
@@ -276,7 +284,7 @@ function PlanForm({ view, caseId, copy, onDone, onCancel }: {
         </label>
       </div>
 
-      {mutation.isError && <p role="alert" className="text-sm text-[#8a2b1b]">{errorText(mutation.error, copy)}</p>}
+      {mutation.isError && <p id={phoneErrorId} role="alert" className="text-sm text-[#8a2b1b]">{errorText(mutation.error, copy)}</p>}
       <div className="flex flex-wrap gap-3">
         <Button type="submit" disabled={mutation.isPending || !accepted}>{mutation.isPending ? copy.saving : copy.save}</Button>
         {onCancel && <Button type="button" variant="outline" onClick={onCancel}>{copy.cancel}</Button>}
