@@ -81,7 +81,8 @@ export default defineConfig({
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
-    server: { entry: "server" },
+    // CSS de route intégré par TanStack au HTML, avec son placeholder d’hydratation natif.
+    server: { entry: "server", build: { inlineCss: true } },
     // Co-located *.test.ts files under src/routes/** are not routes.
     router: {
       routeFileIgnorePattern: "\\.test\\.ts$",

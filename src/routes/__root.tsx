@@ -9,7 +9,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import appCss from "../styles.css?url";
+import "../styles.css";
 import { PerformanceHead } from "@/marketplace/performance/PerformanceHead";
 import { PHOTOS } from "@/marketplace/pages/landing/photos";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -225,12 +225,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             ]),
       ],
       links: [
-        { rel: "stylesheet", href: appCss },
-        // La planche du cabinet Fine Bindery est le LCP mobile ; les autres pages
-        // gardent leur chargement habituel. Même srcset/sizes que l’image existante.
-        ...(loaderData?.marketplaceBrand === "FINE_BINDERY" && matches.some((match) => String(match.routeId) === "/$locale/")
+        // Les planches des deux accueils peuvent devenir le LCP mobile.
+        // Chaque préchargement reprend exactement le srcset/sizes de son image.
+        ...(isMaReliure && matches.some((match) => ["/", "/$locale/"].includes(match.routeId))
           ? [{ rel: "preload", as: "image", imageSrcSet: PHOTOS.ferriereBaudelaire.srcSet,
-              imageSizes: "(min-width: 1024px) 480px, 100vw", fetchPriority: "high" as const }]
+              imageSizes: loaderData?.marketplaceBrand === "FINE_BINDERY" ? "(min-width: 1024px) 480px, 100vw" : "(min-width: 1024px) 560px, 100vw", fetchPriority: "high" as const }]
           : []),
         { rel: "icon", href: BRAND.icon, type: "image/svg+xml" },
         { rel: "shortcut icon", href: BRAND.icon, type: "image/svg+xml" },
