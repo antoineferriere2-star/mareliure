@@ -3686,6 +3686,12 @@ Seul fichier produit changé : `CustomerLogisticsPanel.tsx`, pour relier l'erreu
 
 Aucun fichier réservé (crafts, brandPages, landing, routes publiques) modifié, aucune migration. Audits publics sans session et sans action de formulaire ; interception avant envoi des requêtes autres que GET/HEAD/OPTIONS et de track-view. Appels externes/inattendus des fixtures locales : zéro. Aucun compte, e-mail, achat Sendcloud, paiement Stripe, fusion de PR ou déploiement. Identité du Worker et historique SQL annoncés par le brief non réinterrogés. Serveur Vite arrêté après les mesures locales.
 
+## Latest handoff
+
+Codex — **20 octobre 2026, soir**, brief n° 7, chantier 4. Branche `fix/discipline-translations-20261020` depuis `origin/main abfe72b` (#155/#153 incluses). Relecture des quatre disciplines DE/IT/ES, 25 chaînes ajustées (un titre, 12 descriptions, 12 introductions), bornes et registre conservés. Rapport `docs/TRANSLATIONS_155_20261020.md` : termes du métier, traitement des calques et sources terminologiques ; aucune relecture humaine native prétendue. Tests existants `disciplines.test.ts` **6/6**, typecheck local réussi. Aucun prix, délai, avis ou service ajouté. Seul fichier produit modifié : `src/marketplace/pages/fineBindery/disciplines.ts`, ouvert explicitement pour ce chantier ; EN/FR et autres contenus intacts. Aucune migration, écriture de production, action fournisseur, compte, e-mail, achat, paiement, fusion de PR ou déploiement.
+
+PR de corrections : [#157](https://github.com/antoineferriere2-star/mareliure/pull/157). CI du code 90aec6c : quality et mocked-customer-journey réussis ; aucun fichier produit changé depuis ces contrôles.
+
 
 ## Latest handoff
 
