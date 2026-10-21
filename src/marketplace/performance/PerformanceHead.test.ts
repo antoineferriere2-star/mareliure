@@ -63,7 +63,7 @@ describe("public resource priorities without changing document semantics", () =>
     expect(html).toContain('crossorigin="anonymous"');
     expect(fixture.tags[1].attrs.fetchPriority).toBeUndefined();
   });
-  for (const pathname of ["/admin", "/espace-client", "/en/fine-binding", "/une-autre-page"])
+  for (const pathname of ["/admin", "/espace-client", "/en/fine-binding", "/m/reliure-marketplace-token-000001", "/en/project", "/une-autre-page"])
     it("keeps native head handling for " + pathname, () => {
       fixture.pathname = pathname;
       expect(renderToStaticMarkup(createElement(PerformanceHead))).toBe(
