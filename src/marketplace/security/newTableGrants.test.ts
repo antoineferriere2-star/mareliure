@@ -115,4 +115,34 @@ describe("droits explicites des nouvelles tables", () => {
     expect(undeclaredTables("DO $$ BEGIN EXECUTE U&'\\0043REATE TABLE public.build_notes(id int)'; END $$;")).toEqual([DYNAMIC]);
     expect(undeclaredTables("SELECT E'aucune \\x63r\\u00e9ation';")).toEqual([]);
   });
+  // Contre-revue de #160 (#152, troisième passage) : variantes de docs/review-149-20261020/probes160.json.
+  it("tout EXECUTE dynamique est renvoyé à une relecture, quel que soit son texte apparent", () => {
+    for (const sql of [
+      "DO $$ BEGIN EXECUTE chr(67)||'REATE TA'||'BLE public.notes(id int)'; END $$;",
+      "DO $$ BEGIN EXECUTE replace('CR#ATE TABL# public.notes(id int)', '#','E'); END $$;",
+      "DO $$ BEGIN EXECUTE convert_from(decode('Q1JFQVRFIFRBQkxFIHB1YmxpYy5ub3RlcyhpZCBpbnQp','base64'),'UTF8'); END $$;",
+      "DO $$ BEGIN EXECUTE U&'!0043REATE TABLE public.notes(id int)' UESCAPE '!'; END $$;",
+      "DO 'BEGIN EXECUTE E''\\x43REATE TABLE public.notes(id int)''; END';",
+      "DO $$ BEGIN EXECUTE 'CREATE/**/TABLE public.notes(id int)'; END $$;",
+    ]) expect(undeclaredTables(sql), sql).toEqual([DYNAMIC]);
+    expect(undeclaredTables("-- acl: dynamic-reviewed\nDO $$ BEGIN EXECUTE 'select 1'; END $$;")).toEqual([]);
+  });
+  it("SELECT … INTO détecté derrière EXPLAIN ANALYZE ou entre parenthèses", () => {
+    expect(undeclaredTables("EXPLAIN ANALYZE SELECT 1 AS id INTO public.notes;")).toEqual(["notes"]);
+    expect(undeclaredTables("(SELECT 1 AS id INTO public.notes);")).toEqual(["notes"]);
+    expect(undeclaredTables("CREATE VIEW public.v AS SELECT 1 AS id;")).toEqual([]);
+    expect(undeclaredTables("MERGE INTO public.t USING (SELECT 1 AS id) s ON true WHEN MATCHED THEN DO NOTHING;")).toEqual([]);
+  });
+  it("un GRANT non qualifié ne vaut pas déclaration si search_path change ou si une table temporaire homonyme existe", () => {
+    expect(undeclaredTables("CREATE TABLE audit.notes(id int);CREATE TABLE public.notes(id int);SET LOCAL search_path=audit,public;GRANT SELECT ON notes TO authenticated;")).toEqual(["notes"]);
+    expect(undeclaredTables("CREATE TEMP TABLE notes(id int);CREATE TABLE public.notes(id int);GRANT SELECT ON notes TO authenticated;")).toEqual(["notes"]);
+    expect(undeclaredTables("CREATE TABLE public.notes(id int);GRANT SELECT ON notes TO authenticated;")).toEqual([]);
+    expect(undeclaredTables("CREATE TABLE public.notes(id int);SET search_path=audit;GRANT SELECT ON public.notes TO authenticated;")).toEqual([]);
+  });
+  it("U+E000 dans un nom non cité ne peut plus emprunter le GRANT d'un nom cité", () => {
+    expect(undeclaredTables('CREATE TABLE public.0(id int);CREATE TABLE public."other_notes"(id int);GRANT SELECT ON public."other_notes" TO authenticated;')).not.toEqual([]);
+  });
+  it("une table supprimée puis recréée doit redéclarer ses droits", () => {
+    expect(undeclaredTables("CREATE TABLE public.notes(id int);GRANT SELECT ON public.notes TO authenticated;DROP TABLE public.notes;CREATE TABLE public.notes(id int);")).toEqual(["notes"]);
+  });
 });

@@ -6,6 +6,11 @@
  * (casse et points compris), les renommages et changements de schéma sont suivis, et un GRANT/REVOKE ne
  * compte que pour la relation exacte qu'il désigne. Une création non comprise ou dynamique est signalée
  * plutôt qu'ignorée ; le marqueur `-- acl: dynamic-reviewed` lève ce signal pour un fichier relu à la main.
+ *
+ * Portée (après trois contre-revues, #147, #152, #160) : ce garde-fou attrape l'oubli d'un auteur de bonne
+ * foi, pas un SQL écrit pour le tromper. Tout SQL exécuté dynamiquement (`EXECUTE`) est renvoyé à une
+ * relecture humaine plutôt qu'analysé. La preuve forte reste la comparaison du catalogue des droits sur une
+ * copie PostgreSQL après application (procédure de la migration 20261020100000).
  */
 
 /** Jeton d'identifiant cité : un caractère d'usage privé, qu'aucun identifiant non cité ne peut contenir. */
@@ -20,6 +25,10 @@ const fold = (text: string) => text.replace(/[A-Z]/g, (c) => c.toLowerCase());
 
 /** Les chaînes et corps `$…$` d'une instruction, mis bout à bout, parlent de créer une table persistante. */
 function createsTable(literals: string): boolean {
+  // SQL exécuté dynamiquement (revue de #160) : son texte peut être calculé (chr, concaténation, replace,
+  // décodage base64, UESCAPE…) et n'est pas lisible statiquement. Tout EXECUTE dans un corps ou une chaîne
+  // est donc à relire à la main (marqueur `-- acl: dynamic-reviewed`), quel que soit son texte apparent.
+  if (/\bexecute\b/i.test(literals)) return true;
   // Une création temporaire ne masque pas une création persistante voisine (revue #152).
   const persistent = literals.replace(/\bcreate\s+(?:(?:global|local)\s+)?temp(?:orary)?\s+table\b/gi, " ");
   return /\bcreate\b/i.test(persistent) && /\btable\b/i.test(persistent);
@@ -42,7 +51,9 @@ function decodeU(text: string): string {
 }
 
 /** Retire commentaires, chaînes et corps `$…$` ; remplace chaque identifiant cité par un jeton. */
-function lex(source: string): Lexed {
+function lex(input: string): Lexed {
+  // U+E000 est accepté par PostgreSQL dans un identifiant non cité : neutralisé avant de servir de jeton.
+  const source = input.replaceAll(QID, "");
   const serviceOnly = new Set<string>();
   const quoted: string[] = [];
   let dynamic = false;
@@ -134,12 +145,17 @@ export function undeclaredTables(source: string): string[] {
   const tables = new Map<string, Relation>();
   const unreadable: string[] = dynamic ? ["<création dynamique (EXECUTE, DO, format) à déclarer>"] : [];
   const create = new RegExp(String.raw`^create\s+(?:or\s+replace\s+)?(?:(?:global|local)\s+)?(temp|temporary|unlogged)?\s*table\s+(?:if\s+not\s+exists\s+)?${QUALIFIED}`, "u");
-  // SELECT … INTO crée une table, y compris derrière un WITH ; INSERT INTO n'en crée pas.
-  const selectInto = new RegExp(String.raw`\bselect\b[\s\S]*?(?<!\binsert\s)\binto\s+(?:(temp|temporary|unlogged)\s+)?(?:table\s+)?${QUALIFIED}`, "u");
+  // SELECT … INTO crée une table, où qu'il soit dans l'instruction (WITH, EXPLAIN ANALYZE, parenthèses) ;
+  // INSERT INTO et MERGE INTO n'en créent pas.
+  const selectInto = new RegExp(String.raw`\bselect\b[\s\S]*?(?<!\b(?:insert|merge)\s)\binto\s+(?:(temp|temporary|unlogged)\s+)?(?:table\s+)?${QUALIFIED}`, "u");
   const alter = new RegExp(String.raw`^alter\s+table\s+(?:if\s+exists\s+)?(?:only\s+)?${QUALIFIED}\s+(rename\s+to|set\s+schema)\s+(${IDENT})`, "u");
   const grant = /^(?:grant|revoke)\b[\s\S]*?\bon\s+([\s\S]+?)\s+(?:to|from)\b/u;
   const target = new RegExp(String.raw`^\s*${QUALIFIED}\s*$`, "u");
   const add = (schema: string, table: string) => tables.set(key(schema, table), { schema, table, declared: false, original: table });
+  // Un nom non qualifié n'est sûrement « public » que si le fichier ne change pas le search_path et ne crée
+  // pas de table temporaire du même nom (revue de #160) : sinon son GRANT ne compte pas comme déclaration.
+  const temporary = new Set<string>();
+  let searchPathChanged = false;
 
   for (const raw of sql.split(";")) {
     const statement = raw.trim().replace(/\s+/g, " ");
@@ -148,11 +164,15 @@ export function undeclaredTables(source: string): string[] {
       const m = create.exec(statement);
       if (!m) { unreadable.push(`<create table illisible : ${statement.slice(0, 60)}>`); continue; }
       if (m[1] !== "temp" && m[1] !== "temporary") add(schemaOf(m[2]), name(m[3]));
+      else temporary.add(name(m[3]));
       continue;
     }
-    const into = /^(?:select|with)\b/u.test(statement) ? selectInto.exec(statement) : null;
+    if (/^set\s+(?:(?:local|session)\s+)?search_path\b/u.test(statement) || /\bset_config\s*\(/u.test(statement)) searchPathChanged = true;
+    const definesObject = /^(?:insert|merge|update|delete|grant|revoke|alter|comment|create\s+(?:or\s+replace\s+)?(?:view|materialized|policy|function|procedure|trigger|index|unique|rule))\b/u.test(statement);
+    const into = /\bselect\b/u.test(statement) && !definesObject ? selectInto.exec(statement) : null;
     if (into) {
       if (into[1] !== "temp" && into[1] !== "temporary") add(schemaOf(into[2]), name(into[3]));
+      else temporary.add(name(into[3]));
       continue;
     }
     const altered = alter.exec(statement);
@@ -181,6 +201,7 @@ export function undeclaredTables(source: string): string[] {
       if (/^(?:function|procedure|routine|sequence|schema|database|type|domain|language|large|foreign|tablespace|parameter|all\s)/u.test(objects)) continue;
       for (const part of objects.replace(/^table\s+/u, "").split(",")) {
         const m = target.exec(part);
+        if (m && !m[1] && (searchPathChanged || temporary.has(name(m[2])))) continue;
         const relation = m ? tables.get(key(schemaOf(m[1]), name(m[2]))) : undefined;
         if (relation) relation.declared = true;
       }
