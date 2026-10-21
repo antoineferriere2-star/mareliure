@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildAdminDashboard, type DashboardRows, type DashboardBrand } from "@/marketplace/admin/adminDashboard";
+import { buildTrafficSummary, type PageViewRow } from "@/marketplace/admin/trafficSummary";
 import { unreadCount, type ConversationMessageFacts } from "@/marketplace/messaging/conversation";
 import { isMessageAudience } from "@/marketplace/messaging/audience";
 
@@ -78,5 +79,23 @@ export async function readAdminDashboard(sb: SupabaseClient, userId: string,
     providerConfigured: options.providerConfigured ?? false, unreadByCase,
   };
   const since = filter.days === null ? null : new Date(now.getTime() - filter.days * 86_400_000).toISOString();
-  return buildAdminDashboard(rows, { brand: filter.brand, since });
+  // La fréquentation ne bloque jamais le pilotage : une lecture en échec l'omet, le reste s'affiche.
+  const traffic = await readPageViews(sb, since).then(
+    (views) => buildTrafficSummary(views, { brand: filter.brand, since, days: filter.days, now: now.toISOString() }),
+    (error) => { console.error("admin_dashboard_traffic_unreadable", error instanceof Error ? error.message : error); return null; },
+  );
+  return { ...buildAdminDashboard(rows, { brand: filter.brand, since }), traffic };
+}
+
+/** Vues de la période, paginées par identifiant ; aucune donnée personnelle (empreintes salées par jour). */
+async function readPageViews(sb: SupabaseClient, since: string | null): Promise<PageViewRow[]> {
+  const rows: PageViewRow[] = [];
+  for (let from = 0; ; from += PAGE) {
+    let query = sb.from("build_page_views").select("path, referrer_host, device, visitor_hash, session_hash, is_new_session, created_at");
+    if (since) query = query.gte("created_at", since);
+    const { data, error } = await query.order("id", { ascending: true }).range(from, from + PAGE - 1);
+    if (error) throw new Error("build_page_views: " + error.message);
+    rows.push(...((data ?? []) as PageViewRow[]));
+    if (!data || data.length < PAGE) return rows;
+  }
 }

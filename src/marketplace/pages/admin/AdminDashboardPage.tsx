@@ -4,6 +4,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getAdminDashboard, sendTeamAlertTest } from "@/marketplace/services/adminDashboard.data.functions";
 import type { AdminDashboard, DashboardBrand } from "@/marketplace/admin/adminDashboard";
+import type { TrafficSummary } from "@/marketplace/admin/trafficSummary";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { CARD } from "@/marketplace/pages/binder/quotes/quoteUi";
 
@@ -101,6 +102,9 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
           </ul>
         )}
       </Section>
+
+      {data.traffic === null && <p className={CARD}>La fréquentation n'a pas pu être lue ; le reste du pilotage est à jour.</p>}
+      {data.traffic && <Traffic traffic={data.traffic} casesCreated={cases.created} periodLabel={periodLabel} />}
 
       <Section title="Dossiers" hint={`${cases.created} dossier(s) créé(s) ${periodLabel}. Entonnoir : état actuel de tous les dossiers.`}>
         <div className={CARD}>
@@ -206,6 +210,67 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
       <AlertTest />
       <p className="text-xs text-muted-foreground">Calculé le {new Date(data.generatedAt).toLocaleString("fr-FR")}. Aucun nom ni adresse de client n'est affiché ici.</p>
     </>
+  );
+}
+
+const DEVICE_LABEL: Record<string, string> = { desktop: "Ordinateur", mobile: "Mobile", tablet: "Tablette" };
+
+/** Fréquentation des sites publics : ce que la mesure permet de dire (voir trafficSummary.ts). */
+function Traffic({ traffic, casesCreated, periodLabel }: { traffic: TrafficSummary; casesCreated: number; periodLabel: string }) {
+  const maxDay = Math.max(1, ...traffic.perDay.map((day) => day.views));
+  const rate = (part: number, whole: number) => (whole ? `${Math.round((part / whole) * 1000) / 10} %` : "—");
+  return (
+    <Section title="Fréquentation" hint={`Pages publiques ${periodLabel}. Un visiteur est compté une fois par jour de venue ; robots exclus depuis le 21 octobre 2026.`}>
+      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+        <Stat label="Pages vues" value={traffic.views} />
+        <Stat label="Visites" value={traffic.visits} detail={`${traffic.visitors} visiteur(s), comptés par jour`} />
+        <Stat label="Présentations ouvertes" value={traffic.intakeVisits} detail={`${rate(traffic.intakeVisits, traffic.visits)} des visites`} />
+        <Stat label="Dossiers créés" value={casesCreated} detail={`${rate(casesCreated, traffic.visits)} des visites`} />
+      </div>
+      {traffic.perDay.length > 0 && (
+        <div className={CARD}>
+          <p className="text-sm text-muted-foreground">Pages vues par jour</p>
+          <ol className="mt-3 flex h-24 items-end gap-px" aria-label="Pages vues par jour">
+            {traffic.perDay.map((day) => (
+              <li key={day.day} className="flex h-full flex-1 items-end" title={`${new Date(`${day.day}T12:00:00Z`).toLocaleDateString("fr-FR")} : ${day.views} vue(s), ${day.visits} visite(s)`}>
+                <span className="block w-full rounded-t-sm bg-[#7a2230]" style={{ height: `${(day.views / maxDay) * 100}%`, minHeight: day.views ? 2 : 0 }} />
+              </li>
+            ))}
+          </ol>
+          <p className="mt-1 flex justify-between text-xs text-muted-foreground">
+            <span>{new Date(`${traffic.perDay[0].day}T12:00:00Z`).toLocaleDateString("fr-FR")}</span>
+            <span>{new Date(`${traffic.perDay[traffic.perDay.length - 1].day}T12:00:00Z`).toLocaleDateString("fr-FR")}</span>
+          </p>
+        </div>
+      )}
+      <div className="grid gap-3 lg:grid-cols-3">
+        <div className={`${CARD} lg:col-span-2`}>
+          <p className="text-sm text-muted-foreground">Pages les plus vues</p>
+          {traffic.topPages.length === 0 ? <p className="mt-2 text-sm">Aucune vue sur la période.</p> : (
+            <table className="mt-2 w-full text-sm">
+              <thead className="text-left text-xs text-muted-foreground"><tr><th className="py-1 font-normal">Page</th><th className="py-1 text-right font-normal">Vues</th><th className="py-1 text-right font-normal">Visites</th></tr></thead>
+              <tbody>{traffic.topPages.map((page) => (
+                <tr key={page.path} className="border-t border-border"><td className="max-w-0 truncate py-1.5 pr-3">{page.path}</td><td className="py-1.5 text-right tabular-nums">{page.views}</td><td className="py-1.5 text-right tabular-nums">{page.visits}</td></tr>
+              ))}</tbody>
+            </table>
+          )}
+        </div>
+        <div className="space-y-3">
+          <div className={CARD}>
+            <p className="text-sm text-muted-foreground">D'où viennent les visites</p>
+            <ul className="mt-2 space-y-1 text-sm">{traffic.sources.map((source) => (
+              <li key={source.source} className="flex justify-between gap-3"><span className="truncate">{source.source}</span><span className="tabular-nums">{source.visits}</span></li>
+            ))}</ul>
+          </div>
+          <div className={CARD}>
+            <p className="text-sm text-muted-foreground">Appareils (pages vues)</p>
+            <ul className="mt-2 space-y-1 text-sm">{traffic.devices.map((device) => (
+              <li key={device.device} className="flex justify-between gap-3"><span>{DEVICE_LABEL[device.device] ?? device.device}</span><span className="tabular-nums">{device.views}</span></li>
+            ))}</ul>
+          </div>
+        </div>
+      </div>
+    </Section>
   );
 }
 
