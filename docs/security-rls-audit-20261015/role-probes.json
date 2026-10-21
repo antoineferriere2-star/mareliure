@@ -1,0 +1,981 @@
+{
+  "probes": [
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_applications",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_billing_profiles",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_clients",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_commercial_terms",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_credit_note_items",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_credit_notes",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_document_counters",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_invitations",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_invoice_items",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_invoices",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_members",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_operation_photos",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_portfolio",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_price_preferences",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_quote_item_photos",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_quote_items",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_quotes",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_rates",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_service_categories",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_services",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_skills",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_subscriptions",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_work_counters",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_work_photos",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binder_works",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_binders",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_case_logistics_plans",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_case_matches",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_case_payment_circuits",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_cases",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_commercial_proposal_payments",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_commercial_proposals",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_conversation_reads",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_decisions",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_events",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_external_settlements",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_intake_missions",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_messages",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_credit_notes",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_disputes",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_document_counters",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_invoice_items",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_invoices",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_order_assignments",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_orders",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_refunds",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_supplier_invoices",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_oppe_supplier_payments",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_own_agreement_identity_completions",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_own_client_agreements",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_pricebook",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_proposal_acceptances",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_proposal_billing_details",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_quotes",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_reference_default_prices",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_reference_price_operation_links",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_round_trip_automation",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_round_trip_automation_changes",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_round_trip_label_events",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_round_trip_label_jobs",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_round_trip_rate_approvals",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_stripe_webhook_events",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_work_items",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_work_logistics_events",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_work_logistics_labels",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_work_logistics_photos",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_billing_documents",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_checkout_attempts",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_connect_consent_history",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_connect_consents",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_fee_counters",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_fee_documents",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_notices",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_offer_settings",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_online_disputes",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_online_payments",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_online_refund_attempts",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "public.marketplace_workshop_online_refunds",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "anon",
+      "table": "storage.buckets",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "anon",
+      "table": "storage.objects",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_applications",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_billing_profiles",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_clients",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_commercial_terms",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_credit_note_items",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_credit_notes",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_document_counters",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_invitations",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_invoice_items",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_invoices",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_members",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_operation_photos",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_portfolio",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_price_preferences",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_quote_item_photos",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_quote_items",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_quotes",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_rates",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_service_categories",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_services",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_skills",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_subscriptions",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_work_counters",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_work_photos",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binder_works",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_binders",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_case_logistics_plans",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_case_matches",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_case_payment_circuits",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_cases",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_commercial_proposal_payments",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_commercial_proposals",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_conversation_reads",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_decisions",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_events",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_external_settlements",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_intake_missions",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_messages",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_credit_notes",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_disputes",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_document_counters",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_invoice_items",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_invoices",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_order_assignments",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_orders",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_refunds",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_supplier_invoices",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_oppe_supplier_payments",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_own_agreement_identity_completions",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_own_client_agreements",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_pricebook",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_proposal_acceptances",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_proposal_billing_details",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_quotes",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_reference_default_prices",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_reference_price_operation_links",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_round_trip_automation",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_round_trip_automation_changes",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_round_trip_label_events",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_round_trip_label_jobs",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_round_trip_rate_approvals",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_stripe_webhook_events",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_work_items",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_work_logistics_events",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_work_logistics_labels",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_work_logistics_photos",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_billing_documents",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_checkout_attempts",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_connect_consent_history",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_connect_consents",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_fee_counters",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_fee_documents",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_notices",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_offer_settings",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_online_disputes",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_online_payments",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_online_refund_attempts",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "public.marketplace_workshop_online_refunds",
+      "sqlstate": "42501",
+      "visible_rows": null
+    },
+    {
+      "role": "authenticated",
+      "table": "storage.buckets",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    },
+    {
+      "role": "authenticated",
+      "table": "storage.objects",
+      "sqlstate": "00000",
+      "visible_rows": 0
+    }
+  ],
+  "schema_privileges": {
+    "anon": {
+      "public_usage": true,
+      "database_temp": true,
+      "public_create": false
+    },
+    "service_role": {
+      "public_usage": true,
+      "database_temp": true,
+      "public_create": false
+    },
+    "authenticated": {
+      "public_usage": true,
+      "database_temp": true,
+      "public_create": false
+    }
+  }
+}

@@ -72,3 +72,5 @@ Dix comparaisons navigateur (cinq pages × mobile/bureau) : **0 changement de te
 Incident local antérieur, déjà signalé au propriétaire : pendant les essais du brief 7, l'emploi d'un PID périmé a arrêté par erreur un processus de contenu Firefox. Une interruption d'onglet est possible ; aucun état de cet onglet n'a été certifié ensuite. Cet incident précède les mesures retenues. Les arrêts suivants utilisent identité fraîche, date de création et handle détenu du seul processus de recette.
 
 Aucune écriture de production, migration, achat, paiement, compte, e-mail, fusion de PR ni déploiement effectué par ce chantier. **Mesures et recette terminées ; objectif LCP explicitement non atteint.**
+
+Actualisation finale de la branche sur **main 38ebd31**, après les mesures. #161 a ajouté le guide photo des pages par besoin ; cette évolution externe est intégrée pour éviter une branche obsolète, mais ne fait pas partie de la source c5ba309 mesurée. Les contrôles CI de la tête finale restent distincts des trente mesures de cette source.
