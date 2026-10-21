@@ -7,6 +7,7 @@
  * sont toujours l'état présent. Les montants sont en centimes d'euro.
  */
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import type { TrafficSummary } from "./trafficSummary";
 
 export type DashboardBrand = MarketplaceBrand | "ALL";
 
@@ -80,6 +81,8 @@ export interface RecentPayment { at: string; circuit: "A" | "C"; brand: Marketpl
 
 export interface AdminDashboard {
   generatedAt: string;
+  /** Fréquentation des sites publics sur la période (trafficSummary.ts) ; absente si la lecture échoue. */
+  traffic?: TrafficSummary | null;
   unreadMessages: number;
   brand: DashboardBrand;
   since: string | null;
