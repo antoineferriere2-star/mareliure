@@ -17,7 +17,11 @@ import {
   ferriereServicePhoto,
 } from "@/marketplace/pages/pricing/ferriereServiceIllustrations";
 import { PRICE_FACTOR_DETAILS } from "@/marketplace/pages/pricing/priceFactors";
+import { RELIURE_INTAKE_MINUTES, RELIURE_PHOTO_SHOTS } from "@/marketplace/pages/customer/reliureIntakeGuidance";
 import { CRAFT_GLOSSARY, CRAFT_GLOSSARY_SOURCE } from "./craftGlossary";
+
+/** Les photos que demande la présentation, depuis la même source que le parcours lui-même. */
+const PHOTO_SHOTS = [...RELIURE_PHOTO_SHOTS.photos ?? [], ...RELIURE_PHOTO_SHOTS.photosDommages ?? []];
 import { CRAFT_PAGES, craftFaq, craftPage, type CraftSlug } from "./craftPages";
 
 export function CraftPage({ slug }: { slug: CraftSlug }) {
@@ -150,11 +154,42 @@ export function CraftPage({ slug }: { slug: CraftSlug }) {
           </div>
         </section>
 
+        <section className={SHELL}>
+          <div className="border-t border-mr-rule py-section-sm sm:py-section">
+            <SectionHead
+              folio="IV"
+              eyebrow="Préparer votre présentation"
+              title="Quelques photos suffisent pour commencer."
+              lead={`Environ ${RELIURE_INTAKE_MINUTES} minutes, depuis votre téléphone ou votre ordinateur. Le livre reste chez vous tant que le prix n’est pas accepté.`}
+            />
+            <ul className="mt-12 grid gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
+              {PHOTO_SHOTS.map((shot) => (
+                <li key={shot.key}>
+                  <img
+                    src={shot.exampleSrc}
+                    alt=""
+                    width={240}
+                    height={180}
+                    loading="lazy"
+                    decoding="async"
+                    className="aspect-[4/3] w-full border border-mr-rule bg-mr-paper-warm object-contain p-4"
+                  />
+                  <p className="mr-heading mt-4 text-mr-ink">{shot.label}</p>
+                  <p className="mr-body mt-1.5">{shot.hint}</p>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-10">
+              <IntakeCta />
+            </div>
+          </div>
+        </section>
+
         <section className="bg-mr-paper-warm">
           <div className={`${SHELL} py-section-sm sm:py-section`}>
             <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
               <div className="lg:col-span-5">
-                <SectionHead folio="IV" eyebrow="Questions fréquentes" title="Avant de présenter votre livre." />
+                <SectionHead folio="V" eyebrow="Questions fréquentes" title="Avant de présenter votre livre." />
               </div>
               <div className="divide-y divide-mr-rule-strong border-y border-mr-rule-strong lg:col-span-7 lg:mt-14">
                 {craftFaq(page).map((item) => (
