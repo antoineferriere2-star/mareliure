@@ -1,3 +1,4 @@
+import { deviceClass } from "@/build/analytics/deviceClass";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 import { logOperationalError } from "@/build/services/operationalLog.server";
@@ -28,13 +29,7 @@ function jsonResponse(status: number, body: unknown) {
   });
 }
 
-function deviceClass(request: Request): string {
-  const ua = (request.headers.get("user-agent") ?? "").toLowerCase();
-  if (/bot|crawl|spider|preview|monitor|lighthouse/.test(ua)) return "bot";
-  if (/ipad|tablet/.test(ua)) return "tablet";
-  if (/mobi|android|iphone/.test(ua)) return "mobile";
-  return "desktop";
-}
+
 
 function referrerHost(referrer: string): string | null {
   if (!referrer) return null;
@@ -62,7 +57,7 @@ export const Route = createFileRoute("/api/public/track-view")({
         const parsed = bodySchema.safeParse(json);
         if (!parsed.success) return jsonResponse(400, { error: "Invalid request shape." });
 
-        const device = deviceClass(request);
+        const device = deviceClass(request.headers.get("user-agent"));
         // Bots inflate visit counts without ever becoming a Project Brief.
         if (device === "bot") return jsonResponse(202, { ok: true });
 

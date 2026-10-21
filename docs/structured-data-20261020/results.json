@@ -1,0 +1,1392 @@
+[
+  {
+    "url": "https://mareliure.fr/reparation-de-livres",
+    "at": "2026-10-20T17:18:38.742Z",
+    "status": 200,
+    "htmlSha256": "43df5149ba1d5c96d7f96d6eea0b3db2e713a0dbeb13c15d48e042d851c44c92",
+    "types": {
+      "Organization": 1,
+      "ImageObject": 1,
+      "Country": 1,
+      "WebSite": 1,
+      "BreadcrumbList": 1,
+      "ListItem": 3,
+      "FAQPage": 1,
+      "Question": 6,
+      "Answer": 6,
+      "DefinedTermSet": 1,
+      "DefinedTerm": 9
+    },
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://mareliure.fr/#organization",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mareliure.fr/mareliure-icon.svg"
+        },
+        "description": "Service de reliure, restauration et création de livres, confié à des artisans relieurs indépendants installés en France.",
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://mareliure.fr/#website",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "inLanguage": "fr-FR",
+        "publisher": {
+          "@id": "https://mareliure.fr/#organization"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Accueil",
+            "item": "https://mareliure.fr/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Les savoir-faire",
+            "item": "https://mareliure.fr/#savoir-faire"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Réparer",
+            "item": "https://mareliure.fr/reparation-de-livres"
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Peut-on garder la couverture d'origine ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "C'est l'objet du réemboîtage : remettre le corps d'ouvrage dans sa couverture d'origine. Que ce soit possible dépend de l'état de la couverture ; c'est l'une des premières choses que nous regardons."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Faut-il envoyer le livre pour connaître le prix ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. Vous présentez votre livre avec quelques photos, ses dimensions, son état et ce que vous souhaitez en faire. Il reste chez vous : Ma Reliure étudie le travail et vous propose un prix avant tout engagement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Le prix annoncé peut-il changer ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un prix ne devient ferme qu'une fois confirmé par Ma Reliure pour votre projet, et il devient définitif quand vous le confirmez à votre tour. Un changement vous est expliqué avant d'être fait."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment le livre voyage-t-il jusqu'à l'atelier ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pour un livre courant, d'une valeur déclarée inférieure à 100 €, dans un colis de 500 g et 35 × 25 × 8 cm au plus, entre deux adresses de France métropolitaine (hors Corse), la proposition peut inclure un transport aller-retour de 15 € TTC, sur une ligne distincte. Ce forfait n'inclut aucune assurance. Les livres anciens, rares, uniques ou de plus grande valeur ne voyagent pas par ce forfait : leur trajet est convenu avec vous."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment se passe le paiement ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Une fois le prix confirmé, vous passez commande depuis votre espace client et payez par carte bancaire, via notre prestataire de paiement Stripe. Le contrat est formé au moment où vous validez ce paiement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Qui réalise le travail ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un atelier artisanal indépendant installé en France, choisi parce que son savoir-faire correspond à votre livre. Vous ne négociez pas avec l'atelier : Ma Reliure reste votre interlocuteur du début à la fin."
+            }
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "DefinedTermSet",
+        "name": "Vocabulaire de l’atelier — Réparer",
+        "url": "https://mareliure.fr/reparation-de-livres",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "Réemboîtage",
+            "description": "Remise en place d’un corps d’ouvrage dans une couverture existante ou refaite, sans refaire nécessairement toute la couture."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Reprise de coiffe",
+            "description": "Réparation ou reconstitution localisée d’une coiffe endommagée."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Réparation de mors",
+            "description": "Stabilisation ou reconstitution de la charnière entre dos et plat."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Réparation de coin",
+            "description": "Consolidation ou reconstitution limitée d’un coin de plat ou de couvrure."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Formation des mors",
+            "description": "Création ou rétablissement des charnières structurelles du dos permettant l’articulation des plats."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Réparation de fond de cahier",
+            "description": "Consolidation de la pliure centrale d’un cahier fragilisé ou rompu."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Réparation de déchirure de feuillet",
+            "description": "Raccord localisé d’une déchirure en respectant la souplesse et la lisibilité du feuillet."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Reprise de couture existante",
+            "description": "Rétablissement partiel de points de couture sans nécessairement démonter tout le volume."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Remplacement de gardes",
+            "description": "Dépose et montage de nouvelles gardes lorsque les gardes existantes ne peuvent être conservées."
+          }
+        ]
+      }
+    ],
+    "schemaOrg": {
+      "at": "2026-10-20T17:14:13.052Z",
+      "errors": 0,
+      "warnings": 0,
+      "observedIn": "Schema.org URL validator UI",
+      "topLevelDetected": [
+        "BreadcrumbList",
+        "WebSite",
+        "DefinedTermSet",
+        "FAQPage"
+      ],
+      "validatorUrl": "https://validator.schema.org/#url=https%3A%2F%2Fmareliure.fr%2Freparation-de-livres"
+    },
+    "google": {
+      "at": "2026-10-20T17:17:46.241Z",
+      "resultUrl": "https://search.google.com/test/rich-results/result?id=px4aZVZYFWbuleKe6HEuoA",
+      "verdict": "1 fil d’Ariane valide détecté",
+      "profile": "pre-existing Google session; no login performed"
+    }
+  },
+  {
+    "url": "https://mareliure.fr/restauration-de-livres-anciens",
+    "at": "2026-10-20T17:18:39.113Z",
+    "status": 200,
+    "htmlSha256": "87751777842a81cf93b32b7037bbd71393e8cb21d98ad4cd85825270d6a93a07",
+    "types": {
+      "Organization": 1,
+      "ImageObject": 1,
+      "Country": 1,
+      "WebSite": 1,
+      "BreadcrumbList": 1,
+      "ListItem": 3,
+      "FAQPage": 1,
+      "Question": 7,
+      "Answer": 7,
+      "DefinedTermSet": 1,
+      "DefinedTerm": 10
+    },
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://mareliure.fr/#organization",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mareliure.fr/mareliure-icon.svg"
+        },
+        "description": "Service de reliure, restauration et création de livres, confié à des artisans relieurs indépendants installés en France.",
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://mareliure.fr/#website",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "inLanguage": "fr-FR",
+        "publisher": {
+          "@id": "https://mareliure.fr/#organization"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Accueil",
+            "item": "https://mareliure.fr/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Les savoir-faire",
+            "item": "https://mareliure.fr/#savoir-faire"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Restaurer",
+            "item": "https://mareliure.fr/restauration-de-livres-anciens"
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Un livre patrimonial peut-il être restauré ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Oui, sur étude. Une restauration patrimoniale ne se chiffre jamais sur catalogue : un ouvrage ancien, un manuscrit ou une reliure d'époque se regardent avant de se chiffrer, et le travail se décide pièce en main."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Restaurer ou relier à neuf ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Restaurer n'est pas relier. La restauration garde ce qui existe — cuir, papier, pièces de titre, fers d'origine — quand une nouvelle reliure remplace la couverture. Dites-nous ce que vous attendez du livre ; c'est la première question que nous vous poserons."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Faut-il envoyer le livre pour connaître le prix ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. Vous présentez votre livre avec quelques photos, ses dimensions, son état et ce que vous souhaitez en faire. Il reste chez vous : Ma Reliure étudie le travail et vous propose un prix avant tout engagement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Le prix annoncé peut-il changer ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un prix ne devient ferme qu'une fois confirmé par Ma Reliure pour votre projet, et il devient définitif quand vous le confirmez à votre tour. Un changement vous est expliqué avant d'être fait."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment le livre voyage-t-il jusqu'à l'atelier ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pour un livre courant, d'une valeur déclarée inférieure à 100 €, dans un colis de 500 g et 35 × 25 × 8 cm au plus, entre deux adresses de France métropolitaine (hors Corse), la proposition peut inclure un transport aller-retour de 15 € TTC, sur une ligne distincte. Ce forfait n'inclut aucune assurance. Les livres anciens, rares, uniques ou de plus grande valeur ne voyagent pas par ce forfait : leur trajet est convenu avec vous."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment se passe le paiement ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Une fois le prix confirmé, vous passez commande depuis votre espace client et payez par carte bancaire, via notre prestataire de paiement Stripe. Le contrat est formé au moment où vous validez ce paiement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Qui réalise le travail ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un atelier artisanal indépendant installé en France, choisi parce que son savoir-faire correspond à votre livre. Vous ne négociez pas avec l'atelier : Ma Reliure reste votre interlocuteur du début à la fin."
+            }
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "DefinedTermSet",
+        "name": "Vocabulaire de l’atelier — Restaurer",
+        "url": "https://mareliure.fr/restauration-de-livres-anciens",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "Consolidation de cuir",
+            "description": "Stabilisation d’un cuir fragilisé ou pulvérulent sans masquer indûment ses caractéristiques historiques."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Réintégration de cuir",
+            "description": "Ajout localisé de cuir compatible pour combler une perte de couvrure."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Reprise de dos",
+            "description": "Réparation localisée d’un dos conservé lorsque son état le permet."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Remontage d’ancien dos",
+            "description": "Conservation puis repositionnement d’un dos d’origine après une intervention structurelle."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Reprise de dorure",
+            "description": "Rétablissement ou reprise localisée d’une dorure existante lorsque l’éthique de conservation et l’état l’autorisent."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Conservation des éléments anciens",
+            "description": "Préservation, documentation et éventuel remontage des éléments d’origine non réemployés structurellement."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Dérestauration",
+            "description": "Retrait raisonné d’une intervention antérieure lorsque celle-ci est nocive ou compromet la lecture de l’ouvrage."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Nettoyage à sec de feuillet",
+            "description": "Réduction de salissures superficielles sur un feuillet par des procédés secs contrôlés."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Doublage de feuillet",
+            "description": "Renforcement d’un feuillet par ajout d’un support compatible lorsque sa fragilité le justifie."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Désacidification",
+            "description": "Traitement chimique visant à réduire l’acidité du papier, hors intervention de reliure courante."
+          }
+        ]
+      }
+    ],
+    "schemaOrg": {
+      "at": "2026-10-20T17:15:30.349Z",
+      "errors": 0,
+      "warnings": 0,
+      "observedIn": "Schema.org URL validator UI",
+      "topLevelDetected": [
+        "BreadcrumbList",
+        "WebSite",
+        "DefinedTermSet",
+        "FAQPage"
+      ],
+      "validatorUrl": "https://validator.schema.org/#url=https%3A%2F%2Fmareliure.fr%2Frestauration-de-livres-anciens"
+    },
+    "google": {
+      "at": "2026-10-20T17:23:51.000Z",
+      "resultUrl": "https://search.google.com/test/rich-results/result?id=CYtZAOShpeRZks9GqOGjHQ",
+      "verdict": "1 fil d’Ariane valide détecté",
+      "profile": "pre-existing Google session; no login performed"
+    }
+  },
+  {
+    "url": "https://mareliure.fr/reliure-de-livres",
+    "at": "2026-10-20T17:18:39.597Z",
+    "status": 200,
+    "htmlSha256": "d8bb80499a4b19a6daf85a6999e07fedd47ac1925cf19e456e00e9dbafc952d7",
+    "types": {
+      "Organization": 1,
+      "ImageObject": 1,
+      "Country": 1,
+      "WebSite": 1,
+      "BreadcrumbList": 1,
+      "ListItem": 3,
+      "FAQPage": 1,
+      "Question": 6,
+      "Answer": 6,
+      "DefinedTermSet": 1,
+      "DefinedTerm": 10
+    },
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://mareliure.fr/#organization",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mareliure.fr/mareliure-icon.svg"
+        },
+        "description": "Service de reliure, restauration et création de livres, confié à des artisans relieurs indépendants installés en France.",
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://mareliure.fr/#website",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "inLanguage": "fr-FR",
+        "publisher": {
+          "@id": "https://mareliure.fr/#organization"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Accueil",
+            "item": "https://mareliure.fr/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Les savoir-faire",
+            "item": "https://mareliure.fr/#savoir-faire"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Relier",
+            "item": "https://mareliure.fr/reliure-de-livres"
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Quelle différence entre demi-cuir et plein cuir ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "En demi-cuir, le cuir couvre le dos (et les coins pour un demi-cuir à coins), les plats étant en papier ou en toile ; en plein cuir, il couvre tout l'ouvrage. Plus il y a de cuir, plus le parage et la couvrure demandent de temps."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Faut-il envoyer le livre pour connaître le prix ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. Vous présentez votre livre avec quelques photos, ses dimensions, son état et ce que vous souhaitez en faire. Il reste chez vous : Ma Reliure étudie le travail et vous propose un prix avant tout engagement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Le prix annoncé peut-il changer ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un prix ne devient ferme qu'une fois confirmé par Ma Reliure pour votre projet, et il devient définitif quand vous le confirmez à votre tour. Un changement vous est expliqué avant d'être fait."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment le livre voyage-t-il jusqu'à l'atelier ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pour un livre courant, d'une valeur déclarée inférieure à 100 €, dans un colis de 500 g et 35 × 25 × 8 cm au plus, entre deux adresses de France métropolitaine (hors Corse), la proposition peut inclure un transport aller-retour de 15 € TTC, sur une ligne distincte. Ce forfait n'inclut aucune assurance. Les livres anciens, rares, uniques ou de plus grande valeur ne voyagent pas par ce forfait : leur trajet est convenu avec vous."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment se passe le paiement ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Une fois le prix confirmé, vous passez commande depuis votre espace client et payez par carte bancaire, via notre prestataire de paiement Stripe. Le contrat est formé au moment où vous validez ce paiement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Qui réalise le travail ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un atelier artisanal indépendant installé en France, choisi parce que son savoir-faire correspond à votre livre. Vous ne négociez pas avec l'atelier : Ma Reliure reste votre interlocuteur du début à la fin."
+            }
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "DefinedTermSet",
+        "name": "Vocabulaire de l’atelier — Relier",
+        "url": "https://mareliure.fr/reliure-de-livres",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "Reliure pleine toile",
+            "description": "Reliure dont la couvrure est entièrement réalisée en toile."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Reliure Bradel",
+            "description": "Reliure à structure de couverture distincte, couramment utilisée en pleine toile ou plein papier."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Quart de reliure",
+            "description": "Couvrure partielle dans laquelle le cuir ou un autre matériau occupe le dos et une faible portion des plats."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Demi-reliure cuir",
+            "description": "Reliure dont le dos et une partie des plats sont couverts de cuir, les plats recevant généralement un autre matériau."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Demi-reliure à coins",
+            "description": "Demi-reliure complétée de pièces de cuir aux quatre coins des plats."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Reliure plein cuir",
+            "description": "Reliure dont le cuir couvre dos et plats."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Couture de cahiers",
+            "description": "Assemblage des cahiers par un fil et une structure de couture adaptée à l’ouvrage."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Arrondissure",
+            "description": "Mise en forme arrondie du dos avant endossure lorsque la structure le permet."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Pose de nerfs véritables",
+            "description": "Mise en place de supports de couture formant des nerfs structurels visibles ou non."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Broderie de tranchefiles main",
+            "description": "Réalisation manuelle de tranchefiles cousues en tête et en queue du dos."
+          }
+        ]
+      }
+    ],
+    "schemaOrg": {
+      "at": "2026-10-20T17:16:35.018Z",
+      "errors": 0,
+      "warnings": 0,
+      "observedIn": "Schema.org URL validator UI",
+      "topLevelDetected": [
+        "BreadcrumbList",
+        "WebSite",
+        "DefinedTermSet",
+        "FAQPage"
+      ],
+      "validatorUrl": "https://validator.schema.org/#url=https%3A%2F%2Fmareliure.fr%2Freliure-de-livres"
+    },
+    "google": {
+      "at": "2026-10-20T17:27:01.321Z",
+      "resultUrl": "https://search.google.com/test/rich-results/result?id=gI87Dgm45AwpexqaukSLyg",
+      "verdict": "1 fil d’Ariane valide détecté",
+      "profile": "pre-existing Google session; no login performed"
+    }
+  },
+  {
+    "url": "https://mareliure.fr/dorure-et-finitions",
+    "at": "2026-10-20T17:18:39.658Z",
+    "status": 200,
+    "htmlSha256": "c4b4235d6bad39f3e05c7901352289b5666279e0de364d813b44a60b5c99cbf7",
+    "types": {
+      "Organization": 1,
+      "ImageObject": 1,
+      "Country": 1,
+      "WebSite": 1,
+      "BreadcrumbList": 1,
+      "ListItem": 3,
+      "FAQPage": 1,
+      "Question": 6,
+      "Answer": 6,
+      "DefinedTermSet": 1,
+      "DefinedTerm": 11
+    },
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://mareliure.fr/#organization",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mareliure.fr/mareliure-icon.svg"
+        },
+        "description": "Service de reliure, restauration et création de livres, confié à des artisans relieurs indépendants installés en France.",
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://mareliure.fr/#website",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "inLanguage": "fr-FR",
+        "publisher": {
+          "@id": "https://mareliure.fr/#organization"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Accueil",
+            "item": "https://mareliure.fr/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Les savoir-faire",
+            "item": "https://mareliure.fr/#savoir-faire"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Embellir",
+            "item": "https://mareliure.fr/dorure-et-finitions"
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Peut-on ajouter une dorure sur une reliure existante ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un titrage, un nom d'auteur, une tomaison ou des initiales se posent sur un dos ou un plat existant quand la matière s'y prête. Présentez votre livre : l'atelier dit ce qui est possible avant tout prix."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Faut-il envoyer le livre pour connaître le prix ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. Vous présentez votre livre avec quelques photos, ses dimensions, son état et ce que vous souhaitez en faire. Il reste chez vous : Ma Reliure étudie le travail et vous propose un prix avant tout engagement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Le prix annoncé peut-il changer ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un prix ne devient ferme qu'une fois confirmé par Ma Reliure pour votre projet, et il devient définitif quand vous le confirmez à votre tour. Un changement vous est expliqué avant d'être fait."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment le livre voyage-t-il jusqu'à l'atelier ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pour un livre courant, d'une valeur déclarée inférieure à 100 €, dans un colis de 500 g et 35 × 25 × 8 cm au plus, entre deux adresses de France métropolitaine (hors Corse), la proposition peut inclure un transport aller-retour de 15 € TTC, sur une ligne distincte. Ce forfait n'inclut aucune assurance. Les livres anciens, rares, uniques ou de plus grande valeur ne voyagent pas par ce forfait : leur trajet est convenu avec vous."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment se passe le paiement ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Une fois le prix confirmé, vous passez commande depuis votre espace client et payez par carte bancaire, via notre prestataire de paiement Stripe. Le contrat est formé au moment où vous validez ce paiement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Qui réalise le travail ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un atelier artisanal indépendant installé en France, choisi parce que son savoir-faire correspond à votre livre. Vous ne négociez pas avec l'atelier : Ma Reliure reste votre interlocuteur du début à la fin."
+            }
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "DefinedTermSet",
+        "name": "Vocabulaire de l’atelier — Embellir",
+        "url": "https://mareliure.fr/dorure-et-finitions",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "Titrage au dos",
+            "description": "Marquage d’un titre sur le dos du volume."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Titrage d’auteur",
+            "description": "Marquage du nom de l’auteur sur une zone de titrage."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Titrage de tomaison",
+            "description": "Marquage du numéro ou de l’identification d’un tome."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Pose de pièce de titre",
+            "description": "Découpe, préparation et collage d’une pièce de cuir destinée à porter le titre."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Dorure à la feuille",
+            "description": "Dorure réalisée avec de l’or en feuille appliqué par pression d’outils chauffés sur une zone apprêtée."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Dorure manuelle",
+            "description": "Marquage exécuté à la main à l’aide de fers, filets, palettes ou roulettes chauffés."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Filet doré",
+            "description": "Traçage d’une ligne dorée au filet sur dos, plats ou élément de protection."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Dorure des compartiments",
+            "description": "Décor appliqué dans les espaces séparant les nerfs du dos."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Dorure sur tranche",
+            "description": "Application d’or ou de film sur une tranche préparée et polie."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Pose de gardes marbrées",
+            "description": "Montage de papiers marbrés comme gardes, selon les contraintes de structure et de décor."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Mosaïque incrustée",
+            "description": "Insertion de pièces de cuir découpées dans une couvrure afin d’obtenir un décor de niveau affleurant."
+          }
+        ]
+      }
+    ],
+    "schemaOrg": {
+      "at": "2026-10-20T17:17:21.947Z",
+      "errors": 0,
+      "warnings": 0,
+      "observedIn": "Schema.org URL validator UI",
+      "topLevelDetected": [
+        "BreadcrumbList",
+        "WebSite",
+        "DefinedTermSet",
+        "FAQPage"
+      ],
+      "validatorUrl": "https://validator.schema.org/#url=https%3A%2F%2Fmareliure.fr%2Fdorure-et-finitions"
+    },
+    "google": {
+      "at": "2026-10-20T17:35:45.053Z",
+      "resultUrl": "https://search.google.com/test/rich-results/result?id=McOLWZZXbAMCko88GzejSQ",
+      "verdict": "1 fil d’Ariane valide détecté",
+      "profile": "pre-existing Google session; no login performed"
+    }
+  },
+  {
+    "url": "https://mareliure.fr/reliure-de-creation",
+    "at": "2026-10-20T17:18:39.723Z",
+    "status": 200,
+    "htmlSha256": "63fd3c9d501787593a585ad60f7333ac15ba8629c512c77ff427e254b2844d90",
+    "types": {
+      "Organization": 1,
+      "ImageObject": 1,
+      "Country": 1,
+      "WebSite": 1,
+      "BreadcrumbList": 1,
+      "ListItem": 3,
+      "FAQPage": 1,
+      "Question": 6,
+      "Answer": 6,
+      "DefinedTermSet": 1,
+      "DefinedTerm": 6
+    },
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://mareliure.fr/#organization",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mareliure.fr/mareliure-icon.svg"
+        },
+        "description": "Service de reliure, restauration et création de livres, confié à des artisans relieurs indépendants installés en France.",
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://mareliure.fr/#website",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "inLanguage": "fr-FR",
+        "publisher": {
+          "@id": "https://mareliure.fr/#organization"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Accueil",
+            "item": "https://mareliure.fr/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Les savoir-faire",
+            "item": "https://mareliure.fr/#savoir-faire"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Transformer",
+            "item": "https://mareliure.fr/reliure-de-creation"
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Comment se décide une reliure de création ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Une reliure de création est une pièce unique dessinée avec vous, toujours sur étude. Vous présentez le livre et vos intentions ; l'atelier propose, Ma Reliure vous annonce le prix avant tout engagement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Faut-il envoyer le livre pour connaître le prix ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. Vous présentez votre livre avec quelques photos, ses dimensions, son état et ce que vous souhaitez en faire. Il reste chez vous : Ma Reliure étudie le travail et vous propose un prix avant tout engagement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Le prix annoncé peut-il changer ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un prix ne devient ferme qu'une fois confirmé par Ma Reliure pour votre projet, et il devient définitif quand vous le confirmez à votre tour. Un changement vous est expliqué avant d'être fait."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment le livre voyage-t-il jusqu'à l'atelier ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pour un livre courant, d'une valeur déclarée inférieure à 100 €, dans un colis de 500 g et 35 × 25 × 8 cm au plus, entre deux adresses de France métropolitaine (hors Corse), la proposition peut inclure un transport aller-retour de 15 € TTC, sur une ligne distincte. Ce forfait n'inclut aucune assurance. Les livres anciens, rares, uniques ou de plus grande valeur ne voyagent pas par ce forfait : leur trajet est convenu avec vous."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment se passe le paiement ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Une fois le prix confirmé, vous passez commande depuis votre espace client et payez par carte bancaire, via notre prestataire de paiement Stripe. Le contrat est formé au moment où vous validez ce paiement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Qui réalise le travail ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un atelier artisanal indépendant installé en France, choisi parce que son savoir-faire correspond à votre livre. Vous ne négociez pas avec l'atelier : Ma Reliure reste votre interlocuteur du début à la fin."
+            }
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "DefinedTermSet",
+        "name": "Vocabulaire de l’atelier — Transformer",
+        "url": "https://mareliure.fr/reliure-de-creation",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "Dos brisé",
+            "description": "Construction d’un dos séparé du corps d’ouvrage afin d’améliorer l’ouverture ou la protection."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Encadrement doré",
+            "description": "Construction d’un cadre décoratif au filet, à la roulette ou au fer autour d’un plat."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Décor peint lié à la reliure",
+            "description": "Application d’un décor pictural sur une couvrure, lorsque cette pratique relève de l’atelier."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Mosaïque incrustée",
+            "description": "Insertion de pièces de cuir découpées dans une couvrure afin d’obtenir un décor de niveau affleurant."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Mosaïque sertie",
+            "description": "Mise en place de pièces de cuir dont les contours sont marqués ou dorés après insertion."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Mosaïque superposée",
+            "description": "Application de pièces de cuir en relief sur une couvrure existante."
+          }
+        ]
+      }
+    ],
+    "schemaOrg": {
+      "at": "2026-10-20T17:17:47.690Z",
+      "errors": 0,
+      "warnings": 0,
+      "observedIn": "Schema.org URL validator UI",
+      "topLevelDetected": [
+        "BreadcrumbList",
+        "WebSite",
+        "DefinedTermSet",
+        "FAQPage"
+      ],
+      "validatorUrl": "https://validator.schema.org/#url=https%3A%2F%2Fmareliure.fr%2Freliure-de-creation"
+    },
+    "google": {
+      "at": "2026-10-20T17:36:58.929Z",
+      "resultUrl": "https://search.google.com/test/rich-results/result?id=CQtv7Kj6-fL6-GnhDbKlRQ",
+      "verdict": "1 fil d’Ariane valide détecté",
+      "profile": "pre-existing Google session; no login performed"
+    }
+  },
+  {
+    "url": "https://mareliure.fr/etuis-et-boites",
+    "at": "2026-10-20T17:18:39.782Z",
+    "status": 200,
+    "htmlSha256": "26108694cf89640ee949195d17ec2f1b402a241073225306ee9b11edc5ec8ef4",
+    "types": {
+      "Organization": 1,
+      "ImageObject": 1,
+      "Country": 1,
+      "WebSite": 1,
+      "BreadcrumbList": 1,
+      "ListItem": 3,
+      "FAQPage": 1,
+      "Question": 6,
+      "Answer": 6,
+      "DefinedTermSet": 1,
+      "DefinedTerm": 8
+    },
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://mareliure.fr/#organization",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mareliure.fr/mareliure-icon.svg"
+        },
+        "description": "Service de reliure, restauration et création de livres, confié à des artisans relieurs indépendants installés en France.",
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://mareliure.fr/#website",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "inLanguage": "fr-FR",
+        "publisher": {
+          "@id": "https://mareliure.fr/#organization"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Accueil",
+            "item": "https://mareliure.fr/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Les savoir-faire",
+            "item": "https://mareliure.fr/#savoir-faire"
+          },
+          {
+            "@type": "ListItem",
+            "position": 3,
+            "name": "Protéger",
+            "item": "https://mareliure.fr/etuis-et-boites"
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "La protection modifie-t-elle le livre ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. Étui, chemise, boîte ou coffret sont montés sur mesure autour de l'ouvrage, sans rien lui faire subir. C'est la solution pour un livre qu'on ne veut pas toucher."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Faut-il envoyer le livre pour connaître le prix ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Non. Vous présentez votre livre avec quelques photos, ses dimensions, son état et ce que vous souhaitez en faire. Il reste chez vous : Ma Reliure étudie le travail et vous propose un prix avant tout engagement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Le prix annoncé peut-il changer ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un prix ne devient ferme qu'une fois confirmé par Ma Reliure pour votre projet, et il devient définitif quand vous le confirmez à votre tour. Un changement vous est expliqué avant d'être fait."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment le livre voyage-t-il jusqu'à l'atelier ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Pour un livre courant, d'une valeur déclarée inférieure à 100 €, dans un colis de 500 g et 35 × 25 × 8 cm au plus, entre deux adresses de France métropolitaine (hors Corse), la proposition peut inclure un transport aller-retour de 15 € TTC, sur une ligne distincte. Ce forfait n'inclut aucune assurance. Les livres anciens, rares, uniques ou de plus grande valeur ne voyagent pas par ce forfait : leur trajet est convenu avec vous."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Comment se passe le paiement ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Une fois le prix confirmé, vous passez commande depuis votre espace client et payez par carte bancaire, via notre prestataire de paiement Stripe. Le contrat est formé au moment où vous validez ce paiement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Qui réalise le travail ?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Un atelier artisanal indépendant installé en France, choisi parce que son savoir-faire correspond à votre livre. Vous ne négociez pas avec l'atelier : Ma Reliure reste votre interlocuteur du début à la fin."
+            }
+          }
+        ]
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "DefinedTermSet",
+        "name": "Vocabulaire de l’atelier — Protéger",
+        "url": "https://mareliure.fr/etuis-et-boites",
+        "hasDefinedTerm": [
+          {
+            "@type": "DefinedTerm",
+            "name": "Chemise à rabats",
+            "description": "Protection souple ou semi-rigide constituée d’une chemise dotée de rabats."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Chemise-étui",
+            "description": "Ensemble associant une chemise de protection et un étui adapté au volume."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Étui gainé",
+            "description": "Étui recouvert d’un matériau de couvrure, notamment papier, toile ou cuir."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Étui cigare",
+            "description": "Étui à ouverture coulissante verticale ou horizontale, adapté au volume et à son usage."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Boîte de conservation",
+            "description": "Boîte conçue pour protéger un ouvrage des contraintes physiques et des poussières avec des matériaux adaptés."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Boîte à dos",
+            "description": "Boîte dont la structure ou la décoration rappelle le dos d’un livre relié."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Coffret",
+            "description": "Contenant de présentation ou de protection à structure renforcée, éventuellement décoré."
+          },
+          {
+            "@type": "DefinedTerm",
+            "name": "Titrage de boîte",
+            "description": "Identification dorée, imprimée ou marquée d’une boîte ou d’un étui."
+          }
+        ]
+      }
+    ],
+    "schemaOrg": {
+      "at": "2026-10-20T17:23:40.435Z",
+      "errors": 0,
+      "warnings": 0,
+      "observedIn": "Schema.org URL validator UI",
+      "topLevelDetected": [
+        "BreadcrumbList",
+        "WebSite",
+        "DefinedTermSet",
+        "FAQPage"
+      ],
+      "validatorUrl": "https://validator.schema.org/#url=https%3A%2F%2Fmareliure.fr%2Fetuis-et-boites"
+    },
+    "google": {
+      "at": "2026-10-20T17:40:12.393Z",
+      "resultUrl": "https://search.google.com/test/rich-results/result?id=8vrOGaicFUK0rPqjG6DHGA",
+      "verdict": "1 fil d’Ariane valide détecté",
+      "profile": "pre-existing Google session; no login performed"
+    }
+  },
+  {
+    "url": "https://mareliure.fr/tarifs",
+    "at": "2026-10-20T17:18:39.849Z",
+    "status": 200,
+    "htmlSha256": "97306cbb934d94b88cca065ba9d2934693be2707cfe4b9f9cf4960d5f2bb6214",
+    "types": {
+      "Organization": 1,
+      "ImageObject": 1,
+      "Country": 1,
+      "WebSite": 1,
+      "BreadcrumbList": 1,
+      "ListItem": 2
+    },
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://mareliure.fr/#organization",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://mareliure.fr/mareliure-icon.svg"
+        },
+        "description": "Service de reliure, restauration et création de livres, confié à des artisans relieurs indépendants installés en France.",
+        "areaServed": {
+          "@type": "Country",
+          "name": "France"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://mareliure.fr/#website",
+        "name": "Ma Reliure",
+        "url": "https://mareliure.fr/",
+        "inLanguage": "fr-FR",
+        "publisher": {
+          "@id": "https://mareliure.fr/#organization"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Accueil",
+            "item": "https://mareliure.fr/"
+          },
+          {
+            "@type": "ListItem",
+            "position": 2,
+            "name": "Tarifs",
+            "item": "https://mareliure.fr/tarifs"
+          }
+        ]
+      }
+    ],
+    "schemaOrg": {
+      "at": "2026-10-20T17:07:42.039Z",
+      "errors": 0,
+      "warnings": 0,
+      "observedIn": "Schema.org URL validator UI",
+      "topLevelDetected": [
+        "BreadcrumbList",
+        "WebSite"
+      ],
+      "validatorUrl": "https://validator.schema.org/#url=https%3A%2F%2Fmareliure.fr%2Ftarifs"
+    },
+    "google": {
+      "at": "2026-10-20T17:42:08.388Z",
+      "resultUrl": "https://search.google.com/test/rich-results/result?id=Rty5rH584JcaXjRe1OAPfA",
+      "verdict": "1 fil d’Ariane valide détecté",
+      "profile": "pre-existing Google session; no login performed"
+    }
+  },
+  {
+    "url": "https://finebindery.com/en",
+    "at": "2026-10-20T17:18:40.429Z",
+    "status": 200,
+    "htmlSha256": "10f60f9f4260b74c5348c7821b07235a26ec6135a178e20d864939dd0d42a787",
+    "types": {
+      "Organization": 1,
+      "ImageObject": 1,
+      "WebSite": 1,
+      "FAQPage": 1,
+      "Question": 6,
+      "Answer": 6
+    },
+    "jsonLd": [
+      {
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "@id": "https://finebindery.com/#organization",
+        "name": "Fine Bindery",
+        "url": "https://finebindery.com/",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://finebindery.com/mareliure-icon.svg"
+        },
+        "description": "The European network for bookbinding and book conservation, opening with independent ateliers in France."
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "WebSite",
+        "@id": "https://finebindery.com/#website",
+        "name": "Fine Bindery",
+        "url": "https://finebindery.com/",
+        "inLanguage": [
+          "en",
+          "fr",
+          "de",
+          "it",
+          "es"
+        ],
+        "publisher": {
+          "@id": "https://finebindery.com/#organization"
+        }
+      },
+      {
+        "@context": "https://schema.org",
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Can I contact an atelier directly?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes. A project presented from an atelier’s page reaches that atelier directly."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Who sells to me and who invoices me?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "It depends on how you start. A project presented from an atelier’s page makes that atelier your seller: it sends its own quote and invoices you. A project presented to Fine Bindery is sold by OPPE SAS under the Fine Bindery brand, which chooses the atelier, issues the quote and the invoice, and takes payment; the atelier then invoices OPPE SAS, never you."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "How are ateliers chosen for the network?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Fine Bindery reviews each atelier before publishing its page: its skills, its experience and the kind of work it wishes to receive. There is no ranking and no paid placement."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Do I need to speak French?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Each atelier lists the languages it speaks, and Fine Bindery remains your point of contact when you present a project to us."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Is shipping included?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "No. Shipping is quoted separately, according to destination, value and the level of care the book requires."
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "Can valuable or antique books be entrusted?",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "Yes, subject to an individual review and suitable logistics."
+            }
+          }
+        ]
+      }
+    ],
+    "schemaOrg": {
+      "at": "2026-10-20T17:27:00.821Z",
+      "errors": 0,
+      "warnings": 0,
+      "observedIn": "Schema.org URL validator UI",
+      "topLevelDetected": [
+        "WebSite",
+        "FAQPage"
+      ],
+      "validatorUrl": "https://validator.schema.org/#url=https%3A%2F%2Ffinebindery.com%2Fen"
+    },
+    "google": {
+      "at": "2026-10-20T17:44:01.804Z",
+      "resultUrl": "https://search.google.com/test/rich-results/result?id=nDd6XKa0lUyMd8infft1xQ",
+      "verdict": "Aucun élément détecté",
+      "profile": "pre-existing Google session; no login performed"
+    }
+  }
+]
