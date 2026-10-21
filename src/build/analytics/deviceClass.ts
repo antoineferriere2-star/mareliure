@@ -11,7 +11,7 @@ const AUTOMATED = new RegExp(
     "inspectiontool", "googleother", "google-", "headlesschrome", "playwright", "puppeteer",
     "selenium", "phantomjs", "electron", "curl/", "wget/", "python-", "node-fetch", "axios/",
     "go-http-client", "okhttp", "java/", "httpclient", "validator", "gtmetrix", "pingdom", "uptime",
-  ].map((word) => word.replace(/[.*+?^${}()|[\]\/]/g, "\$&")).join("|"),
+  ].join("|"), // mots sans caractère spécial d'expression régulière
 );
 
 export function deviceClass(userAgent: string | null | undefined): "bot" | "tablet" | "mobile" | "desktop" {
