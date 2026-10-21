@@ -18,4 +18,3 @@ SELECT jsonb_build_object('at',(SELECT as_of FROM params),'read_only',current_se
 'application_statuses_60d',(SELECT jsonb_agg(x) FROM (SELECT status,count(*) raw,count(*) FILTER(WHERE NOT test_address) remaining FROM apps,params WHERE created_at>=as_of-interval '60 days' GROUP BY status) x),
 'space_statuses_60d',(SELECT jsonb_agg(x) FROM (SELECT status,count(*) raw,count(*) FILTER(WHERE NOT excluded_test) remaining FROM binders,params WHERE created_at>=as_of-interval '60 days' GROUP BY status) x));
 COMMIT;
-
