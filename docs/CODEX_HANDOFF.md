@@ -3772,3 +3772,8 @@ Actualisation documentaire uniquement ; huit correctifs reliés à leurs SHA, fi
 ## Latest handoff
 
 Codex — **21 octobre 2026**, brief n° 8, chantier 1, #159 : actualisation finale sur main **38ebd31**, fusions documentaires extérieures conservées, aucun historique réécrit. Les mesures terminées et la recette locale 4/4 restent celles de la version produit c5ba309/main 11d292f, consignées dans MOBILE_LCP_20261020.md. #161 a ajouté ensuite le guide photo des pages par besoin ; cette évolution externe intégrée à la branche n’est pas présentée comme remesurée. Objectif LCP non atteint, chiffres et portée explicites. Aucun déploiement ni fusion de PR exécuté par Codex.
+
+
+## Latest handoff
+
+Codex — **21 octobre 2026**, brief n° 9, chantier 2 : recommandation publiée avant tout nouveau changement de code : **ne pas fusionner #159 en l’état**. Tableau FCP/LCP/TBT par page en tête de MOBILE_LCP_20261020.md. Leviers et gains attendus extraits des quinze audits après déjà archivés : estimations Lighthouse explicitement non mesurées/non additionnables, police sans gain isolé promis, cache sans gain au premier accès froid. Élément LCP nommé par page, priorité au découpage réel du JS public, sans nouveau report global de React. Aucun code, mesure nouvelle, fusion, fermeture ou déploiement dans cette actualisation documentaire.

@@ -1,3 +1,41 @@
+# Décision — brief n° 9, 21 octobre 2026
+
+**Recommandation : ne pas fusionner #159 en l'état.** Le premier affichage progresse sur les cinq pages, mais le LCP ne progresse pas de façon homogène et aucun LCP médian n'atteint 2,5 s. Le TBT augmente sur les cinq pages, de 5,5 à 228,5 ms sur partenaires. Le head personnalisé et l'abaissement de priorité des modules ne justifient pas leur généralisation sur ces seuls résultats. Je ne recommande pas non plus une sélection de commits comme gain prouvé : aucun essai isolé ne permet d'attribuer l'amélioration à un sous-ensemble précis.
+
+Les choix ci-dessous portent sur **la version c5ba309 mesurée**, pas sur la production ni sur les ajouts postérieurs de main (#161). Aucun nouveau changement de code de performance n'est effectué avec cette décision ; la PR reste ouverte pour revue, sans fusion ni fermeture exécutée ici.
+
+| Page | FCP avant → après, médiane | LCP avant → après, médiane | TBT avant → après, médiane | Décision pour les changements de #159 |
+| --- | --- | --- | --- | --- |
+| Ma Reliure / | 3,14 → 1,35 s | 3,66 → 3,73 s | 10 → 69 ms | Ne pas fusionner |
+| /tarifs | 3,05 → 0,96 s | 3,58 → 3,41 s | 4 → 51 ms | Ne pas fusionner |
+| /reparation-de-livres | 2,84 → 0,95 s | 3,43 → 3,13 s | 8 → 19 ms | Ne pas fusionner |
+| /partenaires-relieurs | 3,14 → 0,94 s | 3,59 → 3,57 s | 6 → 229 ms | Ne pas fusionner |
+| Fine Bindery /en | 3,19 → 1,71 s | 4,21 → 4,27 s | 13 → 95 ms | Ne pas fusionner |
+
+## Levier suivant et gain attendu
+
+Les chiffres suivants sont **les estimations Lighthouse des trois passages déjà archivés**, pas des gains obtenus. Ils sont non additionnables : CSS, JavaScript, police et image se recouvrent dans le chemin critique. Un zéro signifie qu'aucun gain LCP n'est estimé par cet audit, pas qu'une ressource est inutile. Les détails et les quinze extractions figurent dans [decision-estimates.json](mobile-lcp-20261020/decision-estimates.json). Aucun nouveau passage ni résultat inventé.
+
+| Page | JS inutilisé : potentiel et estimation LCP médiane | CSS bloquante : estimation médiane | Image responsive : potentiel et estimation LCP |
+| --- | --- | --- | --- |
+| Ma Reliure / | 34 884 octets ; **200 ms LCP** (0–350) | **300 ms FCP / 0 ms LCP** | 15 712 octets ; **0 ms LCP** médian (0–150) |
+| /tarifs | 34 881 octets ; **300 ms LCP** (300–450) | **300 ms FCP / 300 ms LCP** | 0 octets ; **0 ms LCP** médian (0–0) |
+| /reparation-de-livres | 34 758 octets ; **300 ms LCP** (150–300) | **300 ms FCP / 300 ms LCP** | 0 octets ; **0 ms LCP** médian (0–0) |
+| /partenaires-relieurs | 34 503 octets ; **300 ms LCP** (300–350) | **300 ms FCP / 300 ms LCP** | 15 509 octets ; **0 ms LCP** médian (0–150) |
+| Fine Bindery /en | 35 779 octets ; **450 ms LCP** (400–500) | **300 ms FCP / 0 ms LCP** | 15 712 octets ; **0 ms LCP** médian (0–0) |
+
+- **Accueil Ma Reliure :** LCP mesuré = H1 dans un passage, planche Ferrière dans deux ; image de 27 962 octets, déjà préchargée High dans la branche. La CSS de 27 ko transférés et Fraunces de 67 304 octets retardent le rendu, puis le JavaScript et l'affichage de l'image deviennent les leviers restants. Priorité : réduire les quelque 35 ko de JS inutilisé de l'index sur cette page ; corriger sizes/source de l'image seulement après vérification visuelle de netteté. Le preload/priorité est déjà reconnu : **0 ms supplémentaire estimé** pour le répéter. La réduction de CSS annonce surtout un gain FCP, sans gain LCP médian sur ce cas.
+- **/tarifs :** LCP = paragraphe d'introduction, jamais une image dans ces trois passages. Priorité : alléger le JS initial et le CSS critique ; estimations ci-dessus, à valider séparément. Une meilleure image hors LCP n'annonce ici **aucun gain LCP**. La police gouverne aussi le rendu du texte, mais aucun sous-ensemble de police conservant le rendu n'a montré de gain isolé : **gain de cette piste non chiffré et non promis**.
+- **/reparation-de-livres :** LCP = paragraphe d'introduction ; même dépendance CSS/police puis travail de rendu/JS. Priorité au JS inutilisé et à une CSS critique réduite, sans différer l'interactivité. Les économies calculées ne suffisent pas à affirmer le franchissement des 2,5 s, même si elles sont du même ordre que les 630 ms manquantes ; elles ne se cumulent pas simplement.
+- **/partenaires-relieurs :** LCP = H1 dans les six passages avant/après, pas la capture de l'outil. Priorité à l'évaluation/hydratation du JavaScript et à la CSS ; l'image optimisable de 15,5 ko est hors LCP et n'apporte **aucun gain LCP estimé**. Le TBT justifie une trace CPU et une expérience de découpage des dépendances publiques avant de garder des modulepreload Low.
+- **Fine Bindery /en :** LCP = planche Ferrière dans les trois passages de branche, 27 962 octets et priorité High ; le titre était aussi candidat avant. Priorité au JS inutilisé (environ 35,8 ko) et au coût de rendu après chargement, puis à un sizes plus précis si la netteté le permet. La même image économisable de 15,7 ko n'a **aucun gain LCP médian estimé**. CSS/police jouent sur le premier affichage ; le gain de police à rendu identique reste non démontré.
+
+**Police et cache, sur les cinq pages :** font-display est déjà swap et font-display-insight ne propose aucun gain de ce réglage. La police est déjà preload High dans la branche ; répéter ce réglage n'est pas un nouveau levier. Le cache peut aider une visite chaude, mais le protocole à profil neuf n'en bénéficie pas : **0 ms attendu au premier accès froid** du seul changement de cache. Une réduction réelle des octets de police nécessite une expérience isolée, avec contrôle de caractères, contours et retours à la ligne ; aucun gain en millisecondes n'est validé aujourd'hui.
+
+La piste de travail suivante recommandée est donc **un découpage mesuré du JS chargé par les pages publiques**, sur une branche distincte avec interactions précoces couvertes, plutôt qu'un nouveau report général de React. Les estimations LCP du JS restent de quelques centaines de millisecondes ; elles n'autorisent pas à promettre seules les 0,63 à 1,78 s manquantes.
+
+---
+
 # Performance mobile — mesures terminées le 21 octobre 2026
 
 **Objectif LCP < 2,5 s non atteint sur les cinq pages.** Le premier affichage arrive plus tôt, mais le LCP reste entre 3,13 et 4,27 s et le temps de blocage augmente notamment sur la page partenaires. Cette PR ne résout pas l'objectif annoncé ; les changements et leurs limites sont soumis à revue, sans fusion ni déploiement.
