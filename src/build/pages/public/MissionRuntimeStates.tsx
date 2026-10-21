@@ -21,3 +21,19 @@ export function MissionRuntimeSkeleton({ label }: { label: string }) {
     </section>
   );
 }
+
+/**
+ * Ce que le serveur envoie pour une route de Mission (`ssr: false`) : TanStack rend le
+ * `pendingComponent` à la place de la page. Sans lui, le HTML reçu n'avait pas de corps et le
+ * visiteur voyait un écran vide jusqu'au chargement du JavaScript. Même squelette, même
+ * surface que l'état de chargement du runtime : rien ne saute quand la Mission prend la main.
+ */
+export function MissionRuntimePending({ label }: { label: string }) {
+  return (
+    <main className="intake-surface min-h-screen px-4 py-5 sm:px-6 lg:px-8 lg:py-8">
+      <div className="mx-auto max-w-5xl">
+        <MissionRuntimeSkeleton label={label} />
+      </div>
+    </main>
+  );
+}

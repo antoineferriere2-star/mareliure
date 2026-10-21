@@ -1,7 +1,9 @@
 import {workshopIntakeGuidance} from "@/marketplace/pages/customer/workshopIntakeGuidance";
 import { useMemo, type ReactNode } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useParams } from "@tanstack/react-router";
 import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
+import { MissionRuntimePending } from "@/build/pages/public/MissionRuntimeStates";
+import { FR_PUBLIC_COPY } from "@/build/pages/public/frPublicCopy";
 import type { IntakeGuidance } from "@/build/pages/public/intakeGuidance";
 import { CustomerSpaceOffer } from "@/marketplace/pages/customer/CustomerSpaceOffer";
 import { WorkshopIntakeNotice } from "@/marketplace/pages/customer/WorkshopIntakeCopy";
@@ -55,8 +57,18 @@ export const Route = createFileRoute("/m/$publicToken")({
   head: ({ params }) => ({
     meta: [{ title: titleFor(params.publicToken) }, { name: "robots", content: "noindex, nofollow" }],
   }),
+  pendingComponent: RuntimePending,
   component: RuntimePage,
 });
+
+const PREPARING = "Preparing your project intake…";
+
+/** Rendu par le serveur avant le JavaScript (route sans SSR) : la langue suit la Mission servie. */
+function RuntimePending() {
+  const { publicToken } = useParams({ strict: false }) as { publicToken?: string };
+  const french = isMaReliure && publicToken === BOOKBINDING_PUBLIC_TOKEN;
+  return <MissionRuntimePending label={french ? FR_PUBLIC_COPY[PREPARING] ?? PREPARING : PREPARING} />;
+}
 
 /**
  * Ce que Ma Reliure dit autour du parcours des particuliers : promesse au

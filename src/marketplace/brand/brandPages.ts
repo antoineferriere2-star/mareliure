@@ -10,6 +10,7 @@
  * 8 octobre 2026).
  */
 import { FINE_BINDERY_LOCALES } from "@/marketplace/i18n/fineBinderyLocale";
+import { DISCIPLINES } from "@/marketplace/pages/fineBindery/disciplines";
 
 export interface SitemapEntry {
   path: string;
@@ -41,6 +42,7 @@ export const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
   ...FINE_BINDERY_LOCALES.flatMap((locale) => [
     { path: `/${locale}`, changefreq: "weekly" as const, priority: locale === "en" ? "1.0" : "0.9" },
     { path: `/${locale}/professionals`, changefreq: "weekly" as const, priority: "0.9" },
+    ...DISCIPLINES.map((discipline) => ({ path: `/${locale}/${discipline.slug}`, changefreq: "monthly" as const, priority: "0.8" })),
   ]),
   { path: "/legal-notice", changefreq: "yearly", priority: "0.3" },
   { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },

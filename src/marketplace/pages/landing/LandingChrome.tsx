@@ -134,6 +134,15 @@ export function IntakeCta({
   );
 }
 
+/** La même Mission, en lien de texte : pour une page dont le bouton principal sert un autre public. */
+export function IntakeTextLink({ children }: { children: ReactNode }) {
+  return (
+    <Link to="/m/$publicToken" params={INTAKE_PARAMS} className="mr-link mr-tap">
+      {children}
+    </Link>
+  );
+}
+
 /**
  * Où vit la landing sur ce déploiement.
  *
