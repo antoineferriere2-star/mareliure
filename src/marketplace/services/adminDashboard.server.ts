@@ -4,6 +4,7 @@ import { buildTrafficSummary, type PageViewRow } from "@/marketplace/admin/traff
 import { buildIntakeFunnel, type IntakeSessionFacts } from "@/marketplace/admin/intakeFunnel";
 import { bookbindingPlaybookSchema } from "@/build/playbooks/bookbindingPlaybookSchema";
 import { BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
+import { INTERNAL_VISIT_KEY } from "@/build/runtime/sessionMetadata";
 import { unreadCount, type ConversationMessageFacts } from "@/marketplace/messaging/conversation";
 import { isMessageAudience } from "@/marketplace/messaging/audience";
 
@@ -114,7 +115,8 @@ async function readIntakeSessions(sb: SupabaseClient, since: string | null): Pro
     for (const row of (data ?? []) as { mission_id: string; created_at: string; submitted_at: string | null; answers: unknown }[]) {
       const answers = row.answers && typeof row.answers === "object" && !Array.isArray(row.answers) ? row.answers as Record<string, unknown> : {};
       sessions.push({ brand: brandOf.get(row.mission_id)!, created_at: row.created_at, submitted: Boolean(row.submitted_at),
-        keys: Object.keys(answers).filter((key) => answers[key] !== null && answers[key] !== "") });
+        keys: Object.keys(answers).filter((key) => answers[key] !== null && answers[key] !== ""),
+        internal: answers[INTERNAL_VISIT_KEY] === "1" });
     }
     if (!data || data.length < PAGE) return sessions;
   }

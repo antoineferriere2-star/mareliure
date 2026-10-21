@@ -1,4 +1,6 @@
 /* eslint-disable react-refresh/only-export-components -- localizeField is exported for unit testing */
+import { isInternalVisitor } from "@/build/analytics/internalVisitor";
+import { INTERNAL_VISIT_KEY } from "@/build/runtime/sessionMetadata";
 import {
   useCallback,
   useEffect,
@@ -375,9 +377,11 @@ function MissionRuntimeContent({
       onMissionLocale(missionLocale(data.mission));
       setSchema(data.playbook_schema);
       setSessionAuth(auth);
-      const initialAnswers = { ...(data.session.answers ?? {}), ...seedAnswers };
+      // Navigateur de l'équipe : la session est marquée pour être exclue des mesures (Insights Engine).
+      const seed = { ...seedAnswers, ...(isInternalVisitor() ? { [INTERNAL_VISIT_KEY]: "1" } : {}) };
+      const initialAnswers = { ...(data.session.answers ?? {}), ...seed };
       setAnswers(initialAnswers);
-      if (seedAnswers && Object.keys(seedAnswers).length > 0) {
+      if (Object.keys(seed).length > 0) {
         // Best-effort: a referral tag lost to a transient network error just
         // means this session is never resolved as BINDER_REFERRED — never a
         // security question, see reconcileCaseTriage. Fired directly against

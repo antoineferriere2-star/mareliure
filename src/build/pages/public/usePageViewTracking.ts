@@ -1,5 +1,6 @@
 import { useEffect, useRef } from "react";
 import { useRouterState } from "@tanstack/react-router";
+import { isInternalVisitor } from "@/build/analytics/internalVisitor";
 
 const SESSION_KEY = "metre-build-visit-session";
 
@@ -28,6 +29,8 @@ export function usePageViewTracking(locale?: string) {
     if (typeof window === "undefined") return;
     if (lastSent.current === pathname) return;
     lastSent.current = pathname;
+    // Navigateurs de l'équipe : jamais comptés (voir internalVisitor.ts).
+    if (isInternalVisitor()) return;
 
     const session = readSession();
     const body = JSON.stringify({

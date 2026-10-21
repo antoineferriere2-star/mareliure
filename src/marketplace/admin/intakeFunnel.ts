@@ -5,8 +5,9 @@
  * dernière étape du Playbook dont au moins une question a reçu une réponse. Seuls les **noms** des
  * questions répondues entrent ici, jamais les réponses (aucune donnée personnelle).
  *
- * Une session naît à l'affichage de la page : « aucune réponse » compte aussi les robots, les aperçus
- * de lien et nos propres recettes. Le chiffre utile est la suite : qui répond, et jusqu'où.
+ * Une session naît à l'affichage de la page : « aucune réponse » compte aussi les robots et les aperçus
+ * de lien. Les sessions des navigateurs de l'équipe (marquées `_internal_visit`) sont exclues.
+ * Le chiffre utile est la suite : qui répond, et jusqu'où.
  */
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import type { PlaybookSchema } from "@/build/schema/playbook";
@@ -17,6 +18,8 @@ export interface IntakeSessionFacts {
   submitted: boolean;
   /** Noms des questions répondues (clés de `answers`), sans les valeurs. */
   keys: string[];
+  /** Ouverte par un navigateur de l'équipe (build/analytics/internalVisitor.ts) : jamais comptée. */
+  internal?: boolean;
 }
 
 export interface IntakeFunnel {
@@ -32,8 +35,8 @@ export function buildIntakeFunnel(sessions: IntakeSessionFacts[], schema: Playbo
   const stepOf = new Map<string, number>();
   steps.forEach((step, index) => step.fields.forEach((field) => stepOf.set(field.key, index)));
   const sinceMs = options.since ? Date.parse(options.since) : null;
-  const inScope = sessions.filter((session) =>
-    (options.brand === "ALL" || session.brand === options.brand)
+  const inScope = sessions.filter((session) => !session.internal
+    && (options.brand === "ALL" || session.brand === options.brand)
     && (sinceMs === null || Date.parse(session.created_at) >= sinceMs));
 
   // -1 : aucune réponse ; une session envoyée est allée au bout, quelles que soient les étapes facultatives.

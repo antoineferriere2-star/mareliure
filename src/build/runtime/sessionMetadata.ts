@@ -3,6 +3,8 @@ export const PROFILE_REQUEST_SOURCE = "finebindery_profile" as const;
 export const PROFILE_SOURCE_ANSWER_KEY = "_request_source";
 export const FINE_BINDERY_SUBMISSION_LOCALE_KEY = "_submission_locale";
 export const FINE_BINDERY_PREFERRED_LANGUAGE_KEY = "_preferred_language";
+/** Session ouverte par un navigateur de l'équipe : exclue des mesures (build/analytics/internalVisitor.ts). */
+export const INTERNAL_VISIT_KEY = "_internal_visit";
 
 const FINE_BINDERY_LOCALES = new Set(["en", "fr", "de", "it", "es"]);
 const REFERRAL_SLUG = /^[a-z0-9]+(-[a-z0-9]+)*$/;
@@ -20,6 +22,7 @@ export function runtimeSessionMetadataError(key: string, value: unknown): string
   if (key === PROFILE_SOURCE_ANSWER_KEY) {
     return value === PROFILE_REQUEST_SOURCE ? null : "Invalid request source.";
   }
+  if (key === INTERNAL_VISIT_KEY) return value === "1" ? null : "Invalid internal visit flag.";
   if (key === FINE_BINDERY_SUBMISSION_LOCALE_KEY || key === FINE_BINDERY_PREFERRED_LANGUAGE_KEY) {
     return typeof value === "string" && FINE_BINDERY_LOCALES.has(value)
       ? null

@@ -37,4 +37,8 @@ describe("parcours « Présenter mon livre » au pilotage", () => {
     expect(buildIntakeFunnel(sessions, bookbindingPlaybookSchema, { brand: "FINE_BINDERY", since: null })).toMatchObject({ opened: 2, answeredFirst: 1, submitted: 0 });
     expect(buildIntakeFunnel(sessions, bookbindingPlaybookSchema, { brand: "ALL", since: null }).opened).toBe(8);
   });
+  it("ne compte jamais les sessions des navigateurs de l'équipe", () => {
+    const withInternal = [...sessions, { ...session("MA_RELIURE", ["intention"], true), internal: true }];
+    expect(buildIntakeFunnel(withInternal, bookbindingPlaybookSchema, { brand: "ALL", since: null })).toMatchObject({ opened: 8, submitted: 1 });
+  });
 });
