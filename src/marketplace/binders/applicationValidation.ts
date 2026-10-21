@@ -38,6 +38,7 @@ const applicationInput = z.object({
   websiteUrl: optionalText("Site ou réseau social", APPLICATION_LIMITS.websiteUrl).refine(
     (value) => {
       if (!value) return true;
+      if (!/^https?:\/\//i.test(value)) return false;
       try {
         return ["http:", "https:"].includes(new URL(value).protocol);
       } catch {

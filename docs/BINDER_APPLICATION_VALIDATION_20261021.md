@@ -30,8 +30,8 @@ ApplicationForm garde les attributs required/maxLength/type pour la sémantique 
 
 ## Vérifications
 
-- **38 tests ciblés réussis** : 32 tests de validation (normalisation, formats, consentement, longueurs, bornes) et 6 tests du point d’entrée public, base et e-mail simulés. Les refus sont vérifiés avant l’appel à admin(), insert() ou sendTemplateEmail(). Aucun e-mail réel envoyé.
-- **Suite complète : 316 fichiers, 3 889 tests réussis**, un worker, délai de test 30 s.
+- **40 tests ciblés réussis** : 34 tests de validation (normalisation, formats, consentement, longueurs, bornes) et 6 tests du point d’entrée public, base et e-mail simulés. Les refus sont vérifiés avant l’appel à admin(), insert() ou sendTemplateEmail(). Aucun e-mail réel envoyé. Les deux derniers cas refusent explicitement `https:atelier.fr` et `http:/atelier.fr`, acceptés par le parseur URL mais contraires au préfixe demandé.
+- **Premier passage local complet : 316 fichiers, 3 889 tests réussis**, un worker, délai de test 30 s, avant ajout de ces deux cas URL. Le dernier commit est de nouveau soumis à la suite complète en CI ; ce nombre historique n’est pas présenté comme le nombre de la dernière CI.
 - **TypeScript réussi**, lint sans erreur (19 avertissements existants au premier passage).
 - **Build `node scripts/buildMaReliure.mjs` réussi**, vérification du projet public attendu dans l’artefact ; aucune publication.
 - **Recette candidature : 2/2**, bureau 1280 × 900 et mobile 375 × 812 réels. Deux refus successifs, dont au clavier ; e-mail/téléphone/site/expérience/consentement ; attributs de limites ; ville absente acceptée jusqu’au serveur simulé ; refus de ce serveur rattaché à l’e-mail sans faux succès. Aucune requête extérieure ou inattendue. Captures [bureau](binder-application-validation-20261021/refus-1280.png) et [mobile](binder-application-validation-20261021/refus-375.png).

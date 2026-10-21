@@ -62,7 +62,7 @@ describe("validation partagée de la candidature atelier", () => {
       expect(validateBinderApplication({ ...valid, websiteUrl }).ok).toBe(true);
     },
   );
-  it.each(["atelier.fr", "https://", "javascript:alert(1)", "ftp://atelier.fr"])(
+  it.each(["atelier.fr", "https://", "https:atelier.fr", "http:/atelier.fr", "javascript:alert(1)", "ftp://atelier.fr"])(
     "refuse une adresse web invalide : %s",
     (websiteUrl) => {
       expect(errors({ ...valid, websiteUrl }).websiteUrl).toContain("https://");
