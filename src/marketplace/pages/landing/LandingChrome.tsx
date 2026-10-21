@@ -206,7 +206,11 @@ function Wordmark({ tone = "ink" }: { tone?: "ink" | "paper" }) {
 const HEADER_LINK =
   "mr-tap mr-small shrink-0 text-mr-graphite underline-offset-[6px] transition-colors hover:text-mr-ink hover:underline";
 
-export function LandingHeader({ workshop = false }: { workshop?: boolean }) {
+/**
+ * `workshop` : en-tête du parcours atelier (bouton « Créer mon espace atelier » au lieu de « Présenter mon
+ * livre ») ; `cta={false}` le retire, pour la page même où l'on crée cet espace.
+ */
+export function LandingHeader({ workshop = false, cta = true }: { workshop?: boolean; cta?: boolean }) {
   return (
     <header className="sticky top-0 z-40 border-b border-mr-rule/70 bg-mr-paper">
       <SkipLink label="Aller au contenu" />
@@ -250,7 +254,7 @@ export function LandingHeader({ workshop = false }: { workshop?: boolean }) {
               Se connecter
             </a>
           </span>
-          {workshop ? (
+          {!cta ? null : workshop ? (
             <a href="/auth?space=atelier" className={actionClass("primary", "compact")}>
               Créer mon espace atelier
             </a>

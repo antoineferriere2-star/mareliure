@@ -31,7 +31,7 @@ export const Route = createFileRoute("/auth")({
   // the Métré deployment rather than made and ignored.
   loader: async () =>
     isMaReliure ? { brand: await getRequestMarketplaceBrand() } : { brand: null },
-  head: ({ loaderData }) => {
+  head: ({ loaderData, match }) => {
     if (!isMaReliure) {
       return {
         meta: [
@@ -45,10 +45,12 @@ export const Route = createFileRoute("/auth")({
         ],
       };
     }
+    // Arrivé par « Créer mon espace atelier » (?space=atelier), le relieur ne lit pas « Retrouver mes livres » (revue #162).
+    const atelier = (match.search as { space?: string }).space === "atelier";
     const title =
       loaderData?.brand === "FINE_BINDERY"
-        ? "My Books — Fine Bindery"
-        : "Retrouver mes livres — Ma Reliure";
+        ? atelier ? "Workshop space — Fine Bindery" : "My Books — Fine Bindery"
+        : atelier ? "Mon espace atelier — Ma Reliure" : "Retrouver mes livres — Ma Reliure";
     return { meta: [{ title }, { name: "robots", content: "noindex,nofollow" }] };
   },
   component: AuthPage,
