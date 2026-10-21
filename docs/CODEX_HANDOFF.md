@@ -3599,6 +3599,13 @@ En cours (PR de ce bloc) : un admin atterrit sur `/admin` après connexion au li
 
 ## Latest handoff
 
+Codex — 15 octobre 2026, branche `docs/sendcloud-audit-20261015`, base `origin/main` fb32fe1 (inclut #123 déjà fusionnée). Audit documentaire uniquement, `docs/SENDCLOUD_AUDIT_20261015.md` ; aucun fichier transport/configuration modifié, aucune opération de production ni achat.
+
+Constats prioritaires : tarif expiré impossible à renouveler (INSERT + unique dossier/proposition), job ambigu sans adoption/clôture manuelle accessible, colis retour non comparé aux mesures approuvées, annulation/rejet webhook laissant l'étiquette confirmed, primitive d'annulation non branchée au site. Méthodes Sendcloud Retour toujours désactivées ; limites de récupération/annulation à corriger avant réouverture. Recommandations uniquement : Claude Code conserve l'implémentation.
+
+Panneaux Sendcloud consultés après connexion du propriétaire : 621399 feedback décoché, 633076 coché et URL attendue. Aucun enregistrement/test webhook/régénération. Réponses des notifications de 13:58, rattachement des suivis et fin réelle des annulations non vérifiés ; pas de succès hébergé prétendu.
+
+Validation : suite complète de base lancée, 3764/3769 réussis avec cinq timeouts de scans et deux erreurs de délai internes Vitest ; trois fichiers repris passent (73 tests) puis les deux derniers passent (14 tests) avec `--maxWorkers=1 --testTimeout=120000`. Aucun changement d'assertion/configuration versionnée. 83 tests ciblés transport/audit passent, dont six sondes temporaires sur migrations réelles PGlite et fournisseur simulé : expiration/unique, absence de sortie ambiguë, mesures retour divergentes, webhook annulé/livré/refusé rejoué. Sondes et journaux conservés hors Git dans `D:/CodexProjects/outputs/mareliure-*20261015*`. `npm run typecheck` réussi sur la base audit. Aucun build requis pour la PR documentaire. Pas de fusion ni déploiement.
 Codex — 15 octobre 2026, branche indépendante perf/public-js-20261015, base origin/main fb32fe1. JavaScript public réduit sur les quatre routes : / — Ma Reliure 10,3 % ; /partenaires-relieurs 4,7 % ; /tarifs 4,8 % ; /en — Fine Bindery 1,9 %. Métadonnées/FAQ partagées dans des modules légers, loaders différés, contenu Fine Bindery différé sur l’accueil Ma Reliure, glossaire public séparé du catalogue sans changer son API.
 
 Preuves : docs/PUBLIC_JS_20261015.md et .json, 24 passages finaux Lighthouse 12.8.2 (trois avant/après pour chaque page). Serveurs Node locaux sans compression CDN, mêmes réglages mobiles, pings et Supabase bloqués. Corps HTML hors scripts/commentaires et empreintes CSS identiques sur les quatre pages ; aucun font-display optional, changement d’image ou de transport/configuration. Les temps locaux ne sont pas présentés comme ceux de production ; TBT variable et un échantillon CLS Fine Bindery à environ 0,027 (médiane nulle) consignés.
@@ -3711,6 +3718,8 @@ Codex — **20 octobre 2026, soir**, brief n° 7, chantier 3. Branche docs/struc
 **Réserve lecture seule stricte :** le robot du test Google peut exécuter le POST de suivi de visite de /en ; Google-InspectionTool n’est pas reconnu par le filtre bot actuel. Une ligne anonyme build_page_views a pu être créée ; résultat SQL non observé, absence d’écriture analytique non certifiée. Aucune action métier exécutée. Rapport et description de #158 qualifiés ; aucun nettoyage ni nouvelle validation URL. Utiliser le mode code/JSON-LD isolé pour un contrôle strict futur.
 
 ## Latest handoff
+
+Codex — **20 octobre 2026, après-midi**, brief n° 6, chantier 1, PR #124. Origin/main f4bb8d0c81e893d44c803a6b87420551a1220ad8 intégré dans la branche propre de cette PR par un commit de fusion local ; conflits limités au handoff résolus en gardant les deux blocs. Aucune fusion de PR ni publication de Worker. Table avant / correction / preuve ajoutée en tête du rapport ; relevés historiques conservés et explicitement datés, y compris les verdicts devenus obsolètes.
 
 Codex — **20 octobre 2026, après-midi**, brief n° 6, chantier 1, PR #132. Origin/main f4bb8d0c81e893d44c803a6b87420551a1220ad8 intégré dans la branche propre de cette PR par un commit de fusion local ; conflits limités au handoff résolus en gardant les deux blocs. Aucune fusion de PR ni publication de Worker. Table avant / correction / preuve ajoutée en tête du rapport ; relevés historiques conservés et explicitement datés, y compris les verdicts devenus obsolètes.
 
