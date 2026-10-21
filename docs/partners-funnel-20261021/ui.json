@@ -1,0 +1,634 @@
+[
+  {
+    "at": "2026-10-21T12:43:46.177Z",
+    "mode": "desktop",
+    "status": 200,
+    "snapshot": {
+      "title": "Ma Reliure pour les relieurs — Devis, ouvrages et facturation",
+      "width": 1280,
+      "scrollWidth": 1280,
+      "documentHeight": 10977,
+      "h1": "Vos ouvrages, vos devis, vos clients. Dans un seul outil.",
+      "headings": [
+        {
+          "top": 234,
+          "height": 202,
+          "text": "Vos ouvrages, vos devis, vos clients. Dans un seul outil."
+        },
+        {
+          "top": 1359,
+          "height": 92,
+          "text": "Un devis prêt en quelques clics."
+        },
+        {
+          "top": 2249,
+          "height": 46,
+          "text": "Vos tarifs, à votre main."
+        },
+        {
+          "top": 3024,
+          "height": 46,
+          "text": "L’ouvrage au centre."
+        },
+        {
+          "top": 3679,
+          "height": 92,
+          "text": "Des documents à votre nom, des factures en règle."
+        },
+        {
+          "top": 4881,
+          "height": 92,
+          "text": "Des projets Ma Reliure, en plus des vôtres."
+        },
+        {
+          "top": 5276,
+          "height": 22,
+          "text": "Des projets déjà qualifiés"
+        },
+        {
+          "top": 5276,
+          "height": 22,
+          "text": "Une rémunération connue"
+        },
+        {
+          "top": 5276,
+          "height": 22,
+          "text": "Vous choisissez vos projets"
+        },
+        {
+          "top": 5276,
+          "height": 22,
+          "text": "Vos clients restent les vôtres"
+        },
+        {
+          "top": 5512,
+          "height": 22,
+          "text": "Aucun volume garanti"
+        },
+        {
+          "top": 5722,
+          "height": 20,
+          "text": "Le parcours d’un projet"
+        },
+        {
+          "top": 6411,
+          "height": 92,
+          "text": "Un abonnement simple, page vitrine incluse."
+        },
+        {
+          "top": 6387,
+          "height": 20,
+          "text": "Inclus"
+        },
+        {
+          "top": 7345,
+          "height": 92,
+          "text": "Avant de créer votre espace."
+        },
+        {
+          "top": 8453,
+          "height": 92,
+          "text": "Vous préférez d'abord nous présenter votre atelier ?"
+        },
+        {
+          "top": 9999,
+          "height": 92,
+          "text": "Votre prochain devis peut partir ce soir."
+        }
+      ],
+      "candidate": {
+        "top": 8265,
+        "height": 1630,
+        "text": "VIIISans compteVous préférez d'abord nous présenter votre atelier ?Cette candidature reste possible si vous souhaitez être recontacté avant de créer votre espace. L'accès aux projets exige toujours une validation par Ma Reliure.Créer mon espace atelier dès maintenantNe pas remplir ce champPrénomNomNom de l'atelierVilleAdresse e-mailTéléphone (facultatif)Site ou réseau social (facultatif)Savoir-faireReliure toilePapier décoréDemi-cuirPlein cuirDorureRestaurationConservationCartonnageRebinding contemporainReliure d'artAnnées d'expérience (facultatif)Votre atelier, en quelques mots (facultatif)J'accepte que ces informations soient utilisées par Ma Reliure pour étudier ma candidature, conformément à la politique de confidentialité.Envoyer ma candidature"
+      },
+      "hero": {
+        "top": 94,
+        "height": 857,
+        "text": "Pour les relieurs et restaurateursVos ouvrages, vos devis, vos clients. Dans un seul outil.L’espace atelier de Ma Reliure réunit ce qui encombre les soirées : devis, tarifs, fiches ouvrage, factures et page vitrine. À votre nom, pour vos propres clients.Créer mon espace atelierVoir l’outil15 € HT par mois · Vos clients restent les vôtres · Aucun volume de commandes garantiVous cherchez un relieur pour votre livre ? Présentez-le à Ma Reliure : c’est gratuit et sans engagement, et vous recevez un devis avant de décider.Espace atelier — données d'exemple"
+      },
+      "ctas": [
+        {
+          "top": 25,
+          "height": 44,
+          "text": "Créer mon espace atelier",
+          "href": "/auth?space=atelier"
+        },
+        {
+          "top": 594,
+          "height": 51,
+          "text": "Créer mon espace atelier",
+          "href": "/auth?space=atelier"
+        },
+        {
+          "top": 6811,
+          "height": 51,
+          "text": "Créer mon espace atelier",
+          "href": "/auth?space=atelier"
+        },
+        {
+          "top": 8652,
+          "height": 24,
+          "text": "Créer mon espace atelier dès maintenant",
+          "href": "/auth?space=atelier"
+        },
+        {
+          "top": 10180,
+          "height": 51,
+          "text": "Créer mon espace atelier",
+          "href": "/auth?space=atelier"
+        }
+      ],
+      "fields": [
+        {
+          "id": "pr-first-name",
+          "type": "text",
+          "required": true,
+          "label": "Prénom",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-last-name",
+          "type": "text",
+          "required": true,
+          "label": "Nom",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-workshop",
+          "type": "text",
+          "required": true,
+          "label": "Nom de l'atelier",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-city",
+          "type": "text",
+          "required": true,
+          "label": "Ville",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-email",
+          "type": "email",
+          "required": true,
+          "label": "Adresse e-mail",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-phone",
+          "type": "tel",
+          "required": false,
+          "label": "Téléphone (facultatif)",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": false
+        },
+        {
+          "id": "pr-website",
+          "type": "url",
+          "required": false,
+          "label": "Site ou réseau social (facultatif)",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": false
+        },
+        {
+          "id": "pr-years",
+          "type": "number",
+          "required": false,
+          "label": "Années d'expérience (facultatif)",
+          "min": "0",
+          "max": "100",
+          "maxLength": -1,
+          "invalid": false
+        },
+        {
+          "id": "pr-message",
+          "type": "textarea",
+          "required": false,
+          "label": "Votre atelier, en quelques mots (facultatif)",
+          "maxLength": -1,
+          "invalid": false
+        },
+        {
+          "id": "",
+          "type": "checkbox",
+          "required": true,
+          "label": "J'accepte que ces informations soient utilisées par Ma Reliure pour étudier ma candidature, conformément à la politique de confidentialité.",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        }
+      ],
+      "skills": 10,
+      "bodyText": "POUR LES RELIEURS ET RESTAURATEURS\n\nVos ouvrages, vos devis, vos clients. Dans un seul outil.\n\nL’espace atelier de Ma Reliure réunit ce qui encombre les soirées : devis, tarifs, fiches ouvrage, factures et page vitrine. À votre nom, pour vos propres clients.\n\nCréer mon espace atelier\nVoir l’outil\n\n15 € HT par mois · Vos clients restent les vôtres · Aucun volume de commandes garanti\n\nVous cherchez un relieur pour votre livre ? Présentez-le à Ma Reliure : c’est gratuit et sans engagement, et vous recevez un devis avant de décider.\n\nEspace atelier — données d'exemple\nDevis\nVos prestations et vos prix à portée de clic, un PDF prêt à envoyer.\nTarifs\n45 prestations de départ, que vous ajustez à votre atelier.\nOuvrages\nChaque livre a sa fiche, avec son client, ses devis et ses factures.\nFactures\nDu devis accepté à la facture, avec acompte et suivi des paiements.\nI\n\nDEVIS\n\nUn devis prêt en quelques clics.\n\nOuvrez un devis, cochez ce que vous allez faire : vos prestations et vos prix sont déjà là, le total se construit sous vos yeux.\n\nVos prestations fréquentes et vos favoris, en tête de liste\nVos catégories et une recherche dans toutes vos prestations\nVos prix d'atelier, repris automatiquement\nUne ligne libre pour tout ce qui sort de l'ordinaire\nUne TVA pour tout le devis, modifiable en un geste\nPlusieurs formats et plusieurs livres dans le même devis\nUn PDF prêt à envoyer, à votre nom\nEspace atelier — données d'exemple\nII\n\nPRESTATIONS & TARIFS\n\nVos tarifs, à votre main.\n\nVous ne partez pas d'une page blanche, et vous n'héritez pas d'une grille imposée : ajustez ce qui ne vous ressemble pas, ajoutez ce qui vous est propre.\n\nLes 45 prestations Ma Reliure comme point de départ\nUn prix, plusieurs, ou une catégorie entière ajustés d'un coup\nVos propres prestations, rangées dans vos catégories\n« Sur étude » pour ce qui se chiffre pièce en main\nEspace atelier — données d'exemple\nIII\n\nOUVRAGES\n\nL’ouvrage au centre.\n\nUn livre, une fiche. Tout ce qui le concerne s'y rattache, du premier devis à la dernière facture.\n\nTitre, auteur, dimensions et état du livre\nLe client, et tous les devis et factures de l'ouvrage\nRetrouvé en tapant un titre, un auteur ou un nom\nEspace atelier — données d'exemple\nIV\n\nDOCUMENTS & FACTURES\n\nDes documents à votre nom, des factures en règle.\n\nLe devis part au nom de votre atelier. Accepté, il devient une facture sans rien ressaisir ; la facture suit ensuite l'acompte, le paiement et, s'il le faut, l'avoir.\n\nDevis PDF généré par l’outil — données d’exemple\nEspace atelier — données d'exemple\nVotre logo, votre couleur et vos mentions sur chaque document\nDes photos d'exemple sur les lignes du devis, jusque dans le PDF\nUn devis accepté devient une facture en un geste\nAcompte, paiement reçu, avoir : chaque facture garde son histoire\nUne numérotation continue et les mentions obligatoires\nV\n\nLE RÉSEAU MA RELIURE\n\nDes projets Ma Reliure, en plus des vôtres.\n\nQuand votre atelier est validé, Ma Reliure vous propose des livres qui correspondent à vos savoir-faire. Chaque proposition arrive complète, dans le même espace que vos propres clients.\n\nEspace atelier — données d'exemple\nDes projets déjà qualifiés\n\nPhotos, format, état du livre et attentes du client sont recueillis avant que le projet vous soit proposé.\n\nUne rémunération connue\n\nVous connaissez le travail envisagé et votre rémunération avant d'accepter.\n\nVous choisissez vos projets\n\nPlanning complet, projet hors spécialité, délai incompatible : vous restez libre de refuser.\n\nVos clients restent les vôtres\n\nUn client que vous invitez avec votre lien personnel, ou qui vous trouve par votre page vitrine, reste votre client : vous lui faites votre devis et votre facture.\n\nAucun volume garanti\n\nL'abonnement donne l'outil et la page vitrine. Il ne garantit aucune commande venant du réseau Ma Reliure.\n\nLE PARCOURS D’UN PROJET\n1\nLe client présente son livre à Ma Reliure\n2\nMa Reliure étudie la demande, fixe le prix et vous annonce votre rémunération\n3\nVous acceptez la prestation, la rémunération et votre délai\n4\nMa Reliure vend le projet au client, qui l'accepte et règle\n5\nLe livre rejoint votre atelier\n6\nVous réalisez le travail, puis vous facturez Oppe\n7\nOppe vous règle par virement sous 30 jours ; le livre retourne chez son propriétaire\nVI\n\nTARIF\n\nUn abonnement simple, page vitrine incluse.\n\n15 €\nHT par mois, sans engagement\n\nFrance métropolitaine : TVA 20 % (3 €), soit 18 € TTC par mois, vitrine incluse. Même TVA si l’atelier est en franchise en base. Autres territoires : qualification individuelle.\n\nPour les nouveaux ateliers. Les ateliers déjà inscrits gardent la gratuité tant qu'ils n'ont pas accepté expressément la transition.\n\nCréer mon espace atelier\nINCLUS\nClients\nOuvrages\nDevis\nFactures et avoirs\nPrestations et tarifs\nMessages\nPage vitrine\nPaiement direct\nVirement, chèque, espèces : vous encaissez comme aujourd’hui.\n0 €\nPaiement en ligne\nFacultatif : votre client paie votre devis ou votre facture par carte, vous restez le vendeur.\n3 %\ndu montant encaissé, TVA comprise, hors frais Stripe ; frais Stripe à votre charge\nProjets confiés par Ma Reliure\nOppe vend et facture le client ; vous facturez Oppe la rémunération annoncée, réglée sous 30 jours.\nAnnoncée\nVII\n\nQUESTIONS FRÉQUENTES\n\nAvant de créer votre espace.\nCombien coûte l'outil ?\n+\nEt pour le paiement en ligne de mes clients ?\n+\nQui vend, qui facture, qui me paie quand Ma Reliure me confie un projet ?\n+\nPuis-je utiliser l'outil sans recevoir de projets Ma Reliure ?\n+\nEst-ce que je suis obligé d'accepter les projets proposés ?\n+\nQui fixe les prix ?\n+\nPuis-je utiliser Ma Reliure avec un client que j'ai trouvé moi-même ?\n+\nMes documents portent-ils le nom de mon atelier ?\n+\nPuis-je parler directement avec le client d'un projet Ma Reliure ?\n+\nQue se passe-t-il si je découvre un problème après réception ?\n+\nVIII\n\nSANS COMPTE\n\nVous préférez d'abord nous présenter votre atelier ?\n\nCette candidature reste possible si vous souhaitez être recontacté avant de créer votre espace. L'accès aux projets exige toujours une validation par Ma Reliure.\n\nCréer mon espace atelier dès maintenant\nNe pas remplir ce champ\nPrénom\nNom\nNom de l'atelier\nVille\nAdresse e-mail\nTéléphone (facultatif)\nSite ou réseau social (facultatif)\nSavoir-faire\nReliure toile\nPapier décoré\nDemi-cuir\nPlein cuir\nDorure\nRestauration\nConservation\nCartonnage\nRebinding contemporain\nReliure d'art\nAnnées d'expérience (facultatif)\nVotre atelier, en quelques mots (facultatif)\nJ'accepte que ces informations soient utilisées par Ma Reliure pour étudier ma candidature, conformément à la politique de confidentialité.\nEnvoyer ma candidature\nVotre prochain devis peut partir ce soir.\n\nCréez votre espace : vos prestations sont déjà là, il ne manque que vos prix.\n\nCréer mon espace atelier\nPrésenter mon livre\n\nVous avez un livre à faire relier ? Le second bouton est pour vous.",
+      "forms": 1
+    },
+    "missing": [
+      {
+        "id": "pr-first-name",
+        "type": "text",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "pr-last-name",
+        "type": "text",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "pr-workshop",
+        "type": "text",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "pr-city",
+        "type": "text",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "pr-email",
+        "type": "email",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "",
+        "type": "checkbox",
+        "validationMessage": "Veuillez cocher cette case si vous souhaitez continuer."
+      }
+    ],
+    "auth": {
+      "url": "https://mareliure.fr/auth?space=atelier",
+      "width": 1280,
+      "title": "Retrouver mes livres — Ma Reliure",
+      "bodyText": "Aller au contenu\nMa Reliure\nComment ça marche\nLes savoir-faire\nTarifs\nPour les relieurs\nSe connecter\nPrésenter mon livre\n\nVOTRE ESPACE\n\nAccéder à mon espace Ma Reliure\nClient\nAtelier partenaire\n\nIndiquez votre adresse e-mail pour créer votre espace atelier ou vous reconnecter. Le lien et le code reçus vérifient cette adresse. Vous créez ensuite votre atelier ; l'accès aux projets reste soumis à la validation de Ma Reliure.\n\nCréer mon espace atelier ou me connecter\nAdresse e-mail\nRecevoir mon lien et mon code de connexion\n\nVous avez déjà un mot de passe ?\n\nVotre espace atelier est disponible dès la création du compte. Ma Reliure valide séparément l’accès aux nouveaux projets.\n\nMa Reliure\n\nReliure, restauration et création, confiées à des ateliers indépendants installés en France.\n\nPRESTATIONS\n\nRéparation\nRestauration\nReliure\nDorure et finitions\nReliure de création\nÉtuis et boîtes\n\nLE SERVICE\n\nComment ça marche\nLes savoir-faire\nTarifs\nPour les relieurs\n\nINFORMATIONS\n\nMentions légales\nConfidentialité\nConditions d'utilisation\nConditions générales de vente\nContact\n\nMa Reliure — reliure et restauration de livres, par des artisans indépendants.",
+      "fields": [
+        {
+          "type": "email",
+          "required": true,
+          "label": "Adresse e-mail"
+        }
+      ]
+    },
+    "blocked": [
+      {
+        "url": "https://mareliure.fr/api/public/track-view",
+        "method": "POST"
+      }
+    ],
+    "errors": [],
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_FAILED"
+    ],
+    "badResponses": [],
+    "sent": {
+      "count": 111,
+      "methods": [
+        "GET"
+      ],
+      "hosts": [
+        "mareliure.fr"
+      ],
+      "fetches": [
+        {
+          "url": "https://mareliure.fr/_serverFn/07a56fbc7c0c1d92cde9892017e862066f5e61b959a66ecbd5d8eac3df5461b4",
+          "method": "GET",
+          "type": "fetch"
+        }
+      ]
+    }
+  },
+  {
+    "at": "2026-10-21T12:43:49.687Z",
+    "mode": "mobile",
+    "status": 200,
+    "snapshot": {
+      "title": "Ma Reliure pour les relieurs — Devis, ouvrages et facturation",
+      "width": 375,
+      "scrollWidth": 375,
+      "documentHeight": 15330,
+      "h1": "Vos ouvrages, vos devis, vos clients. Dans un seul outil.",
+      "headings": [
+        {
+          "top": 214,
+          "height": 122,
+          "text": "Vos ouvrages, vos devis, vos clients. Dans un seul outil."
+        },
+        {
+          "top": 1880,
+          "height": 62,
+          "text": "Un devis prêt en quelques clics."
+        },
+        {
+          "top": 3139,
+          "height": 31,
+          "text": "Vos tarifs, à votre main."
+        },
+        {
+          "top": 4113,
+          "height": 31,
+          "text": "L’ouvrage au centre."
+        },
+        {
+          "top": 4982,
+          "height": 62,
+          "text": "Des documents à votre nom, des factures en règle."
+        },
+        {
+          "top": 6384,
+          "height": 62,
+          "text": "Des projets Ma Reliure, en plus des vôtres."
+        },
+        {
+          "top": 6954,
+          "height": 22,
+          "text": "Des projets déjà qualifiés"
+        },
+        {
+          "top": 7131,
+          "height": 22,
+          "text": "Une rémunération connue"
+        },
+        {
+          "top": 7280,
+          "height": 22,
+          "text": "Vous choisissez vos projets"
+        },
+        {
+          "top": 7458,
+          "height": 22,
+          "text": "Vos clients restent les vôtres"
+        },
+        {
+          "top": 7665,
+          "height": 22,
+          "text": "Aucun volume garanti"
+        },
+        {
+          "top": 7837,
+          "height": 20,
+          "text": "Le parcours d’un projet"
+        },
+        {
+          "top": 8762,
+          "height": 62,
+          "text": "Un abonnement simple, page vitrine incluse."
+        },
+        {
+          "top": 9334,
+          "height": 20,
+          "text": "Inclus"
+        },
+        {
+          "top": 10413,
+          "height": 31,
+          "text": "Avant de créer votre espace."
+        },
+        {
+          "top": 11673,
+          "height": 62,
+          "text": "Vous préférez d'abord nous présenter votre atelier ?"
+        },
+        {
+          "top": 13570,
+          "height": 62,
+          "text": "Votre prochain devis peut partir ce soir."
+        }
+      ],
+      "candidate": {
+        "top": 11517,
+        "height": 1982,
+        "text": "VIIISans compteVous préférez d'abord nous présenter votre atelier ?Cette candidature reste possible si vous souhaitez être recontacté avant de créer votre espace. L'accès aux projets exige toujours une validation par Ma Reliure.Créer mon espace atelier dès maintenantNe pas remplir ce champPrénomNomNom de l'atelierVilleAdresse e-mailTéléphone (facultatif)Site ou réseau social (facultatif)Savoir-faireReliure toilePapier décoréDemi-cuirPlein cuirDorureRestaurationConservationCartonnageRebinding contemporainReliure d'artAnnées d'expérience (facultatif)Votre atelier, en quelques mots (facultatif)J'accepte que ces informations soient utilisées par Ma Reliure pour étudier ma candidature, conformément à la politique de confidentialité.Envoyer ma candidature"
+      },
+      "hero": {
+        "top": 114,
+        "height": 1101,
+        "text": "Pour les relieurs et restaurateursVos ouvrages, vos devis, vos clients. Dans un seul outil.L’espace atelier de Ma Reliure réunit ce qui encombre les soirées : devis, tarifs, fiches ouvrage, factures et page vitrine. À votre nom, pour vos propres clients.Créer mon espace atelierVoir l’outil15 € HT par mois · Vos clients restent les vôtres · Aucun volume de commandes garantiVous cherchez un relieur pour votre livre ? Présentez-le à Ma Reliure : c’est gratuit et sans engagement, et vous recevez un devis avant de décider.Espace atelier — données d'exemple"
+      },
+      "ctas": [
+        {
+          "top": 12,
+          "height": 44,
+          "text": "Créer mon espace atelier",
+          "href": "/auth?space=atelier"
+        },
+        {
+          "top": 513,
+          "height": 51,
+          "text": "Créer mon espace atelier",
+          "href": "/auth?space=atelier"
+        },
+        {
+          "top": 9235,
+          "height": 51,
+          "text": "Créer mon espace atelier",
+          "href": "/auth?space=atelier"
+        },
+        {
+          "top": 11892,
+          "height": 24,
+          "text": "Créer mon espace atelier dès maintenant",
+          "href": "/auth?space=atelier"
+        },
+        {
+          "top": 13744,
+          "height": 51,
+          "text": "Créer mon espace atelier",
+          "href": "/auth?space=atelier"
+        }
+      ],
+      "fields": [
+        {
+          "id": "pr-first-name",
+          "type": "text",
+          "required": true,
+          "label": "Prénom",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-last-name",
+          "type": "text",
+          "required": true,
+          "label": "Nom",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-workshop",
+          "type": "text",
+          "required": true,
+          "label": "Nom de l'atelier",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-city",
+          "type": "text",
+          "required": true,
+          "label": "Ville",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-email",
+          "type": "email",
+          "required": true,
+          "label": "Adresse e-mail",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        },
+        {
+          "id": "pr-phone",
+          "type": "tel",
+          "required": false,
+          "label": "Téléphone (facultatif)",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": false
+        },
+        {
+          "id": "pr-website",
+          "type": "url",
+          "required": false,
+          "label": "Site ou réseau social (facultatif)",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": false
+        },
+        {
+          "id": "pr-years",
+          "type": "number",
+          "required": false,
+          "label": "Années d'expérience (facultatif)",
+          "min": "0",
+          "max": "100",
+          "maxLength": -1,
+          "invalid": false
+        },
+        {
+          "id": "pr-message",
+          "type": "textarea",
+          "required": false,
+          "label": "Votre atelier, en quelques mots (facultatif)",
+          "maxLength": -1,
+          "invalid": false
+        },
+        {
+          "id": "",
+          "type": "checkbox",
+          "required": true,
+          "label": "J'accepte que ces informations soient utilisées par Ma Reliure pour étudier ma candidature, conformément à la politique de confidentialité.",
+          "min": "",
+          "max": "",
+          "maxLength": -1,
+          "invalid": true
+        }
+      ],
+      "skills": 10,
+      "bodyText": "POUR LES RELIEURS ET RESTAURATEURS\n\nVos ouvrages, vos devis, vos clients. Dans un seul outil.\n\nL’espace atelier de Ma Reliure réunit ce qui encombre les soirées : devis, tarifs, fiches ouvrage, factures et page vitrine. À votre nom, pour vos propres clients.\n\nCréer mon espace atelier\nVoir l’outil\n\n15 € HT par mois · Vos clients restent les vôtres · Aucun volume de commandes garanti\n\nVous cherchez un relieur pour votre livre ? Présentez-le à Ma Reliure : c’est gratuit et sans engagement, et vous recevez un devis avant de décider.\n\nEspace atelier — données d'exemple\nDevis\nVos prestations et vos prix à portée de clic, un PDF prêt à envoyer.\nTarifs\n45 prestations de départ, que vous ajustez à votre atelier.\nOuvrages\nChaque livre a sa fiche, avec son client, ses devis et ses factures.\nFactures\nDu devis accepté à la facture, avec acompte et suivi des paiements.\nI\n\nDEVIS\n\nUn devis prêt en quelques clics.\n\nOuvrez un devis, cochez ce que vous allez faire : vos prestations et vos prix sont déjà là, le total se construit sous vos yeux.\n\nVos prestations fréquentes et vos favoris, en tête de liste\nVos catégories et une recherche dans toutes vos prestations\nVos prix d'atelier, repris automatiquement\nUne ligne libre pour tout ce qui sort de l'ordinaire\nUne TVA pour tout le devis, modifiable en un geste\nPlusieurs formats et plusieurs livres dans le même devis\nUn PDF prêt à envoyer, à votre nom\nEspace atelier — données d'exemple\nII\n\nPRESTATIONS & TARIFS\n\nVos tarifs, à votre main.\n\nVous ne partez pas d'une page blanche, et vous n'héritez pas d'une grille imposée : ajustez ce qui ne vous ressemble pas, ajoutez ce qui vous est propre.\n\nLes 45 prestations Ma Reliure comme point de départ\nUn prix, plusieurs, ou une catégorie entière ajustés d'un coup\nVos propres prestations, rangées dans vos catégories\n« Sur étude » pour ce qui se chiffre pièce en main\nEspace atelier — données d'exemple\nIII\n\nOUVRAGES\n\nL’ouvrage au centre.\n\nUn livre, une fiche. Tout ce qui le concerne s'y rattache, du premier devis à la dernière facture.\n\nTitre, auteur, dimensions et état du livre\nLe client, et tous les devis et factures de l'ouvrage\nRetrouvé en tapant un titre, un auteur ou un nom\nEspace atelier — données d'exemple\nIV\n\nDOCUMENTS & FACTURES\n\nDes documents à votre nom, des factures en règle.\n\nLe devis part au nom de votre atelier. Accepté, il devient une facture sans rien ressaisir ; la facture suit ensuite l'acompte, le paiement et, s'il le faut, l'avoir.\n\nDevis PDF généré par l’outil — données d’exemple\nEspace atelier — données d'exemple\nVotre logo, votre couleur et vos mentions sur chaque document\nDes photos d'exemple sur les lignes du devis, jusque dans le PDF\nUn devis accepté devient une facture en un geste\nAcompte, paiement reçu, avoir : chaque facture garde son histoire\nUne numérotation continue et les mentions obligatoires\nV\n\nLE RÉSEAU MA RELIURE\n\nDes projets Ma Reliure, en plus des vôtres.\n\nQuand votre atelier est validé, Ma Reliure vous propose des livres qui correspondent à vos savoir-faire. Chaque proposition arrive complète, dans le même espace que vos propres clients.\n\nEspace atelier — données d'exemple\nDes projets déjà qualifiés\n\nPhotos, format, état du livre et attentes du client sont recueillis avant que le projet vous soit proposé.\n\nUne rémunération connue\n\nVous connaissez le travail envisagé et votre rémunération avant d'accepter.\n\nVous choisissez vos projets\n\nPlanning complet, projet hors spécialité, délai incompatible : vous restez libre de refuser.\n\nVos clients restent les vôtres\n\nUn client que vous invitez avec votre lien personnel, ou qui vous trouve par votre page vitrine, reste votre client : vous lui faites votre devis et votre facture.\n\nAucun volume garanti\n\nL'abonnement donne l'outil et la page vitrine. Il ne garantit aucune commande venant du réseau Ma Reliure.\n\nLE PARCOURS D’UN PROJET\n1\nLe client présente son livre à Ma Reliure\n2\nMa Reliure étudie la demande, fixe le prix et vous annonce votre rémunération\n3\nVous acceptez la prestation, la rémunération et votre délai\n4\nMa Reliure vend le projet au client, qui l'accepte et règle\n5\nLe livre rejoint votre atelier\n6\nVous réalisez le travail, puis vous facturez Oppe\n7\nOppe vous règle par virement sous 30 jours ; le livre retourne chez son propriétaire\nVI\n\nTARIF\n\nUn abonnement simple, page vitrine incluse.\n\n15 €\nHT par mois, sans engagement\n\nFrance métropolitaine : TVA 20 % (3 €), soit 18 € TTC par mois, vitrine incluse. Même TVA si l’atelier est en franchise en base. Autres territoires : qualification individuelle.\n\nPour les nouveaux ateliers. Les ateliers déjà inscrits gardent la gratuité tant qu'ils n'ont pas accepté expressément la transition.\n\nCréer mon espace atelier\nINCLUS\nClients\nOuvrages\nDevis\nFactures et avoirs\nPrestations et tarifs\nMessages\nPage vitrine\nPaiement direct\nVirement, chèque, espèces : vous encaissez comme aujourd’hui.\n0 €\nPaiement en ligne\nFacultatif : votre client paie votre devis ou votre facture par carte, vous restez le vendeur.\n3 %\ndu montant encaissé, TVA comprise, hors frais Stripe ; frais Stripe à votre charge\nProjets confiés par Ma Reliure\nOppe vend et facture le client ; vous facturez Oppe la rémunération annoncée, réglée sous 30 jours.\nAnnoncée\nVII\n\nQUESTIONS FRÉQUENTES\n\nAvant de créer votre espace.\nCombien coûte l'outil ?\n+\nEt pour le paiement en ligne de mes clients ?\n+\nQui vend, qui facture, qui me paie quand Ma Reliure me confie un projet ?\n+\nPuis-je utiliser l'outil sans recevoir de projets Ma Reliure ?\n+\nEst-ce que je suis obligé d'accepter les projets proposés ?\n+\nQui fixe les prix ?\n+\nPuis-je utiliser Ma Reliure avec un client que j'ai trouvé moi-même ?\n+\nMes documents portent-ils le nom de mon atelier ?\n+\nPuis-je parler directement avec le client d'un projet Ma Reliure ?\n+\nQue se passe-t-il si je découvre un problème après réception ?\n+\nVIII\n\nSANS COMPTE\n\nVous préférez d'abord nous présenter votre atelier ?\n\nCette candidature reste possible si vous souhaitez être recontacté avant de créer votre espace. L'accès aux projets exige toujours une validation par Ma Reliure.\n\nCréer mon espace atelier dès maintenant\nNe pas remplir ce champ\nPrénom\nNom\nNom de l'atelier\nVille\nAdresse e-mail\nTéléphone (facultatif)\nSite ou réseau social (facultatif)\nSavoir-faire\nReliure toile\nPapier décoré\nDemi-cuir\nPlein cuir\nDorure\nRestauration\nConservation\nCartonnage\nRebinding contemporain\nReliure d'art\nAnnées d'expérience (facultatif)\nVotre atelier, en quelques mots (facultatif)\nJ'accepte que ces informations soient utilisées par Ma Reliure pour étudier ma candidature, conformément à la politique de confidentialité.\nEnvoyer ma candidature\nVotre prochain devis peut partir ce soir.\n\nCréez votre espace : vos prestations sont déjà là, il ne manque que vos prix.\n\nCréer mon espace atelier\nPrésenter mon livre\n\nVous avez un livre à faire relier ? Le second bouton est pour vous.",
+      "forms": 1
+    },
+    "missing": [
+      {
+        "id": "pr-first-name",
+        "type": "text",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "pr-last-name",
+        "type": "text",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "pr-workshop",
+        "type": "text",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "pr-city",
+        "type": "text",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "pr-email",
+        "type": "email",
+        "validationMessage": "Veuillez renseigner ce champ."
+      },
+      {
+        "id": "",
+        "type": "checkbox",
+        "validationMessage": "Veuillez cocher cette case si vous souhaitez continuer."
+      }
+    ],
+    "auth": {
+      "url": "https://mareliure.fr/auth?space=atelier",
+      "width": 375,
+      "title": "Retrouver mes livres — Ma Reliure",
+      "bodyText": "Aller au contenu\nMa Reliure\nPrésenter mon livre\nTarifs\nSe connecter\n\nVOTRE ESPACE\n\nAccéder à mon espace Ma Reliure\nClient\nAtelier partenaire\n\nIndiquez votre adresse e-mail pour créer votre espace atelier ou vous reconnecter. Le lien et le code reçus vérifient cette adresse. Vous créez ensuite votre atelier ; l'accès aux projets reste soumis à la validation de Ma Reliure.\n\nCréer mon espace atelier ou me connecter\nAdresse e-mail\nRecevoir mon lien et mon code de connexion\n\nVous avez déjà un mot de passe ?\n\nVotre espace atelier est disponible dès la création du compte. Ma Reliure valide séparément l’accès aux nouveaux projets.\n\nMa Reliure\n\nReliure, restauration et création, confiées à des ateliers indépendants installés en France.\n\nPRESTATIONS\n\nRéparation\nRestauration\nReliure\nDorure et finitions\nReliure de création\nÉtuis et boîtes\n\nLE SERVICE\n\nComment ça marche\nLes savoir-faire\nTarifs\nPour les relieurs\n\nINFORMATIONS\n\nMentions légales\nConfidentialité\nConditions d'utilisation\nConditions générales de vente\nContact\n\nMa Reliure — reliure et restauration de livres, par des artisans indépendants.",
+      "fields": [
+        {
+          "type": "email",
+          "required": true,
+          "label": "Adresse e-mail"
+        }
+      ]
+    },
+    "blocked": [
+      {
+        "url": "https://mareliure.fr/api/public/track-view",
+        "method": "POST"
+      }
+    ],
+    "errors": [],
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_FAILED"
+    ],
+    "badResponses": [],
+    "sent": {
+      "count": 110,
+      "methods": [
+        "GET"
+      ],
+      "hosts": [
+        "mareliure.fr"
+      ],
+      "fetches": [
+        {
+          "url": "https://mareliure.fr/_serverFn/07a56fbc7c0c1d92cde9892017e862066f5e61b959a66ecbd5d8eac3df5461b4",
+          "method": "GET",
+          "type": "fetch"
+        }
+      ]
+    }
+  }
+]
