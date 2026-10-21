@@ -60,5 +60,15 @@ describe("corrected #154 residual probes after #160", () => {
     expect(
       undeclaredTables(sql.replace("-- acl: dynamic-reviewed", "-- not reviewed")),
     ).not.toEqual([]);
+    await db.exec("BEGIN;");
+    try {
+      await db.exec(sql);
+      const result = await db.query<{ exists: boolean }>(
+        "SELECT to_regclass('public.reviewed_notes') IS NOT NULL AS exists",
+      );
+      expect(result.rows[0].exists).toBe(true);
+    } finally {
+      await db.exec("ROLLBACK;");
+    }
   });
 });
