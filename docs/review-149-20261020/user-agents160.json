@@ -1,0 +1,147 @@
+[
+  {
+    "name": "Safari iOS",
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",
+    "expected": "mobile"
+  },
+  {
+    "name": "Chrome Android",
+    "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36",
+    "expected": "mobile"
+  },
+  {
+    "name": "Samsung Internet",
+    "ua": "Mozilla/5.0 (Linux; Android 15; SAMSUNG SM-S928B) AppleWebKit/537.36 (KHTML, like Gecko) SamsungBrowser/28.0 Chrome/136.0.0.0 Mobile Safari/537.36",
+    "expected": "mobile"
+  },
+  {
+    "name": "Firefox desktop",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:143.0) Gecko/20100101 Firefox/143.0",
+    "expected": "desktop"
+  },
+  {
+    "name": "Firefox Android",
+    "ua": "Mozilla/5.0 (Android 15; Mobile; rv:143.0) Gecko/143.0 Firefox/143.0",
+    "expected": "mobile"
+  },
+  {
+    "name": "Firefox iOS",
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) FxiOS/143.0 Mobile/15E148 Safari/605.1.15",
+    "expected": "mobile"
+  },
+  {
+    "name": "Edge desktop",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Edg/140.0.0.0",
+    "expected": "desktop"
+  },
+  {
+    "name": "Edge Android",
+    "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 EdgA/140.0.0.0",
+    "expected": "mobile"
+  },
+  {
+    "name": "Edge iOS",
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) EdgiOS/140.0 Mobile/15E148 Safari/605.1.15",
+    "expected": "mobile"
+  },
+  {
+    "name": "Chrome iOS",
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) CriOS/140.0.7339.101 Mobile/15E148 Safari/604.1",
+    "expected": "mobile"
+  },
+  {
+    "name": "Safari macOS",
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15",
+    "expected": "desktop"
+  },
+  {
+    "name": "Chrome desktop",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36",
+    "expected": "desktop"
+  },
+  {
+    "name": "Instagram iOS",
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 Instagram 399.0.0.0.0 (iPhone16,2; iOS 18_6; fr_FR; fr; scale=3.00; 1290x2796)",
+    "expected": "mobile"
+  },
+  {
+    "name": "Instagram Android",
+    "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 Instagram 399.0.0.0.0 Android (35/15; 420dpi; 1080x2400; Google; Pixel 9; tokay; tokay; fr_FR; 123456789)",
+    "expected": "mobile"
+  },
+  {
+    "name": "Facebook iOS",
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [FBAN/FBIOS;FBAV/528.0.0.0.0;FBBV/123456789;FBDV/iPhone16,2;FBMD/iPhone;FBSN/iOS;FBSV/18.6;FBSS/3;FBID/phone;FBLC/fr_FR;FBOP/5]",
+    "expected": "mobile"
+  },
+  {
+    "name": "Facebook Android",
+    "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/528.0.0.0.0;IABMV/1;]",
+    "expected": "mobile"
+  },
+  {
+    "name": "LinkedIn iOS",
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148 [LinkedInApp]",
+    "expected": "mobile"
+  },
+  {
+    "name": "LinkedIn Android",
+    "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 [LinkedInApp]",
+    "expected": "mobile"
+  },
+  {
+    "name": "Android WebView",
+    "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 9 Build/AP3A.241105.008; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.0.0 Mobile Safari/537.36",
+    "expected": "mobile"
+  },
+  {
+    "name": "iPad mobile UA",
+    "ua": "Mozilla/5.0 (iPad; CPU OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1",
+    "expected": "tablet"
+  },
+  {
+    "name": "iPad desktop UA",
+    "ua": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Safari/605.1.15",
+    "expected": "desktop"
+  },
+  {
+    "name": "Google Search iOS",
+    "ua": "Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) GSA/389.0.0 Mobile/15E148 Safari/604.1",
+    "expected": "mobile"
+  },
+  {
+    "name": "Google Inspection",
+    "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 (compatible; Google-InspectionTool/1.0;)",
+    "expected": "bot"
+  },
+  {
+    "name": "Lighthouse",
+    "ua": "Mozilla/5.0 (Linux; Android 15; Pixel 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Mobile Safari/537.36 Chrome-Lighthouse",
+    "expected": "bot"
+  },
+  {
+    "name": "Headless Chrome",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/140.0.0.0 Safari/537.36",
+    "expected": "bot"
+  },
+  {
+    "name": "Playwright explicit",
+    "ua": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36 Playwright/1.62.0",
+    "expected": "bot"
+  },
+  {
+    "name": "curl",
+    "ua": "curl/8.9.1",
+    "expected": "bot"
+  },
+  {
+    "name": "Python requests",
+    "ua": "python-requests/2.32.3",
+    "expected": "bot"
+  },
+  {
+    "name": "empty",
+    "ua": "",
+    "expected": "bot"
+  }
+]
