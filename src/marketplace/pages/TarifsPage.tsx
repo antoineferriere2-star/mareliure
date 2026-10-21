@@ -53,8 +53,8 @@ const STEPS: readonly Step[] = [
   },
   {
     when: "Nous",
-    title: "Nous vous proposons un prix",
-    body: "Un prix pour l’ensemble du travail, établi d’après ce que vos photos montrent. Vous l’acceptez ou non : rien n’est engagé avant votre accord.",
+    title: "Nous vous adressons un devis",
+    body: "Un devis pour l’ensemble du travail — la prestation, le prix TTC et le délai annoncé —, établi d’après ce que vos photos montrent. Vous l’acceptez ou non : rien n’est engagé avant votre accord.",
   },
   {
     when: "L’atelier",
@@ -83,8 +83,8 @@ export function TarifsPage() {
             <p className="mr-lead mt-7 max-w-[38rem]">
               Chaque livre est différent : son état, son format, les matériaux et le temps de travail
               font son prix. Nous ne publions donc pas de grille, qui donnerait un chiffre faux à la
-              plupart des projets. Nous regardons votre livre, puis nous vous proposons un prix — avant
-              tout engagement.
+              plupart des projets. Nous regardons votre livre, puis nous vous adressons un devis.
+              Présenter votre livre est gratuit et sans engagement.
             </p>
             <div className="mt-9 flex flex-wrap items-center gap-x-7 gap-y-4">
               <IntakeCta />
@@ -97,7 +97,7 @@ export function TarifsPage() {
 
         <section aria-labelledby="construction-du-prix" className="bg-mr-paper-warm">
           <div className={`${SHELL} py-section-sm sm:py-section`}>
-            <SectionHead folio="I" eyebrow="Votre prix, pas à pas" title={<span id="construction-du-prix">Un prix proposé, puis confirmé. Jamais imposé.</span>} />
+            <SectionHead folio="I" eyebrow="Votre devis, pas à pas" title={<span id="construction-du-prix">Un prix proposé, puis confirmé. Jamais imposé.</span>} />
             <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8 lg:mt-16 lg:gap-12">
               {STEPS.map((step, index) => (
                 <li key={step.title}>

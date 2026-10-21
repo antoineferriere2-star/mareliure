@@ -7,6 +7,7 @@ import { WORK_ITEMS } from "@/marketplace/pricing/catalog";
 import { PRICE_FACTOR_DETAILS } from "@/marketplace/pages/pricing/priceFactors";
 import { FERRIERE_EDITORIAL_CRAFT_KEYS, FERRIERE_SERVICE_PHOTO_NUMBERS } from "@/marketplace/pages/pricing/ferriereServiceIllustrations";
 import { craftHead } from "./craftHead";
+import { RELIURE_PHOTO_SHOTS } from "@/marketplace/pages/customer/reliureIntakeGuidance";
 
 describe("les pages par besoin de Ma Reliure", () => {
   it("couvrent les six savoir-faire de l'accueil, dans l'ordre, chacun une fois", () => {
@@ -58,5 +59,13 @@ describe("les pages par besoin de Ma Reliure", () => {
     const chrome = readFileSync(resolve(process.cwd(), "src/marketplace/pages/landing/LandingChrome.tsx"), "utf8");
     for (const page of CRAFT_PAGES) expect(chrome).toContain(`href: "${page.path}"`);
     expect(readFileSync(resolve(process.cwd(), "src/marketplace/pages/ReliureLanding.tsx"), "utf8")).toContain("CRAFT_PAGES[index].path");
+  });
+
+  it("montrent les photos demandées par la présentation, illustrations comprises", () => {
+    const page = readFileSync(resolve(process.cwd(), "src/marketplace/pages/crafts/CraftPage.tsx"), "utf8");
+    expect(page).toContain("RELIURE_PHOTO_SHOTS");
+    const shots = [...(RELIURE_PHOTO_SHOTS.photos ?? []), ...(RELIURE_PHOTO_SHOTS.photosDommages ?? [])];
+    expect(shots.length).toBeGreaterThanOrEqual(3);
+    for (const shot of shots) expect(existsSync(resolve(process.cwd(), `public${shot.exampleSrc}`)), shot.exampleSrc).toBe(true);
   });
 });

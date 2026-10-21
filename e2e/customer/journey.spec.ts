@@ -142,9 +142,14 @@ for (const language of ["fr", "en"] as Language[]) {
       exact: true,
     });
     await phone.fill("");
-    await save.click();
+    await save.focus();
+    await save.press("Enter");
     await expect(logistics.getByRole("alert")).toContainText(
       language === "fr" ? "téléphone français" : "French phone number",
+    );
+    await expect(phone).toBeFocused();
+    await expect(phone).toHaveAccessibleDescription(
+      language === "fr" ? /téléphone français/ : /French phone number/,
     );
     await expect.poll(() => scenario.phoneRefusals).toBe(0);
     await expect(save).toBeEnabled();
@@ -153,6 +158,10 @@ for (const language of ["fr", "en"] as Language[]) {
     await save.click();
     await expect(logistics.getByRole("alert")).toContainText(
       language === "fr" ? "téléphone français" : "French phone number",
+    );
+    await expect(phone).toBeFocused();
+    await expect(phone).toHaveAccessibleDescription(
+      language === "fr" ? /téléphone français/ : /French phone number/,
     );
     await expect.poll(() => scenario.phoneRefusals).toBe(0);
     await expect(save).toBeEnabled();

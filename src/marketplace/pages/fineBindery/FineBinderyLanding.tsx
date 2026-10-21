@@ -5,6 +5,7 @@ import { PHOTOS } from "@/marketplace/pages/landing/photos";
 import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
 import { FineBinderyFooter, FineBinderyHeader, FineBinderyIntakeCta } from "./FineBinderyChrome";
 import { FEATURED_WORKSHOP } from "./content";
+import { DISCIPLINE_LABELS, DISCIPLINES, disciplinePath } from "./disciplines";
 import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
 import { ENGINE_LOCALE, fineBinderyDirectoryPath, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 import { specialtyName } from "@/marketplace/i18n/fineBinderyPublicGlossary";
@@ -88,7 +89,7 @@ function Disciplines({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }
     <SectionHead folio="I" eyebrow={copy.home.offersEyebrow} title={copy.home.offersTitle} />
     <ul className="mt-12 grid gap-x-6 gap-y-12 sm:grid-cols-2 lg:mt-14 lg:grid-cols-4">{copy.home.offers.map((item, index) => {
       const photo = ferriereServicePhoto(FERRIERE_FINE_BINDERY_OFFER_KEYS[index]);
-      return <li key={item.title}><Plate photo={photo} sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw" ratio="landscape" alt="" number={index + 2} numberLabel={PLATE_LABEL[locale]} caption={item.title} /><p className="mr-body mt-3">{item.body}</p></li>;
+      return <li key={item.title}><Plate photo={photo} sizes="(min-width: 1024px) 300px, (min-width: 640px) 50vw, 100vw" ratio="landscape" alt="" number={index + 2} numberLabel={PLATE_LABEL[locale]} caption={item.title} /><p className="mr-body mt-3">{item.body}</p><a href={disciplinePath(locale, DISCIPLINES[index].slug)} className="mr-link mr-tap mt-3 text-[1rem]">{DISCIPLINE_LABELS[locale].more}<span className="sr-only"> — {item.title}</span></a></li>;
     })}</ul>
     <p className="mr-meta mt-10">{copy.home.photoCredit} · <a className="mr-link" href={FERRIERE_SERVICE_PHOTO_SOURCE}>{FERRIERE_SERVICE_PHOTO_CREDIT}</a></p>
   </div></section>;

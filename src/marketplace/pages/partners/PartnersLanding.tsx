@@ -14,7 +14,7 @@
 import { PLATFORM_FEE_LABEL, SUBSCRIPTION_LABEL, WORKSHOP_OFFER, formatHtPrice } from "@/marketplace/offer/workshopOffer";
 import { useState, type FormEvent, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
-import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SectionRule, SHELL } from "@/marketplace/pages/landing/LandingChrome";
+import { IntakeCta, IntakeTextLink, LandingFooter, LandingHeader, SectionHead, SectionRule, SHELL } from "@/marketplace/pages/landing/LandingChrome";
 import { ActionLink, actionClass } from "@/marketplace/pages/landing/actions";
 import { ProductShot, type ProductShotKey } from "@/marketplace/pages/landing/ProductShot";
 import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
@@ -106,6 +106,12 @@ function Hero() {
           <p className="mr-small mt-8 max-w-[34rem]">
             {SUBSCRIPTION_LABEL} <span aria-hidden="true">·</span> Vos clients restent les vôtres{" "}
             <span aria-hidden="true">·</span> Aucun volume de commandes garanti
+          </p>
+          {/* La recherche « devis relieur » amène aussi ici des particuliers : un renvoi, pas un second bouton. */}
+          <p className="mr-small mt-6 max-w-[34rem] border-t border-mr-rule pt-5">
+            Vous cherchez un relieur pour votre livre ?{" "}
+            <IntakeTextLink>Présentez-le à Ma Reliure</IntakeTextLink> : c’est gratuit et sans engagement, et vous
+            recevez un devis avant de décider.
           </p>
         </div>
         <ProductShot shot="aujourdhui" priority className="lg:col-span-7" sizes="(min-width: 1024px) 720px, 100vw" />

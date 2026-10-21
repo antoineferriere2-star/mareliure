@@ -1,7 +1,11 @@
 import {workshopIntakeGuidance} from "@/marketplace/pages/customer/workshopIntakeGuidance";
 import { useMemo, type ReactNode } from "react";
-import { createFileRoute, notFound } from "@tanstack/react-router";
+import { createFileRoute, notFound, useParams } from "@tanstack/react-router";
 import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
+import { MissionRuntimePending } from "@/build/pages/public/MissionRuntimeStates";
+import { FR_PUBLIC_COPY } from "@/build/pages/public/frPublicCopy";
+import { DE_FINE_BINDERY_COPY, IT_FINE_BINDERY_COPY } from "@/build/pages/public/fineBinderyEuropeanCopy";
+import { ES_PUBLIC_COPY } from "@/build/pages/public/publicLocaleContext";
 import { FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
 import { CustomerSpaceOffer } from "@/marketplace/pages/customer/CustomerSpaceOffer";
 import { WorkshopIntakeNotice } from "@/marketplace/pages/customer/WorkshopIntakeCopy";
@@ -19,8 +23,20 @@ export const Route = createFileRoute("/$locale/project")({
   head: ({ params }) => isFineBinderyLocale(params.locale)
     ? fineBinderyLocalizedHead(params.locale, { title: `${fineBinderyHeadCopy(params.locale).start} — Fine Bindery`, description: fineBinderyHeadCopy(params.locale).seo.homeDescription, pathWithoutLocale: "project", noindex: true })
     : { meta: [{ title: "Project — Fine Bindery" }, { name: "robots", content: "noindex, nofollow" }] },
+  pendingComponent: FineBinderyProjectPending,
   component: FineBinderyProjectRoute,
 });
+
+const PREPARING = "Preparing your project intake…";
+const PREPARING_BY_LOCALE: Record<string, string | undefined> = {
+  fr: FR_PUBLIC_COPY[PREPARING], de: DE_FINE_BINDERY_COPY[PREPARING], it: IT_FINE_BINDERY_COPY[PREPARING], es: ES_PUBLIC_COPY[PREPARING],
+};
+
+/** Rendu par le serveur avant le JavaScript (route sans SSR), dans la langue de l'adresse. */
+function FineBinderyProjectPending() {
+  const { locale } = useParams({ strict: false }) as { locale?: string };
+  return <div className="fb-intake"><MissionRuntimePending label={(locale && PREPARING_BY_LOCALE[locale]) || PREPARING} /></div>;
+}
 
 function FineBinderyProjectRoute() {
   const { locale } = Route.useParams(); const { ref, source } = Route.useSearch();
