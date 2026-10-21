@@ -1,0 +1,122 @@
+[
+  {
+    "name": "private-use-identifier",
+    "sql": "CREATE TABLE public.0(id int);CREATE TABLE public.\"other_notes\"(id int);GRANT SELECT ON public.\"other_notes\" TO authenticated;",
+    "target": "public.0",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "search-path-grant",
+    "sql": "CREATE TABLE audit.notes(id int);CREATE TABLE public.notes(id int);SET LOCAL search_path=audit,public;GRANT SELECT ON notes TO authenticated;",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "temporary-search-path",
+    "sql": "CREATE TEMP TABLE notes(id int);CREATE TABLE public.notes(id int);GRANT SELECT ON notes TO authenticated;",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "select-into-prefix",
+    "sql": "EXPLAIN ANALYZE SELECT 1 AS id INTO public.notes;",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "select-into-parentheses",
+    "sql": "(SELECT 1 AS id INTO public.notes);",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "drop-recreate",
+    "sql": "CREATE TABLE public.notes(id int);GRANT SELECT ON public.notes TO authenticated;DROP TABLE public.notes;CREATE TABLE public.notes(id int);",
+    "target": "public.notes",
+    "expectedDetector": ["notes"],
+    "expectedSelect": false,
+    "kind": "protected control"
+  },
+  {
+    "name": "grant-column-only",
+    "sql": "CREATE TABLE public.notes(id int,private text);GRANT SELECT(id) ON public.notes TO authenticated;",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "explicit column decision"
+  },
+  {
+    "name": "dynamic-chr",
+    "sql": "DO $$ BEGIN EXECUTE chr(67)||'REATE TA'||'BLE public.notes(id int)'; END $$;",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "dynamic-replace",
+    "sql": "DO $$ BEGIN EXECUTE replace('CR#ATE TABL# public.notes(id int)', '#','E'); END $$;",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "dynamic-base64",
+    "sql": "DO $$ BEGIN EXECUTE convert_from(decode('Q1JFQVRFIFRBQkxFIHB1YmxpYy5ub3RlcyhpZCBpbnQp','base64'),'UTF8'); END $$;",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "unicode-custom-escape",
+    "sql": "DO $$ BEGIN EXECUTE U&'!0043REATE TABLE public.notes(id int)' UESCAPE '!'; END $$;",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "sql-prepare-exec",
+    "sql": "DO 'BEGIN EXECUTE E''\\x43REATE TABLE public.notes(id int)''; END';",
+    "target": "public.notes",
+    "expectedDetector": [],
+    "expectedSelect": false,
+    "kind": "remaining bypass"
+  },
+  {
+    "name": "dynamic-comment-word",
+    "sql": "DO $$ BEGIN EXECUTE 'CREATE/**/TABLE public.notes(id int)'; END $$;",
+    "target": "public.notes",
+    "expectedDetector": ["<création dynamique (EXECUTE, DO, format) à déclarer>"],
+    "expectedSelect": false,
+    "kind": "protected control"
+  },
+  {
+    "name": "global-grant-before",
+    "sql": "GRANT SELECT ON ALL TABLES IN SCHEMA public TO authenticated;CREATE TABLE public.notes(id int);",
+    "target": "public.notes",
+    "expectedDetector": ["notes"],
+    "expectedSelect": false,
+    "kind": "protected control"
+  },
+  {
+    "name": "cte-insert-then-into",
+    "sql": "WITH t AS (SELECT 1 AS id) SELECT * INTO public.notes FROM t;",
+    "target": "public.notes",
+    "expectedDetector": ["notes"],
+    "expectedSelect": false,
+    "kind": "protected control"
+  }
+]
