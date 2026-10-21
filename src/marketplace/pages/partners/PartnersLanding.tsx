@@ -20,7 +20,6 @@ import { ProductShot, type ProductShotKey } from "@/marketplace/pages/landing/Pr
 import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
 import { submitBinderApplication } from "@/marketplace/services/binderApplications.data.functions";
 import { BINDER_SKILLS } from "@/marketplace/binders/skills";
-import { useHydratedChecked, useHydratedText } from "@/marketplace/performance/useHydratedControl";
 import {
   BENEFITS,
   DOCUMENT_POINTS,
@@ -386,20 +385,20 @@ function ApplicationForm() {
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
 
-  const [firstName, setFirstName] = useHydratedText("pr-first-name");
-  const [lastName, setLastName] = useHydratedText("pr-last-name");
-  const [workshopName, setWorkshopName] = useHydratedText("pr-workshop");
-  const [city, setCity] = useHydratedText("pr-city");
-  const [email, setEmail] = useHydratedText("pr-email");
-  const [phone, setPhone] = useHydratedText("pr-phone");
-  const [websiteUrl, setWebsiteUrl] = useHydratedText("pr-website");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [workshopName, setWorkshopName] = useState("");
+  const [city, setCity] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
   const [skills, setSkills] = useState<string[]>([]);
-  const [yearsExperience, setYearsExperience] = useHydratedText("pr-years");
-  const [message, setMessage] = useHydratedText("pr-message");
-  const [consent, setConsent] = useHydratedChecked("pr-consent");
+  const [yearsExperience, setYearsExperience] = useState("");
+  const [message, setMessage] = useState("");
+  const [consent, setConsent] = useState(false);
   // Honeypot : un champ qu'une personne ne voit jamais (voir label sr-only et
   // absence de tabIndex naturel), rempli seulement par un robot.
-  const [hpCompanyName, setHpCompanyName] = useHydratedText("pr-company");
+  const [hpCompanyName, setHpCompanyName] = useState("");
 
   function toggleSkill(slug: string) {
     setSkills((current) =>
@@ -622,7 +621,6 @@ function ApplicationForm() {
 
             <label className="mr-small flex items-start gap-3 text-mr-graphite">
               <input
-                id="pr-consent"
                 type="checkbox"
                 required
                 checked={consent}
