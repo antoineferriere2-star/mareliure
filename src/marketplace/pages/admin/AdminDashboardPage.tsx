@@ -1,10 +1,12 @@
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
+import { isInternalVisitor, setInternalVisitor } from "@/build/analytics/internalVisitor";
 import { Link } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getAdminDashboard, sendTeamAlertTest } from "@/marketplace/services/adminDashboard.data.functions";
 import type { AdminDashboard, DashboardBrand } from "@/marketplace/admin/adminDashboard";
 import type { TrafficSummary } from "@/marketplace/admin/trafficSummary";
+import type { IntakeFunnel } from "@/marketplace/admin/intakeFunnel";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { CARD } from "@/marketplace/pages/binder/quotes/quoteUi";
 
@@ -60,6 +62,10 @@ export function AdminDashboardPage() {
   const fetchDashboard = useServerFn(getAdminDashboard);
   const dashboard = useQuery({ queryKey: ["admin", "dashboard", brand, days], queryFn: () => fetchDashboard({ data: { brand, days } }) });
   const periodLabel = days === null ? "depuis l'ouverture" : `sur les ${days} derniers jours`;
+  // Ouvrir le pilotage exclut ce navigateur de la fréquentation (internalVisitor.ts) ; réversible ci-dessous.
+  const [internal, setInternal] = useState(false);
+  useEffect(() => { setInternalVisitor(true); setInternal(isInternalVisitor()); }, []);
+  const toggleInternal = () => { setInternalVisitor(!internal); setInternal(isInternalVisitor()); };
 
   return (
     <div className="space-y-8">
@@ -70,6 +76,11 @@ export function AdminDashboardPage() {
           <Toggle label="Marque" options={BRANDS} value={brand} onChange={setBrand} />
           <Toggle label="Période" options={PERIODS} value={days} onChange={setDays} />
         </div>
+        <p className="text-xs text-muted-foreground">
+          {internal ? "Ce navigateur est exclu de la fréquentation et du parcours de présentation." : "Ce navigateur est compté comme un visiteur."}{" "}
+          <button type="button" onClick={toggleInternal} className="underline">{internal ? "Le compter à nouveau" : "L'exclure"}</button>
+          {" "}· Autre appareil : ouvrir une page du site avec « ?interne=1 ».
+        </p>
       </header>
       {dashboard.isPending && <p role="status">Chargement du pilotage…</p>}
       {dashboard.isError && <p role="alert">Le tableau de bord n'a pas pu être chargé.</p>}
@@ -105,6 +116,8 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
 
       {data.traffic === null && <p className={CARD}>La fréquentation n'a pas pu être lue ; le reste du pilotage est à jour.</p>}
       {data.traffic && <Traffic traffic={data.traffic} casesCreated={cases.created} periodLabel={periodLabel} />}
+      {data.intake === null && <p className={CARD}>Le parcours de présentation n'a pas pu être lu.</p>}
+      {data.intake && <IntakeSteps funnel={data.intake} periodLabel={periodLabel} />}
 
       <Section title="Dossiers" hint={`${cases.created} dossier(s) créé(s) ${periodLabel}. Entonnoir : état actuel de tous les dossiers.`}>
         <div className={CARD}>
@@ -220,7 +233,7 @@ function Traffic({ traffic, casesCreated, periodLabel }: { traffic: TrafficSumma
   const maxDay = Math.max(1, ...traffic.perDay.map((day) => day.views));
   const rate = (part: number, whole: number) => (whole ? `${Math.round((part / whole) * 1000) / 10} %` : "—");
   return (
-    <Section title="Fréquentation" hint={`Pages publiques ${periodLabel}. Un visiteur est compté une fois par jour de venue ; robots exclus depuis le 21 octobre 2026.`}>
+    <Section title="Fréquentation" hint={`Pages publiques ${periodLabel}. Un visiteur est compté une fois par jour de venue ; robots exclus depuis le 21 octobre 2026, navigateurs de l’équipe dès leur marquage.`}>
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
         <Stat label="Pages vues" value={traffic.views} />
         <Stat label="Visites" value={traffic.visits} detail={`${traffic.visitors} visiteur(s), comptés par jour`} />
@@ -270,6 +283,36 @@ function Traffic({ traffic, casesCreated, periodLabel }: { traffic: TrafficSumma
           </div>
         </div>
       </div>
+    </Section>
+  );
+}
+
+/** Où s'arrêtent les présentations de livre, étape par étape (voir intakeFunnel.ts). */
+function IntakeSteps({ funnel, periodLabel }: { funnel: IntakeFunnel; periodLabel: string }) {
+  const max = Math.max(1, funnel.answeredFirst);
+  return (
+    <Section title="Parcours « Présenter mon livre »"
+      hint={`Présentations ouvertes ${periodLabel}. Une présentation s'ouvre à l'affichage de la page : « sans réponse » compte aussi les robots ; les navigateurs de l’équipe sont exclus dès leur marquage. Seuls les noms des questions répondues sont lus.`}>
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Stat label="Ouvertes" value={funnel.opened} detail={`${funnel.opened - funnel.answeredFirst} sans aucune réponse`} />
+        <Stat label="Ont commencé" value={funnel.answeredFirst} detail="au moins une réponse" />
+        <Stat label="Envoyées" value={funnel.submitted} detail={funnel.answeredFirst ? `${Math.round((funnel.submitted / funnel.answeredFirst) * 100)} % de celles commencées` : undefined} />
+      </div>
+      {funnel.answeredFirst > 0 && (
+        <div className={CARD}>
+          <p className="text-sm text-muted-foreground">Arrivées à chaque étape (parmi celles commencées) — et arrêts sur l'étape</p>
+          <ol className="mt-3 space-y-2">
+            {funnel.steps.map((step, index) => (
+              <li key={step.id} className="grid grid-cols-[minmax(0,1fr)_5.5rem_4.5rem] items-center gap-3 text-sm sm:grid-cols-[minmax(0,20rem)_1fr_5rem]">
+                <span className="truncate" title={step.title}>{index + 1}. {step.title}</span>
+                <span className="h-3 rounded-sm bg-muted" aria-hidden="true"><span className="block h-3 rounded-sm bg-[#7a2230]" style={{ width: `${(step.reached / max) * 100}%` }} /></span>
+                <span className="text-right tabular-nums">{step.reached}{step.stoppedHere ? <span className="text-[#7a2230]"> · −{step.stoppedHere}</span> : null}</span>
+              </li>
+            ))}
+          </ol>
+          <p className="mt-3 text-xs text-muted-foreground">« −n » : présentations arrêtées après avoir répondu à cette étape, sans envoi.</p>
+        </div>
+      )}
     </Section>
   );
 }

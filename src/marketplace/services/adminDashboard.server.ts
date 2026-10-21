@@ -1,6 +1,10 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildAdminDashboard, type DashboardRows, type DashboardBrand } from "@/marketplace/admin/adminDashboard";
 import { buildTrafficSummary, type PageViewRow } from "@/marketplace/admin/trafficSummary";
+import { buildIntakeFunnel, type IntakeSessionFacts } from "@/marketplace/admin/intakeFunnel";
+import { bookbindingPlaybookSchema } from "@/build/playbooks/bookbindingPlaybookSchema";
+import { BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
+import { INTERNAL_VISIT_KEY } from "@/build/runtime/sessionMetadata";
 import { unreadCount, type ConversationMessageFacts } from "@/marketplace/messaging/conversation";
 import { isMessageAudience } from "@/marketplace/messaging/audience";
 
@@ -84,7 +88,38 @@ export async function readAdminDashboard(sb: SupabaseClient, userId: string,
     (views) => buildTrafficSummary(views, { brand: filter.brand, since, days: filter.days, now: now.toISOString() }),
     (error) => { console.error("admin_dashboard_traffic_unreadable", error instanceof Error ? error.message : error); return null; },
   );
-  return { ...buildAdminDashboard(rows, { brand: filter.brand, since }), traffic };
+  const intake = await readIntakeSessions(sb, since).then(
+    (sessions) => buildIntakeFunnel(sessions, bookbindingPlaybookSchema, { brand: filter.brand, since }),
+    (error) => { console.error("admin_dashboard_intake_unreadable", error instanceof Error ? error.message : error); return null; },
+  );
+  return { ...buildAdminDashboard(rows, { brand: filter.brand, since }), traffic, intake };
+}
+
+/**
+ * Sessions des deux Missions de présentation sur la période. Les réponses sont réduites
+ * immédiatement aux noms des questions répondues : aucune valeur ne sort de cette fonction.
+ */
+async function readIntakeSessions(sb: SupabaseClient, since: string | null): Promise<IntakeSessionFacts[]> {
+  const { data: missions, error } = await sb.from("build_missions").select("id, public_token")
+    .in("public_token", [BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN]);
+  if (error) throw new Error("build_missions: " + error.message);
+  const brandOf = new Map((missions ?? []).map((m: { id: string; public_token: string }) =>
+    [m.id, m.public_token === FINE_BINDERY_PUBLIC_TOKEN ? "FINE_BINDERY" as const : "MA_RELIURE" as const]));
+  if (brandOf.size === 0) return [];
+  const sessions: IntakeSessionFacts[] = [];
+  for (let from = 0; ; from += PAGE) {
+    let query = sb.from("build_runtime_sessions").select("id, mission_id, created_at, submitted_at, answers").in("mission_id", [...brandOf.keys()]);
+    if (since) query = query.gte("created_at", since);
+    const { data, error: readError } = await query.order("id", { ascending: true }).range(from, from + PAGE - 1);
+    if (readError) throw new Error("build_runtime_sessions: " + readError.message);
+    for (const row of (data ?? []) as { mission_id: string; created_at: string; submitted_at: string | null; answers: unknown }[]) {
+      const answers = row.answers && typeof row.answers === "object" && !Array.isArray(row.answers) ? row.answers as Record<string, unknown> : {};
+      sessions.push({ brand: brandOf.get(row.mission_id)!, created_at: row.created_at, submitted: Boolean(row.submitted_at),
+        keys: Object.keys(answers).filter((key) => answers[key] !== null && answers[key] !== ""),
+        internal: answers[INTERNAL_VISIT_KEY] === "1" });
+    }
+    if (!data || data.length < PAGE) return sessions;
+  }
 }
 
 /** Vues de la période, paginées par identifiant ; aucune donnée personnelle (empreintes salées par jour). */

@@ -8,6 +8,7 @@
  */
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import type { TrafficSummary } from "./trafficSummary";
+import type { IntakeFunnel } from "./intakeFunnel";
 
 export type DashboardBrand = MarketplaceBrand | "ALL";
 
@@ -83,6 +84,8 @@ export interface AdminDashboard {
   generatedAt: string;
   /** Fréquentation des sites publics sur la période (trafficSummary.ts) ; absente si la lecture échoue. */
   traffic?: TrafficSummary | null;
+  /** Où s'arrêtent les présentations de livre (intakeFunnel.ts) ; absente si la lecture échoue. */
+  intake?: IntakeFunnel | null;
   unreadMessages: number;
   brand: DashboardBrand;
   since: string | null;
