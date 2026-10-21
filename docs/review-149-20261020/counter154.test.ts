@@ -9,38 +9,38 @@ beforeAll(async () => {
 afterAll(async () => {
   await db.close();
 });
-// These new characterisations reproduce residual gaps; they are separate from corrected #152 regressions.
+// Non-regressions of the five residual #154 probes corrected by #160.
 const probes = [
   {
-    name: "P2: WITH SELECT INTO is not followed",
+    name: "fixed #160: WITH SELECT INTO is not followed",
     sql: "WITH payload AS (SELECT 1 AS id) SELECT * INTO public.build_notes FROM payload;",
     target: "public.build_notes",
   },
   {
-    name: "P2: a temporary CREATE hides a persistent CREATE in the same DO body",
+    name: "fixed #160: a temporary CREATE hides a persistent CREATE in the same DO body",
     sql: "DO $$ BEGIN CREATE TEMP TABLE scratch(id int); CREATE TABLE public.build_notes(id int); END $$;",
     target: "public.build_notes",
   },
   {
-    name: "P2: a quoted identifier collides with the lexer's qid0 token",
+    name: "fixed #160: a quoted identifier collides with the lexer's qid0 token",
     sql: 'CREATE TABLE public.qid0(id int);CREATE TABLE public."other_notes"(id int);GRANT SELECT ON public."other_notes" TO authenticated;',
     target: "public.qid0",
   },
   {
-    name: "P2: dotted schema and table names share the same internal key",
+    name: "fixed #160: dotted schema and table names share the same internal key",
     sql: 'CREATE SCHEMA "public.case";CREATE TABLE public."case.notes"(id int);CREATE TABLE "public.case".notes(id int);GRANT SELECT ON "public.case".notes TO authenticated;',
     target: 'public."case.notes"',
   },
   {
-    name: "P2: an escaped CREATE token in dynamic SQL is not decoded",
+    name: "fixed #160: an escaped CREATE token in dynamic SQL is not decoded",
     sql: "DO $$ BEGIN EXECUTE E'\\x43REATE TABLE public.build_notes(id int)'; END $$;",
     target: "public.build_notes",
   },
 ];
-describe("independent residual #154 probes, not corrected behaviours", () => {
+describe("corrected #154 residual probes after #160", () => {
   for (const probe of probes)
     it(probe.name, async () => {
-      expect(undeclaredTables(probe.sql)).toEqual([]);
+      expect(undeclaredTables(probe.sql)).not.toEqual([]);
       await db.exec("BEGIN;");
       try {
         await db.exec(probe.sql);

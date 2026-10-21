@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-21T09:44:44.316Z",
+  "reviewedHead": "4fe6e9d1b2743e981d08c1c11735fed98f7a8580",
+  "main": "11d292f",
+  "sources": {
+    "src/marketplace/security/tableGrants.ts": "4b7efb66426a336c5dd00c9a1092f035725ee400d71c3d168343cb80040cda62",
+    "src/build/analytics/deviceClass.ts": "315f11a7c1543672d2c9474c41a0bc9ea379105dcefbc0ef6d41896b6d711520"
+  },
+  "tests": {
+    "files": 5,
+    "total": 73,
+    "passed": 73,
+    "sqlCorrected": 18,
+    "operatorRenders": 9,
+    "newSql": 15,
+    "userAgentsAndLimit": 30,
+    "intentionalDynamicMarker": 1
+  },
+  "runtime": {
+    "pglite": "0.5.8",
+    "node": "v24.14.0"
+  }
+}
