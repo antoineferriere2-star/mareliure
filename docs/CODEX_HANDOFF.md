@@ -3734,6 +3734,9 @@ Aucun fichier réservé (crafts, brandPages, landing, routes publiques) modifié
 
 ## Latest handoff
 
+> Relevé intermédiaire historique, clôturé par le bloc du 21 octobre ci-dessous.
+
+Codex — **20 octobre 2026, soir**, brief n° 7, chantier 2, branche perf/mobile-lcp-20261020 depuis origin/main abfe72b. **Travail en cours : mesures après correctif non encore publiées, objectif LCP non déclaré atteint.** Priorités réseau ciblées, préchargement responsive sur l’accueil Fine Bindery et cache de police, sans modification de rendu ni fichier réservé. Suite locale 314 fichiers / 3 844 tests, typecheck réussi, lint sans erreur et 19 avertissements existants. Le rapport docs/MOBILE_LCP_20261020.md et ce bloc seront actualisés après la recette et les quinze mesures finales. Aucun achat, paiement, compte, e-mail, écriture de production, fusion de PR ou déploiement.
 Codex — **20 octobre 2026, soir**, brief n° 7, chantier 4. Branche `fix/discipline-translations-20261020` depuis `origin/main abfe72b` (#155/#153 incluses). Relecture des quatre disciplines DE/IT/ES, 25 chaînes ajustées (un titre, 12 descriptions, 12 introductions), bornes et registre conservés. Rapport `docs/TRANSLATIONS_155_20261020.md` : termes du métier, traitement des calques et sources terminologiques ; aucune relecture humaine native prétendue. Tests existants `disciplines.test.ts` **6/6**, typecheck local réussi. Aucun prix, délai, avis ou service ajouté. Seul fichier produit modifié : `src/marketplace/pages/fineBindery/disciplines.ts`, ouvert explicitement pour ce chantier ; EN/FR et autres contenus intacts. Aucune migration, écriture de production, action fournisseur, compte, e-mail, achat, paiement, fusion de PR ou déploiement.
 
 PR de corrections : [#157](https://github.com/antoineferriere2-star/mareliure/pull/157). CI du code 90aec6c : quality et mocked-customer-journey réussis ; aucun fichier produit changé depuis ces contrôles.
@@ -3745,6 +3748,10 @@ Codex — **20 octobre 2026, soir**, brief n° 7, chantier 3. Branche docs/struc
 
 **Réserve lecture seule stricte :** le robot du test Google peut exécuter le POST de suivi de visite de /en ; Google-InspectionTool n’est pas reconnu par le filtre bot actuel. Une ligne anonyme build_page_views a pu être créée ; résultat SQL non observé, absence d’écriture analytique non certifiée. Aucune action métier exécutée. Rapport et description de #158 qualifiés ; aucun nettoyage ni nouvelle validation URL. Utiliser le mode code/JSON-LD isolé pour un contrôle strict futur.
 
+
+## Latest handoff
+
+Codex — **21 octobre 2026**, brief n° 8, chantier 1 : #159 terminée sur la version produit c5ba309 (main 11d292f, #156/#160 incluses). Rapport docs/MOBILE_LCP_20261020.md et 30 mesures retenues docs/mobile-lcp-20261020/results.json. Trois passages par page/version, même Lighthouse mobile et build local Wrangler ; référence refaite dans la même séance pour rapprocher les calibrages CPU. **Objectif LCP < 2,5 s non atteint sur les cinq pages** : 3,73 / 3,41 / 3,13 / 3,57 / 4,27 s ; dépassement de 630 à 1 775 ms. FCP amélioré, hausse du TBT documentée, aucun gain global homogène promis. Essai de report React et polices dérivées retiré ; hydratation/entrée native/configuration/route pending de #156 identiques à main. Sept contrôles head réussis. Dix comparaisons texte/géométrie sans changement, limites pixel explicites. CI du code : 315 fichiers / 3 853 tests, typecheck/lint/build verts (19 avertissements existants) ; build Ma Reliure local vérifié, recette client locale finale **4/4** FR/EN bureau/375 px. Verrou SQLite/refus de connexion initial Fine Bindery écarté puis lot complet rejoué ; aucune erreur présentée comme mesure réussie. Ancien incident Firefox du brief 7 conservé dans le rapport ; nettoyage suivant limité aux processus Codex dont identité fraîche et handle sont vérifiés. Aucune écriture de production, migration, action fournisseur, compte, e-mail, achat, paiement, fusion ou déploiement.
 ## Latest handoff
 
 Codex — **20 octobre 2026, après-midi**, brief n° 6, chantier 1, PR #124. Origin/main f4bb8d0c81e893d44c803a6b87420551a1220ad8 intégré dans la branche propre de cette PR par un commit de fusion local ; conflits limités au handoff résolus en gardant les deux blocs. Aucune fusion de PR ni publication de Worker. Table avant / correction / preuve ajoutée en tête du rapport ; relevés historiques conservés et explicitement datés, y compris les verdicts devenus obsolètes.
@@ -3760,3 +3767,13 @@ Script converti : 15/15 non-régressions PGlite réussies, fournisseur et Storag
 Codex — **20 octobre 2026, après-midi**, brief n° 6, chantier 1, PR #139. Origin/main f4bb8d0c81e893d44c803a6b87420551a1220ad8 intégré dans la branche propre de cette PR par un commit de fusion local ; conflits limités au handoff résolus en gardant les deux blocs. Aucune fusion de PR ni publication de Worker. Table avant / correction / preuve ajoutée en tête du rapport ; relevés historiques conservés et explicitement datés, y compris les verdicts devenus obsolètes.
 
 Actualisation documentaire uniquement ; huit correctifs reliés à leurs SHA, fichiers et essais. Aucun nouvel inventaire de production prétendu. Les contrôles généraux typecheck, lint, tests et build sont exécutés par la CI standard de chaque tête avant livraison ; leurs résultats sont consultables dans la PR. Les nouvelles contre-sondes de #149 sont dans une PR séparée et ne sont pas confondues avec les anciens défauts corrigés. Aucun fichier produit ou fichier réservé à Claude modifié, aucune écriture de production, aucun achat, paiement, compte ou e-mail.
+
+
+## Latest handoff
+
+Codex — **21 octobre 2026**, brief n° 8, chantier 1, #159 : actualisation finale sur main **38ebd31**, fusions documentaires extérieures conservées, aucun historique réécrit. Les mesures terminées et la recette locale 4/4 restent celles de la version produit c5ba309/main 11d292f, consignées dans MOBILE_LCP_20261020.md. #161 a ajouté ensuite le guide photo des pages par besoin ; cette évolution externe intégrée à la branche n’est pas présentée comme remesurée. Objectif LCP non atteint, chiffres et portée explicites. Aucun déploiement ni fusion de PR exécuté par Codex.
+
+
+## Latest handoff
+
+Codex — **21 octobre 2026**, brief n° 9, chantier 2 : recommandation publiée avant tout nouveau changement de code : **ne pas fusionner #159 en l’état**. Tableau FCP/LCP/TBT par page en tête de MOBILE_LCP_20261020.md. Leviers et gains attendus extraits des quinze audits après déjà archivés : estimations Lighthouse explicitement non mesurées/non additionnables, police sans gain isolé promis, cache sans gain au premier accès froid. Élément LCP nommé par page, priorité au découpage réel du JS public, sans nouveau report global de React. Aucun code, mesure nouvelle, fusion, fermeture ou déploiement dans cette actualisation documentaire.

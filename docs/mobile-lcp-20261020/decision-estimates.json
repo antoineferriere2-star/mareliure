@@ -1,0 +1,1752 @@
+{
+  "at": "2026-10-21T15:34:39.261Z",
+  "measuredHead": "c5ba309e7a534b486f9873557a50f56badc09b4b",
+  "recommendation": "do_not_merge_as_is",
+  "gains": [
+    {
+      "key": "home",
+      "jsBytes": 34884,
+      "jsLcpMedianMs": 200,
+      "jsLcpRangeMs": [
+        0,
+        350,
+        200
+      ],
+      "cssFcpMedianMs": 300,
+      "cssLcpMedianMs": 0,
+      "imageLcpMedianMs": 0,
+      "imageLcpRangeMs": [
+        0,
+        150,
+        0
+      ],
+      "imageBytes": 15712
+    },
+    {
+      "key": "tarifs",
+      "jsBytes": 34881,
+      "jsLcpMedianMs": 300,
+      "jsLcpRangeMs": [
+        300,
+        300,
+        450
+      ],
+      "cssFcpMedianMs": 300,
+      "cssLcpMedianMs": 300,
+      "imageLcpMedianMs": 0,
+      "imageLcpRangeMs": [
+        0,
+        0,
+        0
+      ],
+      "imageBytes": 0
+    },
+    {
+      "key": "reparation",
+      "jsBytes": 34758,
+      "jsLcpMedianMs": 300,
+      "jsLcpRangeMs": [
+        300,
+        150,
+        300
+      ],
+      "cssFcpMedianMs": 300,
+      "cssLcpMedianMs": 300,
+      "imageLcpMedianMs": 0,
+      "imageLcpRangeMs": [
+        0,
+        0,
+        0
+      ],
+      "imageBytes": 0
+    },
+    {
+      "key": "partenaires",
+      "jsBytes": 34503,
+      "jsLcpMedianMs": 300,
+      "jsLcpRangeMs": [
+        300,
+        300,
+        350
+      ],
+      "cssFcpMedianMs": 300,
+      "cssLcpMedianMs": 300,
+      "imageLcpMedianMs": 0,
+      "imageLcpRangeMs": [
+        150,
+        0,
+        0
+      ],
+      "imageBytes": 15509
+    },
+    {
+      "key": "finebindery",
+      "jsBytes": 35779,
+      "jsLcpMedianMs": 450,
+      "jsLcpRangeMs": [
+        450,
+        400,
+        500
+      ],
+      "cssFcpMedianMs": 300,
+      "cssLcpMedianMs": 0,
+      "imageLcpMedianMs": 0,
+      "imageLcpRangeMs": [
+        0,
+        0,
+        0
+      ],
+      "imageBytes": 15712
+    }
+  ],
+  "rawAudits": [
+    {
+      "key": "home",
+      "pass": 1,
+      "metrics": {
+        "first-contentful-paint": 1352.1595,
+        "largest-contentful-paint": 2252.1594999999998,
+        "total-blocking-time": 635.9202499999985,
+        "cumulative-layout-shift": 0,
+        "speed-index": 3487.225239839709
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0.5,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 34884,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34884,
+              "wastedPercent": 36.59282958269001
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 500 ms",
+          "metricSavings": {
+            "FCP": 500,
+            "LCP": 500
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27083,
+              "wastedMs": 526
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 0.5,
+          "displayValue": "Est savings of 15 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "node": {
+                "type": "node",
+                "lhId": "page-1-IMG",
+                "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,1,FIGURE,0,DIV,0,IMG",
+                "selector": "div.grid > figure.lg:col-span-6 > div.aspect-[4/3] > img.h-full",
+                "boundingRect": {
+                  "top": 668,
+                  "bottom": 895,
+                  "left": 46,
+                  "right": 366,
+                  "width": 320,
+                  "height": 227
+                },
+                "snippet": "<img src=\"http://127.0.0.1:8787/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 560px, 100vw\" alt=\"Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à …\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+                "nodeLabel": "Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à l’or …"
+              },
+              "url": "http://127.0.0.1:8787/photos/ferriere-baudelaire-800.webp",
+              "totalBytes": 27962,
+              "wastedBytes": 15712,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "reason": "This image file is larger than it needs to be (800x600) for its displayed dimensions (530x397). Use responsive images to reduce the image download size.",
+                    "wastedBytes": 15712
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "home",
+      "pass": 2,
+      "metrics": {
+        "first-contentful-paint": 1717.6025,
+        "largest-contentful-paint": 4130.323,
+        "total-blocking-time": 69.27949999999998,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1955.4636000011683
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 350
+          },
+          "numericValue": 360,
+          "overallSavingsMs": 360,
+          "overallSavingsBytes": 34884,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34884,
+              "wastedPercent": 36.59282958269001
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 300 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27089,
+              "wastedMs": 327
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "LCP": 0
+          },
+          "items": [
+            {
+              "type": "checklist",
+              "items": {
+                "priorityHinted": {
+                  "label": "fetchpriority=high applied",
+                  "value": true
+                },
+                "requestDiscoverable": {
+                  "label": "Request is discoverable in initial document",
+                  "value": true
+                },
+                "eagerlyLoaded": {
+                  "label": "LCP resources should not use loading=lazy",
+                  "value": true
+                }
+              }
+            },
+            {
+              "type": "node",
+              "lhId": "page-0-IMG",
+              "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,1,FIGURE,0,DIV,0,IMG",
+              "selector": "div.grid > figure.lg:col-span-6 > div.aspect-[4/3] > img.h-full",
+              "boundingRect": {
+                "top": 668,
+                "bottom": 895,
+                "left": 46,
+                "right": 366,
+                "width": 320,
+                "height": 227
+              },
+              "snippet": "<img src=\"http://127.0.0.1:8787/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 560px, 100vw\" alt=\"Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à …\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+              "nodeLabel": "Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à l’or …"
+            }
+          ]
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 15 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 150
+          },
+          "items": [
+            {
+              "node": {
+                "type": "node",
+                "lhId": "page-0-IMG",
+                "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,1,FIGURE,0,DIV,0,IMG",
+                "selector": "div.grid > figure.lg:col-span-6 > div.aspect-[4/3] > img.h-full",
+                "boundingRect": {
+                  "top": 668,
+                  "bottom": 895,
+                  "left": 46,
+                  "right": 366,
+                  "width": 320,
+                  "height": 227
+                },
+                "snippet": "<img src=\"http://127.0.0.1:8787/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 560px, 100vw\" alt=\"Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à …\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+                "nodeLabel": "Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à l’or …"
+              },
+              "url": "http://127.0.0.1:8787/photos/ferriere-baudelaire-800.webp",
+              "totalBytes": 27962,
+              "wastedBytes": 15712,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "reason": "This image file is larger than it needs to be (800x600) for its displayed dimensions (530x397). Use responsive images to reduce the image download size.",
+                    "wastedBytes": 15712
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "home",
+      "pass": 3,
+      "metrics": {
+        "first-contentful-paint": 1253.1467499999999,
+        "largest-contentful-paint": 3732.764500000002,
+        "total-blocking-time": 51.55887500000006,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1440.7582000001876
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 200
+          },
+          "numericValue": 200,
+          "overallSavingsMs": 200,
+          "overallSavingsBytes": 34884,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34884,
+              "wastedPercent": 36.59282958269001
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 310 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27089,
+              "wastedMs": 331
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "LCP": 0
+          },
+          "items": [
+            {
+              "type": "checklist",
+              "items": {
+                "priorityHinted": {
+                  "label": "fetchpriority=high applied",
+                  "value": true
+                },
+                "requestDiscoverable": {
+                  "label": "Request is discoverable in initial document",
+                  "value": true
+                },
+                "eagerlyLoaded": {
+                  "label": "LCP resources should not use loading=lazy",
+                  "value": true
+                }
+              }
+            },
+            {
+              "type": "node",
+              "lhId": "page-0-IMG",
+              "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,1,FIGURE,0,DIV,0,IMG",
+              "selector": "div.grid > figure.lg:col-span-6 > div.aspect-[4/3] > img.h-full",
+              "boundingRect": {
+                "top": 668,
+                "bottom": 895,
+                "left": 46,
+                "right": 366,
+                "width": 320,
+                "height": 227
+              },
+              "snippet": "<img src=\"http://127.0.0.1:8787/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 560px, 100vw\" alt=\"Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à …\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+              "nodeLabel": "Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à l’or …"
+            }
+          ]
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 0.5,
+          "displayValue": "Est savings of 15 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "node": {
+                "type": "node",
+                "lhId": "page-0-IMG",
+                "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,1,FIGURE,0,DIV,0,IMG",
+                "selector": "div.grid > figure.lg:col-span-6 > div.aspect-[4/3] > img.h-full",
+                "boundingRect": {
+                  "top": 668,
+                  "bottom": 895,
+                  "left": 46,
+                  "right": 366,
+                  "width": 320,
+                  "height": 227
+                },
+                "snippet": "<img src=\"http://127.0.0.1:8787/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 560px, 100vw\" alt=\"Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à …\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+                "nodeLabel": "Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à l’or …"
+              },
+              "url": "http://127.0.0.1:8787/photos/ferriere-baudelaire-800.webp",
+              "totalBytes": 27962,
+              "wastedBytes": 15712,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "reason": "This image file is larger than it needs to be (800x600) for its displayed dimensions (530x397). Use responsive images to reduce the image download size.",
+                    "wastedBytes": 15712
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "tarifs",
+      "pass": 1,
+      "metrics": {
+        "first-contentful-paint": 1244.7873,
+        "largest-contentful-paint": 3723.858199999998,
+        "total-blocking-time": 64.53544999999997,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1452.9917600004796
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 300
+          },
+          "numericValue": 320,
+          "overallSavingsMs": 320,
+          "overallSavingsBytes": 34881,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34881,
+              "wastedPercent": 36.58880716856081
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 290 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 300
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27088,
+              "wastedMs": 329
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": []
+        }
+      }
+    },
+    {
+      "key": "tarifs",
+      "pass": 2,
+      "metrics": {
+        "first-contentful-paint": 963.0678,
+        "largest-contentful-paint": 3280.067800000001,
+        "total-blocking-time": 50.999999999999886,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1120.355560001669
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 300
+          },
+          "numericValue": 300,
+          "overallSavingsMs": 300,
+          "overallSavingsBytes": 34881,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34881,
+              "wastedPercent": 36.58880716856081
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 290 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 300
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27089,
+              "wastedMs": 332
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": []
+        }
+      }
+    },
+    {
+      "key": "tarifs",
+      "pass": 3,
+      "metrics": {
+        "first-contentful-paint": 946.3854000000001,
+        "largest-contentful-paint": 3414.3853999999988,
+        "total-blocking-time": 36.30729999999994,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1236.9676799988317
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 450
+          },
+          "numericValue": 450,
+          "overallSavingsMs": 450,
+          "overallSavingsBytes": 34881,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34881,
+              "wastedPercent": 36.58880716856081
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 290 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 300
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27089,
+              "wastedMs": 323
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": []
+        }
+      }
+    },
+    {
+      "key": "reparation",
+      "pass": 1,
+      "metrics": {
+        "first-contentful-paint": 949.9419,
+        "largest-contentful-paint": 3284.9418999999994,
+        "total-blocking-time": 60.52904999999987,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1773.8662199997202
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 300
+          },
+          "numericValue": 300,
+          "overallSavingsMs": 300,
+          "overallSavingsBytes": 34758,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34758,
+              "wastedPercent": 36.460399332898085
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 290 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 300
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27089,
+              "wastedMs": 325
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": []
+        }
+      }
+    },
+    {
+      "key": "reparation",
+      "pass": 2,
+      "metrics": {
+        "first-contentful-paint": 949.5542,
+        "largest-contentful-paint": 2848.5542,
+        "total-blocking-time": 9,
+        "cumulative-layout-shift": 0,
+        "speed-index": 949.5542
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 150
+          },
+          "numericValue": 150,
+          "overallSavingsMs": 150,
+          "overallSavingsBytes": 34758,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34758,
+              "wastedPercent": 36.460399332898085
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 300 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 300
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27097,
+              "wastedMs": 325
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": []
+        }
+      }
+    },
+    {
+      "key": "reparation",
+      "pass": 3,
+      "metrics": {
+        "first-contentful-paint": 962.2560000000001,
+        "largest-contentful-paint": 3129.256,
+        "total-blocking-time": 18.999999999999773,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1011.5052799997748
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 300
+          },
+          "numericValue": 300,
+          "overallSavingsMs": 300,
+          "overallSavingsBytes": 34758,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34758,
+              "wastedPercent": 36.460399332898085
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 310 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 300
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27089,
+              "wastedMs": 331
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": []
+        }
+      }
+    },
+    {
+      "key": "partenaires",
+      "pass": 1,
+      "metrics": {
+        "first-contentful-paint": 955.9464,
+        "largest-contentful-paint": 3429.9464000000007,
+        "total-blocking-time": 191.5268000000001,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1160.3534800012098
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 300
+          },
+          "numericValue": 300,
+          "overallSavingsMs": 300,
+          "overallSavingsBytes": 34503,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34503,
+              "wastedPercent": 36.19306350154244
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 290 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 300
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27090,
+              "wastedMs": 328
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 15 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 150
+          },
+          "items": [
+            {
+              "node": {
+                "type": "node",
+                "lhId": "page-0-IMG",
+                "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,1,FIGURE,0,DIV,0,IMG",
+                "selector": "div.grid > figure.lg:col-span-7 > div.overflow-hidden > img.block",
+                "boundingRect": {
+                  "top": 824,
+                  "bottom": 1055,
+                  "left": 21,
+                  "right": 391,
+                  "width": 370,
+                  "height": 231
+                },
+                "snippet": "<img src=\"/photos/product/atelier-aujourdhui-960.webp\" srcset=\"/photos/product/atelier-aujourdhui-960.webp 960w, /photos/product/atelier-…\" sizes=\"(min-width: 1024px) 720px, 100vw\" width=\"1600\" height=\"1000\" alt=\"L'écran Aujourd'hui de l'espace atelier : nouvelles demandes, messages non…\" loading=\"eager\" fetchpriority=\"high\" decoding=\"async\" class=\"block h-auto w-full\">",
+                "nodeLabel": "L'écran Aujourd'hui de l'espace atelier : nouvelles demandes, messages non lus,…"
+              },
+              "url": "http://127.0.0.1:8787/photos/product/atelier-aujourdhui-960.webp",
+              "totalBytes": 28452,
+              "wastedBytes": 15509,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "reason": "This image file is larger than it needs to be (960x600) for its displayed dimensions (648x405). Use responsive images to reduce the image download size.",
+                    "wastedBytes": 15509
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "partenaires",
+      "pass": 2,
+      "metrics": {
+        "first-contentful-paint": 944.50548,
+        "largest-contentful-paint": 3568.505479999999,
+        "total-blocking-time": 228.5000000000001,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1789.8016531517524
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 300
+          },
+          "numericValue": 300,
+          "overallSavingsMs": 300,
+          "overallSavingsBytes": 34503,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34503,
+              "wastedPercent": 36.19306350154244
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 270 ms",
+          "metricSavings": {
+            "FCP": 250,
+            "LCP": 250
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27082,
+              "wastedMs": 322
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 0.5,
+          "displayValue": "Est savings of 15 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "node": {
+                "type": "node",
+                "lhId": "page-1-IMG",
+                "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,1,FIGURE,0,DIV,0,IMG",
+                "selector": "div.grid > figure.lg:col-span-7 > div.overflow-hidden > img.block",
+                "boundingRect": {
+                  "top": 824,
+                  "bottom": 1055,
+                  "left": 21,
+                  "right": 391,
+                  "width": 370,
+                  "height": 231
+                },
+                "snippet": "<img src=\"/photos/product/atelier-aujourdhui-960.webp\" srcset=\"/photos/product/atelier-aujourdhui-960.webp 960w, /photos/product/atelier-…\" sizes=\"(min-width: 1024px) 720px, 100vw\" width=\"1600\" height=\"1000\" alt=\"L'écran Aujourd'hui de l'espace atelier : nouvelles demandes, messages non…\" loading=\"eager\" fetchpriority=\"high\" decoding=\"async\" class=\"block h-auto w-full\">",
+                "nodeLabel": "L'écran Aujourd'hui de l'espace atelier : nouvelles demandes, messages non lus,…"
+              },
+              "url": "http://127.0.0.1:8787/photos/product/atelier-aujourdhui-960.webp",
+              "totalBytes": 28452,
+              "wastedBytes": 15509,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "reason": "This image file is larger than it needs to be (960x600) for its displayed dimensions (648x405). Use responsive images to reduce the image download size.",
+                    "wastedBytes": 15509
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "partenaires",
+      "pass": 3,
+      "metrics": {
+        "first-contentful-paint": 939.7076999999999,
+        "largest-contentful-paint": 3588.7077,
+        "total-blocking-time": 258.14615000000003,
+        "cumulative-layout-shift": 0,
+        "speed-index": 1304.6017112649847
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 34 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 350
+          },
+          "numericValue": 350,
+          "overallSavingsMs": 350,
+          "overallSavingsBytes": 34503,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 34503,
+              "wastedPercent": 36.19306350154244
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 290 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 300
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8787/assets/styles-BKUmZczz.css",
+              "totalBytes": 27082,
+              "wastedMs": 320
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": null
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 0.5,
+          "displayValue": "Est savings of 15 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "node": {
+                "type": "node",
+                "lhId": "page-1-IMG",
+                "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,1,FIGURE,0,DIV,0,IMG",
+                "selector": "div.grid > figure.lg:col-span-7 > div.overflow-hidden > img.block",
+                "boundingRect": {
+                  "top": 824,
+                  "bottom": 1055,
+                  "left": 21,
+                  "right": 391,
+                  "width": 370,
+                  "height": 231
+                },
+                "snippet": "<img src=\"/photos/product/atelier-aujourdhui-960.webp\" srcset=\"/photos/product/atelier-aujourdhui-960.webp 960w, /photos/product/atelier-…\" sizes=\"(min-width: 1024px) 720px, 100vw\" width=\"1600\" height=\"1000\" alt=\"L'écran Aujourd'hui de l'espace atelier : nouvelles demandes, messages non…\" loading=\"eager\" fetchpriority=\"high\" decoding=\"async\" class=\"block h-auto w-full\">",
+                "nodeLabel": "L'écran Aujourd'hui de l'espace atelier : nouvelles demandes, messages non lus,…"
+              },
+              "url": "http://127.0.0.1:8787/photos/product/atelier-aujourdhui-960.webp",
+              "totalBytes": 28452,
+              "wastedBytes": 15509,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "reason": "This image file is larger than it needs to be (960x600) for its displayed dimensions (648x405). Use responsive images to reduce the image download size.",
+                    "wastedBytes": 15509
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "finebindery",
+      "pass": 1,
+      "metrics": {
+        "first-contentful-paint": 1826.36925,
+        "largest-contentful-paint": 4495.064650000002,
+        "total-blocking-time": 120.32614999999998,
+        "cumulative-layout-shift": 0,
+        "speed-index": 2644.3672399999996
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 35 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 450
+          },
+          "numericValue": 450,
+          "overallSavingsMs": 450,
+          "overallSavingsBytes": 35779,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8788/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 35779,
+              "wastedPercent": 37.5306709077351
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 320 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8788/assets/styles-BKUmZczz.css",
+              "totalBytes": 27090,
+              "wastedMs": 338
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "LCP": 0
+          },
+          "items": [
+            {
+              "type": "checklist",
+              "items": {
+                "priorityHinted": {
+                  "label": "fetchpriority=high applied",
+                  "value": true
+                },
+                "requestDiscoverable": {
+                  "label": "Request is discoverable in initial document",
+                  "value": true
+                },
+                "eagerlyLoaded": {
+                  "label": "LCP resources should not use loading=lazy",
+                  "value": true
+                }
+              }
+            },
+            {
+              "type": "node",
+              "lhId": "page-0-IMG",
+              "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,0,DIV,1,FIGURE,0,DIV,0,IMG",
+              "selector": "div.grid > figure.lg:col-span-5 > div.aspect-[4/3] > img.h-full",
+              "boundingRect": {
+                "top": 613,
+                "bottom": 840,
+                "left": 46,
+                "right": 366,
+                "width": 320,
+                "height": 227
+              },
+              "snippet": "<img src=\"http://127.0.0.1:8788/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 480px, 100vw\" alt=\"A contemporary design binding in grey and aubergine leather mosaic, titled…\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+              "nodeLabel": "A contemporary design binding in grey and aubergine leather mosaic, titled in g…"
+            }
+          ]
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 0.5,
+          "displayValue": "Est savings of 15 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "node": {
+                "type": "node",
+                "lhId": "page-0-IMG",
+                "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,0,DIV,1,FIGURE,0,DIV,0,IMG",
+                "selector": "div.grid > figure.lg:col-span-5 > div.aspect-[4/3] > img.h-full",
+                "boundingRect": {
+                  "top": 613,
+                  "bottom": 840,
+                  "left": 46,
+                  "right": 366,
+                  "width": 320,
+                  "height": 227
+                },
+                "snippet": "<img src=\"http://127.0.0.1:8788/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 480px, 100vw\" alt=\"A contemporary design binding in grey and aubergine leather mosaic, titled…\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+                "nodeLabel": "A contemporary design binding in grey and aubergine leather mosaic, titled in g…"
+              },
+              "url": "http://127.0.0.1:8788/photos/ferriere-baudelaire-800.webp",
+              "totalBytes": 27962,
+              "wastedBytes": 15712,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "reason": "This image file is larger than it needs to be (800x600) for its displayed dimensions (530x397). Use responsive images to reduce the image download size.",
+                    "wastedBytes": 15712
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "finebindery",
+      "pass": 2,
+      "metrics": {
+        "first-contentful-paint": 1702.2782499999998,
+        "largest-contentful-paint": 4258.200849999999,
+        "total-blocking-time": 61.14435000000003,
+        "cumulative-layout-shift": 0,
+        "speed-index": 2094.760760000062
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 35 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 400
+          },
+          "numericValue": 390,
+          "overallSavingsMs": 390,
+          "overallSavingsBytes": 35779,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8788/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 35779,
+              "wastedPercent": 37.5306709077351
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 300 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8788/assets/styles-BKUmZczz.css",
+              "totalBytes": 27097,
+              "wastedMs": 323
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "LCP": 0
+          },
+          "items": [
+            {
+              "type": "checklist",
+              "items": {
+                "priorityHinted": {
+                  "label": "fetchpriority=high applied",
+                  "value": true
+                },
+                "requestDiscoverable": {
+                  "label": "Request is discoverable in initial document",
+                  "value": true
+                },
+                "eagerlyLoaded": {
+                  "label": "LCP resources should not use loading=lazy",
+                  "value": true
+                }
+              }
+            },
+            {
+              "type": "node",
+              "lhId": "page-0-IMG",
+              "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,0,DIV,1,FIGURE,0,DIV,0,IMG",
+              "selector": "div.grid > figure.lg:col-span-5 > div.aspect-[4/3] > img.h-full",
+              "boundingRect": {
+                "top": 613,
+                "bottom": 840,
+                "left": 46,
+                "right": 366,
+                "width": 320,
+                "height": 227
+              },
+              "snippet": "<img src=\"http://127.0.0.1:8788/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 480px, 100vw\" alt=\"A contemporary design binding in grey and aubergine leather mosaic, titled…\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+              "nodeLabel": "A contemporary design binding in grey and aubergine leather mosaic, titled in g…"
+            }
+          ]
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 0.5,
+          "displayValue": "Est savings of 15 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "node": {
+                "type": "node",
+                "lhId": "page-0-IMG",
+                "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,0,DIV,1,FIGURE,0,DIV,0,IMG",
+                "selector": "div.grid > figure.lg:col-span-5 > div.aspect-[4/3] > img.h-full",
+                "boundingRect": {
+                  "top": 613,
+                  "bottom": 840,
+                  "left": 46,
+                  "right": 366,
+                  "width": 320,
+                  "height": 227
+                },
+                "snippet": "<img src=\"http://127.0.0.1:8788/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 480px, 100vw\" alt=\"A contemporary design binding in grey and aubergine leather mosaic, titled…\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+                "nodeLabel": "A contemporary design binding in grey and aubergine leather mosaic, titled in g…"
+              },
+              "url": "http://127.0.0.1:8788/photos/ferriere-baudelaire-800.webp",
+              "totalBytes": 27962,
+              "wastedBytes": 15712,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "reason": "This image file is larger than it needs to be (800x600) for its displayed dimensions (530x397). Use responsive images to reduce the image download size.",
+                    "wastedBytes": 15712
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "key": "finebindery",
+      "pass": 3,
+      "metrics": {
+        "first-contentful-paint": 1710.487125,
+        "largest-contentful-paint": 4274.476825000002,
+        "total-blocking-time": 94.50257500000009,
+        "cumulative-layout-shift": 0,
+        "speed-index": 2756.1320200014184
+      },
+      "audits": {
+        "unused-javascript": {
+          "score": 0,
+          "displayValue": "Est savings of 35 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 500
+          },
+          "numericValue": 490,
+          "overallSavingsMs": 490,
+          "overallSavingsBytes": 35779,
+          "items": [
+            {
+              "url": "http://127.0.0.1:8788/assets/index-CLT_f775.js",
+              "totalBytes": 95331,
+              "wastedBytes": 35779,
+              "wastedPercent": 37.5306709077351
+            }
+          ]
+        },
+        "unused-css-rules": {
+          "score": 1,
+          "displayValue": "",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "numericValue": 0,
+          "overallSavingsMs": 0,
+          "overallSavingsBytes": 0,
+          "items": []
+        },
+        "render-blocking-insight": {
+          "score": 0,
+          "displayValue": "Est savings of 300 ms",
+          "metricSavings": {
+            "FCP": 300,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "url": "http://127.0.0.1:8788/assets/styles-BKUmZczz.css",
+              "totalBytes": 27097,
+              "wastedMs": 320
+            }
+          ]
+        },
+        "font-display-insight": {
+          "score": 1,
+          "metricSavings": {
+            "INP": 0
+          },
+          "items": []
+        },
+        "lcp-discovery-insight": {
+          "score": 1,
+          "metricSavings": {
+            "LCP": 0
+          },
+          "items": [
+            {
+              "type": "checklist",
+              "items": {
+                "priorityHinted": {
+                  "label": "fetchpriority=high applied",
+                  "value": true
+                },
+                "requestDiscoverable": {
+                  "label": "Request is discoverable in initial document",
+                  "value": true
+                },
+                "eagerlyLoaded": {
+                  "label": "LCP resources should not use loading=lazy",
+                  "value": true
+                }
+              }
+            },
+            {
+              "type": "node",
+              "lhId": "page-0-IMG",
+              "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,0,DIV,1,FIGURE,0,DIV,0,IMG",
+              "selector": "div.grid > figure.lg:col-span-5 > div.aspect-[4/3] > img.h-full",
+              "boundingRect": {
+                "top": 613,
+                "bottom": 840,
+                "left": 46,
+                "right": 366,
+                "width": 320,
+                "height": 227
+              },
+              "snippet": "<img src=\"http://127.0.0.1:8788/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 480px, 100vw\" alt=\"A contemporary design binding in grey and aubergine leather mosaic, titled…\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+              "nodeLabel": "A contemporary design binding in grey and aubergine leather mosaic, titled in g…"
+            }
+          ]
+        },
+        "modern-image-formats": null,
+        "image-delivery-insight": {
+          "score": 0.5,
+          "displayValue": "Est savings of 15 KiB",
+          "metricSavings": {
+            "FCP": 0,
+            "LCP": 0
+          },
+          "items": [
+            {
+              "node": {
+                "type": "node",
+                "lhId": "page-0-IMG",
+                "path": "1,HTML,1,BODY,1,DIV,1,MAIN,0,SECTION,0,DIV,0,DIV,1,FIGURE,0,DIV,0,IMG",
+                "selector": "div.grid > figure.lg:col-span-5 > div.aspect-[4/3] > img.h-full",
+                "boundingRect": {
+                  "top": 613,
+                  "bottom": 840,
+                  "left": 46,
+                  "right": 366,
+                  "width": 320,
+                  "height": 227
+                },
+                "snippet": "<img src=\"http://127.0.0.1:8788/photos/ferriere-baudelaire-800.webp\" srcset=\"/photos/ferriere-baudelaire-480.webp 480w, /photos/ferriere-baudelaire-800…\" sizes=\"(min-width: 1024px) 480px, 100vw\" alt=\"A contemporary design binding in grey and aubergine leather mosaic, titled…\" loading=\"eager\" decoding=\"sync\" fetchpriority=\"low\" class=\"h-full w-full object-contain\">",
+                "nodeLabel": "A contemporary design binding in grey and aubergine leather mosaic, titled in g…"
+              },
+              "url": "http://127.0.0.1:8788/photos/ferriere-baudelaire-800.webp",
+              "totalBytes": 27962,
+              "wastedBytes": 15712,
+              "subItems": {
+                "type": "subitems",
+                "items": [
+                  {
+                    "reason": "This image file is larger than it needs to be (800x600) for its displayed dimensions (530x397). Use responsive images to reduce the image download size.",
+                    "wastedBytes": 15712
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

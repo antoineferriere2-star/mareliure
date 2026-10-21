@@ -5,12 +5,13 @@ import {
   createRootRouteWithContext,
   useRouter,
   useRouterState,
-  HeadContent,
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
 import appCss from "../styles.css?url";
+import { PerformanceHead } from "@/marketplace/performance/PerformanceHead";
+import { PHOTOS } from "@/marketplace/pages/landing/photos";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { markHydrated } from "../lib/hydration";
 import {
@@ -173,7 +174,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     marketplaceBrand: isMaReliure ? await getRequestMarketplaceBrand() : null,
     fineBinderyLocale: isMaReliure ? await getRequestFineBinderyLocale() : null,
   }),
-  head: ({ loaderData }) => {
+  head: ({ loaderData, matches }) => {
     const BRAND = rootBrand(loaderData?.marketplaceBrand ?? null, loaderData?.fineBinderyLocale ?? null);
     return {
       meta: [
@@ -224,10 +225,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
             ]),
       ],
       links: [
-        {
-          rel: "stylesheet",
-          href: appCss,
-        },
+        { rel: "stylesheet", href: appCss },
+        // Les planches des deux accueils peuvent devenir le LCP mobile.
+        // Chaque préchargement reprend exactement le srcset/sizes de son image.
+        ...(isMaReliure && matches.some((match) => ["/", "/$locale/"].includes(match.routeId))
+          ? [{ rel: "preload", as: "image", imageSrcSet: PHOTOS.ferriereBaudelaire.srcSet,
+              imageSizes: loaderData?.marketplaceBrand === "FINE_BINDERY" ? "(min-width: 1024px) 480px, 100vw" : "(min-width: 1024px) 560px, 100vw", fetchPriority: "high" as const }]
+          : []),
         { rel: "icon", href: BRAND.icon, type: "image/svg+xml" },
         { rel: "shortcut icon", href: BRAND.icon, type: "image/svg+xml" },
       ],
@@ -248,7 +252,7 @@ function RootShell({ children }: { children: ReactNode }) {
   return (
     <html lang={BRAND.lang} className={BRAND.themeClass}>
       <head>
-        <HeadContent />
+        <PerformanceHead />
       </head>
       <body>
         {children}

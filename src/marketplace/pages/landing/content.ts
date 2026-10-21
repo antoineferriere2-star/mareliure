@@ -372,6 +372,7 @@ export const EDITORIAL_FONT_PRELOAD = {
   rel: "preload",
   href: "/fonts/fraunces-latin-var.woff2",
   as: "font",
+  fetchPriority: "high",
   type: "font/woff2",
   crossOrigin: "anonymous",
 } as const;
