@@ -94,4 +94,25 @@ describe("droits explicites des nouvelles tables", () => {
     expect(undeclaredTables('CREATE TABLE public.CASE_NOTES(id int);GRANT SELECT ON public.case_notes TO authenticated;')).toEqual([]);
     expect(undeclaredTables('CREATE TABLE public."a""b"(id int);GRANT SELECT ON public."a""b" TO authenticated;')).toEqual([]);
   });
+  // Contre-revue de #154 (#152, second passage).
+  it("WITH … SELECT INTO crée une table ; INSERT INTO derrière un WITH n'en crée pas", () => {
+    expect(undeclaredTables("WITH payload AS (SELECT 1 AS id) SELECT * INTO public.build_notes FROM payload;")).toEqual(["build_notes"]);
+    expect(undeclaredTables("WITH payload AS (SELECT 1 AS id) INSERT INTO public.existing SELECT * FROM payload;")).toEqual([]);
+    expect(undeclaredTables("INSERT INTO public.existing SELECT 1;")).toEqual([]);
+  });
+  it("une création temporaire ne masque pas une création persistante dans le même bloc", () => {
+    expect(undeclaredTables("DO $$ BEGIN CREATE TEMP TABLE scratch(id int); CREATE TABLE public.build_notes(id int); END $$;")).toEqual([DYNAMIC]);
+    expect(undeclaredTables("DO $$ BEGIN CREATE TEMP TABLE scratch(id int); END $$;")).toEqual([]);
+  });
+  it("aucune collision entre une vraie table et les jetons internes, ni entre noms à points", () => {
+    expect(undeclaredTables('CREATE TABLE public.qid0(id int);CREATE TABLE public."other_notes"(id int);GRANT SELECT ON public."other_notes" TO authenticated;')).toEqual(["qid0"]);
+    expect(undeclaredTables('CREATE SCHEMA "public.case";CREATE TABLE public."case.notes"(id int);CREATE TABLE "public.case".notes(id int);GRANT SELECT ON "public.case".notes TO authenticated;')).toEqual(["case.notes"]);
+    expect(undeclaredTables('CREATE TABLE public."case.notes"(id int);GRANT SELECT ON public."case.notes" TO authenticated;')).toEqual([]);
+  });
+  it("SQL dynamique échappé (E'' et U&'') : décodé avant examen", () => {
+    expect(undeclaredTables("DO $$ BEGIN EXECUTE E'\\x43REATE TABLE public.build_notes(id int)'; END $$;")).toEqual([DYNAMIC]);
+    expect(undeclaredTables("DO $$ BEGIN EXECUTE E'\\103REATE TABLE public.build_notes(id int)'; END $$;")).toEqual([DYNAMIC]);
+    expect(undeclaredTables("DO $$ BEGIN EXECUTE U&'\\0043REATE TABLE public.build_notes(id int)'; END $$;")).toEqual([DYNAMIC]);
+    expect(undeclaredTables("SELECT E'aucune \\x63r\\u00e9ation';")).toEqual([]);
+  });
 });
