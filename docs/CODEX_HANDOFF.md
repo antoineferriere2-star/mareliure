@@ -3692,6 +3692,32 @@ Codex — **19 octobre 2026**, chantier 3 du brief n° 3, branche `docs/search-c
 
 Aucune demande d'indexation, validation de correction, test d'URL active, modification de propriété, e-mail, achat ou déploiement. Pas de diagnostic des codes HTTP actuels à partir de données historiques. Validation du dépôt partagée avec la source commune du chantier SQL ; la CI standard de cette PR reste consultable avant toute fusion, qui n'est pas effectuée ici.
 
+
+## Latest handoff
+
+Codex — **20 octobre 2026, 16 h 59 Paris (UTC+2)**, brief n° 6, chantier 3. Branche `fix/a11y-20261020` depuis `origin/main f4bb8d0c81e893d44c803a6b87420551a1220ad8` (#150 incluse). Rapport final `docs/A11Y_PERF_20261020.md`, résultats structurés `docs/a11y-20261020/results.json`, PR [#153](https://github.com/antoineferriere2-star/mareliure/pull/153). Le brouillon de rapport intermédiaire est remplacé par les mesures achevées.
+
+Lighthouse 13.5.0 et axe-core indépendant 4.14.0 : **12 audits publics** (six URL × mobile/bureau) et **24 états locaux simulés** (20 navigations + quatre snapshots d'erreur, FR/EN × 1 280/375 px réels). Source produit locale mesurée : `3f62f370e441bafd1a851780fdfc3aecb33b7d29`. Les 36 mesures donnent 100 en accessibilité Lighthouse et aucune violation axe confirmée ; quatre contrôles publics de contraste restent incomplets, sans certification WCAG ni conclusion de réussite pour ces nœuds. Le montage anglais local garde lang=fr : limite du contexte SSR de la fixture, pas un défaut du portail de production démontré.
+
+Passe publique retenue du 20 octobre **14:48:53–14:54:07 UTC**, après arrêt complet du serveur Vite Codex. Performance mobile **61–83**, bureau **88–97**, LCP mobile **3,6–4,4 s**. TBT de l'accueil mobile 862,5 ms, mesure unique à reproduire avant attribution de cause. Les performances locales décrivent Vite et les simulations, pas le Worker. Premiers essais redirigés vers la connexion et premières passes publiques avec charge locale exclus des tableaux ; traces et journaux conservés hors dépôt. Un avertissement interne Lighthouse EN/mobile « prête » a entraîné un rejeu ciblé, signalé dans le rapport.
+
+Seul fichier produit changé : `CustomerLogisticsPanel.tsx`, pour relier l'erreur de téléphone au champ (aria-invalid/aria-describedby) et ramener le focus à chaque refus. La recette `e2e/customer/journey.spec.ts` vérifie deux refus successifs, dont un au clavier, et la description accessible. Reproduction avant correctif en échec conservée. Recette finale **4/4** ; suite locale **312 fichiers / 3 829 tests**, typecheck réussi, lint sans erreur et 19 avertissements existants. CI du code `3f62f37` : quality et mocked-customer-journey réussis (build Vite inclus dans quality). Aucun build de production local supplémentaire prétendu.
+
+Aucun fichier réservé (crafts, brandPages, landing, routes publiques) modifié, aucune migration. Audits publics sans session et sans action de formulaire ; interception avant envoi des requêtes autres que GET/HEAD/OPTIONS et de track-view. Appels externes/inattendus des fixtures locales : zéro. Aucun compte, e-mail, achat Sendcloud, paiement Stripe, fusion de PR ou déploiement. Identité du Worker et historique SQL annoncés par le brief non réinterrogés. Serveur Vite arrêté après les mesures locales.
+
+## Latest handoff
+
+Codex — **20 octobre 2026, soir**, brief n° 7, chantier 4. Branche `fix/discipline-translations-20261020` depuis `origin/main abfe72b` (#155/#153 incluses). Relecture des quatre disciplines DE/IT/ES, 25 chaînes ajustées (un titre, 12 descriptions, 12 introductions), bornes et registre conservés. Rapport `docs/TRANSLATIONS_155_20261020.md` : termes du métier, traitement des calques et sources terminologiques ; aucune relecture humaine native prétendue. Tests existants `disciplines.test.ts` **6/6**, typecheck local réussi. Aucun prix, délai, avis ou service ajouté. Seul fichier produit modifié : `src/marketplace/pages/fineBindery/disciplines.ts`, ouvert explicitement pour ce chantier ; EN/FR et autres contenus intacts. Aucune migration, écriture de production, action fournisseur, compte, e-mail, achat, paiement, fusion de PR ou déploiement.
+
+PR de corrections : [#157](https://github.com/antoineferriere2-star/mareliure/pull/157). CI du code 90aec6c : quality et mocked-customer-journey réussis ; aucun fichier produit changé depuis ces contrôles.
+
+
+## Latest handoff
+
+Codex — **20 octobre 2026, soir**, brief n° 7, chantier 3. Branche docs/structured-data-20261020 depuis origin/main abfe72b. Rapport docs/STRUCTURED_DATA_20261020.md et preuves JSON/PNG publiques : huit URL HTTP 200, **0 erreur / 0 avertissement Schema.org** ; six DefinedTermSet, six FAQPage françaises (54 termes, 37 questions), sept BreadcrumbList validés par Google, aucun résultat enrichi détecté sur /en. Le retrait des résultats enrichis FAQ en mai 2026 est vérifié dans la documentation Google actuelle. Les outils valident les pages servies, sans certifier un classement ou un affichage effectif. Session Google préexistante visible, aucune connexion nouvelle ; profil entièrement anonyme non testé. Relevés UTC et empreintes HTML conservés. Aucun fichier produit, compte, réglage, demande d’indexation, e-mail, achat, paiement, écriture manuelle de production, fusion de PR ou déploiement.
+
+**Réserve lecture seule stricte :** le robot du test Google peut exécuter le POST de suivi de visite de /en ; Google-InspectionTool n’est pas reconnu par le filtre bot actuel. Une ligne anonyme build_page_views a pu être créée ; résultat SQL non observé, absence d’écriture analytique non certifiée. Aucune action métier exécutée. Rapport et description de #158 qualifiés ; aucun nettoyage ni nouvelle validation URL. Utiliser le mode code/JSON-LD isolé pour un contrôle strict futur.
+
 ## Latest handoff
 
 Codex — **20 octobre 2026, après-midi**, brief n° 6, chantier 1, PR #139. Origin/main f4bb8d0c81e893d44c803a6b87420551a1220ad8 intégré dans la branche propre de cette PR par un commit de fusion local ; conflits limités au handoff résolus en gardant les deux blocs. Aucune fusion de PR ni publication de Worker. Table avant / correction / preuve ajoutée en tête du rapport ; relevés historiques conservés et explicitement datés, y compris les verdicts devenus obsolètes.
