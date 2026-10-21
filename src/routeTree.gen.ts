@@ -46,6 +46,10 @@ import { Route as TermsOfSaleRouteImport } from './routes/terms-of-sale'
 import { Route as TermsOfUseRouteImport } from './routes/terms-of-use'
 import { Route as LocaleIndexRouteImport } from './routes/$locale.index'
 import { Route as LocaleSlugRouteImport } from './routes/$locale.$slug'
+import { Route as LocaleBespokeCommissionsRouteImport } from './routes/$locale.bespoke-commissions'
+import { Route as LocaleBookRestorationRouteImport } from './routes/$locale.book-restoration'
+import { Route as LocaleCollectorRebindingRouteImport } from './routes/$locale.collector-rebinding'
+import { Route as LocaleFineBindingRouteImport } from './routes/$locale.fine-binding'
 import { Route as LocaleProfessionalsRouteImport } from './routes/$locale.professionals'
 import { Route as LocaleProjectRouteImport } from './routes/$locale.project'
 import { Route as AuthenticatedActiverMonAtelierRouteImport } from './routes/_authenticated/activer-mon-atelier'
@@ -327,6 +331,28 @@ const LocaleIndexRoute = LocaleIndexRouteImport.update({
 const LocaleSlugRoute = LocaleSlugRouteImport.update({
   id: '/$locale/$slug',
   path: '/$locale/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleBespokeCommissionsRoute =
+  LocaleBespokeCommissionsRouteImport.update({
+    id: '/$locale/bespoke-commissions',
+    path: '/$locale/bespoke-commissions',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LocaleBookRestorationRoute = LocaleBookRestorationRouteImport.update({
+  id: '/$locale/book-restoration',
+  path: '/$locale/book-restoration',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleCollectorRebindingRoute =
+  LocaleCollectorRebindingRouteImport.update({
+    id: '/$locale/collector-rebinding',
+    path: '/$locale/collector-rebinding',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const LocaleFineBindingRoute = LocaleFineBindingRouteImport.update({
+  id: '/$locale/fine-binding',
+  path: '/$locale/fine-binding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const LocaleProfessionalsRoute = LocaleProfessionalsRouteImport.update({
@@ -927,6 +953,10 @@ export interface FileRoutesByFullPath {
   '/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/bespoke-commissions': typeof LocaleBespokeCommissionsRoute
+  '/$locale/book-restoration': typeof LocaleBookRestorationRoute
+  '/$locale/collector-rebinding': typeof LocaleCollectorRebindingRoute
+  '/$locale/fine-binding': typeof LocaleFineBindingRoute
   '/$locale/professionals': typeof LocaleProfessionalsRoute
   '/$locale/project': typeof LocaleProjectRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
@@ -1055,6 +1085,10 @@ export interface FileRoutesByTo {
   '/terms-of-sale': typeof TermsOfSaleRoute
   '/terms-of-use': typeof TermsOfUseRoute
   '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/bespoke-commissions': typeof LocaleBespokeCommissionsRoute
+  '/$locale/book-restoration': typeof LocaleBookRestorationRoute
+  '/$locale/collector-rebinding': typeof LocaleCollectorRebindingRoute
+  '/$locale/fine-binding': typeof LocaleFineBindingRoute
   '/$locale/professionals': typeof LocaleProfessionalsRoute
   '/$locale/project': typeof LocaleProjectRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
@@ -1190,6 +1224,10 @@ export interface FileRoutesById {
   '/_authenticated/mes-livres': typeof AuthenticatedMesLivresRouteRouteWithChildren
   '/_authenticated/portal': typeof AuthenticatedPortalRouteRouteWithChildren
   '/$locale/$slug': typeof LocaleSlugRoute
+  '/$locale/bespoke-commissions': typeof LocaleBespokeCommissionsRoute
+  '/$locale/book-restoration': typeof LocaleBookRestorationRoute
+  '/$locale/collector-rebinding': typeof LocaleCollectorRebindingRoute
+  '/$locale/fine-binding': typeof LocaleFineBindingRoute
   '/$locale/professionals': typeof LocaleProfessionalsRoute
   '/$locale/project': typeof LocaleProjectRoute
   '/_authenticated/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
@@ -1326,6 +1364,10 @@ export interface FileRouteTypes {
     | '/mes-livres'
     | '/portal'
     | '/$locale/$slug'
+    | '/$locale/bespoke-commissions'
+    | '/$locale/book-restoration'
+    | '/$locale/collector-rebinding'
+    | '/$locale/fine-binding'
     | '/$locale/professionals'
     | '/$locale/project'
     | '/activer-mon-atelier'
@@ -1454,6 +1496,10 @@ export interface FileRouteTypes {
     | '/terms-of-sale'
     | '/terms-of-use'
     | '/$locale/$slug'
+    | '/$locale/bespoke-commissions'
+    | '/$locale/book-restoration'
+    | '/$locale/collector-rebinding'
+    | '/$locale/fine-binding'
     | '/$locale/professionals'
     | '/$locale/project'
     | '/activer-mon-atelier'
@@ -1588,6 +1634,10 @@ export interface FileRouteTypes {
     | '/_authenticated/mes-livres'
     | '/_authenticated/portal'
     | '/$locale/$slug'
+    | '/$locale/bespoke-commissions'
+    | '/$locale/book-restoration'
+    | '/$locale/collector-rebinding'
+    | '/$locale/fine-binding'
     | '/$locale/professionals'
     | '/$locale/project'
     | '/_authenticated/activer-mon-atelier'
@@ -1718,6 +1768,10 @@ export interface RootRouteChildren {
   TermsOfSaleRoute: typeof TermsOfSaleRoute
   TermsOfUseRoute: typeof TermsOfUseRoute
   LocaleSlugRoute: typeof LocaleSlugRoute
+  LocaleBespokeCommissionsRoute: typeof LocaleBespokeCommissionsRoute
+  LocaleBookRestorationRoute: typeof LocaleBookRestorationRoute
+  LocaleCollectorRebindingRoute: typeof LocaleCollectorRebindingRoute
+  LocaleFineBindingRoute: typeof LocaleFineBindingRoute
   LocaleProfessionalsRoute: typeof LocaleProfessionalsRoute
   LocaleProjectRoute: typeof LocaleProjectRoute
   ASlugRoute: typeof ASlugRoute
@@ -2007,6 +2061,34 @@ declare module '@tanstack/react-router' {
       path: '/$locale/$slug'
       fullPath: '/$locale/$slug'
       preLoaderRoute: typeof LocaleSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/bespoke-commissions': {
+      id: '/$locale/bespoke-commissions'
+      path: '/$locale/bespoke-commissions'
+      fullPath: '/$locale/bespoke-commissions'
+      preLoaderRoute: typeof LocaleBespokeCommissionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/book-restoration': {
+      id: '/$locale/book-restoration'
+      path: '/$locale/book-restoration'
+      fullPath: '/$locale/book-restoration'
+      preLoaderRoute: typeof LocaleBookRestorationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/collector-rebinding': {
+      id: '/$locale/collector-rebinding'
+      path: '/$locale/collector-rebinding'
+      fullPath: '/$locale/collector-rebinding'
+      preLoaderRoute: typeof LocaleCollectorRebindingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/fine-binding': {
+      id: '/$locale/fine-binding'
+      path: '/$locale/fine-binding'
+      fullPath: '/$locale/fine-binding'
+      preLoaderRoute: typeof LocaleFineBindingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/$locale/professionals': {
@@ -3001,6 +3083,10 @@ const rootRouteChildren: RootRouteChildren = {
   TermsOfSaleRoute: TermsOfSaleRoute,
   TermsOfUseRoute: TermsOfUseRoute,
   LocaleSlugRoute: LocaleSlugRoute,
+  LocaleBespokeCommissionsRoute: LocaleBespokeCommissionsRoute,
+  LocaleBookRestorationRoute: LocaleBookRestorationRoute,
+  LocaleCollectorRebindingRoute: LocaleCollectorRebindingRoute,
+  LocaleFineBindingRoute: LocaleFineBindingRoute,
   LocaleProfessionalsRoute: LocaleProfessionalsRoute,
   LocaleProjectRoute: LocaleProjectRoute,
   ASlugRoute: ASlugRoute,

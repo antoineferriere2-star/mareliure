@@ -210,6 +210,10 @@ function ProviderResolution({ caseId, job }: { caseId: string; job: OperatorLogi
     onSettled: refresh,
   });
   const result = mutation.data;
+  // Revue #152 (P3) : le résultat est traduit, et reste affiché quand la réservation change d'état.
+  const resultLine = result && (
+    <p className="mt-1 text-xs">Résultat : {resolutionText(result)}</p>
+  );
   if (job.status === "ambiguous") return (
     <div className="mt-2 rounded border border-amber-400 bg-amber-50 p-2 text-xs text-amber-900">
       <p>Achat sans réponse certaine. Cherchez le colis dans Sendcloud (référence {job.id}) puis :</p>
@@ -219,18 +223,33 @@ function ProviderResolution({ caseId, job }: { caseId: string; job: OperatorLogi
         <label>Constat : aucune étiquette chez Sendcloud (preuve)<input className={FIELD} value={evidence} maxLength={500} placeholder="Recherche panneau Sendcloud le …, aucun envoi" onChange={(e) => setEvidence(e.target.value)} /></label>
         <Button size="sm" variant="outline" className="self-end" disabled={mutation.isPending || evidence.trim().length < 8} onClick={() => mutation.mutate("absent")}>Déclarer absente</Button>
       </div>
-      {result && <p className="mt-1">Résultat : {result.state}{result.code ? ` (${result.code})` : ""}</p>}
+      {resultLine}
       {mutation.isError && <p className="mt-1 text-destructive">{errorText(mutation.error)}</p>}
     </div>
   );
   if (job.status === "confirmed" && job.provider === "sendcloud") return (
     <div className="mt-2 text-xs">
       <Button size="sm" variant="outline" disabled={mutation.isPending} onClick={() => { if (window.confirm("Demander à Sendcloud d'annuler cette étiquette ?")) mutation.mutate("cancel"); }}>Annuler chez Sendcloud</Button>
-      {result && <span className="ml-2">Résultat : {result.state === "queued" ? "annulation en file, confirmée au prochain statut Sendcloud" : result.state}{result.code ? ` (${result.code})` : ""}</span>}
+      {resultLine}
       {mutation.isError && <p className="mt-1 text-destructive">{errorText(mutation.error)}</p>}
     </div>
   );
-  return null;
+  return resultLine || null;
+}
+
+const RESOLUTION_STATE: Record<string, string> = {
+  confirmed: "étiquette confirmée et stockée",
+  failed: "constat enregistré : réservation close sans étiquette",
+  pending: "en attente, aucune étiquette confirmée",
+  review_required: "action manuelle nécessaire",
+  cancelled: "étiquette annulée chez Sendcloud",
+  queued: "annulation en file, confirmée au prochain statut Sendcloud",
+  refused: "annulation refusée par Sendcloud",
+};
+
+function resolutionText(result: { state: string; code?: string }): string {
+  const code = result.code && result.code !== "absent_confirmed" ? ` — ${RESULT_CODES[result.code] ?? result.code}` : "";
+  return `${RESOLUTION_STATE[result.state] ?? result.state}${code}`;
 }
 
 function ManualLabelForm({ caseId, direction, chargedOther, replace }: { caseId: string; direction: "outbound" | "return"; chargedOther: number; replace: boolean }) {
