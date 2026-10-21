@@ -103,6 +103,13 @@ function Hero() {
               Voir l’outil
             </ActionLink>
           </div>
+          {/* Deuxième intention, dite dès le haut : la candidature était à 11 517 px sur mobile (revue #162). */}
+          <p className="mr-body mt-6 max-w-[34rem]">
+            Vous préférez d’abord présenter votre atelier, sans créer de compte ?{" "}
+            <a href="#candidature" className="mr-link mr-tap">
+              Envoyer une candidature
+            </a>
+          </p>
           <p className="mr-small mt-8 max-w-[34rem]">
             {SUBSCRIPTION_LABEL} <span aria-hidden="true">·</span> Vos clients restent les vôtres{" "}
             <span aria-hidden="true">·</span> Aucun volume de commandes garanti

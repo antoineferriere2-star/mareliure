@@ -304,7 +304,8 @@ export function MaReliureAuthPage({
 
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
-      {brand === "FINE_BINDERY" ? <FineBinderyHeader locale={fineBinderyLocale} /> : <LandingHeader />}
+      {/* Côté atelier, l'en-tête ne propose pas « Présenter mon livre » (parcours atelier, revue #162). */}
+      {brand === "FINE_BINDERY" ? <FineBinderyHeader locale={fineBinderyLocale} /> : <LandingHeader workshop={audience === "binder"} cta={audience !== "binder"} />}
       <main id="contenu" className="mx-auto w-full max-w-[36rem] flex-1 px-5 py-14 sm:px-8 sm:py-20">
         <p className="mr-eyebrow">{t.eyebrow}</p>
         <h1 className="mr-title mt-4 text-mr-ink">{t.heading}</h1>
