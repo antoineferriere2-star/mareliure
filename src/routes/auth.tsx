@@ -32,7 +32,7 @@ export const Route = createFileRoute("/auth")({
   // the Métré deployment rather than made and ignored.
   loader: async () =>
     isMaReliure ? { brand: await getRequestMarketplaceBrand() } : { brand: null },
-  head: ({ loaderData, match }) => {
+  head: ({ loaderData, match, matches }) => {
     if (!isMaReliure) {
       return {
         meta: [
@@ -48,8 +48,12 @@ export const Route = createFileRoute("/auth")({
     }
     // Arrivé par « Créer mon espace atelier » (?space=atelier), le relieur ne lit pas « Retrouver mes livres » (revues #162, #165).
     const search = match.search as { space?: string; locale?: string };
+    // Route `ssr: false` : côté serveur son loader n'a pas tourné. La marque vient alors de la racine,
+    // qui l'a lue dans le Host de la requête — sinon finebindery.com recevait un titre Ma Reliure.
+    const rootBrand = (matches[0]?.loaderData as { marketplaceBrand?: string | null } | undefined)?.marketplaceBrand;
+    const brand = loaderData?.brand ?? rootBrand;
     const title = authPageTitle(
-      loaderData?.brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE",
+      brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE",
       search.space === "atelier" ? "binder" : "customer",
       isFineBinderyLocale(search.locale) ? search.locale : "en",
     );
