@@ -27,7 +27,7 @@ export function duplicateQuoteInput(source: DocumentView): QuoteInput {
       blockKey: item.blockKey ?? "format-principal",
       serviceId: null, label: item.label, description: item.description, unit: item.unit,
       quantity: item.quantity, unitPriceCents: item.unitPriceCents,
-      catalogPriceCents: item.catalogPriceCents, vatRateBps: item.vatRateBps,
+      catalogPriceCents: item.catalogPriceCents, vatRateBps: item.vatRateBps, nature: item.nature ?? "service",
       ...(item.referenceVersion && item.referenceOperationKey
         ? { referenceVersion: item.referenceVersion, referenceOperationKey: item.referenceOperationKey } : {}),
     })),

@@ -6,6 +6,7 @@ import { commercialOriginOf } from "@/marketplace/cases/commercialOrigin";
 import { customerJourney } from "@/marketplace/shipping/customerJourney";
 import { getQuote,getInvoice,getCreditNote } from "./binderQuotes.server";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
+import { issuedPdfBase64ForCustomer } from "./issuedDocumentPdf.server";
 import { openWorkshopPaymentToken } from "@/marketplace/stripe/workshopPaymentToken.server";
 import { hashAccessToken } from "@/build/services/dossierAccessToken.server";
 import { workshopOrigin } from "@/marketplace/billing/workshopSubscription";
@@ -69,7 +70,8 @@ export async function workshopCustomerDocument(sb:Supa,userId:string,caseId:stri
   const owned=await workshopCustomerCase(sb,userId,caseId);
   const doc=owned.documents.find(d=>d.id===id && d.kind===kind);
   if(!doc) fail(404,"Document introuvable.");
-  const actual=kind==="quote"?await getQuote(sb,owned.binderId,id):kind==="invoice"?await getInvoice(sb,owned.binderId,id):await getCreditNote(sb,owned.binderId,id);
-  const {base64}=await renderDocumentPdf(actual);
+  // Devis : rendu à la demande. Facture et avoir émis : le fichier rangé à l'émission, jamais régénéré.
+  const base64=kind==="quote"?(await renderDocumentPdf(await getQuote(sb,owned.binderId,id))).base64
+    :await issuedPdfBase64ForCustomer(sb,owned.binderId,kind==="invoice"?await getInvoice(sb,owned.binderId,id):await getCreditNote(sb,owned.binderId,id));
   return {filename:`${kind}-${doc!.number.replace(/[^A-Za-z0-9._-]/g,"_")}.pdf`,base64};
 }

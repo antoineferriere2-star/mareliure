@@ -13,3 +13,7 @@ export const SETTLEMENT_UNAVAILABLE: Record<SettlementUnavailableReason, string>
   deposit: "Devis avec acompte : le suivi direct ne couvre pas encore les règlements en plusieurs temps. Conservez vos justificatifs dans votre comptabilité.",
   accepted_without_agreement: "Devis accepté sans référence d'accord client : le suivi direct exige un accord référencé. Conservez vos justificatifs ; pour un prochain travail, envoyez le devis puis enregistrez l'accord du client.",
 };
+
+/** Libellé du champ référence selon le mode de règlement : ce que l'atelier a sous les yeux. */
+export const referenceLabel = (method: "virement" | "cheque" | "especes" | "carte" | "autre") =>
+  method === "cheque" ? "N° de chèque" : method === "virement" ? "Libellé du virement" : "Référence";

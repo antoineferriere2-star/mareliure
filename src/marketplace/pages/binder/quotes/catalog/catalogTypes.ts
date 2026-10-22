@@ -12,6 +12,8 @@ export interface Service {
   /** Le lien facultatif au référentiel : les deux ensemble, ou aucun (prestation personnelle). */
   referenceVersion: string | null;
   referenceOperationKey: string | null;
+  /** Service ou bien livré (étui, boîte, coffret, chemise). */
+  nature: "service" | "bien";
 }
 
 export interface Category {

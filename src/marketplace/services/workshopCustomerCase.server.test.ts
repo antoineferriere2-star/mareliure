@@ -2,12 +2,14 @@ import { beforeEach, expect, it, vi } from "vitest";
 import { workshopCustomerCase, workshopCustomerDocument } from "./workshopCustomerCase.server";
 import { loadCaseContext } from "./caseRepository.server";
 import { getInvoice } from "./binderQuotes.server";
+import { issuedPdfBase64ForCustomer } from "./issuedDocumentPdf.server";
 import { sealWorkshopPaymentToken } from "@/marketplace/stripe/workshopPaymentToken.server";
 import { hashAccessToken } from "@/build/services/dossierAccessToken.server";
 
 vi.mock("./caseRepository.server",()=>({loadCaseContext:vi.fn()}));
 vi.mock("./binderQuotes.server",()=>({getQuote:vi.fn(),getInvoice:vi.fn(),getCreditNote:vi.fn()}));
 vi.mock("@/marketplace/quotes/documentPdf",()=>({renderDocumentPdf:vi.fn(async()=>({base64:"PDF"}))}));
+vi.mock("./issuedDocumentPdf.server",()=>({issuedPdfBase64ForCustomer:vi.fn(async()=>"PDF")}));
 type Row=Record<string,unknown>;
 function world() {
   const tables:Record<string,Row[]>={
@@ -60,7 +62,7 @@ it("changer le contact de l’ouvrage conserve l’historique du client initial 
 it("un document historique reste téléchargeable indépendamment des droits de nouvelle création",async()=>{
   const w=world();vi.mocked(getInvoice).mockResolvedValue({} as never);
   expect(await workshopCustomerDocument(w.sb as never,"owner","case","invoice","invoice")).toEqual({filename:"invoice-I-1.pdf",base64:"PDF"});
-  expect(getInvoice).toHaveBeenCalledWith(w.sb,"seller","invoice");expect(w.queried).not.toContain("marketplace_binder_subscriptions");
+  expect(getInvoice).toHaveBeenCalledWith(w.sb,"seller","invoice");expect(issuedPdfBase64ForCustomer).toHaveBeenCalledWith(w.sb,"seller",{});expect(w.queried).not.toContain("marketplace_binder_subscriptions");
 });
 it("récupère seulement le lien authentifié existant sans renouveler sa validité",async()=>{
   const w=world(),token="a".repeat(64);const p=w.tables.marketplace_workshop_online_payments[0];

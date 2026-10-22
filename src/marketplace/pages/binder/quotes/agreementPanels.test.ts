@@ -90,3 +90,19 @@ describe("compte sans atelier (C4)", () => {
     expect(html).not.toContain("no_binder");
   });
 });
+
+describe("règlements directs : mode et référence", () => {
+  it("libelle la référence selon le mode, et l'affiche dans l'historique", async () => {
+    const { referenceLabel } = await import("./settlementCopy");
+    expect([referenceLabel("cheque"), referenceLabel("virement"), referenceLabel("carte"), referenceLabel("especes"), referenceLabel("autre")])
+      .toEqual(["N° de chèque", "Libellé du virement", "Référence", "Référence", "Référence"]);
+    const html = text(render(createElement(ExternalSettlementPanel, { invoiceId: "i2" }), [[["external-settlement", "i2"], {
+      eligible: true, reason: null, currency: "EUR", totalCents: 10000, netCents: 4000, disputed: false,
+      events: [{ id: "e1", kind: "receipt", amount_cents: 4000, currency: "EUR", created_at: "2026-10-22T10:00:00Z",
+        payment_method: "cheque", payment_reference: "1234567", evidence: null }],
+    }]]));
+    // Mode par défaut : virement.
+    expect(html).toContain("Libellé du virement (facultatif, sans coordonnées bancaires)");
+    expect(html).toContain("Chèque · réf. 1234567");
+  });
+});

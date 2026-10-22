@@ -13,6 +13,7 @@ import type { Supa } from "@/build/services/adminAuth.server";
 import { findReferenceOperation, isImportable } from "@/marketplace/reference";
 import type { FavoriteInput, ReferenceServiceInput } from "@/marketplace/reference/catalogInput";
 import { assertOwnCategory, BinderQuotesError, serviceView, type ServiceView } from "./binderQuotes.server";
+import { defaultNatureForName } from "@/marketplace/quotes/operationNature";
 
 /**
  * Ajoute une opération du référentiel au catalogue de l'atelier. L'opération doit exister dans la version
@@ -35,6 +36,7 @@ export async function addReferenceService(sb: Supa, binderId: string, input: Ref
       vat_rate_bps: input.vatRateBps,
       is_active: true,
       is_favorite: input.isFavorite,
+      operation_nature: input.nature ?? defaultNatureForName(input.name),
       // La version et la clé viennent de la ressource ; les deux ensemble (CHECK en base).
       reference_version: found.manifest.version,
       reference_operation_key: found.operation.key,

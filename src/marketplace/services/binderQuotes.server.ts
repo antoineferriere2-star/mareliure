@@ -19,6 +19,7 @@
 import type { Json, Tables } from "@/integrations/supabase/types";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { duplicateQuoteInput } from "@/marketplace/quotes/duplicateQuote";
+import { defaultNatureForName, invoiceNatureOf, type LineNature } from "@/marketplace/quotes/operationNature";
 import { findActiveBinderMembership } from "./binderMembership.server";
 import {
   buildQuoteRows,
@@ -36,7 +37,7 @@ import type {
   QuoteInput,
   ServiceInput,
 } from "@/marketplace/quotes/quoteInput";
-import { canTransition, isQuoteStatus, type QuoteStatus } from "@/marketplace/quotes/quoteStatus";
+import { canTransition, isQuoteStatus, todayInParis, type QuoteStatus } from "@/marketplace/quotes/quoteStatus";
 import {
   creditedByInvoice,
   invoiceListStatus,
@@ -164,6 +165,7 @@ function profileFromRow(row: Tables<"marketplace_binder_billing_profiles">): Bil
     siret: row.siret,
     vatNumber: row.vat_number,
     vatOnDebits: row.vat_on_debits,
+    vatFilingRegime: (row.vat_filing_regime ?? null) as BillingProfile["vatFilingRegime"],
     legalNotes: row.legal_notes,
     email: row.email,
     phone: row.phone,
@@ -177,6 +179,8 @@ function profileFromRow(row: Tables<"marketplace_binder_billing_profiles">): Bil
     vatMention: row.vat_mention,
     quotePrefix: row.quote_prefix,
     invoicePrefix: row.invoice_prefix,
+    invoicePrefixPending: row.invoice_prefix_pending ?? null,
+    prefixPendingFromYear: row.prefix_pending_from_year ?? null,
     quoteValidityDays: row.quote_validity_days,
     paymentTerms: row.payment_terms,
     paymentDelayDays: row.payment_delay_days,
@@ -219,11 +223,40 @@ export async function loadBillingProfile(sb: Supa, binderId: string): Promise<Bi
   };
 }
 
+/**
+ * Une série de factures ne change pas en cours d'année : dès qu'une facture ou un avoir a été numéroté,
+ * le nouveau préfixe est mis en attente et la base l'applique à la première pièce de l'année suivante
+ * (trigger `marketplace_binder_promote_pending_prefix`). Avant toute numérotation, il s'applique tout de suite.
+ */
+async function resolveInvoicePrefix(sb: Supa, binderId: string, wanted: string) {
+  const { data: current, error } = await sb
+    .from("marketplace_binder_billing_profiles")
+    .select("invoice_prefix")
+    .eq("binder_id", binderId)
+    .maybeSingle();
+  if (error) throw new BinderQuotesError("failed");
+  const now = { invoice_prefix: wanted, invoice_prefix_pending: null, prefix_pending_from_year: null };
+  if (!current || current.invoice_prefix === wanted) return now;
+  const { count, error: countError } = await sb
+    .from("marketplace_binder_document_counters")
+    .select("binder_id", { count: "exact", head: true })
+    .eq("binder_id", binderId)
+    .in("kind", ["invoice", "credit_note"]);
+  if (countError) throw new BinderQuotesError("failed");
+  if (!count) return now;
+  return {
+    invoice_prefix: current.invoice_prefix,
+    invoice_prefix_pending: wanted,
+    prefix_pending_from_year: Number(todayInParis().slice(0, 4)) + 1,
+  };
+}
+
 export async function saveBillingProfile(
   sb: Supa,
   binderId: string,
   input: BillingProfileInput,
 ): Promise<BillingProfile> {
+  const prefix = await resolveInvoicePrefix(sb, binderId, input.invoicePrefix);
   const { data, error } = await sb
     .from("marketplace_binder_billing_profiles")
     .upsert(
@@ -243,6 +276,7 @@ export async function saveBillingProfile(
         siret: input.siret,
         vat_number: input.vatNumber,
         vat_on_debits: input.vatOnDebits,
+        vat_filing_regime: input.vatRegime === "VAT_LIABLE" ? input.vatFilingRegime : null,
         legal_notes: input.legalNotes,
         email: input.email,
         phone: input.phone,
@@ -253,7 +287,7 @@ export async function saveBillingProfile(
         default_vat_rate_bps: input.defaultVatRateBps,
         vat_mention: input.vatMention,
         quote_prefix: input.quotePrefix,
-        invoice_prefix: input.invoicePrefix,
+        ...prefix,
         quote_validity_days: input.quoteValidityDays,
         payment_terms: input.paymentTerms,
         payment_delay_days: input.paymentDelayDays,
@@ -331,6 +365,8 @@ export interface ServiceView {
   referenceVersion: string | null;
   referenceOperationKey: string | null;
   isFavorite: boolean;
+  /** Service ou bien livré, recopiée sur chaque ligne de devis. */
+  nature: LineNature;
 }
 
 const categoryView = (row: Tables<"marketplace_binder_service_categories">): CategoryView => ({
@@ -351,6 +387,7 @@ export const serviceView = (row: Tables<"marketplace_binder_services">): Service
   referenceVersion: row.reference_version,
   referenceOperationKey: row.reference_operation_key,
   isFavorite: row.is_favorite,
+  nature: row.operation_nature === "bien" ? "bien" : "service",
 });
 
 export async function listCatalog(
@@ -423,6 +460,8 @@ export async function saveService(
     vat_rate_bps: input.vatRateBps,
     unit: input.unit,
     is_active: input.isActive,
+    // Nature : celle choisie ; à défaut, déduite du nom à la création, inchangée à la modification.
+    ...(input.nature ? { operation_nature: input.nature } : input.id ? {} : { operation_nature: defaultNatureForName(input.name) }),
     // Le favori ne change que si l'appelant le dit : enregistrer un prix ne défavorise jamais une prestation.
     // Le LIEN au référentiel, lui, n'est jamais modifiable ici (voir binderReferenceCatalog.server.ts).
     ...(input.isFavorite === undefined ? {} : { is_favorite: input.isFavorite }),
@@ -1079,6 +1118,13 @@ export async function convertQuoteToInvoice(
   const vatMention = effectiveVatMention(quote.vat_mention, profile.vatMention);
   const due = new Date(`${today}T12:00:00Z`);
   due.setUTCDate(due.getUTCDate() + (profile.paymentDelayDays ?? 0));
+  // Nature de la facture déduite des lignes du devis (mixte si biens et services) ; modifiable en brouillon.
+  const { data: natures, error: naturesError } = await sb
+    .from("marketplace_binder_quote_items")
+    .select("operation_nature")
+    .eq("quote_id", quoteId)
+    .eq("binder_id", binderId);
+  if (naturesError) throw new BinderQuotesError("failed");
   const { data, error } = await sb.rpc("marketplace_binder_create_invoice_draft", {
     p_binder_id: binderId,
     p_quote_id: quoteId,
@@ -1086,7 +1132,7 @@ export async function convertQuoteToInvoice(
       issue_date: today,
       service_date: null,
       due_date: due.toISOString().slice(0, 10),
-      operation_nature: "services",
+      operation_nature: invoiceNatureOf((natures ?? []).map((row) => row.operation_nature as LineNature | null)),
       client_type: null,
       issuer: issuerOf(profile),
       vat_mention: vatMention,
@@ -1111,7 +1157,8 @@ const draftPayload = (
   issuer: ReturnType<typeof issuerOf>,
   vatMention: string | null,
 ) => ({
-  issue_date: input.issueDate,
+  // Date provisoire du brouillon : la base impose la date du jour à l'émission, quelle que soit la saisie.
+  issue_date: todayInParis(),
   service_date: input.serviceDate,
   due_date: input.dueDate,
   operation_nature: input.operationNature,
@@ -1173,7 +1220,8 @@ function issueCandidate(doc: DocumentView): InvoiceIssueCandidate {
   if (!compliance) throw new BinderQuotesError("invalid_input");
   return {
     status: doc.status as InvoiceIssueCandidate["status"],
-    issueDate: doc.issueDate,
+    // La facture prendra la date du jour : c'est elle qui sert au contrôle de l'échéance.
+    issueDate: todayInParis(),
     serviceDate: compliance.serviceDate,
     dueDate: compliance.dueDate,
     operationNature: compliance.operationNature,
@@ -1212,6 +1260,9 @@ function issueCandidate(doc: DocumentView): InvoiceIssueCandidate {
   };
 }
 
+export const ISSUE_REFUSED_WITHOUT_DETAIL =
+  "Une mention obligatoire manque ou n'est pas valide. Vérifiez le profil atelier (SIREN, SIRET, adresse, régime de TVA) et la fiche du client";
+
 export async function issueInvoice(
   sb: Supa,
   binderId: string,
@@ -1232,9 +1283,10 @@ export async function issueInvoice(
     if (message.includes("seller_identity_completion_required"))
       throw new BinderQuotesError("seller_identity_completion_required");
     if (message.includes("invoice_seller_changed")) throw new BinderQuotesError("seller_changed");
+    // La base a refusé alors que le contrôle de l'écran était passé : on le dit, jamais une liste vide.
     throw new BinderQuotesError(
       message.includes("invoice_incomplete") ? "profile_incomplete" : "failed",
-      result.missing,
+      result.missing.length ? result.missing : [ISSUE_REFUSED_WITHOUT_DETAIL],
     );
   }
   return getInvoice(sb, binderId, invoiceId);

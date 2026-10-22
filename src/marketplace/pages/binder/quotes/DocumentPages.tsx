@@ -39,6 +39,8 @@ import {
 } from "@/marketplace/quotes/quoteFormat";
 import type { DocumentView } from "@/marketplace/quotes/quoteViews";
 import type { InvoiceDraftInput } from "@/marketplace/invoices/invoiceCompliance";
+import { countryOptions, isCountryCode, normalizeCountry } from "@/marketplace/invoices/countries";
+import { isValidSiren } from "@/marketplace/invoices/siren";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   CARD,
@@ -570,13 +572,20 @@ export function QuoteDetailPage({ quoteId }: { quoteId: string }) {
 
 const valueOrNull = (value: string) => value.trim() || null;
 
+/** Ancienne saisie libre (« France ») ramenée au code ; ce qui n'est pas un code reste à choisir. */
+const countryCodeOrNull = (value: string | null) => {
+  const code = normalizeCountry(value);
+  return code && isCountryCode(code) ? code : null;
+};
+const COUNTRY_OPTIONS = countryOptions();
+
 function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
   const updateDraft = useServerFn(updateMyInvoiceDraft);
   const issue = useServerFn(issueMyInvoice);
   const queryClient = useQueryClient();
   const compliance = doc.invoiceCompliance!;
+  // Pas de date d'émission ici : la facture prend la date du jour au moment où elle est émise.
   const [draft, setDraft] = useState<InvoiceDraftInput>({
-    issueDate: doc.issueDate,
     serviceDate: compliance.serviceDate,
     dueDate: compliance.dueDate,
     operationNature: compliance.operationNature,
@@ -588,11 +597,13 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
     clientAddressLine1: doc.client.addressLine1,
     clientPostalCode: doc.client.postalCode,
     clientCity: doc.client.city,
-    clientCountry: doc.client.country,
-    clientBillingAddressLine1: compliance.billingAddressLine1,
-    clientBillingPostalCode: compliance.billingPostalCode,
-    clientBillingCity: compliance.billingCity,
-    clientBillingCountry: compliance.billingCountry,
+    clientCountry: countryCodeOrNull(doc.client.country),
+    // L'adresse de facturation part de celle du client ; l'atelier la corrige si elle diffère.
+    clientBillingAddressLine1: compliance.billingAddressLine1 ?? doc.client.addressLine1,
+    clientBillingPostalCode: compliance.billingPostalCode ?? doc.client.postalCode,
+    clientBillingCity: compliance.billingCity ?? doc.client.city,
+    clientBillingCountry:
+      countryCodeOrNull(compliance.billingCountry) ?? countryCodeOrNull(doc.client.country) ?? "FR",
     clientSiren: compliance.clientSiren,
     clientVatNumber: compliance.clientVatNumber,
     clientPurchaseOrderNumber: compliance.purchaseOrderNumber,
@@ -601,7 +612,7 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
     deliveryAddressLine1: compliance.deliveryAddressLine1,
     deliveryPostalCode: compliance.deliveryPostalCode,
     deliveryCity: compliance.deliveryCity,
-    deliveryCountry: compliance.deliveryCountry,
+    deliveryCountry: countryCodeOrNull(compliance.deliveryCountry),
     paymentTerms: doc.paymentTerms,
     earlyPaymentDiscountTerms: compliance.earlyPaymentDiscountTerms,
     latePenaltyTerms: compliance.latePenaltyTerms,
@@ -658,6 +669,31 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
       } else setFailed(true);
     },
   });
+  const countryField = (
+    key: "clientBillingCountry" | "deliveryCountry",
+    label: string,
+    allowEmpty: boolean,
+  ) => (
+    <Field label={label} htmlFor={`invoice-${key}`}>
+      <select
+        id={`invoice-${key}`}
+        className={FIELD}
+        value={draft[key] ?? ""}
+        onChange={(event) => set({ [key]: event.target.value || null } as Partial<InvoiceDraftInput>)}
+      >
+        {allowEmpty && <option value="">Identique / non précisé</option>}
+        {COUNTRY_OPTIONS.map((country) => (
+          <option key={country.code} value={country.code}>
+            {country.name}
+          </option>
+        ))}
+      </select>
+    </Field>
+  );
+  const sirenRequired =
+    draft.clientType === "public_entity" ||
+    (draft.clientType === "business" && (draft.clientBillingCountry ?? "FR") === "FR");
+  const sirenInvalid = Boolean(draft.clientSiren) && !isValidSiren(draft.clientSiren);
   const field = (key: keyof InvoiceDraftInput, label: string, type = "text") => (
     <Field label={label} htmlFor={`invoice-${String(key)}`}>
       <input
@@ -686,12 +722,12 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
         </p>
         <h2 className="mt-1 font-serif text-xl">Vérifier avant émission</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Le numéro définitif sera attribué uniquement à l'émission. Les informations seront alors
-          figées.
+          Le numéro définitif et la date d'émission (celle du jour) sont attribués uniquement à
+          l'émission. Les informations sont alors figées et ne peuvent plus être modifiées ; une
+          correction passe par un avoir.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
-        {field("issueDate", "Date d'émission", "date")}
+      <div className="grid gap-4 sm:grid-cols-2">
         {field("serviceDate", "Date de prestation", "date")}
         {field("dueDate", "Date d'échéance", "date")}
       </div>
@@ -707,8 +743,8 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
           >
             <option value="">À renseigner</option>
             <option value="individual">Particulier</option>
-            <option value="business">Entreprise</option>
-            <option value="public_entity">Entité publique</option>
+            <option value="business">Professionnel</option>
+            <option value="public_entity">Public</option>
           </select>
         </Field>
         <Field label="Nature de l'opération" htmlFor="invoice-operation-nature">
@@ -724,9 +760,9 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
             }
           >
             <option value="">À renseigner</option>
-            <option value="services">Services</option>
-            <option value="goods">Biens</option>
-            <option value="mixed">Mixte</option>
+            <option value="services">Prestation de services</option>
+            <option value="goods">Livraison de biens</option>
+            <option value="mixed">Mixte (biens et services)</option>
           </select>
         </Field>
         {field("clientName", "Nom du client")}
@@ -735,7 +771,16 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
             "clientLegalName",
             draft.clientType === "public_entity" ? "Nom de l'entité publique" : "Raison sociale",
           )}
-        {draft.clientType !== "individual" && field("clientSiren", "SIREN client")}
+        {draft.clientType !== "individual" && (
+          <div>
+            {field("clientSiren", sirenRequired ? "SIREN client" : "SIREN client (facultatif)")}
+            {sirenInvalid && (
+              <p className="mt-1 text-xs text-[#7a2230]">
+                Ce SIREN ne passe pas le contrôle de la clé : vérifiez les 9 chiffres.
+              </p>
+            )}
+          </div>
+        )}
         {draft.clientType !== "individual" && field("clientVatNumber", "Numéro de TVA client")}
         {draft.clientType !== "individual" &&
           field("clientPurchaseOrderNumber", "Bon de commande (facultatif)")}
@@ -745,7 +790,7 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
         {field("clientBillingAddressLine1", "Adresse de facturation")}
         {field("clientBillingPostalCode", "Code postal de facturation")}
         {field("clientBillingCity", "Ville de facturation")}
-        {field("clientBillingCountry", "Pays de facturation")}
+        {countryField("clientBillingCountry", "Pays de facturation", false)}
       </div>
       <details>
         <summary className="cursor-pointer text-sm font-semibold">
@@ -755,7 +800,7 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
           {field("deliveryAddressLine1", "Adresse de livraison")}
           {field("deliveryPostalCode", "Code postal")}
           {field("deliveryCity", "Ville")}
-          {field("deliveryCountry", "Pays")}
+          {countryField("deliveryCountry", "Pays", true)}
         </div>
       </details>
       <div className="grid gap-4 sm:grid-cols-2">

@@ -109,7 +109,7 @@ const TODAY = "2026-09-21";
 
 const profile = (): BillingProfileInput => ({
   workshopName: "Atelier A", binderName: null, legalName: "Atelier A SARL", legalForm: "SARL", shareCapital: null, siren: "123 456 789", addressLine1: "12 rue des Relieurs", addressLine2: null, postalCode: "45000",
-  city: "Orléans", country: "FR", siret: "123 456 789 00012", vatNumber: "FR12345678901", vatOnDebits: false, legalNotes: null, email: "a@example.test",
+  city: "Orléans", country: "FR", siret: "123 456 789 00012", vatNumber: "FR12345678901", vatOnDebits: false, vatFilingRegime: null, legalNotes: null, email: "a@example.test",
   phone: "02 00 00 00 00", website: null, documentAccentColor: "#7A2230", documentFooter: null, vatRegime: "VAT_LIABLE", defaultVatRateBps: 2000, vatMention: null, quotePrefix: "D", invoicePrefix: "F",
   quoteValidityDays: 30, paymentTerms: null, paymentDelayDays: 30, earlyPaymentDiscountTerms: null, latePenaltyTerms: null, iban: null, quoteNotes: null, invoiceNotes: null,
 });

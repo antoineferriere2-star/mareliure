@@ -13,6 +13,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
+import { ISSUED_PDF_INTEGRITY_MESSAGE, IssuedPdfIntegrityError, issuedPdfBase64, storeIssuedPdfQuietly } from "./issuedDocumentPdf.server";
 import {
   billingProfileInput,
   categoryInput,
@@ -95,6 +96,9 @@ async function run<T>(
           : MESSAGES[err.code];
       fail(err.status, message);
     }
+    // Le fichier archivé ne correspond plus à son empreinte : on ne sert rien, on ne régénère rien.
+    if (err instanceof IssuedPdfIntegrityError)
+      fail(409, ISSUED_PDF_INTEGRITY_MESSAGE);
     // Les gardes SQL de circuit (projet Oppe, client propre) arrivent en message PostgreSQL.
     const refusal = circuitRefusal((err as { message?: string } | null)?.message);
     if (refusal) fail(409, refusal);
@@ -435,7 +439,11 @@ export const issueMyInvoice = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) => id.parse(data))
   .handler(({ context, data }) =>
-    run(context.userId, (binderId, sb) => issueInvoice(sb, binderId, data.id)),
+    run(context.userId, async (binderId, sb) => {
+      const issued = await issueInvoice(sb, binderId, data.id);
+      await storeIssuedPdfQuietly(sb, binderId, issued);
+      return issued;
+    }),
   );
 
 export const createMyFullCreditNote = createServerFn({ method: "POST" })
@@ -447,9 +455,11 @@ export const createMyFullCreditNote = createServerFn({ method: "POST" })
       .parse(data),
   )
   .handler(({ context, data }) =>
-    run(context.userId, (binderId, sb) =>
-      createFullCreditNote(sb, binderId, data.id, todayInParis(), data.reason),
-    ),
+    run(context.userId, async (binderId, sb) => {
+      const invoice = await createFullCreditNote(sb, binderId, data.id, todayInParis(), data.reason);
+      await storeCreditNotePdfs(sb, binderId, data.id);
+      return invoice;
+    }),
   );
 
 export const createMyPartialCreditNote = createServerFn({ method: "POST" })
@@ -486,11 +496,29 @@ export const createMyPartialCreditNote = createServerFn({ method: "POST" })
       });
       if (result.error)
         fail(409, "Avoir refusé : vérifiez les lignes et les montants restant à créditer.");
+      await storeCreditNotePdfs(sb, binderId, data.id);
       return getInvoice(sb, binderId, data.id);
     }),
   );
 
 // --- PDF ----------------------------------------------------------------------------------------
+
+/** Range le PDF de chaque avoir de la facture qui n'en a pas encore (celui qui vient d'être créé). */
+async function storeCreditNotePdfs(sb: Awaited<ReturnType<typeof admin>>, binderId: string, invoiceId: string) {
+  const { data } = await sb
+    .from("marketplace_binder_credit_notes")
+    .select("id")
+    .eq("binder_id", binderId)
+    .eq("invoice_id", invoiceId)
+    .is("pdf_path", null);
+  for (const row of data ?? []) {
+    try {
+      await storeIssuedPdfQuietly(sb, binderId, await getCreditNote(sb, binderId, row.id));
+    } catch (error) {
+      console.error("issued_pdf_store_failed", { kind: "credit_note", id: row.id, error: String(error) });
+    }
+  }
+}
 
 const safeFileName = (number: string) => number.replace(/[^A-Za-z0-9._-]/g, "_");
 
@@ -512,7 +540,7 @@ export const getMyInvoicePdf = createServerFn({ method: "GET" })
     run(context.userId, async (binderId, sb) => {
       const invoice = await getInvoice(sb, binderId, data.id);
       if (invoice.status === "draft") throw new BinderQuotesError("conflict");
-      const { base64 } = await renderDocumentPdf(invoice);
+      const base64 = await issuedPdfBase64(sb, binderId, invoice);
       return { filename: `facture-${safeFileName(invoice.number)}.pdf`, base64 };
     }),
   );
@@ -523,7 +551,7 @@ export const getMyCreditNotePdf = createServerFn({ method: "GET" })
   .handler(({ context, data }) =>
     run(context.userId, async (binderId, sb) => {
       const credit = await getCreditNote(sb, binderId, data.id);
-      const { base64 } = await renderDocumentPdf(credit);
+      const base64 = await issuedPdfBase64(sb, binderId, credit);
       return { filename: `avoir-${safeFileName(credit.number)}.pdf`, base64 };
     }),
   );

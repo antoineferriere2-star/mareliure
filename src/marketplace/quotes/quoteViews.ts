@@ -5,6 +5,7 @@
  * seuls identifiants sont ceux du document lui-même, de son client et de son lien
  * devis ↔ facture.
  */
+import type { LineNature } from "./operationNature";
 import type { Issuer } from "./quoteBuild";
 import type { VatGroup, VatRegime } from "./quoteCalc";
 import type {
@@ -26,6 +27,8 @@ export interface DocumentItemView {
   catalogPriceCents: number | null;
   vatRateBps: number;
   totalHtCents: number;
+  /** Absente des lignes antérieures à la phase 1 : service. */
+  nature?: LineNature;
   referenceVersion?: string | null;
   referenceOperationKey?: string | null;
   photos: DocumentPhotoView[];
@@ -228,6 +231,7 @@ export interface InvoiceDbRow extends CommonRow {
 
 export interface ItemDbRow {
   line_key?: string;
+  operation_nature?: string | null;
   block_key?: string;
   block_label?: string;
   block_book_count?: number;
@@ -306,6 +310,7 @@ function common(row: CommonRow, items: ItemDbRow[], photos: PhotoDbRow[] = []) {
       catalogPriceCents: item.catalog_price_cents ?? null,
       vatRateBps: item.vat_rate_bps,
       totalHtCents: item.total_ht_cents,
+      nature: item.operation_nature === "bien" ? "bien" : "service",
       referenceVersion: item.reference_version ?? null,
       referenceOperationKey: item.reference_operation_key ?? null,
       photos: photos

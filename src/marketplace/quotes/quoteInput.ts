@@ -5,6 +5,8 @@
  * recalcule tout avec `computeQuote` et attribue le numéro lui-même. Les
  * schémas sont `.strict()` : un champ en plus est refusé, pas ignoré.
  */
+import { normalizeCountry } from "@/marketplace/invoices/countries";
+import { isValidSiren, isValidSiret, normalizeSiren } from "@/marketplace/invoices/siren";
 import { z } from "zod";
 import { quantityToHundredths } from "./quoteCalc";
 
@@ -17,6 +19,11 @@ const optionalText = (max: number) =>
     .nullish()
     .transform((v) => (v ? v : null));
 const uuid = z.string().uuid();
+/** SIREN / SIRET : espaces et points tolérés à la saisie, chiffres seuls en base, clé de Luhn vérifiée. */
+const companyId = (check: (value: string) => boolean, message: string) =>
+  optionalText(20)
+    .transform((v) => (v ? normalizeSiren(v) || null : null))
+    .refine((value) => !value || check(value), message);
 const mm = z.number().int().min(1).max(2000).nullable();
 
 export const quoteLineInput = z
@@ -35,6 +42,8 @@ export const quoteLineInput = z
     unitPriceCents: z.number().int().min(0).max(100_000_000),
     catalogPriceCents: z.number().int().min(0).max(100_000_000).nullable(),
     vatRateBps: z.number().int().min(0).max(10_000),
+    /** Absente : service. « bien » pour un étui, une boîte, un coffret, une chemise. */
+    nature: z.enum(["service", "bien"]).optional(),
     referenceVersion: optionalText(60).optional(),
     referenceOperationKey: optionalText(60).optional(),
   })
@@ -75,7 +84,7 @@ export const quoteInput = z
         addressLine1: optionalText(300),
         postalCode: optionalText(20),
         city: optionalText(120),
-        country: optionalText(80),
+        country: optionalText(80).transform(normalizeCountry),
       })
       .strict(),
     book: z
@@ -128,22 +137,24 @@ export const billingProfileInput = z
     legalName: optionalText(200),
     legalForm: optionalText(120),
     shareCapital: optionalText(120),
-    siren: optionalText(20),
+    siren: companyId(isValidSiren, "SIREN invalide : 9 chiffres, clé de contrôle incorrecte"),
     addressLine1: optionalText(300),
     addressLine2: optionalText(300),
     postalCode: optionalText(20),
     city: optionalText(120),
     country: text(80).min(1).default("FR"),
-    siret: optionalText(20),
+    siret: companyId(isValidSiret, "SIRET invalide : 14 chiffres, clé de contrôle incorrecte"),
     vatNumber: optionalText(30),
     vatOnDebits: z.boolean().default(false),
+    /** Régime d'imposition de la TVA (assujetti) : conditionne la périodicité de l'e-reporting. */
+    vatFilingRegime: z.enum(["reel_simplifie", "reel_normal"]).nullable().default(null),
     legalNotes: optionalText(1000),
     email: optionalText(200),
     phone: optionalText(40),
     website: optionalText(300),
     documentAccentColor: z.enum(["#7A2230", "#24483D", "#263A57", "#3B342E"]).default("#7A2230"),
     documentFooter: optionalText(1000),
-    vatRegime: z.enum(["FRANCHISE", "VAT_LIABLE", "EXEMPT"]).nullable(),
+    vatRegime: z.enum(["FRANCHISE", "VAT_LIABLE"]).nullable(),
     defaultVatRateBps: z.number().int().min(0).max(10_000),
     vatMention: optionalText(500),
     quotePrefix: z.string().trim().regex(/^[A-Za-z0-9]{1,8}$/, "1 à 8 lettres ou chiffres"),
@@ -174,6 +185,8 @@ export const serviceInput = z
     unitPriceCents: z.number().int().min(0).max(100_000_000),
     vatRateBps: z.number().int().min(0).max(10_000).nullable(),
     unit: optionalText(40),
+    /** Absente : déduite du nom à la création, inchangée à la modification. */
+    nature: z.enum(["service", "bien"]).optional(),
     isActive: z.boolean(),
     /** Absent : le favori ne change pas. Le lien au référentiel n'est PAS un champ d'ici (voir `referenceServiceInput`). */
     isFavorite: z.boolean().optional(),
@@ -193,7 +206,7 @@ export const clientInput = z
     addressLine1: optionalText(300),
     postalCode: optionalText(20),
     city: optionalText(120),
-    country: optionalText(80),
+    country: optionalText(80).transform(normalizeCountry),
     notes: optionalText(2000),
   })
   .strict();

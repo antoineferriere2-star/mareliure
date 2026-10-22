@@ -27,6 +27,8 @@ export interface BillingProfile {
   siret: string | null;
   vatNumber: string | null;
   vatOnDebits: boolean;
+  /** Régime d'imposition de la TVA d'un atelier assujetti (réel simplifié ou normal). */
+  vatFilingRegime: VatFilingRegime | null;
   legalNotes: string | null;
   email: string | null;
   phone: string | null;
@@ -41,6 +43,9 @@ export interface BillingProfile {
   vatMention: string | null;
   quotePrefix: string;
   invoicePrefix: string;
+  /** Préfixe de facture demandé, appliqué à la première facture de `prefixPendingFromYear` (série jamais changée en cours d'année). */
+  invoicePrefixPending: string | null;
+  prefixPendingFromYear: number | null;
   quoteValidityDays: number;
   paymentTerms: string | null;
   paymentDelayDays: number | null;
@@ -66,6 +71,7 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
   siret: null,
   vatNumber: null,
   vatOnDebits: false,
+  vatFilingRegime: null,
   legalNotes: null,
   email: null,
   phone: null,
@@ -79,6 +85,8 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
   vatMention: null,
   quotePrefix: "D",
   invoicePrefix: "F",
+  invoicePrefixPending: null,
+  prefixPendingFromYear: null,
   quoteValidityDays: 30,
   paymentTerms: null,
   paymentDelayDays: 30,
@@ -97,6 +105,27 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
  */
 export const FRANCHISE_MENTION_SUGGESTION = "TVA non applicable, art. 293 B du CGI";
 
+export type VatFilingRegime = "reel_simplifie" | "reel_normal";
+
+/** Les trois régimes proposés à l'atelier : franchise, réel simplifié, réel normal. */
+export type TaxRegimeChoice = "franchise" | VatFilingRegime;
+export const TAX_REGIME_CHOICES: readonly (readonly [TaxRegimeChoice, string])[] = [
+  ["franchise", "Franchise en base de TVA (aucune TVA facturée)"],
+  ["reel_simplifie", "Je facture la TVA — réel simplifié"],
+  ["reel_normal", "Je facture la TVA — réel normal"],
+];
+
+export function taxRegimeChoiceOf(profile: Pick<BillingProfile, "vatRegime" | "vatFilingRegime">): TaxRegimeChoice | null {
+  if (profile.vatRegime === "FRANCHISE") return "franchise";
+  return profile.vatRegime === "VAT_LIABLE" ? profile.vatFilingRegime : null;
+}
+
+export function taxRegimeFields(choice: TaxRegimeChoice): Pick<BillingProfile, "vatRegime" | "vatFilingRegime"> {
+  return choice === "franchise"
+    ? { vatRegime: "FRANCHISE", vatFilingRegime: null }
+    : { vatRegime: "VAT_LIABLE", vatFilingRegime: choice };
+}
+
 /** L'émetteur tel qu'il est imprimé et figé dans le document. */
 export interface Issuer {
   workshopName: string | null;
@@ -113,6 +142,8 @@ export interface Issuer {
   siret: string | null;
   vatNumber: string | null;
   vatOnDebits: boolean;
+  /** Absent des pièces antérieures à la phase 1 de la facturation électronique. */
+  vatFilingRegime?: VatFilingRegime | null;
   legalNotes: string | null;
   email: string | null;
   phone: string | null;
@@ -140,6 +171,7 @@ export function issuerOf(profile: BillingProfile): Issuer {
     siret: profile.siret,
     vatNumber: profile.vatNumber,
     vatOnDebits: profile.vatOnDebits,
+    vatFilingRegime: profile.vatRegime === "VAT_LIABLE" ? profile.vatFilingRegime : null,
     legalNotes: profile.legalNotes,
     email: profile.email,
     phone: profile.phone,
@@ -246,6 +278,8 @@ export interface QuoteRow {
 
 export interface QuoteItemRow {
   line_key: string;
+  /** `service` | `bien`. */
+  operation_nature: string;
   block_key: string;
   block_label: string;
   block_book_count: number;
@@ -277,7 +311,7 @@ export const QUOTE_ROW_KEYS: readonly (keyof QuoteRow)[] = [
 export const QUOTE_ITEM_ROW_KEYS: readonly (keyof QuoteItemRow)[] = [
   "line_key", "block_key", "block_label", "block_book_count", "block_height_mm", "block_width_mm", "block_spine_mm",
   "service_id", "label", "description", "unit", "quantity", "unit_price_cents",
-  "catalog_price_cents", "vat_rate_bps", "total_ht_cents",
+  "catalog_price_cents", "vat_rate_bps", "total_ht_cents", "operation_nature",
 ];
 
 const valueOf = (input: DiscountInput | DepositInput): number =>
@@ -332,6 +366,7 @@ export function buildQuoteRows(args: {
     // En franchise en base, le taux enregistré est toujours 0.
     vat_rate_bps: regime === "FRANCHISE" ? 0 : l.vatRateBps,
     total_ht_cents: totals.lineTotalsCents[i],
+    operation_nature: l.nature ?? "service",
   }));
 
   const validityDays = input.validityDays ?? profile.quoteValidityDays;

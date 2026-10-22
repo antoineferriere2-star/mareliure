@@ -1,5 +1,10 @@
 import type { BillingProfile, Issuer } from "@/marketplace/quotes/quoteBuild";
 import { z } from "zod";
+import { DEFAULT_COUNTRY, isCountryCode } from "./countries";
+import { isValidSiren, isValidSiret, normalizeSiren } from "./siren";
+
+/** Mention posée automatiquement en franchise en base quand l'atelier n'en a pas saisi. */
+export const FRANCHISE_VAT_MENTION = "TVA non applicable, art. 293 B du CGI";
 
 export type InvoiceClientType = "individual" | "business" | "public_entity";
 export type InvoiceOperationNature = "goods" | "services" | "mixed";
@@ -54,8 +59,15 @@ const date = z.string().regex(/^\d{4}-\d{2}-\d{2}$/).refine((value) => {
   return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
 }, "Date invalide");
 
+const countryCode = z.string().trim().toUpperCase().refine((value) => !value || isCountryCode(value), "Pays inconnu").nullish()
+  .transform((value) => value || null);
+const sirenText = z.string().trim().max(20).nullish()
+  .transform((value) => (value ? normalizeSiren(value) || null : null))
+  .refine((value) => !value || isValidSiren(value), "SIREN invalide : 9 chiffres, clé de contrôle incorrecte");
+
 export const invoiceDraftInput = z.object({
-  issueDate: date,
+  /** Ignorée : la date d'émission est celle du serveur au moment de l'émission. Tolérée pour les anciens écrans. */
+  issueDate: date.optional(),
   serviceDate: date.nullable(),
   dueDate: date.nullable(),
   operationNature: z.enum(["goods", "services", "mixed"]).nullable(),
@@ -67,12 +79,12 @@ export const invoiceDraftInput = z.object({
   clientAddressLine1: nullableText(300),
   clientPostalCode: nullableText(20),
   clientCity: nullableText(120),
-  clientCountry: nullableText(80),
+  clientCountry: countryCode,
   clientBillingAddressLine1: nullableText(300),
   clientBillingPostalCode: nullableText(20),
   clientBillingCity: nullableText(120),
-  clientBillingCountry: nullableText(80),
-  clientSiren: nullableText(20),
+  clientBillingCountry: countryCode,
+  clientSiren: sirenText,
   clientVatNumber: nullableText(30),
   clientPurchaseOrderNumber: nullableText(120),
   clientPublicServiceCode: nullableText(120),
@@ -80,7 +92,7 @@ export const invoiceDraftInput = z.object({
   deliveryAddressLine1: nullableText(300),
   deliveryPostalCode: nullableText(20),
   deliveryCity: nullableText(120),
-  deliveryCountry: nullableText(80),
+  deliveryCountry: countryCode,
   paymentTerms: nullableText(1000),
   earlyPaymentDiscountTerms: nullableText(1000),
   latePenaltyTerms: nullableText(1000),
@@ -96,9 +108,7 @@ const hasAddress = (line: string | null, postalCode: string | null, city: string
 export function invoiceLegalMentions(candidate: InvoiceIssueCandidate): string[] {
   const mentions: string[] = [];
   if (candidate.vatRegime === "FRANCHISE") {
-    mentions.push(candidate.vatMention?.trim() || "TVA non applicable, art. 293 B du CGI");
-  } else if (candidate.vatRegime === "EXEMPT" && present(candidate.vatMention)) {
-    mentions.push(candidate.vatMention!.trim());
+    mentions.push(candidate.vatMention?.trim() || FRANCHISE_VAT_MENTION);
   }
   if (candidate.issuer.vatOnDebits) mentions.push("Option pour le paiement de la taxe d'après les débits");
   if (candidate.buyer.type === "business" || candidate.buyer.type === "public_entity") {
@@ -122,13 +132,19 @@ export function validateInvoiceForIssue(candidate: InvoiceIssueCandidate): Invoi
   if (!present(issuer.legalName) && !present(issuer.workshopName)) missing.push("Raison sociale atelier manquante");
   if (!present(issuer.legalForm)) missing.push("Forme juridique atelier manquante");
   if (!present(issuer.siren)) missing.push("SIREN atelier manquant");
+  else if (!isValidSiren(issuer.siren)) missing.push("SIREN atelier invalide (clé de contrôle)");
   if (!present(issuer.siret)) missing.push("SIRET atelier manquant");
+  else if (!isValidSiret(issuer.siret)) missing.push("SIRET atelier invalide (clé de contrôle)");
+  else if (isValidSiren(issuer.siren) && !normalizeSiren(issuer.siret!).startsWith(normalizeSiren(issuer.siren!))) {
+    missing.push("Le SIRET atelier ne commence pas par son SIREN");
+  }
   if (!hasAddress(issuer.addressLine1, issuer.postalCode, issuer.city)) missing.push("Adresse atelier manquante");
   if (candidate.vatRegime === null) missing.push("Régime de TVA atelier manquant");
   if (candidate.vatRegime === "VAT_LIABLE" && !present(issuer.vatNumber)) missing.push("Numéro de TVA atelier manquant");
-  if ((candidate.vatRegime === "FRANCHISE" || candidate.vatRegime === "EXEMPT") && !present(candidate.vatMention)) {
-    missing.push("Mention de TVA manquante");
+  if (candidate.vatRegime === "VAT_LIABLE" && !issuer.vatFilingRegime) {
+    missing.push("Régime de TVA de l'atelier à choisir dans le profil atelier (réel simplifié ou réel normal)");
   }
+  // En franchise, la mention de l'article 293 B est ajoutée d'office.
   if (!present(candidate.serviceDate)) missing.push("Date de prestation manquante");
   if (!present(candidate.dueDate)) missing.push("Échéance de paiement manquante");
   if (present(candidate.dueDate) && candidate.dueDate! < candidate.issueDate) {
@@ -140,9 +156,13 @@ export function validateInvoiceForIssue(candidate: InvoiceIssueCandidate): Invoi
   if (!hasAddress(buyer.billingAddressLine1 ?? buyer.addressLine1, buyer.billingPostalCode ?? buyer.postalCode, buyer.billingCity ?? buyer.city)) {
     missing.push("Adresse client manquante");
   }
+  const country = (buyer.billingCountry ?? buyer.country ?? DEFAULT_COUNTRY).trim().toUpperCase();
+  if (!isCountryCode(country)) missing.push("Pays de facturation du client à choisir dans la liste");
   if (buyer.type === "business" && !present(buyer.legalName)) missing.push("Raison sociale client manquante");
   if (buyer.type === "public_entity" && !present(buyer.legalName)) missing.push("Nom de l'entité publique manquant");
   if (buyer.type === "public_entity" && !present(buyer.siren)) missing.push("SIREN de l'entité publique manquant");
+  if (buyer.type === "business" && country === "FR" && !present(buyer.siren)) missing.push("SIREN du client professionnel manquant");
+  if (present(buyer.siren) && !isValidSiren(buyer.siren)) missing.push("SIREN client invalide (clé de contrôle)");
   if ((buyer.type === "business" || buyer.type === "public_entity") && !present(candidate.paymentTerms)) missing.push("Conditions de paiement manquantes");
   if ((buyer.type === "business" || buyer.type === "public_entity") && !present(candidate.earlyPaymentDiscountTerms)) missing.push("Conditions d'escompte manquantes");
   if ((buyer.type === "business" || buyer.type === "public_entity") && !present(candidate.latePenaltyTerms)) missing.push("Pénalités de retard manquantes");

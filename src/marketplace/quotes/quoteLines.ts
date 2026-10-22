@@ -9,6 +9,7 @@
 import type { VatRegime } from "./quoteCalc";
 import { PRICEABLE_SERVICE_MAPPINGS } from "@/marketplace/pricing/basePrices";
 import { CURRENT_REFERENCE_VERSION } from "@/marketplace/reference";
+import { defaultNatureForName, type LineNature } from "./operationNature";
 
 export interface CatalogService {
   id: string;
@@ -19,6 +20,8 @@ export interface CatalogService {
   /** `null` : le taux par défaut du profil. */
   vatRateBps: number | null;
   unit: string | null;
+  /** Absent des données antérieures : déduite du nom. */
+  nature?: LineNature;
   referenceVersion?: string | null;
   referenceOperationKey?: string | null;
 }
@@ -37,6 +40,8 @@ export interface QuoteLine {
   /** Prix du catalogue au moment de l'ajout ; `null` pour une ligne libre. */
   catalogPriceCents: number | null;
   vatRateBps: number;
+  /** Service ou bien livré : recopiée de la prestation, choisie à la saisie pour une ligne libre. Absente : service. */
+  nature?: LineNature;
   /** Indication d'interface seulement : le devis enregistre toujours son snapshot. */
   priceSource: "catalog" | "base" | "manual";
   requiresManualPrice: boolean;
@@ -64,6 +69,7 @@ export function lineFromService(
     unitPriceCents: service.unitPriceCents,
     catalogPriceCents: service.unitPriceCents,
     vatRateBps: service.vatRateBps ?? defaultVatRateBps,
+    nature: service.nature ?? defaultNatureForName(service.name),
     priceSource: "catalog",
     requiresManualPrice: false,
     referenceVersion: service.referenceVersion ?? null,
@@ -89,6 +95,7 @@ export function lineFromBasePrice(
     unitPriceCents: service.unitPriceCents ?? 0,
     catalogPriceCents: null,
     vatRateBps: defaultVatRateBps,
+    nature: defaultNatureForName(service.label),
     priceSource: "base",
     requiresManualPrice: service.pricingMode === "manual_review",
     referenceVersion: exactKey ? CURRENT_REFERENCE_VERSION : null,
@@ -108,6 +115,7 @@ export function freeLine(defaultVatRateBps: number, key: string, label = ""): Qu
     unitPriceCents: 0,
     catalogPriceCents: null,
     vatRateBps: defaultVatRateBps,
+    nature: "service",
     priceSource: "manual",
     requiresManualPrice: false,
   };

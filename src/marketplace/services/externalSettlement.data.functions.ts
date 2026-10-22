@@ -7,6 +7,9 @@ import { requireWorkshopAccess } from "./workshopAccess.server";
 
 const id = z.object({ id: z.string().uuid() }).strict();
 const evidence = z.string().trim().min(8).max(500);
+export const PAYMENT_METHODS = ["virement", "cheque", "especes", "carte", "autre"] as const;
+export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
+const optional = (max: number) => z.string().trim().max(max).nullish().transform((value) => value || null);
 /** Pourquoi l'accord du circuit externe ne peut pas encore être enregistré (audit #53, C1/C2). */
 export type OwnContractBlocker = "seller_identity_missing" | "validity_expired" | "send_first";
 export interface OwnContract {
@@ -23,7 +26,11 @@ export type SettlementUnavailableReason =
 export interface SettlementState {
   eligible: boolean; currency: string; totalCents: number; netCents: number; disputed: boolean;
   reason: SettlementUnavailableReason | null;
-  events: { id: string; kind: string; amount_cents: number; currency: string; evidence: string; created_at: string }[];
+  events: {
+    id: string; kind: string; amount_cents: number; currency: string; created_at: string;
+    /** Absents des écritures antérieures à la phase 1 : `autre`, la note portant l'ancien justificatif libre. */
+    payment_method?: PaymentMethod; payment_reference?: string | null; evidence: string | null;
+  }[];
 }
 export type AgreementIdentityState =
   | "complete" | "completed_by_attestation" | "attestation_required" | "profile_identifier_missing" | "seller_changed";
@@ -79,11 +86,14 @@ export const getExternalSettlements = createServerFn({ method: "GET" }).middlewa
   });
 export const recordExternalSettlement = createServerFn({ method: "POST" }).middleware([requireSupabaseAuth])
   .validator((data: unknown) => z.object({ id: z.string().uuid(), invoiceId: z.string().uuid(),
-    kind: z.enum(["receipt", "refund", "dispute_open", "dispute_close"]), amountCents: z.number().int().min(0).max(2147483647), evidence,
-  }).strict().parse(data)).handler(async ({ context, data }) => {
+    kind: z.enum(["receipt", "refund", "dispute_open", "dispute_close"]), amountCents: z.number().int().min(0).max(2147483647),
+    method: z.enum(PAYMENT_METHODS), reference: optional(120), note: optional(500),
+  }).strict().refine((value) => value.reference || value.note, { message: "Référence ou note requise", path: ["reference"] })
+    .parse(data)).handler(async ({ context, data }) => {
     const { sb, binderId } = await scope(context.userId);
     const result = await sb.rpc("marketplace_record_external_settlement", { p_id: data.id, p_invoice: data.invoiceId,
-      p_binder: binderId, p_actor: context.userId, p_kind: data.kind, p_amount: data.amountCents, p_evidence: data.evidence });
-    if (result.error) fail(409, "Écriture non enregistrée : vérifiez le solde, le litige et l'unicité du justificatif. Aucun mouvement bancaire n'a été déclenché.");
+      p_binder: binderId, p_actor: context.userId, p_kind: data.kind, p_amount: data.amountCents,
+      p_method: data.method, p_reference: data.reference, p_note: data.note });
+    if (result.error) fail(409, "Écriture non enregistrée : vérifiez le solde, le litige et l'unicité de la référence. Aucun mouvement bancaire n'a été déclenché.");
     return { ok: true };
   });

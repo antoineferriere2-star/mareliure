@@ -15,6 +15,7 @@ import type { PricingMode } from "@/marketplace/reference/types";
 import { ErrorNote, FIELD, Field, PRIMARY_BUTTON, SECONDARY_BUTTON } from "../quoteUi";
 import { CATALOG_KEY } from "../quoteQueryKeys";
 import type { Service } from "./catalogTypes";
+import { defaultNatureForName, type LineNature } from "@/marketplace/quotes/operationNature";
 
 export type ServiceFormTarget =
   | {
@@ -49,6 +50,9 @@ export function ServiceForm({
     favorite: false,
     description: "",
   });
+  // Proposée d'après le nom (étui, boîte, coffret, chemise : bien livré) tant que le relieur ne l'a pas choisie.
+  const [chosenNature, setChosenNature] = useState<LineNature | null>(null);
+  const nature = chosenNature ?? defaultNatureForName(values.name);
   const [problems, setProblems] = useState<string[]>([]);
   const set = <K extends keyof ServiceFormValues>(key: K, value: ServiceFormValues[K]) => setValues((v) => ({ ...v, [key]: value }));
   const options = unitOptions(candidates);
@@ -71,6 +75,7 @@ export function ServiceForm({
             vatRateBps: null,
             categoryId: null,
             isFavorite: values.favorite,
+            nature,
           },
         });
       }
@@ -83,6 +88,7 @@ export function ServiceForm({
           unitPriceCents: result.unitPriceCents,
           vatRateBps: null,
           unit: result.unit,
+          nature,
           isActive: true,
           isFavorite: values.favorite,
         },
@@ -138,6 +144,13 @@ export function ServiceForm({
           <input id={`${idBase}-price`} inputMode="decimal" className={`${FIELD} text-right tabular-nums`} placeholder="ex. 45" value={values.price} onChange={(e) => set("price", e.target.value)} />
         </Field>
       </div>
+
+      <Field label="Nature" htmlFor={`${idBase}-nature`} hint="Un étui, une boîte, un coffret ou une chemise est un bien livré ; le reste, une prestation de service.">
+        <select id={`${idBase}-nature`} className={FIELD} value={nature} onChange={(e) => setChosenNature(e.target.value === "bien" ? "bien" : "service")}>
+          <option value="service">Prestation de service</option>
+          <option value="bien">Bien livré</option>
+        </select>
+      </Field>
 
       {!isReference && (
         <Field label="Description (facultatif)" htmlFor={`${idBase}-description`}>

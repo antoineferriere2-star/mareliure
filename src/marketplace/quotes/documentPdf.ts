@@ -302,7 +302,8 @@ export async function renderDocumentPdf(document: DocumentView | CreditNoteDocum
       row(document.discountType === "PERCENT" ? `Remise (${rateLabel(document.discountValue)})` : "Remise", `- ${formatMoneyPdf(document.discountCents)}`);
     }
     row("Total HT", formatMoneyPdf(document.totalHtCents));
-    if (showVat) document.vatBreakdown.filter((group) => group.baseHtCents !== 0 || group.vatCents !== 0).forEach((group) => row(`TVA ${rateLabel(group.vatRateBps)}`, formatMoneyPdf(group.vatCents)));
+    // TVA ventilée par taux, chacun avec sa base HT.
+    if (showVat) document.vatBreakdown.filter((group) => group.baseHtCents !== 0 || group.vatCents !== 0).forEach((group) => row(`TVA ${rateLabel(group.vatRateBps)} sur ${formatMoneyPdf(group.baseHtCents)}`, formatMoneyPdf(group.vatCents)));
     row(isCredit ? "Total de l’avoir" : showVat ? "Total TTC" : "Total à payer", formatMoneyPdf(document.totalTtcCents), true);
     if (!isCredit && document.depositCents > 0) {
       row(document.depositType === "PERCENT" ? `Acompte demandé (${rateLabel(document.depositValue)})` : "Acompte demandé", formatMoneyPdf(document.depositCents));
