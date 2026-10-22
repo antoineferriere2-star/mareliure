@@ -31,12 +31,16 @@ describe("la facture en franchise exige la mention effective", () => {
     addressLine1: "1 rue X",
     postalCode: "45000",
     city: "Orléans",
-    siren: "123456789",
-    siret: "123",
+    siren: "732829320",
+    siret: "73282932000009",
     vatRegime: "FRANCHISE" as const,
   };
-  it("sans mention : « Mention de TVA » manque", () => {
-    expect(profileReadiness({ ...franchise, vatMention: effectiveVatMention(null, null) }, "invoice").missing).toEqual(["Mention de TVA"]);
+  it("sans mention : le profil est prêt, la mention de l'article 293 B étant posée d'office à l'émission", () => {
+    expect(profileReadiness({ ...franchise, vatMention: effectiveVatMention(null, null) }, "invoice")).toEqual({ ready: true, missing: [] });
+  });
+  it("assujetti : le régime d'imposition et des identifiants valides sont exigés, comme à l'émission", () => {
+    const liable = { ...franchise, vatRegime: "VAT_LIABLE" as const, vatNumber: "FR40732829320", vatFilingRegime: null, siren: "732829321" };
+    expect(profileReadiness(liable as never, "invoice").missing).toEqual(["SIREN (clé de contrôle)", "Régime d'imposition"]);
   });
   it("avec la mention du profil, le devis sans mention peut être facturé", () => {
     expect(profileReadiness({ ...franchise, vatMention: effectiveVatMention(null, "TVA non applicable") }, "invoice").ready).toBe(true);
