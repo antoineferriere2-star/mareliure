@@ -1,3 +1,4 @@
+import { isTestWorkshop, TEST_WORKSHOP_NOTICE_CAPTURE } from "@/marketplace/binders/testWorkshop.server";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { workshopOrigin } from "@/marketplace/billing/workshopSubscription";
 import { assertExpectedStripeAccount } from "@/marketplace/stripe/stripeClient.server";
@@ -33,6 +34,15 @@ export async function notifyWorkshop(
     throw new Error("workshop_notice_in_progress");
   }
   try {
+    if (await isTestWorkshop(sb, notice.binderId)) {
+      const saved = await sb
+        .from("marketplace_workshop_notices")
+        .update({ captured_at: new Date().toISOString(), captured_text: TEST_WORKSHOP_NOTICE_CAPTURE, processing_until: null, claim_token: null })
+        .eq("id", notice.id)
+        .eq("claim_token", claimed.data);
+      if (saved.error) throw saved.error;
+      return;
+    }
     if (process.env.WORKSHOP_NOTICE_TEST_CAPTURE === "true") {
       // Fail closed outside the existing isolated recipe; never mark a capture as sent.
       if (

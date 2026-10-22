@@ -6,12 +6,12 @@ const h = vi.hoisted(() => ({ send: vi.fn(), guard: vi.fn() }));
 vi.mock("@/lib/email-templates/send-email", () => ({ sendTemplateEmail: h.send }));
 vi.mock("@/marketplace/stripe/stripeClient.server", () => ({ assertExpectedStripeAccount: h.guard }));
 const notice = { id: "invoice-paid-fixture", binderId: "workshop-fixture", heading: "Facture payée", intro: "Le règlement est enregistré." };
-function fixture(claim: string | null = "lease", terminal = false) {
+function fixture(claim: string | null = "lease", terminal = false, isDemo = false) {
   const writes: Array<Record<string, unknown>> = [];
   const owner = vi.fn().mockResolvedValue({ data: { user: { email: "owner@example.com" } } });
   const chain = (data: unknown) => {
     const result = { data, error: null };
-    const q = { eq: vi.fn(() => q), single: vi.fn(async () => result), then: (resolve: (value: unknown) => unknown) => Promise.resolve(result).then(resolve) };
+    const q = { eq: vi.fn(() => q), single: vi.fn(async () => result), maybeSingle: vi.fn(async () => result), then: (resolve: (value: unknown) => unknown) => Promise.resolve(result).then(resolve) };
     return q;
   };
   const sb = {
@@ -19,7 +19,7 @@ function fixture(claim: string | null = "lease", terminal = false) {
     auth: { admin: { getUserById: owner } },
     from: vi.fn((table: string) => ({
       upsert: vi.fn().mockResolvedValue({ error: null }),
-      select: vi.fn(() => chain(table === "marketplace_binders" ? { user_id: "owner" } : { sent_at: terminal ? "2026-10-06" : null, captured_at: null })),
+      select: vi.fn(() => chain(table === "marketplace_binders" ? { user_id: "owner", is_demo: isDemo } : { sent_at: terminal ? "2026-10-06" : null, captured_at: null })),
       update: vi.fn((value: Record<string, unknown>) => { writes.push(value); return chain(null); }),
     })),
   };
@@ -72,4 +72,11 @@ it("interdit une capture de recette en dehors du compte et de la base isolés", 
   expect(h.send).not.toHaveBeenCalled();
   expect(h.guard).not.toHaveBeenCalled();
   expect(f.writes).toEqual([{ processing_until: null, claim_token: null }]);
+});
+it("atelier de test : la notification est conservée, aucun e-mail n'est envoyé", async () => {
+  const f = fixture("lease", false, true);
+  await notifyWorkshop(f.sb, notice);
+  expect(h.send).not.toHaveBeenCalled();
+  expect(f.owner).not.toHaveBeenCalled();
+  expect(f.writes).toEqual([expect.objectContaining({ captured_at: expect.any(String), captured_text: expect.stringContaining("Atelier de test"), claim_token: null })]);
 });
