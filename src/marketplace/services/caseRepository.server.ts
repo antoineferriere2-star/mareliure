@@ -303,6 +303,8 @@ export async function resolveApprovedBinderBySlug(
     .select("id, display_name, workshop_name")
     .eq("personal_referral_slug", slug)
     .eq("status", "approved")
+    // Un lien d'atelier de test ne crée jamais un projet réel.
+    .eq("is_demo", false)
     .maybeSingle();
   if (!data) return null;
   return { binderId: data.id, displayName: data.workshop_name ?? data.display_name };
@@ -319,6 +321,7 @@ export async function resolvePublishedFineBinderyBinderBySlug(
     .eq("personal_referral_slug", slug)
     .eq("status", "approved")
     .eq("public_profile_status", "published")
+    .eq("is_demo", false)
     .maybeSingle();
   if (!data) return null;
   return { binderId: data.id, displayName: data.workshop_name ?? data.display_name };

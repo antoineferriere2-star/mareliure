@@ -1,6 +1,8 @@
 /** Le cadre de travail du relieur : une navigation stable autour des gestes quotidiens. */
 import { createFileRoute, Outlet, Link } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { setInternalVisitor } from "@/build/analytics/internalVisitor";
 import { useServerFn } from "@tanstack/react-start";
 import { BookOpen, FileText, Globe2, House, Inbox, LibraryBig, Menu, MessageSquare, ReceiptText, Users } from "lucide-react";
 import { SignOutButton } from "@/marketplace/pages/SignOutButton";
@@ -52,6 +54,8 @@ function AtelierLayoutContent() {
   const fetchProfile = useServerFn(getMyBinderProfile);
   const cases = useQuery({ queryKey: ["marketplace", "binder", "cases"], queryFn: () => fetchCases(), retry: false });
   const profile = useQuery({ queryKey: ["marketplace", "binder", "profile"], queryFn: () => fetchProfile(), retry: false });
+  // Atelier de test : ce navigateur sort de la fréquentation et de l'entonnoir, comme avec ?interne=1.
+  useEffect(() => { if (profile.data?.is_demo) setInternalVisitor(true); }, [profile.data?.is_demo]);
   const newCount = (cases.data ?? []).filter((row) => row.state === "offered" || row.state === "invited").length;
   const unreadCount = (cases.data ?? []).reduce((total, row) => total + row.unreadCount, 0);
   const badgeFor = (key: string) => key === "projects" ? newCount : key === "messages" ? unreadCount : 0;

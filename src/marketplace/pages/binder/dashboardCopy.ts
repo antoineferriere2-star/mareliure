@@ -45,6 +45,8 @@ export interface DashboardCopy {
   };
   /** Les champs manquants arrivent en français depuis le serveur ; ils sont traduits ici, sinon laissés tels quels. */
   missingTerms: Record<string, string>;
+  /** Guide de démarrage : affiché tant qu'aucune facture n'a été émise. Cinq étapes, une ligne chacune. */
+  firstInvoice: { title: string; steps: readonly string[]; note: string; links: readonly string[] };
 }
 
 /** Le français accorde 0 au singulier ; l'anglais, l'allemand, l'italien et l'espagnol, au pluriel. */
@@ -107,6 +109,18 @@ function copyFor(locale: FineBinderyLocale): DashboardCopy {
           editProfile: "Modifier mon profil", finishProfile: "Terminer mon profil",
           missing: (s) => `Manquant : ${s}.`, unavailable: "Information indisponible.", retry: "Réessayer",
         },
+        firstInvoice: {
+          title: "Votre première facture en 5 étapes",
+          steps: [
+            "Complétez votre profil : identité, SIREN, SIRET, adresse et régime de TVA.",
+            "Ajoutez le client : particulier, ou professionnel avec son SIREN.",
+            "Créez le devis à partir de vos prestations, puis envoyez-le.",
+            "Quand le client a donné son accord, transformez le devis en facture.",
+            "Vérifiez le brouillon et émettez la facture ; enregistrez le règlement à réception.",
+          ],
+          note: "Une facture émise ne se modifie plus : une erreur se corrige par un avoir.",
+          links: ["Mon profil", "Mes contacts", "Nouveau devis", "Mes devis", "Mes factures"],
+        },
         missingTerms: {},
       };
     case "en":
@@ -162,8 +176,20 @@ function copyFor(locale: FineBinderyLocale): DashboardCopy {
           editProfile: "Edit my profile", finishProfile: "Finish my profile",
           missing: (s) => `Missing: ${s}.`, unavailable: "Information unavailable.", retry: "Try again",
         },
+        firstInvoice: {
+          title: "Your first invoice in 5 steps",
+          steps: [
+            "Complete your profile: identity, SIREN, SIRET, address and VAT scheme.",
+            "Add the client: an individual, or a business with its SIREN.",
+            "Build the quote from your services, then send it.",
+            "Once the client has agreed, turn the quote into an invoice.",
+            "Check the draft and issue the invoice; record the payment when it arrives.",
+          ],
+          note: "An issued invoice can no longer be changed: a mistake is corrected with a credit note.",
+          links: ["My profile", "My contacts", "New quote", "My quotes", "My invoices"],
+        },
         missingTerms: {
-          "Nom de l'atelier": "Workshop name", "Régime de TVA": "VAT regime", Adresse: "Address", "Numéro de TVA": "VAT number", "Mention de TVA": "VAT statement",
+          "Nom de l'atelier": "Workshop name", "Régime de TVA": "VAT regime", Adresse: "Address", "Numéro de TVA": "VAT number", "Mention de TVA": "VAT statement", "Régime d'imposition": "VAT filing scheme (simplified or normal)", "SIREN (clé de contrôle)": "SIREN (check digit)", "SIRET (clé de contrôle)": "SIRET (check digit)",
           "nom de l’atelier": "workshop name", ville: "city", présentation: "introduction", "au moins une spécialité": "at least one specialty",
         },
       };
@@ -220,8 +246,20 @@ function copyFor(locale: FineBinderyLocale): DashboardCopy {
           editProfile: "Profil bearbeiten", finishProfile: "Profil fertigstellen",
           missing: (s) => `Fehlt: ${s}.`, unavailable: "Information nicht verfügbar.", retry: "Erneut versuchen",
         },
+        firstInvoice: {
+          title: "Ihre erste Rechnung in 5 Schritten",
+          steps: [
+            "Vervollständigen Sie Ihr Profil: Identität, SIREN, SIRET, Adresse und Umsatzsteuerregelung.",
+            "Legen Sie den Kunden an: Privatperson oder Unternehmen mit SIREN.",
+            "Erstellen Sie das Angebot aus Ihren Leistungen und senden Sie es.",
+            "Nach Zustimmung des Kunden wandeln Sie das Angebot in eine Rechnung um.",
+            "Prüfen Sie den Entwurf und stellen Sie die Rechnung aus; erfassen Sie die Zahlung bei Eingang.",
+          ],
+          note: "Eine ausgestellte Rechnung ist nicht mehr änderbar: Ein Fehler wird per Gutschrift korrigiert.",
+          links: ["Mein Profil", "Meine Kontakte", "Neues Angebot", "Meine Angebote", "Meine Rechnungen"],
+        },
         missingTerms: {
-          "Nom de l'atelier": "Name der Werkstatt", "Régime de TVA": "Umsatzsteuerregelung", Adresse: "Adresse", "Numéro de TVA": "USt-IdNr.", "Mention de TVA": "Umsatzsteuerhinweis",
+          "Nom de l'atelier": "Name der Werkstatt", "Régime de TVA": "Umsatzsteuerregelung", Adresse: "Adresse", "Numéro de TVA": "USt-IdNr.", "Mention de TVA": "Umsatzsteuerhinweis", "Régime d'imposition": "Umsatzsteuer-Veranlagung (vereinfacht oder normal)", "SIREN (clé de contrôle)": "SIREN (Prüfziffer)", "SIRET (clé de contrôle)": "SIRET (Prüfziffer)",
           "nom de l’atelier": "Name der Werkstatt", ville: "Ort", présentation: "Vorstellung", "au moins une spécialité": "mindestens eine Spezialisierung",
         },
       };
@@ -278,8 +316,20 @@ function copyFor(locale: FineBinderyLocale): DashboardCopy {
           editProfile: "Modifica il mio profilo", finishProfile: "Completa il mio profilo",
           missing: (s) => `Mancante: ${s}.`, unavailable: "Informazione non disponibile.", retry: "Riprova",
         },
+        firstInvoice: {
+          title: "La tua prima fattura in 5 passaggi",
+          steps: [
+            "Completa il profilo: identità, SIREN, SIRET, indirizzo e regime IVA.",
+            "Aggiungi il cliente: privato, o professionista con il suo SIREN.",
+            "Crea il preventivo dalle tue prestazioni, poi invialo.",
+            "Quando il cliente ha accettato, trasforma il preventivo in fattura.",
+            "Controlla la bozza ed emetti la fattura; registra il pagamento quando arriva.",
+          ],
+          note: "Una fattura emessa non si modifica più: un errore si corregge con una nota di credito.",
+          links: ["Il mio profilo", "I miei contatti", "Nuovo preventivo", "I miei preventivi", "Le mie fatture"],
+        },
         missingTerms: {
-          "Nom de l'atelier": "Nome del laboratorio", "Régime de TVA": "Regime IVA", Adresse: "Indirizzo", "Numéro de TVA": "Partita IVA", "Mention de TVA": "Dicitura IVA",
+          "Nom de l'atelier": "Nome del laboratorio", "Régime de TVA": "Regime IVA", Adresse: "Indirizzo", "Numéro de TVA": "Partita IVA", "Mention de TVA": "Dicitura IVA", "Régime d'imposition": "Regime di dichiarazione IVA (semplificato o normale)", "SIREN (clé de contrôle)": "SIREN (cifra di controllo)", "SIRET (clé de contrôle)": "SIRET (cifra di controllo)",
           "nom de l’atelier": "nome del laboratorio", ville: "città", présentation: "presentazione", "au moins une spécialité": "almeno una specialità",
         },
       };
@@ -336,8 +386,20 @@ function copyFor(locale: FineBinderyLocale): DashboardCopy {
           editProfile: "Editar mi perfil", finishProfile: "Terminar mi perfil",
           missing: (s) => `Falta: ${s}.`, unavailable: "Información no disponible.", retry: "Reintentar",
         },
+        firstInvoice: {
+          title: "Su primera factura en 5 pasos",
+          steps: [
+            "Complete su perfil: identidad, SIREN, SIRET, dirección y régimen de IVA.",
+            "Añada al cliente: particular, o profesional con su SIREN.",
+            "Cree el presupuesto a partir de sus servicios y envíelo.",
+            "Cuando el cliente lo haya aceptado, convierta el presupuesto en factura.",
+            "Revise el borrador y emita la factura; registre el pago cuando llegue.",
+          ],
+          note: "Una factura emitida ya no se modifica: un error se corrige con una factura rectificativa.",
+          links: ["Mi perfil", "Mis contactos", "Nuevo presupuesto", "Mis presupuestos", "Mis facturas"],
+        },
         missingTerms: {
-          "Nom de l'atelier": "Nombre del taller", "Régime de TVA": "Régimen de IVA", Adresse: "Dirección", "Numéro de TVA": "Número de IVA", "Mention de TVA": "Mención de IVA",
+          "Nom de l'atelier": "Nombre del taller", "Régime de TVA": "Régimen de IVA", Adresse: "Dirección", "Numéro de TVA": "Número de IVA", "Mention de TVA": "Mención de IVA", "Régime d'imposition": "Régimen de declaración del IVA (simplificado o normal)", "SIREN (clé de contrôle)": "SIREN (dígito de control)", "SIRET (clé de contrôle)": "SIRET (dígito de control)",
           "nom de l’atelier": "nombre del taller", ville: "ciudad", présentation: "presentación", "au moins une spécialité": "al menos una especialidad",
         },
       };

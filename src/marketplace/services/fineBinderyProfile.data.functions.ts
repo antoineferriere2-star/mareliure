@@ -1,3 +1,4 @@
+import { isTestWorkshop } from "@/marketplace/binders/testWorkshop.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { admin, type Supa } from "@/build/services/adminAuth.server";
@@ -223,6 +224,7 @@ export const setMyFineBinderyProfilePublication = createServerFn({ method: "POST
       const subscription = await loadWorkshopSubscription(sb, binder.id);
       if (!subscription.canCreate) fail(409, "Un abonnement actif est requis pour publier la vitrine.");
       if (binder.status !== "approved") fail(409, "L'atelier doit être approuvé avant publication.");
+      if (await isTestWorkshop(sb, binder.id)) fail(409, "Un atelier de test ne se publie pas : sa vitrine reste privée.");
       const missing = publicProfileMissing({ workshopName: binder.workshop_name, city: binder.city, bio: binder.bio, skills });
       if (missing.length) fail(409, `Profil incomplet : ${missing.join(", ")}.`);
       const slug = await reserveStableSlug(sb, binder);
@@ -378,7 +380,7 @@ export const deleteMyFineBinderyPortfolioItem = createServerFn({ method: "POST" 
 
 async function publicBinderRows(sb: Supa) {
   const { data, error } = await sb.from("marketplace_binders").select(publicProfileColumns)
-    .eq("status", "approved").eq("public_profile_status", "published")
+    .eq("status", "approved").eq("public_profile_status", "published").eq("is_demo", false)
     .not("personal_referral_slug", "is", null).order("workshop_name");
   if (error) throw error;
   const rows = data ?? [];
@@ -413,7 +415,7 @@ export const getPublicFineBinderyProfile = createServerFn({ method: "GET" })
     const sb = await admin();
     const { data: binder, error } = await sb.from("marketplace_binders").select(publicProfileColumns)
       .eq("personal_referral_slug", data.slug).eq("status", "approved")
-      .eq("public_profile_status", "published").maybeSingle();
+      .eq("public_profile_status", "published").eq("is_demo", false).maybeSingle();
     if (error || !binder) return null;
     if (!(await loadWorkshopSubscription(sb, binder.id)).canCreate) return null;
     const [skills, portfolio, logoUrl, workshopPhotoUrl] = await Promise.all([

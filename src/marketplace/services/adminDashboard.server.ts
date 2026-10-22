@@ -1,3 +1,4 @@
+import { excludeTestWorkshops } from "@/marketplace/admin/testWorkshopScope";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildAdminDashboard, type DashboardRows, type DashboardBrand } from "@/marketplace/admin/adminDashboard";
 import { buildTrafficSummary, type PageViewRow } from "@/marketplace/admin/trafficSummary";
@@ -38,7 +39,8 @@ export async function readAdminDashboard(sb: SupabaseClient, userId: string,
   options: { now?: Date; providerConfigured?: boolean } = {}) {
   const now = options.now ?? new Date();
   const [cases, binders, applications, subscriptions, connectConsents, offer, proposals, proposalPayments, oppeRefunds, oppeDisputes,
-    onlinePayments, feeDocuments, onlineRefunds, onlineDisputes, plans, labelJobs, automation, ownClientLabels, messages, conversationReads] = await Promise.all([
+    onlinePayments, feeDocuments, onlineRefunds, onlineDisputes, plans, labelJobs, automation, ownClientLabels, messages, conversationReads,
+    caseReferrers, assignments, paymentBinders] = await Promise.all([
     readAll<DashboardRows["cases"][number]>(sb, "marketplace_cases", "id, reference, brand, status, created_at"),
     readAll<DashboardRows["binders"][number]>(sb, "marketplace_binders",
       "id, status, public_profile_status, stripe_account_id, stripe_connect_onboarded_at, stripe_connect_charges_enabled, stripe_connect_payouts_enabled, is_demo, created_at"),
@@ -64,6 +66,10 @@ export async function readAdminDashboard(sb: SupabaseClient, userId: string,
     }),
     readAll<MessageRow>(sb, "marketplace_messages", "case_id, sender_user_id, audience, created_at"),
     readAll<ReadRow>(sb, "marketplace_conversation_reads", "case_id, last_read_at", { user_id: userId }),
+    // Rattachement des dossiers et des paiements à un atelier, pour écarter les ateliers de test.
+    readAll<{ id: string; referred_binder_id: string | null }>(sb, "marketplace_cases", "id, referred_binder_id"),
+    readAll<{ case_id: string; binder_id: string }>(sb, "marketplace_oppe_order_assignments", "case_id, binder_id"),
+    readAll<{ id: string; binder_id: string }>(sb, "marketplace_workshop_online_payments", "id, binder_id"),
   ]);
   const lastRead = new Map(conversationReads.map(row => [row.case_id, row.last_read_at]));
   const perCase = new Map<string, ConversationMessageFacts[]>();
@@ -76,12 +82,12 @@ export async function readAdminDashboard(sb: SupabaseClient, userId: string,
   const unreadByCase = [...perCase].map(([case_id, facts]) => ({
     case_id, count: unreadCount(facts, userId, lastRead.get(case_id) ?? null),
   }));
-  const rows: DashboardRows = {
+  const rows: DashboardRows = excludeTestWorkshops({
     now: now.toISOString(), cases, binders, applications, subscriptions, connectConsents, offer: offer[0] ?? null, proposals,
     proposalPayments, oppeRefunds, oppeDisputes, onlinePayments, feeDocuments, onlineRefunds, onlineDisputes, plans, labelJobs,
     automation: automation[0] ?? null, ownClientLabels,
     providerConfigured: options.providerConfigured ?? false, unreadByCase,
-  };
+  }, { caseReferrers, assignments, paymentBinders });
   const since = filter.days === null ? null : new Date(now.getTime() - filter.days * 86_400_000).toISOString();
   // La fréquentation ne bloque jamais le pilotage : une lecture en échec l'omet, le reste s'affiche.
   const traffic = await readPageViews(sb, since).then(
