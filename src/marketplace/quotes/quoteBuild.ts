@@ -8,6 +8,7 @@
  * recopiés dans le document (snapshot) : modifier le profil plus tard ne change
  * aucun devis existant.
  */
+import { isValidSiren, isValidSiret } from "@/marketplace/invoices/siren";
 import { computeQuote, type DepositInput, type DiscountInput, type QuoteTotals, type VatRegime } from "./quoteCalc";
 import type { QuoteInput } from "./quoteInput";
 import { addDays } from "./quoteStatus";
@@ -228,10 +229,14 @@ export function profileReadiness(
   if (profile.vatRegime === null) missing.push("Régime de TVA");
   if (kind === "invoice") {
     if (!filled(profile.addressLine1) || !filled(profile.postalCode) || !filled(profile.city)) missing.push("Adresse");
+    // Mêmes règles que l'émission (invoiceCompliance et la base) : un profil « prêt » doit pouvoir émettre.
     if (!filled(profile.siren)) missing.push("SIREN");
+    else if (!isValidSiren(profile.siren)) missing.push("SIREN (clé de contrôle)");
     if (!filled(profile.siret)) missing.push("SIRET");
+    else if (!isValidSiret(profile.siret)) missing.push("SIRET (clé de contrôle)");
     if (profile.vatRegime === "VAT_LIABLE" && !filled(profile.vatNumber)) missing.push("Numéro de TVA");
-    if (profile.vatRegime === "FRANCHISE" && !filled(profile.vatMention)) missing.push("Mention de TVA");
+    if (profile.vatRegime === "VAT_LIABLE" && !profile.vatFilingRegime) missing.push("Régime d'imposition");
+    // En franchise, la mention de l'article 293 B est posée d'office à l'émission : elle ne manque jamais.
   }
   return { ready: missing.length === 0, missing };
 }

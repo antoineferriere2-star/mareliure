@@ -163,7 +163,7 @@ function copyFor(locale: FineBinderyLocale): DashboardCopy {
           missing: (s) => `Missing: ${s}.`, unavailable: "Information unavailable.", retry: "Try again",
         },
         missingTerms: {
-          "Nom de l'atelier": "Workshop name", "Régime de TVA": "VAT regime", Adresse: "Address", "Numéro de TVA": "VAT number", "Mention de TVA": "VAT statement",
+          "Nom de l'atelier": "Workshop name", "Régime de TVA": "VAT regime", Adresse: "Address", "Numéro de TVA": "VAT number", "Mention de TVA": "VAT statement", "Régime d'imposition": "VAT filing scheme (simplified or normal)", "SIREN (clé de contrôle)": "SIREN (check digit)", "SIRET (clé de contrôle)": "SIRET (check digit)",
           "nom de l’atelier": "workshop name", ville: "city", présentation: "introduction", "au moins une spécialité": "at least one specialty",
         },
       };
@@ -221,7 +221,7 @@ function copyFor(locale: FineBinderyLocale): DashboardCopy {
           missing: (s) => `Fehlt: ${s}.`, unavailable: "Information nicht verfügbar.", retry: "Erneut versuchen",
         },
         missingTerms: {
-          "Nom de l'atelier": "Name der Werkstatt", "Régime de TVA": "Umsatzsteuerregelung", Adresse: "Adresse", "Numéro de TVA": "USt-IdNr.", "Mention de TVA": "Umsatzsteuerhinweis",
+          "Nom de l'atelier": "Name der Werkstatt", "Régime de TVA": "Umsatzsteuerregelung", Adresse: "Adresse", "Numéro de TVA": "USt-IdNr.", "Mention de TVA": "Umsatzsteuerhinweis", "Régime d'imposition": "Umsatzsteuer-Veranlagung (vereinfacht oder normal)", "SIREN (clé de contrôle)": "SIREN (Prüfziffer)", "SIRET (clé de contrôle)": "SIRET (Prüfziffer)",
           "nom de l’atelier": "Name der Werkstatt", ville: "Ort", présentation: "Vorstellung", "au moins une spécialité": "mindestens eine Spezialisierung",
         },
       };
@@ -279,7 +279,7 @@ function copyFor(locale: FineBinderyLocale): DashboardCopy {
           missing: (s) => `Mancante: ${s}.`, unavailable: "Informazione non disponibile.", retry: "Riprova",
         },
         missingTerms: {
-          "Nom de l'atelier": "Nome del laboratorio", "Régime de TVA": "Regime IVA", Adresse: "Indirizzo", "Numéro de TVA": "Partita IVA", "Mention de TVA": "Dicitura IVA",
+          "Nom de l'atelier": "Nome del laboratorio", "Régime de TVA": "Regime IVA", Adresse: "Indirizzo", "Numéro de TVA": "Partita IVA", "Mention de TVA": "Dicitura IVA", "Régime d'imposition": "Regime di dichiarazione IVA (semplificato o normale)", "SIREN (clé de contrôle)": "SIREN (cifra di controllo)", "SIRET (clé de contrôle)": "SIRET (cifra di controllo)",
           "nom de l’atelier": "nome del laboratorio", ville: "città", présentation: "presentazione", "au moins une spécialité": "almeno una specialità",
         },
       };
@@ -337,7 +337,7 @@ function copyFor(locale: FineBinderyLocale): DashboardCopy {
           missing: (s) => `Falta: ${s}.`, unavailable: "Información no disponible.", retry: "Reintentar",
         },
         missingTerms: {
-          "Nom de l'atelier": "Nombre del taller", "Régime de TVA": "Régimen de IVA", Adresse: "Dirección", "Numéro de TVA": "Número de IVA", "Mention de TVA": "Mención de IVA",
+          "Nom de l'atelier": "Nombre del taller", "Régime de TVA": "Régimen de IVA", Adresse: "Dirección", "Numéro de TVA": "Número de IVA", "Mention de TVA": "Mención de IVA", "Régime d'imposition": "Régimen de declaración del IVA (simplificado o normal)", "SIREN (clé de contrôle)": "SIREN (dígito de control)", "SIRET (clé de contrôle)": "SIRET (dígito de control)",
           "nom de l’atelier": "nombre del taller", ville: "ciudad", présentation: "presentación", "au moins une spécialité": "al menos una especialidad",
         },
       };
