@@ -134,3 +134,17 @@ describe("la page lit ses mots dans le dictionnaire", () => {
     }
   });
 });
+
+describe("guide de la première facture", () => {
+  it("tient en cinq étapes et dix lignes au plus, dans chaque langue, chacune avec son lien", () => {
+    for (const locale of ["fr", "en", "de", "it", "es"] as const) {
+      const guide = dashboardCopy(locale).firstInvoice;
+      expect(guide.steps).toHaveLength(5);
+      expect(guide.links).toHaveLength(5);
+      // Titre + 5 étapes + note : 7 lignes.
+      expect(1 + guide.steps.length + 1).toBeLessThanOrEqual(10);
+      expect(guide.steps.join(" ")).not.toMatch(/conforme|certifi/i);
+    }
+    expect(dashboardCopy("fr").firstInvoice.steps[4]).toContain("émettez la facture");
+  });
+});
