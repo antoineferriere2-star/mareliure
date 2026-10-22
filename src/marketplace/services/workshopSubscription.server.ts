@@ -1,3 +1,4 @@
+import { isTestWorkshop, TEST_WORKSHOP_PROVIDER_REFUSED } from "@/marketplace/binders/testWorkshop.server";
 import { alertWorkshopSubscriptionSynced, readWorkshopSubscriptionStatus } from "@/marketplace/notifications/adminEventAlerts.server";
 import type Stripe from "stripe";
 import type { Supa } from "@/build/services/adminAuth.server";
@@ -43,6 +44,7 @@ export async function loadWorkshopSubscription(sb: Supa, binderId: string) {
 export async function createWorkshopCheckout(sb: Supa, userId: string, accepted: boolean) {
   if (!accepted) fail(400, "Votre accord explicite aux conditions de l’abonnement est requis.");
   const binderId = await workshopBillingOwner(sb, userId);
+  if (await isTestWorkshop(sb, binderId)) fail(409, TEST_WORKSHOP_PROVIDER_REFUSED);
   const workshop = await sb
     .from("marketplace_binder_billing_profiles")
     .select("country,postal_code,city,address_line1,legal_name,workshop_name,vat_regime,vat_number,siren")

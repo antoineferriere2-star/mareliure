@@ -48,6 +48,7 @@ const ERRORS: Record<string, string> = {
   parcel_changed_rate_review_required: "Le colis de ce trajet (poids ou dimensions) n'est pas celui du tarif : enregistrez un nouveau tarif avec les mesures actuelles.",
   return_parcel_review_required: "Le colis retour dépasse le plafond du forfait (500 g, 35 × 25 × 8 cm) : traitement manuel.",
   reservation_conflict: "Une étiquette existe déjà pour une autre proposition ou un autre paiement : vérifiez le journal.",
+  test_workshop_provider_refused: "Dossier d'un atelier de test : aucune étiquette n'est achetée chez Sendcloud.",
   rate_method_unavailable: "Code de méthode absent du devis Sendcloud actuel de ce dossier, sans prix en EUR, ou exigeant un point relais : choisissez une méthode achetable de la liste.",
 };
 const errorText = (e: unknown) => {

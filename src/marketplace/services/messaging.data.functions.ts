@@ -9,6 +9,7 @@
  * and only the SELECTED workshop, still in good standing, ever enters a
  * conversation (an invited or available one has no right to the customer yet).
  */
+import { isTestWorkshop } from "@/marketplace/binders/testWorkshop.server";
 import { alertTeamMessage } from "@/marketplace/notifications/adminEventAlerts.server";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
@@ -141,6 +142,8 @@ async function notifyWorkshopOfNewMessage(
 ): Promise<void> {
   if (!selectedBinderId || senderRole === "binder") return;
   try {
+    // Atelier de test : le message reste lisible dans l'espace atelier, aucun e-mail n'est envoyé à ses membres.
+    if (await isTestWorkshop(sb, selectedBinderId)) return;
     const { brand, brandName, directWorkshopMessaging, origin } = await loadCaseBrand(sb, caseId);
     if (!readableAudiences("binder", directWorkshopMessaging).includes(audience)) return;
     const { data: members } = await sb.from("marketplace_binder_members")

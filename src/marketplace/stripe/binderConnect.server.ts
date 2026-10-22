@@ -1,3 +1,4 @@
+import { assertNotTestWorkshop } from "@/marketplace/binders/testWorkshop.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
@@ -65,6 +66,7 @@ function isIsolatedConnectRecipeAccount(account: {
  * jamais recréé une deuxième fois pour le même atelier).
  */
 export async function ensureBinderStripeAccount(sb: Supa, binderId: string): Promise<string> {
+  await assertNotTestWorkshop(sb, binderId);
   const { data: binder, error } = await sb
     .from("marketplace_binders")
     .select("id, user_id, stripe_account_id, display_name, workshop_name, country_code")

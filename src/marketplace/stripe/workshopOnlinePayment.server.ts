@@ -1,3 +1,4 @@
+import { assertNotTestWorkshop } from "@/marketplace/binders/testWorkshop.server";
 import type Stripe from "stripe";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
@@ -97,6 +98,7 @@ export async function createWorkshopInvoiceCheckout(sb: Supa, token: string) {
   const row = await paymentByToken(sb, token);
   if (row.paid_at || !["ready", "failed"].includes(row.status))
     throw new Error("payment_pending_reconciliation");
+  await assertNotTestWorkshop(sb, row.binder_id);
   await assertWorkshopDirectChargeAccount(row.stripe_account_id);
   const stripe = getMarketplaceStripeClient();
   const options = { stripeAccount: row.stripe_account_id };

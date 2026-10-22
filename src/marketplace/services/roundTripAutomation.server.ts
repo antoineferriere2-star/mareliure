@@ -7,6 +7,7 @@
  * économique ≤ 12,50 € HT). La réservation SQL précède tout appel ; l'orchestrateur ne rachète
  * jamais après une réponse ambiguë sans relire le fournisseur.
  */
+import { isTestCase } from "@/marketplace/binders/testWorkshop.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { SENDCLOUD_RETURN_METHODS_ENABLED } from "@/marketplace/config";
@@ -87,6 +88,8 @@ export async function purchaseAutomatically(sb: Supa, caseId: string, direction:
   const automation = await automationState(sb);
   if (!automation.enabled) throw new LogisticsError("automation_closed");
   if (!provider || !automation.providerConfigured) throw new LogisticsError("provider_unavailable", 503);
+  // Dossier d'un atelier de test : refusé avant toute réservation ou tout achat réel.
+  if (await isTestCase(sb, caseId)) throw new LogisticsError("test_workshop_provider_refused");
   const plan = await loadPlanRow(sb, caseId);
   const back = effectiveReturnAddress(plan);
   const reception = plan.workshop?.reception;

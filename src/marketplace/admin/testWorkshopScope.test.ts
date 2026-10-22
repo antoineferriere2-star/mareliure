@@ -56,6 +56,25 @@ describe("pilotage : les ateliers de test n'entrent dans aucun indicateur", () =
     expect(scoped.binders).toHaveLength(2);
   });
 
+  it("un dossier confié à l'atelier de test puis réaffecté à un vrai atelier redevient réel (dans les deux sens)", () => {
+    const facts = (first: string, then: string) => ({
+      caseReferrers: [{ id: "oppe-test", referred_binder_id: null }],
+      assignments: [{ case_id: "oppe-test", binder_id: first, ended_at: "2026-10-10" }, { case_id: "oppe-test", binder_id: then, ended_at: null }],
+      paymentBinders: [],
+    });
+    expect(excludeTestWorkshops(rows(), facts("test-b", "real-b")).cases.map((c) => c.id)).toContain("oppe-test");
+    expect(excludeTestWorkshops(rows(), facts("test-b", "real-b")).proposalPayments.map((p) => p.proposal_id)).toContain("p-test");
+    expect(excludeTestWorkshops(rows(), facts("real-b", "test-b")).cases.map((c) => c.id)).not.toContain("oppe-test");
+  });
+
+  it("une candidature convertie en atelier de test sort des comptes", () => {
+    const input = rows();
+    input.applications = [{ status: "approved", created_at: "x", converted_binder_id: "test-b" },
+      { status: "approved", created_at: "x", converted_binder_id: "real-b" }, { status: "submitted", created_at: "x", converted_binder_id: null }];
+    const scoped = excludeTestWorkshops(input, { caseReferrers: [], assignments: [], paymentBinders: [] });
+    expect(scoped.applications.map((a) => a.converted_binder_id)).toEqual(["real-b", null]);
+  });
+
   it("ne change rien sans atelier de test", () => {
     const input = rows();
     input.binders = [binder("real-b", false)];
