@@ -15,7 +15,10 @@ import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBr
 import { isFineBinderyLocale, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 
 export const Route = createFileRoute("/auth")({
-  ssr: false,
+  // Le composant reste rendu dans le navigateur (session Supabase locale) ; le loader, lui, tourne au
+  // serveur pour que head() connaisse la marque du Host : sinon finebindery.com/auth recevait un titre
+  // Ma Reliure (#169/#170). `matches` passé à head() est un instantané sans les données de la racine.
+  ssr: "data-only",
   // `?redirect=` lets /free-inquiry-audit send a visitor straight into setup
   // after they create an account. The value is never trusted as a
   // destination — resolvePostAuthDestination matches it against an
@@ -32,7 +35,7 @@ export const Route = createFileRoute("/auth")({
   // the Métré deployment rather than made and ignored.
   loader: async () =>
     isMaReliure ? { brand: await getRequestMarketplaceBrand() } : { brand: null },
-  head: ({ loaderData, match, matches }) => {
+  head: ({ loaderData, match }) => {
     if (!isMaReliure) {
       return {
         meta: [
@@ -48,12 +51,8 @@ export const Route = createFileRoute("/auth")({
     }
     // Arrivé par « Créer mon espace atelier » (?space=atelier), le relieur ne lit pas « Retrouver mes livres » (revues #162, #165).
     const search = match.search as { space?: string; locale?: string };
-    // Route `ssr: false` : côté serveur son loader n'a pas tourné. La marque vient alors de la racine,
-    // qui l'a lue dans le Host de la requête — sinon finebindery.com recevait un titre Ma Reliure.
-    const rootBrand = (matches[0]?.loaderData as { marketplaceBrand?: string | null } | undefined)?.marketplaceBrand;
-    const brand = loaderData?.brand ?? rootBrand;
     const title = authPageTitle(
-      brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE",
+      loaderData?.brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE",
       search.space === "atelier" ? "binder" : "customer",
       isFineBinderyLocale(search.locale) ? search.locale : "en",
     );
@@ -121,7 +120,7 @@ function AuthPage() {
   );
 
   useEffect(() => {
-    // La route est `ssr: false` : le premier montage côté client peut être
+    // Le composant n'est pas rendu au serveur : le premier montage côté client peut être
     // défait avant que cette promesse ne résolve (StrictMode en double
     // montage, ou le remplacement du rendu provisoire par le vrai). Sans ce
     // garde, `goToHomeRoute` — qui appelle `setRouting`/`setAccessError` —
