@@ -5,7 +5,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fail } from "@/build/services/serverError";
 import { requireWorkshopAccess } from "./workshopAccess.server";
 import { getInvoice, getCreditNote } from "./binderQuotes.server";
-import { issuedPdfBase64 } from "./issuedDocumentPdf.server";
+import { issuedPdfBase64ForCustomer } from "./issuedDocumentPdf.server";
 import { getRequestHost } from "@tanstack/react-start/server";
 import { resolveMarketplaceBrandForRequest } from "@/marketplace/brand/resolveRequestBrand.server";
 import { frenchWorkshopTaxEligibility } from "@/marketplace/billing/workshopTax";
@@ -192,7 +192,7 @@ export const getWorkshopPublicInvoicePdf = createServerFn({ method: "GET" })
     const p = await paymentByToken(sb, data.token);
     const invoice = await getInvoice(sb, p.binder_id, p.invoice_id);
     if (invoice.status === "draft") fail(409, "La facture doit être émise.");
-    const base64 = await issuedPdfBase64(sb, p.binder_id, invoice);
+    const base64 = await issuedPdfBase64ForCustomer(sb, p.binder_id, invoice);
     return { filename: `facture-${invoice.number.replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`, base64 };
   });
 export const getWorkshopPublicCreditPdf = createServerFn({ method: "GET" })
@@ -215,7 +215,7 @@ export const getWorkshopPublicCreditPdf = createServerFn({ method: "GET" })
     if (row.error) throw row.error;
     if (!row.data) fail(404, "Avoir introuvable.");
     const credit = await getCreditNote(sb, p.binder_id, data.creditId);
-    const base64 = await issuedPdfBase64(sb, p.binder_id, credit);
+    const base64 = await issuedPdfBase64ForCustomer(sb, p.binder_id, credit);
     return { filename: `avoir-${credit.number.replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`, base64 };
   });
 export const createPublicWorkshopCheckout = createServerFn({ method: "POST" })

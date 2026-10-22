@@ -16,6 +16,12 @@ const BLOCKS_SQL = readFileSync(
   resolve(process.cwd(), "supabase/migrations/20260923100000_marketplace_quote_size_blocks_photos.sql"),
   "utf8",
 ).replace(/^\s*--.*$/gm, "").replace(/--.*$/gm, "");
+/** Phase 1 de la facturation électronique : nature des lignes (`operation_nature`), entre autres. */
+const EINVOICING_PHASE1_SQL = readFileSync(
+  resolve(process.cwd(), "supabase/migrations/20261023100000_einvoicing_phase1.sql"),
+  "utf8",
+).replace(/^\s*--.*$/gm, "").replace(/--.*$/gm, "");
+const ADDED_QUOTE_ITEM_COLUMNS = EINVOICING_PHASE1_SQL.match(/ALTER TABLE public\.marketplace_binder_quote_items\s+ADD COLUMN IF NOT EXISTS \w+/g) ?? [];
 
 const TABLES = [
   "marketplace_binder_billing_profiles",
@@ -185,7 +191,8 @@ describe("le serveur envoie exactement ce que la base attend", () => {
   it("de même pour les lignes de devis", () => {
     const cols = columns("marketplace_binder_quote_items");
     for (const key of QUOTE_ITEM_ROW_KEYS) {
-      expect(cols.has(key) || BLOCKS_SQL.includes(`ADD COLUMN IF NOT EXISTS ${key} `), key).toBe(true);
+      expect(cols.has(key) || BLOCKS_SQL.includes(`ADD COLUMN IF NOT EXISTS ${key} `)
+        || ADDED_QUOTE_ITEM_COLUMNS.some((added) => added.endsWith(` ${key}`)), key).toBe(true);
     }
     const setByFunction = new Set(["id", "quote_id", "binder_id", "position"]);
     for (const [name, meta] of cols) {

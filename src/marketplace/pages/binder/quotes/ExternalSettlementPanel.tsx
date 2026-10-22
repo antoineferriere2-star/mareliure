@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { getExternalSettlements, recordExternalSettlement, type PaymentMethod } from "@/marketplace/services/externalSettlement.data.functions";
-import { SETTLEMENT_UNAVAILABLE } from "./settlementCopy";
+import { SETTLEMENT_UNAVAILABLE, referenceLabel } from "./settlementCopy";
 import { isNoWorkshopError } from "@/marketplace/i18n/noWorkshopCopy";
 import { NoWorkshopNotice } from "../NoWorkshopNotice";
 import { CARD, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
@@ -46,7 +46,7 @@ export function ExternalSettlementPanel({ invoiceId }: { invoiceId: string }) {
       <Field label="Opération déjà effectuée ou litige" htmlFor="settlement-kind"><select id="settlement-kind" className={FIELD} value={kind} disabled={write.isPending} onChange={e => { setKind(e.target.value as keyof typeof labels); setRequestId(crypto.randomUUID()); }}>{Object.entries(labels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>
       {monetary && <Field label={`Montant (${state.data.currency})`} htmlFor="settlement-amount"><input id="settlement-amount" inputMode="decimal" className={FIELD} value={amount} disabled={write.isPending} onChange={e => { setAmount(e.target.value); setRequestId(crypto.randomUUID()); }} /></Field>}
       {monetary && <Field label="Mode de règlement" htmlFor="settlement-method"><select id="settlement-method" className={FIELD} value={method} disabled={write.isPending} onChange={e => { setMethod(e.target.value as PaymentMethod); setRequestId(crypto.randomUUID()); }}>{Object.entries(methods).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select></Field>}
-      {monetary && <Field label="Référence (facultative, sans coordonnées bancaires)" htmlFor="settlement-reference"><input id="settlement-reference" className={FIELD} maxLength={120} value={reference} disabled={write.isPending} onChange={e => { setReference(e.target.value); setRequestId(crypto.randomUUID()); }} /></Field>}
+      {monetary && <Field label={`${referenceLabel(method)} (facultatif, sans coordonnées bancaires)`} htmlFor="settlement-reference"><input id="settlement-reference" className={FIELD} maxLength={120} value={reference} disabled={write.isPending} onChange={e => { setReference(e.target.value); setRequestId(crypto.randomUUID()); }} /></Field>}
       <div className="sm:col-span-2"><Field label={monetary ? "Note (facultative si une référence est saisie)" : "Motif du litige"} htmlFor="settlement-note"><input id="settlement-note" className={FIELD} maxLength={500} value={note} disabled={write.isPending} onChange={e => { setNote(e.target.value); setRequestId(crypto.randomUUID()); }} /></Field></div>
     </div>
     <button className={`${PRIMARY_BUTTON} mt-3`} type="button" disabled={write.isPending || (kind === "receipt" && state.data.disputed) || (!(monetary && reference.trim()) && !note.trim()) || !Number.isSafeInteger(cents) || (monetary && cents <= 0)} onClick={() => write.mutate()}>Enregistrer la déclaration</button>

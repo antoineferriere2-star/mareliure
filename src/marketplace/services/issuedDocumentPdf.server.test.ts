@@ -1,8 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   ISSUED_DOCUMENTS_BUCKET,
+  ISSUED_PDF_UNAVAILABLE_MESSAGE,
   IssuedPdfIntegrityError,
   issuedPdfBase64,
+  issuedPdfBase64ForCustomer,
   sha256Hex,
   storeIssuedPdf,
   storeIssuedPdfQuietly,
@@ -92,12 +94,25 @@ describe("PDF des pièces émises", () => {
     expect(w.tables.marketplace_binder_credit_notes[0].pdf_path).toBe(`${BINDER}/credit_note/cn.pdf`);
   });
 
-  it("refuse de servir un fichier altéré, sans le régénérer", async () => {
+  it("refuse de servir un fichier altéré, sans le régénérer, et le journalise pour l'admin", async () => {
     const w = world();
-    await storeIssuedPdf(w.sb, BINDER, invoice);
+    const original = await storeIssuedPdf(w.sb, BINDER, invoice);
     w.files.set(`${BINDER}/invoice/inv.pdf`, new TextEncoder().encode("%PDF-modifié"));
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
     await expect(issuedPdfBase64(w.sb, BINDER, invoice)).rejects.toBeInstanceOf(IssuedPdfIntegrityError);
     expect(renderDocumentPdf).toHaveBeenCalledTimes(1);
+    const entry = JSON.parse(String(log.mock.calls[0][0]));
+    expect(entry).toMatchObject({
+      event: "issued_pdf_integrity_failure", severity: "critical", reason: "hash_mismatch", kind: "invoice",
+      binderId: BINDER, documentId: "inv", path: `${BINDER}/invoice/inv.pdf`, expectedSha256: await sha256Hex(original),
+    });
+    expect(entry.actualSha256).toMatch(/^[0-9a-f]{64}$/);
+    // Le client de l'atelier lit un message, pas une erreur technique.
+    await expect(issuedPdfBase64ForCustomer(w.sb, BINDER, invoice)).rejects.toThrow(ISSUED_PDF_UNAVAILABLE_MESSAGE);
+    w.files.delete(`${BINDER}/invoice/inv.pdf`);
+    await expect(issuedPdfBase64(w.sb, BINDER, invoice)).rejects.toBeInstanceOf(IssuedPdfIntegrityError);
+    expect(JSON.parse(String(log.mock.calls.at(-1)![0]))).toMatchObject({ reason: "stored_file_missing", actualSha256: null });
+    log.mockRestore();
   });
 
   it("retient le fichier déjà envoyé si l'enregistrement de l'empreinte avait échoué", async () => {

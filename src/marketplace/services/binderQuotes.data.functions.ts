@@ -13,7 +13,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
-import { IssuedPdfIntegrityError, issuedPdfBase64, storeIssuedPdfQuietly } from "./issuedDocumentPdf.server";
+import { ISSUED_PDF_INTEGRITY_MESSAGE, IssuedPdfIntegrityError, issuedPdfBase64, storeIssuedPdfQuietly } from "./issuedDocumentPdf.server";
 import {
   billingProfileInput,
   categoryInput,
@@ -98,7 +98,7 @@ async function run<T>(
     }
     // Le fichier archivé ne correspond plus à son empreinte : on ne sert rien, on ne régénère rien.
     if (err instanceof IssuedPdfIntegrityError)
-      fail(409, "Le PDF archivé de cette pièce ne correspond plus à son empreinte. Rien n'a été servi ; contactez Ma Reliure.");
+      fail(409, ISSUED_PDF_INTEGRITY_MESSAGE);
     // Les gardes SQL de circuit (projet Oppe, client propre) arrivent en message PostgreSQL.
     const refusal = circuitRefusal((err as { message?: string } | null)?.message);
     if (refusal) fail(409, refusal);

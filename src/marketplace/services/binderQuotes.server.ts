@@ -1260,6 +1260,9 @@ function issueCandidate(doc: DocumentView): InvoiceIssueCandidate {
   };
 }
 
+export const ISSUE_REFUSED_WITHOUT_DETAIL =
+  "Une mention obligatoire manque ou n'est pas valide. Vérifiez le profil atelier (SIREN, SIRET, adresse, régime de TVA) et la fiche du client";
+
 export async function issueInvoice(
   sb: Supa,
   binderId: string,
@@ -1280,9 +1283,10 @@ export async function issueInvoice(
     if (message.includes("seller_identity_completion_required"))
       throw new BinderQuotesError("seller_identity_completion_required");
     if (message.includes("invoice_seller_changed")) throw new BinderQuotesError("seller_changed");
+    // La base a refusé alors que le contrôle de l'écran était passé : on le dit, jamais une liste vide.
     throw new BinderQuotesError(
       message.includes("invoice_incomplete") ? "profile_incomplete" : "failed",
-      result.missing,
+      result.missing.length ? result.missing : [ISSUE_REFUSED_WITHOUT_DETAIL],
     );
   }
   return getInvoice(sb, binderId, invoiceId);

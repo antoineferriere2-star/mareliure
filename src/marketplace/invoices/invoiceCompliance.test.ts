@@ -70,7 +70,7 @@ describe("validateInvoiceForIssue", () => {
     value.issuer = { ...value.issuer, vatFilingRegime: null };
     expect(validateInvoiceForIssue(value).missing).toEqual(expect.arrayContaining([
       "Pays de facturation du client à choisir dans la liste",
-      "Régime d'imposition de la TVA atelier manquant (réel simplifié ou réel normal)",
+      "Régime de TVA de l'atelier à choisir dans le profil atelier (réel simplifié ou réel normal)",
     ]));
   });
   it("n'exige pas de mention en franchise : elle est posée d'office", () => {

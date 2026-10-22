@@ -142,7 +142,7 @@ export function validateInvoiceForIssue(candidate: InvoiceIssueCandidate): Invoi
   if (candidate.vatRegime === null) missing.push("Régime de TVA atelier manquant");
   if (candidate.vatRegime === "VAT_LIABLE" && !present(issuer.vatNumber)) missing.push("Numéro de TVA atelier manquant");
   if (candidate.vatRegime === "VAT_LIABLE" && !issuer.vatFilingRegime) {
-    missing.push("Régime d'imposition de la TVA atelier manquant (réel simplifié ou réel normal)");
+    missing.push("Régime de TVA de l'atelier à choisir dans le profil atelier (réel simplifié ou réel normal)");
   }
   // En franchise, la mention de l'article 293 B est ajoutée d'office.
   if (!present(candidate.serviceDate)) missing.push("Date de prestation manquante");

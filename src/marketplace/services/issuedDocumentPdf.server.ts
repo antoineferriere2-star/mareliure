@@ -9,6 +9,7 @@
 import type { Supa } from "@/build/services/adminAuth.server";
 import type { CreditNoteDocumentView, DocumentView } from "@/marketplace/quotes/quoteViews";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
+import { fail } from "@/build/services/serverError";
 
 export const ISSUED_DOCUMENTS_BUCKET = "binder-issued-documents";
 
@@ -19,6 +20,28 @@ export class IssuedPdfIntegrityError extends Error {
   constructor(readonly path: string) {
     super("issued_pdf_integrity");
   }
+}
+
+/** Ce que lit l'atelier : rien n'est servi, rien n'est régénéré. */
+export const ISSUED_PDF_INTEGRITY_MESSAGE =
+  "Le PDF archivé de cette pièce ne correspond plus à son empreinte. Rien n'a été servi ; Ma Reliure est prévenue et revient vers vous.";
+/** Ce que lit le client de l'atelier sur son lien ou son espace. */
+export const ISSUED_PDF_UNAVAILABLE_MESSAGE =
+  "Ce document ne peut pas être téléchargé pour le moment. L'atelier et Ma Reliure en sont informés.";
+
+/**
+ * Événement d'exploitation : une ligne JSON par anomalie, repérable dans les journaux du Worker par
+ * `event: "issued_pdf_integrity_failure"` et `severity: "critical"`. Ni contenu ni donnée client.
+ */
+function logIntegrityFailure(context: { kind: Kind; binderId: string; documentId: string; path: string; expectedSha256: string;
+  actualSha256: string | null }) {
+  console.error(JSON.stringify({
+    event: "issued_pdf_integrity_failure",
+    severity: "critical",
+    at: new Date().toISOString(),
+    ...context,
+    reason: context.actualSha256 === null ? "stored_file_missing" : "hash_mismatch",
+  }));
 }
 
 const tableOf = (kind: Kind) =>
@@ -67,7 +90,7 @@ export async function storeIssuedPdf(sb: Supa, binderId: string, doc: IssuedDocu
   const kind = kindOf(doc);
   if (doc.status === "draft") throw new Error("issued_pdf_draft");
   const row = await storedRow(sb, kind, binderId, doc.id);
-  if (row.pdf_path) return readStored(sb, row.pdf_path, row.pdf_sha256!);
+  if (row.pdf_path) return readStored(sb, { kind, binderId, documentId: doc.id, path: row.pdf_path, sha: row.pdf_sha256! });
 
   const path = `${binderId}/${kind}/${doc.id}.pdf`;
   let bytes = await download(sb, path);
@@ -94,20 +117,38 @@ export async function storeIssuedPdf(sb: Supa, binderId: string, doc: IssuedDocu
   if (!written?.length) {
     const again = await storedRow(sb, kind, binderId, doc.id);
     if (!again.pdf_path) throw new Error("issued_pdf_not_recorded");
-    return readStored(sb, again.pdf_path, again.pdf_sha256!);
+    return readStored(sb, { kind, binderId, documentId: doc.id, path: again.pdf_path, sha: again.pdf_sha256! });
   }
   return bytes;
 }
 
-async function readStored(sb: Supa, path: string, sha: string): Promise<Uint8Array> {
-  const bytes = await download(sb, path);
-  if (!bytes || (await sha256Hex(bytes)) !== sha) throw new IssuedPdfIntegrityError(path);
+async function readStored(
+  sb: Supa,
+  stored: { kind: Kind; binderId: string; documentId: string; path: string; sha: string },
+): Promise<Uint8Array> {
+  const bytes = await download(sb, stored.path);
+  const actual = bytes ? await sha256Hex(bytes) : null;
+  if (!bytes || actual !== stored.sha) {
+    logIntegrityFailure({ kind: stored.kind, binderId: stored.binderId, documentId: stored.documentId, path: stored.path,
+      expectedSha256: stored.sha, actualSha256: actual });
+    throw new IssuedPdfIntegrityError(stored.path);
+  }
   return bytes;
 }
 
 /** Ce que sert tout téléchargement d'une facture ou d'un avoir émis. */
 export async function issuedPdfBase64(sb: Supa, binderId: string, doc: IssuedDocument): Promise<string> {
   return toBase64(await storeIssuedPdf(sb, binderId, doc));
+}
+
+/** Téléchargement par le client de l'atelier : une anomalie d'empreinte devient un message, jamais un rendu neuf. */
+export async function issuedPdfBase64ForCustomer(sb: Supa, binderId: string, doc: IssuedDocument): Promise<string> {
+  try {
+    return await issuedPdfBase64(sb, binderId, doc);
+  } catch (error) {
+    if (error instanceof IssuedPdfIntegrityError) fail(409, ISSUED_PDF_UNAVAILABLE_MESSAGE);
+    throw error;
+  }
 }
 
 /** Rangement au moment de l'émission : un échec n'annule jamais l'émission, le premier téléchargement reprendra. */

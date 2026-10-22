@@ -22,6 +22,7 @@ import {
   getInvoice,
   getQuote,
   issueInvoice,
+  ISSUE_REFUSED_WITHOUT_DETAIL,
   listCatalog,
   listClients,
   listInvoices,
@@ -160,6 +161,8 @@ function makeDb() {
 
   async function rpc(name: string, args: Row) {
     rpcCalls.push({ name, args: JSON.parse(JSON.stringify(args)) });
+    // Refus simulé de la base pour une fonction donnée (garde SQL plus stricte que l'écran).
+    if (world.failRpc?.name === name) return { data: null, error: { message: world.failRpc.message } };
     if (name === "marketplace_binder_credit_limits")
       return {
         data: rows("marketplace_binder_invoice_items")
@@ -307,7 +310,8 @@ function makeDb() {
     }),
   };
 
-  return { sb: { from, rpc, storage } as any, tables, rpcCalls, storageFiles };
+  const world = { sb: { from, rpc, storage } as any, tables, rpcCalls, storageFiles, failRpc: null as { name: string; message: string } | null };
+  return world;
 }
 
 // ---------------------------------------------------------------------------
@@ -415,6 +419,9 @@ const quoteInput = (over: Partial<QuoteInput> = {}): QuoteInput => ({
 });
 
 let world: ReturnType<typeof makeDb>;
+// Chaque scénario repart de l'horloge réelle : un test qui avance la date ne la laisse pas aux suivants.
+afterEach(() => vi.useRealTimers());
+
 beforeEach(() => {
   // La date d'émission est celle du serveur : les factures de ces scénarios sont émises « le jour J ».
   vi.useFakeTimers({ toFake: ["Date"], now: new Date(`${TODAY}T10:00:00Z`) });
@@ -1217,6 +1224,25 @@ describe("devis accepté → facture", () => {
     world.tables.marketplace_binder_invoices.find((row) => row.id === invoice.id)!.status =
       "credited";
     expect((await listInvoices(world.sb, BINDER_A))[0].status).toBe("credited");
+  });
+
+  it("un atelier assujetti sans régime d'imposition (profils existants) lit quoi compléter et où", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput({ vatFilingRegime: null }));
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
+    await expect(issuedInvoice(quote.id)).rejects.toMatchObject({
+      code: "profile_incomplete",
+      missing: ["Régime de TVA de l'atelier à choisir dans le profil atelier (réel simplifié ou réel normal)"],
+    });
+    expect(world.rpcCalls.some((c) => c.name === "marketplace_binder_issue_invoice")).toBe(false);
+  });
+
+  it("un refus de la base sans détail côté écran reste un message lisible", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
+    world.failRpc = { name: "marketplace_binder_issue_invoice", message: "invoice_incomplete" };
+    await expect(issuedInvoice(quote.id)).rejects.toMatchObject({ code: "profile_incomplete", missing: [ISSUE_REFUSED_WITHOUT_DETAIL] });
   });
 
   it("une facture exige l'identité complète : adresse, SIRET, TVA — un devis, non", async () => {

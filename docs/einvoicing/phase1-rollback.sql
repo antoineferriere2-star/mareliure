@@ -3,13 +3,16 @@
 -- À n'appliquer qu'avec le retour du Worker à la version précédente : l'application de la phase 1
 -- appelle des fonctions et des colonnes que ce script retire ou neutralise.
 --
--- Aucune donnée n'est supprimée. Les colonnes ajoutées (régime d'imposition, préfixes en attente,
--- pdf_path / pdf_sha256, payment_method / payment_reference), le bucket des PDF et les fonctions de
--- contrôle des SIREN restent en place : l'ancienne application les ignore. Seuls les déclencheurs,
--- contraintes et fonctions de la phase 1 sont rétablis dans leur version antérieure (copiée des
--- migrations 20260923120000 et 20260928110000).
+-- Aucune donnée n'est supprimée. Restent en place, ignorés par l'ancienne application :
+--   colonnes (régime d'imposition, préfixes en attente, pdf_path / pdf_sha256, payment_method /
+--   payment_reference, operation_nature des prestations et des lignes), bucket et PDF rangés,
+--   fonctions de contrôle (SIREN, date de Paris), déclencheurs « nature par défaut » (sans effet sur
+--   l'ancienne application, qui n'envoie pas la nature).
+-- Rétablis dans leur version antérieure (copiée des migrations 20260923120000 et 20260928110000) :
+--   déclencheurs, contraintes et fonctions d'émission, de brouillon, d'avoir et d'encaissement.
+-- Les pays déjà convertis en codes ISO le restent (l'ancienne application les accepte).
 --
--- Testé sur une copie PGlite (src/marketplace/invoices/einvoicingPhase1.rollback.test.ts).
+-- Testé sur une copie PGlite (src/marketplace/invoices/einvoicingPhase1.migration.test.ts, « retour arrière »).
 
 BEGIN;
 
@@ -25,7 +28,8 @@ CREATE TRIGGER marketplace_binder_credit_notes_immutable
   FOR EACH ROW EXECUTE FUNCTION public.marketplace_binder_credit_notes_immutable();
 REVOKE UPDATE (pdf_path, pdf_sha256) ON public.marketplace_binder_credit_notes FROM service_role;
 
--- 3. Factures : immuabilité et émission d'origine.
+-- 3. Factures : immuabilité, émission et brouillon d'origine ; la fonction à instant explicite disparaît
+--    (la fonction d'origine, en plpgsql, remplace l'enveloppe SQL).
 CREATE OR REPLACE FUNCTION public.marketplace_binder_invoices_forbid_content_change()
 RETURNS TRIGGER LANGUAGE plpgsql SET search_path = public AS $$
 DECLARE
@@ -91,6 +95,74 @@ BEGIN
   RETURN p_invoice_id;
 END;
 $$;
+
+DROP FUNCTION IF EXISTS public.marketplace_binder_issue_invoice_at(uuid, uuid, jsonb, timestamptz);
+
+CREATE OR REPLACE FUNCTION public.marketplace_binder_create_invoice_draft(
+  p_binder_id UUID, p_quote_id UUID, p_draft JSONB
+) RETURNS UUID LANGUAGE plpgsql SET search_path = public AS $$
+DECLARE
+  v_quote public.marketplace_binder_quotes%ROWTYPE;
+  v_existing UUID;
+  v_id UUID := gen_random_uuid();
+BEGIN
+  SELECT id INTO v_existing FROM public.marketplace_binder_invoices
+  WHERE quote_id = p_quote_id AND binder_id = p_binder_id;
+  IF FOUND THEN RETURN v_existing; END IF;
+
+  SELECT * INTO v_quote FROM public.marketplace_binder_quotes
+  WHERE id = p_quote_id AND binder_id = p_binder_id FOR UPDATE;
+  IF NOT FOUND THEN RAISE EXCEPTION 'quote_not_found'; END IF;
+  IF v_quote.status <> 'accepted' THEN RAISE EXCEPTION 'quote_not_accepted'; END IF;
+
+  INSERT INTO public.marketplace_binder_invoices (
+    id, binder_id, quote_id, client_id, invoice_number, status, issue_date,
+    service_date, due_date, operation_nature,
+    client_name, client_email, client_phone, client_address_line1, client_postal_code, client_city, client_country,
+    client_type, client_legal_name, client_billing_address_line1, client_billing_postal_code,
+    client_billing_city, client_billing_country, client_siren, client_vat_number,
+    client_purchase_order_number, client_public_service_code, client_public_commitment_number,
+    book_title, book_author, height_mm, width_mm, spine_mm, book_notes,
+    currency, issuer, vat_regime, vat_mention, payment_terms, notes,
+    early_payment_discount_terms, late_penalty_terms,
+    subtotal_cents, discount_type, discount_value, discount_cents,
+    total_ht_cents, total_vat_cents, total_ttc_cents, vat_breakdown,
+    deposit_type, deposit_value, deposit_cents
+  ) VALUES (
+    v_id, p_binder_id, p_quote_id, v_quote.client_id, NULL, 'draft', (p_draft->>'issue_date')::date,
+    (p_draft->>'service_date')::date, (p_draft->>'due_date')::date, p_draft->>'operation_nature',
+    v_quote.client_name, v_quote.client_email, v_quote.client_phone, v_quote.client_address_line1,
+    v_quote.client_postal_code, v_quote.client_city, v_quote.client_country,
+    p_draft->>'client_type', p_draft->>'client_legal_name',
+    COALESCE(p_draft->>'client_billing_address_line1', v_quote.client_address_line1),
+    COALESCE(p_draft->>'client_billing_postal_code', v_quote.client_postal_code),
+    COALESCE(p_draft->>'client_billing_city', v_quote.client_city),
+    COALESCE(p_draft->>'client_billing_country', v_quote.client_country),
+    p_draft->>'client_siren', p_draft->>'client_vat_number', p_draft->>'client_purchase_order_number',
+    p_draft->>'client_public_service_code', p_draft->>'client_public_commitment_number',
+    v_quote.book_title, v_quote.book_author, v_quote.height_mm, v_quote.width_mm, v_quote.spine_mm, v_quote.book_notes,
+    v_quote.currency, p_draft->'issuer', v_quote.vat_regime, p_draft->>'vat_mention',
+    p_draft->>'payment_terms', p_draft->>'notes', p_draft->>'early_payment_discount_terms',
+    p_draft->>'late_penalty_terms', v_quote.subtotal_cents, v_quote.discount_type, v_quote.discount_value,
+    v_quote.discount_cents, v_quote.total_ht_cents, v_quote.total_vat_cents, v_quote.total_ttc_cents,
+    v_quote.vat_breakdown, v_quote.deposit_type, v_quote.deposit_value, v_quote.deposit_cents
+  );
+
+  INSERT INTO public.marketplace_binder_invoice_items (
+    invoice_id, binder_id, position, line_key, block_key, block_label, block_book_count,
+    block_height_mm, block_width_mm, block_spine_mm, service_id, label, description,
+    unit, quantity, unit_price_cents, vat_rate_bps, total_ht_cents
+  ) SELECT v_id, binder_id, position, line_key, block_key, block_label, block_book_count,
+    block_height_mm, block_width_mm, block_spine_mm, service_id, label, description,
+    unit, quantity, unit_price_cents, vat_rate_bps, total_ht_cents
+  FROM public.marketplace_binder_quote_items
+  WHERE quote_id = p_quote_id AND binder_id = p_binder_id ORDER BY position;
+  RETURN v_id;
+END;
+$$;
+
+-- Régime « exonéré » : l'ancienne application le propose encore.
+ALTER TABLE public.marketplace_binder_billing_profiles DROP CONSTRAINT IF EXISTS marketplace_binder_billing_profiles_no_exempt;
 
 -- 4. Encaissements : le justificatif libre redevient obligatoire (8 à 500 caractères).
 --    Une écriture de la phase 1 sans note reçoit un texte tiré de son mode et de sa référence.

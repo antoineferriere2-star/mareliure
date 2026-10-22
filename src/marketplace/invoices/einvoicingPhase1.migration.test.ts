@@ -321,6 +321,14 @@ describe("retour arrière (docs/einvoicing/phase1-rollback.sql)", () => {
     await expect(db.query("INSERT INTO marketplace_external_settlements(id,invoice_id,actor_id,kind,amount_cents,currency) VALUES($1,$2,$3,'dispute_open',0,'EUR')",
       [id(907), id(2), id(1)])).rejects.toThrow(/null value|not-null/);
   });
+  it("retire la fonction à instant explicite et la contrainte « exonéré » ; garde nature et pays convertis", async () => {
+    await expect(db.query("SELECT marketplace_binder_issue_invoice_at($1,$2,'[]'::jsonb,now())", [id(2), id(1)])).rejects.toThrow(/does not exist/);
+    const regime = (await db.query<{ v: string }>("SELECT vat_regime v FROM marketplace_binder_billing_profiles WHERE binder_id=$1", [id(2)])).rows[0].v;
+    await db.query("UPDATE marketplace_binder_billing_profiles SET vat_regime='EXEMPT' WHERE binder_id=$1", [id(2)]);
+    await db.query("UPDATE marketplace_binder_billing_profiles SET vat_regime=$2 WHERE binder_id=$1", [id(2), regime]);
+    expect((await db.query<{ n: string }>("SELECT operation_nature n FROM marketplace_binder_services WHERE id=$1", [id(7)])).rows[0].n).toBe("bien");
+    expect((await db.query<{ c: string }>("SELECT billing_country c FROM marketplace_binder_clients WHERE id=$1", [id(4)])).rows[0].c).toBe("BE");
+  });
   it("les avoirs redeviennent entièrement figés, PDF compris", async () => {
     await expect(db.query("UPDATE marketplace_binder_credit_notes SET pdf_path='y.pdf',pdf_sha256=$1", ["c".repeat(64)]))
       .rejects.toThrow("credit notes are immutable");
