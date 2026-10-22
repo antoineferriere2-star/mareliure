@@ -12,13 +12,14 @@
  * encore (le paiement en ligne des factures de l'atelier) est écrit comme tel.
  */
 import { PLATFORM_FEE_LABEL, SUBSCRIPTION_LABEL, WORKSHOP_OFFER, formatHtPrice } from "@/marketplace/offer/workshopOffer";
-import { useState, type FormEvent, type ReactNode } from "react";
+import { useEffect, useRef, useState, type FormEvent, type ReactNode } from "react";
 import { useServerFn } from "@tanstack/react-start";
 import { IntakeCta, IntakeTextLink, LandingFooter, LandingHeader, SectionHead, SectionRule, SHELL } from "@/marketplace/pages/landing/LandingChrome";
 import { ActionLink, actionClass } from "@/marketplace/pages/landing/actions";
 import { ProductShot, type ProductShotKey } from "@/marketplace/pages/landing/ProductShot";
 import { usePageViewTracking } from "@/build/pages/public/usePageViewTracking";
 import { submitBinderApplication } from "@/marketplace/services/binderApplications.data.functions";
+import type { ApplicationField, ApplicationFieldErrors } from "@/marketplace/binders/applicationValidation";
 import { BINDER_SKILLS } from "@/marketplace/binders/skills";
 import {
   BENEFITS,
@@ -391,6 +392,32 @@ function ApplicationForm() {
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ApplicationFieldErrors>({});
+  const formRef = useRef<HTMLFormElement>(null);
+  const focusError = useRef(false);
+  useEffect(() => {
+    if (!focusError.current) return;
+    focusError.current = false;
+    formRef.current?.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+  }, [fieldErrors]);
+
+  function clearError(field: ApplicationField) {
+    setFieldErrors((current) => ({ ...current, [field]: undefined }));
+  }
+  function showErrors(errors: ApplicationFieldErrors) {
+    focusError.current = true;
+    setFieldErrors(errors);
+  }
+  const invalid = (field: ApplicationField) => ({
+    "aria-invalid": fieldErrors[field] ? (true as const) : undefined,
+    "aria-describedby": fieldErrors[field] ? "pr-" + field + "-error" : undefined,
+  });
+  const errorFor = (field: ApplicationField) =>
+    fieldErrors[field] ? (
+      <p id={"pr-" + field + "-error"} className="mr-small mt-2 text-mr-bordeaux">
+        {fieldErrors[field]}
+      </p>
+    ) : null;
 
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
@@ -408,6 +435,7 @@ function ApplicationForm() {
   const [hpCompanyName, setHpCompanyName] = useState("");
 
   function toggleSkill(slug: string) {
+    clearError("skills");
     setSkills((current) =>
       current.includes(slug) ? current.filter((s) => s !== slug) : [...current, slug],
     );
@@ -418,21 +446,33 @@ function ApplicationForm() {
     setSending(true);
     setProblem(null);
     try {
-      await submit({
-        data: {
-          firstName,
-          lastName,
-          email,
-          phone: phone || undefined,
-          workshopName,
-          city: city || undefined,
-          websiteUrl: websiteUrl || undefined,
-          skills,
-          yearsExperience: yearsExperience ? Number.parseInt(yearsExperience, 10) : undefined,
-          message: message || undefined,
-          hpCompanyName: hpCompanyName || undefined,
-        },
-      });
+      const input = {
+        consent,
+        firstName,
+        lastName,
+        email,
+        phone: phone || undefined,
+        workshopName,
+        city: city || undefined,
+        websiteUrl: websiteUrl || undefined,
+        skills,
+        yearsExperience: yearsExperience ? Number(yearsExperience) : undefined,
+        message: message || undefined,
+        hpCompanyName: hpCompanyName || undefined,
+      };
+      const { validateBinderApplication } =
+        await import("@/marketplace/binders/applicationValidation");
+      const validation = validateBinderApplication(input);
+      if (!validation.ok) {
+        showErrors(validation.fieldErrors);
+        return;
+      }
+      const result = await submit({ data: validation.data });
+      if (!result.ok) {
+        showErrors(result.fieldErrors);
+        return;
+      }
+      setFieldErrors({});
       setSent(true);
     } catch {
       setProblem("Votre candidature n'a pas pu être envoyée. Réessayez dans un instant.");
@@ -459,18 +499,27 @@ function ApplicationForm() {
             Candidature envoyée. Nous la lisons et revenons vers vous.
           </p>
         ) : (
-          <form onSubmit={handleSubmit} className="mt-10 max-w-[36rem] space-y-6 lg:mt-14">
+          <form
+            ref={formRef}
+            noValidate
+            onSubmit={handleSubmit}
+            className="mt-10 max-w-[36rem] space-y-6 lg:mt-14"
+          >
             {/* Piège à robots : masqué visuellement, mais lisible par un lecteur
                 d'écran comme un champ à ne pas remplir, jamais par tabulation. */}
             <div aria-hidden="true" className="absolute -left-[9999px] h-0 w-0 overflow-hidden">
               <label htmlFor="pr-company">Ne pas remplir ce champ</label>
               <input
                 id="pr-company"
+                maxLength={200}
                 type="text"
                 tabIndex={-1}
                 autoComplete="off"
                 value={hpCompanyName}
-                onChange={(e) => setHpCompanyName(e.target.value)}
+                onChange={(e) => {
+                  setHpCompanyName(e.target.value);
+                  clearError("hpCompanyName");
+                }}
               />
             </div>
 
@@ -481,11 +530,17 @@ function ApplicationForm() {
                 </label>
                 <input
                   id="pr-first-name"
+                  maxLength={100}
+                  {...invalid("firstName")}
                   required
                   value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
+                  onChange={(e) => {
+                    setFirstName(e.target.value);
+                    clearError("firstName");
+                  }}
                   className={inputClass}
                 />
+                {errorFor("firstName")}
               </div>
               <div>
                 <label htmlFor="pr-last-name" className={labelClass}>
@@ -493,11 +548,17 @@ function ApplicationForm() {
                 </label>
                 <input
                   id="pr-last-name"
+                  maxLength={100}
+                  {...invalid("lastName")}
                   required
                   value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
+                  onChange={(e) => {
+                    setLastName(e.target.value);
+                    clearError("lastName");
+                  }}
                   className={inputClass}
                 />
+                {errorFor("lastName")}
               </div>
             </div>
 
@@ -507,25 +568,36 @@ function ApplicationForm() {
               </label>
               <input
                 id="pr-workshop"
+                maxLength={200}
+                {...invalid("workshopName")}
                 required
                 value={workshopName}
-                onChange={(e) => setWorkshopName(e.target.value)}
+                onChange={(e) => {
+                  setWorkshopName(e.target.value);
+                  clearError("workshopName");
+                }}
                 className={inputClass}
               />
+              {errorFor("workshopName")}
             </div>
 
             <div className="grid gap-6 sm:grid-cols-2">
               <div>
                 <label htmlFor="pr-city" className={labelClass}>
-                  Ville
+                  Ville <span className="font-normal text-mr-muted">(facultatif)</span>
                 </label>
                 <input
                   id="pr-city"
-                  required
+                  maxLength={100}
+                  {...invalid("city")}
                   value={city}
-                  onChange={(e) => setCity(e.target.value)}
+                  onChange={(e) => {
+                    setCity(e.target.value);
+                    clearError("city");
+                  }}
                   className={inputClass}
                 />
+                {errorFor("city")}
               </div>
               <div>
                 <label htmlFor="pr-email" className={labelClass}>
@@ -533,13 +605,19 @@ function ApplicationForm() {
                 </label>
                 <input
                   id="pr-email"
+                  maxLength={200}
+                  {...invalid("email")}
                   type="email"
                   required
                   autoComplete="email"
                   value={email}
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={(e) => {
+                    setEmail(e.target.value);
+                    clearError("email");
+                  }}
                   className={inputClass}
                 />
+                {errorFor("email")}
               </div>
             </div>
 
@@ -550,11 +628,17 @@ function ApplicationForm() {
                 </label>
                 <input
                   id="pr-phone"
+                  maxLength={30}
+                  {...invalid("phone")}
                   type="tel"
                   value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
+                  onChange={(e) => {
+                    setPhone(e.target.value);
+                    clearError("phone");
+                  }}
                   className={inputClass}
                 />
+                {errorFor("phone")}
               </div>
               <div>
                 <label htmlFor="pr-website" className={labelClass}>
@@ -563,18 +647,32 @@ function ApplicationForm() {
                 </label>
                 <input
                   id="pr-website"
+                  maxLength={300}
+                  {...invalid("websiteUrl")}
                   type="url"
                   placeholder="https://…"
                   value={websiteUrl}
-                  onChange={(e) => setWebsiteUrl(e.target.value)}
+                  onChange={(e) => {
+                    setWebsiteUrl(e.target.value);
+                    clearError("websiteUrl");
+                  }}
                   className={inputClass}
                 />
+                {errorFor("websiteUrl")}
               </div>
             </div>
 
             <div>
-              <span className={labelClass}>Savoir-faire</span>
-              <div className="mt-3 flex flex-wrap gap-2">
+              <span id="pr-skills-label" className={labelClass}>
+                Savoir-faire
+              </span>
+              <div
+                role="group"
+                aria-labelledby="pr-skills-label"
+                tabIndex={-1}
+                {...invalid("skills")}
+                className="mt-3 flex flex-wrap gap-2"
+              >
                 {BINDER_SKILLS.map((skill) => {
                   const active = skills.includes(skill.slug);
                   return (
@@ -594,6 +692,7 @@ function ApplicationForm() {
                   );
                 })}
               </div>
+              {errorFor("skills")}
             </div>
 
             <div>
@@ -602,13 +701,19 @@ function ApplicationForm() {
               </label>
               <input
                 id="pr-years"
+                {...invalid("yearsExperience")}
                 type="number"
                 min={0}
                 max={100}
+                step={1}
                 value={yearsExperience}
-                onChange={(e) => setYearsExperience(e.target.value)}
+                onChange={(e) => {
+                  setYearsExperience(e.target.value);
+                  clearError("yearsExperience");
+                }}
                 className={`${inputClass} max-w-[10rem]`}
               />
+              {errorFor("yearsExperience")}
             </div>
 
             <div>
@@ -618,20 +723,31 @@ function ApplicationForm() {
               </label>
               <textarea
                 id="pr-message"
+                maxLength={2000}
+                {...invalid("message")}
                 rows={4}
                 value={message}
-                onChange={(e) => setMessage(e.target.value)}
+                onChange={(e) => {
+                  setMessage(e.target.value);
+                  clearError("message");
+                }}
                 className={`${inputClass} resize-none`}
                 placeholder="Savoir-faire, spécialités, ce que vous cherchez en rejoignant Ma Reliure…"
               />
+              {errorFor("message")}
             </div>
 
             <label className="mr-small flex items-start gap-3 text-mr-graphite">
               <input
+                id="pr-consent"
+                {...invalid("consent")}
                 type="checkbox"
                 required
                 checked={consent}
-                onChange={(e) => setConsent(e.target.checked)}
+                onChange={(e) => {
+                  setConsent(e.target.checked);
+                  clearError("consent");
+                }}
                 className="mt-0.5 h-5 w-5 shrink-0 accent-mr-ink"
               />
               <span>
@@ -643,6 +759,12 @@ function ApplicationForm() {
                 .
               </span>
             </label>
+            {errorFor("consent")}
+            {fieldErrors._form && (
+              <p role="alert" className="mr-small text-mr-bordeaux">
+                {fieldErrors._form}
+              </p>
+            )}
 
             {problem && (
               <p role="alert" className="mr-small text-mr-bordeaux">

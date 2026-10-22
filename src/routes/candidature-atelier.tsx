@@ -69,14 +69,16 @@ function CandidatureAtelierPage() {
   const [yearsExperience, setYearsExperience] = useState("");
   const [revenueBand, setRevenueBand] = useState<RevenueBand | "">("");
   const [message, setMessage] = useState("");
+  const [consent, setConsent] = useState(false);
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
     setSending(true);
     setProblem(null);
     try {
-      await submit({
+      const result = await submit({
         data: {
+          consent,
           firstName,
           lastName,
           email,
@@ -84,11 +86,12 @@ function CandidatureAtelierPage() {
           workshopName,
           legalEntityType,
           city: city || undefined,
-          yearsExperience: yearsExperience ? Number.parseInt(yearsExperience, 10) : undefined,
+          yearsExperience: yearsExperience ? Number(yearsExperience) : undefined,
           averageAnnualRevenueBand: revenueBand || undefined,
           message: message || undefined,
         },
       });
+      if (!result.ok) { setProblem(Object.values(result.fieldErrors).join(" ")); return; }
       setSent(true);
     } catch (err) {
       setProblem(
@@ -134,7 +137,7 @@ function CandidatureAtelierPage() {
                     Prénom
                   </label>
                   <input
-                    id="ca-first-name"
+                    id="ca-first-name" maxLength={100}
                     required
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
@@ -146,7 +149,7 @@ function CandidatureAtelierPage() {
                     Nom
                   </label>
                   <input
-                    id="ca-last-name"
+                    id="ca-last-name" maxLength={100}
                     required
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
@@ -160,7 +163,7 @@ function CandidatureAtelierPage() {
                   Adresse e-mail
                 </label>
                 <input
-                  id="ca-email"
+                  id="ca-email" maxLength={200}
                   type="email"
                   required
                   autoComplete="email"
@@ -175,7 +178,7 @@ function CandidatureAtelierPage() {
                   Téléphone <span className="font-normal text-mr-muted">(facultatif)</span>
                 </label>
                 <input
-                  id="ca-phone"
+                  id="ca-phone" maxLength={30}
                   type="tel"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
@@ -188,7 +191,7 @@ function CandidatureAtelierPage() {
                   Nom de l'atelier
                 </label>
                 <input
-                  id="ca-workshop"
+                  id="ca-workshop" maxLength={200}
                   required
                   value={workshopName}
                   onChange={(e) => setWorkshopName(e.target.value)}
@@ -219,7 +222,7 @@ function CandidatureAtelierPage() {
                     Ville <span className="font-normal text-mr-muted">(facultatif)</span>
                   </label>
                   <input
-                    id="ca-city"
+                    id="ca-city" maxLength={100}
                     value={city}
                     onChange={(e) => setCity(e.target.value)}
                     className={inputClass}
@@ -269,7 +272,7 @@ function CandidatureAtelierPage() {
                   <span className="font-normal text-mr-muted">(facultatif)</span>
                 </label>
                 <textarea
-                  id="ca-message"
+                  id="ca-message" maxLength={2000}
                   rows={4}
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
@@ -277,6 +280,11 @@ function CandidatureAtelierPage() {
                   placeholder="Savoir-faire, spécialités, ce que vous cherchez en rejoignant Ma Reliure…"
                 />
               </div>
+
+              <label className="mr-small flex items-start gap-3">
+                <input type="checkbox" required checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5 h-5 w-5 accent-mr-ink" />
+                <span>J'accepte que ces informations soient utilisées par Ma Reliure pour étudier ma candidature, conformément à la <a href="/confidentialite" className="mr-link">politique de confidentialité</a>.</span>
+              </label>
 
               {problem && (
                 <p role="alert" className="mr-small text-mr-bordeaux">
