@@ -131,6 +131,8 @@ export function BinderDashboardPage() {
         </ul>
       </section>
 
+      {invoices.data && !invoices.data.some((invoice) => invoice.status !== "draft") && <FirstInvoiceGuide t={t} />}
+
       <div className="grid gap-9 lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start xl:gap-12">
         <section aria-labelledby="now-heading" aria-busy={loading} className="min-w-0 space-y-4">
           <BinderSectionTitle
@@ -264,6 +266,27 @@ function AgendaSkeleton({ label }: { label: string }) {
         </div>
       ))}
     </div>
+  );
+}
+
+const FIRST_INVOICE_LINKS = ["/atelier/tarifs", "/atelier/contacts", "/atelier/devis/nouveau", "/atelier/devis", "/atelier/factures"] as const;
+
+/** Les cinq étapes de la première facture, jusqu'à ce qu'une facture soit émise. */
+function FirstInvoiceGuide({ t }: { t: DashboardCopy }) {
+  const guide = t.firstInvoice;
+  return (
+    <section aria-labelledby="first-invoice-heading" className="border border-[#cfc5b6] bg-[#fffdf8] px-4 py-4 sm:px-5">
+      <h2 id="first-invoice-heading" className="font-serif text-lg">{guide.title}</h2>
+      <ol className="mt-3 list-decimal space-y-1.5 pl-5 text-sm">
+        {guide.steps.map((step, i) => (
+          <li key={step}>
+            {step}{" "}
+            <Link to={FIRST_INVOICE_LINKS[i]} className={`font-semibold text-[#5f1b27] underline underline-offset-4 ${FOCUS}`}>{guide.links[i]}</Link>
+          </li>
+        ))}
+      </ol>
+      <p className="mt-3 text-xs text-[#685d51]">{guide.note}</p>
+    </section>
   );
 }
 
