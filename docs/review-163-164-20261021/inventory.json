@@ -1,0 +1,519 @@
+{
+  "at": "2026-10-21T15:49:11.030Z",
+  "inventory": [
+    {
+      "file": "20260723151154_0d548b55-ed6e-424f-abcd-ae90a7557218.sql",
+      "findings": []
+    },
+    {
+      "file": "20260723151756_39b151fc-b758-421a-879a-8b51849e277d.sql",
+      "findings": []
+    },
+    {
+      "file": "20260723152742_7c9b574c-6fc5-44d7-85bb-2fc162e967a5.sql",
+      "findings": []
+    },
+    {
+      "file": "20260723161118_bcd580ca-1dfc-4ef8-b1b4-fb2dd8eabee8.sql",
+      "findings": []
+    },
+    {
+      "file": "20260723184720_2e15e45a-bd04-4990-ab39-df04f26a096b.sql",
+      "findings": []
+    },
+    {
+      "file": "20260724054451_3c2f85f1-dd68-469b-a314-2d69df646876.sql",
+      "findings": []
+    },
+    {
+      "file": "20260724073603_476d26bb-02e1-4b42-a4bd-584b28fc109c.sql",
+      "findings": []
+    },
+    {
+      "file": "20260724090000_dossier_ai_insights.sql",
+      "findings": []
+    },
+    {
+      "file": "20260724103728_290b3f32-0f97-4c47-a16f-954014475aca.sql",
+      "findings": []
+    },
+    {
+      "file": "20260724193011_0d644ebd-0583-4886-b07f-a1419c148bc6.sql",
+      "findings": []
+    },
+    {
+      "file": "20260725060000_public_request_audit.sql",
+      "findings": []
+    },
+    {
+      "file": "20260725070000_build_workspaces.sql",
+      "findings": []
+    },
+    {
+      "file": "20260725080000_dossier_followup.sql",
+      "findings": []
+    },
+    {
+      "file": "20260725102046_c8c530f5-21b9-4359-89f3-196c71c58c44.sql",
+      "findings": []
+    },
+    {
+      "file": "20260725122224_0f7ce0dd-c425-4110-a0ba-1109700f5a31.sql",
+      "findings": []
+    },
+    {
+      "file": "20260725130000_workspace_plan_quotas.sql",
+      "findings": []
+    },
+    {
+      "file": "20260725200100_0bf1836a-66ef-475d-b827-697394c43137.sql",
+      "findings": [
+        "<création dynamique (EXECUTE, DO, format) à déclarer>"
+      ]
+    },
+    {
+      "file": "20260725200136_dd4d4829-5e62-47a6-a77a-103703990fc2.sql",
+      "findings": []
+    },
+    {
+      "file": "20260726080000_stripe_billing_columns.sql",
+      "findings": []
+    },
+    {
+      "file": "20260726081511_0240fe83-47b0-4d3f-8d36-57a31adbc332.sql",
+      "findings": []
+    },
+    {
+      "file": "20260727064115_260feceb-8a6e-46d7-a9b4-c347816c4e62.sql",
+      "findings": []
+    },
+    {
+      "file": "20260727064814_c01fd3ac-bdf6-4fee-a2d6-9fbce52c31e2.sql",
+      "findings": []
+    },
+    {
+      "file": "20260727082509_3896a37b-dd1d-4d9b-9ff2-840a656507d4.sql",
+      "findings": []
+    },
+    {
+      "file": "20260727082519_209ff3fc-26fe-40ab-adf3-9bdc68dd78e5.sql",
+      "findings": []
+    },
+    {
+      "file": "20260727083103_c7b07a3a-1f27-43a5-854b-7d07866a780e.sql",
+      "findings": []
+    },
+    {
+      "file": "20260727094538_0176cb4e-b4de-4dc9-b777-94df20fd0c9a.sql",
+      "findings": []
+    },
+    {
+      "file": "20260727094603_d64fa358-8e78-4b7d-b7b7-d19f37b52f18.sql",
+      "findings": []
+    },
+    {
+      "file": "20260727110000_onboarding_publish.sql",
+      "findings": []
+    },
+    {
+      "file": "20260727111547_b5127f5f-6fdb-4332-9514-87a5189de389.sql",
+      "findings": []
+    },
+    {
+      "file": "20260729090000_visitor_project_summary.sql",
+      "findings": []
+    },
+    {
+      "file": "20260729093000_visitor_summary_email.sql",
+      "findings": []
+    },
+    {
+      "file": "20260729112838_0ac302fa-52d2-4182-a7be-5e1b2c478d00.sql",
+      "findings": []
+    },
+    {
+      "file": "20260730125429_848b1630-a92d-4ebf-a0f6-f4bd33d332c8.sql",
+      "findings": []
+    },
+    {
+      "file": "20260801120000_workspace_trial_entitlements.sql",
+      "findings": []
+    },
+    {
+      "file": "20260801120100_create_inspiration_photos_bucket.sql",
+      "findings": []
+    },
+    {
+      "file": "20260801130000_align_inspiration_photos_bucket_limits.sql",
+      "findings": []
+    },
+    {
+      "file": "20260801185515_c6d39cc3-d76e-4470-b710-1f7122482108.sql",
+      "findings": []
+    },
+    {
+      "file": "20260802183843_e22c85fb-bd44-4e61-821a-1bd7d84fdbf9.sql",
+      "findings": []
+    },
+    {
+      "file": "20260803080534_54cd465d-06f2-456f-8847-24a7e0d8e11b.sql",
+      "findings": []
+    },
+    {
+      "file": "20260803100000_multiple_intakes_per_workspace.sql",
+      "findings": []
+    },
+    {
+      "file": "20260803100100_publish_targets_in_flight_setup.sql",
+      "findings": []
+    },
+    {
+      "file": "20260806000000_public_site_analyses.sql",
+      "findings": []
+    },
+    {
+      "file": "20260807111654_ad72d53f-9ca4-4f3c-b4a5-29adbd1e7d54.sql",
+      "findings": []
+    },
+    {
+      "file": "20260807121357_b882a08e-92e5-4a2a-86f9-573918b198e5.sql",
+      "findings": []
+    },
+    {
+      "file": "20260808090000_create_project_photos_bucket.sql",
+      "findings": []
+    },
+    {
+      "file": "20260815120000_internal_sales_workspace.sql",
+      "findings": []
+    },
+    {
+      "file": "20260815173415_4ec816c1-9480-415b-9fdd-d9fc9ea25c48.sql",
+      "findings": []
+    },
+    {
+      "file": "20260815175655_0d97d4b1-1e58-46fd-b6f6-cc422c7c25b6.sql",
+      "findings": []
+    },
+    {
+      "file": "20260815220000_mission_branding_snapshot.sql",
+      "findings": []
+    },
+    {
+      "file": "20260826175701_d9e4f76f-207f-4361-b42b-9caa537ba797.sql",
+      "findings": []
+    },
+    {
+      "file": "20260826175902_bca0a330-c16f-42c3-ab13-65acf971e977.sql",
+      "findings": []
+    },
+    {
+      "file": "20260826185101_40d48ec8-500f-4a6b-8c23-94b436c014d7.sql",
+      "findings": []
+    },
+    {
+      "file": "20260826200000_workspace_notification_settings.sql",
+      "findings": []
+    },
+    {
+      "file": "20260831120000_hermes_prospect_funnel_batch.sql",
+      "findings": []
+    },
+    {
+      "file": "20260831185132_24448191-6152-4bb1-95ae-4cf58d963c0d.sql",
+      "findings": []
+    },
+    {
+      "file": "20260901172458_85155391-bef0-460d-9fd9-d47ce21c4b4d.sql",
+      "findings": []
+    },
+    {
+      "file": "20260908120000_marketplace_reliure.sql",
+      "findings": []
+    },
+    {
+      "file": "20260908210000_managed_pricing_offers.sql",
+      "findings": []
+    },
+    {
+      "file": "20260909120000_pricing_reference_system.sql",
+      "findings": [
+        "marketplace_work_items",
+        "marketplace_binder_rates",
+        "marketplace_pricebook"
+      ]
+    },
+    {
+      "file": "20260911120000_marketplace_binder_membership.sql",
+      "findings": []
+    },
+    {
+      "file": "20260911130000_marketplace_referral.sql",
+      "findings": []
+    },
+    {
+      "file": "20260912090000_marketplace_messaging.sql",
+      "findings": []
+    },
+    {
+      "file": "20260912100000_marketplace_decisions.sql",
+      "findings": []
+    },
+    {
+      "file": "20260913090000_marketplace_pricing_modes.sql",
+      "findings": []
+    },
+    {
+      "file": "20260914090000_marketplace_binder_applications.sql",
+      "findings": []
+    },
+    {
+      "file": "20260915090000_marketplace_binder_applications_extend.sql",
+      "findings": []
+    },
+    {
+      "file": "20260916090000_marketplace_fine_bindery_brand.sql",
+      "findings": []
+    },
+    {
+      "file": "20260916100000_marketplace_commercial_proposals.sql",
+      "findings": []
+    },
+    {
+      "file": "20260916110000_marketplace_pricebook_wiring.sql",
+      "findings": []
+    },
+    {
+      "file": "20260916120000_marketplace_stripe.sql",
+      "findings": []
+    },
+    {
+      "file": "20260917090000_marketplace_commercial_proposal_tax.sql",
+      "findings": []
+    },
+    {
+      "file": "20260917100000_marketplace_commercial_proposal_customer_type.sql",
+      "findings": []
+    },
+    {
+      "file": "20260918090000_marketplace_commercial_proposal_tax_auto_france.sql",
+      "findings": []
+    },
+    {
+      "file": "20260919090000_marketplace_binder_quotes.sql",
+      "findings": []
+    },
+    {
+      "file": "20260920090000_marketplace_verified_email_exact_match.sql",
+      "findings": []
+    },
+    {
+      "file": "20260920100000_marketplace_binder_invoice_vat_mention.sql",
+      "findings": []
+    },
+    {
+      "file": "20260920110000_marketplace_stripe_webhook_states.sql",
+      "findings": []
+    },
+    {
+      "file": "20260920120000_marketplace_case_engagement_guard.sql",
+      "findings": []
+    },
+    {
+      "file": "20260920130000_marketplace_message_audiences.sql",
+      "findings": []
+    },
+    {
+      "file": "20260921090000_marketplace_binder_contacts_works.sql",
+      "findings": []
+    },
+    {
+      "file": "20260921100000_marketplace_binder_reference_links.sql",
+      "findings": []
+    },
+    {
+      "file": "20260921110000_marketplace_base_prices.sql",
+      "findings": [
+        "marketplace_reference_default_prices",
+        "marketplace_reference_price_operation_links"
+      ]
+    },
+    {
+      "file": "20260922130000_marketplace_base_prices_v1_seed.sql",
+      "findings": []
+    },
+    {
+      "file": "20260922140000_marketplace_binder_case_work.sql",
+      "findings": []
+    },
+    {
+      "file": "20260923100000_marketplace_quote_size_blocks_photos.sql",
+      "findings": []
+    },
+    {
+      "file": "20260923110000_marketplace_document_branding.sql",
+      "findings": []
+    },
+    {
+      "file": "20260923120000_marketplace_invoice_compliance.sql",
+      "findings": []
+    },
+    {
+      "file": "20260923130000_marketplace_binder_pricing_catalog.sql",
+      "findings": []
+    },
+    {
+      "file": "20260923140000_finebindery_public_profiles.sql",
+      "findings": []
+    },
+    {
+      "file": "20260924120000_finebindery_i18n.sql",
+      "findings": []
+    },
+    {
+      "file": "20260924160000_marketplace_binder_operation_photos.sql",
+      "findings": []
+    },
+    {
+      "file": "20260928090000_marketplace_payment_circuits.sql",
+      "findings": []
+    },
+    {
+      "file": "20260928110000_own_client_external_settlement.sql",
+      "findings": []
+    },
+    {
+      "file": "20260928130000_work_logistics_manual.sql",
+      "findings": []
+    },
+    {
+      "file": "20261001150000_own_client_seller_identity_contract_epoch.sql",
+      "findings": []
+    },
+    {
+      "file": "20261001160000_book_round_trip_shipping.sql",
+      "findings": []
+    },
+    {
+      "file": "20261002090000_book_round_trip_journey.sql",
+      "findings": []
+    },
+    {
+      "file": "20261005090000_commercial_origin_separation.sql",
+      "findings": []
+    },
+    {
+      "file": "20261005120000_oppe_order_lifecycle.sql",
+      "findings": []
+    },
+    {
+      "file": "20261005150000_oppe_invoicing.sql",
+      "findings": [
+        "marketplace_oppe_invoices",
+        "marketplace_oppe_invoice_items",
+        "marketplace_oppe_credit_notes",
+        "marketplace_oppe_refunds",
+        "marketplace_oppe_disputes",
+        "<création dynamique (EXECUTE, DO, format) à déclarer>"
+      ]
+    },
+    {
+      "file": "20261005180000_oppe_supplier_invoices.sql",
+      "findings": [
+        "marketplace_oppe_supplier_invoices",
+        "marketplace_oppe_supplier_payments",
+        "<création dynamique (EXECUTE, DO, format) à déclarer>"
+      ]
+    },
+    {
+      "file": "20261005210000_oppe_tax_qualification.sql",
+      "findings": []
+    },
+    {
+      "file": "20261006100000_workshop_subscriptions.sql",
+      "findings": []
+    },
+    {
+      "file": "20261006110000_workshop_partial_credit_notes.sql",
+      "findings": []
+    },
+    {
+      "file": "20261006120000_workshop_connect_payments.sql",
+      "findings": []
+    },
+    {
+      "file": "20261006130000_workshop_order_transport.sql",
+      "findings": []
+    },
+    {
+      "file": "20261006140000_workshop_credit_franchise.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007100000_workshop_checkout_recovery.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007110000_workshop_payment_audit.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007120000_workshop_legacy_scope.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007130000_workshop_payment_link_recovery.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007140000_workshop_transport_labels.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007150000_workshop_referral_import.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007160000_workshop_quote_contract_epoch.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007170000_workshop_referral_agreement.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007180000_workshop_fee_vat_documents.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007190000_workshop_payment_own_client_origin.sql",
+      "findings": []
+    },
+    {
+      "file": "20261007200000_workshop_payment_attempt_reconciliation.sql",
+      "findings": []
+    },
+    {
+      "file": "20261008100000_case_closure_atomic.sql",
+      "findings": []
+    },
+    {
+      "file": "20261008110000_closed_case_reconciliation.sql",
+      "findings": []
+    },
+    {
+      "file": "20261015100000_round_trip_rate_versions.sql",
+      "findings": []
+    },
+    {
+      "file": "20261016100000_round_trip_label_resolution.sql",
+      "findings": []
+    },
+    {
+      "file": "20261020100000_marketplace_grants_hardening.sql",
+      "findings": [
+        "<création dynamique (EXECUTE, DO, format) à déclarer>"
+      ]
+    }
+  ]
+}

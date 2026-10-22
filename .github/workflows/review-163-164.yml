@@ -1,0 +1,19 @@
+name: Independent review 163 and 164
+on:
+  pull_request:
+    paths:
+      - "docs/review-163-164-20261021/**"
+      - "src/marketplace/security/tableGrants.ts"
+      - ".github/workflows/review-163-164.yml"
+  workflow_dispatch:
+jobs:
+  guard-review:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npx vitest run --config docs/review-163-164-20261021/vitest.config.ts
