@@ -40,7 +40,16 @@ async function draft(options: { clientType?: string; country?: string; siren?: s
     VALUES($1,$2,0,'QA reliure',10000,0,10000,'qa-line')`, [invoice, id(2)]);
   return invoice;
 }
-const issue = (invoice: string) => db.query("SELECT marketplace_binder_issue_invoice($1,$2,'[]'::jsonb)", [id(2), invoice]);
+/**
+ * Les fonctions appelées par le serveur tournent ici avec le rôle de service, comme en production :
+ * un appel en propriétaire masquerait un droit manquant (défaut relevé par Codex sur la copie le 22/10).
+ */
+async function asService<T>(work: () => Promise<T>): Promise<T> {
+  await db.exec("SET ROLE service_role");
+  try { return await work(); } finally { await db.exec("RESET ROLE"); }
+}
+const service = <R>(sql: string, params: unknown[] = []) => asService(() => db.query<R>(sql, params));
+const issue = (invoice: string) => service("SELECT marketplace_binder_issue_invoice($1,$2,'[]'::jsonb)", [id(2), invoice]);
 const row = (invoice: string) => db.query<Record<string, string | null>>(
   "SELECT status,invoice_number,to_char(issue_date,'YYYY-MM-DD') issue_date,vat_mention,client_billing_country FROM marketplace_binder_invoices WHERE id=$1",
   [invoice]).then((r) => r.rows[0]);
@@ -48,6 +57,8 @@ const row = (invoice: string) => db.query<Record<string, string | null>>(
 beforeAll(async () => {
   db = new PGlite();
   await db.exec(quoteRecipePrerequisites);
+  // Tables du socle simulées par la fixture : mêmes droits que le rôle de service en production (lus le 22/10/2026).
+  await db.exec("GRANT SELECT, INSERT, UPDATE ON marketplace_binder_members, marketplace_binders TO service_role");
   for (const file of ["20260919090000_marketplace_binder_quotes", "20260920100000_marketplace_binder_invoice_vat_mention",
     "20260921090000_marketplace_binder_contacts_works", "20260923100000_marketplace_quote_size_blocks_photos",
     "20260923110000_marketplace_document_branding", "20260923120000_marketplace_invoice_compliance",
@@ -161,9 +172,9 @@ describe("avoirs", () => {
   it("datés du jour même par la base ; PDF posé une fois ; ni modification ni suppression", async () => {
     const invoice = await draft();
     await issue(invoice);
-    await expect(db.query("SELECT marketplace_binder_create_full_credit_note($1,$2,'2020-01-01','QA annulation')", [id(2), invoice]))
+    await expect(service("SELECT marketplace_binder_create_full_credit_note($1,$2,'2020-01-01','QA annulation')", [id(2), invoice]))
       .rejects.toThrow("credit_note_date_must_be_today");
-    const { rows } = await db.query<{ c: string }>("SELECT marketplace_binder_create_full_credit_note($1,$2,$3,'QA annulation') c", [id(2), invoice, await today()]);
+    const { rows } = await service<{ c: string }>("SELECT marketplace_binder_create_full_credit_note($1,$2,$3,'QA annulation') c", [id(2), invoice, await today()]);
     const credit = rows[0].c;
     await db.query("UPDATE marketplace_binder_credit_notes SET pdf_path='a.pdf',pdf_sha256=$2 WHERE id=$1", [credit, "c".repeat(64)]);
     await expect(db.query("UPDATE marketplace_binder_credit_notes SET pdf_sha256=$2 WHERE id=$1", [credit, "d".repeat(64)])).rejects.toThrow("credit notes are immutable");
@@ -193,7 +204,7 @@ describe("préfixe de numérotation : jamais changé en cours de série", () => 
 describe("encaissements : moyen de paiement structuré", () => {
   let invoice: string;
   const record = (n: number, kind: string, amount: number, method: string | null, reference: string | null = null, note: string | null = null) =>
-    db.query("SELECT marketplace_record_external_settlement($1,$2,$3,$4,$5,$6,$7,$8,$9)", [id(n), invoice, id(2), id(1), kind, amount, method, reference, note]);
+    service("SELECT marketplace_record_external_settlement($1,$2,$3,$4,$5,$6,$7,$8,$9)", [id(n), invoice, id(2), id(1), kind, amount, method, reference, note]);
   beforeAll(async () => {
     // Vrai parcours « client de l'atelier » : accord écrit sur le devis, brouillon, émission.
     const quote = id(n++);
@@ -205,7 +216,7 @@ describe("encaissements : moyen de paiement structuré", () => {
       VALUES($1,$2,0,'QA reliure',10000,0,10000,'qa-line')`, [quote, id(2)]);
     const revision = (await db.query<{ r: string }>("SELECT marketplace_own_contract($1,$2,$3)->>'revision' r", [quote, id(2), id(1)])).rows[0].r;
     await db.query("SELECT marketplace_accept_own_quote($1,$2,$3,$4,$5)", [quote, id(2), id(1), "Accord écrit du client QA", revision]);
-    invoice = (await db.query<{ id: string }>("SELECT marketplace_binder_create_invoice_draft($1,$2,$3::jsonb) id", [id(2), quote, JSON.stringify({
+    invoice = (await service<{ id: string }>("SELECT marketplace_binder_create_invoice_draft($1,$2,$3::jsonb) id", [id(2), quote, JSON.stringify({
       issue_date: "2026-01-02", service_date: "2026-01-02", due_date: "2099-12-31", operation_nature: "services", client_type: "individual",
       client_billing_address_line1: "1 rue QA", client_billing_postal_code: "45000", client_billing_city: "Orléans", client_billing_country: "FR",
       issuer: JSON.parse(issuer()) })])).rows[0].id;
@@ -225,7 +236,7 @@ describe("encaissements : moyen de paiement structuré", () => {
     ]);
   });
   it("garde l'ancienne signature (moyen « autre », texte libre en note) pendant le déploiement", async () => {
-    await db.query("SELECT marketplace_record_external_settlement($1,$2,$3,$4,'receipt',1000,'Virement reçu le 12')", [id(905), invoice, id(2), id(1)]);
+    await service("SELECT marketplace_record_external_settlement($1,$2,$3,$4,'receipt',1000,'Virement reçu le 12')", [id(905), invoice, id(2), id(1)]);
     const last = (await db.query<{ payment_method: string; evidence: string }>("SELECT payment_method,evidence FROM marketplace_external_settlements WHERE id=$1", [id(905)])).rows[0];
     expect(last).toEqual({ payment_method: "autre", evidence: "Virement reçu le 12" });
   });
@@ -247,18 +258,23 @@ describe("date d'émission à l'heure de Paris", () => {
       "SELECT to_char(marketplace_paris_date('2026-12-31 23:30:00+00'),'YYYY-MM-DD') d, to_char(marketplace_paris_date('2026-07-31 21:30:00+00'),'YYYY-MM-DD') s");
     expect(r.rows[0]).toEqual({ d: "2027-01-01", s: "2026-07-31" });
   });
-  it("une émission à cet instant est datée du 1er janvier et numérotée dans la série de la nouvelle année", async () => {
+  it("une émission à cet instant, par le rôle de service, est datée du 1er janvier et numérotée en 2027", async () => {
     const invoice = await draft({ due: "2099-12-31" });
-    await db.query("SELECT marketplace_binder_issue_invoice_at($1,$2,'[]'::jsonb,'2026-12-31 23:30:00+00')", [id(2), invoice]);
+    // Seul le propriétaire du schéma fige l'horloge, le temps du test.
+    await db.exec("CREATE OR REPLACE FUNCTION public.marketplace_issue_clock() RETURNS timestamptz LANGUAGE sql STABLE SET search_path = public AS $$ SELECT '2026-12-31 23:30:00+00'::timestamptz $$");
+    try {
+      await issue(invoice);
+    } finally {
+      await db.exec("CREATE OR REPLACE FUNCTION public.marketplace_issue_clock() RETURNS timestamptz LANGUAGE sql STABLE SET search_path = public AS $$ SELECT now() $$");
+    }
     const issued = await row(invoice);
     expect(issued.issue_date).toBe("2027-01-01");
     expect(issued.invoice_number).toMatch(/-2027-0001$/);
   });
-  it("la fonction à instant explicite n'est pas ouverte au rôle de service", async () => {
-    await db.exec("SET ROLE service_role");
-    try {
-      await expect(db.query("SELECT marketplace_binder_issue_invoice_at($1,$2,'[]'::jsonb,now())", [id(2), id(1)])).rejects.toThrow(/permission denied/);
-    } finally { await db.exec("RESET ROLE"); }
+  it("le rôle de service lit l'horloge mais ne peut pas la remplacer", async () => {
+    await expect(service<{ ok: boolean }>("SELECT marketplace_issue_clock() <= now() ok")).resolves.toMatchObject({ rows: [{ ok: true }] });
+    await expect(asService(() => db.exec("CREATE OR REPLACE FUNCTION public.marketplace_issue_clock() RETURNS timestamptz LANGUAGE sql AS $$ SELECT '2020-01-01'::timestamptz $$")))
+      .rejects.toThrow(/must be owner|permission denied/);
   });
 });
 
@@ -321,8 +337,8 @@ describe("retour arrière (docs/einvoicing/phase1-rollback.sql)", () => {
     await expect(db.query("INSERT INTO marketplace_external_settlements(id,invoice_id,actor_id,kind,amount_cents,currency) VALUES($1,$2,$3,'dispute_open',0,'EUR')",
       [id(907), id(2), id(1)])).rejects.toThrow(/null value|not-null/);
   });
-  it("retire la fonction à instant explicite et la contrainte « exonéré » ; garde nature et pays convertis", async () => {
-    await expect(db.query("SELECT marketplace_binder_issue_invoice_at($1,$2,'[]'::jsonb,now())", [id(2), id(1)])).rejects.toThrow(/does not exist/);
+  it("retire l'horloge et la contrainte « exonéré » ; garde nature et pays convertis", async () => {
+    await expect(db.query("SELECT marketplace_issue_clock()")).rejects.toThrow(/does not exist/);
     const regime = (await db.query<{ v: string }>("SELECT vat_regime v FROM marketplace_binder_billing_profiles WHERE binder_id=$1", [id(2)])).rows[0].v;
     await db.query("UPDATE marketplace_binder_billing_profiles SET vat_regime='EXEMPT' WHERE binder_id=$1", [id(2)]);
     await db.query("UPDATE marketplace_binder_billing_profiles SET vat_regime=$2 WHERE binder_id=$1", [id(2), regime]);

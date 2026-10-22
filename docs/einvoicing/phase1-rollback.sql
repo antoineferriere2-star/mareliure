@@ -28,8 +28,7 @@ CREATE TRIGGER marketplace_binder_credit_notes_immutable
   FOR EACH ROW EXECUTE FUNCTION public.marketplace_binder_credit_notes_immutable();
 REVOKE UPDATE (pdf_path, pdf_sha256) ON public.marketplace_binder_credit_notes FROM service_role;
 
--- 3. Factures : immuabilité, émission et brouillon d'origine ; la fonction à instant explicite disparaît
---    (la fonction d'origine, en plpgsql, remplace l'enveloppe SQL).
+-- 3. Factures : immuabilité, émission et brouillon d'origine ; l'horloge d'émission n'est plus utilisée et disparaît.
 CREATE OR REPLACE FUNCTION public.marketplace_binder_invoices_forbid_content_change()
 RETURNS TRIGGER LANGUAGE plpgsql SET search_path = public AS $$
 DECLARE
@@ -96,7 +95,7 @@ BEGIN
 END;
 $$;
 
-DROP FUNCTION IF EXISTS public.marketplace_binder_issue_invoice_at(uuid, uuid, jsonb, timestamptz);
+DROP FUNCTION IF EXISTS public.marketplace_issue_clock();
 
 CREATE OR REPLACE FUNCTION public.marketplace_binder_create_invoice_draft(
   p_binder_id UUID, p_quote_id UUID, p_draft JSONB
