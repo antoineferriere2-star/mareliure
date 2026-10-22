@@ -520,6 +520,8 @@ END $$;
 
 -- ---------------------------------------------------------------------------
 -- 9. Conservation : supprimer un atelier, un devis, un dossier ou une proposition ne supprime plus
+--    (Relu à la main : le SQL dynamique ci-dessous ne fait que remplacer des clés étrangères, il ne crée aucune table.)
+-- acl: dynamic-reviewed
 --    aucune pièce, aucun encaissement, aucun compteur.
 -- ---------------------------------------------------------------------------
 DO $$

@@ -256,3 +256,26 @@ describe("conservation", () => {
     expect((await journal()).length).toBeGreaterThan(0);
   });
 });
+
+describe("événements d'export et d'attestation", () => {
+  it("sont chaînés comme les pièces, avec l'empreinte du manifeste", async () => {
+    await service("SELECT marketplace_journal_record_event($1,'export',$2::jsonb,$3)", ["oppe", JSON.stringify({ manifest_sha256: "f".repeat(64) }), id(1)]);
+    await service("SELECT marketplace_journal_record_event($1,'attestation_draft',$2::jsonb,$3)", ["oppe", JSON.stringify({ software_version: "abc" }), id(1)]);
+    const rows = await journal("oppe");
+    expect(rows.slice(-2).map((r) => [r.event, r.payload])).toEqual([
+      ["export", { manifest_sha256: "f".repeat(64) }], ["attestation_draft", { software_version: "abc" }],
+    ]);
+  });
+});
+
+describe("retour arrière (docs/einvoicing/phase2-rollback.sql)", () => {
+  it("cesse d'alimenter le journal sans rien en retirer, et rend aux pièces OPPE leur immuabilité d'origine", async () => {
+    const before = (await db.query<{ c: number }>("SELECT count(*)::int c FROM marketplace_issuer_journal")).rows[0].c;
+    await db.exec(readFileSync(new URL("../../../docs/einvoicing/phase2-rollback.sql", import.meta.url), "utf8"));
+    await issue(await draft([[2_000, 2000]], "2026-10-22"));
+    expect((await db.query<{ c: number }>("SELECT count(*)::int c FROM marketplace_issuer_journal")).rows[0].c).toBe(before);
+    await expect(db.query("UPDATE marketplace_oppe_credit_notes SET pdf_path='y' WHERE false")).resolves.toBeDefined();
+    await expect(service("SELECT marketplace_journal_verify($1)", [ISSUER])).rejects.toThrow(/permission denied/);
+    await expect(db.query("DELETE FROM marketplace_issuer_journal")).rejects.toThrow("issuer_journal_append_only");
+  });
+});

@@ -9,6 +9,7 @@ import type { TrafficSummary } from "@/marketplace/admin/trafficSummary";
 import type { IntakeFunnel } from "@/marketplace/admin/intakeFunnel";
 import { formatEuros } from "@/marketplace/pricing/money";
 import { CARD } from "@/marketplace/pages/binder/quotes/quoteUi";
+import { AdminLedgerSection } from "./AdminLedgerSection";
 
 const BRANDS: [DashboardBrand, string][] = [["ALL", "Les deux marques"], ["MA_RELIURE", "Ma Reliure"], ["FINE_BINDERY", "Fine Bindery"]];
 const PERIODS: [7 | 30 | 90 | null, string][] = [[7, "7 jours"], [30, "30 jours"], [90, "90 jours"], [null, "Depuis l'ouverture"]];
@@ -221,6 +222,7 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
         </div>
       </Section>
       <AlertTest />
+      <AdminLedgerSection />
       <p className="text-xs text-muted-foreground">Calculé le {new Date(data.generatedAt).toLocaleString("fr-FR")}. Aucun nom ni adresse de client n'est affiché ici.</p>
     </>
   );

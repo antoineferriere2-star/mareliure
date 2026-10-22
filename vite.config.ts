@@ -7,6 +7,16 @@
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
 import { loadEnv } from "vite";
 import { resolve as resolvePath } from "node:path";
+import { execSync } from "node:child_process";
+
+/** Version du logiciel inscrite dans les archives et le modèle d'attestation : le commit construit. */
+function buildCommit(): string {
+  try {
+    return execSync("git rev-parse --short=12 HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim() || "inconnu";
+  } catch {
+    return "inconnu";
+  }
+}
 
 /**
  * Which Supabase project the *browser* talks to.
@@ -76,6 +86,7 @@ export default defineConfig({
       // Date de construction (AAAA-MM-JJ) pour le <lastmod> du plan du site : un Worker
       // fige son horloge à 0 hors requête, et la date calculée au chargement valait 1970-01-01.
       "import.meta.env.VITE_BUILD_DATE": JSON.stringify(new Date().toISOString().slice(0, 10)),
+      "import.meta.env.VITE_BUILD_COMMIT": JSON.stringify(buildCommit()),
     },
   },
   tanstackStart: {

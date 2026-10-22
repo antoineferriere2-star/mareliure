@@ -1,7 +1,8 @@
 /**
- * PDF des pièces émises (factures et avoirs d'atelier) : produit une seule fois, rangé dans un bucket privé
- * avec son empreinte SHA-256, puis toujours resservi tel quel — jamais régénéré. La base n'accepte d'écrire
- * `pdf_path` / `pdf_sha256` qu'une fois (migration 20261023100000).
+ * PDF des pièces émises (factures et avoirs des ateliers et d'OPPE) : produit une seule fois, rangé dans un
+ * bucket privé avec son empreinte SHA-256, puis toujours resservi tel quel — jamais régénéré. La base
+ * n'accepte d'écrire `pdf_path` / `pdf_sha256` qu'une fois (migrations 20261023100000 et 20261024100000),
+ * et journalise la pose du PDF dans la chaîne de l'émetteur.
  *
  * Une pièce émise avant cette version, ou dont le rangement a échoué au moment de l'émission, est rangée à
  * son premier téléchargement : à partir de là, c'est ce fichier qui fait foi.
@@ -14,7 +15,17 @@ import { fail } from "@/build/services/serverError";
 export const ISSUED_DOCUMENTS_BUCKET = "binder-issued-documents";
 
 type IssuedDocument = DocumentView | CreditNoteDocumentView;
-type Kind = "invoice" | "credit_note";
+type Kind = "invoice" | "credit_note" | "oppe_invoice" | "oppe_credit_note";
+
+/** Une pièce à ranger : sa table, sa ligne, l'émetteur dont la chaîne reçoit les anomalies, son rendu. */
+interface Target {
+  kind: Kind;
+  id: string;
+  /** Restriction d'accès (l'atelier ne lit que ses pièces) ; aucune pour une pièce OPPE. */
+  binderId: string | null;
+  issuer: string;
+  render: () => Promise<Uint8Array>;
+}
 
 export class IssuedPdfIntegrityError extends Error {
   constructor(readonly path: string) {
@@ -33,19 +44,38 @@ export const ISSUED_PDF_UNAVAILABLE_MESSAGE =
  * Événement d'exploitation : une ligne JSON par anomalie, repérable dans les journaux du Worker par
  * `event: "issued_pdf_integrity_failure"` et `severity: "critical"`. Ni contenu ni donnée client.
  */
-function logIntegrityFailure(context: { kind: Kind; binderId: string; documentId: string; path: string; expectedSha256: string;
-  actualSha256: string | null }) {
-  console.error(JSON.stringify({
+async function logIntegrityFailure(sb: Supa, issuer: string, context: { kind: Kind; binderId: string | null; documentId: string;
+  path: string; expectedSha256: string; actualSha256: string | null }) {
+  const entry = {
     event: "issued_pdf_integrity_failure",
     severity: "critical",
     at: new Date().toISOString(),
     ...context,
     reason: context.actualSha256 === null ? "stored_file_missing" : "hash_mismatch",
-  }));
+  };
+  console.error(JSON.stringify(entry));
+  // Et dans la chaîne de l'émetteur : l'anomalie elle-même devient une preuve datée.
+  try {
+    const { error } = await sb.rpc("marketplace_journal_record_event", {
+      p_issuer: issuer, p_event: "pdf_integrity_failure", p_payload: entry, p_actor: null,
+    });
+    if (error) throw error;
+  } catch (error) {
+    console.error(JSON.stringify({ event: "issued_pdf_integrity_journal_failed", documentId: context.documentId, error: String(error) }));
+  }
 }
 
-const tableOf = (kind: Kind) =>
-  kind === "invoice" ? "marketplace_binder_invoices" : "marketplace_binder_credit_notes";
+const TABLES: Record<Kind, "marketplace_binder_invoices" | "marketplace_binder_credit_notes" | "marketplace_oppe_invoices" | "marketplace_oppe_credit_notes"> = {
+  invoice: "marketplace_binder_invoices",
+  credit_note: "marketplace_binder_credit_notes",
+  oppe_invoice: "marketplace_oppe_invoices",
+  oppe_credit_note: "marketplace_oppe_credit_notes",
+};
+const tableOf = (kind: Kind) => TABLES[kind];
+const pathOf = (target: Target) =>
+  target.binderId ? `${target.binderId}/${target.kind}/${target.id}.pdf` : `oppe/${target.kind}/${target.id}.pdf`;
+const scoped = <Q extends { eq: (column: string, value: string) => Q }>(query: Q, target: Target) =>
+  target.binderId ? query.eq("binder_id", target.binderId) : query;
 
 export async function sha256Hex(bytes: Uint8Array): Promise<string> {
   const digest = await crypto.subtle.digest("SHA-256", bytes as Uint8Array<ArrayBuffer>);
@@ -65,12 +95,8 @@ function kindOf(doc: IssuedDocument): Kind {
   throw new Error("issued_pdf_kind");
 }
 
-async function storedRow(sb: Supa, kind: Kind, binderId: string, id: string) {
-  const { data, error } = await sb
-    .from(tableOf(kind))
-    .select("pdf_path, pdf_sha256")
-    .eq("id", id)
-    .eq("binder_id", binderId)
+async function storedRow(sb: Supa, target: Target) {
+  const { data, error } = await scoped(sb.from(tableOf(target.kind)).select("pdf_path, pdf_sha256").eq("id", target.id), target)
     .maybeSingle();
   if (error || !data) throw error ?? new Error("issued_pdf_document_not_found");
   return data as { pdf_path: string | null; pdf_sha256: string | null };
@@ -89,13 +115,27 @@ async function download(sb: Supa, path: string): Promise<Uint8Array | null> {
 export async function storeIssuedPdf(sb: Supa, binderId: string, doc: IssuedDocument): Promise<Uint8Array> {
   const kind = kindOf(doc);
   if (doc.status === "draft") throw new Error("issued_pdf_draft");
-  const row = await storedRow(sb, kind, binderId, doc.id);
-  if (row.pdf_path) return readStored(sb, { kind, binderId, documentId: doc.id, path: row.pdf_path, sha: row.pdf_sha256! });
+  return storeTarget(sb, {
+    kind, id: doc.id, binderId, issuer: `binder:${binderId}`,
+    render: async () => fromBase64((await renderDocumentPdf(doc)).base64),
+  });
+}
 
-  const path = `${binderId}/${kind}/${doc.id}.pdf`;
+/** Pièce OPPE (facture ou avoir) : même règle, rangée sous `oppe/`, chaîne de l'émetteur « oppe ». */
+export async function storeOppeIssuedPdf(sb: Supa, kind: "oppe_invoice" | "oppe_credit_note", id: string,
+  doc: DocumentView | CreditNoteDocumentView): Promise<Uint8Array> {
+  return storeTarget(sb, { kind, id, binderId: null, issuer: "oppe", render: async () => fromBase64((await renderDocumentPdf(doc)).base64) });
+}
+
+async function storeTarget(sb: Supa, target: Target): Promise<Uint8Array> {
+  const { kind } = target;
+  const row = await storedRow(sb, target);
+  if (row.pdf_path) return readStored(sb, target, { path: row.pdf_path, sha: row.pdf_sha256! });
+
+  const path = pathOf(target);
   let bytes = await download(sb, path);
   if (!bytes) {
-    bytes = fromBase64((await renderDocumentPdf(doc)).base64);
+    bytes = await target.render();
     const { error } = await sb.storage
       .from(ISSUED_DOCUMENTS_BUCKET)
       .upload(path, bytes, { contentType: "application/pdf", upsert: false });
@@ -106,31 +146,25 @@ export async function storeIssuedPdf(sb: Supa, binderId: string, doc: IssuedDocu
     }
   }
   const sha = await sha256Hex(bytes);
-  const { data: written, error } = await sb
-    .from(tableOf(kind))
-    .update({ pdf_path: path, pdf_sha256: sha })
-    .eq("id", doc.id)
-    .eq("binder_id", binderId)
+  const { data: written, error } = await scoped(
+    sb.from(tableOf(kind)).update({ pdf_path: path, pdf_sha256: sha }).eq("id", target.id), target)
     .is("pdf_path", null)
     .select("id");
   if (error) throw error;
   if (!written?.length) {
-    const again = await storedRow(sb, kind, binderId, doc.id);
+    const again = await storedRow(sb, target);
     if (!again.pdf_path) throw new Error("issued_pdf_not_recorded");
-    return readStored(sb, { kind, binderId, documentId: doc.id, path: again.pdf_path, sha: again.pdf_sha256! });
+    return readStored(sb, target, { path: again.pdf_path, sha: again.pdf_sha256! });
   }
   return bytes;
 }
 
-async function readStored(
-  sb: Supa,
-  stored: { kind: Kind; binderId: string; documentId: string; path: string; sha: string },
-): Promise<Uint8Array> {
+async function readStored(sb: Supa, target: Target, stored: { path: string; sha: string }): Promise<Uint8Array> {
   const bytes = await download(sb, stored.path);
   const actual = bytes ? await sha256Hex(bytes) : null;
   if (!bytes || actual !== stored.sha) {
-    logIntegrityFailure({ kind: stored.kind, binderId: stored.binderId, documentId: stored.documentId, path: stored.path,
-      expectedSha256: stored.sha, actualSha256: actual });
+    await logIntegrityFailure(sb, target.issuer, { kind: target.kind, binderId: target.binderId, documentId: target.id,
+      path: stored.path, expectedSha256: stored.sha, actualSha256: actual });
     throw new IssuedPdfIntegrityError(stored.path);
   }
   return bytes;
