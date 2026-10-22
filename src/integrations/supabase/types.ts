@@ -1170,6 +1170,9 @@ export type Database = {
           iban: string | null
           invoice_notes: string | null
           invoice_prefix: string
+          invoice_prefix_pending: string | null
+          credit_note_prefix_pending: string | null
+          prefix_pending_from_year: number | null
           late_penalty_terms: string | null
           legal_form: string | null
           legal_name: string | null
@@ -1189,6 +1192,7 @@ export type Database = {
           vat_mention: string | null
           vat_number: string | null
           vat_on_debits: boolean
+          vat_filing_regime: string | null
           vat_regime: string | null
           website: string | null
           workshop_name: string | null
@@ -1210,6 +1214,9 @@ export type Database = {
           iban?: string | null
           invoice_notes?: string | null
           invoice_prefix?: string
+          invoice_prefix_pending?: string | null
+          credit_note_prefix_pending?: string | null
+          prefix_pending_from_year?: number | null
           late_penalty_terms?: string | null
           legal_form?: string | null
           legal_name?: string | null
@@ -1229,6 +1236,7 @@ export type Database = {
           vat_mention?: string | null
           vat_number?: string | null
           vat_on_debits?: boolean
+          vat_filing_regime?: string | null
           vat_regime?: string | null
           website?: string | null
           workshop_name?: string | null
@@ -1250,6 +1258,9 @@ export type Database = {
           iban?: string | null
           invoice_notes?: string | null
           invoice_prefix?: string
+          invoice_prefix_pending?: string | null
+          credit_note_prefix_pending?: string | null
+          prefix_pending_from_year?: number | null
           late_penalty_terms?: string | null
           legal_form?: string | null
           legal_name?: string | null
@@ -1269,6 +1280,7 @@ export type Database = {
           vat_mention?: string | null
           vat_number?: string | null
           vat_on_debits?: boolean
+          vat_filing_regime?: string | null
           vat_regime?: string | null
           website?: string | null
           workshop_name?: string | null
@@ -1504,6 +1516,8 @@ export type Database = {
           client: Json
           created_at: string
           credit_note_number: string
+          pdf_path: string | null
+          pdf_sha256: string | null
           currency: string
           id: string
           invoice_id: string
@@ -1524,6 +1538,8 @@ export type Database = {
           client: Json
           created_at?: string
           credit_note_number: string
+          pdf_path?: string | null
+          pdf_sha256?: string | null
           currency?: string
           id?: string
           invoice_id: string
@@ -1544,6 +1560,8 @@ export type Database = {
           client?: Json
           created_at?: string
           credit_note_number?: string
+          pdf_path?: string | null
+          pdf_sha256?: string | null
           currency?: string
           id?: string
           invoice_id?: string
@@ -1800,6 +1818,8 @@ export type Database = {
           late_penalty_terms: string | null
           legal_mentions: Json
           notes: string | null
+          pdf_path: string | null
+          pdf_sha256: string | null
           operation_nature: string | null
           paid_at: string | null
           payment_status: string
@@ -1882,6 +1902,8 @@ export type Database = {
           late_penalty_terms?: string | null
           legal_mentions?: Json
           notes?: string | null
+          pdf_path?: string | null
+          pdf_sha256?: string | null
           operation_nature?: string | null
           paid_at?: string | null
           payment_status?: string
@@ -1964,6 +1986,8 @@ export type Database = {
           late_penalty_terms?: string | null
           legal_mentions?: Json
           notes?: string | null
+          pdf_path?: string | null
+          pdf_sha256?: string | null
           operation_nature?: string | null
           paid_at?: string | null
           payment_status?: string
@@ -4744,30 +4768,36 @@ export type Database = {
           amount_cents: number
           created_at: string
           currency: string
-          evidence: string
+          evidence: string | null
           id: string
           invoice_id: string
           kind: string
+          payment_method: string
+          payment_reference: string | null
         }
         Insert: {
           actor_id: string
           amount_cents: number
           created_at?: string
           currency: string
-          evidence: string
+          evidence?: string | null
           id: string
           invoice_id: string
           kind: string
+          payment_method?: string
+          payment_reference?: string | null
         }
         Update: {
           actor_id?: string
           amount_cents?: number
           created_at?: string
           currency?: string
-          evidence?: string
+          evidence?: string | null
           id?: string
           invoice_id?: string
           kind?: string
+          payment_method?: string
+          payment_reference?: string | null
         }
         Relationships: [
           {
@@ -5112,18 +5142,33 @@ export type Database = {
         Args: { p_actor: string; p_binder: string; p_invoice: string }
         Returns: Json
       }
-      marketplace_record_external_settlement: {
-        Args: {
-          p_actor: string
-          p_amount: number
-          p_binder: string
-          p_evidence: string
-          p_id: string
-          p_invoice: string
-          p_kind: string
-        }
-        Returns: undefined
-      }
+      marketplace_record_external_settlement:
+        | {
+            Args: {
+              p_actor: string
+              p_amount: number
+              p_binder: string
+              p_evidence: string
+              p_id: string
+              p_invoice: string
+              p_kind: string
+            }
+            Returns: undefined
+          }
+        | {
+            Args: {
+              p_actor: string
+              p_amount: number
+              p_binder: string
+              p_id: string
+              p_invoice: string
+              p_kind: string
+              p_method: string
+              p_note: string | null
+              p_reference: string | null
+            }
+            Returns: undefined
+          }
       marketplace_set_case_payment_circuit: {
         Args: {
           p_actor: string

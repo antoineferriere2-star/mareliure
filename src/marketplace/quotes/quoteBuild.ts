@@ -27,6 +27,8 @@ export interface BillingProfile {
   siret: string | null;
   vatNumber: string | null;
   vatOnDebits: boolean;
+  /** Régime d'imposition de la TVA d'un atelier assujetti (réel simplifié ou normal). */
+  vatFilingRegime: VatFilingRegime | null;
   legalNotes: string | null;
   email: string | null;
   phone: string | null;
@@ -41,6 +43,9 @@ export interface BillingProfile {
   vatMention: string | null;
   quotePrefix: string;
   invoicePrefix: string;
+  /** Préfixe de facture demandé, appliqué à la première facture de `prefixPendingFromYear` (série jamais changée en cours d'année). */
+  invoicePrefixPending: string | null;
+  prefixPendingFromYear: number | null;
   quoteValidityDays: number;
   paymentTerms: string | null;
   paymentDelayDays: number | null;
@@ -66,6 +71,7 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
   siret: null,
   vatNumber: null,
   vatOnDebits: false,
+  vatFilingRegime: null,
   legalNotes: null,
   email: null,
   phone: null,
@@ -79,6 +85,8 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
   vatMention: null,
   quotePrefix: "D",
   invoicePrefix: "F",
+  invoicePrefixPending: null,
+  prefixPendingFromYear: null,
   quoteValidityDays: 30,
   paymentTerms: null,
   paymentDelayDays: 30,
@@ -97,6 +105,8 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
  */
 export const FRANCHISE_MENTION_SUGGESTION = "TVA non applicable, art. 293 B du CGI";
 
+export type VatFilingRegime = "reel_simplifie" | "reel_normal";
+
 /** L'émetteur tel qu'il est imprimé et figé dans le document. */
 export interface Issuer {
   workshopName: string | null;
@@ -113,6 +123,8 @@ export interface Issuer {
   siret: string | null;
   vatNumber: string | null;
   vatOnDebits: boolean;
+  /** Absent des pièces antérieures à la phase 1 de la facturation électronique. */
+  vatFilingRegime?: VatFilingRegime | null;
   legalNotes: string | null;
   email: string | null;
   phone: string | null;
@@ -140,6 +152,7 @@ export function issuerOf(profile: BillingProfile): Issuer {
     siret: profile.siret,
     vatNumber: profile.vatNumber,
     vatOnDebits: profile.vatOnDebits,
+    vatFilingRegime: profile.vatRegime === "VAT_LIABLE" ? profile.vatFilingRegime : null,
     legalNotes: profile.legalNotes,
     email: profile.email,
     phone: profile.phone,

@@ -322,15 +322,16 @@ const profileInput = (over: Partial<BillingProfileInput> = {}): BillingProfileIn
   legalName: "Atelier Dorure SARL",
   legalForm: "SARL",
   shareCapital: "5 000 €",
-  siren: "123 456 789",
+  siren: "732 829 320",
   addressLine1: "12 rue des Relieurs",
   addressLine2: null,
   postalCode: "45000",
   city: "Orléans",
   country: "FR",
-  siret: "123 456 789 00012",
+  siret: "732 829 320 00009",
   vatNumber: "FR12345678901",
   vatOnDebits: false,
+  vatFilingRegime: "reel_normal",
   legalNotes: "SARL au capital de 5 000 €",
   email: "atelier@example.test",
   phone: "02 00 00 00 00",
@@ -412,6 +413,8 @@ const quoteInput = (over: Partial<QuoteInput> = {}): QuoteInput => ({
 
 let world: ReturnType<typeof makeDb>;
 beforeEach(() => {
+  // La date d'émission est celle du serveur : les factures de ces scénarios sont émises « le jour J ».
+  vi.useFakeTimers({ toFake: ["Date"], now: new Date(`${TODAY}T10:00:00Z`) });
   world = makeDb();
   world.tables.marketplace_binder_members = [
     {
@@ -1079,7 +1082,7 @@ describe("devis accepté → facture", () => {
       clientBillingPostalCode: draft.client.postalCode,
       clientBillingCity: draft.client.city,
       clientBillingCountry: draft.client.country,
-      clientSiren: null,
+      clientSiren: "552100554",
       clientVatNumber: null,
       clientPurchaseOrderNumber: null,
       clientPublicServiceCode: null,
@@ -1159,7 +1162,8 @@ describe("devis accepté → facture", () => {
       43000, 8600, 51600,
     ]);
     expect([invoice.depositCents, invoice.balanceCents]).toEqual([15480, 36120]);
-    expect(invoice.issueDate).toBe("2026-09-25");
+    // La date demandée par l'écran est ignorée : une facture porte la date du serveur au jour de l'émission.
+    expect(invoice.issueDate).toBe(TODAY);
   });
 
   it("un numéro de facture distinct, et le lien « facture issue du devis X » dans les deux sens", async () => {
@@ -1221,7 +1225,7 @@ describe("devis accepté → facture", () => {
     expect(await listInvoices(world.sb, BINDER_A)).toHaveLength(1);
   });
 
-  it("en franchise, la facture exige la mention (et pas de numéro de TVA)", async () => {
+  it("en franchise sans mention saisie, l'article 293 B est posé d'office (et pas de numéro de TVA)", async () => {
     await saveBillingProfile(
       world.sb,
       BINDER_A,
@@ -1229,11 +1233,9 @@ describe("devis accepté → facture", () => {
     );
     const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
     await setQuoteStatus(world.sb, BINDER_A, quote.id, "accepted");
-    const draft = await convertQuoteToInvoice(world.sb, BINDER_A, quote.id, TODAY);
-    await expect(issueInvoice(world.sb, BINDER_A, draft.id)).rejects.toMatchObject({
-      code: "profile_incomplete",
-      missing: expect.arrayContaining(["Mention de TVA manquante"]),
-    });
+    await issuedInvoice(quote.id);
+    const call = world.rpcCalls.find((c) => c.name === "marketplace_binder_issue_invoice");
+    expect(call?.args.p_legal_mentions).toContain("TVA non applicable, art. 293 B du CGI");
   });
 
   describe("P1-8 — la mention de franchise est figée dans la facture", () => {
@@ -1311,14 +1313,12 @@ describe("devis accepté → facture", () => {
       expect((await issuedInvoice(quote.id)).vatMention).toBe(MENTION);
     });
 
-    it("sans mention nulle part : refus, aucune facture, aucun numéro consommé", async () => {
+    it("sans mention nulle part : la mention légale de franchise est posée d'office", async () => {
       const quote = await franchiseQuoteWithoutMention();
-      await expect(issuedInvoice(quote.id)).rejects.toMatchObject({
-        code: "profile_incomplete",
-        missing: expect.arrayContaining(["Mention de TVA manquante"]),
-      });
-      expect(await listInvoices(world.sb, BINDER_A)).toHaveLength(1);
-      expect((await getQuote(world.sb, BINDER_A, quote.id)).status).toBe("accepted");
+      const invoice = await issuedInvoice(quote.id);
+      expect(invoice.status).toBe("issued");
+      const call = world.rpcCalls.find((c) => c.name === "marketplace_binder_issue_invoice");
+      expect(call?.args.p_legal_mentions).toContain(MENTION);
     });
 
     it("le serveur transmet la mention effective à la fonction SQL", async () => {
@@ -1489,7 +1489,7 @@ describe("PDF", () => {
     const text = pdf.printed.join("\n");
     for (const expected of [
       "Atelier Dorure",
-      "SIRET 123 456 789 00012",
+      "SIRET 732 829 320 00009",
       "TVA FR12345678901",
       "DEVIS",
       "N° D-2026-0001",
@@ -1539,7 +1539,8 @@ describe("PDF", () => {
     expect(text).not.toContain("Tarif de base Ma Reliure");
     expect(text).not.toContain("OPR-0065");
     expect(text).not.toContain("reliure-fr-v1");
-    expect(printed.filter((value) => value === "TVA 20 %")).toHaveLength(1);
+    // Un seul taux : la TVA apparaît une fois, dans les totaux, avec sa base (pas sur chaque ligne).
+    expect(printed.filter((value) => value.startsWith("TVA 20 %"))).toHaveLength(1);
   });
 
   it("une facture PDF porte son numéro et le lien vers son devis", async () => {

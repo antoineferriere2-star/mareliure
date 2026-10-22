@@ -11,6 +11,14 @@ export const OPERATION_PHOTOS_KEY = ["marketplace", "binder", "operation-photos"
 
 /** Le profil tel que le serveur l'attend en écriture. */
 export function profileToInput(profile: BillingProfile) {
-  const { logoStoragePath: _path, logoUrl: _url, ...input } = profile;
-  return input;
+  // Le préfixe en attente est calculé par le serveur : il ne s'écrit jamais depuis le navigateur.
+  const {
+    logoStoragePath: _path,
+    logoUrl: _url,
+    invoicePrefixPending: _pending,
+    prefixPendingFromYear: _year,
+    ...input
+  } = profile;
+  // Renvoyer le préfixe en cours effacerait le préfixe en attente : c'est celui demandé qui est réécrit.
+  return { ...input, invoicePrefix: profile.invoicePrefixPending ?? profile.invoicePrefix };
 }

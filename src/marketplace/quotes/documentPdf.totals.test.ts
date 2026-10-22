@@ -79,6 +79,15 @@ describe("totaux du PDF : rien sous le bandeau du total", () => {
     expect(await hiddenUnderTotalBand(doc, "Total TTC")).toEqual([]);
   });
 
+  it("ventile la TVA par taux, chacun avec sa base HT", async () => {
+    const { printed } = await renderDocumentPdf(document({
+      vatBreakdown: [{ vatRateBps: 2000, baseHtCents: 25000, vatCents: 5000 }, { vatRateBps: 550, baseHtCents: 10000, vatCents: 550 }],
+    }));
+    const text = printed.join("\n").replace(/\u202f|\u00a0/g, " ");
+    expect(text).toMatch(/TVA 20 % sur 250,00 €/);
+    expect(text).toMatch(/TVA 5,5 % sur 100,00 €/);
+  });
+
   it("avec un acompte, dont les lignes suivent le bandeau", async () => {
     const doc = document({ depositType: "PERCENT", depositValue: 3000, depositCents: 12600, balanceCents: 29400 });
     expect(await hiddenUnderTotalBand(doc, "Total TTC")).toEqual([]);

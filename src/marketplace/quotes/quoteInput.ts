@@ -5,6 +5,8 @@
  * recalcule tout avec `computeQuote` et attribue le numéro lui-même. Les
  * schémas sont `.strict()` : un champ en plus est refusé, pas ignoré.
  */
+import { normalizeCountry } from "@/marketplace/invoices/countries";
+import { isValidSiren, isValidSiret, normalizeSiren } from "@/marketplace/invoices/siren";
 import { z } from "zod";
 import { quantityToHundredths } from "./quoteCalc";
 
@@ -17,6 +19,11 @@ const optionalText = (max: number) =>
     .nullish()
     .transform((v) => (v ? v : null));
 const uuid = z.string().uuid();
+/** SIREN / SIRET : espaces et points tolérés à la saisie, chiffres seuls en base, clé de Luhn vérifiée. */
+const companyId = (check: (value: string) => boolean, message: string) =>
+  optionalText(20)
+    .transform((v) => (v ? normalizeSiren(v) || null : null))
+    .refine((value) => !value || check(value), message);
 const mm = z.number().int().min(1).max(2000).nullable();
 
 export const quoteLineInput = z
@@ -75,7 +82,7 @@ export const quoteInput = z
         addressLine1: optionalText(300),
         postalCode: optionalText(20),
         city: optionalText(120),
-        country: optionalText(80),
+        country: optionalText(80).transform(normalizeCountry),
       })
       .strict(),
     book: z
@@ -128,15 +135,17 @@ export const billingProfileInput = z
     legalName: optionalText(200),
     legalForm: optionalText(120),
     shareCapital: optionalText(120),
-    siren: optionalText(20),
+    siren: companyId(isValidSiren, "SIREN invalide : 9 chiffres, clé de contrôle incorrecte"),
     addressLine1: optionalText(300),
     addressLine2: optionalText(300),
     postalCode: optionalText(20),
     city: optionalText(120),
     country: text(80).min(1).default("FR"),
-    siret: optionalText(20),
+    siret: companyId(isValidSiret, "SIRET invalide : 14 chiffres, clé de contrôle incorrecte"),
     vatNumber: optionalText(30),
     vatOnDebits: z.boolean().default(false),
+    /** Régime d'imposition de la TVA (assujetti) : conditionne la périodicité de l'e-reporting. */
+    vatFilingRegime: z.enum(["reel_simplifie", "reel_normal"]).nullable().default(null),
     legalNotes: optionalText(1000),
     email: optionalText(200),
     phone: optionalText(40),
@@ -193,7 +202,7 @@ export const clientInput = z
     addressLine1: optionalText(300),
     postalCode: optionalText(20),
     city: optionalText(120),
-    country: optionalText(80),
+    country: optionalText(80).transform(normalizeCountry),
     notes: optionalText(2000),
   })
   .strict();

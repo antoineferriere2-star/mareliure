@@ -13,6 +13,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
 import { PricingCatalogEditor } from "./catalog/PricingCatalogEditor";
 import { OperationPhotoLibrary } from "./catalog/OperationPhotoLibrary";
+import { isValidSiren, isValidSiret } from "@/marketplace/invoices/siren";
 import { CATALOG_KEY, PRICING_CATALOG_KEY, PROFILE_QUERY_KEY, profileToInput } from "./quoteQueryKeys";
 import { BinderPageHeader } from "../BinderPageUi";
 import { DOCUMENT_ACCENT_COLORS, DOCUMENT_LOGO_MAX_BYTES, DOCUMENT_LOGO_MIME_TYPES, type DocumentLogoMime } from "@/marketplace/quotes/documentBranding";
@@ -134,12 +135,18 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           {input("legalName", "Raison sociale")}
           {input("legalForm", "Forme juridique")}
           {input("shareCapital", "Capital social (si applicable)")}
-          {input("siren", "SIREN")}
+          <div>
+            {input("siren", "SIREN")}
+            {p.siren && !isValidSiren(p.siren) && <p className="mt-1 text-xs text-[#7a2230]">Ce SIREN ne passe pas le contrôle de la clé : vérifiez les 9 chiffres.</p>}
+          </div>
           {input("addressLine1", "Adresse", { autoComplete: "street-address" })}
           {input("addressLine2", "Complément d'adresse")}
           {input("postalCode", "Code postal", { autoComplete: "postal-code" })}
           {input("city", "Ville", { autoComplete: "address-level2" })}
-          {input("siret", "SIRET")}
+          <div>
+            {input("siret", "SIRET")}
+            {p.siret && !isValidSiret(p.siret) && <p className="mt-1 text-xs text-[#7a2230]">Ce SIRET ne passe pas le contrôle de la clé : vérifiez les 14 chiffres.</p>}
+          </div>
           {input("vatNumber", "Numéro de TVA (si assujetti)")}
           {input("email", "E-mail", { type: "email" })}
           {input("phone", "Téléphone", { type: "tel" })}
@@ -209,7 +216,16 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           <Field label="TVA appliquée aux nouveaux devis (%)" htmlFor="profile-default-vat" hint="Chaque nouveau devis reprend ce taux. Il reste modifiable dans le Workbench.">
             <input id="profile-default-vat" inputMode="decimal" className={FIELD} value={p.defaultVat} onChange={(e) => set({ defaultVat: e.target.value })} />
           </Field>
-          <Field label="Mention de TVA imprimée" htmlFor="profile-vatMention" hint={p.vatRegime === "FRANCHISE" ? "Obligatoire sur une facture en franchise." : undefined}>
+          {p.vatRegime === "VAT_LIABLE" && (
+            <Field label="Régime d'imposition de la TVA" htmlFor="profile-vatFilingRegime" hint="Indiqué sur votre espace professionnel des impôts ou par votre comptable. Requis pour émettre une facture.">
+              <select id="profile-vatFilingRegime" className={FIELD} value={p.vatFilingRegime ?? ""} onChange={(e) => set({ vatFilingRegime: (e.target.value || null) as BillingProfile["vatFilingRegime"] })}>
+                <option value="">À renseigner</option>
+                <option value="reel_simplifie">Réel simplifié</option>
+                <option value="reel_normal">Réel normal</option>
+              </select>
+            </Field>
+          )}
+          <Field label="Mention de TVA imprimée" htmlFor="profile-vatMention" hint={p.vatRegime === "FRANCHISE" ? "Laissée vide, la facture porte « TVA non applicable, art. 293 B du CGI »." : p.vatRegime === "EXEMPT" ? "Obligatoire : le texte qui fonde l'exonération." : undefined}>
             <input id="profile-vatMention" className={FIELD} value={text("vatMention")} onChange={(e) => set({ vatMention: e.target.value || null })} />
           </Field>
         </div>
@@ -226,8 +242,13 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           <Field label="Préfixe des devis" htmlFor="profile-quotePrefix" hint="ex. D → D-2026-0001">
             <input id="profile-quotePrefix" className={FIELD} value={p.quotePrefix} onChange={(e) => set({ quotePrefix: e.target.value })} />
           </Field>
-          <Field label="Préfixe des factures" htmlFor="profile-invoicePrefix" hint="ex. F → F-2026-0001">
-            <input id="profile-invoicePrefix" className={FIELD} value={p.invoicePrefix} onChange={(e) => set({ invoicePrefix: e.target.value })} />
+          <Field label="Préfixe des factures" htmlFor="profile-invoicePrefix" hint="ex. F → F-2026-0001. Une fois une facture émise, un nouveau préfixe ne s'applique qu'au 1er janvier suivant.">
+            <input id="profile-invoicePrefix" className={FIELD} value={p.invoicePrefixPending ?? p.invoicePrefix} onChange={(e) => set({ invoicePrefix: e.target.value, invoicePrefixPending: null })} />
+            {p.invoicePrefixPending && p.prefixPendingFromYear && (
+              <p className="mt-1 text-xs text-[#4a4036]">
+                Série en cours : {p.invoicePrefix}. Le préfixe {p.invoicePrefixPending} s'appliquera à la première facture de {p.prefixPendingFromYear}.
+              </p>
+            )}
           </Field>
           <Field label="Validité d'un devis (jours)" htmlFor="profile-validity">
             <input id="profile-validity" inputMode="numeric" className={FIELD} value={p.validity} onChange={(e) => set({ validity: e.target.value })} />
@@ -259,7 +280,7 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
         </div>
       </section>
 
-      {mutation.isError && <ErrorNote>Vérifiez les champs (préfixes de 1 à 8 lettres ou chiffres, taux et validité valides), puis réessayez.</ErrorNote>}
+      {mutation.isError && <ErrorNote>Vérifiez les champs (SIREN et SIRET valides, préfixes de 1 à 8 lettres ou chiffres, taux et validité valides), puis réessayez.</ErrorNote>}
       <div className="flex items-center gap-3">
         <button type="submit" className={PRIMARY_BUTTON} disabled={mutation.isPending}>
           {mutation.isPending ? "Enregistrement…" : "Enregistrer"}
