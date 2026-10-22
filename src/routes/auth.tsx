@@ -9,6 +9,7 @@ import { resolvePostAuthDestination } from "@/build/services/postAuthRoute";
 import { resolveMarketplacePostAuthDestination } from "@/marketplace/auth/postAuthRoute";
 import { getMyBinderProfile, getMyPendingBinderInvitations } from "@/marketplace/services/marketplace.data.functions";
 import { MaReliureAuthPage } from "@/marketplace/pages/auth/MaReliureAuthPage";
+import { authPageTitle } from "@/marketplace/pages/auth/authPageTitle";
 import { isMaReliure } from "@/brand";
 import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBrand.server";
 import { isFineBinderyLocale, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
@@ -45,12 +46,13 @@ export const Route = createFileRoute("/auth")({
         ],
       };
     }
-    // Arrivé par « Créer mon espace atelier » (?space=atelier), le relieur ne lit pas « Retrouver mes livres » (revue #162).
-    const atelier = (match.search as { space?: string }).space === "atelier";
-    const title =
-      loaderData?.brand === "FINE_BINDERY"
-        ? atelier ? "Workshop space — Fine Bindery" : "My Books — Fine Bindery"
-        : atelier ? "Mon espace atelier — Ma Reliure" : "Retrouver mes livres — Ma Reliure";
+    // Arrivé par « Créer mon espace atelier » (?space=atelier), le relieur ne lit pas « Retrouver mes livres » (revues #162, #165).
+    const search = match.search as { space?: string; locale?: string };
+    const title = authPageTitle(
+      loaderData?.brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE",
+      search.space === "atelier" ? "binder" : "customer",
+      isFineBinderyLocale(search.locale) ? search.locale : "en",
+    );
     return { meta: [{ title }, { name: "robots", content: "noindex,nofollow" }] };
   },
   component: AuthPage,
