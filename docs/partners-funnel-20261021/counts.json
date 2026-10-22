@@ -1,0 +1,134 @@
+{
+  "at": "2026-10-21T09:36:01.821606+00:00",
+  "windows": [
+    {
+      "days": 30,
+      "since": "2026-09-21T09:36:01.821606+00:00",
+      "until": "2026-10-21T09:36:01.821606+00:00",
+      "spaces": {
+        "raw": 3,
+        "remaining": 1,
+        "demo_or_test": 2
+      },
+      "page_views": {
+        "raw": 115,
+        "sessions": 109,
+        "visitors": 21,
+        "stored_bot": 0,
+        "test_referrer": 2,
+        "after_explicit_exclusions": 113,
+        "visitors_after_explicit_exclusions": 20
+      },
+      "applications": {
+        "raw": 2,
+        "remaining": 0,
+        "test_addresses": 2,
+        "pending_remaining": 0,
+        "converted_remaining": 0
+      }
+    },
+    {
+      "days": 60,
+      "since": "2026-08-22T09:36:01.821606+00:00",
+      "until": "2026-10-21T09:36:01.821606+00:00",
+      "spaces": {
+        "raw": 4,
+        "remaining": 1,
+        "demo_or_test": 3
+      },
+      "page_views": {
+        "raw": 123,
+        "sessions": 115,
+        "visitors": 27,
+        "stored_bot": 0,
+        "test_referrer": 2,
+        "after_explicit_exclusions": 121,
+        "visitors_after_explicit_exclusions": 26
+      },
+      "applications": {
+        "raw": 3,
+        "remaining": 0,
+        "test_addresses": 3,
+        "pending_remaining": 0,
+        "converted_remaining": 0
+      }
+    }
+  ],
+  "read_only": "on",
+  "partner_weeks_60d": [
+    {
+      "week": "2026-09-07T00:00:00",
+      "views": 4,
+      "visitors": 2
+    },
+    {
+      "week": "2026-09-14T00:00:00",
+      "views": 4,
+      "visitors": 4
+    },
+    {
+      "week": "2026-09-21T00:00:00",
+      "views": 17,
+      "visitors": 9
+    },
+    {
+      "week": "2026-09-28T00:00:00",
+      "views": 58,
+      "visitors": 7
+    },
+    {
+      "week": "2026-10-05T00:00:00",
+      "views": 37,
+      "visitors": 4
+    },
+    {
+      "week": "2026-10-12T00:00:00",
+      "views": 3,
+      "visitors": 1
+    }
+  ],
+  "space_statuses_60d": [
+    {
+      "raw": 4,
+      "status": "approved",
+      "remaining": 1
+    }
+  ],
+  "partner_devices_60d": [
+    {
+      "views": 119,
+      "device": "desktop",
+      "visitors": 25
+    },
+    {
+      "views": 4,
+      "device": "mobile",
+      "visitors": 2
+    }
+  ],
+  "partner_referrers_60d": [
+    {
+      "host": "(absent)",
+      "views": 109
+    },
+    {
+      "host": "mareliure.fr",
+      "views": 11
+    },
+    {
+      "host": "127.0.0.1:8263",
+      "views": 2
+    },
+    {
+      "host": "www.google.com",
+      "views": 1
+    }
+  ],
+  "application_statuses_60d": [
+    {
+      "raw": 3,
+      "status": "accepted",
+      "remaining": 0
+    }
+  ]
+}

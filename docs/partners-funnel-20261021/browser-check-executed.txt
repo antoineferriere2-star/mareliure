@@ -1,0 +1,36 @@
+import fs from 'node:fs';
+import puppeteer from '../mareliure-brief6-20261020/tools/node_modules/puppeteer-core/lib/puppeteer/puppeteer-core.js';
+const out='D:/CodexProjects/outputs/mareliure-brief8-20261021';
+const browser=await puppeteer.launch({executablePath:'D:/CodexData/ms-playwright/chromium-1234/chrome-win64/chrome.exe',headless:true,userDataDir:fs.mkdtempSync(out+'/chrome-funnel-'),args:['--no-sandbox','--disable-background-networking']});
+const results=[];
+try {
+ for (const [mode,width,height] of [['desktop',1280,900],['mobile',375,812]]) {
+  const context=await browser.createBrowserContext(),page=await context.newPage();
+  await page.setViewport({width,height,deviceScaleFactor:1,isMobile:mode==='mobile',hasTouch:mode==='mobile'});
+  const blocked=[],sent=[],errors=[],consoleErrors=[],badResponses=[];
+  page.on('pageerror',e=>errors.push(e.message));page.on('console',m=>{if(m.type()==='error')consoleErrors.push(m.text());});
+  page.on('response',r=>{if(r.status()>=400)badResponses.push({url:r.url(),status:r.status()});});
+  await page.setRequestInterception(true);
+  page.on('request',r=>{const u=new URL(r.url());if(u.hostname!=='mareliure.fr'||!['GET','HEAD'].includes(r.method())||u.pathname==='/api/public/track-view'){blocked.push({url:r.url(),method:r.method()});return r.abort();}sent.push({url:r.url(),method:r.method(),type:r.resourceType()});return r.continue();});
+  const response=await page.goto('https://mareliure.fr/partenaires-relieurs',{waitUntil:'domcontentloaded',timeout:60000});
+  await page.waitForSelector('#candidature',{timeout:30000});
+  await page.evaluate(async()=>{await document.fonts.ready;});
+  await page.waitForFunction(()=>{const key=Object.keys(document).find(k=>k.startsWith('__reactContainer$'));return key&&document[key]?.stateNode?.current?.memoizedState?.isDehydrated===false;},{timeout:30000});
+  const snapshot=await page.evaluate(()=>{
+   const position=e=>({top:Math.round(e.getBoundingClientRect().top+scrollY),height:Math.round(e.getBoundingClientRect().height),text:e.textContent?.trim()});
+   const form=document.querySelector('#candidature form');
+   return {title:document.title,width:innerWidth,scrollWidth:document.documentElement.scrollWidth,documentHeight:document.documentElement.scrollHeight,h1:document.querySelector('h1')?.textContent,headings:[...document.querySelectorAll('main h1,main h2,main h3')].map(position),candidate:position(document.querySelector('#candidature')),hero:position(document.querySelector('main section')),ctas:[...document.querySelectorAll('a[href="/auth?space=atelier"]')].map(e=>({...position(e),href:e.getAttribute('href')})),fields:[...form.querySelectorAll('input,textarea')].filter(e=>e.tabIndex!==-1).map(e=>({id:e.id,type:e.type,required:e.required,label:e.labels?.[0]?.textContent.trim(),min:e.min,max:e.max,maxLength:e.maxLength,invalid:e.required&&!e.checkValidity()})),skills:form.querySelectorAll('button[aria-pressed]').length,bodyText:document.querySelector('main').innerText,forms:document.forms.length};
+  });
+  await page.screenshot({path:out+'/partners-'+mode+'-hero.png'});
+  await page.$eval('#candidature',e=>e.scrollIntoView({block:'start',behavior:'instant'}));
+  await page.screenshot({path:out+'/partners-'+mode+'-candidature.png'});
+  const missing=await page.$eval('#candidature form',form=>[...form.querySelectorAll(':invalid')].map(e=>({id:e.id,type:e.type,validationMessage:e.validationMessage})));
+  await page.$eval('a[href="/auth?space=atelier"]',e=>e.scrollIntoView({block:'center',behavior:'instant'}));
+  await page.click('a[href="/auth?space=atelier"]');
+  await page.waitForFunction(()=>location.pathname==='/auth'&&document.body.innerText.includes('Créer mon espace atelier ou me connecter'),{timeout:30000});
+  const auth=await page.evaluate(()=>({url:location.href,width:innerWidth,title:document.title,bodyText:document.body.innerText,fields:[...document.querySelectorAll('input')].map(e=>({type:e.type,required:e.required,label:e.labels?.[0]?.textContent.trim()}))}));
+  await page.screenshot({path:out+'/partners-'+mode+'-auth.png'});
+  const row={at:new Date().toISOString(),mode,status:response.status(),snapshot,missing,auth,blocked,sent,errors,consoleErrors,badResponses};results.push(row);fs.writeFileSync(out+'/partners-ui.json',JSON.stringify(results,null,2));console.log(mode,JSON.stringify({status:row.status,width:snapshot.width,height:snapshot.documentHeight,candidateTop:snapshot.candidate.top,ctaCount:snapshot.ctas.length,fields:snapshot.fields.length,required:snapshot.fields.filter(f=>f.required).length,blocked:blocked.length,sentMethods:[...new Set(sent.map(r=>r.method))],errors,badResponses}));
+  await context.close();
+ }
+}finally{await browser.close();}
