@@ -15,7 +15,7 @@ import { fail } from "@/build/services/serverError";
 export const ISSUED_DOCUMENTS_BUCKET = "binder-issued-documents";
 
 type IssuedDocument = DocumentView | CreditNoteDocumentView;
-type Kind = "invoice" | "credit_note" | "oppe_invoice" | "oppe_credit_note";
+type Kind = "invoice" | "credit_note" | "oppe_invoice" | "oppe_credit_note" | "oppe_fee_document";
 
 /** Une pièce à ranger : sa table, sa ligne, l'émetteur dont la chaîne reçoit les anomalies, son rendu. */
 interface Target {
@@ -65,11 +65,13 @@ async function logIntegrityFailure(sb: Supa, issuer: string, context: { kind: Ki
   }
 }
 
-const TABLES: Record<Kind, "marketplace_binder_invoices" | "marketplace_binder_credit_notes" | "marketplace_oppe_invoices" | "marketplace_oppe_credit_notes"> = {
+const TABLES: Record<Kind, "marketplace_binder_invoices" | "marketplace_binder_credit_notes" | "marketplace_oppe_invoices"
+  | "marketplace_oppe_credit_notes" | "marketplace_workshop_fee_documents"> = {
   invoice: "marketplace_binder_invoices",
   credit_note: "marketplace_binder_credit_notes",
   oppe_invoice: "marketplace_oppe_invoices",
   oppe_credit_note: "marketplace_oppe_credit_notes",
+  oppe_fee_document: "marketplace_workshop_fee_documents",
 };
 const tableOf = (kind: Kind) => TABLES[kind];
 const pathOf = (target: Target) =>
@@ -122,7 +124,7 @@ export async function storeIssuedPdf(sb: Supa, binderId: string, doc: IssuedDocu
 }
 
 /** Pièce OPPE (facture ou avoir) : même règle, rangée sous `oppe/`, chaîne de l'émetteur « oppe ». */
-export async function storeOppeIssuedPdf(sb: Supa, kind: "oppe_invoice" | "oppe_credit_note", id: string,
+export async function storeOppeIssuedPdf(sb: Supa, kind: "oppe_invoice" | "oppe_credit_note" | "oppe_fee_document", id: string,
   doc: DocumentView | CreditNoteDocumentView): Promise<Uint8Array> {
   return storeTarget(sb, { kind, id, binderId: null, issuer: "oppe", render: async () => fromBase64((await renderDocumentPdf(doc)).base64) });
 }

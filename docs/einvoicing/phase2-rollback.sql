@@ -28,6 +28,13 @@ DROP TRIGGER IF EXISTS marketplace_journal_proposal_payment_update ON public.mar
 DROP TRIGGER IF EXISTS marketplace_journal_oppe_refund_insert ON public.marketplace_oppe_refunds;
 DROP TRIGGER IF EXISTS marketplace_journal_oppe_refund_update ON public.marketplace_oppe_refunds;
 DROP TRIGGER IF EXISTS marketplace_journal_prefix_change ON public.marketplace_binder_billing_profiles;
+DROP TRIGGER IF EXISTS marketplace_journal_fee_document ON public.marketplace_workshop_fee_documents;
+DROP TRIGGER IF EXISTS marketplace_journal_fee_document_pdf ON public.marketplace_workshop_fee_documents;
+
+-- Pièces de frais OPPE : immuabilité d'origine (20261007180000).
+CREATE OR REPLACE FUNCTION public.marketplace_fee_document_immutable() RETURNS trigger
+LANGUAGE plpgsql SET search_path = public AS $$ BEGIN RAISE EXCEPTION 'issued_fee_document_immutable'; END $$;
+REVOKE UPDATE (pdf_path, pdf_sha256) ON public.marketplace_workshop_fee_documents FROM service_role;
 
 -- Pièces OPPE : immuabilité d'origine, sans exception (20261005150000).
 CREATE OR REPLACE FUNCTION public.marketplace_forbid_oppe_document_change() RETURNS trigger
@@ -45,6 +52,6 @@ END $$;
 
 -- Fonctions ouvertes au serveur : retirées (le journal reste lisible par le propriétaire).
 REVOKE EXECUTE ON FUNCTION public.marketplace_journal_verify(text), public.marketplace_journal_close_due(text),
-  public.marketplace_journal_record_event(text, text, jsonb, uuid) FROM service_role;
+  public.marketplace_journal_record_event(text, text, jsonb, uuid), public.marketplace_journal_issuers() FROM service_role;
 
 COMMIT;

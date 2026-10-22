@@ -12,6 +12,8 @@ const PROBLEM_LABELS: Record<IntegrityProblem["problem"], string> = {
   document_modified: "Une pièce a été modifiée après son émission",
   pdf_hash_changed: "L'empreinte d'un PDF rangé a changé",
   document_not_journaled: "Une pièce émise n'est pas au journal",
+  refund_not_journaled: "Un remboursement n'est pas au journal",
+  entry_in_closed_period: "Une entrée est datée d'une période déjà close",
 };
 const MONTHS = ["janvier", "février", "mars", "avril", "mai", "juin", "juillet", "août", "septembre", "octobre", "novembre", "décembre"];
 

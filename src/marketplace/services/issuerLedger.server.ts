@@ -7,9 +7,10 @@ import type { Supa } from "@/build/services/adminAuth.server";
 import { todayInParis } from "@/marketplace/quotes/quoteStatus";
 import { oppeCreditNoteDocument, oppeInvoiceDocument, type OppeCreditNoteRecord, type OppeInvoiceItemRecord,
   type OppeInvoiceRecord } from "@/marketplace/invoices/oppeInvoice";
-import { buildIssuerArchive, pdfFileName, type JournalRow } from "@/marketplace/ledger/archive";
+import { buildIssuerArchive, isPiece, pdfFileName, pieceOf, type JournalRow } from "@/marketplace/ledger/archive";
 import { getCreditNote, getInvoice } from "./binderQuotes.server";
 import { IssuedPdfIntegrityError, storeIssuedPdf, storeOppeIssuedPdf } from "./issuedDocumentPdf.server";
+import { workshopFeeDocumentView } from "./workshopFeeDocuments.server";
 
 export const OPPE_ISSUER = "oppe";
 export const binderIssuer = (binderId: string) => `binder:${binderId}`;
@@ -86,8 +87,24 @@ async function issuerLabel(sb: Supa, issuer: string): Promise<string> {
   return data?.siren ? `${name} — SIREN ${data.siren}` : name;
 }
 
+const SUPPLIER_INVOICES_BUCKET = "supplier-invoices-private";
+
 async function pdfOf(sb: Supa, issuer: string, entry: JournalRow): Promise<Uint8Array> {
   const id = entry.document_id!;
+  if (entry.document_kind === "supplier_invoice") {
+    // Le document remis à OPPE, tel que déposé (outil ou PDF externe de l'atelier).
+    const { data, error } = await sb.storage.from(SUPPLIER_INVOICES_BUCKET).download(String(entry.payload.document_path));
+    if (error || !data) throw error ?? new Error("supplier_invoice_document_missing");
+    return new Uint8Array(await data.arrayBuffer());
+  }
+  if (entry.document_kind === "oppe_fee_document") {
+    const { data: row, error } = await sb.from("marketplace_workshop_fee_documents").select("*").eq("id", id).maybeSingle();
+    if (error || !row) throw error ?? new Error("fee_document_not_found");
+    const original = row.invoice_document_id
+      ? (await sb.from("marketplace_workshop_fee_documents").select("*").eq("id", row.invoice_document_id).maybeSingle()).data ?? undefined
+      : undefined;
+    return storeOppeIssuedPdf(sb, "oppe_fee_document", id, workshopFeeDocumentView(row, original));
+  }
   if (entry.document_kind === "binder_invoice" || entry.document_kind === "binder_credit_note") {
     const binderId = issuer.slice("binder:".length);
     const doc = entry.document_kind === "binder_invoice" ? await getInvoice(sb, binderId, id) : await getCreditNote(sb, binderId, id);
@@ -110,14 +127,28 @@ async function pdfOf(sb: Supa, issuer: string, entry: JournalRow): Promise<Uint8
     oppeCreditNoteDocument(invoice as unknown as OppeInvoiceRecord, note as unknown as OppeCreditNoteRecord));
 }
 
+const JOURNAL_PAGE = 1000;
+
 export async function exportIssuerArchive(sb: Supa, issuer: string, period: ArchivePeriod, actorId: string | null) {
   const bounds = periodBounds(period);
   await closeDuePeriods(sb, issuer);
-  // Fenêtre élargie d'un jour de chaque côté, puis filtre sur le jour civil à Paris.
-  const { data: rows, error } = await sb.from("marketplace_issuer_journal").select("*").eq("issuer_key", issuer)
-    .gte("occurred_at", dayBefore(bounds.start)).lt("occurred_at", dayAfter(bounds.end)).order("seq");
-  if (error) throw error;
-  const entries = ((rows ?? []) as unknown as JournalRow[]).filter((e) => {
+  // Instantané : le dernier rang est capturé d'abord, puis le journal est lu page par page jusqu'à lui
+  // (une lecture unique serait tronquée par la limite de réponse, sans que rien ne le signale).
+  const { data: head, error: headError } = await sb.from("marketplace_issuer_journal").select("seq").eq("issuer_key", issuer)
+    .order("seq", { ascending: false }).limit(1).maybeSingle();
+  if (headError) throw headError;
+  const lastSeq = Number(head?.seq ?? 0);
+  const rows: JournalRow[] = [];
+  for (let from = 0; ; from += JOURNAL_PAGE) {
+    // Fenêtre élargie d'un jour de chaque côté, puis filtre sur le jour civil à Paris.
+    const { data: page, error } = await sb.from("marketplace_issuer_journal").select("*").eq("issuer_key", issuer)
+      .lte("seq", lastSeq).gte("occurred_at", dayBefore(bounds.start)).lt("occurred_at", dayAfter(bounds.end))
+      .order("seq").range(from, from + JOURNAL_PAGE - 1);
+    if (error) throw error;
+    rows.push(...((page ?? []) as unknown as JournalRow[]));
+    if (!page || page.length < JOURNAL_PAGE) break;
+  }
+  const entries = rows.filter((e) => {
     const day = parisDayOf(e.occurred_at);
     return day >= bounds.start && day < bounds.end;
   });
@@ -134,8 +165,8 @@ export async function exportIssuerArchive(sb: Supa, issuer: string, period: Arch
 
   const pdfs: { name: string; bytes: Uint8Array }[] = [];
   const missingPdfs: { number: string; reason: string }[] = [];
-  for (const entry of entries.filter((e) => e.event === "issued")) {
-    const number = String(entry.payload.invoice_number ?? entry.payload.credit_note_number ?? entry.payload.number ?? entry.document_id);
+  for (const entry of entries.filter(isPiece)) {
+    const number = pieceOf(entry).number || String(entry.document_id);
     try {
       pdfs.push({ name: pdfFileName(number), bytes: await pdfOf(sb, issuer, entry) });
     } catch (pdfError) {
@@ -174,14 +205,9 @@ const toBase64 = (bytes: Uint8Array) => {
 // ---------------------------------------------------------------------------------------------
 
 export async function listIssuers(sb: Supa) {
-  const { data, error } = await sb.from("marketplace_issuer_journal").select("issuer_key, seq, occurred_at")
-    .order("seq", { ascending: false });
-  if (error) throw error;
-  const latest = new Map<string, { issuer: string; entries: number; lastAt: string }>();
-  for (const row of data ?? []) {
-    if (!latest.has(row.issuer_key)) latest.set(row.issuer_key, { issuer: row.issuer_key, entries: Number(row.seq), lastAt: row.occurred_at });
-  }
-  const issuers = [...latest.values()];
+  const rows = await rpcOrThrow<{ issuer_key: string; entries: number; last_seq: number; last_at: string }[]>(
+    sb.rpc("marketplace_journal_issuers"));
+  const issuers = rows.map((r) => ({ issuer: r.issuer_key, entries: Number(r.entries), lastAt: r.last_at }));
   return Promise.all(issuers.map(async (i) => ({ ...i, label: await issuerLabel(sb, i.issuer) })));
 }
 

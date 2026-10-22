@@ -40,9 +40,10 @@ export type Database = {
   public: {
     Tables: {
       marketplace_workshop_fee_documents: {
-        Row: { id: string; binder_id: string; payment_id: string; invoice_document_id: string | null; kind: string; number: string; brand: string; issued_at: string; stripe_application_fee_id: string | null; refunded_fee_cumulative_cents: number; total_ht_cents: number; total_vat_cents: number; total_ttc_cents: number; document: Json }
+        Row: { id: string; binder_id: string; payment_id: string; invoice_document_id: string | null; kind: string; number: string; brand: string; issued_at: string; stripe_application_fee_id: string | null; refunded_fee_cumulative_cents: number; total_ht_cents: number; total_vat_cents: number; total_ttc_cents: number; document: Json; pdf_path: string | null; pdf_sha256: string | null }
         Insert: { id?: string; binder_id: string; payment_id: string; invoice_document_id?: string | null; kind: string; number: string; brand: string; issued_at?: string; stripe_application_fee_id?: string | null; refunded_fee_cumulative_cents?: number; total_ht_cents: number; total_vat_cents: number; total_ttc_cents: number; document: Json }
-        Update: never
+        // Seule la pose unique du PDF rangé est permise (migration 20261024100000).
+        Update: { pdf_path?: string | null; pdf_sha256?: string | null }
         Relationships: []
       }
       marketplace_workshop_checkout_attempts: {
@@ -4995,6 +4996,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      marketplace_journal_issuers: {
+        Args: Record<PropertyKey, never>
+        Returns: { issuer_key: string; entries: number; last_seq: number; last_at: string }[]
+      }
       marketplace_journal_close_due: {
         Args: { p_issuer?: string | null }
         Returns: number

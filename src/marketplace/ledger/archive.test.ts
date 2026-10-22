@@ -71,3 +71,22 @@ describe("archive d'un émetteur", () => {
     expect(crc32(new TextEncoder().encode("123456789")).toString(16)).toBe("cbf43926");
   });
 });
+
+describe("pièces de toutes les activités de l'émetteur", () => {
+  it("compte la facture d'atelier à OPPE et les pièces de frais, avoirs en négatif", async () => {
+    const entries = await chain([
+      { ...base, event: "submitted", event_key: "s", document_kind: "supplier_invoice", document_id: "si1",
+        payload: { invoice_number: "F-OPPE-0001", issue_date: "2026-03-12", amount_ht_cents: 10_000, vat_cents: 2_000, amount_ttc_cents: 12_000 } },
+      { ...base, issuer_key: "oppe", event: "issued", event_key: "f", document_kind: "oppe_fee_document", document_id: "fd1",
+        payload: { kind: "credit_note", number: "MRF-AV-0001", issued_at: "2026-03-13T08:00:00Z", total_ht_cents: 50, total_vat_cents: 10,
+          total_ttc_cents: 60, document: { customer: { name: "Atelier QA" } } } },
+    ]);
+    const built = await buildIssuerArchive({ issuer: { key: "binder:x", label: "QA" }, period: { start: "2026-03-01", end: "2026-04-01", label: "mars" },
+      entries, anchor: null, closures: [], pdfs: [], missingPdfs: [], softwareVersion: "x", generatedAt: new Date("2026-04-02T08:00:00Z") });
+    const files = unzipStore(built.zip);
+    const factures = new TextDecoder().decode(files[1].bytes);
+    expect(factures).toContain("2026-03-12;F-OPPE-0001;facture à OPPE;OPPE SAS;100,00;20,00;120,00;EUR;1;");
+    expect(factures).toContain("2026-03-13;MRF-AV-0001;avoir de frais;Atelier QA;-0,50;-0,10;-0,60;EUR;2;");
+    expect(JSON.parse(new TextDecoder().decode(files[3].bytes))).toHaveLength(2);
+  });
+});

@@ -66,17 +66,29 @@ const str = (value: unknown) => (value === null || value === undefined ? "" : St
 const num = (value: unknown) => (typeof value === "number" ? value : Number(value ?? 0));
 
 /** Numéro et date d'une pièce, quelle que soit la table d'origine. */
-function pieceOf(entry: JournalRow) {
+export function pieceOf(entry: JournalRow) {
   const p = entry.payload;
+  const supplier = entry.document_kind === "supplier_invoice";
+  const fee = entry.document_kind === "oppe_fee_document";
+  const doc = (fee ? p.document : null) as Record<string, unknown> | null;
   const number = str(p.invoice_number ?? p.credit_note_number ?? p.number);
-  const date = str(p.issue_date);
-  const client = p.customer && typeof p.customer === "object" ? str((p.customer as Record<string, unknown>).name) : str(p.client_name ?? (p.client as Record<string, unknown> | undefined)?.name);
-  const credit = entry.document_kind === "binder_credit_note" || entry.document_kind === "oppe_credit_note";
-  return { number, date, client, credit };
+  const date = str(p.issue_date ?? (fee ? str(p.issued_at).slice(0, 10) : ""));
+  const customer = (p.customer ?? doc?.customer) as Record<string, unknown> | undefined;
+  const client = supplier ? "OPPE SAS" : customer && typeof customer === "object" ? str(customer.name)
+    : str(p.client_name ?? (p.client as Record<string, unknown> | undefined)?.name);
+  const credit = entry.document_kind === "binder_credit_note" || entry.document_kind === "oppe_credit_note" || (fee && p.kind === "credit_note");
+  const amount = (key: "ht" | "vat" | "ttc") => Math.abs(num(supplier
+    ? { ht: p.amount_ht_cents, vat: p.vat_cents, ttc: p.amount_ttc_cents }[key]
+    : { ht: p.total_ht_cents, vat: p.total_vat_cents, ttc: p.total_ttc_cents }[key]));
+  const type = supplier ? "facture à OPPE" : fee ? (credit ? "avoir de frais" : "facture de frais") : credit ? "avoir" : "facture";
+  return { number, date, client, credit, type, ht: amount("ht"), vat: amount("vat"), ttc: amount("ttc") };
 }
 
+/** Une entrée du journal qui est une pièce : émise, ou facture d'atelier remise à OPPE. */
+export const isPiece = (e: JournalRow) => e.event === "issued" || (e.event === "submitted" && e.document_kind === "supplier_invoice");
+
 export async function buildIssuerArchive(input: ArchiveInput): Promise<BuiltArchive> {
-  const pieces = input.entries.filter((e) => e.event === "issued");
+  const pieces = input.entries.filter(isPiece);
   const money = input.entries.filter((e) => e.event === "payment" || e.event === "refund");
 
   const facturesCsv = toCsv(
@@ -84,9 +96,8 @@ export async function buildIssuerArchive(input: ArchiveInput): Promise<BuiltArch
     pieces.map((e) => {
       const piece = pieceOf(e);
       const sign = piece.credit ? -1 : 1;
-      return [piece.date, piece.number, piece.credit ? "avoir" : "facture", piece.client,
-        euros(sign * num(e.payload.total_ht_cents)), euros(sign * num(e.payload.total_vat_cents)), euros(sign * num(e.payload.total_ttc_cents)),
-        str(e.payload.currency), e.seq, e.hash];
+      return [piece.date, piece.number, piece.type, piece.client, euros(sign * piece.ht), euros(sign * piece.vat), euros(sign * piece.ttc),
+        str(e.payload.currency ?? "EUR"), e.seq, e.hash];
     }),
   );
   const encaissementsCsv = toCsv(

@@ -15,7 +15,7 @@ import {
 } from "@/marketplace/stripe/stripeClient.server";
 import { workshopOrigin } from "@/marketplace/billing/workshopSubscription";
 import { workshopFeeDocumentView } from "./workshopFeeDocuments.server";
-import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
+import { ISSUED_PDF_UNAVAILABLE_MESSAGE, IssuedPdfIntegrityError, storeOppeIssuedPdf } from "./issuedDocumentPdf.server";
 import { requireWorkshopAccess } from "./workshopAccess.server";
 
 export const getMyWorkshopSubscription = createServerFn({ method: "GET" })
@@ -68,7 +68,15 @@ export const getMyWorkshopFeeDocumentPdf = createServerFn({ method: "GET" })
         .eq("id", row.data.invoice_document_id).eq("binder_id", binderId).single()
       : { data: undefined, error: null };
     if (original.error) throw original.error;
-    const { base64 } = await renderDocumentPdf(workshopFeeDocumentView(row.data, original.data));
+    // Rangé une fois (chaîne de l'émetteur « oppe »), puis resservi tel quel.
+    const bytes = await storeOppeIssuedPdf(sb, "oppe_fee_document", row.data.id, workshopFeeDocumentView(row.data, original.data))
+      .catch((error) => {
+        if (error instanceof IssuedPdfIntegrityError) fail(409, ISSUED_PDF_UNAVAILABLE_MESSAGE);
+        throw error;
+      });
+    let binary = "";
+    for (let i = 0; i < bytes.length; i += 0x8000) binary += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+    const base64 = btoa(binary);
     return { filename: `${row.data.number.replace(/[^A-Za-z0-9._-]/g, "_")}.pdf`, base64 };
   });
 

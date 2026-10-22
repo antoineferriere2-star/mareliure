@@ -53,6 +53,7 @@ function fakeSb(journal: Awaited<ReturnType<typeof rows>>) {
     }),
     from: (table: string) => {
       const filters: ((r: Record<string, unknown>) => boolean)[] = [];
+      let window: [number, number] | null = null;
       const q: Record<string, unknown> = {};
       Object.assign(q, {
         select: () => q,
@@ -61,10 +62,13 @@ function fakeSb(journal: Awaited<ReturnType<typeof rows>>) {
         lt: (c: string, v: string) => (filters.push((r) => String(r[c]) < v), q),
         lte: () => q,
         order: () => q,
+        limit: () => q,
+        // Pagination : une seule page ici (3 entrées), la boucle s'arrête d'elle-même.
+        range: (a: number, b: number) => ((window = [a, b]), q),
         maybeSingle: async () => ({ data: table === "marketplace_issuer_journal" ? { seq: 7, hash: "1".repeat(64) }
           : { legal_name: "Atelier QA", siren: "732829320" }, error: null }),
         then: (resolve: (v: unknown) => void) => resolve({ data: table === "marketplace_issuer_journal"
-          ? journal.filter((r) => filters.every((f) => f(r as never))) : [], error: null }),
+          ? journal.filter((r) => filters.every((f) => f(r as never))).slice(window?.[0] ?? 0, window ? window[1] + 1 : undefined) : [], error: null }),
       });
       return q;
     },
@@ -92,6 +96,23 @@ describe("export d'archives d'un émetteur", () => {
       p_payload: expect.objectContaining({ manifest_sha256: result.manifestSha256, period_start: "2026-03-01", missing_pdfs: 1, chain_ok: true }) });
     expect(calls[0].name).toBe("marketplace_journal_close_due");
     expect(result.filename).toBe("archives-atelier-2026-03.zip");
+  });
+
+  it("lit tout le journal, page par page, au-delà de la limite de réponse (1 005 entrées)", async () => {
+    const many: Record<string, unknown>[] = [];
+    let prev = "1".repeat(64);
+    for (let i = 0; i < 1005; i += 1) {
+      const seq = 8 + i;
+      const canonical = JSON.stringify({ seq });
+      const hash = await journalHash(prev, canonical);
+      many.push({ issuer_key: ISSUER, seq, event: "export", event_key: `e${seq}`, document_kind: null, document_id: null, actor: "system",
+        occurred_at: "2026-03-10T10:00:00.000000Z", payload: {}, canonical, prev_hash: prev, hash });
+      prev = hash;
+    }
+    const { sb, calls } = fakeSb(many as never);
+    const result = await exportIssuerArchive(sb, ISSUER, { year: 2026, month: 3 }, null);
+    expect(result.entries).toBe(1005);
+    expect(calls.find((c) => c.name === "marketplace_journal_record_event")!.args.p_payload).toMatchObject({ chain_ok: true, entries: 1005, last_seq: 1012 });
   });
 
   it("borne l'année et le mois", () => {

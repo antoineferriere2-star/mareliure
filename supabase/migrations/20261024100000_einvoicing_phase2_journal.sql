@@ -65,7 +65,8 @@ CREATE TABLE IF NOT EXISTS public.marketplace_issuer_journal (
     'closure', 'export', 'pdf_integrity_failure', 'modification_refused', 'attestation_draft')),
   event_key text NOT NULL,
   document_kind text CHECK (document_kind IN ('binder_invoice', 'binder_credit_note', 'settlement', 'online_payment',
-    'supplier_invoice', 'supplier_payment', 'oppe_invoice', 'oppe_credit_note', 'proposal_payment', 'oppe_refund')),
+    'supplier_invoice', 'supplier_payment', 'oppe_invoice', 'oppe_credit_note', 'proposal_payment', 'oppe_refund',
+    'oppe_fee_document')),
   document_id uuid,
   occurred_at timestamptz NOT NULL,
   actor text,
@@ -104,15 +105,38 @@ CREATE OR REPLACE FUNCTION public.marketplace_journal_envelope(
     'actor', p_actor, 'payload', p_payload)
 $$;
 
+-- Horloge du journal : l'instant réel d'inscription (clock_timestamp), lu une fois le verrou de l'émetteur obtenu.
+-- now() figerait le début de la transaction : une transaction commencée avant minuit et validée après une clôture
+-- écrirait dans la période close. Seul le propriétaire peut la remplacer, sur une copie, pour une recette datée.
+CREATE OR REPLACE FUNCTION public.marketplace_journal_clock()
+RETURNS timestamptz LANGUAGE sql VOLATILE SET search_path = public AS $$
+  SELECT clock_timestamp()
+$$;
+
+-- Verrou de l'émetteur : pris par tout ajout et par toute clôture, avant de lire l'instant ou de calculer quoi que ce soit.
+CREATE OR REPLACE FUNCTION public.marketplace_journal_lock(p_issuer text)
+RETURNS void LANGUAGE sql SET search_path = public AS $$
+  SELECT pg_advisory_xact_lock(hashtextextended('marketplace_issuer_journal:' || p_issuer, 0))
+$$;
+
 -- Ajout interne (jamais ouvert au rôle de service) : verrou par émetteur, idempotent par clé d'événement.
+-- `p_at` n'est fourni que par la reprise initiale des pièces existantes (leur instant d'émission d'origine).
 CREATE OR REPLACE FUNCTION public.marketplace_journal_append(
-  p_issuer text, p_event text, p_event_key text, p_kind text, p_doc uuid, p_payload jsonb, p_actor text
+  p_issuer text, p_event text, p_event_key text, p_kind text, p_doc uuid, p_payload jsonb, p_actor text, p_at timestamptz DEFAULT NULL
 ) RETURNS text LANGUAGE plpgsql SET search_path = public AS $$
-DECLARE v_seq bigint; v_prev text; v_hash text; v_at timestamptz := public.marketplace_issue_clock(); v_canonical text;
+DECLARE v_seq bigint; v_prev text; v_hash text; v_at timestamptz; v_canonical text; v_day date;
 BEGIN
-  PERFORM pg_advisory_xact_lock(hashtextextended('marketplace_issuer_journal:' || p_issuer, 0));
+  PERFORM public.marketplace_journal_lock(p_issuer);
   SELECT hash INTO v_hash FROM public.marketplace_issuer_journal WHERE issuer_key = p_issuer AND event_key = p_event_key;
   IF FOUND THEN RETURN v_hash; END IF;
+  v_at := coalesce(p_at, public.marketplace_journal_clock());
+  v_day := public.marketplace_paris_date(v_at);
+  -- Une période close est close : aucune entrée (hors clôture) ne peut y être inscrite.
+  IF p_event <> 'closure' AND EXISTS (SELECT 1 FROM public.marketplace_issuer_journal
+    WHERE issuer_key = p_issuer AND event = 'closure'
+      AND (payload ->> 'period_start')::date <= v_day AND v_day < (payload ->> 'period_end')::date) THEN
+    RAISE EXCEPTION 'journal_period_closed % %', p_issuer, v_day;
+  END IF;
   SELECT seq, hash INTO v_seq, v_prev FROM public.marketplace_issuer_journal WHERE issuer_key = p_issuer ORDER BY seq DESC LIMIT 1;
   v_seq := coalesce(v_seq, 0) + 1;
   v_prev := coalesce(v_prev, repeat('0', 64));
@@ -158,6 +182,8 @@ BEGIN
       FROM public.marketplace_oppe_invoice_items it WHERE it.invoice_id = p_id;
   ELSIF p_kind = 'oppe_credit_note' THEN
     SELECT to_jsonb(c) - ARRAY['pdf_path', 'pdf_sha256'] INTO v FROM public.marketplace_oppe_credit_notes c WHERE c.id = p_id;
+  ELSIF p_kind = 'oppe_fee_document' THEN
+    SELECT to_jsonb(f) - ARRAY['pdf_path', 'pdf_sha256'] INTO v FROM public.marketplace_workshop_fee_documents f WHERE f.id = p_id;
   ELSE
     RETURN NULL; -- paiements en ligne, paiements OPPE, remboursements : instantané à l'événement, sans relecture.
   END IF;
@@ -168,7 +194,8 @@ END $$;
 -- Pièces dont le contenu est relu à la vérification (immuables par construction).
 CREATE OR REPLACE FUNCTION public.marketplace_journal_rereadable(p_kind text)
 RETURNS boolean LANGUAGE sql IMMUTABLE SET search_path = public AS $$
-  SELECT p_kind IN ('binder_invoice', 'binder_credit_note', 'settlement', 'supplier_invoice', 'supplier_payment', 'oppe_invoice', 'oppe_credit_note')
+  SELECT p_kind IN ('binder_invoice', 'binder_credit_note', 'settlement', 'supplier_invoice', 'supplier_payment', 'oppe_invoice',
+    'oppe_credit_note', 'oppe_fee_document')
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -264,6 +291,10 @@ CREATE CONSTRAINT TRIGGER marketplace_journal_oppe_invoice AFTER INSERT ON publi
 DROP TRIGGER IF EXISTS marketplace_journal_oppe_credit_note ON public.marketplace_oppe_credit_notes;
 CREATE CONSTRAINT TRIGGER marketplace_journal_oppe_credit_note AFTER INSERT ON public.marketplace_oppe_credit_notes
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION public.marketplace_journal_on_document('oppe_credit_note', 'issued');
+-- Factures et avoirs de frais émis par OPPE aux ateliers (circuit C).
+DROP TRIGGER IF EXISTS marketplace_journal_fee_document ON public.marketplace_workshop_fee_documents;
+CREATE CONSTRAINT TRIGGER marketplace_journal_fee_document AFTER INSERT ON public.marketplace_workshop_fee_documents
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW EXECUTE FUNCTION public.marketplace_journal_on_document('oppe_fee_document', 'issued');
 DROP TRIGGER IF EXISTS marketplace_journal_proposal_payment_insert ON public.marketplace_commercial_proposal_payments;
 CREATE CONSTRAINT TRIGGER marketplace_journal_proposal_payment_insert AFTER INSERT ON public.marketplace_commercial_proposal_payments
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (NEW.paid_at IS NOT NULL)
@@ -329,6 +360,27 @@ BEGIN
 END $$;
 GRANT UPDATE (pdf_path, pdf_sha256) ON public.marketplace_oppe_invoices, public.marketplace_oppe_credit_notes TO service_role;
 
+-- Pièces de frais OPPE : même règle, PDF posé une fois.
+ALTER TABLE public.marketplace_workshop_fee_documents ADD COLUMN IF NOT EXISTS pdf_path text, ADD COLUMN IF NOT EXISTS pdf_sha256 text;
+ALTER TABLE public.marketplace_workshop_fee_documents DROP CONSTRAINT IF EXISTS marketplace_workshop_fee_documents_pdf_check;
+ALTER TABLE public.marketplace_workshop_fee_documents ADD CONSTRAINT marketplace_workshop_fee_documents_pdf_check
+  CHECK ((pdf_path IS NULL) = (pdf_sha256 IS NULL) AND (pdf_sha256 IS NULL OR pdf_sha256 ~ '^[0-9a-f]{64}$'));
+CREATE OR REPLACE FUNCTION public.marketplace_fee_document_immutable()
+RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
+BEGIN
+  IF TG_OP = 'UPDATE'
+    AND (to_jsonb(NEW) - ARRAY['pdf_path', 'pdf_sha256']) = (to_jsonb(OLD) - ARRAY['pdf_path', 'pdf_sha256'])
+    AND OLD.pdf_path IS NULL THEN
+    RETURN NEW;
+  END IF;
+  RAISE EXCEPTION 'issued_fee_document_immutable';
+END $$;
+GRANT UPDATE (pdf_path, pdf_sha256) ON public.marketplace_workshop_fee_documents TO service_role;
+DROP TRIGGER IF EXISTS marketplace_journal_fee_document_pdf ON public.marketplace_workshop_fee_documents;
+CREATE CONSTRAINT TRIGGER marketplace_journal_fee_document_pdf AFTER UPDATE ON public.marketplace_workshop_fee_documents
+  DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (OLD.pdf_sha256 IS NULL AND NEW.pdf_sha256 IS NOT NULL)
+  EXECUTE FUNCTION public.marketplace_journal_on_document('oppe_fee_document', 'pdf_stored');
+
 DROP TRIGGER IF EXISTS marketplace_journal_oppe_invoice_pdf ON public.marketplace_oppe_invoices;
 CREATE CONSTRAINT TRIGGER marketplace_journal_oppe_invoice_pdf AFTER UPDATE ON public.marketplace_oppe_invoices
   DEFERRABLE INITIALLY DEFERRED FOR EACH ROW WHEN (OLD.pdf_sha256 IS NULL AND NEW.pdf_sha256 IS NOT NULL)
@@ -375,11 +427,18 @@ BEGIN
         WHEN 'binder_invoice' THEN (SELECT pdf_sha256 FROM public.marketplace_binder_invoices WHERE id = e.document_id)
         WHEN 'binder_credit_note' THEN (SELECT pdf_sha256 FROM public.marketplace_binder_credit_notes WHERE id = e.document_id)
         WHEN 'oppe_invoice' THEN (SELECT pdf_sha256 FROM public.marketplace_oppe_invoices WHERE id = e.document_id)
-        WHEN 'oppe_credit_note' THEN (SELECT pdf_sha256 FROM public.marketplace_oppe_credit_notes WHERE id = e.document_id) END
+        WHEN 'oppe_credit_note' THEN (SELECT pdf_sha256 FROM public.marketplace_oppe_credit_notes WHERE id = e.document_id)
+        WHEN 'oppe_fee_document' THEN (SELECT pdf_sha256 FROM public.marketplace_workshop_fee_documents WHERE id = e.document_id) END
         INTO v_last;
       IF v_last IS DISTINCT FROM e.payload ->> 'sha256' THEN
         v_problems := v_problems || jsonb_build_object('seq', e.seq, 'problem', 'pdf_hash_changed', 'document_kind', e.document_kind, 'document_id', e.document_id);
       END IF;
+    END IF;
+    IF e.event <> 'closure' AND EXISTS (SELECT 1 FROM public.marketplace_issuer_journal c
+      WHERE c.issuer_key = p_issuer AND c.event = 'closure' AND c.seq < e.seq
+        AND (c.payload ->> 'period_start')::date <= public.marketplace_paris_date(e.occurred_at)
+        AND public.marketplace_paris_date(e.occurred_at) < (c.payload ->> 'period_end')::date) THEN
+      v_problems := v_problems || jsonb_build_object('seq', e.seq, 'problem', 'entry_in_closed_period');
     END IF;
     v_prev := e.hash;
     v_expected := e.seq + 1;
@@ -394,18 +453,32 @@ BEGIN
         UNION ALL SELECT 'binder_credit_note', id FROM public.marketplace_binder_credit_notes WHERE binder_id = v_binder
         UNION ALL SELECT 'settlement', s.id FROM public.marketplace_external_settlements s JOIN public.marketplace_binder_invoices i ON i.id = s.invoice_id WHERE i.binder_id = v_binder
         UNION ALL SELECT 'supplier_invoice', id FROM public.marketplace_oppe_supplier_invoices WHERE binder_id = v_binder
+        UNION ALL SELECT 'supplier_payment', p.id FROM public.marketplace_oppe_supplier_payments p
+          JOIN public.marketplace_oppe_supplier_invoices s ON s.id = p.invoice_id WHERE s.binder_id = v_binder
+        UNION ALL SELECT 'online_payment', id FROM public.marketplace_workshop_online_payments WHERE binder_id = v_binder AND paid_at IS NOT NULL
       ) d WHERE NOT EXISTS (SELECT 1 FROM public.marketplace_issuer_journal j WHERE j.issuer_key = p_issuer AND j.document_kind = d.k AND j.document_id = d.id)), '[]'::jsonb);
+    -- Le cumul remboursé de chaque paiement en ligne doit égaler la somme de ses remboursements journalisés :
+    -- retirer le dernier remboursement, même en fin de chaîne, se voit ici.
+    v_problems := v_problems || coalesce((SELECT jsonb_agg(jsonb_build_object('problem', 'refund_not_journaled', 'document_kind', 'online_payment',
+        'document_id', p.id, 'expected_cents', p.refunded_cents, 'journaled_cents', coalesce(r.total, 0)))
+      FROM public.marketplace_workshop_online_payments p
+      LEFT JOIN (SELECT document_id, sum((payload ->> 'refund_cents')::bigint) AS total FROM public.marketplace_issuer_journal
+        WHERE issuer_key = p_issuer AND event = 'refund' AND document_kind = 'online_payment' GROUP BY 1) r ON r.document_id = p.id
+      WHERE p.binder_id = v_binder AND p.refunded_cents <> coalesce(r.total, 0)), '[]'::jsonb);
   ELSIF p_issuer = 'oppe' THEN
     v_problems := v_problems || coalesce((SELECT jsonb_agg(jsonb_build_object('problem', 'document_not_journaled', 'document_kind', k, 'document_id', id))
       FROM (
         SELECT 'oppe_invoice' k, id FROM public.marketplace_oppe_invoices
         UNION ALL SELECT 'oppe_credit_note', id FROM public.marketplace_oppe_credit_notes
+        UNION ALL SELECT 'oppe_fee_document', id FROM public.marketplace_workshop_fee_documents
+        UNION ALL SELECT 'proposal_payment', proposal_id FROM public.marketplace_commercial_proposal_payments WHERE paid_at IS NOT NULL
+        UNION ALL SELECT 'oppe_refund', id FROM public.marketplace_oppe_refunds WHERE status = 'succeeded'
       ) d WHERE NOT EXISTS (SELECT 1 FROM public.marketplace_issuer_journal j WHERE j.issuer_key = 'oppe' AND j.document_kind = d.k AND j.document_id = d.id)), '[]'::jsonb);
   END IF;
 
   RETURN jsonb_build_object('issuer', p_issuer, 'ok', jsonb_array_length(v_problems) = 0, 'entries', v_count,
     'last_seq', v_expected - 1, 'last_hash', v_prev, 'problems', v_problems,
-    'verified_at', to_char(public.marketplace_issue_clock() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
+    'verified_at', to_char(public.marketplace_journal_clock() AT TIME ZONE 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS"Z"'));
 END $$;
 
 -- ---------------------------------------------------------------------------
@@ -416,14 +489,34 @@ RETURNS jsonb LANGUAGE sql STABLE SET search_path = public AS $$
   WITH entries AS (
     SELECT * FROM public.marketplace_issuer_journal
     WHERE issuer_key = p_issuer AND public.marketplace_paris_date(occurred_at) >= p_start AND public.marketplace_paris_date(occurred_at) < p_end
+  ), raw_docs AS (
+    -- Toutes les pièces de l'émetteur : factures et avoirs (atelier, OPPE, frais OPPE) et factures d'atelier à OPPE.
+    SELECT document_kind, payload,
+      document_kind IN ('binder_credit_note', 'oppe_credit_note')
+        OR (document_kind = 'oppe_fee_document' AND payload ->> 'kind' = 'credit_note') AS credit,
+      CASE WHEN document_kind = 'supplier_invoice' THEN (payload ->> 'amount_ht_cents')::bigint ELSE (payload ->> 'total_ht_cents')::bigint END AS ht,
+      CASE WHEN document_kind = 'supplier_invoice' THEN (payload ->> 'vat_cents')::bigint ELSE (payload ->> 'total_vat_cents')::bigint END AS vat,
+      CASE WHEN document_kind = 'supplier_invoice' THEN (payload ->> 'amount_ttc_cents')::bigint ELSE (payload ->> 'total_ttc_cents')::bigint END AS ttc,
+      CASE
+        WHEN document_kind = 'supplier_invoice' THEN jsonb_build_array(jsonb_build_object('rate_bps', coalesce((payload ->> 'vat_rate_bps')::bigint, 0),
+          'base_ht_cents', (payload ->> 'amount_ht_cents')::bigint, 'vat_cents', (payload ->> 'vat_cents')::bigint))
+        WHEN document_kind = 'oppe_fee_document' THEN coalesce(payload -> 'document' -> 'vat_breakdown', '[]'::jsonb)
+        ELSE coalesce(payload -> 'vat_breakdown', '[]'::jsonb) END AS breakdown
+    FROM entries WHERE event = 'issued' OR (event = 'submitted' AND document_kind = 'supplier_invoice')
   ), docs AS (
-    SELECT CASE WHEN document_kind IN ('binder_credit_note', 'oppe_credit_note') THEN -1 ELSE 1 END AS sign, document_kind, payload
-    FROM entries WHERE event = 'issued'
+    -- Signe normalisé une seule fois : un avoir compte en négatif, quel que soit le signe de son stockage
+    -- (les avoirs OPPE portent déjà une ventilation négative, ceux des ateliers une ventilation positive).
+    SELECT document_kind, payload, credit, CASE WHEN credit THEN -1 ELSE 1 END AS sign,
+      CASE WHEN credit THEN -abs(ht) ELSE ht END AS ht, CASE WHEN credit THEN -abs(vat) ELSE vat END AS vat,
+      CASE WHEN credit THEN -abs(ttc) ELSE ttc END AS ttc, breakdown
+    FROM raw_docs
   ), vat AS (
     SELECT coalesce((b ->> 'vatRateBps'), (b ->> 'rate_bps'))::bigint AS rate,
-      sum(d.sign * coalesce((b ->> 'baseHtCents'), (b ->> 'base_ht_cents'))::bigint) AS base,
-      sum(d.sign * coalesce((b ->> 'vatCents'), (b ->> 'vat_cents'))::bigint) AS vat
-    FROM docs d CROSS JOIN LATERAL jsonb_array_elements(coalesce(d.payload -> 'vat_breakdown', '[]'::jsonb)) b GROUP BY 1
+      sum(CASE WHEN d.credit THEN -abs(coalesce((b ->> 'baseHtCents'), (b ->> 'base_ht_cents'))::bigint)
+        ELSE coalesce((b ->> 'baseHtCents'), (b ->> 'base_ht_cents'))::bigint END) AS base,
+      sum(CASE WHEN d.credit THEN -abs(coalesce((b ->> 'vatCents'), (b ->> 'vat_cents'))::bigint)
+        ELSE coalesce((b ->> 'vatCents'), (b ->> 'vat_cents'))::bigint END) AS vat
+    FROM docs d CROSS JOIN LATERAL jsonb_array_elements(d.breakdown) b GROUP BY 1
   ), money AS (
     SELECT CASE
         WHEN document_kind = 'settlement' THEN payload ->> 'payment_method'
@@ -441,9 +534,9 @@ RETURNS jsonb LANGUAGE sql STABLE SET search_path = public AS $$
     'entries', (SELECT count(*) FROM entries),
     'first_seq', (SELECT min(seq) FROM entries), 'last_seq', (SELECT max(seq) FROM entries),
     'invoices', (SELECT count(*) FROM docs WHERE sign = 1), 'credit_notes', (SELECT count(*) FROM docs WHERE sign = -1),
-    'total_ht_cents', coalesce((SELECT sum(sign * (payload ->> 'total_ht_cents')::bigint) FROM docs), 0),
-    'total_vat_cents', coalesce((SELECT sum(sign * (payload ->> 'total_vat_cents')::bigint) FROM docs), 0),
-    'total_ttc_cents', coalesce((SELECT sum(sign * (payload ->> 'total_ttc_cents')::bigint) FROM docs), 0),
+    'total_ht_cents', coalesce((SELECT sum(ht) FROM docs), 0),
+    'total_vat_cents', coalesce((SELECT sum(vat) FROM docs), 0),
+    'total_ttc_cents', coalesce((SELECT sum(ttc) FROM docs), 0),
     'vat_by_rate', coalesce((SELECT jsonb_agg(jsonb_build_object('rate_bps', rate, 'base_ht_cents', base, 'vat_cents', vat) ORDER BY rate) FROM vat), '[]'::jsonb),
     'payments_by_method', coalesce((SELECT jsonb_object_agg(method, amount) FROM money), '{}'::jsonb))
 $$;
@@ -452,10 +545,11 @@ CREATE OR REPLACE FUNCTION public.marketplace_journal_close_period(p_issuer text
 RETURNS text LANGUAGE plpgsql SET search_path = public AS $$
 DECLARE v_end date; v_key text; v_prev_closure text; v_last record;
 BEGIN
+  PERFORM public.marketplace_journal_lock(p_issuer);
   v_end := CASE p_kind WHEN 'day' THEN p_start + 1 WHEN 'month' THEN (p_start + interval '1 month')::date
     WHEN 'year' THEN (p_start + interval '1 year')::date END;
   IF v_end IS NULL THEN RAISE EXCEPTION 'closure_kind_invalid'; END IF;
-  IF v_end > public.marketplace_paris_date(public.marketplace_issue_clock()) THEN RAISE EXCEPTION 'closure_period_not_over'; END IF;
+  IF v_end > public.marketplace_paris_date(public.marketplace_journal_clock()) THEN RAISE EXCEPTION 'closure_period_not_over'; END IF;
   v_key := 'closure:' || p_kind || ':' || to_char(p_start, 'YYYY-MM-DD');
   SELECT hash INTO v_prev_closure FROM public.marketplace_issuer_journal
     WHERE issuer_key = p_issuer AND event = 'closure' AND payload ->> 'kind' = p_kind ORDER BY seq DESC LIMIT 1;
@@ -473,7 +567,7 @@ END $$;
 -- avant chaque vérification ou export.
 CREATE OR REPLACE FUNCTION public.marketplace_journal_close_due(p_issuer text DEFAULT NULL)
 RETURNS integer LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
-DECLARE i record; d date; v_today date := public.marketplace_paris_date(public.marketplace_issue_clock()); v_first date; v_n integer := 0;
+DECLARE i record; d date; v_today date := public.marketplace_paris_date(public.marketplace_journal_clock()); v_first date; v_n integer := 0;
 BEGIN
   FOR i IN SELECT issuer_key, min(public.marketplace_paris_date(occurred_at)) AS first_day FROM public.marketplace_issuer_journal
     WHERE (p_issuer IS NULL OR issuer_key = p_issuer) AND event <> 'closure' GROUP BY 1 LOOP
@@ -503,6 +597,13 @@ BEGIN
   END LOOP;
   RETURN v_n;
 END $$;
+
+-- Inventaire des émetteurs par agrégat : jamais tronqué par une limite de lecture.
+CREATE OR REPLACE FUNCTION public.marketplace_journal_issuers()
+RETURNS TABLE (issuer_key text, entries bigint, last_seq bigint, last_at timestamptz)
+LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT j.issuer_key, count(*), max(j.seq), max(j.occurred_at) FROM public.marketplace_issuer_journal j GROUP BY 1 ORDER BY 1
+$$;
 
 -- ---------------------------------------------------------------------------
 -- 8. Événements de l'application (export, anomalie de PDF, modification refusée, modèle d'attestation).
@@ -552,11 +653,16 @@ END $$;
 -- ---------------------------------------------------------------------------
 REVOKE ALL ON public.marketplace_issuer_journal FROM PUBLIC, anon, authenticated, service_role;
 GRANT SELECT ON public.marketplace_issuer_journal TO service_role;
-REVOKE ALL ON FUNCTION public.marketplace_journal_append(text, text, text, text, uuid, jsonb, text),
+REVOKE ALL ON FUNCTION public.marketplace_journal_lock(text) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.marketplace_journal_clock() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.marketplace_journal_clock() TO service_role;
+REVOKE ALL ON FUNCTION public.marketplace_journal_append(text, text, text, text, uuid, jsonb, text, timestamptz),
   public.marketplace_journal_close_period(text, text, date), public.marketplace_journal_on_document(),
   public.marketplace_journal_on_prefix_change(), public.marketplace_journal_document(text, uuid),
   public.marketplace_journal_period_totals(text, date, date)
   FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.marketplace_journal_issuers() FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.marketplace_journal_issuers() TO service_role;
 REVOKE ALL ON FUNCTION public.marketplace_journal_verify(text), public.marketplace_journal_close_due(text),
   public.marketplace_journal_record_event(text, text, jsonb, uuid), public.marketplace_canonical_json(jsonb),
   public.marketplace_journal_hash(text, text), public.marketplace_jsonb_restrict(jsonb, jsonb),
@@ -588,33 +694,34 @@ BEGIN
         FROM public.marketplace_oppe_supplier_payments p JOIN public.marketplace_oppe_supplier_invoices s ON s.id = p.invoice_id
       UNION ALL SELECT 'oppe_invoice', 'issued', id, 'oppe', issued_at FROM public.marketplace_oppe_invoices
       UNION ALL SELECT 'oppe_credit_note', 'issued', id, 'oppe', issued_at FROM public.marketplace_oppe_credit_notes
+      UNION ALL SELECT 'oppe_fee_document', 'issued', id, 'oppe', issued_at FROM public.marketplace_workshop_fee_documents
     ) x ORDER BY at, k, id
   LOOP
     PERFORM public.marketplace_journal_append(r.issuer, r.ev, r.ev || ':' || r.k || ':' || r.id, r.k, r.id,
-      public.marketplace_journal_document(r.k, r.id), 'backfill');
+      public.marketplace_journal_document(r.k, r.id), 'backfill', r.at);
   END LOOP;
   -- Encaissements en ligne et paiements OPPE déjà reçus, et PDF déjà rangés.
   FOR r IN SELECT * FROM public.marketplace_workshop_online_payments WHERE paid_at IS NOT NULL ORDER BY paid_at LOOP
     PERFORM public.marketplace_journal_append('binder:' || r.binder_id, 'payment', 'payment:online_payment:' || r.id, 'online_payment', r.id,
       jsonb_build_object('payment_id', r.id, 'invoice_id', r.invoice_id, 'method', 'carte', 'amount_cents', r.amount_cents,
-        'currency', r.currency, 'paid_at', r.paid_at, 'payment_intent_id', r.payment_intent_id), 'backfill');
+        'currency', r.currency, 'paid_at', r.paid_at, 'payment_intent_id', r.payment_intent_id), 'backfill', r.paid_at);
     IF r.refunded_cents > 0 THEN
       PERFORM public.marketplace_journal_append('binder:' || r.binder_id, 'refund', 'refund:online_payment:' || r.id || ':' || r.refunded_cents,
         'online_payment', r.id, jsonb_build_object('payment_id', r.id, 'invoice_id', r.invoice_id, 'method', 'carte',
           'refunded_total_cents', r.refunded_cents, 'refund_cents', r.refunded_cents, 'currency', r.currency,
-          'payment_intent_id', r.payment_intent_id), 'backfill');
+          'payment_intent_id', r.payment_intent_id), 'backfill', r.updated_at);
     END IF;
   END LOOP;
   FOR r IN SELECT p.*, i.number AS invoice_number FROM public.marketplace_commercial_proposal_payments p
     LEFT JOIN public.marketplace_oppe_invoices i ON i.proposal_id = p.proposal_id WHERE p.paid_at IS NOT NULL ORDER BY p.paid_at LOOP
     PERFORM public.marketplace_journal_append('oppe', 'payment', 'payment:proposal_payment:' || r.proposal_id, 'proposal_payment', r.proposal_id,
       jsonb_build_object('proposal_id', r.proposal_id, 'method', 'carte', 'amount_cents', r.amount_paid_cents, 'currency', r.paid_currency,
-        'paid_at', r.paid_at, 'payment_intent_id', r.stripe_payment_intent_id, 'invoice_number', r.invoice_number), 'backfill');
+        'paid_at', r.paid_at, 'payment_intent_id', r.stripe_payment_intent_id, 'invoice_number', r.invoice_number), 'backfill', r.paid_at);
   END LOOP;
   FOR r IN SELECT * FROM public.marketplace_oppe_refunds WHERE status = 'succeeded' ORDER BY updated_at LOOP
     PERFORM public.marketplace_journal_append('oppe', 'refund', 'refund:oppe_refund:' || r.id, 'oppe_refund', r.id,
       jsonb_build_object('refund_id', r.id, 'invoice_id', r.invoice_id, 'method', 'carte', 'refund_cents', r.amount_cents,
-        'currency', r.currency, 'stripe_refund_id', r.stripe_refund_id, 'credit_note_id', r.credit_note_id), 'backfill');
+        'currency', r.currency, 'stripe_refund_id', r.stripe_refund_id, 'credit_note_id', r.credit_note_id), 'backfill', r.updated_at);
   END LOOP;
   FOR r IN
     SELECT 'binder_invoice' k, id, 'binder:' || binder_id AS issuer, pdf_path, pdf_sha256 FROM public.marketplace_binder_invoices WHERE pdf_sha256 IS NOT NULL
@@ -631,9 +738,19 @@ END $$;
 -- ---------------------------------------------------------------------------
 DO $$
 BEGIN
+  IF to_regnamespace('cron') IS NULL AND EXISTS (SELECT 1 FROM pg_available_extensions WHERE name = 'pg_cron') THEN
+    -- Un refus d'activation ne fait pas échouer la migration : il est signalé, le rattrapage à la demande demeure.
+    BEGIN
+      EXECUTE 'CREATE EXTENSION IF NOT EXISTS pg_cron WITH SCHEMA pg_catalog';
+    EXCEPTION WHEN OTHERS THEN
+      RAISE NOTICE 'pg_cron : activation refusée (%), clôtures rattrapées à la demande', SQLERRM;
+    END;
+  END IF;
   IF to_regnamespace('cron') IS NOT NULL THEN
-    PERFORM cron.schedule('marketplace-journal-closures', '15 0 * * *', 'SELECT public.marketplace_journal_close_due()');
+    -- 00:15 UTC (cron.timezone = GMT) : 1 h 15 à Paris en hiver, 2 h 15 en été. Même nom : remplacée, jamais doublée.
+    EXECUTE $q$SELECT cron.schedule('marketplace-journal-closures', '15 0 * * *', 'SELECT public.marketplace_journal_close_due()')$q$;
+    RAISE NOTICE 'pg_cron : clôtures planifiées chaque nuit (marketplace-journal-closures)';
   ELSE
-    RAISE NOTICE 'pg_cron absent : clôtures rattrapées à la vérification et à l''export';
+    RAISE NOTICE 'pg_cron indisponible : clôtures rattrapées à la vérification et à l''export';
   END IF;
 END $$;
