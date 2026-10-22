@@ -46,8 +46,16 @@ $$;
 -- Jour civil à Paris d'un instant : la date d'émission d'une facture ou d'un avoir, et l'année de sa série.
 -- Le 31 décembre à 23 h 30 UTC est déjà le 1er janvier à Paris.
 CREATE OR REPLACE FUNCTION public.marketplace_paris_date(p_at timestamptz)
-RETURNS date LANGUAGE sql IMMUTABLE SET search_path = public AS $$
+RETURNS date LANGUAGE sql STABLE SET search_path = public AS $$
   SELECT (p_at AT TIME ZONE 'Europe/Paris')::date
+$$;
+
+-- L'horloge de l'émission : le seul endroit où facture et avoir lisent l'instant présent.
+-- Le rôle de service l'appelle sans pouvoir la remplacer ; seul le propriétaire du schéma peut la figer,
+-- sur une copie, pour rejouer la nuit du 31 décembre.
+CREATE OR REPLACE FUNCTION public.marketplace_issue_clock()
+RETURNS timestamptz LANGUAGE sql STABLE SET search_path = public AS $$
+  SELECT now()
 $$;
 
 -- ---------------------------------------------------------------------------
@@ -665,7 +673,7 @@ CREATE TRIGGER marketplace_binder_credit_notes_immutable
 CREATE OR REPLACE FUNCTION public.marketplace_binder_credit_note_issue_today()
 RETURNS trigger LANGUAGE plpgsql SET search_path = public AS $$
 BEGIN
-  IF NEW.issue_date IS DISTINCT FROM public.marketplace_paris_date(now()) THEN
+  IF NEW.issue_date IS DISTINCT FROM public.marketplace_paris_date(public.marketplace_issue_clock()) THEN
     RAISE EXCEPTION 'credit_note_date_must_be_today';
   END IF;
   RETURN NEW;
@@ -689,15 +697,15 @@ END $$;
 -- ---------------------------------------------------------------------------
 -- 5. Émission : date du jour imposée, mentions et identifiants contrôlés par la base.
 -- ---------------------------------------------------------------------------
--- L'instant d'émission est un paramètre de la fonction interne pour qu'un test rejoue la nuit du
--- 31 décembre ; seule la fonction publique, qui passe toujours now(), est ouverte au rôle de service.
-CREATE OR REPLACE FUNCTION public.marketplace_binder_issue_invoice_at(
-  p_binder_id UUID, p_invoice_id UUID, p_legal_mentions JSONB, p_at timestamptz
+-- Appelée par le serveur avec le rôle de service (jamais en SECURITY DEFINER) ; l'instant vient de l'horloge.
+CREATE OR REPLACE FUNCTION public.marketplace_binder_issue_invoice(
+  p_binder_id UUID, p_invoice_id UUID, p_legal_mentions JSONB
 ) RETURNS UUID LANGUAGE plpgsql SET search_path = public AS $$
 DECLARE
   v_invoice public.marketplace_binder_invoices%ROWTYPE;
   v_number TEXT;
-  v_today DATE := public.marketplace_paris_date(p_at);
+  v_at timestamptz := public.marketplace_issue_clock();
+  v_today DATE := public.marketplace_paris_date(v_at);
   v_mention TEXT;
   v_country TEXT;
 BEGIN
@@ -741,7 +749,7 @@ BEGIN
 
   v_number := public.marketplace_binder_next_document_number(p_binder_id, 'invoice', EXTRACT(YEAR FROM v_today)::integer);
   UPDATE public.marketplace_binder_invoices SET
-    invoice_number = v_number, status = 'issued', issued_at = p_at, issue_date = v_today,
+    invoice_number = v_number, status = 'issued', issued_at = v_at, issue_date = v_today,
     client_billing_country = v_country, vat_mention = v_mention,
     legal_mentions = COALESCE(p_legal_mentions, '[]'::jsonb),
     retained_until = (date_trunc('year', v_today) + interval '11 years - 1 day')::date,
@@ -752,11 +760,6 @@ BEGIN
 END;
 $$;
 
-CREATE OR REPLACE FUNCTION public.marketplace_binder_issue_invoice(
-  p_binder_id UUID, p_invoice_id UUID, p_legal_mentions JSONB
-) RETURNS UUID LANGUAGE sql SET search_path = public AS $$
-  SELECT public.marketplace_binder_issue_invoice_at(p_binder_id, p_invoice_id, p_legal_mentions, now())
-$$;
 
 -- ---------------------------------------------------------------------------
 -- 6. Encaissements : moyen de paiement structuré, référence facultative ; l'ancien texte libre devient la note.
@@ -941,13 +944,16 @@ END;
 $$;
 
 REVOKE ALL ON FUNCTION public.marketplace_default_operation_nature() FROM PUBLIC, anon, authenticated;
-REVOKE ALL ON FUNCTION public.marketplace_binder_issue_invoice_at(uuid, uuid, jsonb, timestamptz) FROM PUBLIC, anon, authenticated, service_role;
+REVOKE ALL ON FUNCTION public.marketplace_issue_clock(), public.marketplace_paris_date(timestamptz) FROM PUBLIC, anon, authenticated;
 REVOKE ALL ON FUNCTION public.marketplace_luhn_valid(text), public.marketplace_siren_valid(text), public.marketplace_siret_valid(text), public.marketplace_company_id_digits(text),
   public.marketplace_binder_prefix_change_guard(), public.marketplace_binder_promote_pending_prefix(),
   public.marketplace_binder_credit_note_header_immutable(), public.marketplace_binder_credit_note_issue_today(),
   public.marketplace_record_external_settlement(uuid, uuid, uuid, uuid, text, integer, text, text, text)
   FROM PUBLIC, anon, authenticated;
-GRANT EXECUTE ON FUNCTION public.marketplace_paris_date(timestamptz) TO service_role;
+GRANT EXECUTE ON FUNCTION public.marketplace_paris_date(timestamptz), public.marketplace_issue_clock() TO service_role;
+-- L'émission elle-même garde les droits d'origine (20260923120000) : exécutable par le rôle de service.
+REVOKE ALL ON FUNCTION public.marketplace_binder_issue_invoice(uuid, uuid, jsonb) FROM PUBLIC, anon, authenticated;
+GRANT EXECUTE ON FUNCTION public.marketplace_binder_issue_invoice(uuid, uuid, jsonb) TO service_role;
 GRANT EXECUTE ON FUNCTION public.marketplace_luhn_valid(text), public.marketplace_siren_valid(text), public.marketplace_siret_valid(text), public.marketplace_company_id_digits(text),
   public.marketplace_record_external_settlement(uuid, uuid, uuid, uuid, text, integer, text, text, text)
   TO service_role;
