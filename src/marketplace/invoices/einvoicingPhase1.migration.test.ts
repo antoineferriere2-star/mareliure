@@ -56,7 +56,10 @@ beforeAll(async () => {
   // Données antérieures à la phase 1 (pays en toutes lettres), puis la migration.
   await db.exec(`INSERT INTO auth.users VALUES('${id(1)}'); INSERT INTO marketplace_binders VALUES('${id(2)}');
     INSERT INTO marketplace_binder_members VALUES('${id(2)}','${id(1)}','active');
-    INSERT INTO marketplace_binder_clients(id,binder_id,name,billing_country) VALUES('${id(3)}','${id(2)}','QA client','France');
+    INSERT INTO marketplace_binder_clients(id,binder_id,name,billing_country) VALUES('${id(3)}','${id(2)}','QA client','France'),
+      ('${id(4)}','${id(2)}','QA Belgique','Belgique'),('${id(5)}','${id(2)}','QA UK',' united  kingdom '),('${id(6)}','${id(2)}','QA inconnu','Bretagne');
+    INSERT INTO marketplace_binder_services(id,binder_id,name) VALUES('${id(7)}','${id(2)}','Étui demi-cuir'),('${id(8)}','${id(2)}','Reliure plein cuir'),
+      ('${id(9)}','${id(2)}','Chemiserie fictive');
     INSERT INTO marketplace_binder_billing_profiles(binder_id) VALUES('${id(2)}');`);
   await db.exec(migration("20261023100000_einvoicing_phase1"));
 }, 60_000);
@@ -235,6 +238,65 @@ describe("encaissements : moyen de paiement structuré", () => {
   });
   it("le client fictif a son pays normalisé en code ISO", async () => {
     expect((await db.query<{ c: string }>("SELECT billing_country c FROM marketplace_binder_clients WHERE id=$1", [id(3)])).rows[0].c).toBe("FR");
+  });
+});
+
+describe("date d'émission à l'heure de Paris", () => {
+  it("le 31 décembre à 23 h 30 UTC est le 1er janvier à Paris", async () => {
+    const r = await db.query<{ d: string; s: string }>(
+      "SELECT to_char(marketplace_paris_date('2026-12-31 23:30:00+00'),'YYYY-MM-DD') d, to_char(marketplace_paris_date('2026-07-31 21:30:00+00'),'YYYY-MM-DD') s");
+    expect(r.rows[0]).toEqual({ d: "2027-01-01", s: "2026-07-31" });
+  });
+  it("une émission à cet instant est datée du 1er janvier et numérotée dans la série de la nouvelle année", async () => {
+    const invoice = await draft({ due: "2099-12-31" });
+    await db.query("SELECT marketplace_binder_issue_invoice_at($1,$2,'[]'::jsonb,'2026-12-31 23:30:00+00')", [id(2), invoice]);
+    const issued = await row(invoice);
+    expect(issued.issue_date).toBe("2027-01-01");
+    expect(issued.invoice_number).toMatch(/-2027-0001$/);
+  });
+  it("la fonction à instant explicite n'est pas ouverte au rôle de service", async () => {
+    await db.exec("SET ROLE service_role");
+    try {
+      await expect(db.query("SELECT marketplace_binder_issue_invoice_at($1,$2,'[]'::jsonb,now())", [id(2), id(1)])).rejects.toThrow(/permission denied/);
+    } finally { await db.exec("RESET ROLE"); }
+  });
+});
+
+describe("régime « exonéré » retiré", () => {
+  it("un profil ne peut plus le choisir, une facture qui le porte n'est pas émise", async () => {
+    await expect(db.query("UPDATE marketplace_binder_billing_profiles SET vat_regime='EXEMPT' WHERE binder_id=$1", [id(2)])).rejects.toThrow(/no_exempt/);
+    await expect(issue(await draft({ regime: "EXEMPT", mention: "Exonération, art. 261 du CGI" }))).rejects.toThrow("invoice_incomplete");
+  });
+});
+
+describe("pays : correspondance exacte des noms courants", () => {
+  it("convertit les noms exacts, laisse une valeur inconnue telle quelle", async () => {
+    const rows = (await db.query<{ id: string; c: string }>("SELECT id, billing_country c FROM marketplace_binder_clients WHERE id = ANY($1) ORDER BY id",
+      [[id(4), id(5), id(6)]])).rows.map((r) => r.c);
+    expect(rows).toEqual(["BE", "GB", "Bretagne"]);
+  });
+});
+
+describe("nature des prestations et des lignes", () => {
+  it("étui, boîte, coffret, chemise deviennent des biens ; le reste reste service", async () => {
+    const rows = (await db.query<{ n: string }>("SELECT operation_nature n FROM marketplace_binder_services WHERE id = ANY($1) ORDER BY id",
+      [[id(7), id(8), id(9)]])).rows.map((r) => r.n);
+    expect(rows).toEqual(["bien", "service", "service"]);
+  });
+  it("une ligne insérée sans nature (ancien Worker) est un service ; le brouillon recopie la nature du devis", async () => {
+    const quote = id(n++);
+    await db.query(`INSERT INTO marketplace_binder_quotes(id,binder_id,client_id,quote_number,status,issue_date,valid_until,client_name,
+      currency,issuer,vat_regime,subtotal_cents,total_ht_cents,total_vat_cents,total_ttc_cents)
+      VALUES($1,$2,$3,'QA-D-NAT','sent',CURRENT_DATE,CURRENT_DATE + 30,'QA client','EUR',$4::jsonb,'FRANCHISE',20000,20000,0,20000)`,
+      [quote, id(2), id(3), issuer()]);
+    await db.query(`INSERT INTO marketplace_binder_quote_items(quote_id,binder_id,position,label,unit_price_cents,vat_rate_bps,total_ht_cents,line_key,operation_nature)
+      VALUES($1,$2,0,'Étui',10000,0,10000,'l-etui','bien'),($1,$2,1,'Reliure',10000,0,10000,'l-rel',NULL)`, [quote, id(2)]);
+    const revision = (await db.query<{ r: string }>("SELECT marketplace_own_contract($1,$2,$3)->>'revision' r", [quote, id(2), id(1)])).rows[0].r;
+    await db.query("SELECT marketplace_accept_own_quote($1,$2,$3,$4,$5)", [quote, id(2), id(1), "Accord écrit du client QA", revision]);
+    const invoice = (await db.query<{ id: string }>("SELECT marketplace_binder_create_invoice_draft($1,$2,$3::jsonb) id",
+      [id(2), quote, JSON.stringify({ issue_date: "2026-01-02", operation_nature: "mixed", issuer: JSON.parse(issuer()) })])).rows[0].id;
+    const natures = (await db.query<{ k: string; n: string }>("SELECT line_key k, operation_nature n FROM marketplace_binder_invoice_items WHERE invoice_id=$1 ORDER BY position", [invoice])).rows;
+    expect(natures).toEqual([{ k: "l-etui", n: "bien" }, { k: "l-rel", n: "service" }]);
   });
 });
 

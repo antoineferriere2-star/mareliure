@@ -16,7 +16,7 @@
  * son régime et ses taux ; ce module applique ce qu'on lui donne.
  */
 
-export type VatRegime = "FRANCHISE" | "VAT_LIABLE" | "EXEMPT";
+export type VatRegime = "FRANCHISE" | "VAT_LIABLE";
 
 export type DiscountInput =
   | { type: "NONE" }

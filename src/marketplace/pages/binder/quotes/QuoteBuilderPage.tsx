@@ -157,7 +157,7 @@ function BuilderForm({
 }: {
   quoteId?: string;
   profile: BillingProfile;
-  services: { id: string; categoryId: string | null; name: string; description: string | null; unitPriceCents: number; vatRateBps: number | null; unit: string | null; isActive: boolean; isFavorite: boolean; referenceVersion: string | null; referenceOperationKey: string | null }[];
+  services: { id: string; categoryId: string | null; name: string; description: string | null; unitPriceCents: number; vatRateBps: number | null; unit: string | null; isActive: boolean; isFavorite: boolean; referenceVersion: string | null; referenceOperationKey: string | null; nature?: "service" | "bien" }[];
   basePrices: { pricingKey: string; label: string; unit: string; unitPriceCents: number | null; pricingMode: string; isFavorite?: boolean }[];
   categories: { id: string; name: string }[];
   clients: { id: string; name: string; email: string | null; phone: string | null; addressLine1: string | null; postalCode: string | null; city: string | null }[];
@@ -291,7 +291,7 @@ function BuilderForm({
 
   const palette = resolvePricePalette(services, basePrices);
   const catalogServices: CatalogService[] = palette.workshop
-    .map((s) => ({ id: s.id, categoryId: s.categoryId, name: s.name, description: s.description, unitPriceCents: s.unitPriceCents, vatRateBps: s.vatRateBps, unit: s.unit, referenceVersion: s.referenceVersion, referenceOperationKey: s.referenceOperationKey }));
+    .map((s) => ({ id: s.id, categoryId: s.categoryId, name: s.name, description: s.description, unitPriceCents: s.unitPriceCents, vatRateBps: s.vatRateBps, unit: s.unit, nature: s.nature, referenceVersion: s.referenceVersion, referenceOperationKey: s.referenceOperationKey }));
   const favoriteServices = palette.workshop.filter((service) => service.isFavorite).map((service) => catalogServices.find((item) => item.id === service.id)!);
   const favoriteBaseServices = palette.base.filter((service) => service.isFavorite);
   const recentlyUsed = recentServices(catalogServices, recentIds);
@@ -348,7 +348,7 @@ function BuilderForm({
   const saveLineToCatalog = useMutation({
     mutationFn: (line: QuoteLine) =>
       saveService({
-        data: { id: null, categoryId: null, name: line.label.trim(), description: line.description.trim() || null, unitPriceCents: line.unitPriceCents, vatRateBps: null, unit: line.unit, isActive: true },
+        data: { id: null, categoryId: null, name: line.label.trim(), description: line.description.trim() || null, unitPriceCents: line.unitPriceCents, vatRateBps: null, unit: line.unit, nature: line.nature ?? "service", isActive: true },
       }),
     onSuccess: (saved, line) => {
       setLine(line.key, { serviceId: saved.id, catalogPriceCents: saved.unitPriceCents });
@@ -778,6 +778,8 @@ function BuilderForm({
                             <input aria-label={`Unité — ${line.label || "ligne"}`} placeholder="Unité" className={`${FIELD} col-span-2 sm:col-span-1`} value={line.unit ?? ""} onChange={(e) => setLine(line.key, { unit: e.target.value || null })} />
                           </div>
                           <textarea aria-label={`Description client — ${line.label || "ligne"}`} rows={2} className={`${FIELD} mt-3 h-auto py-2`} placeholder="Description client (facultative)" value={line.description} onChange={(event) => setLine(line.key, { description: event.target.value })} />
+                          {/* Une ligne du catalogue garde la nature de sa prestation ; une ligne libre la choisit ici. */}
+                          {line.serviceId === null && <label className="mt-3 flex flex-wrap items-center gap-2 text-xs text-[#685d51]">Nature<select aria-label={`Nature — ${line.label || "ligne"}`} className={`${FIELD} h-9 w-auto text-xs`} value={line.nature ?? "service"} onChange={(event) => setLine(line.key, { nature: event.target.value === "bien" ? "bien" : "service" })}><option value="service">Prestation de service</option><option value="bien">Bien livré (étui, boîte…)</option></select></label>}
                           <div className="mt-3 border-t border-[#e2dbd0] pt-3">
                             <div className="flex flex-wrap items-center justify-between gap-2">
                               <p className="text-xs font-semibold uppercase tracking-wide text-[#685d51]">Photos d’exemple</p>

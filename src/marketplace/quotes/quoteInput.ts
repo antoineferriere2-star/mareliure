@@ -42,6 +42,8 @@ export const quoteLineInput = z
     unitPriceCents: z.number().int().min(0).max(100_000_000),
     catalogPriceCents: z.number().int().min(0).max(100_000_000).nullable(),
     vatRateBps: z.number().int().min(0).max(10_000),
+    /** Absente : service. « bien » pour un étui, une boîte, un coffret, une chemise. */
+    nature: z.enum(["service", "bien"]).optional(),
     referenceVersion: optionalText(60).optional(),
     referenceOperationKey: optionalText(60).optional(),
   })
@@ -152,7 +154,7 @@ export const billingProfileInput = z
     website: optionalText(300),
     documentAccentColor: z.enum(["#7A2230", "#24483D", "#263A57", "#3B342E"]).default("#7A2230"),
     documentFooter: optionalText(1000),
-    vatRegime: z.enum(["FRANCHISE", "VAT_LIABLE", "EXEMPT"]).nullable(),
+    vatRegime: z.enum(["FRANCHISE", "VAT_LIABLE"]).nullable(),
     defaultVatRateBps: z.number().int().min(0).max(10_000),
     vatMention: optionalText(500),
     quotePrefix: z.string().trim().regex(/^[A-Za-z0-9]{1,8}$/, "1 à 8 lettres ou chiffres"),
@@ -183,6 +185,8 @@ export const serviceInput = z
     unitPriceCents: z.number().int().min(0).max(100_000_000),
     vatRateBps: z.number().int().min(0).max(10_000).nullable(),
     unit: optionalText(40),
+    /** Absente : déduite du nom à la création, inchangée à la modification. */
+    nature: z.enum(["service", "bien"]).optional(),
     isActive: z.boolean(),
     /** Absent : le favori ne change pas. Le lien au référentiel n'est PAS un champ d'ici (voir `referenceServiceInput`). */
     isFavorite: z.boolean().optional(),

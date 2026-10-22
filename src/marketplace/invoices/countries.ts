@@ -2,6 +2,7 @@
  * Pays de facturation : code ISO 3166-1 alpha-2, seule forme stockée. Le statut France / Union européenne /
  * hors UE se déduit du code — il n'est jamais enregistré à part. Les libellés viennent d'`Intl.DisplayNames`.
  */
+import { COUNTRY_NAME_TO_CODE } from "./countryNames";
 export const EU_COUNTRY_CODES = [
   "AT", "BE", "BG", "CY", "CZ", "DE", "DK", "EE", "ES", "FI", "FR", "GR", "HR", "HU",
   "IE", "IT", "LT", "LU", "LV", "MT", "NL", "PL", "PT", "RO", "SE", "SI", "SK",
@@ -33,12 +34,19 @@ export function countryZone(code: string | null | undefined): CountryZone {
   return (EU_COUNTRY_CODES as readonly string[]).includes(value) ? "eu" : "outside_eu";
 }
 
-/** Anciennes saisies libres (« France », « fr ») ramenées au code ; toute autre valeur est rendue telle quelle. */
+/**
+ * Saisie libre ramenée au code : un code ISO, ou un nom exact de la table (« France », « Belgium »,
+ * « Royaume-Uni »), sans casse ni espaces de bord. Jamais de correspondance approximative : une valeur
+ * inconnue est rendue telle quelle et journalisée, pour qu'on complète la table plutôt que de deviner.
+ */
 export function normalizeCountry(value: string | null | undefined): string | null {
   const trimmed = value?.trim();
   if (!trimmed) return null;
-  if (/^(france|fr|fra)$/i.test(trimmed)) return "FR";
-  return isCountryCode(trimmed) ? trimmed.toUpperCase() : trimmed;
+  if (isCountryCode(trimmed)) return trimmed.toUpperCase();
+  const code = COUNTRY_NAME_TO_CODE[trimmed.replace(/\s+/g, " ").toLowerCase()];
+  if (code) return code;
+  console.warn(JSON.stringify({ event: "country_not_normalized", value: trimmed.slice(0, 80) }));
+  return trimmed;
 }
 
 export function countryName(code: string, locale = "fr"): string {

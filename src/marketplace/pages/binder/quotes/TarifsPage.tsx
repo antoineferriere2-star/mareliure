@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { clearMyDocumentLogo, getBillingProfile, getMyCatalog, saveMyBillingProfile, uploadMyDocumentLogo } from "@/marketplace/services/binderQuotes.data.functions";
 import { getMyPricingCatalog } from "@/marketplace/services/binderPricingCatalog.data.functions";
-import { FRANCHISE_MENTION_SUGGESTION, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
+import { FRANCHISE_MENTION_SUGGESTION, TAX_REGIME_CHOICES, taxRegimeChoiceOf, taxRegimeFields, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
 import { bpsToPercentInput, parsePercentToBps } from "@/marketplace/quotes/quoteFormat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
@@ -194,19 +194,13 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
         <p className="mt-1 text-sm text-muted-foreground">Ma Reliure ne choisit pas votre régime : c'est à vous (ou à votre comptable) de le déclarer.</p>
         <fieldset className="mt-4 grid gap-2 sm:grid-cols-2">
           <legend className="sr-only">Régime de TVA</legend>
-          {(
-            [
-              ["VAT_LIABLE", "Je facture la TVA"],
-              ["FRANCHISE", "Franchise en base de TVA (aucune TVA facturée)"],
-              ["EXEMPT", "Exonération ou autre régime sans TVA"],
-            ] as const
-          ).map(([value, label]) => (
+          {TAX_REGIME_CHOICES.map(([value, label]) => (
             <label key={value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 text-sm">
               <input
                 type="radio"
                 name="profile-vat-regime"
-                checked={p.vatRegime === value}
-                onChange={() => set({ vatRegime: value, vatMention: value === "FRANCHISE" && !p.vatMention ? FRANCHISE_MENTION_SUGGESTION : p.vatMention })}
+                checked={taxRegimeChoiceOf(p) === value}
+                onChange={() => set({ ...taxRegimeFields(value), vatMention: value === "franchise" && !p.vatMention ? FRANCHISE_MENTION_SUGGESTION : p.vatMention })}
               />
               {label}
             </label>
@@ -216,16 +210,7 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
           <Field label="TVA appliquée aux nouveaux devis (%)" htmlFor="profile-default-vat" hint="Chaque nouveau devis reprend ce taux. Il reste modifiable dans le Workbench.">
             <input id="profile-default-vat" inputMode="decimal" className={FIELD} value={p.defaultVat} onChange={(e) => set({ defaultVat: e.target.value })} />
           </Field>
-          {p.vatRegime === "VAT_LIABLE" && (
-            <Field label="Régime d'imposition de la TVA" htmlFor="profile-vatFilingRegime" hint="Indiqué sur votre espace professionnel des impôts ou par votre comptable. Requis pour émettre une facture.">
-              <select id="profile-vatFilingRegime" className={FIELD} value={p.vatFilingRegime ?? ""} onChange={(e) => set({ vatFilingRegime: (e.target.value || null) as BillingProfile["vatFilingRegime"] })}>
-                <option value="">À renseigner</option>
-                <option value="reel_simplifie">Réel simplifié</option>
-                <option value="reel_normal">Réel normal</option>
-              </select>
-            </Field>
-          )}
-          <Field label="Mention de TVA imprimée" htmlFor="profile-vatMention" hint={p.vatRegime === "FRANCHISE" ? "Laissée vide, la facture porte « TVA non applicable, art. 293 B du CGI »." : p.vatRegime === "EXEMPT" ? "Obligatoire : le texte qui fonde l'exonération." : undefined}>
+          <Field label="Mention de TVA imprimée" htmlFor="profile-vatMention" hint={p.vatRegime === "FRANCHISE" ? "Laissée vide, la facture porte « TVA non applicable, art. 293 B du CGI »." : undefined}>
             <input id="profile-vatMention" className={FIELD} value={text("vatMention")} onChange={(e) => set({ vatMention: e.target.value || null })} />
           </Field>
         </div>

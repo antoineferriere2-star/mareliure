@@ -73,12 +73,10 @@ describe("validateInvoiceForIssue", () => {
       "Régime d'imposition de la TVA atelier manquant (réel simplifié ou réel normal)",
     ]));
   });
-  it("n'exige plus de mention en franchise (posée d'office) mais en exige une pour une exonération", () => {
+  it("n'exige pas de mention en franchise : elle est posée d'office", () => {
     const franchise = candidate({ vatRegime: "FRANCHISE", vatMention: null });
     expect(validateInvoiceForIssue(franchise).valid).toBe(true);
     expect(invoiceLegalMentions(franchise)).toContain("TVA non applicable, art. 293 B du CGI");
-    expect(validateInvoiceForIssue(candidate({ vatRegime: "EXEMPT", vatMention: null })).missing)
-      .toContain("Mention d'exonération de TVA manquante");
   });
   it("refuse une échéance antérieure à l'émission", () => {
     expect(validateInvoiceForIssue(candidate({ dueDate: "2026-09-22" })).missing)

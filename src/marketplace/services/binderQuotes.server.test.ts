@@ -117,6 +117,7 @@ function makeDb() {
 
     const q: any = {
       select: () => q,
+      // `count` : le nombre de lignes filtrées, comme le renvoie PostgREST avec { count: "exact" }.
       insert: (v: any) => ((op = "insert"), (values = v), q),
       update: (v: any) => ((op = "update"), (values = v), q),
       delete: () => ((op = "delete"), q),
@@ -138,8 +139,10 @@ function makeDb() {
         const r = run()[0];
         return r ? { data: r, error: null } : { data: null, error: { message: "no rows" } };
       },
-      then: (resolve: any, reject: any) =>
-        Promise.resolve({ data: run(), error: null }).then(resolve, reject),
+      then: (resolve: any, reject: any) => {
+        const data = run();
+        return Promise.resolve({ data, error: null, count: data.length }).then(resolve, reject);
+      },
     };
     return q;
   }
@@ -505,6 +508,24 @@ describe("autorisation admin pour les leads", () => {
 });
 
 describe("profil de facturation", () => {
+  describe("préfixe de facture : jamais changé en cours de série", () => {
+    it("avant toute pièce numérotée, le nouveau préfixe s'applique tout de suite", async () => {
+      await saveBillingProfile(world.sb, BINDER_A, profileInput());
+      const saved = await saveBillingProfile(world.sb, BINDER_A, profileInput({ invoicePrefix: "FA" }));
+      expect([saved.invoicePrefix, saved.invoicePrefixPending, saved.prefixPendingFromYear]).toEqual(["FA", null, null]);
+    });
+    it("après une pièce, il attend le 1er janvier suivant — compté à l'heure de Paris", async () => {
+      await saveBillingProfile(world.sb, BINDER_A, profileInput());
+      world.tables.marketplace_binder_document_counters = [{ binder_id: BINDER_A, kind: "invoice", year: 2026, last_value: 3 }];
+      // 31 décembre 2026, 23 h 30 UTC : déjà le 1er janvier 2027 à Paris, donc effet au 1er janvier 2028.
+      vi.setSystemTime(new Date("2026-12-31T23:30:00Z"));
+      const saved = await saveBillingProfile(world.sb, BINDER_A, profileInput({ invoicePrefix: "FA" }));
+      expect([saved.invoicePrefix, saved.invoicePrefixPending, saved.prefixPendingFromYear]).toEqual(["F", "FA", 2028]);
+      const back = await saveBillingProfile(world.sb, BINDER_A, profileInput({ invoicePrefix: "F" }));
+      expect([back.invoicePrefix, back.invoicePrefixPending]).toEqual(["F", null]);
+    });
+  });
+
   it("sans profil : le nom de l'atelier sert de départ, mais AUCUN régime de TVA n'est présumé", async () => {
     const profile = await loadBillingProfile(world.sb, BINDER_A);
     expect(profile.workshopName).toBe("Atelier A");

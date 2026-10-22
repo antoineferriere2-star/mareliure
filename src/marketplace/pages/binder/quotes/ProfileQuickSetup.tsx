@@ -12,7 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { saveMyBillingProfile } from "@/marketplace/services/binderQuotes.data.functions";
-import { FRANCHISE_MENTION_SUGGESTION, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
+import { FRANCHISE_MENTION_SUGGESTION, TAX_REGIME_CHOICES, taxRegimeChoiceOf, taxRegimeFields, type BillingProfile, type TaxRegimeChoice } from "@/marketplace/quotes/quoteBuild";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
 import { PROFILE_QUERY_KEY, profileToInput } from "./quoteQueryKeys";
 
@@ -20,7 +20,7 @@ export function ProfileQuickSetup({ profile, missing }: { profile: BillingProfil
   const save = useServerFn(saveMyBillingProfile);
   const queryClient = useQueryClient();
   const [name, setName] = useState(profile.workshopName ?? profile.legalName ?? "");
-  const [regime, setRegime] = useState<"FRANCHISE" | "VAT_LIABLE" | "EXEMPT" | null>(profile.vatRegime);
+  const [regime, setRegime] = useState<TaxRegimeChoice | null>(taxRegimeChoiceOf(profile));
   const [mention, setMention] = useState(profile.vatMention ?? "");
 
   const mutation = useMutation({
@@ -29,8 +29,8 @@ export function ProfileQuickSetup({ profile, missing }: { profile: BillingProfil
         data: {
           ...profileToInput(profile),
           workshopName: name.trim() || null,
-          vatRegime: regime,
-          vatMention: regime === "FRANCHISE" ? mention.trim() || FRANCHISE_MENTION_SUGGESTION : profile.vatMention,
+          ...(regime ? taxRegimeFields(regime) : { vatRegime: null, vatFilingRegime: null }),
+          vatMention: regime === "franchise" ? mention.trim() || FRANCHISE_MENTION_SUGGESTION : profile.vatMention,
         },
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY }),
@@ -58,13 +58,7 @@ export function ProfileQuickSetup({ profile, missing }: { profile: BillingProfil
         <fieldset>
           <legend className="mb-1 block text-xs font-medium text-muted-foreground">Régime de TVA</legend>
           <div className="grid gap-2">
-            {(
-              [
-                ["VAT_LIABLE", "Je facture la TVA"],
-                ["FRANCHISE", "Franchise en base de TVA (aucune TVA facturée)"],
-                ["EXEMPT", "Exonération ou autre régime sans TVA"],
-              ] as const
-            ).map(([value, label]) => (
+            {TAX_REGIME_CHOICES.map(([value, label]) => (
               <label key={value} className="flex min-h-11 cursor-pointer items-center gap-2 rounded-md border border-input bg-background px-3 text-sm">
                 <input type="radio" name="vat-regime" checked={regime === value} onChange={() => setRegime(value)} />
                 {label}
@@ -73,7 +67,7 @@ export function ProfileQuickSetup({ profile, missing }: { profile: BillingProfil
           </div>
         </fieldset>
       </div>
-      {regime === "FRANCHISE" && (
+      {regime === "franchise" && (
         <div className="mt-4">
           <Field label="Mention imprimée sur vos documents" htmlFor="setup-mention" hint="Suggestion de départ : modifiez-la ou faites-la valider par votre comptable.">
             <input

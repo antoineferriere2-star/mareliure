@@ -175,8 +175,8 @@ function CategoryBlock({ category, services }: { category: Category; services: S
             </Field>
           </div>
         )}
-        <div className="hidden grid-cols-[1fr_120px_120px_84px_44px_60px_44px] gap-2 px-1 text-xs text-muted-foreground sm:grid">
-          <span>Prestation</span><span>Unité</span><span className="text-right">Prix HT (€)</span><span className="text-right">TVA (%)</span><span /><span className="text-center">Actif</span><span />
+        <div className="hidden grid-cols-[1fr_120px_120px_84px_112px_44px_60px_44px] gap-2 px-1 text-xs text-muted-foreground sm:grid">
+          <span>Prestation</span><span>Unité</span><span className="text-right">Prix HT (€)</span><span className="text-right">TVA (%)</span><span>Nature</span><span /><span className="text-center">Actif</span><span />
         </div>
         {services.map((service) => (
           <ServiceRow key={service.id} service={service} />
@@ -196,11 +196,12 @@ function ServiceRow({ service }: { service: Service }) {
   const [cents, setCents] = useState(service.unitPriceCents);
   const [active, setActive] = useState(service.isActive);
   const [vat, setVat] = useState(service.vatRateBps === null ? "" : bpsToPercentInput(service.vatRateBps));
+  const [nature, setNature] = useState(service.nature);
   const [saved, setSaved] = useState(false);
 
   const save = useMutation({
-    mutationFn: (over: Partial<{ name: string; unit: string; cents: number; active: boolean; vat: string }> = {}) => {
-      const values = { name, unit, cents, active, vat, ...over };
+    mutationFn: (over: Partial<{ name: string; unit: string; cents: number; active: boolean; vat: string; nature: "service" | "bien" }> = {}) => {
+      const values = { name, unit, cents, active, vat, nature, ...over };
       return saveService({
         data: {
           id: service.id,
@@ -211,6 +212,7 @@ function ServiceRow({ service }: { service: Service }) {
           vatRateBps: values.vat.trim() === "" ? null : parsePercentToBps(values.vat),
           unit: values.unit.trim() === "" ? null : values.unit.trim(),
           isActive: values.active,
+          nature: values.nature,
           // Enregistrer un prix ne change jamais le favori, et le lien au référentiel n'est pas modifiable ici.
         },
       });
@@ -237,7 +239,7 @@ function ServiceRow({ service }: { service: Service }) {
   const toPrice = cents === 0 && !active;
 
   return (
-    <div className="grid items-center gap-2 rounded-md border border-border p-2 sm:grid-cols-[1fr_120px_120px_84px_44px_60px_44px] sm:border-0 sm:p-0">
+    <div className="grid items-center gap-2 rounded-md border border-border p-2 sm:grid-cols-[1fr_120px_120px_84px_112px_44px_60px_44px] sm:border-0 sm:p-0">
       <input aria-label={`Nom de la prestation ${service.name}`} className={FIELD} value={name} onChange={(e) => setName(e.target.value)} onBlur={commit} />
       <div className="flex flex-wrap items-center gap-2 sm:contents">
         <div className="w-32 sm:w-auto">
@@ -267,6 +269,21 @@ function ServiceRow({ service }: { service: Service }) {
         </div>
         <div className="w-24 sm:w-auto">
           <input aria-label={`TVA de ${service.name} (vide : taux par défaut)`} placeholder="défaut" inputMode="decimal" className={`${FIELD} text-right`} value={vat} onChange={(e) => setVat(e.target.value)} onBlur={commit} />
+        </div>
+        <div className="w-28 sm:w-auto">
+          <select
+            aria-label={`Nature de ${service.name}`}
+            className={FIELD}
+            value={nature}
+            onChange={(e) => {
+              const next = e.target.value === "bien" ? "bien" : "service";
+              setNature(next);
+              save.mutate({ nature: next });
+            }}
+          >
+            <option value="service">Service</option>
+            <option value="bien">Bien livré</option>
+          </select>
         </div>
         <FavoriteStar service={service} />
         <label className="flex h-11 items-center justify-center gap-1 text-xs">

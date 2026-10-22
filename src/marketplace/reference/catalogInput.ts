@@ -30,6 +30,8 @@ export const referenceServiceInput = z
     vatRateBps: z.number().int().min(0).max(10_000).nullable(),
     categoryId: z.string().uuid().nullable(),
     isFavorite: z.boolean(),
+    /** Absente : déduite du nom. */
+    nature: z.enum(["service", "bien"]).optional(),
   })
   .strict();
 

@@ -109,8 +109,6 @@ export function invoiceLegalMentions(candidate: InvoiceIssueCandidate): string[]
   const mentions: string[] = [];
   if (candidate.vatRegime === "FRANCHISE") {
     mentions.push(candidate.vatMention?.trim() || FRANCHISE_VAT_MENTION);
-  } else if (candidate.vatRegime === "EXEMPT" && present(candidate.vatMention)) {
-    mentions.push(candidate.vatMention!.trim());
   }
   if (candidate.issuer.vatOnDebits) mentions.push("Option pour le paiement de la taxe d'après les débits");
   if (candidate.buyer.type === "business" || candidate.buyer.type === "public_entity") {
@@ -146,8 +144,7 @@ export function validateInvoiceForIssue(candidate: InvoiceIssueCandidate): Invoi
   if (candidate.vatRegime === "VAT_LIABLE" && !issuer.vatFilingRegime) {
     missing.push("Régime d'imposition de la TVA atelier manquant (réel simplifié ou réel normal)");
   }
-  // En franchise, la mention de l'article 293 B est ajoutée d'office ; une exonération doit citer son texte.
-  if (candidate.vatRegime === "EXEMPT" && !present(candidate.vatMention)) missing.push("Mention d'exonération de TVA manquante");
+  // En franchise, la mention de l'article 293 B est ajoutée d'office.
   if (!present(candidate.serviceDate)) missing.push("Date de prestation manquante");
   if (!present(candidate.dueDate)) missing.push("Échéance de paiement manquante");
   if (present(candidate.dueDate) && candidate.dueDate! < candidate.issueDate) {

@@ -1687,6 +1687,7 @@ export type Database = {
           invoice_id: string
           label: string
           line_key: string
+          operation_nature: string
           position: number
           quantity: number
           service_id: string | null
@@ -1708,6 +1709,7 @@ export type Database = {
           invoice_id: string
           label: string
           line_key: string
+          operation_nature?: string
           position: number
           quantity?: number
           service_id?: string | null
@@ -1729,6 +1731,7 @@ export type Database = {
           invoice_id?: string
           label?: string
           line_key?: string
+          operation_nature?: string
           position?: number
           quantity?: number
           service_id?: string | null
@@ -2320,6 +2323,7 @@ export type Database = {
           id: string
           label: string
           line_key: string
+          operation_nature: string
           position: number
           quantity: number
           quote_id: string
@@ -2344,6 +2348,7 @@ export type Database = {
           id?: string
           label: string
           line_key: string
+          operation_nature?: string
           position: number
           quantity?: number
           quote_id: string
@@ -2368,6 +2373,7 @@ export type Database = {
           id?: string
           label?: string
           line_key?: string
+          operation_nature?: string
           position?: number
           quantity?: number
           quote_id?: string
@@ -2684,6 +2690,7 @@ export type Database = {
           is_active: boolean
           is_favorite: boolean
           name: string
+          operation_nature: string
           reference_operation_key: string | null
           reference_version: string | null
           sort_order: number
@@ -2702,6 +2709,7 @@ export type Database = {
           is_active?: boolean
           is_favorite?: boolean
           name: string
+          operation_nature?: string
           reference_operation_key?: string | null
           reference_version?: string | null
           sort_order?: number
@@ -2720,6 +2728,7 @@ export type Database = {
           is_active?: boolean
           is_favorite?: boolean
           name?: string
+          operation_nature?: string
           reference_operation_key?: string | null
           reference_version?: string | null
           sort_order?: number
