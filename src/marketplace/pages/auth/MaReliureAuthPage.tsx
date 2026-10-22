@@ -42,6 +42,7 @@ import {
   FineBinderyHeader,
 } from "@/marketplace/pages/fineBindery/FineBinderyChrome";
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { authPageTitle } from "./authPageTitle";
 import type { FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 
 const labelClass = "mr-small block font-semibold text-mr-ink";
@@ -301,11 +302,13 @@ export function MaReliureAuthPage({
   const [customerMethod, setCustomerMethod] = useState<CustomerMethod>("link");
   const [binderMethod, setBinderMethod] = useState<CustomerMethod>("link");
   const alert = accessError ?? linkProblem;
+  // L'onglet suit l'espace choisi, y compris quand on passe de Client à Atelier sur la page (revue #165).
+  useEffect(() => { document.title = authPageTitle(brand, audience === "binder" ? "binder" : "customer", fineBinderyLocale); }, [brand, audience, fineBinderyLocale]);
 
   return (
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       {/* Côté atelier, l'en-tête ne propose pas « Présenter mon livre » (parcours atelier, revue #162). */}
-      {brand === "FINE_BINDERY" ? <FineBinderyHeader locale={fineBinderyLocale} /> : <LandingHeader workshop={audience === "binder"} cta={audience !== "binder"} />}
+      {brand === "FINE_BINDERY" ? <FineBinderyHeader locale={fineBinderyLocale} cta={audience !== "binder"} /> : <LandingHeader workshop={audience === "binder"} cta={audience !== "binder"} />}
       <main id="contenu" className="mx-auto w-full max-w-[36rem] flex-1 px-5 py-14 sm:px-8 sm:py-20">
         <p className="mr-eyebrow">{t.eyebrow}</p>
         <h1 className="mr-title mt-4 text-mr-ink">{t.heading}</h1>
