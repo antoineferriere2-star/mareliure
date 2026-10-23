@@ -8,8 +8,8 @@ import type { DashboardRows } from "./adminDashboard";
 export interface TestScopeFacts {
   /** Atelier apporteur de chaque dossier (clients propres d'un atelier). */
   caseReferrers: { id: string; referred_binder_id: string | null }[];
-  /** Atelier auquel chaque commande OPPE est confiée. */
-  assignments: { case_id: string; binder_id: string }[];
+  /** Affectations des commandes OPPE ; seule l'affectation active (sans `ended_at`) rattache un dossier. */
+  assignments: { case_id: string; binder_id: string; ended_at?: string | null }[];
   /** Atelier de chaque paiement en ligne. */
   paymentBinders: { id: string; binder_id: string }[];
 }
@@ -19,7 +19,8 @@ export function excludeTestWorkshops(rows: DashboardRows, facts: TestScopeFacts)
   if (testBinders.size === 0) return rows;
   const testCases = new Set([
     ...facts.caseReferrers.filter((c) => c.referred_binder_id && testBinders.has(c.referred_binder_id)).map((c) => c.id),
-    ...facts.assignments.filter((a) => testBinders.has(a.binder_id)).map((a) => a.case_id),
+    // Un dossier confié à un atelier de test puis réaffecté à un vrai atelier redevient réel.
+    ...facts.assignments.filter((a) => !a.ended_at && testBinders.has(a.binder_id)).map((a) => a.case_id),
   ]);
   const testPayments = new Set(facts.paymentBinders.filter((p) => testBinders.has(p.binder_id)).map((p) => p.id));
   const realCase = (row: { case_id: string }) => !testCases.has(row.case_id);
@@ -29,6 +30,8 @@ export function excludeTestWorkshops(rows: DashboardRows, facts: TestScopeFacts)
   return {
     ...rows,
     cases: rows.cases.filter((c) => !testCases.has(c.id)),
+    // Une candidature convertie en atelier de test sort des comptes ; une candidature non rattachée ne peut pas être reconnue.
+    applications: rows.applications.filter((a) => !a.converted_binder_id || !testBinders.has(a.converted_binder_id)),
     subscriptions: rows.subscriptions.filter((s) => !testBinders.has(s.binder_id)),
     connectConsents: rows.connectConsents.filter((c) => !testBinders.has(c.binder_id)),
     proposals,

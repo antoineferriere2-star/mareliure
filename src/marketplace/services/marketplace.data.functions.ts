@@ -8,6 +8,7 @@
  * `build_*`, so this file is the only way in — and it decides, per caller, how
  * much of a case is disclosed.
  */
+import { isTestWorkshop } from "@/marketplace/binders/testWorkshop.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { isClosableCaseStatus } from "@/marketplace/cases/closeCase";
 import { CLOSE_CASE_REFUSALS, closeCase } from "@/marketplace/services/caseClosure.server";
@@ -1085,6 +1086,8 @@ export const inviteBinderMember = createServerFn({ method: "POST" })
       .eq("id", data.binderId)
       .maybeSingle();
     if (!binder) fail(404, "Atelier introuvable.");
+    // Atelier de test : aucune invitation réelle (e-mail) ; son seul membre est le compte de recette.
+    if (await isTestWorkshop(sb, data.binderId)) fail(409, "Atelier de test : aucune invitation n'est envoyée.");
 
     const invitation = await createBinderInvitation(sb, {
       binderId: data.binderId,

@@ -18,7 +18,7 @@ export interface DashboardRows {
   binders: { id: string; status: string; public_profile_status: string | null; stripe_account_id: string | null;
     stripe_connect_onboarded_at: string | null; stripe_connect_charges_enabled: boolean | null; stripe_connect_payouts_enabled: boolean | null;
     is_demo: boolean | null; created_at: string }[];
-  applications: { status: string; created_at: string }[];
+  applications: { status: string; created_at: string; converted_binder_id?: string | null }[];
   subscriptions: { binder_id: string; status: string; legacy_free: boolean; cancel_at_period_end: boolean | null }[];
   connectConsents: { binder_id: string }[];
   offer: { subscription_open: boolean; online_payment_open: boolean; connect_onboarding_open: boolean } | null;

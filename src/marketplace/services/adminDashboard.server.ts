@@ -44,7 +44,7 @@ export async function readAdminDashboard(sb: SupabaseClient, userId: string,
     readAll<DashboardRows["cases"][number]>(sb, "marketplace_cases", "id, reference, brand, status, created_at"),
     readAll<DashboardRows["binders"][number]>(sb, "marketplace_binders",
       "id, status, public_profile_status, stripe_account_id, stripe_connect_onboarded_at, stripe_connect_charges_enabled, stripe_connect_payouts_enabled, is_demo, created_at"),
-    readAll<DashboardRows["applications"][number]>(sb, "marketplace_binder_applications", "status, created_at"),
+    readAll<DashboardRows["applications"][number]>(sb, "marketplace_binder_applications", "status, created_at, converted_binder_id"),
     readAll<DashboardRows["subscriptions"][number]>(sb, "marketplace_binder_subscriptions", "binder_id, status, legacy_free, cancel_at_period_end"),
     readAll<DashboardRows["connectConsents"][number]>(sb, "marketplace_workshop_connect_consents", "binder_id"),
     readAll<NonNullable<DashboardRows["offer"]>>(sb, "marketplace_workshop_offer_settings", "subscription_open, online_payment_open, connect_onboarding_open"),
@@ -68,7 +68,7 @@ export async function readAdminDashboard(sb: SupabaseClient, userId: string,
     readAll<ReadRow>(sb, "marketplace_conversation_reads", "case_id, last_read_at", { user_id: userId }),
     // Rattachement des dossiers et des paiements à un atelier, pour écarter les ateliers de test.
     readAll<{ id: string; referred_binder_id: string | null }>(sb, "marketplace_cases", "id, referred_binder_id"),
-    readAll<{ case_id: string; binder_id: string }>(sb, "marketplace_oppe_order_assignments", "case_id, binder_id"),
+    readAll<{ case_id: string; binder_id: string; ended_at: string | null }>(sb, "marketplace_oppe_order_assignments", "case_id, binder_id, ended_at"),
     readAll<{ id: string; binder_id: string }>(sb, "marketplace_workshop_online_payments", "id, binder_id"),
   ]);
   const lastRead = new Map(conversationReads.map(row => [row.case_id, row.last_read_at]));
@@ -88,6 +88,18 @@ export async function readAdminDashboard(sb: SupabaseClient, userId: string,
     automation: automation[0] ?? null, ownClientLabels,
     providerConfigured: options.providerConfigured ?? false, unreadByCase,
   }, { caseReferrers, assignments, paymentBinders });
+  // Étiquettes des clients propres : rattachées à l'atelier par étiquette → événement → ouvrage.
+  const testBinders = new Set(binders.filter((b) => b.is_demo).map((b) => b.id));
+  if (testBinders.size) {
+    const [labels, events, works] = await Promise.all([
+      readAll<{ event_id: string }>(sb, "marketplace_work_logistics_labels", "event_id"),
+      readAll<{ id: string; work_id: string }>(sb, "marketplace_work_logistics_events", "id, work_id"),
+      readAll<{ id: string; binder_id: string }>(sb, "marketplace_binder_works", "id, binder_id"),
+    ]);
+    const workBinder = new Map(works.map((w) => [w.id, w.binder_id]));
+    const eventBinder = new Map(events.map((e) => [e.id, workBinder.get(e.work_id)]));
+    rows.ownClientLabels = labels.filter((l) => !testBinders.has(eventBinder.get(l.event_id) ?? "")).length;
+  }
   const since = filter.days === null ? null : new Date(now.getTime() - filter.days * 86_400_000).toISOString();
   // La fréquentation ne bloque jamais le pilotage : une lecture en échec l'omet, le reste s'affiche.
   const traffic = await readPageViews(sb, since).then(
