@@ -111,7 +111,8 @@ describe("PDF des pièces émises", () => {
     await expect(issuedPdfBase64ForCustomer(w.sb, BINDER, invoice)).rejects.toThrow(ISSUED_PDF_UNAVAILABLE_MESSAGE);
     w.files.delete(`${BINDER}/invoice/inv.pdf`);
     await expect(issuedPdfBase64(w.sb, BINDER, invoice)).rejects.toBeInstanceOf(IssuedPdfIntegrityError);
-    expect(JSON.parse(String(log.mock.calls.at(-1)![0]))).toMatchObject({ reason: "stored_file_missing", actualSha256: null });
+    const failures = log.mock.calls.map((call) => JSON.parse(String(call[0]))).filter((e) => e.event === "issued_pdf_integrity_failure");
+    expect(failures.at(-1)).toMatchObject({ reason: "stored_file_missing", actualSha256: null });
     log.mockRestore();
   });
 

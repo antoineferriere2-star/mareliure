@@ -40,9 +40,10 @@ export type Database = {
   public: {
     Tables: {
       marketplace_workshop_fee_documents: {
-        Row: { id: string; binder_id: string; payment_id: string; invoice_document_id: string | null; kind: string; number: string; brand: string; issued_at: string; stripe_application_fee_id: string | null; refunded_fee_cumulative_cents: number; total_ht_cents: number; total_vat_cents: number; total_ttc_cents: number; document: Json }
+        Row: { id: string; binder_id: string; payment_id: string; invoice_document_id: string | null; kind: string; number: string; brand: string; issued_at: string; stripe_application_fee_id: string | null; refunded_fee_cumulative_cents: number; total_ht_cents: number; total_vat_cents: number; total_ttc_cents: number; document: Json; pdf_path: string | null; pdf_sha256: string | null }
         Insert: { id?: string; binder_id: string; payment_id: string; invoice_document_id?: string | null; kind: string; number: string; brand: string; issued_at?: string; stripe_application_fee_id?: string | null; refunded_fee_cumulative_cents?: number; total_ht_cents: number; total_vat_cents: number; total_ttc_cents: number; document: Json }
-        Update: never
+        // Seule la pose unique du PDF rangé est permise (migration 20261024100000).
+        Update: { pdf_path?: string | null; pdf_sha256?: string | null }
         Relationships: []
       }
       marketplace_workshop_checkout_attempts: {
@@ -3808,6 +3809,51 @@ export type Database = {
           },
         ]
       }
+      marketplace_issuer_journal: {
+        Row: {
+          actor: string | null
+          canonical: string
+          document_id: string | null
+          document_kind: string | null
+          event: string
+          event_key: string
+          hash: string
+          issuer_key: string
+          occurred_at: string
+          payload: Json
+          prev_hash: string
+          seq: number
+        }
+        Insert: {
+          actor?: string | null
+          canonical: string
+          document_id?: string | null
+          document_kind?: string | null
+          event: string
+          event_key: string
+          hash: string
+          issuer_key: string
+          occurred_at: string
+          payload: Json
+          prev_hash: string
+          seq: number
+        }
+        Update: {
+          actor?: string | null
+          canonical?: string
+          document_id?: string | null
+          document_kind?: string | null
+          event?: string
+          event_key?: string
+          hash?: string
+          issuer_key?: string
+          occurred_at?: string
+          payload?: Json
+          prev_hash?: string
+          seq?: number
+        }
+        Relationships: []
+      }
       marketplace_oppe_credit_notes: {
         Row: {
           id: string
@@ -3816,6 +3862,8 @@ export type Database = {
           issued_at: string
           items: Json
           number: string
+          pdf_path: string | null
+          pdf_sha256: string | null
           reason: string
           retained_until: string
           total_ht_cents: number
@@ -3830,6 +3878,8 @@ export type Database = {
           issued_at?: string
           items: Json
           number: string
+          pdf_path?: string | null
+          pdf_sha256?: string | null
           reason: string
           retained_until: string
           total_ht_cents: number
@@ -3844,6 +3894,8 @@ export type Database = {
           issued_at?: string
           items?: Json
           number?: string
+          pdf_path?: string | null
+          pdf_sha256?: string | null
           reason?: string
           retained_until?: string
           total_ht_cents?: number
@@ -3960,6 +4012,8 @@ export type Database = {
           issued_at: string
           legal_mentions: Json
           number: string
+          pdf_path: string | null
+          pdf_sha256: string | null
           payment: Json
           proposal_id: string
           retained_until: string
@@ -3979,6 +4033,8 @@ export type Database = {
           issued_at?: string
           legal_mentions?: Json
           number: string
+          pdf_path?: string | null
+          pdf_sha256?: string | null
           payment: Json
           proposal_id: string
           retained_until: string
@@ -3998,6 +4054,8 @@ export type Database = {
           issued_at?: string
           legal_mentions?: Json
           number?: string
+          pdf_path?: string | null
+          pdf_sha256?: string | null
           payment?: Json
           proposal_id?: string
           retained_until?: string
@@ -4938,6 +4996,22 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      marketplace_journal_issuers: {
+        Args: Record<PropertyKey, never>
+        Returns: { issuer_key: string; entries: number; last_seq: number; last_at: string }[]
+      }
+      marketplace_journal_close_due: {
+        Args: { p_issuer?: string | null }
+        Returns: number
+      }
+      marketplace_journal_record_event: {
+        Args: { p_actor: string | null; p_event: string; p_issuer: string; p_payload: Json }
+        Returns: string
+      }
+      marketplace_journal_verify: {
+        Args: { p_issuer: string }
+        Returns: Json
+      }
       marketplace_issue_workshop_fee_documents: {
         Args: { p_payment_id: string; p_fee_id: string | null; p_fee_amount: number; p_fee_refunded: number; p_brand: string; p_seller: Json; p_customer: Json }
         Returns: undefined

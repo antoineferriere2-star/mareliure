@@ -13,6 +13,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { renderDocumentPdf } from "@/marketplace/quotes/documentPdf";
+import { binderIssuer, recordModificationRefused } from "./issuerLedger.server";
 import { ISSUED_PDF_INTEGRITY_MESSAGE, IssuedPdfIntegrityError, issuedPdfBase64, storeIssuedPdfQuietly } from "./issuedDocumentPdf.server";
 import {
   billingProfileInput,
@@ -84,10 +85,16 @@ async function run<T>(
   work: (binderId: string, sb: Awaited<ReturnType<typeof admin>>) => Promise<T>,
 ): Promise<T> {
   const sb = await admin();
+  let binderId: string | null = null;
   try {
-    const binderId = await requireBinderId(sb, userId);
+    binderId = await requireBinderId(sb, userId);
     return await work(binderId, sb);
   } catch (err) {
+    // Une écriture refusée par les garde-fous d'immuabilité de la base reste datée au journal de l'atelier.
+    const dbMessage = String((err as { message?: string } | null)?.message ?? "");
+    if (binderId && IMMUTABILITY_REFUSAL.test(dbMessage)) {
+      await recordModificationRefused(sb, binderIssuer(binderId), { action: "server_write", reason: dbMessage.slice(0, 200) }, userId);
+    }
     if (err instanceof BinderQuotesError) {
       // `profile_incomplete:<ce qu'il manque>` : le relieur lit quoi renseigner.
       const message =
@@ -107,6 +114,7 @@ async function run<T>(
 }
 
 const id = z.object({ id: z.string().uuid() }).strict();
+const IMMUTABILITY_REFUSAL = /immutable|written once|cannot be deleted|append_only|credit_note_date_must_be_today|prefix_change_deferred/;
 
 // --- Profil, catalogue, clients -----------------------------------------------------
 

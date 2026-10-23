@@ -12,6 +12,7 @@ import type { DocumentSummary } from "@/marketplace/quotes/quoteViews";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ErrorNote, PAYMENT_LABELS, PRIMARY_BUTTON, QuoteStatusBadge } from "./quoteUi";
 import { INVOICES_KEY, QUOTES_KEY } from "./quoteQueryKeys";
+import { LedgerPanel } from "./LedgerPanel";
 import { BinderEmptyState, BinderPageHeader } from "../BinderPageUi";
 
 export function QuotesListPage({ initialTab = "quotes" }: { initialTab?: "quotes" | "invoices" }) {
@@ -114,6 +115,7 @@ export function QuotesListPage({ initialTab = "quotes" }: { initialTab?: "quotes
           ))}
         </ul>
       )}
+      {tab === "invoices" && <LedgerPanel />}
     </div>
   );
 }

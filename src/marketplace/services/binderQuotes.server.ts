@@ -19,6 +19,7 @@
 import type { Json, Tables } from "@/integrations/supabase/types";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { duplicateQuoteInput } from "@/marketplace/quotes/duplicateQuote";
+import { binderIssuer, recordModificationRefused } from "./issuerLedger.server";
 import { defaultNatureForName, invoiceNatureOf, type LineNature } from "@/marketplace/quotes/operationNature";
 import { findActiveBinderMembership } from "./binderMembership.server";
 import {
@@ -1199,7 +1200,12 @@ export async function updateInvoiceDraft(
   input: InvoiceDraftInput,
 ): Promise<DocumentView> {
   const current = await getInvoice(sb, binderId, invoiceId);
-  if (current.status !== "draft") throw new BinderQuotesError("conflict");
+  if (current.status !== "draft") {
+    // Une facture émise ne se modifie plus : la tentative est refusée et datée au journal de l'atelier.
+    await recordModificationRefused(sb, binderIssuer(binderId),
+      { action: "update_invoice_draft", document_id: invoiceId, reason: "invoice_not_draft" }, null);
+    throw new BinderQuotesError("conflict");
+  }
   const profile = await loadBillingProfile(sb, binderId);
   const vatMention = effectiveVatMention(current.vatMention, profile.vatMention);
   const { error } = await sb.rpc("marketplace_binder_update_invoice_draft", {
