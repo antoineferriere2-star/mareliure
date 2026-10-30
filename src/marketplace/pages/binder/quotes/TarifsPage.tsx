@@ -7,7 +7,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { clearMyDocumentLogo, getBillingProfile, getMyCatalog, saveMyBillingProfile, uploadMyDocumentLogo } from "@/marketplace/services/binderQuotes.data.functions";
 import { getMyPricingCatalog } from "@/marketplace/services/binderPricingCatalog.data.functions";
-import { FRANCHISE_MENTION_SUGGESTION, TAX_REGIME_CHOICES, taxRegimeChoiceOf, taxRegimeFields, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
+import { FRANCHISE_MENTION_SUGGESTION, mentionForRegime, TAX_REGIME_CHOICES, taxRegimeChoiceOf, taxRegimeFields, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
 import { bpsToPercentInput, parsePercentToBps } from "@/marketplace/quotes/quoteFormat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
@@ -200,7 +200,7 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
                 type="radio"
                 name="profile-vat-regime"
                 checked={taxRegimeChoiceOf(p) === value}
-                onChange={() => set({ ...taxRegimeFields(value), vatMention: value === "franchise" && !p.vatMention ? FRANCHISE_MENTION_SUGGESTION : p.vatMention })}
+                onChange={() => set({ ...taxRegimeFields(value), vatMention: value === "franchise" && !p.vatMention ? FRANCHISE_MENTION_SUGGESTION : mentionForRegime(taxRegimeFields(value).vatRegime, p.vatMention) })}
               />
               {label}
             </label>

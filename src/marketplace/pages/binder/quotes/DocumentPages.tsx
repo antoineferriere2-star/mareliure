@@ -666,6 +666,8 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
         await queryClient.invalidateQueries({
           queryKey: ["agreement-identity", doc.linkedQuoteId],
         });
+      } else if (draft.clientSiren && !isValidSiren(draft.clientSiren)) {
+        setMissing(["SIREN du client invalide : vérifiez les 9 chiffres."]);
       } else setFailed(true);
     },
   });

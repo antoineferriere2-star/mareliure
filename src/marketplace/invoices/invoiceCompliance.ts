@@ -105,8 +105,15 @@ const present = (value: string | null | undefined) => Boolean(value?.trim());
 const hasAddress = (line: string | null, postalCode: string | null, city: string | null) =>
   present(line) && present(postalCode) && present(city);
 
+const OPERATION_NATURE_LABEL: Record<InvoiceOperationNature, string> = {
+  goods: "Livraison de biens",
+  services: "Prestation de services",
+  mixed: "Mixte (biens et services)",
+};
+
 export function invoiceLegalMentions(candidate: InvoiceIssueCandidate): string[] {
   const mentions: string[] = [];
+  if (candidate.operationNature) mentions.push(`Nature de l'opération : ${OPERATION_NATURE_LABEL[candidate.operationNature]}`);
   if (candidate.vatRegime === "FRANCHISE") {
     mentions.push(candidate.vatMention?.trim() || FRANCHISE_VAT_MENTION);
   }

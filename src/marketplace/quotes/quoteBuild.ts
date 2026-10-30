@@ -106,6 +106,11 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
  */
 export const FRANCHISE_MENTION_SUGGESTION = "TVA non applicable, art. 293 B du CGI";
 
+/** Une mention de franchise ne survit pas à l'assujettissement : elle contredirait la TVA facturée. */
+export function mentionForRegime(vatRegime: BillingProfile["vatRegime"], mention: string | null): string | null {
+  return vatRegime === "VAT_LIABLE" && mention && /293\s*B/i.test(mention) ? null : mention;
+}
+
 export type VatFilingRegime = "reel_simplifie" | "reel_normal";
 
 /** Les trois régimes proposés à l'atelier : franchise, réel simplifié, réel normal. */
@@ -209,10 +214,8 @@ const filled = (value: string | null | undefined) => Boolean(value && value.trim
  * conversion : la mention non blanche du devis prime (elle a été promise au client),
  * à défaut celle du profil. Une chaîne blanche vaut absence.
  */
-export function effectiveVatMention(quoteMention: string | null, profileMention: string | null): string | null {
-  if (filled(quoteMention)) return quoteMention!.trim();
-  if (filled(profileMention)) return profileMention!.trim();
-  return null;
+export function effectiveVatMention(quoteMention: string | null, profileMention: string | null, vatRegime: BillingProfile["vatRegime"]): string | null {
+  return mentionForRegime(vatRegime, filled(quoteMention) ? quoteMention!.trim() : filled(profileMention) ? profileMention!.trim() : null);
 }
 
 /**
@@ -395,7 +398,7 @@ export function buildQuoteRows(args: {
     currency: "EUR",
     issuer: issuerOf(profile),
     vat_regime: regime,
-    vat_mention: profile.vatMention,
+    vat_mention: mentionForRegime(regime, profile.vatMention),
     payment_terms: profile.paymentTerms,
     notes: input.notes ?? profile.quoteNotes,
     subtotal_cents: totals.subtotalCents,
