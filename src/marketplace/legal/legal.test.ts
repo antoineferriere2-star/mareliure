@@ -142,6 +142,6 @@ describe("le tunnel et le site mènent aux pages de Ma Reliure", () => {
 
   it("lie aussi les CGV depuis le pied de page Fine Bindery", () => {
     const chrome = read("src/marketplace/pages/fineBindery/FineBinderyChrome.tsx");
-    expect(chrome).toContain(`href: "/terms-of-sale"`);
+    expect(chrome).toContain(`fineBinderyLegalPath(locale, "terms-of-sale")`);
   });
 });
