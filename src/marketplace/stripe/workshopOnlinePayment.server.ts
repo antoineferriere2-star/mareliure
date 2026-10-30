@@ -207,6 +207,7 @@ export async function refundWorkshopInvoice(
   paymentId: string,
   creditId: string,
 ) {
+  await assertNotTestWorkshop(sb, binderId);
   const payment = await sb
     .from("marketplace_workshop_online_payments")
     .select("*")

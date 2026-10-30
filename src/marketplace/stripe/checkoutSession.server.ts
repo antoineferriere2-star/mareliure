@@ -22,6 +22,7 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
+import { isTestCase, TEST_WORKSHOP_PROVIDER_REFUSED } from "@/marketplace/binders/testWorkshop.server";
 import { canViewCase } from "@/marketplace/permissions";
 import { loadCaseContext } from "@/marketplace/services/caseRepository.server";
 import { loadAcceptedCommercialProposal } from "@/marketplace/services/commercialProposalRepository.server";
@@ -90,6 +91,7 @@ export async function createCheckoutForCase(input: {
       customerUserId: caseContext.customerUserId,
     });
     if (!canView) fail(403, "Forbidden");
+    if (await isTestCase(sb, data.caseId)) fail(409, TEST_WORKSHOP_PROVIDER_REFUSED);
 
     const proposal = await loadAcceptedCommercialProposal(sb, data.caseId);
     if (!proposal) fail(409, "Aucune proposition commerciale acceptée pour ce dossier.");

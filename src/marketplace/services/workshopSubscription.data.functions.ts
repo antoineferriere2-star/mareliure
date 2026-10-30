@@ -4,6 +4,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin } from "@/build/services/adminAuth.server";
 import { findActiveBinderMembership } from "./binderMembership.server";
 import { fail } from "@/build/services/serverError";
+import { assertNotTestWorkshop } from "@/marketplace/binders/testWorkshop.server";
 import {
   createWorkshopCheckout,
   loadWorkshopSubscription,
@@ -97,6 +98,7 @@ export const createMyWorkshopBillingPortal = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const sb = await admin();
     const binderId = await workshopBillingOwner(sb, context.userId);
+    await assertNotTestWorkshop(sb, binderId);
     const { subscription } = await loadWorkshopSubscription(sb, binderId);
     if (!subscription.stripe_customer_id) fail(409, "Aucun abonnement à gérer.");
     await assertExpectedStripeAccount();
