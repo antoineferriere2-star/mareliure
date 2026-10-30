@@ -21,6 +21,7 @@ const h = vi.hoisted(() => ({
   },
   recorded: [] as string[],
   events: [] as unknown[],
+  testCase: false,
 }));
 
 vi.mock("@tanstack/react-start", () => {
@@ -40,6 +41,10 @@ vi.mock("@/marketplace/services/caseRepository.server", () => ({
     selectedBinderId: null,
     customerEmail: "cliente@example.test",
   })),
+}));
+vi.mock("@/marketplace/binders/testWorkshop.server", () => ({
+  isTestCase: vi.fn(async () => h.testCase),
+  TEST_WORKSHOP_PROVIDER_REFUSED: "Atelier de test",
 }));
 vi.mock("@/marketplace/services/commercialProposalRepository.server", () => ({
   loadAcceptedCommercialProposal: vi.fn(async () => h.proposal),
@@ -103,6 +108,7 @@ const sentTotal = () => sent().line_items.reduce((sum, l) => sum + l.price_data.
 beforeEach(() => {
   h.proposal = null;
   h.payment = null;
+  h.testCase = false;
   h.recorded = [];
   h.events = [];
   h.stripe.create.mockReset().mockResolvedValue({ id: "cs_new", url: "https://checkout.stripe.test/cs_new", status: "open" });
@@ -176,6 +182,16 @@ describe("ce qui ne doit jamais atteindre Stripe", () => {
     h.proposal = acceptedProposal(amountInput(50_000, 0, 2000), { paymentCircuit });
     expect(await codeOf(run())).toBe(409);
     expect(h.stripe.create).not.toHaveBeenCalled();
+  });
+
+  it("un dossier d'atelier de test : aucune session créée, reprise ni expirée", async () => {
+    h.testCase = true;
+    h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
+    h.payment = { paidAt: null, stripeCheckoutSessionId: "cs_open" };
+    expect(await codeOf(run())).toBe(409);
+    expect(h.stripe.create).not.toHaveBeenCalled();
+    expect(h.stripe.retrieve).not.toHaveBeenCalled();
+    expect(h.stripe.expire).not.toHaveBeenCalled();
   });
 
   it("another customer cannot pay or inspect this dossier", async () => {
