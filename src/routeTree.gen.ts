@@ -50,8 +50,12 @@ import { Route as LocaleBespokeCommissionsRouteImport } from './routes/$locale.b
 import { Route as LocaleBookRestorationRouteImport } from './routes/$locale.book-restoration'
 import { Route as LocaleCollectorRebindingRouteImport } from './routes/$locale.collector-rebinding'
 import { Route as LocaleFineBindingRouteImport } from './routes/$locale.fine-binding'
+import { Route as LocaleLegalNoticeRouteImport } from './routes/$locale.legal-notice'
+import { Route as LocalePrivacyPolicyRouteImport } from './routes/$locale.privacy-policy'
 import { Route as LocaleProfessionalsRouteImport } from './routes/$locale.professionals'
 import { Route as LocaleProjectRouteImport } from './routes/$locale.project'
+import { Route as LocaleTermsOfSaleRouteImport } from './routes/$locale.terms-of-sale'
+import { Route as LocaleTermsOfUseRouteImport } from './routes/$locale.terms-of-use'
 import { Route as AuthenticatedActiverMonAtelierRouteImport } from './routes/_authenticated/activer-mon-atelier'
 import { Route as AuthenticatedAdminRouteRouteImport } from './routes/_authenticated/admin/route'
 import { Route as AuthenticatedAtelierRouteRouteImport } from './routes/_authenticated/atelier/route'
@@ -355,6 +359,16 @@ const LocaleFineBindingRoute = LocaleFineBindingRouteImport.update({
   path: '/$locale/fine-binding',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LocaleLegalNoticeRoute = LocaleLegalNoticeRouteImport.update({
+  id: '/$locale/legal-notice',
+  path: '/$locale/legal-notice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocalePrivacyPolicyRoute = LocalePrivacyPolicyRouteImport.update({
+  id: '/$locale/privacy-policy',
+  path: '/$locale/privacy-policy',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const LocaleProfessionalsRoute = LocaleProfessionalsRouteImport.update({
   id: '/$locale/professionals',
   path: '/$locale/professionals',
@@ -363,6 +377,16 @@ const LocaleProfessionalsRoute = LocaleProfessionalsRouteImport.update({
 const LocaleProjectRoute = LocaleProjectRouteImport.update({
   id: '/$locale/project',
   path: '/$locale/project',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleTermsOfSaleRoute = LocaleTermsOfSaleRouteImport.update({
+  id: '/$locale/terms-of-sale',
+  path: '/$locale/terms-of-sale',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LocaleTermsOfUseRoute = LocaleTermsOfUseRouteImport.update({
+  id: '/$locale/terms-of-use',
+  path: '/$locale/terms-of-use',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedActiverMonAtelierRoute =
@@ -957,8 +981,12 @@ export interface FileRoutesByFullPath {
   '/$locale/book-restoration': typeof LocaleBookRestorationRoute
   '/$locale/collector-rebinding': typeof LocaleCollectorRebindingRoute
   '/$locale/fine-binding': typeof LocaleFineBindingRoute
+  '/$locale/legal-notice': typeof LocaleLegalNoticeRoute
+  '/$locale/privacy-policy': typeof LocalePrivacyPolicyRoute
   '/$locale/professionals': typeof LocaleProfessionalsRoute
   '/$locale/project': typeof LocaleProjectRoute
+  '/$locale/terms-of-sale': typeof LocaleTermsOfSaleRoute
+  '/$locale/terms-of-use': typeof LocaleTermsOfUseRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/ateliers/$slug': typeof AteliersSlugRoute
@@ -1089,8 +1117,12 @@ export interface FileRoutesByTo {
   '/$locale/book-restoration': typeof LocaleBookRestorationRoute
   '/$locale/collector-rebinding': typeof LocaleCollectorRebindingRoute
   '/$locale/fine-binding': typeof LocaleFineBindingRoute
+  '/$locale/legal-notice': typeof LocaleLegalNoticeRoute
+  '/$locale/privacy-policy': typeof LocalePrivacyPolicyRoute
   '/$locale/professionals': typeof LocaleProfessionalsRoute
   '/$locale/project': typeof LocaleProjectRoute
+  '/$locale/terms-of-sale': typeof LocaleTermsOfSaleRoute
+  '/$locale/terms-of-use': typeof LocaleTermsOfUseRoute
   '/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/ateliers/$slug': typeof AteliersSlugRoute
@@ -1228,8 +1260,12 @@ export interface FileRoutesById {
   '/$locale/book-restoration': typeof LocaleBookRestorationRoute
   '/$locale/collector-rebinding': typeof LocaleCollectorRebindingRoute
   '/$locale/fine-binding': typeof LocaleFineBindingRoute
+  '/$locale/legal-notice': typeof LocaleLegalNoticeRoute
+  '/$locale/privacy-policy': typeof LocalePrivacyPolicyRoute
   '/$locale/professionals': typeof LocaleProfessionalsRoute
   '/$locale/project': typeof LocaleProjectRoute
+  '/$locale/terms-of-sale': typeof LocaleTermsOfSaleRoute
+  '/$locale/terms-of-use': typeof LocaleTermsOfUseRoute
   '/_authenticated/activer-mon-atelier': typeof AuthenticatedActiverMonAtelierRoute
   '/a/$slug': typeof ASlugRoute
   '/ateliers/$slug': typeof AteliersSlugRoute
@@ -1368,8 +1404,12 @@ export interface FileRouteTypes {
     | '/$locale/book-restoration'
     | '/$locale/collector-rebinding'
     | '/$locale/fine-binding'
+    | '/$locale/legal-notice'
+    | '/$locale/privacy-policy'
     | '/$locale/professionals'
     | '/$locale/project'
+    | '/$locale/terms-of-sale'
+    | '/$locale/terms-of-use'
     | '/activer-mon-atelier'
     | '/a/$slug'
     | '/ateliers/$slug'
@@ -1500,8 +1540,12 @@ export interface FileRouteTypes {
     | '/$locale/book-restoration'
     | '/$locale/collector-rebinding'
     | '/$locale/fine-binding'
+    | '/$locale/legal-notice'
+    | '/$locale/privacy-policy'
     | '/$locale/professionals'
     | '/$locale/project'
+    | '/$locale/terms-of-sale'
+    | '/$locale/terms-of-use'
     | '/activer-mon-atelier'
     | '/a/$slug'
     | '/ateliers/$slug'
@@ -1638,8 +1682,12 @@ export interface FileRouteTypes {
     | '/$locale/book-restoration'
     | '/$locale/collector-rebinding'
     | '/$locale/fine-binding'
+    | '/$locale/legal-notice'
+    | '/$locale/privacy-policy'
     | '/$locale/professionals'
     | '/$locale/project'
+    | '/$locale/terms-of-sale'
+    | '/$locale/terms-of-use'
     | '/_authenticated/activer-mon-atelier'
     | '/a/$slug'
     | '/ateliers/$slug'
@@ -1772,8 +1820,12 @@ export interface RootRouteChildren {
   LocaleBookRestorationRoute: typeof LocaleBookRestorationRoute
   LocaleCollectorRebindingRoute: typeof LocaleCollectorRebindingRoute
   LocaleFineBindingRoute: typeof LocaleFineBindingRoute
+  LocaleLegalNoticeRoute: typeof LocaleLegalNoticeRoute
+  LocalePrivacyPolicyRoute: typeof LocalePrivacyPolicyRoute
   LocaleProfessionalsRoute: typeof LocaleProfessionalsRoute
   LocaleProjectRoute: typeof LocaleProjectRoute
+  LocaleTermsOfSaleRoute: typeof LocaleTermsOfSaleRoute
+  LocaleTermsOfUseRoute: typeof LocaleTermsOfUseRoute
   ASlugRoute: typeof ASlugRoute
   AteliersSlugRoute: typeof AteliersSlugRoute
   DemoDeckProjectRoute: typeof DemoDeckProjectRoute
@@ -2091,6 +2143,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LocaleFineBindingRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/$locale/legal-notice': {
+      id: '/$locale/legal-notice'
+      path: '/$locale/legal-notice'
+      fullPath: '/$locale/legal-notice'
+      preLoaderRoute: typeof LocaleLegalNoticeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/privacy-policy': {
+      id: '/$locale/privacy-policy'
+      path: '/$locale/privacy-policy'
+      fullPath: '/$locale/privacy-policy'
+      preLoaderRoute: typeof LocalePrivacyPolicyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/$locale/professionals': {
       id: '/$locale/professionals'
       path: '/$locale/professionals'
@@ -2103,6 +2169,20 @@ declare module '@tanstack/react-router' {
       path: '/$locale/project'
       fullPath: '/$locale/project'
       preLoaderRoute: typeof LocaleProjectRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/terms-of-sale': {
+      id: '/$locale/terms-of-sale'
+      path: '/$locale/terms-of-sale'
+      fullPath: '/$locale/terms-of-sale'
+      preLoaderRoute: typeof LocaleTermsOfSaleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/$locale/terms-of-use': {
+      id: '/$locale/terms-of-use'
+      path: '/$locale/terms-of-use'
+      fullPath: '/$locale/terms-of-use'
+      preLoaderRoute: typeof LocaleTermsOfUseRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/activer-mon-atelier': {
@@ -3087,8 +3167,12 @@ const rootRouteChildren: RootRouteChildren = {
   LocaleBookRestorationRoute: LocaleBookRestorationRoute,
   LocaleCollectorRebindingRoute: LocaleCollectorRebindingRoute,
   LocaleFineBindingRoute: LocaleFineBindingRoute,
+  LocaleLegalNoticeRoute: LocaleLegalNoticeRoute,
+  LocalePrivacyPolicyRoute: LocalePrivacyPolicyRoute,
   LocaleProfessionalsRoute: LocaleProfessionalsRoute,
   LocaleProjectRoute: LocaleProjectRoute,
+  LocaleTermsOfSaleRoute: LocaleTermsOfSaleRoute,
+  LocaleTermsOfUseRoute: LocaleTermsOfUseRoute,
   ASlugRoute: ASlugRoute,
   AteliersSlugRoute: AteliersSlugRoute,
   DemoDeckProjectRoute: DemoDeckProjectRoute,
@@ -3121,13 +3205,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}

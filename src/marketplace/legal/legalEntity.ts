@@ -91,7 +91,9 @@ export const MEDIATOR_PENDING_NOTE_EN =
   "The competent consumer mediator has not been designated yet. BLOCKED — MEDIATOR DETAILS REQUIRED: this section will be completed with their contact details before any payment opens.";
 
 /** Formate {@link LEGAL_PAGES_UPDATED_AT} dans la langue de la page qui l'affiche. */
-export function formatLegalPagesUpdatedAt(locale: "fr-FR" | "en-US"): string {
+export function formatLegalPagesUpdatedAt(
+  locale: "fr-FR" | "en-US" | "de-DE" | "it-IT" | "es-ES",
+): string {
   return new Intl.DateTimeFormat(locale, { day: "numeric", month: "long", year: "numeric" }).format(
     new Date(`${LEGAL_PAGES_UPDATED_AT}T00:00:00Z`),
   );

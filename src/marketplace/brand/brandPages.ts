@@ -12,6 +12,11 @@
 import { FINE_BINDERY_LOCALES } from "@/marketplace/i18n/fineBinderyLocale";
 import { DISCIPLINES } from "@/marketplace/pages/fineBindery/disciplines";
 
+import {
+  FINE_BINDERY_LEGAL_SLUGS,
+  fineBinderyLegalPath,
+} from "@/marketplace/legal/fineBinderyLegalPaths";
+
 export interface SitemapEntry {
   path: string;
   changefreq?: "always" | "hourly" | "daily" | "weekly" | "monthly" | "yearly" | "never";
@@ -40,14 +45,19 @@ export const MARELIURE_ENTRIES: SitemapEntry[] = [
 // pas listée.
 export const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
   ...FINE_BINDERY_LOCALES.flatMap((locale) => [
-    { path: `/${locale}`, changefreq: "weekly" as const, priority: locale === "en" ? "1.0" : "0.9" },
+    {
+      path: `/${locale}`,
+      changefreq: "weekly" as const,
+      priority: locale === "en" ? "1.0" : "0.9",
+    },
     { path: `/${locale}/professionals`, changefreq: "weekly" as const, priority: "0.9" },
     ...DISCIPLINES.map((discipline) => ({ path: `/${locale}/${discipline.slug}`, changefreq: "monthly" as const, priority: "0.8" })),
+    ...FINE_BINDERY_LEGAL_SLUGS.map((slug) => ({
+      path: fineBinderyLegalPath(locale, slug),
+      changefreq: "yearly" as const,
+      priority: "0.3",
+    })),
   ]),
-  { path: "/legal-notice", changefreq: "yearly", priority: "0.3" },
-  { path: "/privacy-policy", changefreq: "yearly", priority: "0.3" },
-  { path: "/terms-of-use", changefreq: "yearly", priority: "0.3" },
-  { path: "/terms-of-sale", changefreq: "yearly", priority: "0.3" },
 ];
 
 export type PageOwner = "MA_RELIURE" | "FINE_BINDERY";
@@ -59,6 +69,12 @@ export type PageOwner = "MA_RELIURE" | "FINE_BINDERY";
  * prévisualisation de Fine Bindery.
  */
 export const LEGACY_PAGE_REDIRECTS: Record<string, { owner: PageOwner; path: string }> = {
+  ...Object.fromEntries(
+    FINE_BINDERY_LEGAL_SLUGS.map((slug) => [
+      `/${slug}`,
+      { owner: "FINE_BINDERY" as const, path: fineBinderyLegalPath("en", slug) },
+    ]),
+  ),
   "/reliure": { owner: "MA_RELIURE", path: "/" },
   "/professionnels": { owner: "FINE_BINDERY", path: "/fr/professionals" },
   "/fine-bindery": { owner: "FINE_BINDERY", path: "/en" },
@@ -67,7 +83,9 @@ export const LEGACY_PAGE_REDIRECTS: Record<string, { owner: PageOwner; path: str
 /** Pages d'une marque hors sitemap (documents contractuels), redirigées comme les autres vers leur domaine. */
 const MARELIURE_UNLISTED_PATHS = new Set(["/conditions-ateliers"]);
 
-const MARELIURE_ONLY_PATHS = new Set(MARELIURE_ENTRIES.map((entry) => entry.path).filter((path) => path !== "/"));
+const MARELIURE_ONLY_PATHS = new Set(
+  MARELIURE_ENTRIES.map((entry) => entry.path).filter((path) => path !== "/"),
+);
 const FINE_BINDERY_ONLY_PATHS = new Set(FINE_BINDERY_ENTRIES.map((entry) => entry.path));
 // /en, /fr/professionals, /de/<atelier>… : tout chemin ouvert par une langue
 // appartient à Fine Bindery (routes/$locale.*).
@@ -82,6 +100,7 @@ const FINE_BINDERY_LOCALE_PREFIX = new RegExp(`^/(${FINE_BINDERY_LOCALES.join("|
 export function publicPageOwner(pathname: string): PageOwner | null {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
   if (MARELIURE_ONLY_PATHS.has(path) || MARELIURE_UNLISTED_PATHS.has(path)) return "MA_RELIURE";
-  if (FINE_BINDERY_ONLY_PATHS.has(path) || FINE_BINDERY_LOCALE_PREFIX.test(path)) return "FINE_BINDERY";
+  if (FINE_BINDERY_ONLY_PATHS.has(path) || FINE_BINDERY_LOCALE_PREFIX.test(path))
+    return "FINE_BINDERY";
   return null;
 }
