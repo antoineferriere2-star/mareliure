@@ -1116,7 +1116,7 @@ export async function convertQuoteToInvoice(
   const profile = await loadBillingProfile(sb, binderId);
   // Le devis a pu naître en franchise SANS mention (profil complété depuis) : ce qui sera figé dans la
   // facture est la mention effective — celle du devis si elle existe, sinon celle du profil.
-  const vatMention = effectiveVatMention(quote.vat_mention, profile.vatMention);
+  const vatMention = effectiveVatMention(quote.vat_mention, profile.vatMention, quote.vat_regime);
   const due = new Date(`${today}T12:00:00Z`);
   due.setUTCDate(due.getUTCDate() + (profile.paymentDelayDays ?? 0));
   // Nature de la facture déduite des lignes du devis (mixte si biens et services) ; modifiable en brouillon.
@@ -1207,7 +1207,7 @@ export async function updateInvoiceDraft(
     throw new BinderQuotesError("conflict");
   }
   const profile = await loadBillingProfile(sb, binderId);
-  const vatMention = effectiveVatMention(current.vatMention, profile.vatMention);
+  const vatMention = effectiveVatMention(current.vatMention, profile.vatMention, current.vatRegime);
   const { error } = await sb.rpc("marketplace_binder_update_invoice_draft", {
     p_binder_id: binderId,
     p_invoice_id: invoiceId,

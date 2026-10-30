@@ -3,8 +3,11 @@
  * du document : identité, lignes et montants ne sont jamais recalculés ici.
  */
 import { PDFDocument, StandardFonts, rgb, type PDFImage, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
+import { countryName } from "@/marketplace/invoices/countries";
 import { formatDimensions } from "./quoteLines";
 import type { DocumentItemView, DocumentView, CreditNoteDocumentView } from "./quoteViews";
+
+const printedCountry = (country: string | null | undefined) => (country && /^[A-Z]{2}$/.test(country) ? countryName(country) : country);
 
 export interface RenderedPdf { base64: string; pageCount: number; printed: string[] }
 
@@ -193,7 +196,7 @@ export async function renderDocumentPdf(document: DocumentView | CreditNoteDocum
     const width = (CONTENT_W - gap) / 2;
     const top = y;
     const blocks = [
-      { x: MARGIN, title: "DESTINATAIRE", lines: [document.invoiceCompliance?.clientLegalName || document.client.name, document.invoiceCompliance?.billingAddressLine1 || document.client.addressLine1, [document.invoiceCompliance?.billingPostalCode || document.client.postalCode, document.invoiceCompliance?.billingCity || document.client.city].filter(Boolean).join(" ") || null, document.invoiceCompliance?.billingCountry || document.client.country, document.invoiceCompliance?.clientSiren ? `SIREN ${document.invoiceCompliance.clientSiren}` : null, document.invoiceCompliance?.clientVatNumber ? `TVA ${document.invoiceCompliance.clientVatNumber}` : null, document.invoiceCompliance?.purchaseOrderNumber ? `Bon de commande ${document.invoiceCompliance.purchaseOrderNumber}` : null, document.client.email, document.client.phone] },
+      { x: MARGIN, title: "DESTINATAIRE", lines: [document.invoiceCompliance?.clientLegalName || document.client.name, document.invoiceCompliance?.billingAddressLine1 || document.client.addressLine1, [document.invoiceCompliance?.billingPostalCode || document.client.postalCode, document.invoiceCompliance?.billingCity || document.client.city].filter(Boolean).join(" ") || null, printedCountry(document.invoiceCompliance?.billingCountry || document.client.country), document.invoiceCompliance?.clientSiren ? `SIREN ${document.invoiceCompliance.clientSiren}` : null, document.invoiceCompliance?.clientVatNumber ? `TVA ${document.invoiceCompliance.clientVatNumber}` : null, document.invoiceCompliance?.purchaseOrderNumber ? `Bon de commande ${document.invoiceCompliance.purchaseOrderNumber}` : null, document.client.email, document.client.phone] },
       { x: MARGIN + width + gap, title: "OUVRAGE", lines: [document.book.title || "-", document.book.author, formatDimensions(document.book), document.book.notes] },
     ];
     let lowest = top;

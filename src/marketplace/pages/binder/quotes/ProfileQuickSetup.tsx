@@ -12,7 +12,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Link } from "@tanstack/react-router";
 import { saveMyBillingProfile } from "@/marketplace/services/binderQuotes.data.functions";
-import { FRANCHISE_MENTION_SUGGESTION, TAX_REGIME_CHOICES, taxRegimeChoiceOf, taxRegimeFields, type BillingProfile, type TaxRegimeChoice } from "@/marketplace/quotes/quoteBuild";
+import { FRANCHISE_MENTION_SUGGESTION, mentionForRegime, TAX_REGIME_CHOICES, taxRegimeChoiceOf, taxRegimeFields, type BillingProfile, type TaxRegimeChoice } from "@/marketplace/quotes/quoteBuild";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
 import { PROFILE_QUERY_KEY, profileToInput } from "./quoteQueryKeys";
 
@@ -30,7 +30,7 @@ export function ProfileQuickSetup({ profile, missing }: { profile: BillingProfil
           ...profileToInput(profile),
           workshopName: name.trim() || null,
           ...(regime ? taxRegimeFields(regime) : { vatRegime: null, vatFilingRegime: null }),
-          vatMention: regime === "franchise" ? mention.trim() || FRANCHISE_MENTION_SUGGESTION : profile.vatMention,
+          vatMention: regime === "franchise" ? mention.trim() || FRANCHISE_MENTION_SUGGESTION : mentionForRegime(regime ? taxRegimeFields(regime).vatRegime : null, profile.vatMention),
         },
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: PROFILE_QUERY_KEY }),

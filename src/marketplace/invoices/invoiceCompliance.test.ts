@@ -105,4 +105,8 @@ describe("validateInvoiceForIssue", () => {
       "Option pour le paiement de la taxe d'après les débits",
     ]));
   });
+
+  it("imprime la nature de l'opération", () => {
+    expect(invoiceLegalMentions({ ...candidate(), operationNature: "mixed" })).toContain("Nature de l'opération : Mixte (biens et services)");
+  });
 });
