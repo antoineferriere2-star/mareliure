@@ -2,7 +2,8 @@
  * Moteur PDF commun aux devis et factures. Il imprime uniquement le snapshot
  * du document : identité, lignes et montants ne sont jamais recalculés ici.
  */
-import { PDFDocument, StandardFonts, rgb, type PDFImage, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
+import { PDFDocument, PDFHexString, PDFName, PDFString, rgb, type PDFImage, type PDFFont, type PDFPage, type RGB } from "pdf-lib";
+import fontkit from "@pdf-lib/fontkit";
 import { countryName } from "@/marketplace/invoices/countries";
 import { formatDimensions } from "./quoteLines";
 import type { DocumentItemView, DocumentView, CreditNoteDocumentView } from "./quoteViews";
@@ -67,12 +68,51 @@ async function fetchImage(pdf: PDFDocument, url: string | null | undefined): Pro
   }
 }
 
+const fromBase64 = (value: string) => Uint8Array.from(atob(value), (character) => character.charCodeAt(0));
+const BYTE_ORDER_MARK = "﻿";
+const xmlEscape = (value: string) => value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+// Formes liées et crénage retirés : le texte reste extractible et les chasses restent celles des polices d'origine.
+const FONT_OPTIONS = { subset: true, features: { liga: false, clig: false, calt: false, kern: false } };
+
+/** Rend le fichier conforme au profil PDF/A-3B : profil de couleur, métadonnées XMP, identifiant. */
+function declarePdfA(pdf: PDFDocument, title: string, author: string, srgb: Uint8Array, now: Date) {
+  const { context, catalog } = pdf;
+  pdf.setTitle(title);
+  pdf.setAuthor(author);
+  pdf.setCreator("Ma Reliure");
+  pdf.setProducer("Ma Reliure");
+  pdf.setCreationDate(now);
+  pdf.setModificationDate(now);
+  const profile = context.register(context.flateStream(srgb, { N: 3 }));
+  catalog.set(PDFName.of("OutputIntents"), context.obj([context.obj({
+    Type: "OutputIntent",
+    S: "GTS_PDFA1",
+    OutputConditionIdentifier: PDFString.of("sRGB"),
+    Info: PDFString.of("sRGB IEC61966-2.1"),
+    DestOutputProfile: profile,
+  })]));
+  const date = now.toISOString().replace(/\.\d{3}Z$/, "Z");
+  const xmp = `<?xpacket begin="${BYTE_ORDER_MARK}" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/"><rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">
+<rdf:Description rdf:about="" xmlns:pdfaid="http://www.aiim.org/pdfa/ns/id/"><pdfaid:part>3</pdfaid:part><pdfaid:conformance>B</pdfaid:conformance></rdf:Description>
+<rdf:Description rdf:about="" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title><rdf:Alt><rdf:li xml:lang="x-default">${xmlEscape(title)}</rdf:li></rdf:Alt></dc:title><dc:creator><rdf:Seq><rdf:li>${xmlEscape(author)}</rdf:li></rdf:Seq></dc:creator></rdf:Description>
+<rdf:Description rdf:about="" xmlns:xmp="http://ns.adobe.com/xap/1.0/"><xmp:CreatorTool>Ma Reliure</xmp:CreatorTool><xmp:CreateDate>${date}</xmp:CreateDate><xmp:ModifyDate>${date}</xmp:ModifyDate></rdf:Description>
+<rdf:Description rdf:about="" xmlns:pdf="http://ns.adobe.com/pdf/1.3/"><pdf:Producer>Ma Reliure</pdf:Producer></rdf:Description>
+</rdf:RDF></x:xmpmeta>
+<?xpacket end="w"?>`;
+  catalog.set(PDFName.of("Metadata"), context.register(context.stream(new TextEncoder().encode(xmp), { Type: "Metadata", Subtype: "XML" })));
+  const id = Array.from(crypto.getRandomValues(new Uint8Array(16)), (byte) => byte.toString(16).padStart(2, "0")).join("");
+  context.trailerInfo.ID = context.obj([PDFHexString.of(id), PDFHexString.of(id)]);
+}
+
 export async function renderDocumentPdf(document: DocumentView | CreditNoteDocumentView): Promise<RenderedPdf> {
-  const pdf = await PDFDocument.create();
-  const serif = await pdf.embedFont(StandardFonts.TimesRoman);
-  const serifBold = await pdf.embedFont(StandardFonts.TimesRomanBold);
-  const sans = await pdf.embedFont(StandardFonts.Helvetica);
-  const sansBold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const assets = await import("./documentPdfAssets");
+  const pdf = await PDFDocument.create({ updateMetadata: false });
+  pdf.registerFontkit(fontkit);
+  const serif = await pdf.embedFont(fromBase64(assets.serif), FONT_OPTIONS);
+  const serifBold = await pdf.embedFont(fromBase64(assets.serifBold), FONT_OPTIONS);
+  const sans = await pdf.embedFont(fromBase64(assets.sans), FONT_OPTIONS);
+  const sansBold = await pdf.embedFont(fromBase64(assets.sansBold), FONT_OPTIONS);
   const allowed = new Set<number>(sans.getCharacterSet());
   const accent = colorFromHex(document.issuer.documentAccentColor);
   const printed: string[] = [];
@@ -400,5 +440,6 @@ export async function renderDocumentPdf(document: DocumentView | CreditNoteDocum
   drawClosingBlocks();
   drawFooter();
   const pages = pdf.getPages();
+  declarePdfA(pdf, clean(`${documentLabel} ${document.number}`), clean(document.issuer.workshopName || document.issuer.legalName || "Atelier"), fromBase64(assets.srgb), new Date());
   return { base64: await pdf.saveAsBase64(), pageCount: pages.length, printed };
 }
