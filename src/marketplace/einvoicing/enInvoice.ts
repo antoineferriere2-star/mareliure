@@ -11,6 +11,9 @@ export type ProcessingRule = "B2B" | "B2BInt" | "B2C" | "B2G";
 export type EnInvoiceBlocker =
   | "not_issued"
   | "missing_compliance"
+  | "missing_client_type"
+  | "vat_on_debits_not_mapped"
+  | "deposit_not_mapped"
   | "unsupported_currency"
   | "unsupported_vat_regime"
   | "unsupported_public_entity"
@@ -107,6 +110,10 @@ const CREDIT_TRANSFER = "30";
 const VAT_SCHEME_LABEL = "VAT";
 const FRANCHISE_REASON_CODE = "VATEX-FR-FRANCHISE";
 const RECOVERY_INDEMNITY = "Indemnité forfaitaire de 40 € pour frais de recouvrement due en cas de retard de paiement.";
+// Le contrôle français exige ces trois notes sur toute facture, alors que ces clauses ne visent que les professionnels.
+const INDIVIDUAL_RECOVERY_NOTE = "Indemnité forfaitaire de recouvrement : sans objet, vente à un particulier.";
+const INDIVIDUAL_LATE_PENALTY_NOTE = "Pénalités de retard : sans objet, vente à un particulier.";
+const NO_EARLY_PAYMENT_DISCOUNT = "Aucun escompte pour paiement anticipé.";
 
 const money = (cents: number) => (cents / 100).toFixed(2);
 const rate = (bps: number) => (bps / 100).toFixed(2);
@@ -122,10 +129,10 @@ function address(line: string | null | undefined, postCode: string | null | unde
   };
 }
 
-function ruleOf(clientType: string | null, country: string): ProcessingRule {
+function ruleOf(clientType: string | null, country: string): ProcessingRule | null {
   if (clientType === "public_entity") return "B2G";
   if (clientType === "business") return country === "FR" ? "B2B" : "B2BInt";
-  return "B2C";
+  return clientType === "individual" ? "B2C" : null;
 }
 
 export function buildEnInvoice(document: DocumentView | CreditNoteDocumentView, context: EnInvoiceContext = {}): EnInvoiceResult {
@@ -140,6 +147,7 @@ export function buildEnInvoice(document: DocumentView | CreditNoteDocumentView, 
   const country = (compliance.billingCountry ?? document.client.country ?? DEFAULT_COUNTRY).toUpperCase();
   const processingRule = ruleOf(compliance.clientType, country);
   const nature = compliance.operationNature;
+  if (!processingRule) return { ok: false, blockers: [...blockers, "missing_client_type"] };
 
   if (document.currency !== "EUR") blockers.add("unsupported_currency");
   if (document.vatRegime !== "FRANCHISE" && document.vatRegime !== "VAT_LIABLE") blockers.add("unsupported_vat_regime");
@@ -148,6 +156,12 @@ export function buildEnInvoice(document: DocumentView | CreditNoteDocumentView, 
   if (processingRule === "B2C" && nature === "mixed") blockers.add("b2c_mixed");
   if (!present(issuer.siren) || !(present(issuer.legalName) || present(issuer.workshopName))) blockers.add("missing_seller_identity");
   if (!franchise && !present(issuer.vatNumber)) blockers.add("missing_seller_identity");
+  // BT-8 attend un code d'exigibilité que nous n'avons pas encore validé sur la norme en vigueur.
+  if (issuer.vatOnDebits) blockers.add("vat_on_debits_not_mapped");
+  // Un acompte demandé n'est ni un montant payé ni une facture d'acompte : son traitement reste à arrêter.
+  if (document.depositCents > 0 || (document.payment?.depositPaidCents ?? 0) > 0) blockers.add("deposit_not_mapped");
+  const isIndividual = processingRule === "B2C";
+  if (!isIndividual && !isCredit && (!present(compliance.latePenaltyTerms) || !present(compliance.earlyPaymentDiscountTerms))) blockers.add("missing_compliance");
   if (processingRule === "B2B" && !present(compliance.clientSiren)) blockers.add("missing_buyer_identity");
   // Un e-mail n'achemine pas une facture à l'étranger : ces ventes se déclarent en e-reporting, sans facture transmise.
   if (processingRule === "B2BInt") blockers.add("international_reporting_only");
@@ -188,10 +202,10 @@ export function buildEnInvoice(document: DocumentView | CreditNoteDocumentView, 
   const legalInformation = [issuer.legalForm, issuer.shareCapital ? `Capital ${issuer.shareCapital}` : null].filter(Boolean).join(", ");
   const vatMention = document.vatMention?.trim();
   const notes: EnInvoice["notes"] = [];
-  if (processingRule === "B2C") notes.push({ subject_code: "BAR", note: "B2C" });
-  notes.push({ subject_code: "PMT", note: RECOVERY_INDEMNITY });
-  notes.push({ subject_code: "PMD", note: compliance.latePenaltyTerms?.trim() || "Pénalités de retard : néant, vente à un particulier." });
-  notes.push({ subject_code: "AAB", note: compliance.earlyPaymentDiscountTerms?.trim() || "Aucun escompte pour paiement anticipé." });
+  if (isIndividual) notes.push({ subject_code: "BAR", note: "B2C" });
+  notes.push({ subject_code: "PMT", note: isIndividual ? INDIVIDUAL_RECOVERY_NOTE : RECOVERY_INDEMNITY });
+  notes.push({ subject_code: "PMD", note: isIndividual ? INDIVIDUAL_LATE_PENALTY_NOTE : compliance.latePenaltyTerms?.trim() || "Pénalités de retard : voir la facture d'origine." });
+  notes.push({ subject_code: "AAB", note: compliance.earlyPaymentDiscountTerms?.trim() || NO_EARLY_PAYMENT_DISCOUNT });
   if (document.kind === "credit_note") notes.push({ subject_code: "ACD", note: document.reason });
   const deliveryCountry = (compliance.deliveryCountry ?? country).toUpperCase();
 

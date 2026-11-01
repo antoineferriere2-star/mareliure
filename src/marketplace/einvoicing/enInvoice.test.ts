@@ -64,6 +64,12 @@ describe("facture vers EN 16931", () => {
     expect(value.payment_instructions?.credit_transfers[0].payment_account_identifier.value).toBe("FR7630006000011234567890189");
   });
 
+  it("reprend les conditions d'un professionnel", () => {
+    const value = built(invoice());
+    expect(value.notes).toContainEqual({ subject_code: "PMD", note: "Trois fois le taux légal." });
+    expect(JSON.stringify(value.notes)).toContain("40 €");
+  });
+
   it("préfère l'adresse lue dans l'annuaire", () => {
     const result = buildEnInvoice(invoice(), { sellerElectronicAddress: "732829320_ATELIER", buyerElectronicAddress: "552100554_COMPTA" });
     if (!result.ok) throw new Error("refusée");
@@ -112,6 +118,8 @@ describe("facture vers EN 16931", () => {
     expect(result.ok && result.processingRule).toBe("B2C");
     const value = built(document);
     expect(value.notes[0]).toEqual({ subject_code: "BAR", note: "B2C" });
+    expect(JSON.stringify(value.notes)).not.toContain("40 €");
+    expect(value.notes.map((note) => note.subject_code)).toEqual(["BAR", "PMT", "PMD", "AAB"]);
     expect(JSON.stringify(value)).not.toContain("0102030405");
     expect(value.buyer.electronic_address).toEqual({ value: "client@example.com", scheme: "EM" });
   });
@@ -128,6 +136,23 @@ describe("facture vers EN 16931", () => {
 });
 
 describe("pièces refusées", () => {
+  it("un client sans type, jamais supposé particulier", () => {
+    expect(blockers(invoice({}, { clientType: null }))).toEqual(["missing_client_type"]);
+  });
+
+  it("un atelier en TVA sur les débits, tant que BT-8 n'est pas validé", () => {
+    expect(blockers(invoice({ issuer: { ...invoice().issuer, vatOnDebits: true } }))).toEqual(["vat_on_debits_not_mapped"]);
+  });
+
+  it("une pièce avec acompte, demandé ou reçu", () => {
+    expect(blockers(invoice({ depositCents: 6000 }))).toEqual(["deposit_not_mapped"]);
+    expect(blockers(invoice({ payment: { status: "deposit_paid", amountPaidCents: 6000, depositPaidCents: 6000 } }))).toEqual(["deposit_not_mapped"]);
+  });
+
+  it("un professionnel sans pénalités ni escompte", () => {
+    expect(blockers(invoice({}, { latePenaltyTerms: null }))).toEqual(["missing_compliance"]);
+  });
+
   it("un brouillon ou un devis", () => {
     expect(blockers(invoice({ status: "draft" }))).toContain("not_issued");
     expect(blockers(invoice({ kind: "quote" }))).toContain("not_issued");
