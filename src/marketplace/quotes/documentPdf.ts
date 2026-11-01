@@ -53,6 +53,18 @@ function colorFromHex(value: string | null | undefined): RGB {
   return rgb(((number >> 16) & 255) / 255, ((number >> 8) & 255) / 255, (number & 255) / 255);
 }
 
+/** Nombre de composantes d'un JPEG, lu dans son en-tête ; `null` si l'en-tête est illisible. */
+export function jpegComponents(bytes: Uint8Array): number | null {
+  let at = 2;
+  while (at + 9 < bytes.length) {
+    if (bytes[at] !== 0xff) return null;
+    const marker = bytes[at + 1];
+    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) return bytes[at + 9];
+    at += 2 + ((bytes[at + 2] << 8) | bytes[at + 3]);
+  }
+  return null;
+}
+
 async function fetchImage(pdf: PDFDocument, url: string | null | undefined): Promise<PDFImage | null> {
   if (!url) return null;
   try {
@@ -62,6 +74,8 @@ async function fetchImage(pdf: PDFDocument, url: string | null | undefined): Pro
     const mime = response.headers.get("content-type") ?? "";
     // Attendre aussi le décodage pour traiter une image endommagée comme indisponible.
     if (mime.includes("png") || url.toLowerCase().includes(".png")) return await pdf.embedPng(bytes);
+    // Le CMJN contredit le profil sRGB du PDF/A et le Worker ne sait pas le convertir : même sort qu'une image illisible.
+    if (jpegComponents(bytes) === 4) return null;
     return await pdf.embedJpg(bytes);
   } catch {
     return null;

@@ -1,8 +1,8 @@
 // Contrat PDF/A-3B de nos documents : ce que le Factur-X exige du PDF lisible.
 // Il ne remplace pas veraPDF, il empêche seulement de perdre ces éléments sans le voir.
 import { PDFDocument, PDFName } from "pdf-lib";
-import { describe, expect, it } from "vitest";
-import { renderDocumentPdf } from "./documentPdf";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { jpegComponents, renderDocumentPdf } from "./documentPdf";
 import type { DocumentView } from "./quoteViews";
 
 const document = {
@@ -30,6 +30,34 @@ async function rendered() {
   const bytes = Uint8Array.from(atob(base64), (character) => character.charCodeAt(0));
   return { pdf: await PDFDocument.load(bytes, { updateMetadata: false }), raw: Buffer.from(bytes).toString("latin1"), printed };
 }
+
+const jpeg = (components: number) => Uint8Array.from([
+  0xff, 0xd8,
+  0xff, 0xe0, 0x00, 0x04, 0x4a, 0x46,
+  0xff, 0xc0, 0x00, 0x08 + components * 3, 0x08, 0x00, 0x10, 0x00, 0x10, components,
+  ...Array.from({ length: components * 3 }, () => 0x11),
+  0xff, 0xd9,
+]);
+
+afterEach(() => vi.unstubAllGlobals());
+
+describe("images JPEG", () => {
+  it("lit le nombre de composantes dans l'en-tête", () => {
+    expect(jpegComponents(jpeg(3))).toBe(3);
+    expect(jpegComponents(jpeg(4))).toBe(4);
+    expect(jpegComponents(Uint8Array.from([0xff, 0xd8, 0x00, 0x00, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull();
+  });
+
+  it("écarte un logo CMJN, garde un logo RVB", async () => {
+    const withLogo = (components: number) => {
+      vi.stubGlobal("fetch", async () => new Response(jpeg(components), { headers: { "content-type": "image/jpeg" } }));
+      return renderDocumentPdf({ ...document, issuer: { ...document.issuer, logoUrl: "https://exemple.test/logo.jpg" } });
+    };
+    const raw = async (components: number) => Buffer.from((await withLogo(components)).base64, "base64").toString("latin1");
+    expect(await raw(4)).not.toContain("/DCTDecode");
+    expect(await raw(3)).toContain("/DCTDecode");
+  });
+});
 
 describe("documents au format PDF/A-3B", () => {
   it("déclare le profil de couleur sRGB", async () => {
