@@ -16,6 +16,7 @@
  * sont précisées en UN seul endroit, aux frontières `asQuoteRow`, `asInvoiceRow` et
  * `profileFromRow`, jamais par un client non typé.
  */
+import { isCmykJpeg } from "@/marketplace/quotes/jpegColor";
 import type { Json, Tables } from "@/integrations/supabase/types";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { duplicateQuoteInput } from "@/marketplace/quotes/duplicateQuote";
@@ -85,6 +86,7 @@ export type BinderQuotesErrorCode =
   | "not_found"
   | "conflict"
   | "invalid_input"
+  | "image_cmyk"
   | "profile_incomplete"
   | "agreement_required"
   | "seller_identity_completion_required"
@@ -96,6 +98,7 @@ const STATUS_BY_CODE: Record<BinderQuotesErrorCode, number> = {
   not_found: 404,
   conflict: 409,
   invalid_input: 400,
+  image_cmyk: 400,
   profile_incomplete: 422,
   agreement_required: 409,
   seller_identity_completion_required: 409,
@@ -316,6 +319,7 @@ export async function uploadDocumentLogo(
   const bytes = Buffer.from(input.imageBase64, "base64");
   if (bytes.length === 0 || bytes.length > DOCUMENT_LOGO_MAX_BYTES)
     throw new BinderQuotesError("invalid_input");
+  if (isCmykJpeg(bytes)) throw new BinderQuotesError("image_cmyk");
   const extension = input.mimeType === "image/png" ? "png" : "jpg";
   const path = `${binderId}/${crypto.randomUUID()}.${extension}`;
   const { error: uploadError } = await sb.storage
@@ -825,6 +829,7 @@ export async function uploadQuoteItemPhoto(
   const bytes = Buffer.from(input.imageBase64, "base64");
   if (bytes.length === 0 || bytes.length > QUOTE_OPERATION_PHOTO_MAX_BYTES)
     throw new BinderQuotesError("invalid_input");
+  if (isCmykJpeg(bytes)) throw new BinderQuotesError("image_cmyk");
   const extension = input.mimeType === "image/png" ? "png" : "jpg";
   const storagePath = `${binderId}/${input.quoteId}/${crypto.randomUUID()}.${extension}`;
   const { error: uploadError } = await sb.storage
