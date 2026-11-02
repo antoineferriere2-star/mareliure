@@ -843,6 +843,14 @@ export async function uploadQuoteItemPhoto(
  * Reprend un exemple de la bibliothèque sur une ligne de devis. Le fichier est COPIÉ :
  * le devis garde sa photo même si l'atelier retire ensuite l'exemple de sa bibliothèque.
  */
+/** Une photo rangée avant le refus au téléversement ne doit pas disparaître d'un nouveau document. */
+async function assertPrintablePhoto(sb: Supa, storagePath: string) {
+  if (storagePath.endsWith(".png")) return;
+  const { data, error } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET).download(storagePath);
+  if (error || !data) throw new BinderQuotesError("failed");
+  if (isCmykJpeg(new Uint8Array(await data.arrayBuffer()))) throw new BinderQuotesError("image_cmyk");
+}
+
 export async function attachOperationPhotoToQuoteItem(
   sb: Supa,
   binderId: string,
@@ -863,6 +871,7 @@ export async function attachOperationPhotoToQuoteItem(
     .maybeSingle();
   if (error) throw new BinderQuotesError("failed");
   if (!source) throw new BinderQuotesError("not_found");
+  if (input.includeInPdf) await assertPrintablePhoto(sb, source.storage_path);
   const extension = source.storage_path.endsWith(".png") ? "png" : "jpg";
   const storagePath = `${binderId}/${input.quoteId}/${crypto.randomUUID()}.${extension}`;
   const { error: copyError } = await sb.storage
@@ -898,6 +907,7 @@ export async function duplicateQuote(
       const lineKey = lineKeys.get(photo.line_key);
       // Une ancienne photo sans ligne correspondante ne fait pas partie du document.
       if (!lineKey) continue;
+      if (photo.include_in_pdf) await assertPrintablePhoto(sb, photo.storage_path);
       const extension = photo.storage_path.endsWith(".png") ? "png" : "jpg";
       const storagePath = `${binderId}/${copy.id}/${crypto.randomUUID()}.${extension}`;
       const { error } = await sb.storage
