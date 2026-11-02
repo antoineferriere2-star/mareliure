@@ -602,6 +602,15 @@ describe("profil de facturation", () => {
     ).rejects.toMatchObject({ code: "invalid_input" });
     expect(world.storageFiles.size).toBe(0);
   });
+
+  it("refuse un logo CMJN avant tout stockage", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const cmyk = [0xff, 0xd8, 0xff, 0xc0, 0x00, 0x14, 0x08, 0x00, 0x10, 0x00, 0x10, 0x04, ...Array(12).fill(0x11), 0xff, 0xd9];
+    await expect(
+      uploadDocumentLogo(world.sb, BINDER_A, { mimeType: "image/jpeg", imageBase64: Buffer.from(cmyk).toString("base64") }),
+    ).rejects.toMatchObject({ code: "image_cmyk" });
+    expect(world.storageFiles.size).toBe(0);
+  });
 });
 
 describe("catalogue : à l'atelier seul", () => {

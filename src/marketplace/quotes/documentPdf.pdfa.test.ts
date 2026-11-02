@@ -2,7 +2,8 @@
 // Il ne remplace pas veraPDF, il empêche seulement de perdre ces éléments sans le voir.
 import { PDFDocument, PDFName } from "pdf-lib";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { jpegComponents, renderDocumentPdf } from "./documentPdf";
+import { renderDocumentPdf } from "./documentPdf";
+import { IMAGE_CMYK_MESSAGE, imageUploadProblem, isCmykJpeg, jpegComponents } from "./jpegColor";
 import type { DocumentView } from "./quoteViews";
 
 const document = {
@@ -46,6 +47,14 @@ describe("images JPEG", () => {
     expect(jpegComponents(jpeg(3))).toBe(3);
     expect(jpegComponents(jpeg(4))).toBe(4);
     expect(jpegComponents(Uint8Array.from([0xff, 0xd8, 0x00, 0x00, 0, 0, 0, 0, 0, 0, 0, 0]))).toBeNull();
+    expect(isCmykJpeg(jpeg(4))).toBe(true);
+    expect(isCmykJpeg(jpeg(3))).toBe(false);
+  });
+
+  it("montre le refus CMJN, garde le message de l'écran pour le reste", () => {
+    expect(imageUploadProblem(new Error(IMAGE_CMYK_MESSAGE), "Réessayez.")).toBe(IMAGE_CMYK_MESSAGE);
+    expect(imageUploadProblem(new Error("failed"), "Réessayez.")).toBe("Réessayez.");
+    expect(imageUploadProblem(null, "Réessayez.")).toBe("Réessayez.");
   });
 
   it("écarte un logo CMJN, garde un logo RVB", async () => {

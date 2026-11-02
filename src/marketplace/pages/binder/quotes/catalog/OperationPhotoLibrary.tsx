@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { Camera, Search, Trash2 } from "lucide-react";
+import { imageUploadProblem } from "@/marketplace/quotes/jpegColor";
 import {
   deleteMyOperationPhoto,
   getMyOperationPhotos,
@@ -96,7 +97,7 @@ function OperationRow({ operation, photos }: { operation: Operation; photos: Ope
         await upload({ data: { target: operation.target, mimeType: file.type as "image/jpeg" | "image/png", imageBase64: await fileToBase64(file), caption: null } });
       }
     },
-    onError: () => setProblem("Certaines photos n’ont pas pu être ajoutées. Réessayez."),
+    onError: (error) => setProblem(imageUploadProblem(error, "Certaines photos n’ont pas pu être ajoutées. Réessayez.")),
     onSettled: () => queryClient.invalidateQueries({ queryKey: OPERATION_PHOTOS_KEY }),
   });
   const onFiles = (list: FileList | null) => {

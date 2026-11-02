@@ -41,6 +41,7 @@ import { PRICEABLE_SERVICE_MAPPINGS } from "@/marketplace/pricing/basePrices";
 import type { WorkSummary } from "@/marketplace/works/workViews";
 import { WORK_KEY, WORKS_KEY } from "@/marketplace/pages/binder/works/workKeys";
 import { formatDimensions, freeLine, isPriceAdjusted, lineFromBasePrice, lineFromService, parseMillimetres, type CatalogService, type QuoteLine } from "@/marketplace/quotes/quoteLines";
+import { imageUploadProblem } from "@/marketplace/quotes/jpegColor";
 import { euros, parsePercentToBps, parseServerError } from "@/marketplace/quotes/quoteFormat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, MoneyInput, PRIMARY_BUTTON, QuantityInput, SECONDARY_BUTTON } from "./quoteUi";
@@ -491,7 +492,7 @@ function BuilderForm({
         return;
       }
       if ((error as { photoUploadFailed?: boolean }).photoUploadFailed) {
-        setProblems(["Le devis est conservé en brouillon. Certaines photos n'ont pas été ajoutées ; réessayez."]);
+        setProblems([imageUploadProblem(error, "Le devis est conservé en brouillon. Certaines photos n'ont pas été ajoutées ; réessayez.")]);
         return;
       }
       const parsed = parseServerError(error);

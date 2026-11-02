@@ -7,6 +7,7 @@ import fontkit from "@pdf-lib/fontkit";
 import { countryName } from "@/marketplace/invoices/countries";
 import { formatDimensions } from "./quoteLines";
 import type { DocumentItemView, DocumentView, CreditNoteDocumentView } from "./quoteViews";
+import { jpegComponents } from "./jpegColor";
 
 const printedCountry = (country: string | null | undefined) => (country && /^[A-Z]{2}$/.test(country) ? countryName(country) : country);
 
@@ -51,18 +52,6 @@ function colorFromHex(value: string | null | undefined): RGB {
   if (!match) return rgb(0.478, 0.133, 0.188);
   const number = Number.parseInt(match[1], 16);
   return rgb(((number >> 16) & 255) / 255, ((number >> 8) & 255) / 255, (number & 255) / 255);
-}
-
-/** Nombre de composantes d'un JPEG, lu dans son en-tête ; `null` si l'en-tête est illisible. */
-export function jpegComponents(bytes: Uint8Array): number | null {
-  let at = 2;
-  while (at + 9 < bytes.length) {
-    if (bytes[at] !== 0xff) return null;
-    const marker = bytes[at + 1];
-    if (marker >= 0xc0 && marker <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(marker)) return bytes[at + 9];
-    at += 2 + ((bytes[at + 2] << 8) | bytes[at + 3]);
-  }
-  return null;
 }
 
 async function fetchImage(pdf: PDFDocument, url: string | null | undefined): Promise<PDFImage | null> {
