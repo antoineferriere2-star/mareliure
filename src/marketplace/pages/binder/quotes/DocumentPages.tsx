@@ -3,6 +3,7 @@
  * prochaine action évidente — « Marquer comme accepté », puis préparer et
  * émettre une facture. Seule une facture émise est en lecture seule.
  */
+import { IssueConfirmDialog } from "./IssueConfirmDialog";
 import { OnlineInvoicePaymentPanel } from "./OnlineInvoicePaymentPanel";
 import { useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
@@ -622,6 +623,7 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
   const [missing, setMissing] = useState<string[]>([]);
   const [failed, setFailed] = useState(false);
   const [sellerBlocked, setSellerBlocked] = useState(false);
+  const [confirmingIssue, setConfirmingIssue] = useState(false);
   const set = (patch: Partial<InvoiceDraftInput>) =>
     setDraft((current) => ({ ...current, ...patch }));
   const text = (key: keyof InvoiceDraftInput) => String(draft[key] ?? "");
@@ -884,7 +886,7 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
           type="button"
           className={PRIMARY_BUTTON}
           disabled={save.isPending || emit.isPending}
-          onClick={() => emit.mutate()}
+          onClick={() => setConfirmingIssue(true)}
         >
           {emit.isPending ? "Émission…" : "Émettre la facture"}
         </button>
@@ -894,6 +896,18 @@ function InvoiceDraftEditor({ doc }: { doc: DocumentView }) {
           </span>
         )}
       </div>
+      <IssueConfirmDialog
+        open={confirmingIssue}
+        onOpenChange={setConfirmingIssue}
+        title="Émettre cette facture ?"
+        description="Elle recevra son numéro définitif, datée d'aujourd'hui. Elle ne pourra plus être modifiée ni supprimée ; une correction passera par un avoir."
+        details={[
+          { label: "Client", value: text("clientName") || doc.client.name },
+          { label: "Total TTC", value: euros(doc.totalTtcCents) },
+        ]}
+        confirmLabel="Émettre définitivement"
+        onConfirm={() => emit.mutate()}
+      />
     </form>
   );
 }
@@ -906,6 +920,7 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
   const createPartial = useServerFn(createMyPartialCreditNote);
   const [partialAmounts, setPartialAmounts] = useState<Record<number, string>>({});
   const [requestId, setRequestId] = useState(() => crypto.randomUUID());
+  const [confirmingCredit, setConfirmingCredit] = useState<"full" | "partial" | null>(null);
   const queryClient = useQueryClient();
   const [creditReason, setCreditReason] = useState("");
   const [creditError, setCreditError] = useState(false);
@@ -924,20 +939,17 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
     onError: () => setCreditError(true),
   });
 
+  const partialLines = Object.entries(partialAmounts)
+    .map(([position, amount]) => ({
+      position: Number(position),
+      htCents: Math.round(Number(amount.replace(",", ".")) * 100),
+    }))
+    .filter((line) => line.htCents > 0);
+  const partialTotalHtCents = partialLines.reduce((sum, line) => sum + line.htCents, 0);
   const partial = useMutation({
     mutationFn: () =>
       createPartial({
-        data: {
-          id: invoiceId,
-          requestId,
-          reason: creditReason,
-          lines: Object.entries(partialAmounts)
-            .map(([position, amount]) => ({
-              position: Number(position),
-              htCents: Math.round(Number(amount.replace(",", ".")) * 100),
-            }))
-            .filter((line) => line.htCents > 0),
-        },
+        data: { id: invoiceId, requestId, reason: creditReason, lines: partialLines },
       }),
     onSuccess: async () => {
       setPartialAmounts({});
@@ -1044,7 +1056,7 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
                   type="button"
                   className={SECONDARY_BUTTON}
                   disabled={!creditReason.trim() || credit.isPending}
-                  onClick={() => credit.mutate()}
+                  onClick={() => setConfirmingCredit("full")}
                 >
                   {credit.isPending ? "Création…" : "Créer l'avoir complet"}
                 </button>
@@ -1091,7 +1103,7 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
                     partial.isPending ||
                     !Object.values(partialAmounts).some((value) => Number(value) > 0)
                   }
-                  onClick={() => partial.mutate()}
+                  onClick={() => setConfirmingCredit("partial")}
                 >
                   Créer l’avoir partiel
                 </button>
@@ -1102,6 +1114,26 @@ export function InvoiceDetailPage({ invoiceId }: { invoiceId: string }) {
                 )}
               </div>
               {creditError && <ErrorNote>L'avoir n'a pas pu être créé. Réessayez.</ErrorNote>}
+              <IssueConfirmDialog
+                open={confirmingCredit !== null}
+                onOpenChange={(open) => {
+                  if (!open) setConfirmingCredit(null);
+                }}
+                title={
+                  confirmingCredit === "partial"
+                    ? "Créer cet avoir partiel ?"
+                    : "Créer cet avoir complet ?"
+                }
+                description="L'avoir recevra son numéro définitif, daté d'aujourd'hui. Il ne pourra plus être modifié ni supprimé."
+                details={[
+                  { label: "Motif", value: creditReason },
+                  confirmingCredit === "partial"
+                    ? { label: "Montant HT", value: euros(partialTotalHtCents) }
+                    : { label: "Facture TTC", value: euros(doc.totalTtcCents) },
+                ]}
+                confirmLabel="Créer définitivement"
+                onConfirm={() => (confirmingCredit === "partial" ? partial : credit).mutate()}
+              />
             </>
           )}
         </section>
