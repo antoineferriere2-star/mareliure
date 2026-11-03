@@ -1,27 +1,47 @@
 import { describe, expect, it } from "vitest";
 import { WORK_ITEMS } from "@/marketplace/pricing/catalog";
 import { fineBinderyCopy } from "./fineBinderyCopy";
-import { FINE_BINDERY_LOCALES, fineBinderyAlternates, fineBinderyLanguageHref, fineBinderyProfilePath, replaceFineBinderyLocale } from "./fineBinderyLocale";
-import { FINE_BINDERY_TRANSLATED_SERVICE_KEYS, languageName, serviceName, specialtyName } from "./fineBinderyGlossary";
+import {
+  FINE_BINDERY_LOCALES,
+  fineBinderyAlternates,
+  fineBinderyLanguageHref,
+  fineBinderyProfilePath,
+  replaceFineBinderyLocale,
+} from "./fineBinderyLocale";
+import {
+  FINE_BINDERY_TRANSLATED_SERVICE_KEYS,
+  languageName,
+  serviceName,
+  specialtyName,
+} from "./fineBinderyGlossary";
 import { formatFineBinderyMoney, formatFineBinderyPrice } from "./fineBinderyFormat";
 import { EN_BOOKBINDING_COPY } from "@/build/pages/public/enBookbindingCopy";
-import { DE_FINE_BINDERY_COPY, ES_ES_FINE_BINDERY_COPY, IT_FINE_BINDERY_COPY } from "@/build/pages/public/fineBinderyEuropeanCopy";
+import {
+  DE_FINE_BINDERY_COPY,
+  ES_ES_FINE_BINDERY_COPY,
+  IT_FINE_BINDERY_COPY,
+} from "@/build/pages/public/fineBinderyEuropeanCopy";
 import { publicCopy } from "@/build/pages/public/publicLocaleContext";
 
 describe("FineBindery European i18n", () => {
   it("keeps authentication on its real route and preserves workshop access when switching language", () => {
     for (const locale of FINE_BINDERY_LOCALES) {
-      const target = new URL(fineBinderyLanguageHref("/auth", "?space=atelier&redirect=%2Fatelier&locale=en", locale), "https://finebindery.com");
+      const target = new URL(
+        fineBinderyLanguageHref("/auth", "?space=atelier&redirect=%2Fatelier&locale=en", locale),
+        "https://finebindery.com",
+      );
       expect(target.pathname).toBe("/auth");
       expect(target.searchParams.get("locale")).toBe(locale);
       expect(target.searchParams.get("space")).toBe("atelier");
       expect(target.searchParams.get("redirect")).toBe("/atelier");
       expect(target.searchParams.getAll("locale")).toHaveLength(1);
     }
-    expect(fineBinderyLanguageHref("/de/project", "?ref=atelier-martin", "it")).toBe("/it/project?ref=atelier-martin");
-    // Pages sans version de langue : l'accueil de la langue, jamais /fr/legal-notice.
-    expect(fineBinderyLanguageHref("/legal-notice", "", "fr")).toBe("/fr");
-    expect(fineBinderyLanguageHref("/terms-of-sale", "", "de")).toBe("/de");
+    expect(fineBinderyLanguageHref("/de/project", "?ref=atelier-martin", "it")).toBe(
+      "/it/project?ref=atelier-martin",
+    );
+    // Les anciens liens légaux conservent le document dans la langue choisie.
+    expect(fineBinderyLanguageHref("/legal-notice", "", "fr")).toBe("/fr/legal-notice");
+    expect(fineBinderyLanguageHref("/terms-of-sale", "", "de")).toBe("/de/terms-of-sale");
     expect(fineBinderyLanguageHref("/", "", "es")).toBe("/es");
   });
   it("formats EUR with the active regional convention", () => {
@@ -33,7 +53,10 @@ describe("FineBindery European i18n", () => {
     expect(FINE_BINDERY_LOCALES).toEqual(["en", "fr", "de", "it", "es"]);
     const alternates = fineBinderyAlternates("atelier-martin");
     expect(alternates).toHaveLength(6);
-    expect(alternates.at(-1)).toEqual({ locale: "x-default", href: "https://finebindery.com/en/atelier-martin" });
+    expect(alternates.at(-1)).toEqual({
+      locale: "x-default",
+      href: "https://finebindery.com/en/atelier-martin",
+    });
   });
 
   it("keeps the current page and stable slug when the locale changes", () => {
@@ -54,8 +77,12 @@ describe("FineBindery European i18n", () => {
 
   it("translates all 45 commercial services without changing their keys", () => {
     expect(WORK_ITEMS).toHaveLength(45);
-    expect(new Set(FINE_BINDERY_TRANSLATED_SERVICE_KEYS)).toEqual(new Set(WORK_ITEMS.map((item) => item.key)));
-    for (const item of WORK_ITEMS) for (const locale of FINE_BINDERY_LOCALES) expect(serviceName(item.key, locale), `${item.key}/${locale}`).toBeTruthy();
+    expect(new Set(FINE_BINDERY_TRANSLATED_SERVICE_KEYS)).toEqual(
+      new Set(WORK_ITEMS.map((item) => item.key)),
+    );
+    for (const item of WORK_ITEMS)
+      for (const locale of FINE_BINDERY_LOCALES)
+        expect(serviceName(item.key, locale), `${item.key}/${locale}`).toBeTruthy();
   });
 
   it("localizes structured language and specialty labels", () => {
@@ -80,7 +107,9 @@ describe("FineBindery European i18n", () => {
       const unchanged = Object.entries(EN_BOOKBINDING_COPY)
         .filter(([key, english]) => key !== english && dictionary[key] === english)
         .map(([key]) => key);
-      expect(new Set(unchanged), locale).toEqual(allowedIdentical[locale as keyof typeof allowedIdentical]);
+      expect(new Set(unchanged), locale).toEqual(
+        allowedIdentical[locale as keyof typeof allowedIdentical],
+      );
     }
 
     for (const locale of ["de-DE", "it-IT", "es-ES"] as const) {
@@ -91,7 +120,8 @@ describe("FineBindery European i18n", () => {
         "Still to confirm",
         "What happens next",
         '"{field}" is required.',
-      ]) expect(publicCopy(locale, text), `${locale}: ${text}`).not.toBe(text);
+      ])
+        expect(publicCopy(locale, text), `${locale}: ${text}`).not.toBe(text);
     }
   });
 });

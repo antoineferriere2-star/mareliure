@@ -1,3 +1,9 @@
+import {
+  FINE_BINDERY_LEGAL_SLUGS,
+  fineBinderyLegalPath,
+  type FineBinderyLegalSlug,
+} from "../legal/fineBinderyLegalPaths";
+
 export const FINE_BINDERY_LOCALES = ["en", "fr", "de", "it", "es"] as const;
 export type FineBinderyLocale = (typeof FINE_BINDERY_LOCALES)[number];
 
@@ -27,7 +33,10 @@ export const HTML_LOCALE: Record<FineBinderyLocale, string> = {
   es: "es-ES",
 };
 
-export const ENGINE_LOCALE: Record<FineBinderyLocale, "en-US" | "fr-FR" | "de-DE" | "it-IT" | "es-ES"> = {
+export const ENGINE_LOCALE: Record<
+  FineBinderyLocale,
+  "en-US" | "fr-FR" | "de-DE" | "it-IT" | "es-ES"
+> = {
   en: "en-US",
   fr: "fr-FR",
   de: "de-DE",
@@ -59,24 +68,34 @@ export function replaceFineBinderyLocale(pathname: string, locale: FineBinderyLo
   return `/${parts.join("/")}`;
 }
 
-export function fineBinderyLanguageHref(pathname: string, search: string, locale: FineBinderyLocale): string {
+export function fineBinderyLanguageHref(
+  pathname: string,
+  search: string,
+  locale: FineBinderyLocale,
+): string {
   if (pathname === "/auth") {
     const params = new URLSearchParams(search);
     params.set("locale", locale);
     return `/auth?${params.toString()}`;
   }
-  // Une page sans version de langue (/legal-notice, /terms-of-sale…) : préfixer
-  // son adresse menait à /fr/legal-notice, qui n'existe pas (« Atelier
-  // introuvable »). Changer de langue y ramène à l'accueil de la langue choisie.
+  const legacySlug = pathname.replace(/^\/+|\/+$/g, "");
+  if ((FINE_BINDERY_LEGAL_SLUGS as readonly string[]).includes(legacySlug))
+    return `${fineBinderyLegalPath(locale, legacySlug as FineBinderyLegalSlug)}${search}`;
+  // Un chemin non localisé inconnu revient à l’accueil de la langue.
   const first = pathname.split("/").filter(Boolean)[0];
   if (first && !isFineBinderyLocale(first)) return `/${locale}`;
   return `${replaceFineBinderyLocale(pathname, locale)}${search}`;
 }
 
-export function fineBinderyAlternates(pathWithoutLocale = ""): Array<{ locale: FineBinderyLocale | "x-default"; href: string }> {
+export function fineBinderyAlternates(
+  pathWithoutLocale = "",
+): Array<{ locale: FineBinderyLocale | "x-default"; href: string }> {
   const suffix = pathWithoutLocale ? `/${pathWithoutLocale.replace(/^\/+/, "")}` : "";
   return [
-    ...FINE_BINDERY_LOCALES.map((locale) => ({ locale, href: `https://finebindery.com/${locale}${suffix}` })),
+    ...FINE_BINDERY_LOCALES.map((locale) => ({
+      locale,
+      href: `https://finebindery.com/${locale}${suffix}`,
+    })),
     { locale: "x-default" as const, href: `https://finebindery.com/en${suffix}` },
   ];
 }
