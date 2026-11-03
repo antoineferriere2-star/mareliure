@@ -303,6 +303,10 @@ function makeDb() {
         storageFiles.set(`${bucket}/${toPath}`, source);
         return { error: null };
       },
+      download: async (path: string) => {
+        const file = storageFiles.get(`${bucket}/${path}`);
+        return file ? { data: new Blob([file as BlobPart]), error: null } : { data: null, error: { message: "not found" } };
+      },
       createSignedUrl: async (path: string) => ({
         data: { signedUrl: `https://storage.example/${bucket}/${path}` },
         error: null,
@@ -1740,6 +1744,48 @@ describe("photos d'exemple par opération", () => {
       caption,
     });
   const files = () => [...world.storageFiles.keys()];
+  const CMYK = Buffer.from([0xff, 0xd8, 0xff, 0xc0, 0x00, 0x14, 0x08, 0x00, 0x10, 0x00, 0x10, 0x04, ...Array(12).fill(0x11), 0xff, 0xd9]);
+  // Une photo rangée avant le refus au téléversement.
+  const makeStoredPhotosCmyk = () => world.storageFiles.forEach((_, key) => world.storageFiles.set(key, CMYK));
+
+  it("refuse une photo CMJN téléversée sur un devis ou dans la bibliothèque", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    const imageBase64 = CMYK.toString("base64");
+    await expect(uploadQuoteItemPhoto(world.sb, BINDER_A, {
+      quoteId: quote.id, lineKey: quote.items[0].lineKey, filename: "cmjn.jpg", mimeType: "image/jpeg", imageBase64, caption: null, includeInPdf: true,
+    })).rejects.toMatchObject({ code: "image_cmyk" });
+    await expect(uploadOperationPhoto(world.sb, BINDER_A, { target: { pricingKey: "plein_cuir" }, mimeType: "image/jpeg", imageBase64, caption: null }))
+      .rejects.toMatchObject({ code: "image_cmyk" });
+    expect(files()).toEqual([]);
+  });
+
+  it("refuse de copier dans un devis une photo CMJN ancienne de la bibliothèque, sauf hors PDF", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    const { id: photoId } = await upload(BINDER_A, { pricingKey: "plein_cuir" });
+    makeStoredPhotosCmyk();
+    const attach = (includeInPdf: boolean) => attachOperationPhotoToQuoteItem(world.sb, BINDER_A, {
+      quoteId: quote.id, lineKey: quote.items[0].lineKey, photoId, caption: null, includeInPdf,
+    });
+    await expect(attach(true)).rejects.toMatchObject({ code: "image_cmyk" });
+    expect(files()).toHaveLength(1);
+    await attach(false);
+    expect(files()).toHaveLength(2);
+  });
+
+  it("annule la duplication d'un devis dont une photo imprimée est en CMJN", async () => {
+    await saveBillingProfile(world.sb, BINDER_A, profileInput());
+    const original = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
+    await uploadQuoteItemPhoto(world.sb, BINDER_A, {
+      quoteId: original.id, lineKey: original.items[0].lineKey, filename: "ancienne.jpg", mimeType: "image/jpeg", imageBase64: JPEG, caption: null, includeInPdf: true,
+    });
+    makeStoredPhotosCmyk();
+    const quotes = world.tables.marketplace_binder_quotes.length;
+    await expect(duplicateQuote(world.sb, BINDER_A, original.id, TODAY)).rejects.toMatchObject({ code: "image_cmyk" });
+    expect(world.tables.marketplace_binder_quotes.length).toBe(quotes);
+    expect(files()).toHaveLength(1);
+  });
 
   it("duplique les photos du snapshot avec leur légende et leur choix PDF, sans lien de stockage partagé", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput());
