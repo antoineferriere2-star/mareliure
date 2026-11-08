@@ -73,8 +73,11 @@ export async function saveReassignmentOffer(
   if (existing) {
     // Compare-and-swap sur tout ce que la décision a lu, pas seulement `updated_at` : le déclencheur
     // lui donne `now()`, qui n'est pas garanti unique d'une écriture à l'autre (3e revue Codex).
-    // L'ancien état, l'absence d'accord, les anciennes conditions et l'ancien `offered_at` suffisent
-    // à reconnaître qu'un autre appel est passé, quelle que soit la valeur de `updated_at`.
+    // L'ancien état, l'absence d'accord, l'ancienne rémunération et l'ancien `offered_at` suffisent
+    // à reconnaître qu'un autre appel est passé, quelle que soit la valeur de `updated_at` : toute
+    // réécriture pose un `offered_at` nouveau (l'heure de l'appel), y compris quand seule la
+    // prestation change. La prestation elle-même n'est pas filtrée : jusqu'à 2 000 caractères, elle
+    // ferait dépasser à l'URL PostgREST la limite de 16 Ko de Cloudflare (4e revue Codex).
     let write = sb.from("marketplace_quotes").update({
       state: "offered", binder_payout_cents: input.payoutCents, amount_cents: input.payoutCents,
       service_description: input.serviceDescription, offered_at: now, accepted_at: null, declined_at: null,
@@ -82,7 +85,7 @@ export async function saveReassignmentOffer(
     }).eq("id", existing.id).eq("updated_at", existing.updated_at).is("agreement_version", null);
     const unchangedSince: Array<[string, string | number | null]> = [
       ["state", existing.state], ["binder_payout_cents", existing.binder_payout_cents],
-      ["service_description", existing.service_description], ["offered_at", existing.offered_at],
+      ["offered_at", existing.offered_at],
     ];
     for (const [column, value] of unchangedSince)
       write = value === null ? write.is(column as never, null) : write.eq(column as never, value as never);

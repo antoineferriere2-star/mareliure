@@ -17,6 +17,7 @@ const terms = { ...KEY, payoutCents: 7500, serviceDescription: "Réparation des 
 function fakeDb(initial: Row | null, holdReads = 0, frozenStamp = false) {
   const rows: Row[] = initial ? [{ ...initial }] : [];
   let tick = 0;
+  const updateFilters: Array<Array<[string, unknown]>> = [];
   let waiting: Array<() => void> = [];
   const gate = () => new Promise<void>((resolve) => {
     if (holdReads <= 0) return resolve();
@@ -42,6 +43,7 @@ function fakeDb(initial: Row | null, holdReads = 0, frozenStamp = false) {
         },
         update(values: Row) {
           const filters: Array<[string, unknown]> = [];
+          updateFilters.push(filters);
           const run = () => {
             const hit = rows.filter((r) => matches(r, filters));
             hit.forEach((r) => Object.assign(r, values, { updated_at: frozenStamp ? r.updated_at : `t${++tick}` }));
@@ -64,7 +66,7 @@ function fakeDb(initial: Row | null, holdReads = 0, frozenStamp = false) {
       };
     },
   };
-  return { sb: sb as unknown as Supa, rows };
+  return { sb: sb as unknown as Supa, rows, updateFilters };
 }
 
 const declined: Row = {
@@ -120,6 +122,24 @@ describe("réattribution : deux envois simultanés", () => {
       saveReassignmentOffer(db.sb, terms, "2026-11-08T10:00:00.250Z"),
     ]);
     expect([a.outcome, b.outcome].sort()).toEqual(["superseded", "written"]);
+  });
+
+  it("seule la prestation change, deux envois simultanés, updated_at figé : une seule écriture", async () => {
+    const pending: Row = { ...declined, state: "offered", binder_payout_cents: terms.payoutCents };
+    const db = fakeDb(pending, 2, true);
+    const [a, b] = await Promise.all([
+      saveReassignmentOffer(db.sb, terms, "2026-11-08T10:00:00.000Z"),
+      saveReassignmentOffer(db.sb, terms, "2026-11-08T10:00:00.250Z"),
+    ]);
+    expect([a.outcome, b.outcome].sort()).toEqual(["superseded", "written"]);
+  });
+
+  it("le filtre ne porte pas le texte de la prestation (limite d'URL de 16 Ko)", async () => {
+    const db = fakeDb(declined);
+    await saveReassignmentOffer(db.sb, { ...terms, serviceDescription: "é,(\")\n".repeat(330) }, "2026-11-08T10:00:00.000Z");
+    const columns = db.updateFilters.flat().map(([column]) => column);
+    expect(columns).toEqual(expect.arrayContaining(["id", "updated_at", "state", "binder_payout_cents", "offered_at"]));
+    expect(columns).not.toContain("service_description");
   });
 
 describe("réattribution : appels successifs", () => {
