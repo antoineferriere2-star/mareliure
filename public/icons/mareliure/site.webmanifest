@@ -1,0 +1,14 @@
+{
+  "name": "Ma Reliure",
+  "short_name": "Ma Reliure",
+  "lang": "fr",
+  "start_url": "/",
+  "display": "browser",
+  "background_color": "#fbfaf7",
+  "theme_color": "#fbfaf7",
+  "icons": [
+    { "src": "/icons/mareliure/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/mareliure/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "/icons/mareliure/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
