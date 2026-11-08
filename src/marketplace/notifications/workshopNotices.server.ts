@@ -16,11 +16,17 @@ export async function notifyWorkshop(
     /** Page de l'espace atelier ouverte par le bouton ; l'abonnement par défaut. */
     ctaPath?: string;
     ctaLabel?: string;
+    /**
+     * Domaine du bouton, quand il dépend de la marque : la session d'un atelier est rangée par
+     * domaine, un lien Ma Reliure ne la retrouve pas sur Fine Bindery. Sinon `workshopOrigin()`.
+     */
+    ctaOrigin?: string;
   },
 ) {
   const brand = notice.brand ?? "MA_RELIURE";
   const ctaLabel = notice.ctaLabel ?? "Ouvrir mon atelier";
   const ctaPath = notice.ctaPath ?? "/atelier/abonnement";
+  const ctaOrigin = () => notice.ctaOrigin ?? workshopOrigin();
   const brandName = brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure";
   const inserted = await sb.from("marketplace_workshop_notices").upsert(
     {
@@ -75,7 +81,7 @@ export async function notifyWorkshop(
           heading: notice.heading,
           intro: notice.intro,
           ctaLabel,
-          ctaUrl: `${workshopOrigin()}${ctaPath}`,
+          ctaUrl: `${ctaOrigin()}${ctaPath}`,
         }),
         { plainText: true },
       );
@@ -111,7 +117,7 @@ export async function notifyWorkshop(
         heading: notice.heading,
         intro: notice.intro,
         ctaLabel,
-        ctaUrl: `${workshopOrigin()}${ctaPath}`,
+        ctaUrl: `${ctaOrigin()}${ctaPath}`,
       },
     });
     if (!result.sent) throw new Error("workshop_notice_not_delivered");

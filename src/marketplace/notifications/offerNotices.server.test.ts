@@ -27,10 +27,20 @@ it("l'e-mail d'offre renvoie vers le dossier de l'atelier, sans montant ni coord
   expect(`${notice.heading} ${notice.intro}`).not.toMatch(/€|\d+,\d{2}/);
 });
 
-it("une offre Fine Bindery est signée Fine Bindery", () => {
+it("une offre Fine Bindery est signée Fine Bindery et ouvre finebindery.com", () => {
   const notice = workshopOfferNotice({ caseId: CASE, binderId: "b1", offeredAt: "t", reference: "FB-001", brand: "FINE_BINDERY" });
   expect(notice.brand).toBe("FINE_BINDERY");
   expect(notice.intro).toContain("Fine Bindery vous propose");
+  expect(`${notice.ctaOrigin}${notice.ctaPath}`).toBe(`https://finebindery.com/atelier/leads/${CASE}`);
+});
+
+it("une offre Ma Reliure garde le domaine de l'espace atelier", () => {
+  expect(workshopOfferNotice({ caseId: CASE, binderId: "b1", offeredAt: "t", reference: "RL-013", brand: "MA_RELIURE" }).ctaOrigin).toBeUndefined();
+});
+
+it("une réponse de l'atelier de test est marquée comme telle", () => {
+  const alert = offerAnswerAlert({ caseId: CASE, binderId: "b1", reference: "RL-099", workshopName: "Atelier de test OPPE", accepted: true, leadTimeDays: 7, answeredAt: "t", testWorkshop: true });
+  expect(alert.heading).toBe("[Atelier de test] Offre acceptée — RL-099");
 });
 
 it("prévient chaque atelier sollicité, avec la marque et la référence du dossier", async () => {

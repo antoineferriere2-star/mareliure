@@ -55,6 +55,9 @@ it("ouvre l'abonnement par défaut, ou la page demandée", async () => {
   const g = fixture();
   await notifyWorkshop(g.sb, { ...notice, id: "offer-fixture", ctaPath: "/atelier/leads/case-fixture", ctaLabel: "Voir la proposition" });
   expect(h.send.mock.calls[1][2].templateData).toMatchObject({ ctaLabel: "Voir la proposition", ctaUrl: "https://mareliure.fr/atelier/leads/case-fixture" });
+  const k = fixture();
+  await notifyWorkshop(k.sb, { ...notice, id: "offer-fb-fixture", brand: "FINE_BINDERY", ctaOrigin: "https://finebindery.com", ctaPath: "/atelier/leads/case-fixture" });
+  expect(h.send.mock.calls[2][2].templateData).toMatchObject({ ctaUrl: "https://finebindery.com/atelier/leads/case-fixture" });
 });
 it("adresse la notification C avec la marque Fine Bindery de la facture de frais", async () => {
   const f = fixture();
