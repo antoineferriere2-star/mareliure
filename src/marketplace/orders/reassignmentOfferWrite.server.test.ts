@@ -14,7 +14,7 @@ const terms = { ...KEY, payoutCents: 7500, serviceDescription: "Réparation des 
  * `holdReads` retient les premières lectures jusqu'à ce que tous les appels aient lu : c'est le
  * cas simultané de la contre-revue, deux appels qui partent du même ancien état.
  */
-function fakeDb(initial: Row | null, holdReads = 0) {
+function fakeDb(initial: Row | null, holdReads = 0, frozenStamp = false) {
   const rows: Row[] = initial ? [{ ...initial }] : [];
   let tick = 0;
   let waiting: Array<() => void> = [];
@@ -23,7 +23,7 @@ function fakeDb(initial: Row | null, holdReads = 0) {
     waiting.push(resolve);
     if (waiting.length >= holdReads) { holdReads = 0; waiting.forEach((r) => r()); waiting = []; }
   });
-  const matches = (row: Row, filters: Array<[string, unknown]>) => filters.every(([k, v]) => row[k] === v);
+  const matches = (row: Row, filters: Array<[string, unknown]>) => filters.every(([k, v]) => (v === null ? row[k] == null : row[k] === v));
   const sb = {
     from(table: string) {
       expect(table).toBe("marketplace_quotes");
@@ -44,11 +44,12 @@ function fakeDb(initial: Row | null, holdReads = 0) {
           const filters: Array<[string, unknown]> = [];
           const run = () => {
             const hit = rows.filter((r) => matches(r, filters));
-            hit.forEach((r) => Object.assign(r, values, { updated_at: `t${++tick}` }));
+            hit.forEach((r) => Object.assign(r, values, { updated_at: frozenStamp ? r.updated_at : `t${++tick}` }));
             return { data: hit.map((r) => ({ id: r.id })), error: null };
           };
           const q = {
             eq(k: string, v: unknown) { filters.push([k, v]); return q; },
+            is(k: string, v: null) { filters.push([k, v]); return q; },
             select: async () => run(),
             then: (resolve: (v: unknown) => unknown) => Promise.resolve(run()).then(resolve),
           };
@@ -110,6 +111,16 @@ describe("réattribution : deux envois simultanés", () => {
     expect(String(rejected.reason?.message ?? rejected.reason)).toMatch(/vient d'être modifiée/);
   });
 });
+
+  it("même horodatage updated_at après l'écriture concurrente : l'ancien état suffit à départager", async () => {
+    // Le déclencheur donne now() : rien ne garantit une valeur nouvelle. Ici elle ne change pas du tout.
+    const db = fakeDb(declined, 2, true);
+    const [a, b] = await Promise.all([
+      saveReassignmentOffer(db.sb, terms, "2026-11-08T10:00:00.000Z"),
+      saveReassignmentOffer(db.sb, terms, "2026-11-08T10:00:00.250Z"),
+    ]);
+    expect([a.outcome, b.outcome].sort()).toEqual(["superseded", "written"]);
+  });
 
 describe("réattribution : appels successifs", () => {
   it("un clic répété aux mêmes conditions ne réécrit rien", async () => {

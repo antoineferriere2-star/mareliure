@@ -71,11 +71,22 @@ export async function saveReassignmentOffer(
   };
 
   if (existing) {
-    const { data: rows, error: upError } = await sb.from("marketplace_quotes").update({
+    // Compare-and-swap sur tout ce que la décision a lu, pas seulement `updated_at` : le déclencheur
+    // lui donne `now()`, qui n'est pas garanti unique d'une écriture à l'autre (3e revue Codex).
+    // L'ancien état, l'absence d'accord, les anciennes conditions et l'ancien `offered_at` suffisent
+    // à reconnaître qu'un autre appel est passé, quelle que soit la valeur de `updated_at`.
+    let write = sb.from("marketplace_quotes").update({
       state: "offered", binder_payout_cents: input.payoutCents, amount_cents: input.payoutCents,
       service_description: input.serviceDescription, offered_at: now, accepted_at: null, declined_at: null,
       decline_reason_code: null, decline_reason_detail: null, updated_at: now,
-    }).eq("id", existing.id).eq("updated_at", existing.updated_at).select("id");
+    }).eq("id", existing.id).eq("updated_at", existing.updated_at).is("agreement_version", null);
+    const unchangedSince: Array<[string, string | number | null]> = [
+      ["state", existing.state], ["binder_payout_cents", existing.binder_payout_cents],
+      ["service_description", existing.service_description], ["offered_at", existing.offered_at],
+    ];
+    for (const [column, value] of unchangedSince)
+      write = value === null ? write.is(column as never, null) : write.eq(column as never, value as never);
+    const { data: rows, error: upError } = await write.select("id");
     if (upError) fail(500, upError.message);
     return rows && rows.length > 0 ? { outcome: "written", offeredAt: now } : superseded();
   }
