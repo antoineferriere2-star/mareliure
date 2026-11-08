@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Supa } from "@/build/services/adminAuth.server";
-import { saveReassignmentOffer } from "./reassignmentOfferWrite.server";
+import { nextOfferInstant, saveReassignmentOffer } from "./reassignmentOfferWrite.server";
 import { workshopOfferNotice } from "@/marketplace/notifications/offerNotices.server";
 
 type Row = Record<string, unknown>;
@@ -142,6 +142,17 @@ describe("réattribution : deux envois simultanés", () => {
     expect(columns).not.toContain("service_description");
   });
 
+  it("nouvelle heure égale à l'ancienne à la milliseconde, updated_at figé : une seule écriture", async () => {
+    const pending: Row = { ...declined, state: "offered", binder_payout_cents: terms.payoutCents, offered_at: "2026-11-08T10:00:00.000Z" };
+    const db = fakeDb(pending, 2, true);
+    const [a, b] = await Promise.all([
+      saveReassignmentOffer(db.sb, terms, "2026-11-08T10:00:00.000Z"),
+      saveReassignmentOffer(db.sb, terms, "2026-11-08T10:00:00.000Z"),
+    ]);
+    expect([a.outcome, b.outcome].sort()).toEqual(["superseded", "written"]);
+    expect(db.rows[0].offered_at).toBe("2026-11-08T10:00:00.001Z");
+  });
+
 describe("réattribution : appels successifs", () => {
   it("un clic répété aux mêmes conditions ne réécrit rien", async () => {
     const db = fakeDb(declined);
@@ -158,5 +169,19 @@ describe("réattribution : appels successifs", () => {
     await saveReassignmentOffer(db.sb, terms, "2026-11-08T10:00:00.000Z");
     const next = await saveReassignmentOffer(db.sb, { ...terms, payoutCents: 9000 }, "2026-11-08T10:05:00.000Z");
     expect(next).toEqual({ outcome: "written", offeredAt: "2026-11-08T10:05:00.000Z" });
+  });
+});
+
+describe("nextOfferInstant", () => {
+  it("garde l'heure de l'appel quand elle est postérieure, ou sans ancienne heure", () => {
+    expect(nextOfferInstant("2026-11-08T10:00:00+00:00", "2026-11-08T10:00:00.001Z")).toBe("2026-11-08T10:00:00.001Z");
+    expect(nextOfferInstant(null, "2026-11-08T10:00:00.000Z")).toBe("2026-11-08T10:00:00.000Z");
+  });
+  it("heure égale ou horloge en retard : une milliseconde après l'ancienne", () => {
+    expect(nextOfferInstant("2026-11-08T10:00:00.000Z", "2026-11-08T10:00:00.000Z")).toBe("2026-11-08T10:00:00.001Z");
+    expect(nextOfferInstant("2026-11-08T10:00:05.000Z", "2026-11-08T10:00:00.000Z")).toBe("2026-11-08T10:00:05.001Z");
+  });
+  it("ancienne heure en microsecondes : la nouvelle la dépasse strictement", () => {
+    expect(nextOfferInstant("2026-11-08T10:00:00.123999+00:00", "2026-11-08T10:00:00.123Z")).toBe("2026-11-08T10:00:00.124Z");
   });
 });

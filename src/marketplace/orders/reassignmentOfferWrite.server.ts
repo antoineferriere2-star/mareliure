@@ -30,6 +30,19 @@ export interface ReassignmentOfferResult {
 
 const UNIQUE_VIOLATION = "23505";
 
+/**
+ * Le nouvel `offered_at` doit être strictement postérieur à l'ancien, sinon le filtre
+ * `offered_at = <ancien>` ne départage plus deux écritures concurrentes (5e revue Codex : heure
+ * égale à la milliseconde, `UPDATE 1` deux fois). L'ancien peut porter des microsecondes : on part
+ * de sa milliseconde tronquée + 1, donc toujours au-delà.
+ */
+export function nextOfferInstant(previous: string | null, now: string): string {
+  const before = previous === null ? Number.NaN : Date.parse(previous);
+  const current = Date.parse(now);
+  if (Number.isNaN(before) || current > before) return now;
+  return new Date(before + 1).toISOString();
+}
+
 export async function saveReassignmentOffer(
   sb: Supa,
   input: { caseId: string; binderId: string; payoutCents: number; serviceDescription: string },
@@ -75,12 +88,13 @@ export async function saveReassignmentOffer(
     // lui donne `now()`, qui n'est pas garanti unique d'une écriture à l'autre (3e revue Codex).
     // L'ancien état, l'absence d'accord, l'ancienne rémunération et l'ancien `offered_at` suffisent
     // à reconnaître qu'un autre appel est passé, quelle que soit la valeur de `updated_at` : toute
-    // réécriture pose un `offered_at` nouveau (l'heure de l'appel), y compris quand seule la
+    // réécriture pose un `offered_at` strictement postérieur (`nextOfferInstant`), y compris quand seule la
     // prestation change. La prestation elle-même n'est pas filtrée : jusqu'à 2 000 caractères, elle
     // ferait dépasser à l'URL PostgREST la limite de 16 Ko de Cloudflare (4e revue Codex).
+    const offeredAt = nextOfferInstant(existing.offered_at, now);
     let write = sb.from("marketplace_quotes").update({
       state: "offered", binder_payout_cents: input.payoutCents, amount_cents: input.payoutCents,
-      service_description: input.serviceDescription, offered_at: now, accepted_at: null, declined_at: null,
+      service_description: input.serviceDescription, offered_at: offeredAt, accepted_at: null, declined_at: null,
       decline_reason_code: null, decline_reason_detail: null, updated_at: now,
     }).eq("id", existing.id).eq("updated_at", existing.updated_at).is("agreement_version", null);
     const unchangedSince: Array<[string, string | number | null]> = [
@@ -91,7 +105,7 @@ export async function saveReassignmentOffer(
       write = value === null ? write.is(column as never, null) : write.eq(column as never, value as never);
     const { data: rows, error: upError } = await write.select("id");
     if (upError) fail(500, upError.message);
-    return rows && rows.length > 0 ? { outcome: "written", offeredAt: now } : superseded();
+    return rows && rows.length > 0 ? { outcome: "written", offeredAt } : superseded();
   }
 
   const { error: insError } = await sb.from("marketplace_quotes").insert({
