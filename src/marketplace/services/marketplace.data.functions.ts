@@ -848,7 +848,10 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
       })),
     );
 
-    return { offered: decision.binderIds.length };
+    const { notifyWorkshopsOfOffer } = await import("@/marketplace/notifications/offerNotices.server");
+    const notified = await notifyWorkshopsOfOffer(sb, { caseId: data.caseId, binderIds: decision.binderIds, offeredAt });
+
+    return { offered: decision.binderIds.length, notified };
   });
 
 export const selectBinderOffer = createServerFn({ method: "POST" })
@@ -1425,6 +1428,17 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
     if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux projets.");
+    const alertAnswer = async (accepted: boolean) => {
+      const { alertOfferAnswer } = await import("@/marketplace/notifications/offerNotices.server");
+      await alertOfferAnswer(sb, {
+        caseId: data.caseId,
+        binderId: binder!.id,
+        workshopName: binder!.workshop_name || binder!.display_name || "L'atelier",
+        accepted,
+        leadTimeDays: data.leadTimeDays,
+        reasonCode: data.reasonCode,
+      });
+    };
     if (data.accept) {
       if (!data.leadTimeDays) fail(422, "Indiquez le délai de réalisation que vous vous engagez à tenir.");
       const { data: accepted, error: acceptError } = await sb.rpc("marketplace_accept_workshop_offer", {
@@ -1434,6 +1448,7 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
         p_actor_user_id: context.userId,
       });
       if (acceptError) fail(409, acceptError.message);
+      await alertAnswer(true);
       return accepted;
     }
     const { data: result, error } = await sb.rpc("marketplace_respond_to_offer", {
@@ -1472,6 +1487,7 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
         metadata: { minimum_required_payout_cents: data.minimumRequiredPayoutCents },
       });
     }
+    await alertAnswer(false);
     return result;
   });
 

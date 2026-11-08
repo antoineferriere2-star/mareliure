@@ -48,6 +48,14 @@ it("réutilise la clé fournisseur et ne marque livré qu'après succès", async
   expect(h.send).toHaveBeenCalledWith("case-activity", "owner@example.com", expect.objectContaining({ idempotencyKey: "workshop-invoice-paid-fixture" }));
   expect(f.writes).toEqual([expect.objectContaining({ sent_at: expect.any(String), claim_token: null })]);
 });
+it("ouvre l'abonnement par défaut, ou la page demandée", async () => {
+  const f = fixture();
+  await notifyWorkshop(f.sb, notice);
+  expect(h.send.mock.calls[0][2].templateData).toMatchObject({ ctaLabel: "Ouvrir mon atelier", ctaUrl: "https://mareliure.fr/atelier/abonnement" });
+  const g = fixture();
+  await notifyWorkshop(g.sb, { ...notice, id: "offer-fixture", ctaPath: "/atelier/leads/case-fixture", ctaLabel: "Voir la proposition" });
+  expect(h.send.mock.calls[1][2].templateData).toMatchObject({ ctaLabel: "Voir la proposition", ctaUrl: "https://mareliure.fr/atelier/leads/case-fixture" });
+});
 it("adresse la notification C avec la marque Fine Bindery de la facture de frais", async () => {
   const f = fixture();
   await notifyWorkshop(f.sb, { ...notice, brand: "FINE_BINDERY" });

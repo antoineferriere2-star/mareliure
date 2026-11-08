@@ -229,6 +229,11 @@ export const offerOppeOrderToWorkshop = createServerFn({ method: "POST" })
       case_id: data.caseId, binder_id: data.binderId, actor_user_id: context.userId,
       event_type: "reassignment_offer_sent", metadata: { binder_payout_cents: data.payoutCents },
     });
+    // Un accord déjà signé est seulement réactivé : l'atelier n'a rien de nouveau à examiner.
+    if (!existing?.agreement_version) {
+      const { notifyWorkshopsOfOffer } = await import("@/marketplace/notifications/offerNotices.server");
+      await notifyWorkshopsOfOffer(sb, { caseId: data.caseId, binderIds: [data.binderId], offeredAt: now, reassignment: true });
+    }
     return { reactivated: Boolean(existing?.agreement_version) };
   });
 
