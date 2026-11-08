@@ -11,7 +11,7 @@ import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { admin, assertAdmin, type Supa } from "@/build/services/adminAuth.server";
 import { fail } from "@/build/services/serverError";
 import { findActiveBinderMembership } from "./binderMembership.server";
-import { reassignmentOfferTiming } from "@/marketplace/orders/reassignmentOffer";
+import { saveReassignmentOffer } from "@/marketplace/orders/reassignmentOfferWrite.server";
 
 const ORDER_REFUSALS: Record<string, string> = {
   order_not_found: "Aucune commande payée pour ce dossier.",
@@ -194,55 +194,32 @@ export const offerOppeOrderToWorkshop = createServerFn({ method: "POST" })
     const sb = await admin();
     const order = await loadOppeOrder(sb, data.caseId);
     if (!order || !["paid", "in_production"].includes(order.status)) refuse("order_not_reassignable");
-    const { data: existing, error } = await sb
-      .from("marketplace_quotes")
-      .select("id, state, agreement_version, binder_payout_cents, service_description, offered_at")
-      .eq("case_id", data.caseId)
-      .eq("binder_id", data.binderId)
-      .maybeSingle();
-    if (error) fail(500, error.message);
-    const now = new Date().toISOString();
-    // Même offre encore en attente, mêmes conditions : rien n'est réécrit, l'horodatage est conservé.
-    const timing = reassignmentOfferTiming(existing ?? null, data, now);
-    if (existing?.agreement_version) {
-      if (existing.binder_payout_cents !== data.payoutCents)
-        fail(409, "Cet atelier a déjà accepté ce dossier à une autre rémunération : son accord ne se réécrit pas.");
-      const { error: reError } = await sb.from("marketplace_quotes").update({ state: "accepted", updated_at: now }).eq("id", existing.id);
-      if (reError) fail(500, reError.message);
-    } else if (existing && timing.rewrite) {
-      const { error: upError } = await sb.from("marketplace_quotes").update({
-        state: "offered", binder_payout_cents: data.payoutCents, amount_cents: data.payoutCents,
-        service_description: data.serviceDescription, offered_at: now, accepted_at: null, declined_at: null,
-        decline_reason_code: null, decline_reason_detail: null, updated_at: now,
-      }).eq("id", existing.id);
-      if (upError) fail(500, upError.message);
-    } else if (!existing) {
-      const { error: insError } = await sb.from("marketplace_quotes").insert({
-        case_id: data.caseId, binder_id: data.binderId, description: "Offre Oppe (réattribution)",
-        amount_cents: data.payoutCents, currency: "EUR", state: "offered", customer_price_cents: null,
-        binder_payout_cents: data.payoutCents, service_description: data.serviceDescription, offered_at: now,
-      });
-      if (insError) fail(500, insError.message);
-    }
+    const saved = await saveReassignmentOffer(sb, data, new Date().toISOString());
+    // Un appel simultané a déjà écrit et annoncé cette offre : celui-ci ne touche à rien d'autre.
+    if (saved.outcome === "superseded") return { reactivated: false };
+    const reactivated = saved.outcome === "reactivated";
     await sb.from("marketplace_case_matches").upsert(
-      { case_id: data.caseId, binder_id: data.binderId, state: existing?.agreement_version ? "accepted" : "offered", binder_payout_cents: data.payoutCents, currency: "EUR", offered_at: timing.offeredAt },
+      { case_id: data.caseId, binder_id: data.binderId, state: reactivated ? "accepted" : "offered", binder_payout_cents: data.payoutCents, currency: "EUR", offered_at: saved.offeredAt },
       { onConflict: "case_id,binder_id" },
     );
-    await sb.from("marketplace_events").insert({
-      case_id: data.caseId, binder_id: data.binderId, actor_user_id: context.userId,
-      event_type: "reassignment_offer_sent", metadata: { binder_payout_cents: data.payoutCents },
-    });
+    // L'historique ne dit « offre envoyée » que pour une offre écrite (ou un accord réactivé), pas pour un clic répété.
+    if (saved.outcome !== "unchanged") {
+      await sb.from("marketplace_events").insert({
+        case_id: data.caseId, binder_id: data.binderId, actor_user_id: context.userId,
+        event_type: "reassignment_offer_sent", metadata: { binder_payout_cents: data.payoutCents },
+      });
+    }
     // Un accord déjà signé est seulement réactivé : l'atelier n'a rien de nouveau à examiner.
     // Une offre répétée garde sa clé : un e-mail déjà livré n'est pas renvoyé, un envoi échoué est repris.
-    if (!existing?.agreement_version) {
+    if (!reactivated) {
       try {
         const { notifyWorkshopsOfOffer } = await import("@/marketplace/notifications/offerNotices.server");
-        await notifyWorkshopsOfOffer(sb, { caseId: data.caseId, binderIds: [data.binderId], offeredAt: timing.offeredAt, reassignment: true });
+        await notifyWorkshopsOfOffer(sb, { caseId: data.caseId, binderIds: [data.binderId], offeredAt: saved.offeredAt, reassignment: true });
       } catch (err) {
         console.error("[workshop-offer-notice] module-failed", { caseId: data.caseId, err });
       }
     }
-    return { reactivated: Boolean(existing?.agreement_version) };
+    return { reactivated };
   });
 
 /** Réattribution, étape 2 : le nouvel atelier a accepté ; l'administration bascule la commande. */
