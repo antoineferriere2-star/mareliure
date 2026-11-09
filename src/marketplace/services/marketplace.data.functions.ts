@@ -676,6 +676,62 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
   .validator((data: unknown) => managedPriceInput.parse(data))
   .handler(async ({ context, data }) => validateMarketplacePricingCore(context, data));
 
+/**
+ * Ce que recevra chaque atelier, avant l'envoi : le dossier tel qu'il le lira (même projection
+ * que sa page `/atelier/leads/<id>`) et SA rémunération (condition commerciale comprise). Lecture
+ * seule, aucun envoi : l'admin vérifie, puis confirme avec `sendCaseToBinders`.
+ */
+export const previewCaseForBinders = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) =>
+    z.object({ caseId: z.string().uuid(), binderIds: z.array(z.string().uuid()).min(1).max(MAX_BINDERS_PER_CASE) }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const caseContext = await loadCaseContext(sb, data.caseId);
+    if (!caseContext) fail(404, "Dossier introuvable");
+
+    const { data: binders } = await sb
+      .from("marketplace_binders")
+      .select("id, display_name, workshop_name")
+      .in("id", data.binderIds);
+    const reference = caseContext.row.binder_payout_cents;
+    const payouts = reference
+      ? await resolvePerBinderPayouts(sb, data.binderIds, structuralFamily(caseContext.row.pricing_reason_codes), reference)
+      : new Map<string, { payoutCents: number; manualRequired: boolean }>();
+
+    // Divulgation calculée comme pour l'atelier invité lui-même : jamais plus, jamais moins.
+    const disclosureFor = (binderId: string) => {
+      const ownClient = commercialOriginOf(caseContext.row.acquisition_origin) === "workshop_client" && caseContext.row.referred_binder_id === binderId;
+      if (ownClient) return "full" as const;
+      return caseDisclosure({ role: "binder", binderId }, {
+        invitedBinderIds: [...caseContext.invitedBinderIds, binderId],
+        selectedBinderId: caseContext.selectedBinderId,
+        customerUserId: caseContext.customerUserId,
+      });
+    };
+    const disclosures = [...new Set(data.binderIds.map(disclosureFor))];
+    const views = Object.fromEntries(
+      await Promise.all(disclosures.map(async (d) => [d, await buildCaseView(sb, caseContext, d)] as const)),
+    );
+
+    return {
+      views,
+      workshops: data.binderIds.map((binderId) => {
+        const row = (binders ?? []).find((b) => b.id === binderId);
+        const payout = payouts.get(binderId);
+        return {
+          binderId,
+          name: row?.workshop_name || row?.display_name || "Atelier",
+          disclosure: disclosureFor(binderId),
+          payoutCents: payout?.payoutCents ?? null,
+          manualRequired: payout?.manualRequired ?? false,
+        };
+      }),
+    };
+  });
+
 export const sendCaseToBinders = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) =>

@@ -16,6 +16,7 @@
  */
 import type { BriefLine } from "@/build/schema/brief";
 import type { CaseView, CaseViewLine } from "@/marketplace/cases/dossierProjection";
+import { CasePhotoGallery } from "./CasePhotoViewer";
 
 type Locale = "fr-FR" | "en-US";
 
@@ -92,23 +93,7 @@ export function CaseBriefPanel({ view, locale = "fr-FR" }: { view: CaseView; loc
 
       {view.photos.length > 0 && (
         <Section title={en ? `Photos (${view.photos.length})` : `Photos (${view.photos.length})`}>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {view.photos.map((photo, index) =>
-              photo.url ? (
-                <li
-                  key={photo.url}
-                  className="overflow-hidden rounded-lg border border-[#3b2a1d]/15"
-                >
-                  <img
-                    src={photo.url}
-                    alt={photo.caption ?? (en ? `Photo ${index + 1} of the book` : `Photo ${index + 1} de l'ouvrage`)}
-                    className="aspect-square w-full object-cover"
-                    loading="lazy"
-                  />
-                </li>
-              ) : null,
-            )}
-          </ul>
+          <CasePhotoGallery photos={view.photos} locale={locale} />
         </Section>
       )}
 
