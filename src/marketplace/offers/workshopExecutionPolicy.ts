@@ -6,7 +6,8 @@
  * qu'elle ne dépend pas du visiteur ni de son parcours : elle engage l'atelier envers la marque,
  * pour tous les dossiers, quel que soit le Playbook qui les a produits.
  *
- * Toute modification change `version` et demande l'accord d'Antoine.
+ * Texte approuvé par Antoine le 9 novembre 2026 (version ci-dessous). Toute modification change
+ * `version` et demande de nouveau son accord.
  */
 export const WORKSHOP_EXECUTION_POLICY = {
   version: "oppe-execution-2026-11-09",
