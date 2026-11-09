@@ -4,6 +4,7 @@ import { consumeLastCapturedError } from "./lib/error-capture";
 import { renderErrorPage } from "./lib/error-page";
 import { isMaReliure } from "./brand";
 import { canonicalRedirectUrl } from "./marketplace/brand/wwwRedirect";
+import { maintenanceResponse } from "./maintenance";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -52,6 +53,9 @@ export default {
       const target = canonicalRedirectUrl(request.url);
       if (target) return Response.redirect(target, 301);
     }
+    // Pause des pages publiques (MAINTENANCE_MODE=public), espaces connectés et webhooks ouverts.
+    const paused = maintenanceResponse(request, env, new URL(request.url).hostname.includes("finebindery"));
+    if (paused) return paused;
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
