@@ -17,6 +17,7 @@
     "seed:deck": "tsx scripts/seedDeckPlaybook.ts",
     "seed:bookbinding": "tsx scripts/seedBookbindingPlaybook.ts",
     "seed:fine-bindery": "tsx scripts/seedFineBinderyMission.ts",
+    "seed:ferriere": "tsx scripts/seedFerriereMission.ts",
     "seed:marketplace-demo": "tsx scripts/seedMarketplaceDemo.ts",
     "configure:mareliure-auth": "tsx scripts/configureMareliureAuth.ts",
     "setup:stripe-portal": "tsx scripts/setupStripeBillingPortal.ts",

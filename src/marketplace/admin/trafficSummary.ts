@@ -10,7 +10,7 @@
  * La marque se déduit de l'adresse (`publicPageOwner`) ; les pages communes (connexion, espace client)
  * et les écrans internes ne sont pas comptés.
  */
-import { BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
+import { BOOKBINDING_PUBLIC_TOKEN, FERRIERE_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { publicPageOwner } from "@/marketplace/brand/brandPages";
 
@@ -43,6 +43,8 @@ export function viewBrand(rawPath: string): MarketplaceBrand | null {
   const path = rawPath.split(/[?#]/)[0] || "/";
   if (path === `/m/${BOOKBINDING_PUBLIC_TOKEN}`) return "MA_RELIURE";
   if (path === `/m/${FINE_BINDERY_PUBLIC_TOKEN}`) return "FINE_BINDERY";
+  // Servie dans le site de l'atelier Ferrière, mais une Mission Ma Reliure.
+  if (path === `/m/${FERRIERE_PUBLIC_TOKEN}`) return "MA_RELIURE";
   // La racine n'est servie que par Ma Reliure : finebindery.com/ redirige vers /en avant tout affichage.
   if (path === "/") return "MA_RELIURE";
   const owner = publicPageOwner(path);
