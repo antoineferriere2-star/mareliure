@@ -37,6 +37,7 @@ import { depositCentsFor, pricingModeFor } from "@/marketplace/pricing/pricingMo
 import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
 import { isMarketplaceBrand, marketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
+import { payoutsChangedSincePreview } from "@/marketplace/matching/payoutConfirmation";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
 import { loadCustomerCommerce, NO_OPPE_COMMERCE } from "@/marketplace/services/customerCommerce.server";
 import { publicCopy } from "@/build/pages/public/publicLocaleContext";
@@ -741,6 +742,8 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
         binderIds: z.array(z.string().uuid()).min(1).max(MAX_BINDERS_PER_CASE),
         /** Ce que l'atelier s'engage à réaliser : figé avec sa rémunération et son délai. */
         serviceDescription: z.string().trim().min(10).max(2000),
+        /** La rémunération que l'admin a lue dans l'aperçu, par atelier : l'envoi n'en inscrit pas d'autre. */
+        confirmedPayouts: z.record(z.string().uuid(), z.number().int().positive()),
       })
       .parse(data),
   )
@@ -837,6 +840,14 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
       fail(
         422,
         "Au moins un atelier sélectionné a une condition « rémunération manuelle » pour ce type de travail : fixez son montant avant d'envoyer l'offre.",
+      );
+    }
+    // Le montant écrit est celui que l'admin a lu dans l'aperçu, ou rien : une condition commerciale
+    // modifiée entre l'aperçu et la confirmation oblige à revérifier (revue Codex de #192).
+    if (payoutsChangedSincePreview(decision.binderIds, data.confirmedPayouts, payoutByBinder).length > 0) {
+      fail(
+        409,
+        "La rémunération d'au moins un atelier a changé depuis votre vérification. Rouvrez l'aperçu et confirmez le nouveau montant.",
       );
     }
 

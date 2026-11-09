@@ -1002,7 +1002,8 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
   }, [data]);
 
   const invite = useMutation({
-    mutationFn: () => send({ data: { caseId, binderIds: selected, serviceDescription } }),
+    mutationFn: (confirmedPayouts: Record<string, number>) =>
+      send({ data: { caseId, binderIds: selected, serviceDescription, confirmedPayouts } }),
     onSuccess: async () => {
       setPreviewOpen(false);
       setSelected([]);
@@ -1010,7 +1011,11 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
       await queryClient.invalidateQueries({ queryKey });
       await queryClient.invalidateQueries({ queryKey: ["marketplace", "cases"] });
     },
-    onError: (err: Error) => setProblem(err.message),
+    onError: async (err: Error) => {
+      setProblem(err.message);
+      // Montant changé entre-temps : l'aperçu se relit pour montrer le nouveau.
+      await queryClient.invalidateQueries({ queryKey: [...queryKey, "workshop-preview"] });
+    },
   });
 
   const release = useMutation({
@@ -1306,7 +1311,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
             brandName={data.case.brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"}
             sending={invite.isPending}
             problem={problem}
-            onConfirm={() => invite.mutate()}
+            onConfirm={(confirmedPayouts) => invite.mutate(confirmedPayouts)}
           />
         </section>
       </aside>

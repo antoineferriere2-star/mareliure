@@ -71,6 +71,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export function CaseBriefPanel({ view, locale = "fr-FR" }: { view: CaseView; locale?: Locale }) {
   const en = locale === "en-US";
+  // Le compteur suit les vignettes réellement affichées : une signature échouée n'en ajoute pas.
+  const signedPhotos = view.photos.filter((photo) => photo.url).length;
   return (
     <div className="rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -91,8 +93,8 @@ export function CaseBriefPanel({ view, locale = "fr-FR" }: { view: CaseView; loc
         </p>
       )}
 
-      {view.photos.length > 0 && (
-        <Section title={en ? `Photos (${view.photos.length})` : `Photos (${view.photos.length})`}>
+      {signedPhotos > 0 && (
+        <Section title={`Photos (${signedPhotos})`}>
           <CasePhotoGallery photos={view.photos} locale={locale} />
         </Section>
       )}

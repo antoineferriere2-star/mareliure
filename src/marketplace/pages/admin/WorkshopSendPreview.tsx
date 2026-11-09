@@ -13,6 +13,11 @@ import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { WorkshopOfferCard } from "@/marketplace/pages/binder/WorkshopOfferCard";
 import { previewCaseForBinders } from "@/marketplace/services/marketplace.data.functions";
 
+/** Ce que l'admin confirme : le montant affiché de chaque atelier, tel quel. */
+export function confirmedPayoutsOf(workshops: ReadonlyArray<{ binderId: string; payoutCents: number | null }>): Record<string, number> {
+  return Object.fromEntries(workshops.filter((w) => w.payoutCents).map((w) => [w.binderId, w.payoutCents as number]));
+}
+
 export function WorkshopSendPreview({
   open,
   onOpenChange,
@@ -32,13 +37,18 @@ export function WorkshopSendPreview({
   brandName: string;
   sending: boolean;
   problem: string | null;
-  onConfirm: () => void;
+  /** Reçoit la rémunération affichée, par atelier : le serveur refuse l'envoi si elle a changé. */
+  onConfirm: (confirmedPayouts: Record<string, number>) => void;
 }) {
   const preview = useServerFn(previewCaseForBinders);
-  const { data, isPending, error } = useQuery({
+  const { data, isPending, isFetching, error } = useQuery({
     queryKey: ["marketplace", "case", caseId, "workshop-preview", [...binderIds].sort().join(",")],
     queryFn: () => preview({ data: { caseId, binderIds } }),
     enabled: open && binderIds.length > 0,
+    // Relu à chaque ouverture, jamais servi depuis le cache : on ne confirme pas un ancien montant.
+    staleTime: 0,
+    gcTime: 0,
+    refetchOnMount: "always",
   });
   const [tab, setTab] = useState(0);
   const workshops = data?.workshops ?? [];
@@ -112,7 +122,10 @@ export function WorkshopSendPreview({
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>
             Corriger
           </Button>
-          <Button onClick={onConfirm} disabled={!data || blocked || sending}>
+          <Button
+            onClick={() => data && onConfirm(confirmedPayoutsOf(workshops))}
+            disabled={!data || blocked || sending || isFetching}
+          >
             {sending
               ? "Envoi…"
               : workshops.length > 1
