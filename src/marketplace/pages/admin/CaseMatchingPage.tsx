@@ -48,6 +48,7 @@ import {
 } from "@/components/ui/select";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { WorkshopSendPreview } from "./WorkshopSendPreview";
+import { draftServiceDescription } from "@/marketplace/offers/serviceDescriptionDraft";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
 import { formatEuros } from "@/marketplace/pricing/money";
@@ -999,7 +1000,21 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
     if (!data || prefilled.current) return;
     prefilled.current = true;
     if (data.defaultSelection.length > 0) setSelected(data.defaultSelection);
+    // La prestation part d'un brouillon précis (travaux chiffrés, état déclaré, conditions), que
+    // l'admin relit et corrige ; un texte déjà saisi n'est jamais écrasé.
+    setServiceDescription((current) => current.trim() ? current : draftFor(data));
   }, [data]);
+
+  function draftFor(source: NonNullable<typeof data>): string {
+    return draftServiceDescription({
+      title: source.view.title,
+      reference: source.view.reference,
+      components: source.case.pricing_components ?? [],
+      lines: source.view.project,
+      heritage: source.view.heritage,
+      brandName: source.case.brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure",
+    });
+  }
 
   const invite = useMutation({
     mutationFn: (confirmedPayouts: Record<string, number>) =>
@@ -1041,7 +1056,8 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
     data.case.status === "matching" &&
     remaining > 0 &&
     selected.length > 0 &&
-    serviceDescription.trim().length >= 10;
+    serviceDescription.trim().length >= 10 &&
+    serviceDescription.trim().length <= 2000;
 
   function toggle(id: string) {
     setProblem(null);
@@ -1276,14 +1292,27 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
           )}
 
           <div className="mt-4">
-            <Label htmlFor="service-description">Prestation demandée à l'atelier</Label>
+            <div className="flex items-baseline justify-between gap-2">
+              <Label htmlFor="service-description">Prestation demandée à l'atelier</Label>
+              <button
+                type="button"
+                className="text-xs underline text-muted-foreground hover:text-foreground"
+                onClick={() => setServiceDescription(draftFor(data))}
+              >
+                Repartir du brouillon
+              </button>
+            </div>
             <textarea
               id="service-description"
-              className="mt-1 min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="mt-1 min-h-64 w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-6"
               value={serviceDescription}
               onChange={(event) => setServiceDescription(event.target.value)}
               placeholder="Ce que l'atelier s'engage à réaliser : il l'accepte avec sa rémunération et son délai."
             />
+            <p className={`mt-1 text-xs ${serviceDescription.trim().length > 2000 ? "text-destructive" : "text-muted-foreground"}`}>
+              Brouillon tiré des travaux chiffrés et de l'état déclaré : relisez-le et complétez ce que les photos montrent.
+              {" "}{serviceDescription.trim().length} / 2 000 caractères.
+            </p>
           </div>
 
           {problem && <p className="mt-4 text-sm text-destructive">{problem}</p>}
