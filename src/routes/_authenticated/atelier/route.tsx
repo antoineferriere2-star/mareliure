@@ -8,6 +8,7 @@ import { BookOpen, FileText, Globe2, House, Inbox, LibraryBig, Menu, MessageSqua
 import { SignOutButton } from "@/marketplace/pages/SignOutButton";
 import { getMyBinderProfile, listMyBinderCases } from "@/marketplace/services/marketplace.data.functions";
 import { NoWorkshopNotice } from "@/marketplace/pages/binder/NoWorkshopNotice";
+import { WorkshopPasswordGate } from "@/marketplace/pages/binder/WorkshopPasswordGate";
 import { FineBinderyWorkspaceProvider, PROFESSIONAL_COPY, useFineBinderyWorkspace } from "@/marketplace/i18n/FineBinderyWorkspaceContext";
 import { FINE_BINDERY_LOCALES, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 import { languageName } from "@/marketplace/i18n/fineBinderyGlossary";
@@ -45,7 +46,13 @@ function WorkspaceLanguageSelect({ locale, label, onChange, compact = false }: {
   );
 }
 
-function AtelierLayout() { return <FineBinderyWorkspaceProvider><AtelierLayoutContent /></FineBinderyWorkspaceProvider>; }
+function AtelierLayout() { return <FineBinderyWorkspaceProvider><GatedAtelierLayout /></FineBinderyWorkspaceProvider>; }
+
+// Mot de passe obligatoire pour l'espace atelier : choisi avant la première page (WorkshopPasswordGate).
+function GatedAtelierLayout() {
+  const { locale } = useFineBinderyWorkspace();
+  return <WorkshopPasswordGate locale={locale}><AtelierLayoutContent /></WorkshopPasswordGate>;
+}
 
 function AtelierLayoutContent() {
   const { isFineBindery, locale, setLocale } = useFineBinderyWorkspace();
