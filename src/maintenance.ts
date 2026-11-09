@@ -28,8 +28,14 @@ const OPEN_PREFIXES = [
 
 export const MAINTENANCE_RETRY_AFTER_SECONDS = 3600;
 
-export function maintenanceEnabled(env: unknown): boolean {
-  const value = (env as { MAINTENANCE_MODE?: unknown } | null | undefined)?.MAINTENANCE_MODE;
+/**
+ * Nitro appelle `src/server.ts` avec la seule requête : le second argument `env` y est vide en
+ * production. Les variables et secrets du Worker arrivent dans `process.env` (nodejs_compat), comme
+ * pour le reste de l'application ; `env` n'est lu qu'en premier, pour les tests et un appel direct.
+ */
+export function maintenanceEnabled(env: unknown, processEnv: Record<string, string | undefined> | undefined = globalThis.process?.env): boolean {
+  const fromEnv = (env as { MAINTENANCE_MODE?: unknown } | null | undefined)?.MAINTENANCE_MODE;
+  const value = typeof fromEnv === "string" ? fromEnv : processEnv?.MAINTENANCE_MODE;
   return typeof value === "string" && value.trim().toLowerCase() === "public";
 }
 
