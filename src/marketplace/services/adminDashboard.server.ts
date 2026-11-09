@@ -4,7 +4,7 @@ import { buildAdminDashboard, type DashboardRows, type DashboardBrand } from "@/
 import { buildTrafficSummary, type PageViewRow } from "@/marketplace/admin/trafficSummary";
 import { buildIntakeFunnel, type IntakeSessionFacts } from "@/marketplace/admin/intakeFunnel";
 import { bookbindingPlaybookSchema } from "@/build/playbooks/bookbindingPlaybookSchema";
-import { BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
+import { BOOKBINDING_PUBLIC_TOKEN, FERRIERE_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
 import { INTERNAL_VISIT_KEY } from "@/build/runtime/sessionMetadata";
 import { unreadCount, type ConversationMessageFacts } from "@/marketplace/messaging/conversation";
 import { isMessageAudience } from "@/marketplace/messaging/audience";
@@ -119,7 +119,7 @@ export async function readAdminDashboard(sb: SupabaseClient, userId: string,
  */
 async function readIntakeSessions(sb: SupabaseClient, since: string | null): Promise<IntakeSessionFacts[]> {
   const { data: missions, error } = await sb.from("build_missions").select("id, public_token")
-    .in("public_token", [BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN]);
+    .in("public_token", [BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN, FERRIERE_PUBLIC_TOKEN]);
   if (error) throw new Error("build_missions: " + error.message);
   const brandOf = new Map((missions ?? []).map((m: { id: string; public_token: string }) =>
     [m.id, m.public_token === FINE_BINDERY_PUBLIC_TOKEN ? "FINE_BINDERY" as const : "MA_RELIURE" as const]));

@@ -1,10 +1,11 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import { workshopSubmissionProjection } from "./workshopIntakeSummary.server";
-import { resolveApprovedBinderBySlug, resolvePublishedFineBinderyBinderBySlug } from "./caseRepository.server";
-import { BOOKBINDING_MISSION_ID, FINE_BINDERY_MISSION_ID } from "@/build/constants";
+import { resolveApprovedBinderById, resolveApprovedBinderBySlug, resolvePublishedFineBinderyBinderBySlug } from "./caseRepository.server";
+import { BOOKBINDING_MISSION_ID, FERRIERE_MISSION_ID, FINE_BINDERY_MISSION_ID } from "@/build/constants";
+import { FERRIERE_WORKSHOP_ID } from "@/marketplace/config";
 import type { VisitorProjectSummary } from "@/build/schema/visitorSummary";
 import { publicCopy } from "@/build/pages/public/publicLocaleContext";
-vi.mock("./caseRepository.server", () => ({ resolveApprovedBinderBySlug: vi.fn(),resolvePublishedFineBinderyBinderBySlug: vi.fn() }));
+vi.mock("./caseRepository.server", () => ({ resolveApprovedBinderById: vi.fn(),resolveApprovedBinderBySlug: vi.fn(),resolvePublishedFineBinderyBinderBySlug: vi.fn() }));
 const summary: VisitorProjectSummary = {version:1,locale:"fr-FR",measurementSystem:"metric",businessName:"Ma Reliure",summary:"Livre fictif",confirmedItems:[{label:"Titre",value:"Livre fictif"}],calculatedItems:[],itemsToConfirm:[{label:"Prix Ma Reliure",value:"Ancien texte"}],budgetAndTimingItems:[],photos:[{path:"private/fixture.png"}],confirmationText:"Ma Reliure fixe le prix et choisit l’atelier",submittedAt:"2026-10-06T11:00:00Z"};
 beforeEach(() => { vi.resetAllMocks(); vi.mocked(resolveApprovedBinderBySlug).mockResolvedValue({binderId:"binder",displayName:"Atelier de recette"}); });
 it("conserve strictement les projets génériques et les autres missions",async () => {
@@ -31,4 +32,17 @@ it("ne résout la vitrine Fine Bindery que par son statut de publication",async 
   vi.mocked(resolvePublishedFineBinderyBinderBySlug).mockResolvedValue({binderId:"binder",displayName:"Atelier publié"});
   const result=await workshopSubmissionProjection({} as never,FINE_BINDERY_MISSION_ID,{_referral_slug:"atelier",_request_source:"finebindery_profile"},summary);
   expect(result.summary.businessName).toBe("Atelier publié"); expect(resolveApprovedBinderBySlug).not.toHaveBeenCalled();
+});
+it("rattache la Mission du site Ferrière à l’atelier par son identifiant, sans slug",async () => {
+  vi.mocked(resolveApprovedBinderById).mockResolvedValue({binderId:FERRIERE_WORKSHOP_ID,displayName:"Reliure Dorure Ferrière"});
+  const result=await workshopSubmissionProjection({} as never,FERRIERE_MISSION_ID,{},summary);
+  expect(resolveApprovedBinderById).toHaveBeenCalledWith({},FERRIERE_WORKSHOP_ID);
+  expect(resolveApprovedBinderBySlug).not.toHaveBeenCalled();
+  expect(result.summary.businessName).toBe("Reliure Dorure Ferrière");
+  expect(result.summary.confirmationText).not.toMatch(/Ma Reliure fixe|choisit l’atelier/);
+});
+it("ignore un slug envoyé par le navigateur sur la Mission Ferrière",async () => {
+  vi.mocked(resolveApprovedBinderById).mockResolvedValue({binderId:FERRIERE_WORKSHOP_ID,displayName:"Reliure Dorure Ferrière"});
+  await workshopSubmissionProjection({} as never,FERRIERE_MISSION_ID,{_referral_slug:"autre-atelier"},summary);
+  expect(resolveApprovedBinderBySlug).not.toHaveBeenCalled();
 });
