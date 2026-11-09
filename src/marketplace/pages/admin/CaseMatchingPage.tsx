@@ -48,7 +48,6 @@ import {
 } from "@/components/ui/select";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { WorkshopSendPreview } from "./WorkshopSendPreview";
-import { draftServiceDescription } from "@/marketplace/offers/serviceDescriptionDraft";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
 import { formatEuros } from "@/marketplace/pricing/money";
@@ -1002,18 +1001,16 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
     if (data.defaultSelection.length > 0) setSelected(data.defaultSelection);
     // La prestation part d'un brouillon précis (travaux chiffrés, état déclaré, conditions), que
     // l'admin relit et corrige ; un texte déjà saisi n'est jamais écrasé.
-    setServiceDescription((current) => current.trim() ? current : draftFor(data));
+    // Le brouillon est composé par le serveur depuis la vue d'un atelier invité, jamais ici depuis
+    // la vue complète de l'admin.
+    setServiceDescription((current) => current.trim() ? current : data.serviceDescriptionDraft);
   }, [data]);
 
-  function draftFor(source: NonNullable<typeof data>): string {
-    return draftServiceDescription({
-      title: source.view.title,
-      reference: source.view.reference,
-      components: source.case.pricing_components ?? [],
-      lines: source.view.project,
-      heritage: source.view.heritage,
-      brandName: source.case.brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure",
-    });
+  // « Repartir du brouillon » remplace les retouches : le texte précédent reste récupérable.
+  const [replacedText, setReplacedText] = useState<string | null>(null);
+  function restartFromDraft(draft: string) {
+    if (serviceDescription.trim() && serviceDescription !== draft) setReplacedText(serviceDescription);
+    setServiceDescription(draft);
   }
 
   const invite = useMutation({
@@ -1297,7 +1294,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
               <button
                 type="button"
                 className="text-xs underline text-muted-foreground hover:text-foreground"
-                onClick={() => setServiceDescription(draftFor(data))}
+                onClick={() => restartFromDraft(data.serviceDescriptionDraft)}
               >
                 Repartir du brouillon
               </button>
@@ -1313,6 +1310,21 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
               Brouillon tiré des travaux chiffrés et de l'état déclaré : relisez-le et complétez ce que les photos montrent.
               {" "}{serviceDescription.trim().length} / 2 000 caractères.
             </p>
+            {replacedText !== null && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Votre texte précédent a été remplacé par le brouillon.{" "}
+                <button
+                  type="button"
+                  className="underline hover:text-foreground"
+                  onClick={() => {
+                    setServiceDescription(replacedText);
+                    setReplacedText(null);
+                  }}
+                >
+                  Le rétablir
+                </button>
+              </p>
+            )}
           </div>
 
           {problem && <p className="mt-4 text-sm text-destructive">{problem}</p>}

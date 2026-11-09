@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { draftServiceDescription, type DraftLine } from "./serviceDescriptionDraft";
+import { draftServiceDescription, draftServiceDescriptionForCase, type DraftLine } from "./serviceDescriptionDraft";
+import { generateProjectBrief } from "@/build/engine/brief";
+import { bookbindingPlaybookSchema } from "@/build/playbooks/bookbindingPlaybookSchema";
+import type { Answers } from "@/build/schema/answers";
+import type { ProjectBrief } from "@/build/schema/brief";
+import { buildCaseProfile } from "@/marketplace/cases/caseProfile";
 
 // Lignes telles que le Playbook reliure les produit pour RL-013 (vue admin, divulgation complète).
 const rl013: DraftLine[] = [
@@ -74,5 +79,39 @@ describe("brouillon de la prestation demandée à l'atelier", () => {
   it("tient dans la limite de 2 000 caractères de l'envoi pour un dossier chargé", () => {
     const many = Array.from({ length: 12 }, (_, i) => ({ workItemKey: `x${i}`, label: `Travail complémentaire numéro ${i}` }));
     expect(draft({ components: many }).length).toBeLessThanOrEqual(2000);
+  });
+});
+
+describe("brouillon d'un dossier : toujours depuis la vue d'un atelier invité", () => {
+  const ANSWERS: Answers = {
+    intention: "reparation", titre: "Paroissien Romain", auteur: "Missal", nature: "livre_ancien",
+    hauteur: 16, largeur: 13, epaisseur: 3, etat: ["couverture_detachee"],
+    name: "Client Fictif", email: "client@example.invalid", phone: "+385000000000",
+    localisation: { zip: "52203", city_state: "Medulin" }, budget: "250_400", valeurFinanciere: "100_500", consentement: true,
+  };
+  const realBrief = () => generateProjectBrief(bookbindingPlaybookSchema, ANSWERS, { name: "Mission Reliure" });
+  const forCase = (brief: ProjectBrief) => draftServiceDescriptionForCase({
+    reference: "RL-999", brief, profile: buildCaseProfile(ANSWERS), components, brandName: "Ma Reliure",
+  });
+
+  it("dossier réel du Playbook : ni contact, ni budget, ni valeur", () => {
+    const text = forCase(realBrief());
+    for (const secret of ["Client Fictif", "example.invalid", "+385", "Medulin", "250", "100"]) expect(text).not.toContain(secret);
+    expect(text).toContain("Travaux demandés :");
+  });
+
+  it("sonde de la revue Codex : contacts mal classés dans des rubriques autorisées, retirés par leur fieldKey", () => {
+    const brief = realBrief();
+    const misfiled: ProjectBrief = {
+      ...brief,
+      confirmedInformation: [
+        ...brief.confirmedInformation,
+        { fieldKey: "phone", label: "Téléphone", value: "+385 99 999 9999", source: "visitor_answer", category: "État" },
+        { fieldKey: "email", label: "Titre", value: "fuite@example.invalid", source: "visitor_answer", category: "L'ouvrage" },
+      ] as ProjectBrief["confirmedInformation"],
+    };
+    const text = forCase(misfiled);
+    expect(text).not.toContain("+385 99 999 9999");
+    expect(text).not.toContain("fuite@example.invalid");
   });
 });

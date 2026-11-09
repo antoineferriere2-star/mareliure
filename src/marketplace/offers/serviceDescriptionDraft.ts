@@ -1,14 +1,22 @@
 /**
  * Brouillon de la prestation demandée à l'atelier, pour que la consigne envoyée soit précise sans
  * être retapée : les travaux chiffrés (catalogue), puis ce que le client a déclaré de l'ouvrage, puis
- * les conditions d'exécution. L'admin le relit et le corrige avant l'envoi ; rien ne part sans lui.
+ * les conditions d'exécution (`WORKSHOP_EXECUTION_POLICY`). L'admin le relit et le corrige avant
+ * l'envoi ; rien ne part sans lui.
  *
- * Le texte ne reprend que des rubriques du Playbook qui décrivent le livre et le travail (« L'ouvrage »,
- * « État », « Style », « Finitions ») : jamais le contact, la valeur ni le budget du client, qui ne
- * regardent pas l'atelier. Les rubriques retenues sont une liste explicite, pas une exclusion : une
- * rubrique ajoutée plus tard au Playbook n'entre pas dans le texte sans décision.
+ * Deux filtres, l'un après l'autre (revue Codex de #193) :
+ * 1. le brouillon part TOUJOURS de la projection `project_only`, celle que lit un atelier invité
+ *    (`draftServiceDescriptionForCase`) : une ligne de contact, de budget ou réservée au client est
+ *    retirée par son `fieldKey`, même mal classée dans un Brief stocké ;
+ * 2. puis seules les rubriques qui décrivent le livre et le travail sont reprises (« L'ouvrage »,
+ *    « État », « Style », « Finitions ») — liste explicite : une rubrique ajoutée plus tard au
+ *    Playbook n'entre pas sans décision.
  */
+import type { ProjectBrief } from "@/build/schema/brief";
+import { projectCase } from "@/marketplace/cases/dossierProjection";
+import type { CaseProfile } from "@/marketplace/cases/caseProfile";
 import { WORK_ITEMS } from "@/marketplace/pricing/catalog";
+import { executionConditions } from "./workshopExecutionPolicy";
 
 export interface DraftLine {
   label: string;
@@ -53,14 +61,7 @@ export function draftServiceDescription(input: {
       .map((line) => `- ${line.label} : ${clean(line.value)}`),
   );
 
-  const conditions = [
-    "- Conserver les éléments d'origine (couvrure, gardes, fermoir, tranches, décors), sauf accord préalable.",
-    `- Tout travail non prévu ci-dessus (recouture, remplacement de matériaux, nettoyage ou teinture du cuir) : prévenir ${input.brandName} avant d'intervenir.`,
-    ...(input.heritage
-      ? [`- Ouvrage ancien : examen à réception, avec un avis transmis à ${input.brandName} avant de commencer.`]
-      : []),
-    "- Photos avant et après le travail, déposées dans le dossier.",
-  ];
+  const conditions = executionConditions(input).map((condition) => `- ${condition}`);
 
   return [
     `${clean(input.title)} (${input.reference})`,
@@ -73,4 +74,34 @@ export function draftServiceDescription(input: {
     "Conditions :",
     ...conditions,
   ].join("\n");
+}
+
+/**
+ * Le brouillon d'un dossier, à partir de ce qu'un atelier invité est autorisé à lire : la projection
+ * `project_only`, qui retire contacts et données réservées au client par leur `fieldKey`. C'est la
+ * seule entrée à utiliser ; la page admin reçoit le texte déjà composé par le serveur.
+ */
+export function draftServiceDescriptionForCase(input: {
+  reference: string;
+  brief: ProjectBrief;
+  profile: CaseProfile;
+  components: readonly DraftComponent[];
+  brandName: string;
+}): string {
+  const workshopView = projectCase({
+    reference: input.reference,
+    brief: input.brief,
+    profile: input.profile,
+    disclosure: "project_only",
+    photos: [],
+    manualReviewRequired: false,
+  });
+  return draftServiceDescription({
+    title: workshopView.title,
+    reference: workshopView.reference,
+    components: input.components,
+    lines: workshopView.project,
+    heritage: workshopView.heritage,
+    brandName: input.brandName,
+  });
 }
