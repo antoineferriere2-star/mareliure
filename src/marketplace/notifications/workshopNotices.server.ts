@@ -7,9 +7,26 @@ import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 /** The persisted notice stays visible even if delivery fails. Webhook retries resume the email. */
 export async function notifyWorkshop(
   sb: Supa,
-  notice: { id: string; binderId: string; heading: string; intro: string; brand?: MarketplaceBrand },
+  notice: {
+    id: string;
+    binderId: string;
+    heading: string;
+    intro: string;
+    brand?: MarketplaceBrand;
+    /** Page de l'espace atelier ouverte par le bouton ; l'abonnement par défaut. */
+    ctaPath?: string;
+    ctaLabel?: string;
+    /**
+     * Domaine du bouton, quand il dépend de la marque : la session d'un atelier est rangée par
+     * domaine, un lien Ma Reliure ne la retrouve pas sur Fine Bindery. Sinon `workshopOrigin()`.
+     */
+    ctaOrigin?: string;
+  },
 ) {
   const brand = notice.brand ?? "MA_RELIURE";
+  const ctaLabel = notice.ctaLabel ?? "Ouvrir mon atelier";
+  const ctaPath = notice.ctaPath ?? "/atelier/abonnement";
+  const ctaOrigin = () => notice.ctaOrigin ?? workshopOrigin();
   const brandName = brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure";
   const inserted = await sb.from("marketplace_workshop_notices").upsert(
     {
@@ -63,8 +80,8 @@ export async function notifyWorkshop(
           locale: "fr-FR",
           heading: notice.heading,
           intro: notice.intro,
-          ctaLabel: "Ouvrir mon atelier",
-          ctaUrl: `${workshopOrigin()}/atelier/abonnement`,
+          ctaLabel,
+          ctaUrl: `${ctaOrigin()}${ctaPath}`,
         }),
         { plainText: true },
       );
@@ -99,8 +116,8 @@ export async function notifyWorkshop(
         locale: "fr-FR",
         heading: notice.heading,
         intro: notice.intro,
-        ctaLabel: "Ouvrir mon atelier",
-        ctaUrl: `${workshopOrigin()}/atelier/abonnement`,
+        ctaLabel,
+        ctaUrl: `${ctaOrigin()}${ctaPath}`,
       },
     });
     if (!result.sent) throw new Error("workshop_notice_not_delivered");
