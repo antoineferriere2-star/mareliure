@@ -18,6 +18,21 @@ export function confirmedPayoutsOf(workshops: ReadonlyArray<{ binderId: string; 
   return Object.fromEntries(workshops.filter((w) => w.payoutCents).map((w) => [w.binderId, w.payoutCents as number]));
 }
 
+
+export type PreviewState = "loading" | "error" | "refreshing" | "current";
+
+/** Où en est l'aperçu. Une erreur l'emporte sur des données restées en cache. */
+export function previewState(input: { hasData: boolean; isFetching: boolean; hasError: boolean }): PreviewState {
+  if (input.hasError) return "error";
+  if (!input.hasData) return "loading";
+  return input.isFetching ? "refreshing" : "current";
+}
+
+/** On ne confirme qu'un aperçu à jour, sans atelier bloqué, et pas deux fois. */
+export function canConfirmPreview(input: { state: PreviewState; blocked: boolean; sending: boolean }): boolean {
+  return input.state === "current" && !input.blocked && !input.sending;
+}
+
 export function WorkshopSendPreview({
   open,
   onOpenChange,
@@ -41,7 +56,7 @@ export function WorkshopSendPreview({
   onConfirm: (confirmedPayouts: Record<string, number>) => void;
 }) {
   const preview = useServerFn(previewCaseForBinders);
-  const { data, isPending, isFetching, error } = useQuery({
+  const { data: lastData, isPending, isFetching, error, refetch } = useQuery({
     queryKey: ["marketplace", "case", caseId, "workshop-preview", [...binderIds].sort().join(",")],
     queryFn: () => preview({ data: { caseId, binderIds } }),
     enabled: open && binderIds.length > 0,
@@ -50,6 +65,10 @@ export function WorkshopSendPreview({
     gcTime: 0,
     refetchOnMount: "always",
   });
+  // Une relecture échouée laisse en cache l'ancien aperçu (contre-revue Codex de #192) : il n'est
+  // alors plus montré du tout, et rien ne se confirme sur la base d'un aperçu qui n'est pas à jour.
+  const state = previewState({ hasData: Boolean(lastData), isFetching, hasError: Boolean(error) });
+  const data = state === "error" ? undefined : lastData;
   const [tab, setTab] = useState(0);
   const workshops = data?.workshops ?? [];
   const current = workshops[Math.min(tab, Math.max(workshops.length - 1, 0))];
@@ -68,10 +87,21 @@ export function WorkshopSendPreview({
         </DialogHeader>
 
         {isPending && <p className="text-sm text-muted-foreground">Préparation de l'aperçu…</p>}
-        {error && <p className="text-sm text-destructive">{(error as Error).message}</p>}
+        {state === "error" && (
+          <div className="space-y-2">
+            <p className="text-sm text-destructive">
+              L'aperçu n'a pas pu être relu : {(error as Error).message} Rien ne peut être envoyé tant qu'il n'est pas
+              à jour.
+            </p>
+            <Button size="sm" variant="outline" onClick={() => refetch()} disabled={isFetching}>
+              Relire l'aperçu
+            </Button>
+          </div>
+        )}
+        {state === "refreshing" && <p className="text-sm text-muted-foreground">Mise à jour de l'aperçu…</p>}
 
         {data && (
-          <>
+          <div className={state === "refreshing" ? "pointer-events-none space-y-4 opacity-50" : "space-y-4"} aria-busy={state === "refreshing"}>
             {workshops.length > 1 && (
               <div role="tablist" aria-label="Ateliers sélectionnés" className="flex flex-wrap gap-2">
                 {workshops.map((w, index) => (
@@ -114,7 +144,7 @@ export function WorkshopSendPreview({
                 </p>
               </aside>
             </div>
-          </>
+          </div>
         )}
 
         {problem && <p className="text-sm text-destructive">{problem}</p>}
@@ -124,7 +154,7 @@ export function WorkshopSendPreview({
           </Button>
           <Button
             onClick={() => data && onConfirm(confirmedPayoutsOf(workshops))}
-            disabled={!data || blocked || sending || isFetching}
+            disabled={!canConfirmPreview({ state, blocked, sending })}
           >
             {sending
               ? "Envoi…"

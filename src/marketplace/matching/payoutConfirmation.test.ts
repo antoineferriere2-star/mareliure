@@ -3,7 +3,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { payoutsChangedSincePreview, type ResolvedPayout } from "./payoutConfirmation";
 import { resolvePayout, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
-import { confirmedPayoutsOf } from "@/marketplace/pages/admin/WorkshopSendPreview";
+import { canConfirmPreview, confirmedPayoutsOf, previewState } from "@/marketplace/pages/admin/WorkshopSendPreview";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 
 const A = "11111111-1111-4111-8111-111111111111";
@@ -48,5 +48,24 @@ describe("compteur des photos", () => {
     };
     const html = renderToStaticMarkup(createElement(CaseBriefPanel, { view: view as never }));
     expect(html).toContain("Photos (1)");
+  });
+});
+
+describe("confirmation de l'aperçu", () => {
+  it("relecture échouée avec l'ancien aperçu en cache : rien n'est confirmable (contre-revue Codex)", () => {
+    const state = previewState({ hasData: true, isFetching: false, hasError: true });
+    expect(state).toBe("error");
+    expect(canConfirmPreview({ state, blocked: false, sending: false })).toBe(false);
+  });
+
+  it("pendant la relecture, pas de confirmation ; aperçu à jour, oui", () => {
+    expect(canConfirmPreview({ state: previewState({ hasData: true, isFetching: true, hasError: false }), blocked: false, sending: false })).toBe(false);
+    expect(canConfirmPreview({ state: previewState({ hasData: true, isFetching: false, hasError: false }), blocked: false, sending: false })).toBe(true);
+  });
+
+  it("chargement, atelier bloqué ou envoi en cours : pas de confirmation", () => {
+    expect(canConfirmPreview({ state: previewState({ hasData: false, isFetching: true, hasError: false }), blocked: false, sending: false })).toBe(false);
+    expect(canConfirmPreview({ state: "current", blocked: true, sending: false })).toBe(false);
+    expect(canConfirmPreview({ state: "current", blocked: false, sending: true })).toBe(false);
   });
 });
