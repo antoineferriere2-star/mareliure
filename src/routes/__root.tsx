@@ -48,13 +48,52 @@ import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
  * Reliure (audit express SEO/GEO, 15 septembre 2026, actions 1 et 3) : la
  * confusion que ce fichier existe déjà pour éviter, un cran plus bas.
  */
+/**
+ * Les icônes d'onglet, d'écran d'accueil et de manifeste, par marque.
+ *
+ * Ma Reliure et Fine Bindery partagent ce déploiement, donc le même dossier
+ * public : un `/favicon.ico` unique servirait l'icône d'une marque sur le
+ * domaine de l'autre. Chaque marque a son dossier (`public/icons/<marque>/`,
+ * rendu par `scripts/buildBrandIcons.mjs` depuis son favicon.svg) et le head
+ * ne déclare que celui de la marque résolue pour la requête. Le `?v=` force
+ * le rechargement : les navigateurs gardent un favicon très longtemps.
+ */
+interface BrandIcons {
+  svg: string;
+  ico?: string;
+  appleTouch?: string;
+  manifest?: string;
+}
+
+const ICONS_VERSION = "20261108";
+
+function brandIcons(folder: "mareliure" | "finebindery"): BrandIcons {
+  const base = `/icons/${folder}`;
+  return {
+    svg: `${base}/favicon.svg?v=${ICONS_VERSION}`,
+    ico: `${base}/favicon.ico?v=${ICONS_VERSION}`,
+    appleTouch: `${base}/apple-touch-icon.png?v=${ICONS_VERSION}`,
+    manifest: `${base}/site.webmanifest?v=${ICONS_VERSION}`,
+  };
+}
+
+/** Le .ico d'abord (anciens navigateurs), puis le SVG, que les navigateurs récents préfèrent. */
+function iconLinks(icons: BrandIcons) {
+  return [
+    ...(icons.ico ? [{ rel: "icon", href: icons.ico, sizes: "16x16 32x32 48x48" }] : []),
+    { rel: "icon", href: icons.svg, type: "image/svg+xml" },
+    ...(icons.appleTouch ? [{ rel: "apple-touch-icon", href: icons.appleTouch, sizes: "180x180" }] : []),
+    ...(icons.manifest ? [{ rel: "manifest", href: icons.manifest }] : []),
+  ];
+}
+
 const METRE_BRAND = {
   lang: "en",
   title: "Métré Build",
   description:
     "Métré Build turns vague website inquiries into structured Project Briefs your team can act on.",
   author: "Métré Build",
-  icon: "/metre-icon.svg?v=20260727",
+  icons: { svg: "/metre-icon.svg?v=20260727" } as BrandIcons,
   themeClass: undefined as string | undefined,
   schemas: [organizationSchema, websiteSchema],
 };
@@ -65,7 +104,7 @@ const MARELIURE_BRAND = {
   description:
     "Confiez votre livre à un artisan relieur. Réparation, restauration, nouvelle reliure ou création : Ma Reliure évalue votre projet et le confie à l'atelier adapté, partout en France.",
   author: "Ma Reliure",
-  icon: "/mareliure-icon.svg?v=20260909",
+  icons: brandIcons("mareliure"),
   // Porte les valeurs des tokens de surface du tunnel — voir styles.css.
   themeClass: "brand-mareliure" as string | undefined,
   schemas: [mareliureOrganizationSchema, mareliureWebsiteSchema],
@@ -81,9 +120,7 @@ const FINE_BINDERY_BRAND = {
   description:
     "The European network for bookbinding and book conservation. Discover independent ateliers, present your project and work with the right one — opening in France.",
   author: "Fine Bindery",
-  // Même identité visuelle que Ma Reliure (tokens mr-*) — aucune icône propre
-  // à Fine Bindery n'existe encore.
-  icon: "/mareliure-icon.svg?v=20260909",
+  icons: brandIcons("finebindery"),
   themeClass: "brand-mareliure" as string | undefined,
   schemas: [fineBinderyOrganizationSchema, fineBinderyWebsiteSchema],
 };
@@ -228,8 +265,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
           rel: "stylesheet",
           href: appCss,
         },
-        { rel: "icon", href: BRAND.icon, type: "image/svg+xml" },
-        { rel: "shortcut icon", href: BRAND.icon, type: "image/svg+xml" },
+        ...iconLinks(BRAND.icons),
       ],
       scripts: BRAND.schemas.map(jsonLdScript),
     };
