@@ -1,6 +1,6 @@
 import type { PhotoSources } from "@/marketplace/pages/landing/photos";
 
-export const FERRIERE_SERVICE_PHOTO_CREDIT = "Atelier Reliure Dorure Ferrière, Orléans";
+export const FERRIERE_SERVICE_PHOTO_CREDIT = "Atelier Reliure Ferrière, Orléans";
 export const FERRIERE_SERVICE_PHOTO_SOURCE = "http://reliure-ferriere.fr/";
 
 /**

@@ -149,7 +149,7 @@ export function detailFixture(brand: Brand, scenario: string) {
     },
     selectedBinder:
       ["G", "H", "F"].includes(scenario)
-        ? { id: "b1", display_name: "Atelier Test", workshop_name: "Atelier Reliure Dorure Ferrière", city: "Orléans", bio: F ? "Atelier familial de reliure et dorure." : "Family workshop for binding and gilding.", avatar_path: null, years_experience: 25, rating_avg: null, rating_count: 0, skills: ["repair", "gilding"], selectedAt: "2026-09-16T10:00:00Z" }
+        ? { id: "b1", display_name: "Atelier Test", workshop_name: "Atelier Reliure Ferrière", city: "Orléans", bio: F ? "Atelier familial de reliure et dorure." : "Family workshop for binding and gilding.", avatar_path: null, years_experience: 25, rating_avg: null, rating_count: 0, skills: ["repair", "gilding"], selectedAt: "2026-09-16T10:00:00Z" }
         : null,
   };
 }

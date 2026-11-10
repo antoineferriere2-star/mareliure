@@ -34,15 +34,15 @@ it("ne résout la vitrine Fine Bindery que par son statut de publication",async 
   expect(result.summary.businessName).toBe("Atelier publié"); expect(resolveApprovedBinderBySlug).not.toHaveBeenCalled();
 });
 it("rattache la Mission du site Ferrière à l’atelier par son identifiant, sans slug",async () => {
-  vi.mocked(resolveApprovedBinderById).mockResolvedValue({binderId:FERRIERE_WORKSHOP_ID,displayName:"Reliure Dorure Ferrière"});
+  vi.mocked(resolveApprovedBinderById).mockResolvedValue({binderId:FERRIERE_WORKSHOP_ID,displayName:"Reliure Ferrière"});
   const result=await workshopSubmissionProjection({} as never,FERRIERE_MISSION_ID,{},summary);
   expect(resolveApprovedBinderById).toHaveBeenCalledWith({},FERRIERE_WORKSHOP_ID);
   expect(resolveApprovedBinderBySlug).not.toHaveBeenCalled();
-  expect(result.summary.businessName).toBe("Reliure Dorure Ferrière");
+  expect(result.summary.businessName).toBe("Reliure Ferrière");
   expect(result.summary.confirmationText).not.toMatch(/Ma Reliure fixe|choisit l’atelier/);
 });
 it("ignore un slug envoyé par le navigateur sur la Mission Ferrière",async () => {
-  vi.mocked(resolveApprovedBinderById).mockResolvedValue({binderId:FERRIERE_WORKSHOP_ID,displayName:"Reliure Dorure Ferrière"});
+  vi.mocked(resolveApprovedBinderById).mockResolvedValue({binderId:FERRIERE_WORKSHOP_ID,displayName:"Reliure Ferrière"});
   await workshopSubmissionProjection({} as never,FERRIERE_MISSION_ID,{_referral_slug:"autre-atelier"},summary);
   expect(resolveApprovedBinderBySlug).not.toHaveBeenCalled();
 });

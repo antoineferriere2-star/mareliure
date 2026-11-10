@@ -40,7 +40,7 @@ import { BOOKBINDING_PUBLIC_TOKEN, FERRIERE_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TO
 function titleFor(publicToken: string): string {
   if (!isMaReliure) return "Project Intake — Métré Build";
   if (publicToken === FINE_BINDERY_PUBLIC_TOKEN) return "Start your project — Fine Bindery";
-  if (publicToken === FERRIERE_PUBLIC_TOKEN) return "Présenter mon ouvrage — Reliure Dorure Ferrière";
+  if (publicToken === FERRIERE_PUBLIC_TOKEN) return "Présenter mon ouvrage — Reliure Ferrière";
   return "Présenter mon livre — Ma Reliure";
 }
 

@@ -1468,7 +1468,7 @@ describe("PDF", () => {
   it("relit une photo PNG enregistrée et imprime son image et son crédit dans le PDF", async () => {
     await saveBillingProfile(world.sb, BINDER_A, profileInput());
     const quote = await createQuote(world.sb, BINDER_A, quoteInput(), TODAY);
-    const caption = "Illustration — Atelier Reliure Dorure Ferrière, Orléans";
+    const caption = "Illustration — Atelier Reliure Ferrière, Orléans";
     await uploadQuoteItemPhoto(world.sb, BINDER_A, {
       quoteId: quote.id,
       lineKey: quote.items[0].lineKey!,

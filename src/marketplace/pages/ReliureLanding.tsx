@@ -14,7 +14,7 @@
  *
  * Aucun chiffre de cette page n'est inventé. Ni note, ni compteur de projets,
  * ni nombre d'artisans, parce qu'aucun n'est réel. Toutes les photographies
- * viennent de l'atelier Reliure Dorure Ferrière et sont créditées.
+ * viennent de l'atelier Reliure Ferrière et sont créditées.
  */
 import { IntakeCta, LandingFooter, LandingHeader, SectionHead, SectionRule, SHELL } from "./landing/LandingChrome";
 import { Plate } from "./landing/Plate";
@@ -84,7 +84,7 @@ function Hero() {
           number={1}
           alt="Une reliure contemporaine en mosaïque de cuir gris et aubergine, titrée à l’or et à l’argent, sur Le Spleen de Paris de Baudelaire"
           caption="Le Spleen de Paris, reliure de création"
-          credit="Atelier Reliure Dorure Ferrière, Orléans"
+          credit="Atelier Reliure Ferrière, Orléans"
         />
       </div>
     </section>
@@ -235,7 +235,7 @@ function Realisations() {
           folio="III"
           eyebrow="Réalisations"
           title="Le même ouvrage, à son arrivée et à son retour."
-          lead="Deux restaurations conduites par l’atelier Reliure Dorure Ferrière, à Orléans. Ces livres ne sont pas passés par Ma Reliure."
+          lead="Deux restaurations conduites par l’atelier Reliure Ferrière, à Orléans. Ces livres ne sont pas passés par Ma Reliure."
         />
         <div className="mt-12 space-y-16 lg:mt-16 lg:space-y-20">
           {BEFORE_AFTER.map((item, index) => (

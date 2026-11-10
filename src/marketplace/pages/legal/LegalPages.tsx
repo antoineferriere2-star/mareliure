@@ -287,7 +287,7 @@ const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: "Propriété intellectuelle",
     body: [
-      `Les textes, le nom Ma Reliure et la présentation du site appartiennent à ${MARELIURE_PUBLISHER.name}. Les photographies des réalisations sont celles de l'Atelier Reliure Dorure Ferrière, à Orléans, reproduites avec son autorisation. Toute reproduction sans accord préalable est interdite.`,
+      `Les textes, le nom Ma Reliure et la présentation du site appartiennent à ${MARELIURE_PUBLISHER.name}. Les photographies des réalisations sont celles de l'Atelier Reliure Ferrière, à Orléans, reproduites avec son autorisation. Toute reproduction sans accord préalable est interdite.`,
     ],
   },
   {
@@ -487,7 +487,7 @@ const NOTICE_SECTIONS: LegalSection[] = [
   },
   {
     heading: "Crédits photographiques",
-    body: ["Atelier Reliure Dorure Ferrière, Orléans."],
+    body: ["Atelier Reliure Ferrière, Orléans."],
   },
 ];
 
@@ -664,7 +664,7 @@ const TERMS_SECTIONS_EN: LegalSection[] = [
   {
     heading: "Intellectual property",
     body: [
-      `The text, the Fine Bindery name and the site's presentation belong to ${MARELIURE_PUBLISHER.name}. Photographs of finished work belong to Atelier Reliure Dorure Ferrière, in Orléans, France, reproduced with its permission. Any reproduction without prior agreement is prohibited.`,
+      `The text, the Fine Bindery name and the site's presentation belong to ${MARELIURE_PUBLISHER.name}. Photographs of finished work belong to Atelier Reliure Ferrière, in Orléans, France, reproduced with its permission. Any reproduction without prior agreement is prohibited.`,
     ],
   },
   {
@@ -860,7 +860,7 @@ const NOTICE_SECTIONS_EN: LegalSection[] = [
   },
   {
     heading: "Photo credits",
-    body: ["Atelier Reliure Dorure Ferrière, Orléans, France."],
+    body: ["Atelier Reliure Ferrière, Orléans, France."],
   },
 ];
 

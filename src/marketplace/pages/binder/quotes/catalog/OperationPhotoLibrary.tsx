@@ -59,7 +59,7 @@ export function OperationPhotoLibrary({ items, services }: { items: readonly Bin
     <div className="space-y-6">
       <div className="border-l-4 border-[#7a2230] bg-[#fffdf8] px-5 py-4 text-sm leading-6 text-[#4b3829]">
         <p>Les 45 prestations sont illustrées par défaut. Ajoutez vos photos pour remplacer les illustrations proposées. Les nouveaux devis reprennent vos photos en priorité ; vous pouvez les retirer ou les exclure du PDF.</p>
-        <p className="mt-1 text-xs text-[#685d51]">Illustrations fournies avec autorisation : Atelier Reliure Dorure Ferrière, Orléans. Elles ne représentent pas vos propres réalisations. Retirer toutes vos photos rétablit l’illustration par défaut ; les devis déjà enregistrés restent inchangés.</p>
+        <p className="mt-1 text-xs text-[#685d51]">Illustrations fournies avec autorisation : Atelier Reliure Ferrière, Orléans. Elles ne représentent pas vos propres réalisations. Retirer toutes vos photos rétablit l’illustration par défaut ; les devis déjà enregistrés restent inchangés.</p>
       </div>
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <label className="relative sm:w-80">
