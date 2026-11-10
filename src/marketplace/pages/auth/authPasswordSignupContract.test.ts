@@ -27,6 +27,7 @@ describe("MaReliureAuthPage — création de mot de passe client", () => {
   });
 
   it("crée le mot de passe via updateUser, sur la session déjà ouverte", () => {
-    expect(source).toMatch(/auth\.updateUser\(\{\s*password/);
+    // `passwordUpdate` (workshopPassword.ts) ne prend qu'un mot de passe, jamais un e-mail.
+    expect(source).toMatch(/auth\.updateUser\(passwordUpdate\(password\)\)/);
   });
 });
