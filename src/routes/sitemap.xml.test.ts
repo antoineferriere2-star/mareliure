@@ -54,15 +54,12 @@ describe("sitemapFor", () => {
     const { baseUrl, entries } = sitemapFor("www.finebindery.com");
     expect(baseUrl).toBe("https://finebindery.com");
     expect(entries.map((e) => e.path)).toEqual([
-      "/en", "/en/professionals", "/en/fine-binding", "/en/book-restoration", "/en/collector-rebinding", "/en/bespoke-commissions",
-      "/fr", "/fr/professionals", "/fr/fine-binding", "/fr/book-restoration", "/fr/collector-rebinding", "/fr/bespoke-commissions",
-      "/de", "/de/professionals", "/de/fine-binding", "/de/book-restoration", "/de/collector-rebinding", "/de/bespoke-commissions",
-      "/it", "/it/professionals", "/it/fine-binding", "/it/book-restoration", "/it/collector-rebinding", "/it/bespoke-commissions",
-      "/es", "/es/professionals", "/es/fine-binding", "/es/book-restoration", "/es/collector-rebinding", "/es/bespoke-commissions",
-      "/legal-notice",
-      "/privacy-policy",
-      "/terms-of-use",
-      "/terms-of-sale",
+      ...["en", "fr", "de", "it", "es"].flatMap((locale) => [
+        `/${locale}`,
+        `/${locale}/professionals`,
+        ...["fine-binding", "book-restoration", "collector-rebinding", "bespoke-commissions"].map((slug) => `/${locale}/${slug}`),
+        ...["legal-notice", "privacy-policy", "terms-of-use", "terms-of-sale"].map((slug) => `/${locale}/${slug}`),
+      ]),
     ]);
   });
 
@@ -88,6 +85,8 @@ describe("la date de construction", () => {
   it("est injectée par Vite et reconnue par le contrôle de format du plan du site", () => {
     const source = readFileSync(join(process.cwd(), "src/routes/sitemap[.]xml.ts"), "utf8");
     expect(source).toContain(String.raw`/^\d{4}-\d{2}-\d{2}$/.test(BUILD_DATE)`);
-    expect(readFileSync(join(process.cwd(), "vite.config.ts"), "utf8")).toContain('"import.meta.env.VITE_BUILD_DATE"');
+    expect(readFileSync(join(process.cwd(), "vite.config.ts"), "utf8")).toContain(
+      '"import.meta.env.VITE_BUILD_DATE"',
+    );
   });
 });

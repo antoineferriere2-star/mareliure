@@ -2,6 +2,7 @@ import { MARKETPLACE_BRAND_CONFIGS } from "@/marketplace/brand/brandConfig";
 import { FineBinderyLanguageSwitch } from "@/marketplace/i18n/FineBinderyLanguageSwitch";
 import { fineBinderyCopy } from "@/marketplace/i18n/fineBinderyCopy";
 import { fineBinderyDirectoryPath, fineBinderyHomePath, fineBinderyProjectPath, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
+import { fineBinderyLegalPath } from "@/marketplace/legal/fineBinderyLegalPaths";
 import { actionClass } from "@/marketplace/pages/landing/actions";
 import { SkipLink } from "@/marketplace/pages/landing/LandingChrome";
 
@@ -49,6 +50,6 @@ export function FineBinderyHeader({ locale, cta = true }: { locale: FineBinderyL
 
 export function FineBinderyFooter({ locale }: { locale: FineBinderyLocale }) {
   const copy = fineBinderyCopy(locale); const nav = navigation(locale);
-  const legal = [{ href: "/legal-notice", label: copy.footer.legal }, { href: "/privacy-policy", label: copy.footer.privacy }, { href: "/terms-of-use", label: copy.footer.terms }, { href: "/terms-of-sale", label: copy.footer.sales }];
+  const legal = [{ href: fineBinderyLegalPath(locale, "legal-notice"), label: copy.footer.legal }, { href: fineBinderyLegalPath(locale, "privacy-policy"), label: copy.footer.privacy }, { href: fineBinderyLegalPath(locale, "terms-of-use"), label: copy.footer.terms }, { href: fineBinderyLegalPath(locale, "terms-of-sale"), label: copy.footer.sales }];
   return <footer className="bg-mr-paper-warm"><div className="mx-auto max-w-[80rem] px-5 sm:px-8"><span aria-hidden="true" className="mr-filet text-mr-ink" /></div><div className="mx-auto max-w-[80rem] px-5 py-14 sm:px-8 sm:py-20"><div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]"><div><Wordmark locale={locale} /><p className="mr-small mt-6 max-w-[22rem] text-mr-graphite">{copy.footer.summary}</p><div className="mt-6"><FineBinderyLanguageSwitch locale={locale} label={`${copy.nav.language} · ${BRAND.displayName}`} /></div></div><nav aria-label={`${copy.nav.menu} · ${BRAND.displayName}`}><p className="mr-eyebrow text-mr-graphite">Fine Bindery</p><ul className="mr-small mt-5 space-y-3">{nav.map((item) => <li key={item.href}><a href={item.href} className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline">{item.label}</a></li>)}</ul></nav><div><p className="mr-eyebrow text-mr-graphite">{copy.footer.information}</p><ul className="mr-small mt-5 space-y-3">{legal.map((item) => <li key={item.href}><a href={item.href} className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline">{item.label}</a></li>)}</ul></div></div><p className="mr-small mt-12 border-t border-mr-rule pt-8 text-mr-graphite">{BRAND.displayName} — {copy.footer.closing}</p></div></footer>;
 }

@@ -4,7 +4,7 @@ import { canonicalRedirectUrl } from "./wwwRedirect";
 describe("canonicalRedirectUrl", () => {
   it("redirige www.finebindery.com vers finebindery.com, chemin et requête conservés", () => {
     expect(canonicalRedirectUrl("https://www.finebindery.com/legal-notice?x=1")).toBe(
-      "https://finebindery.com/legal-notice?x=1",
+      "https://finebindery.com/en/legal-notice?x=1",
     );
   });
 
@@ -17,28 +17,49 @@ describe("canonicalRedirectUrl", () => {
   it("ne redirige pas une URL déjà canonique", () => {
     expect(canonicalRedirectUrl("https://finebindery.com/en")).toBeNull();
     expect(canonicalRedirectUrl("https://finebindery.com/fr/professionals")).toBeNull();
-    expect(canonicalRedirectUrl("https://finebindery.com/legal-notice")).toBeNull();
+    expect(canonicalRedirectUrl("https://finebindery.com/en/legal-notice")).toBeNull();
     expect(canonicalRedirectUrl("https://mareliure.fr/")).toBeNull();
     expect(canonicalRedirectUrl("https://mareliure.fr/tarifs")).toBeNull();
   });
 
   it("redirige la racine de finebindery.com vers /en, requête conservée", () => {
     expect(canonicalRedirectUrl("https://finebindery.com/")).toBe("https://finebindery.com/en");
-    expect(canonicalRedirectUrl("https://finebindery.com/?utm_source=x")).toBe("https://finebindery.com/en?utm_source=x");
+    expect(canonicalRedirectUrl("https://finebindery.com/?utm_source=x")).toBe(
+      "https://finebindery.com/en?utm_source=x",
+    );
     expect(canonicalRedirectUrl("http://www.finebindery.com/")).toBe("https://finebindery.com/en");
   });
 
   it("renvoie une page propre à une marque vers son domaine", () => {
-    expect(canonicalRedirectUrl("https://finebindery.com/tarifs")).toBe("https://mareliure.fr/tarifs");
-    expect(canonicalRedirectUrl("https://finebindery.com/partenaires-relieurs")).toBe("https://mareliure.fr/partenaires-relieurs");
-    expect(canonicalRedirectUrl("http://www.finebindery.com/mentions-legales")).toBe("https://mareliure.fr/mentions-legales");
+    expect(canonicalRedirectUrl("https://finebindery.com/tarifs")).toBe(
+      "https://mareliure.fr/tarifs",
+    );
+    expect(canonicalRedirectUrl("https://finebindery.com/partenaires-relieurs")).toBe(
+      "https://mareliure.fr/partenaires-relieurs",
+    );
+    expect(canonicalRedirectUrl("http://www.finebindery.com/mentions-legales")).toBe(
+      "https://mareliure.fr/mentions-legales",
+    );
     expect(canonicalRedirectUrl("https://mareliure.fr/en")).toBe("https://finebindery.com/en");
-    expect(canonicalRedirectUrl("https://mareliure.fr/de/professionals")).toBe("https://finebindery.com/de/professionals");
-    expect(canonicalRedirectUrl("https://mareliure.fr/terms-of-sale")).toBe("https://finebindery.com/terms-of-sale");
+    expect(canonicalRedirectUrl("https://mareliure.fr/de/professionals")).toBe(
+      "https://finebindery.com/de/professionals",
+    );
+    expect(canonicalRedirectUrl("https://mareliure.fr/terms-of-sale")).toBe(
+      "https://finebindery.com/en/terms-of-sale",
+    );
   });
 
   it("laisse sur place les pages partagées par les deux marques", () => {
-    for (const path of ["/auth", "/portal", "/mes-livres", "/atelier/x", "/_serverFn/abc", "/assets/app.js", "/sitemap.xml", "/english"]) {
+    for (const path of [
+      "/auth",
+      "/portal",
+      "/mes-livres",
+      "/atelier/x",
+      "/_serverFn/abc",
+      "/assets/app.js",
+      "/sitemap.xml",
+      "/english",
+    ]) {
       expect(canonicalRedirectUrl(`https://finebindery.com${path}`)).toBeNull();
       expect(canonicalRedirectUrl(`https://mareliure.fr${path}`)).toBeNull();
     }
@@ -46,16 +67,26 @@ describe("canonicalRedirectUrl", () => {
   });
 
   it("redirige les anciennes adresses vers leur page actuelle, sur les deux domaines (audit SEO du 12 octobre 2026)", () => {
-    for (const host of ["https://mareliure.fr", "https://finebindery.com", "http://www.finebindery.com"]) {
+    for (const host of [
+      "https://mareliure.fr",
+      "https://finebindery.com",
+      "http://www.finebindery.com",
+    ]) {
       expect(canonicalRedirectUrl(`${host}/reliure`)).toBe("https://mareliure.fr/");
-      expect(canonicalRedirectUrl(`${host}/professionnels`)).toBe("https://finebindery.com/fr/professionals");
+      expect(canonicalRedirectUrl(`${host}/professionnels`)).toBe(
+        "https://finebindery.com/fr/professionals",
+      );
       expect(canonicalRedirectUrl(`${host}/fine-bindery/`)).toBe("https://finebindery.com/en");
     }
-    expect(canonicalRedirectUrl("https://mareliure.fr/reliure?utm_source=x")).toBe("https://mareliure.fr/?utm_source=x");
+    expect(canonicalRedirectUrl("https://mareliure.fr/reliure?utm_source=x")).toBe(
+      "https://mareliure.fr/?utm_source=x",
+    );
   });
 
   it("rattache les conditions ateliers à Ma Reliure", () => {
-    expect(canonicalRedirectUrl("https://finebindery.com/conditions-ateliers")).toBe("https://mareliure.fr/conditions-ateliers");
+    expect(canonicalRedirectUrl("https://finebindery.com/conditions-ateliers")).toBe(
+      "https://mareliure.fr/conditions-ateliers",
+    );
     expect(canonicalRedirectUrl("https://mareliure.fr/conditions-ateliers")).toBeNull();
   });
 
@@ -70,8 +101,12 @@ describe("canonicalRedirectUrl", () => {
   });
 
   it("passe en https les domaines connus, avec ou sans www., en un seul saut", () => {
-    expect(canonicalRedirectUrl("http://mareliure.fr/tarifs?x=1")).toBe("https://mareliure.fr/tarifs?x=1");
-    expect(canonicalRedirectUrl("http://www.finebindery.com/fr")).toBe("https://finebindery.com/fr");
+    expect(canonicalRedirectUrl("http://mareliure.fr/tarifs?x=1")).toBe(
+      "https://mareliure.fr/tarifs?x=1",
+    );
+    expect(canonicalRedirectUrl("http://www.finebindery.com/fr")).toBe(
+      "https://finebindery.com/fr",
+    );
   });
 
   it("ne touche jamais au http d'un hôte inconnu (développement local, prévisualisation)", () => {
