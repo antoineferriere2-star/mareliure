@@ -38,6 +38,7 @@ import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
 import { isMarketplaceBrand, marketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
 import { payoutsChangedSincePreview } from "@/marketplace/matching/payoutConfirmation";
+import { draftServiceDescriptionForCase } from "@/marketplace/offers/serviceDescriptionDraft";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
 import { loadCustomerCommerce, NO_OPPE_COMMERCE } from "@/marketplace/services/customerCommerce.server";
 import { publicCopy } from "@/build/pages/public/publicLocaleContext";
@@ -405,6 +406,15 @@ export const getMarketplaceCase = createServerFn({ method: "GET" })
       offers: offers ?? [],
       remainingInvitations,
       defaultSelection: defaultBinderSelection({ defaultId: DEFAULT_WORKSHOP_ID, candidates: ranked, remaining: remainingInvitations }),
+      // Composé ici, depuis la projection d'un atelier invité : la page admin ne le recalcule pas
+      // depuis sa vue complète (revue Codex de #193).
+      serviceDescriptionDraft: draftServiceDescriptionForCase({
+        reference: caseContext.row.reference,
+        brief: caseContext.brief,
+        profile: caseContext.profile,
+        components: caseContext.row.pricing_components ?? [],
+        brandName: caseContext.row.brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure",
+      }),
     };
   });
 
