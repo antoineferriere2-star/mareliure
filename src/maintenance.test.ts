@@ -35,6 +35,14 @@ describe("pause des sites publics", () => {
     }
   });
 
+  it("le parcours Ferrière, intégré au site de l'atelier, reste ouvert ; les autres Missions non", () => {
+    expect(maintenanceResponse(req("/m/ferriere-intake-token-000001"), on, false)).toBeNull();
+    expect(staysOpenDuringMaintenance("/m/ferriere-intake-token-000001/")).toBe(true);
+    for (const path of ["/m/ferriere-intake-token-000001-x", "/m/ferriere-intake-token-0000012", "/m/mareliure-intake", "/m/"]) {
+      expect(staysOpenDuringMaintenance(path), path).toBe(false);
+    }
+  });
+
   it("une page qui commence comme un espace ouvert n'y échappe pas pour autant", () => {
     expect(staysOpenDuringMaintenance("/ateliers/ferriere")).toBe(false);
     expect(staysOpenDuringMaintenance("/authentique")).toBe(false);

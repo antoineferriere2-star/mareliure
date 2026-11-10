@@ -14,6 +14,8 @@
  * Liste explicite de ce qui reste ouvert : une page publique ajoutée plus tard est coupée avec les
  * autres, sans rien à changer ici.
  */
+import { FERRIERE_PUBLIC_TOKEN } from "@/build/constants";
+
 const OPEN_PREFIXES = [
   // Espaces connectés et parcours engagés.
   "/admin", "/atelier", "/mes-livres", "/portal", "/build", "/marketplace", "/activer-mon-atelier",
@@ -25,6 +27,13 @@ const OPEN_PREFIXES = [
   "/conditions-generales-de-vente", "/mentions-legales", "/confidentialite", "/conditions",
   "/conditions-ateliers", "/terms", "/privacy", "/legal-notice",
 ] as const;
+
+/**
+ * Missions intégrées dans le site d'un atelier, qui n'est pas en pause : le parcours « Présenter mon
+ * ouvrage » de reliure-ferriere.fr est servi par ce Worker dans une iframe. Chemin exact, jamais un
+ * préfixe : les autres Missions `/m/…` sont des pages Ma Reliure et se mettent en pause avec elles.
+ */
+const OPEN_EXACT_PATHS: ReadonlySet<string> = new Set([`/m/${FERRIERE_PUBLIC_TOKEN}`]);
 
 export const MAINTENANCE_RETRY_AFTER_SECONDS = 3600;
 
@@ -40,6 +49,7 @@ export function maintenanceEnabled(env: unknown, processEnv: Record<string, stri
 }
 
 export function staysOpenDuringMaintenance(pathname: string): boolean {
+  if (OPEN_EXACT_PATHS.has(pathname.replace(/\/+$/, ""))) return true;
   return OPEN_PREFIXES.some((prefix) =>
     prefix.endsWith("/") ? pathname.startsWith(prefix) : pathname === prefix || pathname.startsWith(`${prefix}/`) || pathname.startsWith(`${prefix}.`) || pathname.startsWith(`${prefix}-`),
   );
