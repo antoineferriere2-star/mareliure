@@ -45,3 +45,11 @@ describe("pause des sites publics", () => {
     expect(maintenanceResponse(req("/", "HEAD"), on, false)!.body).toBeNull();
   });
 });
+
+describe("pause : variable lue comme le reste de l'application", () => {
+  it("en production, Nitro ne passe pas env : la variable vient de process.env", () => {
+    expect(maintenanceEnabled(undefined, { MAINTENANCE_MODE: "public" })).toBe(true);
+    expect(maintenanceEnabled(undefined, {})).toBe(false);
+    expect(maintenanceEnabled(undefined, { MAINTENANCE_MODE: "off" })).toBe(false);
+  });
+});
