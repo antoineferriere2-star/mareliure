@@ -57,7 +57,7 @@ if (!/^\+?[0-9 .]{9,16}$/.test(phone)) { console.log("Téléphone invalide : rie
 const EMAIL = "contact@oppe.fr"; // pas l'e-mail de l'atelier : aucune notification transporteur chez Justine pour un test
 const OPPE = { name: "Antoine Ferrière", company_name: "Oppe", address_line_1: "705 route du Montclair", postal_code: "24160",
   city: "Clermont-d'Excideuil", country_code: "FR", email: EMAIL, phone_number: phone };
-const ATELIER = { name: "J. et F. Ferrière", company_name: "Reliure Dorure Ferrière", address_line_1: "9 rue Pothier", postal_code: "45000",
+const ATELIER = { name: "J. et F. Ferrière", company_name: "Reliure Ferrière", address_line_1: "9 rue Pothier", postal_code: "45000",
   city: "Orléans", country_code: "FR", email: EMAIL, phone_number: phone };
 
 // ---------- Devis réel des deux trajets ----------

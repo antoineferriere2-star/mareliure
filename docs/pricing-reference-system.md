@@ -247,7 +247,7 @@ est un engagement, pas une optimisation.
 Le référentiel est vide. La priorité n'est pas du code, c'est une conversation :
 s'asseoir avec un relieur et remplir sa grille.
 
-Le premier atelier à interroger est **Reliure Dorure Ferrière** (Orléans), déjà
+Le premier atelier à interroger est **Reliure Ferrière** (Orléans), déjà
 présent sur la plateforme. Trois ateliers suffisent à faire fonctionner le
 moteur sur les travaux courants ; six à le rendre confiant.
 

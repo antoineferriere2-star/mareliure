@@ -88,7 +88,7 @@ async function main() {
         "Merci. Votre demande est transmise à l'atelier Ferrière, qui étudie le travail à réaliser et revient vers vous avec son devis.",
     } as unknown as Json,
     branding: {
-      displayName: "Reliure Dorure Ferrière",
+      displayName: "Reliure Ferrière",
       // Le brun cuir du site de l'atelier (--cuir).
       accentColor: "#573223",
     } as unknown as Json,
