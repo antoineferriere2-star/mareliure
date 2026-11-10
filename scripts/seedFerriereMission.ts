@@ -1,7 +1,8 @@
 /**
  * Idempotent seed for the Ferrière workshop's own Mission — the same published
  * Bookbinding Playbook as Ma Reliure, a third Mission row, enrolled in
- * `marketplace_intake_missions` with `brand = 'MA_RELIURE'`.
+ * `marketplace_intake_missions` with `brand = 'MA_RELIURE'` by the migration
+ * 20261110120000_enrol_ferriere_mission.sql — this script only checks it.
  *
  * Run with: npm run seed:ferriere
  *
@@ -96,15 +97,28 @@ async function main() {
 
   // Enrolled as a Ma Reliure Mission: the case lives in the same back-office,
   // and missionWorkshop.ts attributes it to the Ferrière workshop at triage.
-  const { error: enrolErr } = await supabase.from("marketplace_intake_missions").upsert({
-    mission_id: FERRIERE_MISSION_ID,
-    vertical_id: "bookbinding",
-    brand: "MA_RELIURE",
-  });
+  // The enrolment row is written by the migration
+  // 20261110120000_enrol_ferriere_mission.sql, not here: since the grants
+  // hardening (20261020100000) service_role may only read
+  // marketplace_intake_missions. This script only checks it.
+  const { data: enrolment, error: enrolErr } = await supabase
+    .from("marketplace_intake_missions")
+    .select("brand")
+    .eq("mission_id", FERRIERE_MISSION_ID)
+    .maybeSingle();
   if (enrolErr) throw enrolErr;
 
-  console.log(`Ferrière Mission seeded and enrolled. public_token=${FERRIERE_PUBLIC_TOKEN}`);
+  console.log(`Ferrière Mission seeded. public_token=${FERRIERE_PUBLIC_TOKEN}`);
   console.log(`Runtime: /m/${FERRIERE_PUBLIC_TOKEN}`);
+  if (enrolment?.brand !== "MA_RELIURE") {
+    console.error(
+      "Not enrolled yet: apply supabase/migrations/20261110120000_enrol_ferriere_mission.sql " +
+        "(the Mission must exist first). Until then its Dossiers never become Ma Reliure cases.",
+    );
+    process.exitCode = 1;
+    return;
+  }
+  console.log("Enrolment found: brand MA_RELIURE.");
 }
 
 main().catch((err) => {
