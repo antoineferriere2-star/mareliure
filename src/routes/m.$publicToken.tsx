@@ -1,6 +1,7 @@
 import {workshopIntakeGuidance} from "@/marketplace/pages/customer/workshopIntakeGuidance";
 import { useMemo, type ReactNode } from "react";
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import { MISSION_RELOAD_GUARD } from "@/build/runtime/missionReloadGuard";
 import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
 import { MissionRuntimePending } from "@/build/pages/public/MissionRuntimeStates";
 import { FR_PUBLIC_COPY } from "@/build/pages/public/frPublicCopy";
@@ -56,6 +57,8 @@ export const Route = createFileRoute("/m/$publicToken")({
   }),
   head: ({ params }) => ({
     meta: [{ title: titleFor(params.publicToken) }, { name: "robots", content: "noindex, nofollow" }],
+    // Page coupée en transport sous Firefox : rechargement unique (missionReloadGuard.ts).
+    scripts: [{ children: MISSION_RELOAD_GUARD }],
   }),
   pendingComponent: RuntimePending,
   component: RuntimePage,
