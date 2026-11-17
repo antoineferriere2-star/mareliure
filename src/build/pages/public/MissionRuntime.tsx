@@ -243,8 +243,11 @@ export function MissionRuntime({
   guidance,
   initialLocale,
   routeLocaleWins = false,
+  homeLink = true,
 }: {
   publicToken: string;
+  /** Faux pour un parcours intégré au site de l’entreprise : le nom de l’en-tête n’est pas un lien. */
+  homeLink?: boolean;
   renderAfterSubmission?: RenderAfterSubmission;
   /**
    * What the deployment wants said around the questions — a promise up front,
@@ -290,6 +293,7 @@ export function MissionRuntime({
       showFaqLauncher={false}
       chrome="embedded"
       businessName={businessName}
+      homeLink={homeLink}
       lockedLocale={routeLocaleWins ? (initialLocale ?? missionLocale) : (missionLocale ?? initialLocale ?? null)}
     >
       <MissionRuntimeContent
