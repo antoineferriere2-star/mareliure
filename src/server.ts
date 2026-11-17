@@ -5,6 +5,7 @@ import { renderErrorPage } from "./lib/error-page";
 import { isMaReliure } from "./brand";
 import { canonicalRedirectUrl } from "./marketplace/brand/wwwRedirect";
 import { maintenanceResponse } from "./maintenance";
+import { bufferMissionHtml } from "./lib/bufferMissionHtml";
 
 type ServerEntry = {
   fetch: (request: Request, env: unknown, ctx: unknown) => Promise<Response> | Response;
@@ -59,7 +60,8 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      // Page de Mission rendue en entier, rendu relancé si React plante en flux (bufferMissionHtml.ts).
+      return await bufferMissionHtml(request, await normalizeCatastrophicSsrResponse(response), () => handler.fetch(new Request(request), env, ctx));
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {
