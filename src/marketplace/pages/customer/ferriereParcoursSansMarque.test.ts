@@ -60,3 +60,17 @@ describe("parcours de l'atelier Ferrière, sans marque d'outil", () => {
     expect(route).toContain("homeLink={!isFerriereIntake}");
   });
 });
+
+describe("pied du parcours Ferrière", () => {
+  it("renvoie vers les mentions légales de l'atelier, pas vers celles de la plateforme", () => {
+    const route = readFileSync(resolve(__dirname, "../../../routes/m.$publicToken.tsx"), "utf8");
+    expect(route).toContain("https://www.reliure-ferriere.fr/mentions-legales/");
+    expect(route).toMatch(/legalLink=\{isFerriereIntake \? FERRIERE_LEGAL_LINK : undefined\}/);
+  });
+
+  it("le pied intégré n'affiche les pages de la plateforme que sans lien légal propre", () => {
+    const shell = readFileSync(resolve(__dirname, "../../../build/pages/public/BuildPublicShell.tsx"), "utf8");
+    expect(shell).toMatch(/legalLink \? \(/);
+    expect(shell).toContain('"/confidentialite"');
+  });
+});
