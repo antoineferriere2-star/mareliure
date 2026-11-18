@@ -1,4 +1,18 @@
 import type { FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
+
+/**
+ * Même avis, pour le parcours qu’un atelier intègre dans son propre site
+ * (Reliure Ferrière) : le visiteur est chez l’atelier, rien n’y nomme l’outil.
+ * Le détail du traitement des données reste dans la politique de confidentialité,
+ * liée en bas du parcours, et dans les mentions légales du site de l’atelier.
+ */
+export const workshopIntakeEmbeddedCopy = {
+  fr: {
+    intro: "Votre projet est adressé à l’atelier Reliure Ferrière. Il établit votre devis et vous facture directement.",
+    consent: "J’accepte que l’atelier Reliure Ferrière reçoive ma demande et mes coordonnées pour me répondre.",
+  },
+} as const;
+
 export const workshopIntakeCopy = {
   fr: {
     title: "Votre demande à cet atelier", intro: "Votre projet est adressé à l’atelier dont vous avez suivi le lien. Il établit votre devis et vous facture directement. Oppe fournit l’outil et le suivi.",

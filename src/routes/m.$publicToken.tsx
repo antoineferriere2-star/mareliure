@@ -111,7 +111,7 @@ function RuntimePage() {
   const afterSubmission = isMaReliure
     ? ({ visitorEmail }: { visitorEmail: string | null }): ReactNode => (
         <>
-          {workshopIntake ? <WorkshopIntakeNotice stage="next" /> : isReliureIntake && <ReliureNextSteps />}
+          {workshopIntake ? <WorkshopIntakeNotice stage="next" embedded={isFerriereIntake} /> : isReliureIntake && <ReliureNextSteps />}
           <CustomerSpaceOffer email={visitorEmail} publicToken={publicToken} />
         </>
       )
@@ -121,7 +121,8 @@ function RuntimePage() {
       publicToken={publicToken}
       renderAfterSubmission={afterSubmission}
       seedAnswers={seedAnswers}
-      guidance={workshopIntake ? workshopIntakeGuidance() : isReliureIntake ? RELIURE_GUIDANCE : undefined}
+      homeLink={!isFerriereIntake}
+      guidance={workshopIntake ? workshopIntakeGuidance("fr", { embedded: isFerriereIntake }) : isReliureIntake ? RELIURE_GUIDANCE : undefined}
       initialLocale={isReliureIntake || isFerriereIntake || isFrenchFineBinderyProfileIntake ? "fr-FR" : undefined}
     />
   );

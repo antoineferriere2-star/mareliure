@@ -20,7 +20,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { supabase } from "@/integrations/supabase/client";
-import { FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
+import { FERRIERE_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
 import { usePublicLocale } from "@/build/pages/public/publicLocaleContext";
 import {
   ACCESS_LINK_RESEND_DELAY_SECONDS,
@@ -55,6 +55,14 @@ const FR: Copy = {
     `Retrouvez votre projet et son avancement dans votre espace Ma Reliure. Pas de mot de passe à créer : nous envoyons un lien de connexion à ${email}.`,
   sendButton: (sending) => (sending ? "Envoi…" : "Recevoir mon lien de connexion"),
   problem: "Le lien n’a pas pu être envoyé. Réessayez dans quelques instants.",
+};
+
+/** Parcours intégré au site de l’atelier Ferrière : le suivi n’y est pas présenté sous le nom de Ma Reliure. */
+const FR_ATELIER: Copy = {
+  ...FR,
+  noEmailBody: "Retrouvez votre projet et son avancement dans votre espace, avec l'adresse e-mail indiquée dans votre projet.",
+  pitchBody: (email) =>
+    `Retrouvez votre projet et son avancement dans votre espace. Pas de mot de passe à créer : nous envoyons un lien de connexion à ${email}.`,
 };
 
 const EN: Copy = {
@@ -121,7 +129,7 @@ export function CustomerSpaceOffer({
   publicToken: string;
 }) {
   const { locale } = usePublicLocale();
-  const t = publicToken === FINE_BINDERY_PUBLIC_TOKEN ? (FINE_BINDERY_COPY[locale] ?? EN) : FR;
+  const t = publicToken === FINE_BINDERY_PUBLIC_TOKEN ? (FINE_BINDERY_COPY[locale] ?? EN) : publicToken === FERRIERE_PUBLIC_TOKEN ? FR_ATELIER : FR;
   const [sent, setSent] = useState(false);
   const [sending, setSending] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);

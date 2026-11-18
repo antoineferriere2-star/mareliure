@@ -45,6 +45,7 @@ export function BuildPublicShell({
   chrome = "marketing",
   businessName,
   lockedLocale,
+  homeLink = true,
 }: {
   children: ReactNode;
   /**
@@ -63,6 +64,8 @@ export function BuildPublicShell({
    * every marketing page, where the visitor chooses — see PublicLocaleProvider.
    */
   lockedLocale?: SupportedLocale | null;
+  /** Faux quand le parcours est intégré au site de l’entreprise : son nom n’y mène nulle part. */
+  homeLink?: boolean;
 }) {
   return (
     <PublicLocaleProvider lockedLocale={lockedLocale}>
@@ -70,6 +73,7 @@ export function BuildPublicShell({
         showFaqLauncher={showFaqLauncher}
         chrome={chrome}
         businessName={businessName}
+        homeLink={homeLink}
       >
         {children}
       </BuildPublicShellContent>
@@ -82,11 +86,14 @@ function BuildPublicShellContent({
   showFaqLauncher,
   chrome,
   businessName,
+  homeLink = true,
 }: {
   children: ReactNode;
   showFaqLauncher: boolean;
   chrome: PublicShellChrome;
   businessName?: string | null;
+  /** Faux quand le parcours est intégré au site de l’entreprise : le nom n’y mène nulle part. */
+  homeLink?: boolean;
 }) {
   const { locale } = usePublicLocale();
   usePageViewTracking(locale);
@@ -114,7 +121,7 @@ function BuildPublicShellContent({
                 intake is a page like any other, and the name is the way back
                 to the home page — without it, leaving the intake meant the
                 browser's back button or the address bar. */}
-            {isMaReliure ? (
+            {isMaReliure && homeLink ? (
               <a
                 href="/"
                 className="intake-display truncate text-base font-semibold underline-offset-4 hover:underline"
