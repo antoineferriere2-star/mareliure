@@ -64,6 +64,9 @@ export const Route = createFileRoute("/m/$publicToken")({
   component: RuntimePage,
 });
 
+/** Le parcours est chez l’atelier : ses mentions légales remplacent celles de la plateforme. */
+const FERRIERE_LEGAL_LINK = { href: "https://www.reliure-ferriere.fr/mentions-legales/", label: "Mentions légales et confidentialité" };
+
 const PREPARING = "Preparing your project intake…";
 
 /** Rendu par le serveur avant le JavaScript (route sans SSR) : la langue suit la Mission servie. */
@@ -122,6 +125,7 @@ function RuntimePage() {
       renderAfterSubmission={afterSubmission}
       seedAnswers={seedAnswers}
       homeLink={!isFerriereIntake}
+      legalLink={isFerriereIntake ? FERRIERE_LEGAL_LINK : undefined}
       guidance={workshopIntake ? workshopIntakeGuidance("fr", { embedded: isFerriereIntake }) : isReliureIntake ? RELIURE_GUIDANCE : undefined}
       initialLocale={isReliureIntake || isFerriereIntake || isFrenchFineBinderyProfileIntake ? "fr-FR" : undefined}
     />
