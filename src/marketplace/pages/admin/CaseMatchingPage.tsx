@@ -999,7 +999,19 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
     if (!data || prefilled.current) return;
     prefilled.current = true;
     if (data.defaultSelection.length > 0) setSelected(data.defaultSelection);
+    // La prestation part d'un brouillon précis (travaux chiffrés, état déclaré, conditions), que
+    // l'admin relit et corrige ; un texte déjà saisi n'est jamais écrasé.
+    // Le brouillon est composé par le serveur depuis la vue d'un atelier invité, jamais ici depuis
+    // la vue complète de l'admin.
+    setServiceDescription((current) => current.trim() ? current : data.serviceDescriptionDraft);
   }, [data]);
+
+  // « Repartir du brouillon » remplace les retouches : le texte précédent reste récupérable.
+  const [replacedText, setReplacedText] = useState<string | null>(null);
+  function restartFromDraft(draft: string) {
+    if (serviceDescription.trim() && serviceDescription !== draft) setReplacedText(serviceDescription);
+    setServiceDescription(draft);
+  }
 
   const invite = useMutation({
     mutationFn: (confirmedPayouts: Record<string, number>) =>
@@ -1041,7 +1053,8 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
     data.case.status === "matching" &&
     remaining > 0 &&
     selected.length > 0 &&
-    serviceDescription.trim().length >= 10;
+    serviceDescription.trim().length >= 10 &&
+    serviceDescription.trim().length <= 2000;
 
   function toggle(id: string) {
     setProblem(null);
@@ -1276,14 +1289,42 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
           )}
 
           <div className="mt-4">
-            <Label htmlFor="service-description">Prestation demandée à l'atelier</Label>
+            <div className="flex items-baseline justify-between gap-2">
+              <Label htmlFor="service-description">Prestation demandée à l'atelier</Label>
+              <button
+                type="button"
+                className="text-xs underline text-muted-foreground hover:text-foreground"
+                onClick={() => restartFromDraft(data.serviceDescriptionDraft)}
+              >
+                Repartir du brouillon
+              </button>
+            </div>
             <textarea
               id="service-description"
-              className="mt-1 min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="mt-1 min-h-64 w-full rounded-md border border-input bg-background px-3 py-2 text-sm leading-6"
               value={serviceDescription}
               onChange={(event) => setServiceDescription(event.target.value)}
               placeholder="Ce que l'atelier s'engage à réaliser : il l'accepte avec sa rémunération et son délai."
             />
+            <p className={`mt-1 text-xs ${serviceDescription.trim().length > 2000 ? "text-destructive" : "text-muted-foreground"}`}>
+              Brouillon tiré des travaux chiffrés et de l'état déclaré : relisez-le et complétez ce que les photos montrent.
+              {" "}{serviceDescription.trim().length} / 2 000 caractères.
+            </p>
+            {replacedText !== null && (
+              <p className="mt-1 text-xs text-muted-foreground">
+                Votre texte précédent a été remplacé par le brouillon.{" "}
+                <button
+                  type="button"
+                  className="underline hover:text-foreground"
+                  onClick={() => {
+                    setServiceDescription(replacedText);
+                    setReplacedText(null);
+                  }}
+                >
+                  Le rétablir
+                </button>
+              </p>
+            )}
           </div>
 
           {problem && <p className="mt-4 text-sm text-destructive">{problem}</p>}
