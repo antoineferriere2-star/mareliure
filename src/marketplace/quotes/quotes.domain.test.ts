@@ -67,8 +67,8 @@ describe("quantité × prix", () => {
 });
 
 describe("TVA", () => {
-  it("propose 5,5 % à un atelier qui n'a encore rien réglé", () => {
-    expect(EMPTY_BILLING_PROFILE.defaultVatRateBps).toBe(550);
+  it("propose 20 % à un atelier qui n'a encore rien réglé : le 5,5 % se choisit par prestation", () => {
+    expect(EMPTY_BILLING_PROFILE.defaultVatRateBps).toBe(2000);
   });
 
   it("s'arrondit une fois par taux, pas ligne par ligne", () => {
