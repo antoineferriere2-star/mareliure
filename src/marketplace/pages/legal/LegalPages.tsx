@@ -38,6 +38,12 @@ import {
   SUMMARY_LINK_VALIDITY_DAYS,
 } from "@/marketplace/legal/legalEntity";
 
+import type { FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
+import {
+  fineBinderyLegalPath,
+  type FineBinderyLegalSlug,
+} from "@/marketplace/legal/fineBinderyLegalPaths";
+
 const SHELL = "mx-auto w-full max-w-[46rem] px-5 sm:px-8";
 
 interface LegalSection {
@@ -74,7 +80,7 @@ const LEGAL_PAGES_EN = [
 
 type LegalPath = (typeof LEGAL_PAGES_FR)[number]["href"] | (typeof LEGAL_PAGES_EN)[number]["href"];
 
-function LegalLayout({
+export function LegalLayout({
   path,
   title,
   eyebrow,
@@ -83,8 +89,11 @@ function LegalLayout({
   intro,
   sections,
   brand = "MA_RELIURE",
+  locale = "en",
+  siblingPages,
+  otherLabel,
 }: {
-  path: LegalPath;
+  path: LegalPath | string;
   title: string;
   eyebrow: string;
   updatedLabel: string;
@@ -92,13 +101,16 @@ function LegalLayout({
   intro: ReactNode;
   sections: LegalSection[];
   brand?: "MA_RELIURE" | "FINE_BINDERY";
+  locale?: FineBinderyLocale;
+  siblingPages?: { href: string; label: string }[];
+  otherLabel?: string;
 }) {
-  const siblings = (brand === "FINE_BINDERY" ? LEGAL_PAGES_EN : LEGAL_PAGES_FR).filter(
-    (page) => page.href !== path,
-  );
+  const siblings = (
+    siblingPages ?? (brand === "FINE_BINDERY" ? LEGAL_PAGES_EN : LEGAL_PAGES_FR)
+  ).filter((page) => page.href !== path);
   return (
     <div className="mr-site min-h-screen bg-mr-paper text-mr-graphite">
-      {brand === "FINE_BINDERY" ? <FineBinderyHeader locale="en" /> : <LandingHeader />}
+      {brand === "FINE_BINDERY" ? <FineBinderyHeader locale={locale} /> : <LandingHeader />}
       <main id="contenu" className={`${SHELL} py-14 sm:py-20`}>
         <p className="mr-eyebrow">{eyebrow}</p>
         <h1 className="mr-title mt-4 text-mr-ink">{title}</h1>
@@ -117,21 +129,31 @@ function LegalLayout({
           ))}
         </div>
         <nav
-          aria-label={brand === "FINE_BINDERY" ? "Other legal information" : "Autres informations légales"}
+          aria-label={
+            otherLabel ??
+            (brand === "FINE_BINDERY" ? "Other legal information" : "Autres informations légales")
+          }
           className="mr-small mt-14 border-t border-mr-rule pt-6"
         >
           {seeAlso}{" "}
           {siblings.map((page, index) => (
             <span key={page.href}>
               {index > 0 ? " · " : null}
-              <a href={page.href} className="mr-link">
+              <a
+                href={
+                  brand === "FINE_BINDERY" && page.href.split("/").length === 2
+                    ? fineBinderyLegalPath(locale, page.href.slice(1) as FineBinderyLegalSlug)
+                    : page.href
+                }
+                className="mr-link"
+              >
                 {page.label}
               </a>
             </span>
           ))}
         </nav>
       </main>
-      {brand === "FINE_BINDERY" ? <FineBinderyFooter locale="en" /> : <LandingFooter />}
+      {brand === "FINE_BINDERY" ? <FineBinderyFooter locale={locale} /> : <LandingFooter />}
     </div>
   );
 }
@@ -377,8 +399,12 @@ const SALES_TERMS_SECTIONS_FR: LegalSection[] = [
   {
     heading: "Facturation",
     body: [
-      "La facture de votre commande est émise par " + MARELIURE_PUBLISHER.name + " sous la marque Ma Reliure, à l'adresse de facturation que vous indiquez en acceptant le devis. Elle est disponible dans votre espace client. En cas de remboursement, un avoir est émis.",
-      "L'atelier qui réalise le travail ne vous facture rien : il facture " + MARELIURE_PUBLISHER.name + ".",
+      "La facture de votre commande est émise par " +
+        MARELIURE_PUBLISHER.name +
+        " sous la marque Ma Reliure, à l'adresse de facturation que vous indiquez en acceptant le devis. Elle est disponible dans votre espace client. En cas de remboursement, un avoir est émis.",
+      "L'atelier qui réalise le travail ne vous facture rien : il facture " +
+        MARELIURE_PUBLISHER.name +
+        ".",
     ],
   },
   {
@@ -525,7 +551,7 @@ const PRIVACY_SECTIONS_EN: LegalSection[] = [
       <>
         Fine Bindery is a service published by {MARELIURE_PUBLISHER.name}, the data controller
         described here. Its full identity appears in the{" "}
-        <a href="/legal-notice" className="mr-link">
+        <a href="/en/legal-notice" className="mr-link">
           legal notice
         </a>
         .
@@ -587,7 +613,7 @@ const PRIVACY_SECTIONS_EN: LegalSection[] = [
   {
     heading: "What the site stores in your browser",
     body: [
-      "A session identifier, so you can return to an interrupted project — \"Present another project\" clears it; a visit identifier, cleared when the tab is closed, for traffic measurement; and, if you have an account, your sign-in information.",
+      'A session identifier, so you can return to an interrupted project — "Present another project" clears it; a visit identifier, cleared when the tab is closed, for traffic measurement; and, if you have an account, your sign-in information.',
       "No advertising or third-party audience-measurement cookies are used.",
     ],
   },
@@ -596,9 +622,8 @@ const PRIVACY_SECTIONS_EN: LegalSection[] = [
     body: [
       "You may access your data, correct it, have it erased, restrict its processing, object to it, receive a copy in a reusable format, withdraw your consent, and set directives for its fate after your death.",
       <>
-        Write to us at <Mail />. Depending on your country of residence, you may also have the
-        right to lodge a complaint with your local data protection authority — in France, the
-        CNIL,{" "}
+        Write to us at <Mail />. Depending on your country of residence, you may also have the right
+        to lodge a complaint with your local data protection authority — in France, the CNIL,{" "}
         <a href="https://www.cnil.fr" className="mr-link" rel="noreferrer" target="_blank">
           www.cnil.fr
         </a>
@@ -642,7 +667,7 @@ const TERMS_SECTIONS_EN: LegalSection[] = [
       "Sending a project constitutes neither an order nor an acceptance. A price only becomes firm once confirmed by Fine Bindery for your project.",
       <>
         Ordering, payment and the shipment of your book are governed by the{" "}
-        <a href="/terms-of-sale" className="mr-link">
+        <a href="/en/terms-of-sale" className="mr-link">
           Terms of Sale
         </a>
         .
@@ -678,7 +703,7 @@ const TERMS_SECTIONS_EN: LegalSection[] = [
     body: [
       <>
         The processing of your data is described in the{" "}
-        <a href="/privacy-policy" className="mr-link">
+        <a href="/en/privacy-policy" className="mr-link">
           Privacy Policy
         </a>
         .
@@ -753,8 +778,12 @@ const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
   {
     heading: "Invoicing",
     body: [
-      "The invoice for your order is issued by " + MARELIURE_PUBLISHER.name + " under the Fine Bindery brand, to the billing address you give when accepting the quote. It is available in your customer space. If a refund is made, a credit note is issued.",
-      "The workshop carrying out the work does not invoice you: it invoices " + MARELIURE_PUBLISHER.name + ".",
+      "The invoice for your order is issued by " +
+        MARELIURE_PUBLISHER.name +
+        " under the Fine Bindery brand, to the billing address you give when accepting the quote. It is available in your customer space. If a refund is made, a credit note is issued.",
+      "The workshop carrying out the work does not invoice you: it invoices " +
+        MARELIURE_PUBLISHER.name +
+        ".",
     ],
   },
   {
@@ -774,7 +803,7 @@ const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
   {
     heading: "Round-trip shipping (option)",
     body: [
-      "For an ordinary book with a declared value below €100, packed in a parcel of at most 500 g and 35 × 25 × 8 cm, between two addresses in mainland France (excluding Corsica), your proposal may include a separate \"Round-trip shipping\" line of €15 incl. VAT. It covers the outbound label, which we give you, and the return label, which we give the workshop. Otherwise shipping is quoted separately, or you arrange it yourself or hand the book over in person.",
+      'For an ordinary book with a declared value below €100, packed in a parcel of at most 500 g and 35 × 25 × 8 cm, between two addresses in mainland France (excluding Corsica), your proposal may include a separate "Round-trip shipping" line of €15 incl. VAT. It covers the outbound label, which we give you, and the return label, which we give the workshop. Otherwise shipping is quoted separately, or you arrange it yourself or hand the book over in person.',
       "This fee includes no insurance. If the parcel is lost or damaged, only the carrier's own compensation may apply: for Mondial Relay, at most €25 per parcel including postage, against proof of value. For a book entrusted for work, no compensation is guaranteed. Antiquarian, rare, unique or more valuable books do not travel under this fee.",
       "A carrier's delivery scan is not receipt: the workshop itself confirms physical receipt and the book's condition, with photographs. If something goes wrong, we file the claim with the carrier within its deadlines (damage: 3 working days after delivery; loss: 30 days) and keep you informed in your client area.",
     ],
@@ -802,7 +831,7 @@ const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
     body: [
       <>
         The processing of your data is described in the{" "}
-        <a href="/privacy-policy" className="mr-link">
+        <a href="/en/privacy-policy" className="mr-link">
           Privacy Policy
         </a>
         .
