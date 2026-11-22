@@ -43,6 +43,7 @@ import {
 } from "@/marketplace/pages/fineBindery/FineBinderyChrome";
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import { authPageTitle } from "./authPageTitle";
+import { PASSWORD_MIN_LENGTH, passwordTooShort, passwordUpdate } from "@/marketplace/auth/workshopPassword";
 import type { FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 
 const labelClass = "mr-small block font-semibold text-mr-ink";
@@ -64,6 +65,7 @@ type Audience = "customer" | "binder";
  * jamais sur un e-mail saisi à froid.
  */
 type CustomerMethod = "link" | "password-signin";
+type BinderMethod = "password-signin" | "first-link" | "recover";
 
 const tabClass = (active: boolean) =>
   `mr-tap flex-1 rounded-[2px] border px-4 py-3 text-center text-[0.9375rem] font-semibold transition-colors duration-200 ${
@@ -88,6 +90,14 @@ interface AuthCopy {
   preferPassword: string;
   backToLink: string;
   binderSignInHeading: string;
+  forgotPassword: string;
+  firstSignIn: string;
+  backToPassword: string;
+  recoverLead: string;
+  choosePasswordHeading: string;
+  choosePasswordBody: string;
+  choosePasswordButton: string;
+  passwordTooShortError: string;
   emailLabel: string;
   requestButton: (sending: boolean) => string;
   emailSentHeading: string;
@@ -124,7 +134,7 @@ const MA_RELIURE_COPY: AuthCopy = {
   routingStatus: "Ouverture de votre espace…",
   preferPassword: "Vous avez déjà un mot de passe ?",
   backToLink: "Revenir au lien de connexion par e-mail",
-  binderSignInHeading: "Créer mon espace atelier ou me connecter",
+  binderSignInHeading: "Créer mon espace atelier ou me connecter", forgotPassword: "Mot de passe oublié ?", firstSignIn: "Première connexion ? Recevoir un lien de connexion", backToPassword: "Revenir à la connexion par mot de passe", recoverLead: "Indiquez l'adresse de votre espace atelier : vous recevrez un lien et un code pour choisir un nouveau mot de passe.", choosePasswordHeading: "Choisissez votre mot de passe", choosePasswordBody: "Il est obligatoire pour l'espace atelier : vous vous connecterez ensuite avec votre adresse e-mail et ce mot de passe. 8 caractères minimum.", choosePasswordButton: "Enregistrer et ouvrir mon espace", passwordTooShortError: "Le mot de passe doit faire au moins 8 caractères.",
   emailLabel: "Adresse e-mail",
   requestButton: (sending) => (sending ? "Envoi…" : "Recevoir mon lien et mon code de connexion"),
   emailSentHeading: "E-mail envoyé",
@@ -164,7 +174,7 @@ const FINE_BINDERY_COPY_EN: AuthCopy = {
   routingStatus: "Opening your space…",
   preferPassword: "Already have a password?",
   backToLink: "Back to the email sign-in link",
-  binderSignInHeading: "Create or access my workshop space",
+  binderSignInHeading: "Create or access my workshop space", forgotPassword: "Forgot your password?", firstSignIn: "First sign-in? Get a sign-in link", backToPassword: "Back to password sign-in", recoverLead: "Enter your workshop email address: you will receive a link and a code to choose a new password.", choosePasswordHeading: "Choose your password", choosePasswordBody: "It is required for the workshop space: you will then sign in with your email address and this password. At least 8 characters.", choosePasswordButton: "Save and open my space", passwordTooShortError: "The password must be at least 8 characters long.",
   emailLabel: "Email address",
   requestButton: (sending) => (sending ? "Sending…" : "Send my sign-in link and code"),
   emailSentHeading: "Email sent",
@@ -202,7 +212,7 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
     routingStatus: "Ouverture de votre espace…",
     preferPassword: "Vous avez déjà un mot de passe ?",
     backToLink: "Revenir au lien de connexion par e-mail",
-    binderSignInHeading: "Créer ou retrouver mon espace atelier",
+    binderSignInHeading: "Créer ou retrouver mon espace atelier", forgotPassword: "Mot de passe oublié ?", firstSignIn: "Première connexion ? Recevoir un lien de connexion", backToPassword: "Revenir à la connexion par mot de passe", recoverLead: "Indiquez l'adresse de votre espace atelier : vous recevrez un lien et un code pour choisir un nouveau mot de passe.", choosePasswordHeading: "Choisissez votre mot de passe", choosePasswordBody: "Il est obligatoire pour l'espace atelier : vous vous connecterez ensuite avec votre adresse e-mail et ce mot de passe. 8 caractères minimum.", choosePasswordButton: "Enregistrer et ouvrir mon espace", passwordTooShortError: "Le mot de passe doit faire au moins 8 caractères.",
     emailLabel: "Adresse e-mail",
     requestButton: (sending) => (sending ? "Envoi…" : "Recevoir mon lien et mon code"),
     emailSentHeading: "E-mail envoyé",
@@ -230,7 +240,7 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
     leadPasswordSignin: "Melden Sie sich mit dem Passwort Ihres Bereichs an.",
     leadBinder: "Geben Sie Ihre E-Mail-Adresse ein, um Ihren Werkstattbereich anzulegen oder erneut zu öffnen. Fine Bindery prüft zuerst die Adresse; der Zugang zu neuen Projekten wird separat freigegeben.",
     routingStatus: "Ihr Bereich wird geöffnet…", preferPassword: "Sie haben bereits ein Passwort?", backToLink: "Zurück zum Anmeldelink per E-Mail",
-    binderSignInHeading: "Werkstattbereich anlegen oder öffnen", emailLabel: "E-Mail-Adresse",
+    binderSignInHeading: "Werkstattbereich anlegen oder öffnen", forgotPassword: "Passwort vergessen?", firstSignIn: "Erste Anmeldung? Anmeldelink erhalten", backToPassword: "Zurück zur Anmeldung mit Passwort", recoverLead: "Geben Sie die E-Mail-Adresse Ihrer Werkstatt ein: Sie erhalten einen Link und einen Code, um ein neues Passwort zu wählen.", choosePasswordHeading: "Wählen Sie Ihr Passwort", choosePasswordBody: "Für den Werkstattbereich ist es Pflicht: Sie melden sich danach mit Ihrer E-Mail-Adresse und diesem Passwort an. Mindestens 8 Zeichen.", choosePasswordButton: "Speichern und Bereich öffnen", passwordTooShortError: "Das Passwort muss mindestens 8 Zeichen lang sein.", emailLabel: "E-Mail-Adresse",
     requestButton: (sending) => sending ? "Wird gesendet…" : "Anmeldelink und Code senden", emailSentHeading: "E-Mail gesendet",
     emailSentBody: (email) => `Ein Anmeldelink und ein Code wurden an ${email} gesendet. Beide sind eine Stunde gültig. Prüfen Sie auch den Spam-Ordner.`,
     resendButton: (sending, wait) => wait > 0 ? `Erneut senden (in ${wait} s)` : sending ? "Wird gesendet…" : "E-Mail erneut senden",
@@ -248,7 +258,7 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
     eyebrow: "Il tuo spazio", heading: "Accedi al tuo spazio Fine Bindery", tabClient: "Cliente", tabBinder: "Laboratorio",
     leadLink: "Inserisci l’indirizzo e-mail usato per presentare il libro. Ti invieremo un link e un codice di accesso.", leadPasswordSignin: "Accedi con la password del tuo spazio.",
     leadBinder: "Inserisci l’indirizzo e-mail per creare o riaprire lo spazio del laboratorio. Fine Bindery verifica prima l’indirizzo; l’accesso ai nuovi progetti viene approvato separatamente.",
-    routingStatus: "Apertura dello spazio…", preferPassword: "Hai già una password?", backToLink: "Torna al link di accesso via e-mail", binderSignInHeading: "Crea o apri lo spazio del laboratorio",
+    routingStatus: "Apertura dello spazio…", preferPassword: "Hai già una password?", backToLink: "Torna al link di accesso via e-mail", binderSignInHeading: "Crea o apri lo spazio del laboratorio", forgotPassword: "Password dimenticata?", firstSignIn: "Primo accesso? Ricevi un link di accesso", backToPassword: "Torna all'accesso con password", recoverLead: "Inserisci l'indirizzo e-mail del laboratorio: riceverai un link e un codice per scegliere una nuova password.", choosePasswordHeading: "Scegli la tua password", choosePasswordBody: "È obbligatoria per lo spazio del laboratorio: accederai poi con il tuo indirizzo e-mail e questa password. Almeno 8 caratteri.", choosePasswordButton: "Salva e apri il mio spazio", passwordTooShortError: "La password deve contenere almeno 8 caratteri.",
     emailLabel: "Indirizzo e-mail", requestButton: (sending) => sending ? "Invio…" : "Invia link e codice", emailSentHeading: "E-mail inviata",
     emailSentBody: (email) => `Un link e un codice sono stati inviati a ${email}. Sono validi per un’ora. Controlla anche la cartella spam.`,
     resendButton: (sending, wait) => wait > 0 ? `Reinvia (tra ${wait} s)` : sending ? "Invio…" : "Reinvia l’e-mail", useAnotherAddress: "Usa un altro indirizzo",
@@ -264,7 +274,7 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
     eyebrow: "Tu espacio", heading: "Accede a tu espacio Fine Bindery", tabClient: "Cliente", tabBinder: "Taller",
     leadLink: "Introduce el correo utilizado para presentar tu libro. Te enviaremos un enlace y un código de acceso.", leadPasswordSignin: "Accede con la contraseña de tu espacio.",
     leadBinder: "Introduce tu correo para crear o volver a abrir el espacio del taller. Fine Bindery verifica primero la dirección; el acceso a nuevos proyectos se aprueba por separado.",
-    routingStatus: "Abriendo tu espacio…", preferPassword: "¿Ya tienes contraseña?", backToLink: "Volver al enlace por correo", binderSignInHeading: "Crear o abrir mi espacio de taller",
+    routingStatus: "Abriendo tu espacio…", preferPassword: "¿Ya tienes contraseña?", backToLink: "Volver al enlace por correo", binderSignInHeading: "Crear o abrir mi espacio de taller", forgotPassword: "¿Olvidaste tu contraseña?", firstSignIn: "¿Primer acceso? Recibir un enlace", backToPassword: "Volver al acceso con contraseña", recoverLead: "Indica el correo de tu taller: recibirás un enlace y un código para elegir una nueva contraseña.", choosePasswordHeading: "Elige tu contraseña", choosePasswordBody: "Es obligatoria para el espacio del taller: después accederás con tu correo y esta contraseña. Mínimo 8 caracteres.", choosePasswordButton: "Guardar y abrir mi espacio", passwordTooShortError: "La contraseña debe tener al menos 8 caracteres.",
     emailLabel: "Correo electrónico", requestButton: (sending) => sending ? "Enviando…" : "Enviar enlace y código", emailSentHeading: "Correo enviado",
     emailSentBody: (email) => `Se han enviado un enlace y un código a ${email}. Son válidos durante una hora. Revisa también la carpeta de spam.`,
     resendButton: (sending, wait) => wait > 0 ? `Reenviar (en ${wait} s)` : sending ? "Enviando…" : "Reenviar correo", useAnotherAddress: "Usar otra dirección",
@@ -300,7 +310,9 @@ export function MaReliureAuthPage({
   );
   const [audience, setAudience] = useState<Audience>(initialAudience);
   const [customerMethod, setCustomerMethod] = useState<CustomerMethod>("link");
-  const [binderMethod, setBinderMethod] = useState<CustomerMethod>("link");
+  // Atelier : le mot de passe d'abord (il est obligatoire pour l'espace atelier). Le lien par e-mail
+  // sert à la première connexion et au mot de passe oublié, et mène toujours au choix d'un mot de passe.
+  const [binderMethod, setBinderMethod] = useState<BinderMethod>("password-signin");
   const alert = accessError ?? linkProblem;
   // L'onglet suit l'espace choisi, y compris quand on passe de Client à Atelier sur la page (revue #165).
   useEffect(() => { document.title = authPageTitle(brand, audience === "binder" ? "binder" : "customer", fineBinderyLocale); }, [brand, audience, fineBinderyLocale]);
@@ -391,25 +403,38 @@ export function MaReliureAuthPage({
             <>
               <h2 className="mr-heading text-mr-ink">{t.binderSignInHeading}</h2>
               <div className="mt-4">
-                {binderMethod === "link" ? (
-                  <LinkSignIn t={t} space="atelier" onSent={() => setLinkProblem(null)} onSignedIn={() => onSignedIn("binder")} />
-                ) : (
+                {binderMethod === "password-signin" ? (
                   <PasswordSignIn t={t} onSignedIn={() => onSignedIn("binder")} />
+                ) : (
+                  <>
+                    {binderMethod === "recover" && <p className="mr-body mb-4">{t.recoverLead}</p>}
+                    <LinkSignIn
+                      key={binderMethod}
+                      t={t}
+                      space="atelier"
+                      passwordRequired
+                      onSent={() => setLinkProblem(null)}
+                      onSignedIn={() => onSignedIn("binder")}
+                    />
+                  </>
                 )}
               </div>
-              <p className="mt-6">
-                <button
-                  type="button"
-                  className={textButtonClass}
-                  onClick={() =>
-                    setBinderMethod(binderMethod === "link" ? "password-signin" : "link")
-                  }
-                >
-                  {binderMethod === "link"
-                    ? t.preferPassword
-                    : t.backToLink}
-                </button>
-              </p>
+              <div className="mt-6 flex flex-wrap gap-x-8 gap-y-2">
+                {binderMethod === "password-signin" ? (
+                  <>
+                    <button type="button" className={textButtonClass} onClick={() => setBinderMethod("recover")}>
+                      {t.forgotPassword}
+                    </button>
+                    <button type="button" className={textButtonClass} onClick={() => setBinderMethod("first-link")}>
+                      {t.firstSignIn}
+                    </button>
+                  </>
+                ) : (
+                  <button type="button" className={textButtonClass} onClick={() => setBinderMethod("password-signin")}>
+                    {t.backToPassword}
+                  </button>
+                )}
+              </div>
 
               <p className="mr-small mt-10 border-t border-mr-rule pt-6 text-mr-muted">
                 {t.binderAccessNote}
@@ -426,11 +451,14 @@ export function MaReliureAuthPage({
 function LinkSignIn({
   t,
   space,
+  passwordRequired = false,
   onSent,
   onSignedIn,
 }: {
   t: AuthCopy;
   space?: "atelier";
+  /** Atelier : après le code, le choix d'un mot de passe est obligatoire. */
+  passwordRequired?: boolean;
   onSent: () => void;
   onSignedIn: () => Promise<void>;
 }) {
@@ -499,7 +527,7 @@ function LinkSignIn({
         </div>
 
         <div className="mt-8 border-t border-mr-rule pt-6">
-          <CodeSignIn t={t} email={sentTo} onSignedIn={onSignedIn} />
+          <CodeSignIn t={t} email={sentTo} passwordRequired={passwordRequired} onSignedIn={onSignedIn} />
         </div>
       </div>
     );
@@ -541,10 +569,12 @@ function LinkSignIn({
 function CodeSignIn({
   t,
   email,
+  passwordRequired = false,
   onSignedIn,
 }: {
   t: AuthCopy;
   email: string;
+  passwordRequired?: boolean;
   onSignedIn: () => Promise<void>;
 }) {
   const [code, setCode] = useState("");
@@ -570,7 +600,7 @@ function CodeSignIn({
   }
 
   if (verified) {
-    return <SetPasswordAfterVerification t={t} onSignedIn={onSignedIn} />;
+    return <SetPasswordAfterVerification t={t} required={passwordRequired} onSignedIn={onSignedIn} />;
   }
 
   return (
@@ -612,9 +642,12 @@ function CodeSignIn({
  */
 function SetPasswordAfterVerification({
   t,
+  required = false,
   onSignedIn,
 }: {
   t: AuthCopy;
+  /** Atelier : pas de « Continuer sans mot de passe ». */
+  required?: boolean;
   onSignedIn: () => Promise<void>;
 }) {
   const [password, setPassword] = useState("");
@@ -623,9 +656,13 @@ function SetPasswordAfterVerification({
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault();
+    if (passwordTooShort(password)) {
+      setError(t.passwordTooShortError);
+      return;
+    }
     setLoading(true);
     setError(null);
-    const { error: updateError } = await supabase.auth.updateUser({ password });
+    const { error: updateError } = await supabase.auth.updateUser(passwordUpdate(password));
     setLoading(false);
     if (updateError) {
       setError(t.passwordSetError);
@@ -636,8 +673,8 @@ function SetPasswordAfterVerification({
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2 className="mr-heading text-mr-ink">{t.offerPasswordHeading}</h2>
-      <p className="mr-body mt-2">{t.offerPasswordBody}</p>
+      <h2 className="mr-heading text-mr-ink">{required ? t.choosePasswordHeading : t.offerPasswordHeading}</h2>
+      <p className="mr-body mt-2">{required ? t.choosePasswordBody : t.offerPasswordBody}</p>
       <div className="mt-5">
         <label htmlFor="mr-auth-new-password" className={labelClass}>
           {t.passwordLabel}
@@ -646,7 +683,7 @@ function SetPasswordAfterVerification({
           id="mr-auth-new-password"
           type="password"
           required
-          minLength={8}
+          minLength={PASSWORD_MIN_LENGTH}
           autoComplete="new-password"
           value={password}
           onChange={(event) => setPassword(event.target.value)}
@@ -660,16 +697,18 @@ function SetPasswordAfterVerification({
       )}
       <div className="mt-6 flex flex-wrap items-center gap-x-8 gap-y-3">
         <button type="submit" disabled={loading} className={submitClass}>
-          {t.createPasswordAfterVerifyButton(loading)}
+          {required ? (loading ? "…" : t.choosePasswordButton) : t.createPasswordAfterVerifyButton(loading)}
         </button>
-        <button
-          type="button"
-          className={textButtonClass}
-          disabled={loading}
-          onClick={() => void onSignedIn()}
-        >
-          {t.skipPasswordButton}
-        </button>
+        {!required && (
+          <button
+            type="button"
+            className={textButtonClass}
+            disabled={loading}
+            onClick={() => void onSignedIn()}
+          >
+            {t.skipPasswordButton}
+          </button>
+        )}
       </div>
     </form>
   );
