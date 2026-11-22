@@ -69,8 +69,8 @@ export function FineBinderyDisciplinePage({ locale, slug }: { locale: FineBinder
 
     <section><div className={`${SHELL} py-section-sm sm:py-section`}>
       <div className="grid gap-12 lg:grid-cols-12 lg:gap-16">
-        <div className="lg:col-span-5"><SectionHead folio="II" eyebrow={copy.home.howEyebrow} title={copy.home.howTitle} /></div>
-        <ol className="lg:col-span-7 lg:pt-14">{copy.home.steps.map((title, index) => <li key={title} className="flex items-baseline gap-6 border-b border-mr-rule py-5 first:border-t"><span className="mr-display w-10 shrink-0 text-[2.25rem] leading-none text-mr-bordeaux">{index + 1}</span><p className="mr-heading text-[1.125rem] text-mr-ink">{title}</p></li>)}</ol>
+        <div className="lg:col-span-5"><SectionHead folio="II" eyebrow={copy.home.journeyEyebrow} title={copy.home.journeyTitle} /></div>
+        <ol className="lg:col-span-7 lg:pt-14">{copy.home.journeySteps.map((title, index) => <li key={title} className="flex items-baseline gap-6 border-b border-mr-rule py-5 first:border-t"><span className="mr-display w-10 shrink-0 text-[2.25rem] leading-none text-mr-bordeaux">{index + 1}</span><p className="mr-heading text-[1.125rem] text-mr-ink">{title}</p></li>)}</ol>
       </div>
     </div></section>
 

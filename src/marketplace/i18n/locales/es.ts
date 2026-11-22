@@ -1,36 +1,15 @@
 import type { FineBinderyPublicCopy } from "./types";
+import { FINE_BINDERY_HOME } from "./homeCopy";
+import { FINE_BINDERY_DISCIPLINE_COPY } from "./disciplineCopy";
 import { esSeo, esHomeFaq, esProjectStart, esDirectoryLabel, esProfileNotFound } from "./esHead";
 
 
 export const es: FineBinderyPublicCopy = {
   seo: esSeo,
-  nav: { how: "Cómo funciona", services: "Oficios", workshops: esDirectoryLabel, faq: "Preguntas", signIn: "Iniciar sesión", language: "Idioma", menu: "Menú" },
-  common: { start: esProjectStart, project: "Proyecto", france: "Francia", skills: "Oficios", languages: "Idiomas", techniques: "Técnicas y materiales", originalText: "Texto del taller en su idioma original." },
-  footer: { summary: "La red europea de encuadernación y conservación del libro.", information: "Información", legal: "Aviso legal", privacy: "Privacidad", terms: "Condiciones de uso", sales: "Condiciones de venta", closing: "Encuadernación, conservación y dorado, por talleres independientes." },
-  home: {
-    eyebrow: "Encuadernación · Conservación · Dorado",
-    title: "La red europea de encuadernación y conservación del libro.",
-    lead: "Descubre encuadernadores y restauradores con oficio. Presenta tu proyecto. Trabaja con el taller adecuado.",
-    discover: "Descubre los talleres",
-    proof: "Talleres independientes, revisados antes de su publicación · Un proyecto, un interlocutor · Apertura en Francia",
-    offersEyebrow: "Oficios", offersTitle: "El trabajo de la red.", photoCredit: "Fotografías", offers: [
-      { title: "Encuadernación artística", body: "Encuadernaciones tradicionales y contemporáneas en piel, tela y papeles escogidos." },
-      { title: "Restauración y conservación", body: "Un trabajo cuidadoso sobre libros antiguos, valiosos o queridos, respetando su historia." },
-      { title: "Encuadernación de colección", body: "Una edición querida o buscada, convertida en pieza única." },
-      { title: "Creaciones a medida", body: "Encuadernaciones únicas, libros de familia, ejemplares de presentación, cajas y estuches." },
-    ],
-    pathsEyebrow: "Dos maneras de empezar", pathsTitle: "Elige tu taller — o deja que lo encontremos.", paths: [
-      { title: "Elige un taller", body: "Descubre los talleres publicados, sus trabajos, sus técnicas y los idiomas que hablan. Un proyecto presentado desde la página de un taller llega directamente a ese taller.", cta: "Ver los talleres" },
-      { title: "Presenta tu proyecto", body: "Describe tu libro una sola vez. Fine Bindery estudia el trabajo, lo confía al taller cuyo oficio le corresponde y sigue el proyecto hasta el regreso del libro.", cta: "Presenta tu proyecto" },
-    ],
-    howEyebrow: "Cómo avanza un proyecto", howTitle: "De la primera fotografía al regreso del libro.", steps: ["Presenta tu libro", "Recibe una propuesta", "El taller adecuado confirma", "Tu libro viaja al taller", "Sigue el trabajo", "Tu libro vuelve a casa"],
-    workshopsEyebrow: "Detrás de cada libro, un taller", workshopsTitle: "Encuadernadores, restauradores y doradores independientes.", workshopsLead: "Cada taller se revisa antes de publicar su página: su oficio, su trayectoria y el trabajo que desea recibir.", selected: "Revisado y publicado por Fine Bindery.", discoverWorkshops: "Descubre los talleres publicados",
-    networkNote: "La red abre con talleres en Francia y acogerá a encuadernadores y restauradores de toda Europa.",
-    trustEyebrow: "Tu libro viaja", trustTitle: "Tu libro viaja. Su historia no se pierde.", trust: ["Estado documentado", "Un solo interlocutor", "Talleres revisados", "Un trayecto acompañado"],
-    shippingEyebrow: "Envío", shippingTitle: "Un trayecto adaptado al libro.", shippingLead: "El trayecto se organiza según la naturaleza y el valor del libro, y se presupuesta aparte del trabajo.",
-    faqEyebrow: "Tus preguntas", faqTitle: "Antes de empezar.", faq: esHomeFaq,
-    finalTitle: "Tu libro merece las manos adecuadas.", finalLead: "Descubre los talleres de la red, o presenta tu proyecto y deja que encontremos el adecuado.", established: "desde",
-  },
+  nav: { features: "Funciones", pricing: "Precios", how: "Cómo funciona", services: "Oficios", workshops: esDirectoryLabel, faq: "Preguntas", signIn: "Iniciar sesión", language: "Idioma", menu: "Menú" },
+  common: { signup: "Crear mi cuenta de taller", start: esProjectStart, project: "Proyecto", france: "Francia", skills: "Oficios", languages: "Idiomas", techniques: "Técnicas y materiales", originalText: "Texto del taller en su idioma original." },
+  footer: { summary: "La herramienta de presupuesto y seguimiento para encuadernadores y talleres de restauración.", information: "Información", legal: "Aviso legal", privacy: "Privacidad", terms: "Condiciones de uso", sales: "Condiciones de venta", closing: "Expediente, presupuesto y seguimiento para encuadernadores y restauradores." },
+  home: { ...FINE_BINDERY_HOME.es, ...FINE_BINDERY_DISCIPLINE_COPY.es },
   directory: {
     eyebrow: "La red", title: "Encuadernadores y restauradores, elegidos por su oficio.",
     lead: "Descubre los talleres publicados. Un proyecto presentado desde la página de un taller llega directamente a ese taller.",

@@ -54,11 +54,11 @@ describe("sitemapFor", () => {
     const { baseUrl, entries } = sitemapFor("www.finebindery.com");
     expect(baseUrl).toBe("https://finebindery.com");
     expect(entries.map((e) => e.path)).toEqual([
-      "/en", "/en/professionals", "/en/fine-binding", "/en/book-restoration", "/en/collector-rebinding", "/en/bespoke-commissions",
-      "/fr", "/fr/professionals", "/fr/fine-binding", "/fr/book-restoration", "/fr/collector-rebinding", "/fr/bespoke-commissions",
-      "/de", "/de/professionals", "/de/fine-binding", "/de/book-restoration", "/de/collector-rebinding", "/de/bespoke-commissions",
-      "/it", "/it/professionals", "/it/fine-binding", "/it/book-restoration", "/it/collector-rebinding", "/it/bespoke-commissions",
-      "/es", "/es/professionals", "/es/fine-binding", "/es/book-restoration", "/es/collector-rebinding", "/es/bespoke-commissions",
+      "/en", "/en/fine-binding", "/en/book-restoration", "/en/collector-rebinding", "/en/bespoke-commissions",
+      "/fr", "/fr/fine-binding", "/fr/book-restoration", "/fr/collector-rebinding", "/fr/bespoke-commissions",
+      "/de", "/de/fine-binding", "/de/book-restoration", "/de/collector-rebinding", "/de/bespoke-commissions",
+      "/it", "/it/fine-binding", "/it/book-restoration", "/it/collector-rebinding", "/it/bespoke-commissions",
+      "/es", "/es/fine-binding", "/es/book-restoration", "/es/collector-rebinding", "/es/bespoke-commissions",
       "/legal-notice",
       "/privacy-policy",
       "/terms-of-use",

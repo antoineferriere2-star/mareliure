@@ -48,7 +48,7 @@ describe("canonicalRedirectUrl", () => {
   it("redirige les anciennes adresses vers leur page actuelle, sur les deux domaines (audit SEO du 12 octobre 2026)", () => {
     for (const host of ["https://mareliure.fr", "https://finebindery.com", "http://www.finebindery.com"]) {
       expect(canonicalRedirectUrl(`${host}/reliure`)).toBe("https://mareliure.fr/");
-      expect(canonicalRedirectUrl(`${host}/professionnels`)).toBe("https://finebindery.com/fr/professionals");
+      expect(canonicalRedirectUrl(`${host}/professionnels`)).toBe("https://finebindery.com/fr");
       expect(canonicalRedirectUrl(`${host}/fine-bindery/`)).toBe("https://finebindery.com/en");
     }
     expect(canonicalRedirectUrl("https://mareliure.fr/reliure?utm_source=x")).toBe("https://mareliure.fr/?utm_source=x");
