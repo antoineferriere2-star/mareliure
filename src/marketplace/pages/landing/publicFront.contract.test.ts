@@ -200,3 +200,21 @@ describe("le poids des pages publiques", () => {
     expect(route).toContain('import("@/build/pages/public/BuildPublicHome")');
   });
 });
+
+describe("pivot du 22 novembre 2026 — accès atelier", () => {
+  const FILES = [
+    "src/marketplace/pages/auth/MaReliureAuthPage.tsx",
+    "src/marketplace/pages/binder/dashboardCopy.ts",
+    "src/routes/_authenticated/activer-mon-atelier.tsx",
+  ];
+
+  it.each(FILES)("%s ne promet plus de validation avant d'utiliser l'espace atelier", (file) => {
+    const text = stripComments(read(file));
+    expect(text).not.toMatch(/valide séparément|validera votre atelier|autorisera séparément|soumis à la validation|approves access|approved separately|Ma Reliure valide/i);
+    expect(text).not.toMatch(/\bleads\b/i);
+  });
+
+  it("la page d'accès n'appelle plus l'atelier « partenaire »", () => {
+    expect(stripComments(read("src/marketplace/pages/auth/MaReliureAuthPage.tsx"))).not.toContain('tabBinder: "Atelier partenaire"');
+  });
+});

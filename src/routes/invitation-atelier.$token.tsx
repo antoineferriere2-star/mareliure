@@ -188,7 +188,7 @@ function InvitationPage() {
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <LandingHeader />
       <main id="contenu" className="mx-auto w-full max-w-[32rem] flex-1 px-5 py-16 sm:px-8">
-        <p className="mr-eyebrow">Atelier partenaire</p>
+        <p className="mr-eyebrow">Votre atelier</p>
         <h1 className="mr-title mt-4 text-mr-ink">Activer mon accès</h1>
 
         {step === "checking" && <p className="mr-body mt-6">Vérification…</p>}
