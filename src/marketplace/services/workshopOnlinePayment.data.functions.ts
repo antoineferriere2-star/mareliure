@@ -3,6 +3,10 @@ import { z } from "zod";
 import { admin } from "@/build/services/adminAuth.server";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 import { fail } from "@/build/services/serverError";
+import {
+  WORKSHOP_ONLINE_PAYMENT_OPENING_RETIRED,
+  WORKSHOP_ONLINE_PAYMENT_RETIRED_MESSAGE,
+} from "@/marketplace/commercial/paymentPivot";
 import { requireWorkshopAccess } from "./workshopAccess.server";
 import { getInvoice, getCreditNote } from "./binderQuotes.server";
 import { issuedPdfBase64ForCustomer } from "./issuedDocumentPdf.server";
@@ -36,6 +40,7 @@ export const startMyWorkshopConnect = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const sb = await admin();
     const binderId = await workshopBillingOwner(sb, context.userId);
+    if (WORKSHOP_ONLINE_PAYMENT_OPENING_RETIRED) fail(409, WORKSHOP_ONLINE_PAYMENT_RETIRED_MESSAGE);
     const { settings } = await loadWorkshopSubscription(sb, binderId);
     if (!settings.online_payment_open && !settings.connect_onboarding_open) fail(409, "La configuration des paiements n’est pas encore ouverte.");
     const profile = await sb.from("marketplace_binder_billing_profiles").select("*").eq("binder_id", binderId).maybeSingle();
@@ -68,6 +73,7 @@ export const resumeMyWorkshopConnect = createServerFn({ method: "POST" })
   .handler(async ({ context }) => {
     const sb = await admin();
     const binderId = await workshopBillingOwner(sb, context.userId);
+    if (WORKSHOP_ONLINE_PAYMENT_OPENING_RETIRED) fail(409, WORKSHOP_ONLINE_PAYMENT_RETIRED_MESSAGE);
     const { settings } = await loadWorkshopSubscription(sb, binderId);
     if (!settings.online_payment_open && !settings.connect_onboarding_open) fail(409, "La configuration des paiements n’est pas encore ouverte.");
     const consent = await sb
@@ -100,6 +106,7 @@ export const createMyInvoicePaymentLink = createServerFn({ method: "POST" })
     const existing = await sb.from("marketplace_workshop_online_payments").select("id")
       .eq("binder_id", binderId).eq("invoice_id", data.invoiceId).maybeSingle();
     if (existing.error) throw existing.error;
+    if (!existing.data && WORKSHOP_ONLINE_PAYMENT_OPENING_RETIRED) fail(409, WORKSHOP_ONLINE_PAYMENT_RETIRED_MESSAGE);
     if (!existing.data) {
       const status = await refreshBinderConnectStatus(sb, binderId);
       if (!status.onboarded) fail(409, "Terminez la configuration Stripe de votre atelier.");
