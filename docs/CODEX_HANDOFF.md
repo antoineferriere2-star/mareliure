@@ -3807,3 +3807,13 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - Réécrits : page d'accès `MaReliureAuthPage` (Ma Reliure FR ; Fine Bindery EN, FR, DE, IT, ES — mot d'accueil et chapô), `/activer-mon-atelier` (plus de « leads », plus de « à valider »), ligne « Accès aux demandes » du tableau de bord atelier en 5 langues (facultatif ; les clients passent par le lien du relieur), onglet « Atelier partenaire » → « Atelier », eyebrow de l'invitation.
 - Inchangé : e-mails d'authentification et d'invitation (aucune promesse de validation), logique d'approbation côté serveur (l'approbation reste utile pour les projets transmis tant que le rapprochement n'est pas retiré), vues admin.
 - Vérifié : 384 tests ciblés verts (pages, auth, routes) hors `auth-email-hook.test.ts` (module absent, préexistant) ; nouveau test de contrat sur les trois fichiers. Rendu navigateur non vérifié.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 22 novembre 2026, `feat/accueil-devis-facture` (accueil Ma Reliure : « logiciel de devis et factures »).
+
+- Demande d'Antoine : Ma Reliure doit se lire comme un simple logiciel de devis et factures ; l'accueil parlait surtout d'un parcours de prise de projet.
+- Accueil Ma Reliure (FR) réécrit : titre « Le logiciel de devis et factures des relieurs et ateliers de restauration », bloc « du devis au règlement » (devis, facture, avoir, règlement, client), trois étapes devis / facture / règlements, fonctionnalités, FAQ (« Ma Reliure encaisse-t-il les paiements ? » Non). La demande client par lien reste présentée comme une fonctionnalité parmi d'autres, plus comme le cœur.
+- Titre et description SEO de la racine, `/tarifs`, pied de page, page « Créer mon compte atelier » alignés. Plus aucun montant sur la page (l'exemple 250–400 € disparaît).
+- NON fait : Fine Bindery (EN, FR, DE, IT, ES) garde l'ancien discours « devis et suivi » ; pages par besoin et légales inchangées.
+- Vérifié : 332 tests ciblés verts hors `auth-email-hook.test.ts` (préexistant) ; rendu local de l'accueil contrôlé (titre, sections, absence de l'ancien texte).

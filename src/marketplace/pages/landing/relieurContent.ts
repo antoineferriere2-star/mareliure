@@ -1,73 +1,72 @@
 /**
- * Le texte de l'accueil Ma Reliure, depuis le pivot du 22 novembre 2026 : l'outil
- * de devis et de suivi des relieurs et des ateliers de restauration.
+ * Le texte de l'accueil Ma Reliure, depuis le pivot du 22 novembre 2026 : le logiciel
+ * de devis et factures des relieurs et des ateliers de restauration.
  *
  * Aucun montant publié pour les tarifs (le consentement à payer se valide avec le
- * premier cercle d'ateliers). L'exemple avant/après est un exemple illustratif,
- * annoncé comme tel : ce n'est ni un projet réel ni un tarif.
+ * premier cercle d'ateliers). Le bloc « en pratique » illustre un principe,
+ * il ne reproduit ni un document réel ni un tarif.
  */
 export const RELIEUR_HERO = {
-  eyebrow: "Pour les relieurs et ateliers de restauration",
-  title: "Vos clients décrivent leur livre. Vous recevez un dossier prêt à chiffrer.",
-  lead: "Fini les courriels de trois lignes et les photos envoyées par SMS. Vos clients suivent un parcours guidé — type de projet, état du livre, dimensions, budget, délai, photos — et vous recevez une fiche complète, prête à devis.",
+  eyebrow: "Logiciel de devis et factures",
+  title: "Le logiciel de devis et factures des relieurs et ateliers de restauration.",
+  lead: "Préparez vos devis, transformez-les en factures et suivez les règlements, au même endroit. Vos clients peuvent aussi vous écrire par un lien : leur demande arrive déjà structurée, prête à chiffrer.",
   secondary: "Voir comment ça marche",
-  proof: ["Devis plus rapides", "Moins d’allers-retours", "Chaque projet suivi jusqu’à la livraison"],
+  proof: ["Devis et factures numérotés", "Avoirs et règlements suivis", "Vos clients restent vos clients"],
 } as const;
 
 export const RELIEUR_BEFORE_AFTER = {
-  eyebrow: "Un exemple",
-  title: "La même demande, avec et sans Ma Reliure.",
+  eyebrow: "En pratique",
+  title: "Du devis au règlement, sans changer d’outil.",
   without: {
-    label: "Sans Ma Reliure",
-    caption: "Courriel reçu par l’atelier",
-    body: "« Bonjour, j’ai un livre de famille abîmé, vous pouvez me dire combien ça coûterait ? »",
+    label: "Sans logiciel",
+    caption: "Comment on s’y prend souvent",
+    body: "Un devis dans un traitement de texte, une facture dans un tableur, les règlements dans un carnet — et des numéros à surveiller à la main.",
   },
   with: {
     label: "Avec Ma Reliure",
-    caption: "Fiche reçue par l’atelier",
+    caption: "Un dossier, de bout en bout",
     rows: [
-      ["Projet", "Restauration — reliure pleine peau"],
-      ["Dimensions", "21 × 14 × 3 cm"],
-      ["État", "Dos et coiffes à refaire"],
-      ["Budget", "250 – 400 €"],
-      ["Délai", "Sous 2 mois"],
-      ["Photos", "3 photos jointes"],
+      ["Devis", "Préparé pour chaque projet"],
+      ["Facture", "Créée à partir du devis accepté"],
+      ["Avoir", "Émis si le travail change"],
+      ["Règlement", "Enregistré sur la facture"],
+      ["Client", "Son historique, au même endroit"],
     ],
   },
-  note: "Exemple illustratif, pas un tarif.",
+  note: "Illustration du principe, pas un document réel.",
 } as const;
 
 export const RELIEUR_STEPS = [
   {
-    title: "Partagez votre lien",
-    body: "Vous envoyez à vos clients le lien de votre parcours de prise de projet : sur votre site, par courriel, sur vos réseaux.",
+    title: "Vous faites le devis",
+    body: "Vous préparez un devis clair pour chaque projet, à partir de vos prestations et de vos ouvrages.",
   },
   {
-    title: "Vous recevez la fiche",
-    body: "Le client répond à un parcours pensé pour la reliure : type de projet, état du livre, dimensions, budget, délai, photos.",
+    title: "Vous facturez",
+    body: "Le devis accepté devient une facture ; un avoir corrige si le travail change.",
   },
   {
-    title: "Vous chiffrez et suivez",
-    body: "Vous transformez la fiche en devis, puis vous suivez chaque dossier jusqu’à la livraison, au même endroit.",
+    title: "Vous suivez les règlements",
+    body: "Vous enregistrez ce que le client a réglé. Vous êtes payé directement, sans intermédiaire.",
   },
 ] as const;
 
 export const RELIEUR_FEATURES = [
   {
-    title: "Un parcours pensé pour la reliure",
-    body: "Une prise de projet conçue pour la reliure et la restauration, pas un contact générique.",
+    title: "Des devis prêts à envoyer",
+    body: "Un devis soigné pour chaque projet, rédigé dans le vocabulaire de la reliure.",
   },
   {
-    title: "Une fiche structurée à chaque demande",
-    body: "Type de projet, état, dimensions, budget, délai, photos : tout ce qu’il faut pour chiffrer.",
+    title: "Des factures et des avoirs",
+    body: "Vous facturez depuis le devis accepté et corrigez par un avoir quand il le faut.",
   },
   {
-    title: "Le suivi de chaque dossier",
-    body: "Du premier contact à la livraison, sans quitter l’outil.",
+    title: "Les règlements et les clients",
+    body: "Ce qui est réglé, ce qui reste dû, et l’historique de chaque client.",
   },
   {
-    title: "L’historique de vos clients",
-    body: "Vos clients et leurs projets, au même endroit.",
+    title: "Des demandes déjà structurées",
+    body: "Un lien à partager : le client décrit son livre (type de projet, état, dimensions, photos) et vous recevez une fiche prête à chiffrer.",
   },
 ] as const;
 
@@ -79,28 +78,28 @@ export const RELIEUR_PRICING = {
 
 export const RELIEUR_FAQ = [
   {
-    question: "Mes clients doivent-ils créer un compte ?",
+    question: "Ma Reliure encaisse-t-il les paiements de mes clients ?",
     answer:
-      "Non. Ils ouvrent le lien que vous leur envoyez et suivent le parcours. Ils reçoivent ensuite un lien de suivi de leur projet.",
-  },
-  {
-    question: "Puis-je adapter le parcours à mon activité ?",
-    answer:
-      "Le parcours couvre la reliure, la restauration, la dorure et la création. Son adaptation à votre spécialité se prépare avec les premiers ateliers : dites-nous ce qu’il vous faut.",
+      "Non. Vous fixez vos prix, vous facturez et vous êtes payé directement par votre client. Ma Reliure ne perçoit rien sur vos ventes.",
   },
   {
     question: "Est-ce que je garde la relation avec mes clients ?",
     answer:
-      "Oui. Ma Reliure est votre outil, pas un intermédiaire : vos clients restent vos clients. Vous fixez vos prix, vous facturez et vous êtes payé directement.",
+      "Oui. Ma Reliure est votre outil, pas un intermédiaire : vos clients restent vos clients.",
+  },
+  {
+    question: "Mes clients doivent-ils créer un compte ?",
+    answer:
+      "Non. S’ils vous écrivent par votre lien, ils suivent un parcours guidé sans compte, puis reçoivent un lien de suivi de leur projet.",
   },
   {
     question: "Combien de temps pour mettre en place mon compte ?",
     answer:
-      "Vous créez votre compte atelier en quelques minutes, puis vous obtenez le lien de votre parcours à partager.",
+      "Vous créez votre compte atelier en quelques minutes, puis vous pouvez préparer vos premiers devis.",
   },
 ] as const;
 
 export const RELIEUR_FINAL = {
-  title: "Recevez des demandes prêtes à chiffrer.",
-  lead: "Créez votre compte atelier et partagez votre lien.",
+  title: "Vos devis et vos factures, au même endroit.",
+  lead: "Créez votre compte atelier.",
 } as const;

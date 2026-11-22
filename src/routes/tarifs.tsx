@@ -22,7 +22,7 @@ import { breadcrumbSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/struct
  */
 const TITLE = "Tarifs — Ma Reliure";
 const DESCRIPTION =
-  "Les tarifs de Ma Reliure, l’outil de devis et de suivi des relieurs et ateliers de restauration, arrivent bientôt.";
+  "Les tarifs de Ma Reliure, le logiciel de devis et factures des relieurs et ateliers de restauration, arrivent bientôt.";
 
 export const Route = createFileRoute("/tarifs")({
   head: () => ({

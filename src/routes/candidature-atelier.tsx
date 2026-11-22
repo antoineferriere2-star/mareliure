@@ -292,7 +292,7 @@ function CandidatureAtelierPage() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className={`${inputClass} resize-none`}
-                  placeholder="Spécialités, volume de projets, ce que vous attendez d'un outil de devis et de suivi…"
+                  placeholder="Spécialités, volume de projets, ce que vous attendez d'un logiciel de devis et factures…"
                 />
               </div>
 

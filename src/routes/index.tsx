@@ -29,9 +29,9 @@ const metreDescription =
 // Titre et description recomposés pour la recherche (octobre 2026) : les mots
 // que tape quelqu'un qui cherche — reliure, restauration, relieur — et ce qui
 // distingue le service, partout en France, prix annoncé avant engagement.
-const reliureTitle = "Devis et suivi pour relieurs et ateliers de restauration — Ma Reliure";
+const reliureTitle = "Logiciel de devis et factures pour relieurs — Ma Reliure";
 const reliureDescription =
-  "Vos clients décrivent leur livre, vous recevez un dossier prêt à chiffrer : type de projet, état, dimensions, budget, délai, photos. Puis vous suivez chaque projet jusqu'à la livraison.";
+  "Ma Reliure est le logiciel de devis et factures des relieurs et ateliers de restauration : devis, factures, avoirs et règlements suivis au même endroit. Vous êtes payé directement par vos clients.";
 
 function maReliureHead() {
   return {
