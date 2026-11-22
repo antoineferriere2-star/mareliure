@@ -3778,3 +3778,13 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - En-têtes et pieds de page : plus de « savoir-faire », « Pour les relieurs » ni annuaire. `/tarifs` devient un emplacement. Annuaire Fine Bindery supprimé : `/$locale/professionals` et `/professionnels` redirigent en 301 vers l'accueil de la langue, retirés du plan du site.
 - Hors périmètre, à décider à part : pages par besoin Ma Reliure (réparation, restauration…) et pages de savoir-faire Fine Bindery (leur texte est conservé dans `locales/disciplineCopy.ts`), pages de profil d'atelier, `partenaires-relieurs`, `candidature-atelier`, parcours client, pages légales (liste des clauses : `pivot-relieurs-plan-2026-11-22.md`).
 - Vérifié : typecheck sans nouvelle erreur (erreurs préexistantes : pglite, pdf-lib, standardwebhooks, Stripe absents de `node_modules`) ; 435 tests ciblés verts sauf `auth-email-hook.test.ts` (préexistant). Rendu navigateur non vérifié.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 22 novembre 2026, `feat/pivot-compte-atelier` (PR 2 du pivot « outil pour relieurs », empilée sur `feat/pivot-vitrines-relieurs`).
+
+- `/candidature-atelier` devient la page « Créer mon compte atelier » (URL, plan du site et canonique inchangés) : promesse de l'outil, trois étapes, bouton vers `/auth?space=atelier`. L'espace s'ouvre immédiatement, comme avant : aucune validation manuelle ajoutée.
+- La demande de contact (sans compte) est conservée, reformulée en « Vous préférez être recontacté d'abord ? » ; logique d'envoi, serveur et table inchangés.
+- Retirées de la page : « Ateliers partenaires » et « Ma Reliure décide ensuite quels ateliers reçoivent des projets ».
+- Non traité, PR 4+ : la page d'accès `/auth` et les e-mails disent encore que Ma Reliure valide l'accès aux nouveaux projets (comportement réel tant que le basculement technique n'est pas fait) ; `partenaires-relieurs` ; pages légales.
+- Vérifié : 327 tests ciblés verts sauf `auth-email-hook.test.ts` (préexistant, module absent). Rendu navigateur non vérifié pour cette page.

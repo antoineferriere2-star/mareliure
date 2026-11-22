@@ -74,6 +74,13 @@ describe("la candidature atelier", () => {
   it("déclare son adresse canonique", () => {
     expect(ROUTE).toContain('{ rel: "canonical", href: `${MARELIURE_CANONICAL_HOME}candidature-atelier` }');
   });
+
+  it("est la page « Créer mon compte atelier », sans promesse de la place de marché", () => {
+    const text = stripComments(ROUTE);
+    expect(text).toContain("WORKSHOP_SIGNUP_HREF");
+    expect(text).toContain("Créer mon compte atelier");
+    expect(text).not.toMatch(/reçoivent des projets|Ma Reliure décide|Ateliers partenaires/);
+  });
 });
 
 describe("l'image de partage", () => {
