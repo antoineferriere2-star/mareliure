@@ -1,5 +1,5 @@
 /**
- * Le visage public de Ma Reliure : l'outil de devis et de suivi des relieurs et
+ * Le visage public de Ma Reliure : le logiciel de devis et factures des relieurs et
  * des ateliers de restauration (pivot du 22 novembre 2026).
  *
  * Le visiteur de cette page est le relieur, pas le propriétaire du livre. Le
@@ -90,7 +90,7 @@ function BeforeAfter() {
 function HowItWorks() {
   return (
     <section id={ANCHORS.howItWorks} className={`${SHELL} scroll-mt-36 lg:scroll-mt-28 py-section-sm sm:py-section`}>
-      <SectionHead folio="II" eyebrow="Comment ça marche" title="Trois étapes, du lien au devis." />
+      <SectionHead folio="II" eyebrow="Comment ça marche" title="Trois étapes, du devis au règlement." />
       <ol className="mt-12 grid gap-10 sm:grid-cols-3 sm:gap-8 lg:mt-16 lg:gap-12">
         {RELIEUR_STEPS.map((step, index) => (
           <li key={step.title}>
@@ -108,7 +108,7 @@ function Features() {
   return (
     <section id={FEATURES_ANCHOR} className="scroll-mt-36 bg-mr-paper-warm lg:scroll-mt-28">
       <div className={`${SHELL} py-section-sm sm:py-section`}>
-        <SectionHead folio="III" eyebrow="Fonctionnalités" title="Ce que vous recevez, ce que vous suivez." />
+        <SectionHead folio="III" eyebrow="Fonctionnalités" title="Ce que le logiciel fait pour vous." />
         <dl className="mt-12 grid gap-x-12 gap-y-10 sm:grid-cols-2">
           {RELIEUR_FEATURES.map((feature) => (
             <div key={feature.title} className="border-t border-mr-rule-strong pt-5">

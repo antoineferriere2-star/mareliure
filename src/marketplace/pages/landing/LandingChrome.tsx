@@ -326,7 +326,7 @@ export function LandingFooter() {
           <div>
             <Wordmark />
             <p className="mr-small mt-6 max-w-[20rem] text-mr-graphite">
-              Le dossier prêt à chiffrer, pour les relieurs et les ateliers de restauration.
+              Devis et factures, pour les relieurs et les ateliers de restauration.
             </p>
           </div>
 
@@ -364,7 +364,7 @@ export function LandingFooter() {
         </div>
 
         <p className="mr-small mt-14 border-t border-mr-rule pt-8 text-mr-graphite">
-          {MARELIURE_BRAND} — l’outil de devis et de suivi des relieurs et ateliers de restauration.
+          {MARELIURE_BRAND} — le logiciel de devis et factures des relieurs et ateliers de restauration.
         </p>
       </div>
     </footer>
