@@ -3798,3 +3798,12 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - Frais de 3 % / Stripe Connect : `startMyWorkshopConnect`, `resumeMyWorkshopConnect` refusés ; `createMyInvoicePaymentLink` refusé sauf lien déjà ouvert (retrouver le lien). `OnlineInvoicePaymentPanel` n'apparaît plus que pour une facture ayant déjà un paiement ; `WorkshopConnectPanel` devient une note sans configuration Stripe.
 - NON fait (lots suivants) : retrait du code et des tables (own_client, legacy_resale, frais, prix gérés), `/conditions-ateliers`, `partnersContent`, tableau de bord admin (mentionnent encore 3 %), e-mails, Sendcloud, flags `online_payment_open` / `connect_onboarding_open` en base (à fermer après les derniers paiements engagés). Vérifier en prod, avant de retirer le code, combien de liens de paiement ouverts restent à terminer.
 - Vérifié : 695 tests ciblés verts (commercial, stripe, pages, services) ; 16 fichiers ne se chargent pas (pglite/pdf-lib absents de `node_modules`, préexistant, 7 d'entre eux déjà avant ce lot dans le périmètre commercial/stripe/pages) ; aucun nouveau type d'erreur dans les fichiers touchés. Rendu navigateur non vérifié.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 22 novembre 2026, `feat/pivot-lot-auth-emails` (PR 4, lot 2 « accès atelier » du pivot « outil pour relieurs »).
+
+- Constat vérifié dans le code : seul `requireLeadApprovedBinderId` exige un atelier `approved` (accès aux projets transmis par la plateforme) ; devis, ouvrages, clients et dossiers fonctionnent dès la création de l'espace. Les textes qui parlaient d'une validation avant usage étaient donc faux pour le relieur.
+- Réécrits : page d'accès `MaReliureAuthPage` (Ma Reliure FR ; Fine Bindery EN, FR, DE, IT, ES — mot d'accueil et chapô), `/activer-mon-atelier` (plus de « leads », plus de « à valider »), ligne « Accès aux demandes » du tableau de bord atelier en 5 langues (facultatif ; les clients passent par le lien du relieur), onglet « Atelier partenaire » → « Atelier », eyebrow de l'invitation.
+- Inchangé : e-mails d'authentification et d'invitation (aucune promesse de validation), logique d'approbation côté serveur (l'approbation reste utile pour les projets transmis tant que le rapprochement n'est pas retiré), vues admin.
+- Vérifié : 384 tests ciblés verts (pages, auth, routes) hors `auth-email-hook.test.ts` (module absent, préexistant) ; nouveau test de contrat sur les trois fichiers. Rendu navigateur non vérifié.

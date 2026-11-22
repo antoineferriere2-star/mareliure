@@ -84,7 +84,7 @@ function ActivateMyWorkshop() {
         <p className="mr-lead mt-6">
           {invitations && invitations.length > 0
             ? "Une invitation Ma Reliure vous attend. Activez-la pour rejoindre cet atelier."
-            : "Créez votre espace de travail en quelques instants. Vous pourrez préparer vos prestations et vos devis ; Ma Reliure validera votre atelier avant de lui confier des leads."}
+            : "Créez votre espace de travail en quelques instants. Vous pouvez préparer vos prestations, vos devis, vos clients et vos dossiers dès maintenant, sans attendre de validation."}
         </p>
         {error && <p role="alert" className="mr-small mt-6 border-l-2 border-mr-bordeaux pl-4 text-mr-bordeaux">{error}</p>}
         {!invitations && !error && <p role="status" className="mr-small mt-8">Recherche de votre invitation…</p>}
@@ -106,7 +106,7 @@ function ActivateMyWorkshop() {
               <input maxLength={100} autoComplete="address-level2" value={city} onChange={(event) => setCity(event.target.value)}
                 className="mt-2 w-full rounded-[2px] border border-mr-rule-strong bg-white px-3.5 py-3 text-[1rem] font-normal" />
             </label>
-            <p className="mr-small text-mr-muted">Votre atelier sera « à valider ». L'admin autorisera séparément l'accès aux leads.</p>
+            <p className="mr-small text-mr-muted">Votre espace s'ouvre immédiatement. Vos clients passent par votre propre lien de prise de projet.</p>
             <button type="submit" disabled={loading !== null}
               className="inline-flex min-h-11 items-center rounded-[2px] bg-mr-ink px-6 py-3 font-semibold text-mr-paper disabled:opacity-60">
               {loading === "new" ? "Création…" : "Créer mon espace atelier"}
