@@ -46,7 +46,9 @@ describe("FineBindery European i18n", () => {
       const copy = fineBinderyCopy(locale);
       expect(copy.home.title.length).toBeGreaterThan(20);
       expect(copy.home.offers).toHaveLength(4);
-      expect(copy.home.steps).toHaveLength(6);
+      expect(copy.home.steps).toHaveLength(3);
+      expect(copy.home.features).toHaveLength(4);
+      expect(copy.home.pricingTitle.length).toBeGreaterThan(5);
       expect(copy.home.faq.length).toBeGreaterThanOrEqual(4);
       expect(copy.profile.discuss).not.toMatch(/TODO_TRANSLATE|Google Translate/i);
     }

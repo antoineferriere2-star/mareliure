@@ -41,7 +41,6 @@ export const MARELIURE_ENTRIES: SitemapEntry[] = [
 export const FINE_BINDERY_ENTRIES: SitemapEntry[] = [
   ...FINE_BINDERY_LOCALES.flatMap((locale) => [
     { path: `/${locale}`, changefreq: "weekly" as const, priority: locale === "en" ? "1.0" : "0.9" },
-    { path: `/${locale}/professionals`, changefreq: "weekly" as const, priority: "0.9" },
     ...DISCIPLINES.map((discipline) => ({ path: `/${locale}/${discipline.slug}`, changefreq: "monthly" as const, priority: "0.8" })),
   ]),
   { path: "/legal-notice", changefreq: "yearly", priority: "0.3" },
@@ -60,7 +59,7 @@ export type PageOwner = "MA_RELIURE" | "FINE_BINDERY";
  */
 export const LEGACY_PAGE_REDIRECTS: Record<string, { owner: PageOwner; path: string }> = {
   "/reliure": { owner: "MA_RELIURE", path: "/" },
-  "/professionnels": { owner: "FINE_BINDERY", path: "/fr/professionals" },
+  "/professionnels": { owner: "FINE_BINDERY", path: "/fr" },
   "/fine-bindery": { owner: "FINE_BINDERY", path: "/en" },
 };
 

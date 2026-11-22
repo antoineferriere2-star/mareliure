@@ -144,13 +144,19 @@ describe("refonte des sites publics — captures produit et Fine Bindery", () =>
     expect(source).not.toMatch(/#[0-9a-fA-F]{6}\b/);
   });
 
-  it.each(["en", "fr", "de", "it", "es"])("Fine Bindery (%s) dit que le réseau ouvre en France, et ne parle plus de conciergerie", async (locale) => {
+  /**
+   * Pivot du 22 novembre 2026 : l'accueil parle au relieur. Il ne promet plus
+   * de choisir l'atelier, ne parle plus de réseau ni de commission, et ne
+   * publie aucun montant de tarif.
+   */
+  it.each(["en", "fr", "de", "it", "es"])("l'accueil Fine Bindery (%s) est celui de l'outil des relieurs", async (locale) => {
     const { fineBinderyCopy } = await import("@/marketplace/i18n/fineBinderyCopy");
     const copy = fineBinderyCopy(locale as never);
-    expect(copy.home.networkNote.length).toBeGreaterThan(40);
-    expect(copy.directory.openingNote).toBe(copy.home.networkNote);
-    expect(JSON.stringify(copy)).not.toMatch(/concierge|conciergerie|Concierge|conserjer/i);
-    expect(copy.home.paths).toHaveLength(2);
+    const home = JSON.stringify({ ...copy.home, offers: undefined, offersTitle: undefined, offersEyebrow: undefined, discover: undefined, photoCredit: undefined, shippingEyebrow: undefined, shippingTitle: undefined, shippingLead: undefined });
+    expect(copy.home.steps).toHaveLength(3);
+    expect(home).not.toMatch(/concierge|conciergerie|conserjer|commission|mise en relation/i);
+    // Les montants n'apparaissent que dans l'exemple illustratif, jamais dans le bloc tarifs.
+    expect(copy.home.pricingTitle + copy.home.pricingBody).not.toMatch(/[0-9]/);
   });
 
   it("la page relieurs parle de projets Ma Reliure, jamais de « leads »", () => {

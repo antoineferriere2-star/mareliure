@@ -29,9 +29,9 @@ const metreDescription =
 // Titre et description recomposés pour la recherche (octobre 2026) : les mots
 // que tape quelqu'un qui cherche — reliure, restauration, relieur — et ce qui
 // distingue le service, partout en France, prix annoncé avant engagement.
-const reliureTitle = "Reliure et restauration de livres par des artisans — Ma Reliure";
+const reliureTitle = "Devis et suivi pour relieurs et ateliers de restauration — Ma Reliure";
 const reliureDescription =
-  "Réparation, restauration, reliure ou création : présentez votre livre en quelques minutes. Ma Reliure le confie à l'artisan relieur adapté, partout en France.";
+  "Vos clients décrivent leur livre, vous recevez un dossier prêt à chiffrer : type de projet, état, dimensions, budget, délai, photos. Puis vous suivez chaque projet jusqu'à la livraison.";
 
 function maReliureHead() {
   return {
@@ -94,9 +94,9 @@ function metreHead() {
   };
 }
 
-const fineBinderyTitle = "Fine Bindery — Exceptional French Bookbinding";
+const fineBinderyTitle = "Fine Bindery — quotes and project tracking for bookbinders";
 const fineBinderyDescription =
-  "The European network for bookbinding and book conservation. Discover independent ateliers, present your project and work with the right one — opening in France.";
+  "Your clients describe their book, you receive a brief that’s ready to quote. Fine Bindery is the quote and project tool for bookbinders and conservation workshops.";
 
 /**
  * La racine de finebindery.com affiche l'accueil anglais, mot pour mot celui de
