@@ -3788,3 +3788,13 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - Retirées de la page : « Ateliers partenaires » et « Ma Reliure décide ensuite quels ateliers reçoivent des projets ».
 - Non traité, PR 4+ : la page d'accès `/auth` et les e-mails disent encore que Ma Reliure valide l'accès aux nouveaux projets (comportement réel tant que le basculement technique n'est pas fait) ; `partenaires-relieurs` ; pages légales.
 - Vérifié : 327 tests ciblés verts sauf `auth-email-hook.test.ts` (préexistant, module absent). Rendu navigateur non vérifié pour cette page.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 22 novembre 2026, `feat/pivot-lot-paiements` (PR 4, lot 1 « paiements » du pivot « outil pour relieurs »).
+
+- Fin des NOUVEAUX encaissements par la plateforme, sans migration ni écriture en base. Nouveau `src/marketplace/commercial/paymentPivot.ts` : date de bascule `PAYMENT_PIVOT_AT` (22/11/2026), `createdAfterPaymentPivot` (fail closed sur date illisible), interrupteur `WORKSHOP_ONLINE_PAYMENT_OPENING_RETIRED`.
+- Checkout de proposition (revente Oppe) : `createCheckoutForCase` répond 409 pour un dossier créé à partir de la bascule ; un dossier antérieur se termine aux conditions d'origine.
+- Frais de 3 % / Stripe Connect : `startMyWorkshopConnect`, `resumeMyWorkshopConnect` refusés ; `createMyInvoicePaymentLink` refusé sauf lien déjà ouvert (retrouver le lien). `OnlineInvoicePaymentPanel` n'apparaît plus que pour une facture ayant déjà un paiement ; `WorkshopConnectPanel` devient une note sans configuration Stripe.
+- NON fait (lots suivants) : retrait du code et des tables (own_client, legacy_resale, frais, prix gérés), `/conditions-ateliers`, `partnersContent`, tableau de bord admin (mentionnent encore 3 %), e-mails, Sendcloud, flags `online_payment_open` / `connect_onboarding_open` en base (à fermer après les derniers paiements engagés). Vérifier en prod, avant de retirer le code, combien de liens de paiement ouverts restent à terminer.
+- Vérifié : 695 tests ciblés verts (commercial, stripe, pages, services) ; 16 fichiers ne se chargent pas (pglite/pdf-lib absents de `node_modules`, préexistant, 7 d'entre eux déjà avant ce lot dans le périmètre commercial/stripe/pages) ; aucun nouveau type d'erreur dans les fichiers touchés. Rendu navigateur non vérifié.

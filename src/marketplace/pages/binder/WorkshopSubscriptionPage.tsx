@@ -190,7 +190,7 @@ export function WorkshopSubscriptionPage() {
           </ul>
         </section>
       )}
-      <WorkshopConnectPanel open={settings.online_payment_open} onboardingOpen={settings.connect_onboarding_open} isOwner={isOwner} />
+      <WorkshopConnectPanel />
     </div>
   );
 }

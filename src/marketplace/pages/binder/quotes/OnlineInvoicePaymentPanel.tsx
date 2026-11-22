@@ -34,6 +34,9 @@ export function OnlineInvoicePaymentPanel({ doc }: { doc: DocumentView }) {
     onSuccess: () => client.invalidateQueries({ queryKey: ["invoice-online-payment", doc.id] }),
   });
   const p = query.data?.payment;
+  // Pivot du 22 novembre 2026 : plus de nouveau paiement en ligne. Le panneau n'existe plus que
+  // pour une facture dont le lien a déjà été ouvert, qui se termine aux conditions d'origine.
+  if (!p) return null;
   return (
     <section className={CARD}>
       <h2 className="font-serif text-lg">Paiement traité par Stripe</h2>
@@ -108,18 +111,13 @@ export function OnlineInvoicePaymentPanel({ doc }: { doc: DocumentView }) {
             ))}
         </div>
       ) : null}
-      {query.data && !query.data.open && (
-        <p className="mt-3">Le paiement en ligne n’est pas encore ouvert.</p>
-      )}
-      {(p || query.data?.open) && (
-        <button
-          className={`${PRIMARY_BUTTON} mt-4`}
-          disabled={create.isPending}
-          onClick={() => create.mutate()}
-        >
-          {p ? "Retrouver le lien client et les documents" : "Générer le lien de paiement client"}
-        </button>
-      )}
+      <button
+        className={`${PRIMARY_BUTTON} mt-4`}
+        disabled={create.isPending}
+        onClick={() => create.mutate()}
+      >
+        Retrouver le lien client et les documents
+      </button>
       {url && (
         <div className="mt-3">
           <label className="block text-sm" htmlFor="workshop-payment-link">

@@ -35,6 +35,7 @@ import {
   checkoutEligibility,
   statementDescriptorSuffixForBrand,
 } from "./checkoutPlan";
+import { createdAfterPaymentPivot, PLATFORM_PAYMENTS_RETIRED_MESSAGE } from "@/marketplace/commercial/paymentPivot";
 import { getStripeProductIds } from "./stripeConfig.server";
 import { assertExpectedStripeAccount, getMarketplaceStripeClient } from "./stripeClient.server";
 
@@ -92,6 +93,8 @@ export async function createCheckoutForCase(input: {
     });
     if (!canView) fail(403, "Forbidden");
     if (await isTestCase(sb, data.caseId)) fail(409, TEST_WORKSHOP_PROVIDER_REFUSED);
+    // Pivot du 22 novembre 2026 : plus aucun nouvel encaissement par la plateforme.
+    if (createdAfterPaymentPivot(caseContext.row.created_at)) fail(409, PLATFORM_PAYMENTS_RETIRED_MESSAGE);
 
     const proposal = await loadAcceptedCommercialProposal(sb, data.caseId);
     if (!proposal) fail(409, "Aucune proposition commerciale acceptée pour ce dossier.");
