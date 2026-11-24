@@ -8,7 +8,7 @@ export const it: FineBinderyPublicCopy = {
   seo: itSeo,
   nav: { features: "Funzionalità", pricing: "Prezzi", how: "Come funziona", services: "Competenze", workshops: itDirectoryLabel, faq: "Domande", signIn: "Accedi", language: "Lingua", menu: "Menu" },
   common: { signup: "Crea il mio account laboratorio", start: itProjectStart, project: "Progetto", france: "Francia", skills: "Competenze", languages: "Lingue", techniques: "Tecniche e materiali", originalText: "Testo del laboratorio nella lingua originale." },
-  footer: { summary: "Lo strumento di preventivo e monitoraggio per legatori e laboratori di restauro.", information: "Informazioni", legal: "Note legali", privacy: "Privacy", terms: "Condizioni d’uso", sales: "Condizioni di vendita", closing: "Scheda, preventivo e monitoraggio per legatori e restauratori." },
+  footer: { summary: "Il software per preventivi e fatture di legatori e laboratori di restauro.", information: "Informazioni", legal: "Note legali", privacy: "Privacy", terms: "Condizioni d’uso", sales: "Condizioni di vendita", closing: "Scheda, preventivo e monitoraggio per legatori e restauratori." },
   home: { ...FINE_BINDERY_HOME.it, ...FINE_BINDERY_DISCIPLINE_COPY.it },
   directory: {
     eyebrow: "La rete", title: "Legatori e restauratori, scelti per il loro mestiere.",

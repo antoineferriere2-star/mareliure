@@ -8,7 +8,7 @@ export const de: FineBinderyPublicCopy = {
   seo: deSeo,
   nav: { features: "Funktionen", pricing: "Preise", how: "Ablauf", services: "Fachgebiete", workshops: deDirectoryLabel, faq: "Fragen", signIn: "Anmelden", language: "Sprache", menu: "Menü" },
   common: { signup: "Werkstattkonto anlegen", start: deProjectStart, project: "Projekt", france: "Frankreich", skills: "Fachgebiete", languages: "Sprachen", techniques: "Techniken und Materialien", originalText: "Werkstatttext in der Originalsprache." },
-  footer: { summary: "Das Werkzeug für Angebot und Projektverfolgung von Buchbindern und Restaurierungswerkstätten.", information: "Informationen", legal: "Impressum", privacy: "Datenschutz", terms: "Nutzungsbedingungen", sales: "Verkaufsbedingungen", closing: "Dossier, Angebot und Verfolgung für Buchbinder und Restauratoren." },
+  footer: { summary: "Die Software für Angebote und Rechnungen von Buchbindern und Restaurierungswerkstätten.", information: "Informationen", legal: "Impressum", privacy: "Datenschutz", terms: "Nutzungsbedingungen", sales: "Verkaufsbedingungen", closing: "Dossier, Angebot und Verfolgung für Buchbinder und Restauratoren." },
   home: { ...FINE_BINDERY_HOME.de, ...FINE_BINDERY_DISCIPLINE_COPY.de },
   directory: {
     eyebrow: "Das Netzwerk", title: "Buchbinder und Restauratoren, ausgewählt für ihr Handwerk.",

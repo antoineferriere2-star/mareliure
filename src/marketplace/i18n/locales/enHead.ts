@@ -2,8 +2,8 @@ import type { FineBinderyPublicCopy } from "./types";
 import { FINE_BINDERY_HOME } from "./homeCopy";
 
 export const enSeo: FineBinderyPublicCopy["seo"] = {
-    homeTitle: "Fine Bindery — quotes and project tracking for bookbinders",
-    homeDescription: "Your clients describe their book, you receive a brief that’s ready to quote. Fine Bindery is the quote and project tool for bookbinders and conservation workshops.",
+    homeTitle: "Fine Bindery — quote and invoice software for bookbinders",
+    homeDescription: "Fine Bindery is the quote and invoice software for bookbinders and conservation workshops: quotes, invoices, credit notes and payments tracked in one place. You are paid directly by your clients.",
     directoryTitle: "Bookbinders & book conservators — Fine Bindery",
     directoryDescription: "Browse independent ateliers for bookbinding, restoration, conservation and gilding, and present your project directly to one of them.",
     profileTitle: (w) => `${w} — Bookbinding and restoration | Fine Bindery`,

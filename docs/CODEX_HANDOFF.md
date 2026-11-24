@@ -3817,3 +3817,13 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - Titre et description SEO de la racine, `/tarifs`, pied de page, page « Créer mon compte atelier » alignés. Plus aucun montant sur la page (l'exemple 250–400 € disparaît).
 - NON fait : Fine Bindery (EN, FR, DE, IT, ES) garde l'ancien discours « devis et suivi » ; pages par besoin et légales inchangées.
 - Vérifié : 332 tests ciblés verts hors `auth-email-hook.test.ts` (préexistant) ; rendu local de l'accueil contrôlé (titre, sections, absence de l'ancien texte).
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 24 novembre 2026, `feat/accueil-fb-devis-facture` (accueil Fine Bindery : « logiciel de devis et factures », 5 langues).
+
+- Même réécriture que l'accueil Ma Reliure (#209) : hero, bloc « en pratique » (devis, facture, avoir, règlement, client), trois étapes devis / facture / règlements, quatre fonctionnalités, FAQ (« Fine Bindery encaisse-t-il les paiements ? » Non), appel final. EN, FR, DE, IT, ES ; l'anglais est la référence.
+- Titres et descriptions SEO (`enHead` … `esHead`, fallback de `src/routes/index.tsx`) et résumés de pied de page alignés. Plus aucun montant sur la page.
+- Traductions DE, IT, ES rédigées par Claude : relecture par un natif conseillée.
+- Non traité : pages de savoir-faire par discipline Fine Bindery, pages légales.
+- Vérifié : 375 tests ciblés verts (i18n, pages, brand, routes) hors `auth-email-hook.test.ts` (préexistant) ; rendu local des cinq accueils (titre, titre de page).

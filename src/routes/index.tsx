@@ -94,9 +94,9 @@ function metreHead() {
   };
 }
 
-const fineBinderyTitle = "Fine Bindery — quotes and project tracking for bookbinders";
+const fineBinderyTitle = "Fine Bindery — quote and invoice software for bookbinders";
 const fineBinderyDescription =
-  "Your clients describe their book, you receive a brief that’s ready to quote. Fine Bindery is the quote and project tool for bookbinders and conservation workshops.";
+  "Fine Bindery is the quote and invoice software for bookbinders and conservation workshops: quotes, invoices, credit notes and payments tracked in one place. You are paid directly by your clients.";
 
 /**
  * La racine de finebindery.com affiche l'accueil anglais, mot pour mot celui de

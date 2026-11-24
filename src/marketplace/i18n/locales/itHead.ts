@@ -2,8 +2,8 @@ import type { FineBinderyPublicCopy } from "./types";
 import { FINE_BINDERY_HOME } from "./homeCopy";
 
 export const itSeo: FineBinderyPublicCopy["seo"] = {
-    homeTitle: "Fine Bindery — preventivi e monitoraggio per legatori",
-    homeDescription: "I vostri clienti descrivono il loro libro, voi ricevete una scheda pronta per il preventivo. Fine Bindery è lo strumento di preventivo e monitoraggio per legatori e laboratori di restauro.",
+    homeTitle: "Fine Bindery — software per preventivi e fatture per legatori",
+    homeDescription: "Fine Bindery è il software per preventivi e fatture di legatori e laboratori di restauro: preventivi, fatture, note di credito e pagamenti seguiti nello stesso posto. Siete pagati direttamente dai vostri clienti.",
     directoryTitle: "Legatori e restauratori di libri — Fine Bindery",
     directoryDescription: "Scopri laboratori indipendenti di legatoria, restauro, conservazione e doratura, e presenta il tuo progetto direttamente a uno di loro.",
     profileTitle: (w) => `${w} — Legatoria e restauro | Fine Bindery`,

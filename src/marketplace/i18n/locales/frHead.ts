@@ -2,8 +2,8 @@ import type { FineBinderyPublicCopy } from "./types";
 import { FINE_BINDERY_HOME } from "./homeCopy";
 
 export const frSeo: FineBinderyPublicCopy["seo"] = {
-    homeTitle: "Fine Bindery — devis et suivi pour relieurs",
-    homeDescription: "Vos clients décrivent leur livre, vous recevez un dossier prêt à chiffrer. Fine Bindery est l’outil de devis et de suivi des relieurs et des ateliers de restauration.",
+    homeTitle: "Fine Bindery — logiciel de devis et factures pour relieurs",
+    homeDescription: "Fine Bindery est le logiciel de devis et factures des relieurs et des ateliers de restauration : devis, factures, avoirs et règlements suivis au même endroit. Vous êtes payé directement par vos clients.",
     directoryTitle: "Relieurs et restaurateurs de livres — Fine Bindery",
     directoryDescription: "Parcourez des ateliers indépendants de reliure, restauration, conservation et dorure, et présentez votre projet directement à l’un d’eux.",
     profileTitle: (w) => `${w} — Reliure et restauration | Fine Bindery`,

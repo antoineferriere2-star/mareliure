@@ -2,8 +2,8 @@ import type { FineBinderyPublicCopy } from "./types";
 import { FINE_BINDERY_HOME } from "./homeCopy";
 
 export const deSeo: FineBinderyPublicCopy["seo"] = {
-    homeTitle: "Fine Bindery — Angebot und Projektverfolgung für Buchbinder",
-    homeDescription: "Ihre Kunden beschreiben ihr Buch, Sie erhalten ein kalkulierbares Dossier. Fine Bindery ist das Werkzeug für Angebot und Projektverfolgung von Buchbindern und Restaurierungswerkstätten.",
+    homeTitle: "Fine Bindery — Software für Angebote und Rechnungen für Buchbinder",
+    homeDescription: "Fine Bindery ist die Software für Angebote und Rechnungen von Buchbindern und Restaurierungswerkstätten: Angebote, Rechnungen, Gutschriften und Zahlungen an einem Ort. Sie werden direkt von Ihren Kunden bezahlt.",
     directoryTitle: "Buchbinder und Buchrestauratoren — Fine Bindery",
     directoryDescription: "Entdecken Sie unabhängige Werkstätten für Buchbinderei, Restaurierung, Konservierung und Vergoldung und stellen Sie Ihr Projekt direkt einer von ihnen vor.",
     profileTitle: (w) => `${w} — Buchbinderei und Restaurierung | Fine Bindery`,
