@@ -116,7 +116,7 @@ function CandidatureAtelierPage() {
         <h1 className="mr-title mt-4 text-mr-ink">{WORKSHOP_SIGNUP_LABEL}</h1>
         <p className="mr-lead mt-5">
           Créez votre compte avec votre adresse e-mail : le lien et le code reçus la vérifient, puis vous renseignez le nom de votre atelier.
-          Votre espace s'ouvre immédiatement. Les tarifs arrivent bientôt.
+          Votre espace s'ouvre immédiatement, avec un essai gratuit de quinze jours et sans carte bancaire. Les tarifs arrivent bientôt.
         </p>
         <ol className="mt-8 space-y-5 border-y border-mr-rule py-8">
           {RELIEUR_STEPS.map((step, index) => (

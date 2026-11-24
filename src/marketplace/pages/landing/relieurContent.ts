@@ -73,7 +73,7 @@ export const RELIEUR_FEATURES = [
 export const RELIEUR_PRICING = {
   eyebrow: "Tarifs",
   title: "Les tarifs arrivent bientôt.",
-  body: "Nous les fixons avec le premier cercle d’ateliers qui utilise l’outil. En attendant, vous pouvez créer votre compte atelier.",
+  body: "Votre compte atelier s’ouvre avec un essai gratuit de quinze jours, sans carte bancaire. Les tarifs, nous les fixons avec le premier cercle d’ateliers qui utilise l’outil.",
 } as const;
 
 export const RELIEUR_FAQ = [
