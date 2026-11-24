@@ -37,7 +37,7 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Requests already structured", body: "A link to share: the client describes their book (project type, condition, dimensions, photos) and you receive a brief ready to quote." },
     ],
     pricingEyebrow: "Pricing", pricingTitle: "Pricing is coming soon.",
-    pricingBody: "We are setting it with the first circle of workshops using the tool. In the meantime, you can try Fine Bindery.",
+    pricingBody: "Your workshop account opens with a free fifteen-day trial, no credit card needed. We are setting the price with the first circle of workshops using the tool.",
     faqEyebrow: "Questions", faqTitle: "Before you start.",
     faq: [
       { question: "Does Fine Bindery collect my clients’ payments?", answer: "No. You set your prices, you invoice and you are paid directly by your client. Fine Bindery takes nothing on your sales." },
@@ -75,7 +75,7 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Des demandes déjà structurées", body: "Un lien à partager : le client décrit son livre (type de projet, état, dimensions, photos) et vous recevez une fiche prête à chiffrer." },
     ],
     pricingEyebrow: "Tarifs", pricingTitle: "Les tarifs arrivent bientôt.",
-    pricingBody: "Nous les fixons avec le premier cercle d’ateliers qui utilise l’outil. En attendant, vous pouvez essayer Fine Bindery.",
+    pricingBody: "Votre compte atelier s’ouvre avec un essai gratuit de quinze jours, sans carte bancaire. Les tarifs, nous les fixons avec le premier cercle d’ateliers qui utilise l’outil.",
     faqEyebrow: "Questions", faqTitle: "Avant de vous lancer.",
     faq: [
       { question: "Fine Bindery encaisse-t-il les paiements de mes clients ?", answer: "Non. Vous fixez vos prix, vous facturez et vous êtes payé directement par votre client. Fine Bindery ne perçoit rien sur vos ventes." },
@@ -113,7 +113,7 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Bereits strukturierte Anfragen", body: "Ein Link zum Teilen: Der Kunde beschreibt sein Buch (Projektart, Zustand, Maße, Fotos), und Sie erhalten ein Dossier, das sofort kalkulierbar ist." },
     ],
     pricingEyebrow: "Preise", pricingTitle: "Die Preise folgen in Kürze.",
-    pricingBody: "Wir legen sie mit dem ersten Kreis von Werkstätten fest, die das Werkzeug nutzen. Bis dahin können Sie Fine Bindery ausprobieren.",
+    pricingBody: "Ihr Werkstattkonto startet mit einer kostenlosen Testphase von fünfzehn Tagen, ohne Kreditkarte. Die Preise legen wir mit dem ersten Kreis von Werkstätten fest, die das Werkzeug nutzen.",
     faqEyebrow: "Fragen", faqTitle: "Bevor Sie starten.",
     faq: [
       { question: "Zieht Fine Bindery die Zahlungen meiner Kunden ein?", answer: "Nein. Sie legen Ihre Preise fest, stellen die Rechnung und werden direkt von Ihrem Kunden bezahlt. Fine Bindery erhält nichts von Ihren Verkäufen." },
@@ -151,7 +151,7 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Richieste già strutturate", body: "Un link da condividere: il cliente descrive il suo libro (tipo di progetto, stato, dimensioni, foto) e voi ricevete una scheda pronta per il preventivo." },
     ],
     pricingEyebrow: "Prezzi", pricingTitle: "I prezzi arriveranno presto.",
-    pricingBody: "Li definiamo con la prima cerchia di laboratori che usa lo strumento. Nel frattempo potete provare Fine Bindery.",
+    pricingBody: "Il vostro account laboratorio si apre con una prova gratuita di quindici giorni, senza carta di credito. I prezzi li definiamo con la prima cerchia di laboratori che usa lo strumento.",
     faqEyebrow: "Domande", faqTitle: "Prima di iniziare.",
     faq: [
       { question: "Fine Bindery incassa i pagamenti dei miei clienti?", answer: "No. Fissate voi i prezzi, fatturate e siete pagati direttamente dal vostro cliente. Fine Bindery non trattiene nulla sulle vostre vendite." },
@@ -189,7 +189,7 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Solicitudes ya estructuradas", body: "Un enlace para compartir: el cliente describe su libro (tipo de proyecto, estado, dimensiones, fotos) y usted recibe una ficha lista para presupuestar." },
     ],
     pricingEyebrow: "Precios", pricingTitle: "Los precios llegarán pronto.",
-    pricingBody: "Los fijamos con el primer círculo de talleres que usa la herramienta. Mientras tanto, puede probar Fine Bindery.",
+    pricingBody: "Su cuenta de taller se abre con una prueba gratuita de quince días, sin tarjeta. Los precios los fijamos con el primer círculo de talleres que usa la herramienta.",
     faqEyebrow: "Preguntas", faqTitle: "Antes de empezar.",
     faq: [
       { question: "¿Fine Bindery cobra los pagos de mis clientes?", answer: "No. Usted fija sus precios, factura y cobra directamente de su cliente. Fine Bindery no percibe nada de sus ventas." },

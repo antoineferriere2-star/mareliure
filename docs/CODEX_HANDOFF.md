@@ -3827,3 +3827,15 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - Traductions DE, IT, ES rédigées par Claude : relecture par un natif conseillée.
 - Non traité : pages de savoir-faire par discipline Fine Bindery, pages légales.
 - Vérifié : 375 tests ciblés verts (i18n, pages, brand, routes) hors `auth-email-hook.test.ts` (préexistant) ; rendu local des cinq accueils (titre, titre de page).
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 24 novembre 2026, `feat/essai-15-jours` (essai gratuit de 15 jours à l'inscription d'un atelier).
+
+- Décision d'Antoine : 15 jours d'essai gratuit après l'inscription ; en fin d'essai, lecture seule (consultation et téléchargement gardés, plus de création de devis, de facture ni de publication de vitrine) ; aucune carte demandée. Les ateliers déjà inscrits restent gratuits.
+- **Migration `20261124100000_workshop_trial_15_days.sql`, NON APPLIQUÉE** (à poser par Codex après relecture) : colonne `trial_ends_at` ; les lignes sans abonnement Stripe passent `legacy_free = true` (premier cercle, Ferrière comprise) ; le trigger d'initialisation donne `now() + 15 jours` à tout nouvel atelier ; `marketplace_workshop_can_create` compte l'essai. Vérifiée sur un schéma réduit sous PGlite : atelier existant gratuit, abonné Stripe intact, nouvel atelier à 15 jours, droit de créer vrai pendant l'essai, faux après sa fin quand `subscription_open` est ouvert.
+- **Aucun blocage aujourd'hui** : tant que `subscription_open` est faux, tout le monde peut créer. La fin d'essai ne s'applique qu'à l'ouverture de l'abonnement payant (prix, TVA et conditions Stripe restent à valider : `WORKSHOP_SUBSCRIPTION_TAX_APPROVED`, `WORKSHOP_SUBSCRIPTION_TERMS_READY`). Ne pas ouvrir l'abonnement avant d'avoir de quoi payer.
+- Code : `workshopTrial` et `WORKSHOP_TRIAL_DAYS` dans `billing/workshopSubscription.ts`, `workshopCanCreate` accepte `trial_ends_at` ; page « Abonnement » de l'atelier affiche les jours restants ; types Supabase mis à jour à la main (`trial_ends_at`).
+- Textes publics (« essai gratuit de quinze jours, sans carte ») : tarifs de l'accueil Ma Reliure, Fine Bindery EN/FR/DE/IT/ES, page « Créer mon compte atelier ». Écrit en lettres pour respecter le test « aucun chiffre dans le bloc tarifs ».
+- Non fait : e-mail de rappel avant la fin de l'essai ; bandeau du compte à rebours dans les autres pages de l'espace atelier ; prix publié.
+- Vérifié : 364 tests ciblés verts (billing, pages, i18n, routes) ; 3 fichiers de migration PGlite et `auth-email-hook` ne se chargent pas (modules absents, préexistant). Rendu navigateur non vérifié.

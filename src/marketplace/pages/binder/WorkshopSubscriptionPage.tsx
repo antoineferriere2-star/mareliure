@@ -11,6 +11,7 @@ import {
 import { BinderPageHeader, BinderLoading } from "./BinderPageUi";
 import { CARD, ErrorNote, PRIMARY_BUTTON } from "./quotes/quoteUi";
 import { SUBSCRIPTION_LABEL } from "@/marketplace/offer/workshopOffer";
+import { workshopTrial } from "@/marketplace/billing/workshopSubscription";
 import { downloadPdf, euros } from "@/marketplace/quotes/quoteFormat";
 
 export function WorkshopSubscriptionPage() {
@@ -34,6 +35,7 @@ export function WorkshopSubscriptionPage() {
   if (query.isPending) return <BinderLoading label="Chargement de votre abonnement…" />;
   if (!query.data) return <ErrorNote>L’abonnement n’a pas pu être chargé.</ErrorNote>;
   const { subscription: s, settings, canCreate, isOwner } = query.data;
+  const trial = workshopTrial(s);
   return (
     <div className="space-y-6">
       <BinderPageHeader
@@ -50,7 +52,9 @@ export function WorkshopSubscriptionPage() {
         <p className="mt-3">
           {s.legacy_free
             ? "Votre atelier bénéficie de la gratuité. Aucun prélèvement sans votre accord explicite."
-            : !settings.subscription_open
+            : trial.active
+              ? `Essai gratuit de 15 jours : il vous reste ${trial.daysLeft} jour${trial.daysLeft > 1 ? "s" : ""}, jusqu’au ${new Date(trial.endsAt as string).toLocaleDateString("fr-FR")}. Aucune carte bancaire n’est demandée et aucun prélèvement n’a lieu sans votre accord explicite.`
+              : !settings.subscription_open
               ? "Votre accès est disponible pendant la préparation de l’offre payante. Aucun prélèvement sans votre accord."
               : canCreate
                 ? "Votre abonnement est actif."
