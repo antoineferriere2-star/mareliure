@@ -8,7 +8,7 @@ export const fr: FineBinderyPublicCopy = {
   seo: frSeo,
   nav: { features: "Fonctionnalités", pricing: "Tarifs", how: "Comment ça marche", services: "Savoir-faire", workshops: frDirectoryLabel, faq: "Questions", signIn: "Se connecter", language: "Langue", menu: "Menu" },
   common: { signup: "Créer mon compte atelier", start: frProjectStart, project: "Projet", france: "France", skills: "Savoir-faire", languages: "Langues", techniques: "Techniques et matières", originalText: "Texte de l’atelier affiché dans sa langue d’origine." },
-  footer: { summary: "L’outil de devis et de suivi des relieurs et des ateliers de restauration.", information: "Informations", legal: "Mentions légales", privacy: "Confidentialité", terms: "Conditions d’utilisation", sales: "Conditions de vente", closing: "Dossier, devis et suivi, pour les relieurs et les restaurateurs." },
+  footer: { summary: "Le logiciel de devis et factures des relieurs et des ateliers de restauration.", information: "Informations", legal: "Mentions légales", privacy: "Confidentialité", terms: "Conditions d’utilisation", sales: "Conditions de vente", closing: "Dossier, devis et suivi, pour les relieurs et les restaurateurs." },
   home: { ...FINE_BINDERY_HOME.fr, ...FINE_BINDERY_DISCIPLINE_COPY.fr },
   directory: {
     eyebrow: "Le réseau", title: "Des relieurs et des restaurateurs, choisis pour leur savoir-faire.",

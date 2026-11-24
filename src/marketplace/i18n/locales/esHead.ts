@@ -2,8 +2,8 @@ import type { FineBinderyPublicCopy } from "./types";
 import { FINE_BINDERY_HOME } from "./homeCopy";
 
 export const esSeo: FineBinderyPublicCopy["seo"] = {
-    homeTitle: "Fine Bindery — presupuestos y seguimiento para encuadernadores",
-    homeDescription: "Sus clientes describen su libro, usted recibe un expediente listo para presupuestar. Fine Bindery es la herramienta de presupuesto y seguimiento para encuadernadores y talleres de restauración.",
+    homeTitle: "Fine Bindery — software de presupuestos y facturas para encuadernadores",
+    homeDescription: "Fine Bindery es el software de presupuestos y facturas de encuadernadores y talleres de restauración: presupuestos, facturas, abonos y cobros en un solo lugar. Usted cobra directamente de sus clientes.",
     directoryTitle: "Encuadernadores y restauradores de libros — Fine Bindery",
     directoryDescription: "Descubre talleres independientes de encuadernación, restauración, conservación y dorado, y presenta tu proyecto directamente a uno de ellos.",
     profileTitle: (w) => `${w} — Encuadernación y restauración | Fine Bindery`,

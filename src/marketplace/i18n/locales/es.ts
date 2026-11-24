@@ -8,7 +8,7 @@ export const es: FineBinderyPublicCopy = {
   seo: esSeo,
   nav: { features: "Funciones", pricing: "Precios", how: "Cómo funciona", services: "Oficios", workshops: esDirectoryLabel, faq: "Preguntas", signIn: "Iniciar sesión", language: "Idioma", menu: "Menú" },
   common: { signup: "Crear mi cuenta de taller", start: esProjectStart, project: "Proyecto", france: "Francia", skills: "Oficios", languages: "Idiomas", techniques: "Técnicas y materiales", originalText: "Texto del taller en su idioma original." },
-  footer: { summary: "La herramienta de presupuesto y seguimiento para encuadernadores y talleres de restauración.", information: "Información", legal: "Aviso legal", privacy: "Privacidad", terms: "Condiciones de uso", sales: "Condiciones de venta", closing: "Expediente, presupuesto y seguimiento para encuadernadores y restauradores." },
+  footer: { summary: "El software de presupuestos y facturas de encuadernadores y talleres de restauración.", information: "Información", legal: "Aviso legal", privacy: "Privacidad", terms: "Condiciones de uso", sales: "Condiciones de venta", closing: "Expediente, presupuesto y seguimiento para encuadernadores y restauradores." },
   home: { ...FINE_BINDERY_HOME.es, ...FINE_BINDERY_DISCIPLINE_COPY.es },
   directory: {
     eyebrow: "La red", title: "Encuadernadores y restauradores, elegidos por su oficio.",

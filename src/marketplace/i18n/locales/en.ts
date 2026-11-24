@@ -14,7 +14,7 @@ export const en: FineBinderyPublicCopy = {
   seo: enSeo,
   nav: { features: "Features", pricing: "Pricing", how: "How it works", services: "Disciplines", workshops: enDirectoryLabel, faq: "FAQ", signIn: "Sign in", language: "Language", menu: "Menu" },
   common: { signup: "Try Fine Bindery", start: enProjectStart, project: "Project", france: "France", skills: "Skills", languages: "Languages", techniques: "Techniques & materials", originalText: "Atelier text shown in its original language." },
-  footer: { summary: "The quote and project tool for bookbinders and conservation workshops.", information: "Information", legal: "Legal notice", privacy: "Privacy policy", terms: "Terms of use", sales: "Terms of sale", closing: "Brief, quote and follow-up, for bookbinders and conservators." },
+  footer: { summary: "The quote and invoice software for bookbinders and conservation workshops.", information: "Information", legal: "Legal notice", privacy: "Privacy policy", terms: "Terms of use", sales: "Terms of sale", closing: "Brief, quote and follow-up, for bookbinders and conservators." },
   home: { ...FINE_BINDERY_HOME.en, ...FINE_BINDERY_DISCIPLINE_COPY.en },
   directory: {
     eyebrow: "The network", title: "Bookbinders and conservators, chosen for their craft.",
