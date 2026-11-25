@@ -55,6 +55,40 @@ export function workshopOfferNotice(input: {
   };
 }
 
+/**
+ * Une demande arrive par le lien ou le site d'un atelier : l'atelier ne recevait aucun e-mail
+ * (dossier RL-014, 25 novembre 2026). Seules l'équipe Oppe et les membres de l'espace de travail de
+ * la Mission étaient prévenus ; l'atelier, qui vend et facture, ne l'apprenait qu'en ouvrant son espace.
+ *
+ * Une demande = un e-mail à l'atelier rattaché : le rattachement ne se fait qu'une fois (tri initial du
+ * dossier) et l'identifiant du message suffit, de toute façon, à ne rien renvoyer en cas de reprise.
+ * Contenu minimal : la référence et la marque, jamais les coordonnées ni le texte du client.
+ */
+export function workshopNewRequestNotice(input: { caseId: string; binderId: string; reference: string; brand: MarketplaceBrand }) {
+  return {
+    ctaOrigin: input.brand === "FINE_BINDERY" ? canonicalHome("FINE_BINDERY").replace(/\/+$/, "") : undefined,
+    id: `request-${input.caseId}-${input.binderId}`,
+    binderId: input.binderId,
+    brand: input.brand,
+    heading: `Nouvelle demande reçue par votre site — ${input.reference}`,
+    intro: `Un client vient de vous écrire par votre lien de prise de projet : la demande ${input.reference} vous attend dans votre espace atelier, avec la fiche prête à chiffrer.`,
+    ctaPath: `/atelier/cases/${input.caseId}`,
+    ctaLabel: "Voir la demande",
+  };
+}
+
+/** Jamais bloquant : le visiteur a déjà envoyé sa demande, un échec d'e-mail est journalisé. */
+export async function notifyWorkshopOfNewRequest(sb: Supa, input: { caseId: string; binderId: string }): Promise<boolean> {
+  try {
+    const { reference, brand } = await caseFacts(sb, input.caseId);
+    await notifyWorkshop(sb, workshopNewRequestNotice({ ...input, reference, brand }));
+    return true;
+  } catch (err) {
+    logOperationalError("workshop-new-request-notice.failed", err, { caseId: input.caseId, binderId: input.binderId });
+    return false;
+  }
+}
+
 /** Prévient chaque atelier sollicité. Un échec est journalisé ; l'offre, elle, est déjà enregistrée. */
 export async function notifyWorkshopsOfOffer(
   sb: Supa,

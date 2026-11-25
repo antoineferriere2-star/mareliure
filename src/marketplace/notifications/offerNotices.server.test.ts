@@ -1,6 +1,6 @@
 import { beforeEach, expect, it, vi } from "vitest";
 import type { Supa } from "@/build/services/adminAuth.server";
-import { alertOfferAnswer, notifyWorkshopsOfOffer, offerAnswerAlert, workshopOfferNotice } from "./offerNotices.server";
+import { alertOfferAnswer, notifyWorkshopOfNewRequest, notifyWorkshopsOfOffer, offerAnswerAlert, workshopNewRequestNotice, workshopOfferNotice } from "./offerNotices.server";
 
 const h = vi.hoisted(() => ({ workshop: vi.fn(), admin: vi.fn(), log: vi.fn() }));
 vi.mock("./workshopNotices.server", () => ({ notifyWorkshop: h.workshop }));
@@ -80,4 +80,30 @@ it("une alerte de réponse en échec ne fait jamais échouer la réponse de l'at
   h.admin.mockRejectedValueOnce(new Error("resend down"));
   await expect(alertOfferAnswer(sbWith({ reference: "RL-013" }), { caseId: CASE, binderId: "b1", workshopName: "Reliure Ferrière", accepted: true, leadTimeDays: 21 })).resolves.toBe(false);
   expect(h.log).toHaveBeenCalled();
+});
+
+it("la demande reçue par le site de l'atelier prévient l'atelier, sans coordonnées du client", () => {
+  const notice = workshopNewRequestNotice({ caseId: CASE, binderId: "b1", reference: "RL-014", brand: "MA_RELIURE" });
+  expect(notice).toMatchObject({ id: `request-${CASE}-b1`, binderId: "b1", ctaPath: `/atelier/cases/${CASE}` });
+  expect(notice.heading).toContain("RL-014");
+  expect(JSON.stringify(notice)).not.toMatch(/@|\d{2} \d{2} \d{2}/);
+});
+
+it("un envoi par demande et par atelier : l'identifiant ne change pas d'un appel à l'autre", () => {
+  const a = workshopNewRequestNotice({ caseId: CASE, binderId: "b1", reference: "RL-014", brand: "MA_RELIURE" });
+  const b = workshopNewRequestNotice({ caseId: CASE, binderId: "b1", reference: "RL-014", brand: "MA_RELIURE" });
+  expect(a.id).toBe(b.id);
+  expect(workshopNewRequestNotice({ caseId: CASE, binderId: "b2", reference: "RL-014", brand: "MA_RELIURE" }).id).not.toBe(a.id);
+});
+
+it("envoie l'e-mail à l'atelier rattaché avec la marque du dossier", async () => {
+  const ok = await notifyWorkshopOfNewRequest(sbWith({ reference: "RL-014", brand: "MA_RELIURE" }), { caseId: CASE, binderId: "b1" });
+  expect(ok).toBe(true);
+  expect(h.workshop).toHaveBeenCalledWith(expect.anything(), expect.objectContaining({ binderId: "b1", brand: "MA_RELIURE", heading: expect.stringContaining("RL-014") }));
+});
+
+it("un e-mail en échec ne fait jamais échouer la demande du visiteur", async () => {
+  h.workshop.mockRejectedValueOnce(new Error("workshop_owner_email_missing"));
+  await expect(notifyWorkshopOfNewRequest(sbWith({ reference: "RL-014", brand: "MA_RELIURE" }), { caseId: CASE, binderId: "b1" })).resolves.toBe(false);
+  expect(h.log).toHaveBeenCalledWith("workshop-new-request-notice.failed", expect.any(Error), { caseId: CASE, binderId: "b1" });
 });
