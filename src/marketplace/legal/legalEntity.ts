@@ -7,9 +7,8 @@
  * doit se corriger qu'à un endroit.
  *
  * Tout ce qui figure dans ce fichier a été fourni par l'éditeur le
- * 10 septembre 2026. Rien n'y est déduit. Ce qui n'a pas été fourni — le nom du
- * directeur de la publication — n'y figure pas, et les pages le désignent par
- * sa fonction plutôt que par un nom supposé.
+ * 10 septembre 2026. Rien n'y est déduit. Le directeur de la publication (Antoine
+ * Ferrière, Président) a été ajouté le 25 novembre 2026, à la demande de l'éditeur.
  */
 
 export const MARELIURE_PUBLISHER = {
@@ -23,6 +22,10 @@ export const MARELIURE_PUBLISHER = {
   siret: "943 317 610 00013",
   rcs: "RCS Périgueux 943 317 610",
   vat: "FR55 943 317 610",
+  /** Directeur de la publication : le Président, confirmé par Antoine Ferrière le 25 novembre 2026. */
+  publicationDirector: "Antoine Ferrière",
+  publicationDirectorTitleFr: "Président",
+  publicationDirectorTitleEn: "Chairman (Président)",
 } as const;
 
 /**

@@ -452,7 +452,7 @@ const NOTICE_SECTIONS: LegalSection[] = [
   },
   {
     heading: "Directeur de la publication",
-    body: [`Le représentant légal de ${MARELIURE_PUBLISHER.name}.`],
+    body: [`${MARELIURE_PUBLISHER.publicationDirector}, ${MARELIURE_PUBLISHER.publicationDirectorTitleFr} de ${MARELIURE_PUBLISHER.name}.`],
   },
   {
     heading: "Hébergement",
@@ -805,7 +805,7 @@ const NOTICE_SECTIONS_EN: LegalSection[] = [
   },
   {
     heading: "Publication director",
-    body: [`The legal representative of ${MARELIURE_PUBLISHER.name}.`],
+    body: [`${MARELIURE_PUBLISHER.publicationDirector}, ${MARELIURE_PUBLISHER.publicationDirectorTitleEn} of ${MARELIURE_PUBLISHER.name}.`],
   },
   {
     heading: "Hosting",
