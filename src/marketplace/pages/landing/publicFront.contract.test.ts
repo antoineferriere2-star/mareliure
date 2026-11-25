@@ -162,8 +162,12 @@ describe("refonte des sites publics — captures produit et Fine Bindery", () =>
     const home = JSON.stringify({ ...copy.home, offers: undefined, offersTitle: undefined, offersEyebrow: undefined, discover: undefined, photoCredit: undefined, shippingEyebrow: undefined, shippingTitle: undefined, shippingLead: undefined });
     expect(copy.home.steps).toHaveLength(3);
     expect(home).not.toMatch(/concierge|conciergerie|conserjer|commission|mise en relation/i);
-    // Les montants n'apparaissent que dans l'exemple illustratif, jamais dans le bloc tarifs.
-    expect(copy.home.pricingTitle + copy.home.pricingBody).not.toMatch(/[0-9]/);
+    // Un seul tarif, public depuis le 25 novembre 2026 : 19,90 $ par mois, essai de 14 jours.
+    expect(copy.home.pricingTitle).toMatch(/19[.,]90/);
+    expect(copy.home.pricingBody).toMatch(/14/);
+    expect(copy.home.pricingIncluded).toHaveLength(4);
+    // Pas d'étiquette liée au nombre de personnes dans l'atelier.
+    expect(JSON.stringify(copy.home)).not.toMatch(/\bSolo\b/);
   });
 
   it("la page relieurs parle de projets Ma Reliure, jamais de « leads »", () => {

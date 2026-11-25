@@ -6,14 +6,14 @@ import { WORKSHOP_TRIAL_DAYS, workshopCanCreate, workshopTrial } from "./worksho
 const NOW = Date.parse("2026-12-01T12:00:00Z");
 const base = { legacy_free: false, status: "incomplete", current_period_end: null as string | null };
 
-describe("essai gratuit de 15 jours", () => {
-  it("annonce quinze jours", () => {
-    expect(WORKSHOP_TRIAL_DAYS).toBe(15);
+describe("essai gratuit de 14 jours", () => {
+  it("annonce quatorze jours", () => {
+    expect(WORKSHOP_TRIAL_DAYS).toBe(14);
   });
 
   it("compte les jours restants, arrondis au jour supérieur", () => {
-    const trial = workshopTrial({ ...base, trial_ends_at: "2026-12-16T12:00:00Z" }, NOW);
-    expect(trial).toMatchObject({ applies: true, active: true, daysLeft: 15 });
+    const trial = workshopTrial({ ...base, trial_ends_at: "2026-12-15T12:00:00Z" }, NOW);
+    expect(trial).toMatchObject({ applies: true, active: true, daysLeft: 14 });
     expect(workshopTrial({ ...base, trial_ends_at: "2026-12-01T12:30:00Z" }, NOW).daysLeft).toBe(1);
   });
 
@@ -47,11 +47,11 @@ describe("essai gratuit de 15 jours", () => {
 });
 
 describe("migration de l'essai", () => {
-  const sql = readFileSync(resolve(process.cwd(), "supabase/migrations/20261124100000_workshop_trial_15_days.sql"), "utf8");
+  const sql = readFileSync(resolve(process.cwd(), "supabase/migrations/20261124100000_workshop_trial_14_days.sql"), "utf8");
 
-  it("ajoute la date de fin et la donne à tout nouvel atelier pour quinze jours", () => {
+  it("ajoute la date de fin et la donne à tout nouvel atelier pour quatorze jours", () => {
     expect(sql).toContain("ADD COLUMN trial_ends_at timestamptz");
-    expect(sql).toMatch(/now\(\) \+ interval '15 days'/);
+    expect(sql).toMatch(/now\(\) \+ interval '14 days'/);
   });
 
   it("laisse gratuits les ateliers existants sans abonnement Stripe, et eux seuls", () => {

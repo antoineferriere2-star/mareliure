@@ -6,7 +6,7 @@ import type { FineBinderyHomeCopy } from "./types";
  * qui oriente le propriétaire d'un livre vers un atelier.
  *
  * L'anglais est la référence. Le bloc « en pratique » illustre un principe, sans
- * document réel ; aucun tarif n'est publié, le bloc tarifs est un emplacement.
+ * document réel. Tarif unique publié le 25 novembre 2026 : 19,90 $ par mois, essai de 14 jours.
  */
 export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBinderyHomeCopy> = {
   en: {
@@ -36,8 +36,9 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Payments and clients", body: "What has been paid, what is still due, and each client’s history." },
       { title: "Requests already structured", body: "A link to share: the client describes their book (project type, condition, dimensions, photos) and you receive a brief ready to quote." },
     ],
-    pricingEyebrow: "Pricing", pricingTitle: "Pricing is coming soon.",
-    pricingBody: "Your workshop account opens with a free fifteen-day trial, no credit card needed. We are setting the price with the first circle of workshops using the tool.",
+    pricingEyebrow: "Pricing", pricingTitle: "One plan: $19.90 per month.",
+    pricingBody: "14-day free trial, no credit card required. No commitment: cancel anytime.",
+    pricingIncluded: ["Unlimited quotes and invoices","Simple CRM: clients, projects, history","A project intake link to share with your own clients","PDF export"],
     faqEyebrow: "Questions", faqTitle: "Before you start.",
     faq: [
       { question: "Does Fine Bindery collect my clients’ payments?", answer: "No. You set your prices, you invoice and you are paid directly by your client. Fine Bindery takes nothing on your sales." },
@@ -74,8 +75,9 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Les règlements et les clients", body: "Ce qui est réglé, ce qui reste dû, et l’historique de chaque client." },
       { title: "Des demandes déjà structurées", body: "Un lien à partager : le client décrit son livre (type de projet, état, dimensions, photos) et vous recevez une fiche prête à chiffrer." },
     ],
-    pricingEyebrow: "Tarifs", pricingTitle: "Les tarifs arrivent bientôt.",
-    pricingBody: "Votre compte atelier s’ouvre avec un essai gratuit de quinze jours, sans carte bancaire. Les tarifs, nous les fixons avec le premier cercle d’ateliers qui utilise l’outil.",
+    pricingEyebrow: "Tarifs", pricingTitle: "Un seul abonnement : 19,90 $ par mois.",
+    pricingBody: "Essai gratuit de 14 jours, sans carte bancaire. Sans engagement : résiliable à tout moment.",
+    pricingIncluded: ["Devis et factures illimités","CRM simple : clients, projets, historique","Un lien de prise de projet à partager avec vos clients","Export PDF"],
     faqEyebrow: "Questions", faqTitle: "Avant de vous lancer.",
     faq: [
       { question: "Fine Bindery encaisse-t-il les paiements de mes clients ?", answer: "Non. Vous fixez vos prix, vous facturez et vous êtes payé directement par votre client. Fine Bindery ne perçoit rien sur vos ventes." },
@@ -112,8 +114,9 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Zahlungen und Kunden", body: "Was bezahlt ist, was noch offen ist, und die Historie jedes Kunden." },
       { title: "Bereits strukturierte Anfragen", body: "Ein Link zum Teilen: Der Kunde beschreibt sein Buch (Projektart, Zustand, Maße, Fotos), und Sie erhalten ein Dossier, das sofort kalkulierbar ist." },
     ],
-    pricingEyebrow: "Preise", pricingTitle: "Die Preise folgen in Kürze.",
-    pricingBody: "Ihr Werkstattkonto startet mit einer kostenlosen Testphase von fünfzehn Tagen, ohne Kreditkarte. Die Preise legen wir mit dem ersten Kreis von Werkstätten fest, die das Werkzeug nutzen.",
+    pricingEyebrow: "Preise", pricingTitle: "Ein einziges Abo: 19,90 $ pro Monat.",
+    pricingBody: "14 Tage kostenlos testen, ohne Kreditkarte. Keine Bindung: jederzeit kündbar.",
+    pricingIncluded: ["Unbegrenzte Angebote und Rechnungen","Einfaches CRM: Kunden, Projekte, Verlauf","Ein Link zur Projektaufnahme für Ihre eigenen Kunden","PDF-Export"],
     faqEyebrow: "Fragen", faqTitle: "Bevor Sie starten.",
     faq: [
       { question: "Zieht Fine Bindery die Zahlungen meiner Kunden ein?", answer: "Nein. Sie legen Ihre Preise fest, stellen die Rechnung und werden direkt von Ihrem Kunden bezahlt. Fine Bindery erhält nichts von Ihren Verkäufen." },
@@ -150,8 +153,9 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Pagamenti e clienti", body: "Ciò che è stato pagato, ciò che resta da incassare e la storia di ogni cliente." },
       { title: "Richieste già strutturate", body: "Un link da condividere: il cliente descrive il suo libro (tipo di progetto, stato, dimensioni, foto) e voi ricevete una scheda pronta per il preventivo." },
     ],
-    pricingEyebrow: "Prezzi", pricingTitle: "I prezzi arriveranno presto.",
-    pricingBody: "Il vostro account laboratorio si apre con una prova gratuita di quindici giorni, senza carta di credito. I prezzi li definiamo con la prima cerchia di laboratori che usa lo strumento.",
+    pricingEyebrow: "Prezzi", pricingTitle: "Un solo abbonamento: 19,90 $ al mese.",
+    pricingBody: "Prova gratuita di 14 giorni, senza carta di credito. Nessun vincolo: disdicibile in qualsiasi momento.",
+    pricingIncluded: ["Preventivi e fatture illimitati","CRM semplice: clienti, progetti, storico","Un link di raccolta del progetto da condividere con i vostri clienti","Esportazione PDF"],
     faqEyebrow: "Domande", faqTitle: "Prima di iniziare.",
     faq: [
       { question: "Fine Bindery incassa i pagamenti dei miei clienti?", answer: "No. Fissate voi i prezzi, fatturate e siete pagati direttamente dal vostro cliente. Fine Bindery non trattiene nulla sulle vostre vendite." },
@@ -188,8 +192,9 @@ export const FINE_BINDERY_HOME: Record<"en" | "fr" | "de" | "it" | "es", FineBin
       { title: "Cobros y clientes", body: "Lo que está pagado, lo que queda pendiente y el historial de cada cliente." },
       { title: "Solicitudes ya estructuradas", body: "Un enlace para compartir: el cliente describe su libro (tipo de proyecto, estado, dimensiones, fotos) y usted recibe una ficha lista para presupuestar." },
     ],
-    pricingEyebrow: "Precios", pricingTitle: "Los precios llegarán pronto.",
-    pricingBody: "Su cuenta de taller se abre con una prueba gratuita de quince días, sin tarjeta. Los precios los fijamos con el primer círculo de talleres que usa la herramienta.",
+    pricingEyebrow: "Precios", pricingTitle: "Una sola suscripción: 19,90 $ al mes.",
+    pricingBody: "Prueba gratuita de 14 días, sin tarjeta. Sin permanencia: cancele cuando quiera.",
+    pricingIncluded: ["Presupuestos y facturas ilimitados","CRM sencillo: clientes, proyectos, historial","Un enlace de toma de proyecto para compartir con sus propios clientes","Exportación a PDF"],
     faqEyebrow: "Preguntas", faqTitle: "Antes de empezar.",
     faq: [
       { question: "¿Fine Bindery cobra los pagos de mis clientes?", answer: "No. Usted fija sus precios, factura y cobra directamente de su cliente. Fine Bindery no percibe nada de sus ventas." },

@@ -22,7 +22,7 @@ import { breadcrumbSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/struct
  */
 const TITLE = "Tarifs — Ma Reliure";
 const DESCRIPTION =
-  "Les tarifs de Ma Reliure, le logiciel de devis et factures des relieurs et ateliers de restauration, arrivent bientôt.";
+  "Ma Reliure, le logiciel de devis et factures des relieurs et ateliers de restauration : un seul abonnement à 19,90 € HT par mois, essai gratuit de 14 jours sans carte bancaire, sans engagement.";
 
 export const Route = createFileRoute("/tarifs")({
   head: () => ({

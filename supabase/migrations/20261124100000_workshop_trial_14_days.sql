@@ -1,4 +1,4 @@
--- Essai gratuit de 15 jours à l'inscription d'un atelier, sans carte bancaire
+-- Essai gratuit de 14 jours à l'inscription d'un atelier, sans carte bancaire
 -- (pivot du 22 novembre 2026).
 --
 -- Rien ne bloque tant que l'abonnement payant n'est pas ouvert : marketplace_workshop_can_create
@@ -17,11 +17,11 @@ UPDATE public.marketplace_binder_subscriptions
 SET legacy_free = true, updated_at = now()
 WHERE legacy_free = false AND stripe_subscription_id IS NULL AND trial_ends_at IS NULL;
 
--- Tout nouvel atelier démarre avec 15 jours d'essai.
+-- Tout nouvel atelier démarre avec 14 jours d'essai.
 CREATE OR REPLACE FUNCTION public.marketplace_init_workshop_subscription() RETURNS trigger
 LANGUAGE plpgsql SET search_path = public AS $$ BEGIN
   INSERT INTO public.marketplace_binder_subscriptions(binder_id, legacy_free, trial_ends_at)
-  VALUES (NEW.id, false, now() + interval '15 days');
+  VALUES (NEW.id, false, now() + interval '14 days');
   RETURN NEW;
 END $$;
 

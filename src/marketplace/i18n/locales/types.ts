@@ -6,7 +6,7 @@ export interface FineBinderyHomeCopy {
   };
   howEyebrow: string; howTitle: string; steps: ReadonlyArray<{ title: string; body: string }>;
   featuresEyebrow: string; featuresTitle: string; features: ReadonlyArray<{ title: string; body: string }>;
-  pricingEyebrow: string; pricingTitle: string; pricingBody: string;
+  pricingEyebrow: string; pricingTitle: string; pricingBody: string; pricingIncluded: string[];
   faqEyebrow: string; faqTitle: string; faq: Array<{ question: string; answer: string }>;
   finalTitle: string; finalLead: string;
 }
