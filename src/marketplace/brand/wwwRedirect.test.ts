@@ -2,6 +2,21 @@ import { describe, expect, it } from "vitest";
 import { canonicalRedirectUrl } from "./wwwRedirect";
 
 describe("canonicalRedirectUrl", () => {
+  it("retire les pages de l'ancien modèle de mise en relation (301 vers l'accueil)", () => {
+    for (const path of ["/partenaires-relieurs", "/reparation-de-livres", "/restauration-de-livres-anciens", "/reliure-de-livres", "/dorure-et-finitions", "/reliure-de-creation", "/etuis-et-boites"]) {
+      expect(canonicalRedirectUrl(`https://mareliure.fr${path}`)).toBe("https://mareliure.fr/");
+    }
+  });
+
+  it("coupe le parcours générique de dépôt de livre, mais garde le lien d'un atelier", () => {
+    const generic = "https://mareliure.fr/m/reliure-marketplace-token-000001";
+    expect(canonicalRedirectUrl(generic)).toBe("https://mareliure.fr/");
+    expect(canonicalRedirectUrl(`${generic}?utm=x`)).toBe("https://mareliure.fr/");
+    expect(canonicalRedirectUrl(`${generic}?ref=atelier-test`)).toBeNull();
+    // Fine Bindery et l'atelier Ferrière gardent leur propre parcours.
+    expect(canonicalRedirectUrl("https://finebindery.com/m/fine-bindery-intake-token-000001")).toBeNull();
+  });
+
   it("redirige www.finebindery.com vers finebindery.com, chemin et requête conservés", () => {
     expect(canonicalRedirectUrl("https://www.finebindery.com/legal-notice?x=1")).toBe(
       "https://finebindery.com/legal-notice?x=1",
@@ -30,7 +45,7 @@ describe("canonicalRedirectUrl", () => {
 
   it("renvoie une page propre à une marque vers son domaine", () => {
     expect(canonicalRedirectUrl("https://finebindery.com/tarifs")).toBe("https://mareliure.fr/tarifs");
-    expect(canonicalRedirectUrl("https://finebindery.com/partenaires-relieurs")).toBe("https://mareliure.fr/partenaires-relieurs");
+    expect(canonicalRedirectUrl("https://finebindery.com/candidature-atelier")).toBe("https://mareliure.fr/candidature-atelier");
     expect(canonicalRedirectUrl("http://www.finebindery.com/mentions-legales")).toBe("https://mareliure.fr/mentions-legales");
     expect(canonicalRedirectUrl("https://mareliure.fr/en")).toBe("https://finebindery.com/en");
     expect(canonicalRedirectUrl("https://mareliure.fr/de/professionals")).toBe("https://finebindery.com/de/professionals");

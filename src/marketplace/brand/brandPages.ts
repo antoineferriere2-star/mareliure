@@ -21,14 +21,6 @@ export interface SitemapEntry {
 export const MARELIURE_ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/tarifs", changefreq: "monthly", priority: "0.8" },
-  // Les pages par besoin (pages/crafts/craftPages.ts).
-  { path: "/reparation-de-livres", changefreq: "monthly", priority: "0.8" },
-  { path: "/restauration-de-livres-anciens", changefreq: "monthly", priority: "0.8" },
-  { path: "/reliure-de-livres", changefreq: "monthly", priority: "0.8" },
-  { path: "/dorure-et-finitions", changefreq: "monthly", priority: "0.8" },
-  { path: "/reliure-de-creation", changefreq: "monthly", priority: "0.8" },
-  { path: "/etuis-et-boites", changefreq: "monthly", priority: "0.8" },
-  { path: "/partenaires-relieurs", changefreq: "monthly", priority: "0.7" },
   { path: "/candidature-atelier", changefreq: "monthly", priority: "0.6" },
   { path: "/mentions-legales", changefreq: "yearly", priority: "0.3" },
   { path: "/confidentialite", changefreq: "yearly", priority: "0.3" },
@@ -61,6 +53,14 @@ export const LEGACY_PAGE_REDIRECTS: Record<string, { owner: PageOwner; path: str
   "/reliure": { owner: "MA_RELIURE", path: "/" },
   "/professionnels": { owner: "FINE_BINDERY", path: "/fr" },
   "/fine-bindery": { owner: "FINE_BINDERY", path: "/en" },
+  // Pivot du 22 novembre 2026 : pages de l'ancien modèle de mise en relation, retirées.
+  "/partenaires-relieurs": { owner: "MA_RELIURE", path: "/" },
+  "/reparation-de-livres": { owner: "MA_RELIURE", path: "/" },
+  "/restauration-de-livres-anciens": { owner: "MA_RELIURE", path: "/" },
+  "/reliure-de-livres": { owner: "MA_RELIURE", path: "/" },
+  "/dorure-et-finitions": { owner: "MA_RELIURE", path: "/" },
+  "/reliure-de-creation": { owner: "MA_RELIURE", path: "/" },
+  "/etuis-et-boites": { owner: "MA_RELIURE", path: "/" },
 };
 
 /** Pages d'une marque hors sitemap (documents contractuels), redirigées comme les autres vers leur domaine. */

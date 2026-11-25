@@ -3850,3 +3850,12 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - **Incohérence connue, à traiter dans la PR de paiement** : l'espace atelier (page Abonnement, FAQ d'offre, `workshopTax` = 1800 centimes, contrôle Stripe `unit_amount !== 1500`, devise EUR uniquement) décrit encore l'ancien prix de 15 € HT / 18 € TTC. Rien ne peut être souscrit tant que `subscription_open` est faux. Fine Bindery en dollars demande un prix Stripe en USD et la levée du contrôle EUR.
 - Hors périmètre : stratégie marketing du brief (contact direct, offre de lancement aux ateliers existants, salons), clauses légales, Sendcloud (toujours non tranché).
 - Vérifié : 364 tests ciblés verts (billing, pages, i18n, routes) ; fichiers de migration PGlite et `auth-email-hook` non chargeables ici (préexistant). Rendu navigateur non vérifié.
+
+## Latest handoff — retrait de l'apport d'affaires (25 novembre 2026, PR fix/retrait-apport-affaires)
+
+- Parcours générique `/m/reliure-marketplace-token-000001` sans `?ref=` : 301 vers `/` (wwwRedirect.ts). Les liens d'atelier (`/a/:slug` → `?ref=`), Fine Bindery et Ferrière ne changent pas.
+- `/partenaires-relieurs` et les 6 pages savoir-faire : 301 vers `/`, retirées du plan du site (brandPages.ts). Fichiers de routes laissés en place (inatteignables), à supprimer dans un lot de nettoyage.
+- CGV : notes de travail « LEGAL REVIEW REQUIRED » / « BLOCKED — MEDIATOR » retirées de la page publique (sections Garanties, Responsabilité, Médiation retirées avec elles).
+- /auth : l'onglet Atelier s'ouvre en premier sur Ma Reliure (`?space=client` ouvre Client) ; texte client « donnée à votre atelier ».
+- Titre/description par défaut (404, routes inconnues) : logiciel de devis et factures pour relieurs.
+- NON fait (juriste / décision) : CGA, accord de traitement, politique de confidentialité en deux volets, conditions d'utilisation, représentant légal des mentions légales, page démonstration.

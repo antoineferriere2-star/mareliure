@@ -100,9 +100,9 @@ const METRE_BRAND = {
 
 const MARELIURE_BRAND = {
   lang: "fr",
-  title: "Ma Reliure — Reliure et restauration de livres",
+  title: "Ma Reliure — Logiciel de devis et factures pour relieurs",
   description:
-    "Confiez votre livre à un artisan relieur. Réparation, restauration, nouvelle reliure ou création : Ma Reliure évalue votre projet et le confie à l'atelier adapté, partout en France.",
+    "Ma Reliure est le logiciel de devis et factures des relieurs et ateliers de restauration : un lien de prise de projet à partager à vos clients, 19,90 € HT par mois, essai gratuit de 14 jours.",
   author: "Ma Reliure",
   icons: brandIcons("mareliure"),
   // Porte les valeurs des tokens de surface du tunnel — voir styles.css.

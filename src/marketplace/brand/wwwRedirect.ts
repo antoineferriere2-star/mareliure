@@ -15,6 +15,7 @@
  * connue ne doit jamais recevoir une redirection vers un domaine réel.
  */
 import { MARKETPLACE_BRAND_CONFIGS } from "./brandConfig";
+import { BOOKBINDING_PUBLIC_TOKEN } from "@/build/constants";
 import { LEGACY_PAGE_REDIRECTS, publicPageOwner, type PageOwner } from "./brandPages";
 
 const APEX_HOST_BY_BRAND: Record<PageOwner, string> = {
@@ -60,6 +61,12 @@ export function canonicalRedirectUrl(requestUrl: string): string | null {
   const host = url.hostname.toLowerCase();
   const apex = host.startsWith("www.") ? host.slice(4) : host;
   if (!KNOWN_APEX_HOSTS.has(apex)) return null;
+  // Pivot du 22 novembre 2026 : le parcours générique de dépôt de livre (sans lien d'atelier)
+  // relève de l'ancien modèle de mise en relation ; il n'existe plus. Seul un lien d'atelier
+  // (?ref=) ouvre encore ce parcours, comme prise de projet de cet atelier.
+  if (apex === APEX_HOST_BY_BRAND.MA_RELIURE && url.pathname.replace(/\/+$/, "") === `/m/${BOOKBINDING_PUBLIC_TOKEN}` && !url.searchParams.get("ref")) {
+    return `https://${APEX_HOST_BY_BRAND.MA_RELIURE}/`;
+  }
   const legacy = LEGACY_PAGE_REDIRECTS[url.pathname.length > 1 ? url.pathname.replace(/\/+$/, "") : url.pathname];
   const owner = legacy?.owner ?? publicPageOwner(url.pathname);
   const targetHost = owner ? APEX_HOST_BY_BRAND[owner] : apex;

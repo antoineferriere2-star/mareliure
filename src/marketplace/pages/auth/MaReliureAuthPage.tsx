@@ -117,7 +117,7 @@ const MA_RELIURE_COPY: AuthCopy = {
   tabClient: "Client",
   tabBinder: "Atelier",
   leadLink:
-    "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien et un code de connexion : pas de compte à créer, pas de mot de passe à retenir.",
+    "Indiquez l'adresse e-mail donnée à votre atelier pour le suivi de votre projet. Nous vous envoyons un lien et un code de connexion : pas de compte à créer, pas de mot de passe à retenir.",
   leadPasswordSignin: "Connectez-vous avec le mot de passe de votre espace.",
   leadBinder:
     "Indiquez votre adresse e-mail pour créer votre espace atelier ou vous reconnecter. Le lien et le code reçus vérifient cette adresse. Vous créez ensuite votre atelier.",
