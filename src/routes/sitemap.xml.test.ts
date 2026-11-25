@@ -35,6 +35,7 @@ describe("sitemapFor", () => {
     expect(entries.map((e) => e.path)).toEqual([
       "/",
       "/tarifs",
+      "/demonstration",
       "/candidature-atelier",
       "/mentions-legales",
       "/confidentialite",
