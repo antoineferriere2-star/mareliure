@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { reconcileCaseTriage } from "./services/caseRepository.server";
+
+// L'e-mail à l'atelier a sa propre suite de tests (offerNotices.server.test.ts). Ici, la fausse base
+// enregistre tout upsert comme un rattachement : on ne la laisse pas écrire la ligne de notification.
+const notify = vi.hoisted(() => vi.fn(async () => true));
+vi.mock("./notifications/offerNotices.server", () => ({ notifyWorkshopOfNewRequest: notify }));
+beforeEach(() => notify.mockClear());
 
 type Row = Record<string, unknown>;
 
@@ -57,12 +63,16 @@ describe("FineBindery German project routing", () => {
     expect(updates).toEqual([]);
     expect(matches).toEqual([]);
     expect(events).toEqual([]);
+    expect(notify).not.toHaveBeenCalled();
   });
   it("rattache aussi une demande du lien personnel Ma Reliure au seul atelier référent", async () => {
     const { client, updates, matches } = germanRequestClient(null);
     await reconcileCaseTriage(client as never);
     expect(updates).toContainEqual(expect.objectContaining({ acquisition_origin: "BINDER_REFERRED", referred_binder_id: "binder-martin" }));
     expect(matches).toEqual([expect.objectContaining({ case_id: "case-de", binder_id: "binder-martin", state: "invited" })]);
+    // L'atelier référent est prévenu, une fois, de la demande reçue par son lien.
+    expect(notify).toHaveBeenCalledTimes(1);
+    expect(notify).toHaveBeenCalledWith(expect.anything(), { caseId: "case-de", binderId: "binder-martin" });
   });
   it("un atelier devenu indisponible ne transforme jamais son client propre en vente Oppe", async () => {
     const { client, updates, matches, events } = germanRequestClient(null, false);

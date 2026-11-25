@@ -13,6 +13,8 @@
 import type { Supa } from "@/build/services/adminAuth.server";
 import { logOperationalError } from "@/build/services/operationalLog.server";
 import { canonicalHome, type MarketplaceBrand } from "@/marketplace/brand/brandConfig";
+import { FERRIERE_NEW_REQUEST_COPY_EMAIL, FERRIERE_WORKSHOP_ID } from "@/marketplace/config";
+import { workshopOrigin } from "@/marketplace/billing/workshopSubscription";
 import { notifyAdmin } from "./adminAlerts.server";
 import { notifyWorkshop } from "./workshopNotices.server";
 
@@ -77,11 +79,41 @@ export function workshopNewRequestNotice(input: { caseId: string; binderId: stri
   };
 }
 
+/**
+ * La copie à l'adresse de contact de l'atelier Ferrière. Un échec de la copie ne remet pas en cause
+ * l'e-mail principal, déjà parti : il est journalisé seul. Identifiant d'envoi propre à la demande,
+ * donc jamais deux copies pour la même demande.
+ */
+async function copyNewRequestToWorkshopContact(notice: ReturnType<typeof workshopNewRequestNotice>): Promise<void> {
+  if (notice.binderId !== FERRIERE_WORKSHOP_ID) return;
+  const caseId = notice.id.replace(`request-`, "").replace(`-${notice.binderId}`, "");
+  try {
+    const { sendTemplateEmail } = await import("@/lib/email-templates/send-email");
+    const result = await sendTemplateEmail("case-activity", FERRIERE_NEW_REQUEST_COPY_EMAIL, {
+      brand: notice.brand,
+      idempotencyKey: `workshop-request-copy-${caseId}`,
+      templateData: {
+        brandName: notice.brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure",
+        locale: "fr-FR",
+        heading: notice.heading,
+        intro: notice.intro,
+        ctaLabel: notice.ctaLabel,
+        ctaUrl: `${notice.ctaOrigin ?? workshopOrigin()}${notice.ctaPath}`,
+      },
+    });
+    if (!result.sent) throw new Error("workshop_request_copy_not_delivered");
+  } catch (err) {
+    logOperationalError("workshop-new-request-copy.failed", err, { binderId: notice.binderId });
+  }
+}
+
 /** Jamais bloquant : le visiteur a déjà envoyé sa demande, un échec d'e-mail est journalisé. */
 export async function notifyWorkshopOfNewRequest(sb: Supa, input: { caseId: string; binderId: string }): Promise<boolean> {
   try {
     const { reference, brand } = await caseFacts(sb, input.caseId);
-    await notifyWorkshop(sb, workshopNewRequestNotice({ ...input, reference, brand }));
+    const notice = workshopNewRequestNotice({ ...input, reference, brand });
+    await notifyWorkshop(sb, notice);
+    await copyNewRequestToWorkshopContact(notice);
     return true;
   } catch (err) {
     logOperationalError("workshop-new-request-notice.failed", err, { caseId: input.caseId, binderId: input.binderId });
