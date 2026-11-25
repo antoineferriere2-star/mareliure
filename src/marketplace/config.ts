@@ -36,6 +36,13 @@ export const DEFAULT_WORKSHOP_ID: string | null = "2619269f-a422-4612-9bb7-d8df5
  */
 export const FERRIERE_WORKSHOP_ID = "2619269f-a422-4612-9bb7-d8df52a5d5e8";
 
+/**
+ * Copie des e-mails « nouvelle demande reçue par votre site » de l'atelier Ferrière : le compte de
+ * l'atelier est celui de sa gérante, l'adresse de contact de l'atelier reçoit la même alerte
+ * (décision du 25 novembre 2026). Adresse publique de l'atelier, pas une donnée personnelle.
+ */
+export const FERRIERE_NEW_REQUEST_COPY_EMAIL = "contact@reliure-ferriere.fr";
+
 export const MARKETPLACE_CURRENCY = "EUR";
 
 /** The Métré vertical this marketplace consumes. */

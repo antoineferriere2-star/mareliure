@@ -2,7 +2,8 @@ import { beforeEach, expect, it, vi } from "vitest";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { alertOfferAnswer, notifyWorkshopOfNewRequest, notifyWorkshopsOfOffer, offerAnswerAlert, workshopNewRequestNotice, workshopOfferNotice } from "./offerNotices.server";
 
-const h = vi.hoisted(() => ({ workshop: vi.fn(), admin: vi.fn(), log: vi.fn() }));
+const h = vi.hoisted(() => ({ workshop: vi.fn(), admin: vi.fn(), log: vi.fn(), send: vi.fn() }));
+vi.mock("@/lib/email-templates/send-email", () => ({ sendTemplateEmail: h.send }));
 vi.mock("./workshopNotices.server", () => ({ notifyWorkshop: h.workshop }));
 vi.mock("./adminAlerts.server", () => ({ notifyAdmin: h.admin }));
 vi.mock("@/build/services/operationalLog.server", () => ({ logOperationalError: h.log }));
@@ -17,6 +18,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   h.workshop.mockResolvedValue(undefined);
   h.admin.mockResolvedValue(true);
+  h.send.mockResolvedValue({ sent: true });
 });
 
 it("l'e-mail d'offre renvoie vers le dossier de l'atelier, sans montant ni coordonnées", () => {
@@ -106,4 +108,21 @@ it("un e-mail en échec ne fait jamais échouer la demande du visiteur", async (
   h.workshop.mockRejectedValueOnce(new Error("workshop_owner_email_missing"));
   await expect(notifyWorkshopOfNewRequest(sbWith({ reference: "RL-014", brand: "MA_RELIURE" }), { caseId: CASE, binderId: "b1" })).resolves.toBe(false);
   expect(h.log).toHaveBeenCalledWith("workshop-new-request-notice.failed", expect.any(Error), { caseId: CASE, binderId: "b1" });
+});
+
+it("l'atelier Ferrière : une copie part à l'adresse de contact de l'atelier, une seule fois par demande", async () => {
+  await notifyWorkshopOfNewRequest(sbWith({ reference: "RL-014", brand: "MA_RELIURE" }), { caseId: CASE, binderId: "2619269f-a422-4612-9bb7-d8df52a5d5e8" });
+  expect(h.send).toHaveBeenCalledTimes(1);
+  expect(h.send).toHaveBeenCalledWith("case-activity", "contact@reliure-ferriere.fr", expect.objectContaining({ idempotencyKey: `workshop-request-copy-${CASE}` }));
+});
+
+it("un autre atelier ne déclenche aucune copie", async () => {
+  await notifyWorkshopOfNewRequest(sbWith({ reference: "RL-014", brand: "MA_RELIURE" }), { caseId: CASE, binderId: "b1" });
+  expect(h.send).not.toHaveBeenCalled();
+});
+
+it("une copie qui échoue ne fait pas échouer la demande ni l'e-mail principal", async () => {
+  h.send.mockResolvedValueOnce({ sent: false });
+  await expect(notifyWorkshopOfNewRequest(sbWith({ reference: "RL-014", brand: "MA_RELIURE" }), { caseId: CASE, binderId: "2619269f-a422-4612-9bb7-d8df52a5d5e8" })).resolves.toBe(true);
+  expect(h.log).toHaveBeenCalledWith("workshop-new-request-copy.failed", expect.any(Error), { binderId: "2619269f-a422-4612-9bb7-d8df52a5d5e8" });
 });

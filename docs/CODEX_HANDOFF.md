@@ -3871,3 +3871,9 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 
 - Au tri initial d'un dossier (`reconcileCaseTriage`, une seule fois par dossier), l'atelier rattaché reçoit « Nouvelle demande reçue par votre site » (`notifyWorkshopOfNewRequest`, offerNotices.server.ts) : une demande = un e-mail (id `request-<dossier>-<atelier>`), jamais bloquant, sans coordonnées du client. L'alerte équipe Oppe reste.
 - Ne marche que si le compte de l'atelier a la bonne adresse : contrôle en lecture seule à confier à Codex (codex-brief-mareliure-20261125-adresse-atelier-ferriere.md). Aucune écriture en base ici.
+
+## Latest handoff — copie de la demande à l'adresse de contact Ferrière (25 novembre 2026, PR feat/copie-demande-ferriere)
+
+- Pour l'atelier Ferrière (`FERRIERE_WORKSHOP_ID`), l'e-mail « Nouvelle demande reçue par votre site » est aussi envoyé à `FERRIERE_NEW_REQUEST_COPY_EMAIL` (contact@reliure-ferriere.fr, config.ts) : une copie par demande, échec journalisé sans rien bloquer.
+- Constat en production (lecture seule, 25/11) : le compte de l'atelier Ferrière est celui de sa gérante ; l'espace de travail « Ma Reliure » n'a aucun membre, donc la notification « nouveau dossier » ne part à personne.
+- Test de la PR 216 corrigé : `fineBinderyGermanRequest.server.test.ts` échouait depuis la PR 216 (sa fausse base enregistrait l'upsert de la notification comme un rattachement). Échecs restants sans lien : `admin/trafficSummary.test.ts` (3 tests liés à la date, déjà rouges avant la PR 216).
