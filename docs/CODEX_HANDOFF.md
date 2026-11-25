@@ -3866,3 +3866,8 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - Contenu : `landing/demonstrationContent.ts` ; rendu : `pages/DemonstrationPage.tsx` ; test : `landing/demonstration.test.ts`.
 - Lien « Démonstration » ajouté à l'en-tête, au menu mobile et au pied de page ; entrée au plan du site.
 - Pas de capture réelle de l'écran client (le parcours est décrit, pas capturé) : à ajouter quand une capture fictive existera.
+
+## Latest handoff — e-mail à l'atelier pour une nouvelle demande (25 novembre 2026, PR feat/notification-atelier-demande)
+
+- Au tri initial d'un dossier (`reconcileCaseTriage`, une seule fois par dossier), l'atelier rattaché reçoit « Nouvelle demande reçue par votre site » (`notifyWorkshopOfNewRequest`, offerNotices.server.ts) : une demande = un e-mail (id `request-<dossier>-<atelier>`), jamais bloquant, sans coordonnées du client. L'alerte équipe Oppe reste.
+- Ne marche que si le compte de l'atelier a la bonne adresse : contrôle en lecture seule à confier à Codex (codex-brief-mareliure-20261125-adresse-atelier-ferriere.md). Aucune écriture en base ici.

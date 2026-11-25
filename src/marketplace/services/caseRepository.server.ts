@@ -13,6 +13,7 @@
  * migration changed none of it.
  */
 import { alertCustomerSpaceOpened } from "@/marketplace/notifications/adminEventAlerts.server";
+import { notifyWorkshopOfNewRequest } from "@/marketplace/notifications/offerNotices.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import type { ProjectBrief } from "@/build/schema/brief";
@@ -512,6 +513,8 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
           ? { source: PROFILE_REQUEST_SOURCE }
           : boundWorkshopId ? { source: FERRIERE_SITE_SOURCE } : {},
       });
+      // L'atelier rattaché apprend la demande par e-mail ; n'échoue jamais le tri.
+      await notifyWorkshopOfNewRequest(sb, { caseId: row.id, binderId: referral.binderId });
     }
   }
   return triaged;
