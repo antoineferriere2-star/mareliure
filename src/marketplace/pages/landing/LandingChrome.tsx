@@ -170,6 +170,7 @@ export const WORKSHOP_SIGNUP_HREF = "/auth?space=atelier";
 const NAV = [
   { href: `${LANDING_PATH}#${ANCHORS.howItWorks}`, label: "Comment ça marche" },
   { href: `${LANDING_PATH}#${FEATURES_ANCHOR}`, label: "Fonctionnalités" },
+  { href: "/demonstration", label: "Démonstration" },
   { href: "/tarifs", label: "Tarifs" },
   { href: `${LANDING_PATH}#${FAQ_ANCHOR}`, label: "FAQ" },
 ] as const;
@@ -266,6 +267,9 @@ export function LandingHeader({ workshop = false, cta = true }: { workshop?: boo
       </div>
       <nav aria-label="Navigation mobile" className="border-t border-mr-rule/70 lg:hidden">
         <div className="mx-auto flex max-w-[78rem] items-center justify-between gap-6 px-5 py-1 sm:px-8">
+          <a href="/demonstration" className={HEADER_LINK}>
+            Démonstration
+          </a>
           <a href="/tarifs" className={HEADER_LINK}>
             Tarifs
           </a>
@@ -294,6 +298,7 @@ export function LandingHeader({ workshop = false, cta = true }: { workshop?: boo
 const SERVICE_LINKS = [
   { href: `${LANDING_PATH}#${ANCHORS.howItWorks}`, label: "Comment ça marche" },
   { href: `${LANDING_PATH}#${FEATURES_ANCHOR}`, label: "Fonctionnalités" },
+  { href: "/demonstration", label: "Démonstration" },
   { href: "/tarifs", label: "Tarifs" },
   { href: `${LANDING_PATH}#${FAQ_ANCHOR}`, label: "FAQ" },
   { href: WORKSHOP_SIGNUP_HREF, label: WORKSHOP_SIGNUP_LABEL },

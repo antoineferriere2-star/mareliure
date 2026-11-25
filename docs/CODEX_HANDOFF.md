@@ -3859,3 +3859,10 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - /auth : l'onglet Atelier s'ouvre en premier sur Ma Reliure (`?space=client` ouvre Client) ; texte client « donnée à votre atelier ».
 - Titre/description par défaut (404, routes inconnues) : logiciel de devis et factures pour relieurs.
 - NON fait (juriste / décision) : CGA, accord de traitement, politique de confidentialité en deux volets, conditions d'utilisation, représentant légal des mentions légales, page démonstration.
+
+## Latest handoff — page Démonstration (25 novembre 2026, PR feat/demonstration-parcours)
+
+- Nouvelle page publique `/demonstration` (Ma Reliure seulement) : parcours du client d'un atelier (étapes reprises du Playbook Reliure), fiche d'exemple fictive reçue par l'atelier, devis (captures réelles `atelier-devis` et `devis-pdf`). Aucun montant.
+- Contenu : `landing/demonstrationContent.ts` ; rendu : `pages/DemonstrationPage.tsx` ; test : `landing/demonstration.test.ts`.
+- Lien « Démonstration » ajouté à l'en-tête, au menu mobile et au pied de page ; entrée au plan du site.
+- Pas de capture réelle de l'écran client (le parcours est décrit, pas capturé) : à ajouter quand une capture fictive existera.

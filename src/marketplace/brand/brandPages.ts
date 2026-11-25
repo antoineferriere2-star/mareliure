@@ -21,6 +21,7 @@ export interface SitemapEntry {
 export const MARELIURE_ENTRIES: SitemapEntry[] = [
   { path: "/", changefreq: "weekly", priority: "1.0" },
   { path: "/tarifs", changefreq: "monthly", priority: "0.8" },
+  { path: "/demonstration", changefreq: "monthly", priority: "0.8" },
   { path: "/candidature-atelier", changefreq: "monthly", priority: "0.6" },
   { path: "/mentions-legales", changefreq: "yearly", priority: "0.3" },
   { path: "/confidentialite", changefreq: "yearly", priority: "0.3" },
