@@ -3839,3 +3839,14 @@ Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et pa
 - Textes publics (« essai gratuit de quinze jours, sans carte ») : tarifs de l'accueil Ma Reliure, Fine Bindery EN/FR/DE/IT/ES, page « Créer mon compte atelier ». Écrit en lettres pour respecter le test « aucun chiffre dans le bloc tarifs ».
 - Non fait : e-mail de rappel avant la fin de l'essai ; bandeau du compte à rebours dans les autres pages de l'espace atelier ; prix publié.
 - Vérifié : 364 tests ciblés verts (billing, pages, i18n, routes) ; 3 fichiers de migration PGlite et `auth-email-hook` ne se chargent pas (modules absents, préexistant). Rendu navigateur non vérifié.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 25 novembre 2026, `feat/tarifs-publics` (tarifs publics et essai ramené à 14 jours, d'après le brief « Tarifs et stratégie marketing » d'Antoine).
+
+- Tarif unique publié : Ma Reliure **19,90 € HT / mois** ; Fine Bindery **19,90 $ / mois** (cinq langues). Essai gratuit **14 jours**, sans carte, sans engagement. Contenu : devis et factures illimités, CRM simple (clients, projets, historique), lien de prise de projet partageable, export PDF. Aucun palier lié au nombre de personnes (ne jamais nommer le plan « Solo »).
+- Essai ramené de 15 à 14 jours : `WORKSHOP_TRIAL_DAYS`, texte de la page Abonnement, tests, et **migration renommée `20261124100000_workshop_trial_14_days.sql`** (intervalle 14 jours). Elle n'avait pas encore été appliquée en production : à poser par Codex sous son nouveau nom.
+- Pages : `/tarifs` et bloc tarifs de l'accueil Ma Reliure (liste des inclus), bloc tarifs Fine Bindery (`pricingIncluded`), page « Créer mon compte atelier », méta de `/tarifs`.
+- **Incohérence connue, à traiter dans la PR de paiement** : l'espace atelier (page Abonnement, FAQ d'offre, `workshopTax` = 1800 centimes, contrôle Stripe `unit_amount !== 1500`, devise EUR uniquement) décrit encore l'ancien prix de 15 € HT / 18 € TTC. Rien ne peut être souscrit tant que `subscription_open` est faux. Fine Bindery en dollars demande un prix Stripe en USD et la levée du contrôle EUR.
+- Hors périmètre : stratégie marketing du brief (contact direct, offre de lancement aux ateliers existants, salons), clauses légales, Sendcloud (toujours non tranché).
+- Vérifié : 364 tests ciblés verts (billing, pages, i18n, routes) ; fichiers de migration PGlite et `auth-email-hook` non chargeables ici (préexistant). Rendu navigateur non vérifié.

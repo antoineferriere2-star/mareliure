@@ -129,6 +129,9 @@ function Pricing() {
       <div className="mt-8 max-w-[40rem]">
         <SectionHead eyebrow={RELIEUR_PRICING.eyebrow} title={RELIEUR_PRICING.title} />
         <p className="mr-body mt-6">{RELIEUR_PRICING.body}</p>
+        <ul className="mr-body mt-6 space-y-2">
+          {RELIEUR_PRICING.included.map((item) => <li key={item} className="flex gap-3"><span aria-hidden="true" className="text-mr-bordeaux">—</span>{item}</li>)}
+        </ul>
         <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-4">
           <SignupCta size="compact" />
           <a href="/tarifs" className="mr-link mr-tap text-[1.0625rem]">

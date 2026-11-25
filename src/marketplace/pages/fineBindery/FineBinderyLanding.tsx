@@ -75,7 +75,7 @@ function Features({ copy }: { copy: Copy }) {
 function Pricing({ copy, locale }: { copy: Copy; locale: FineBinderyLocale }) {
   return <section id="pricing" className="scroll-mt-32"><div className={`${SHELL} py-section-sm sm:py-section`}>
     <SectionRule folio="IV" />
-    <div className="mt-8 max-w-[40rem]"><SectionHead eyebrow={copy.home.pricingEyebrow} title={copy.home.pricingTitle} /><p className="mr-body mt-6">{copy.home.pricingBody}</p><div className="mt-8"><FineBinderySignupCta locale={locale} size="compact" /></div></div>
+    <div className="mt-8 max-w-[40rem]"><SectionHead eyebrow={copy.home.pricingEyebrow} title={copy.home.pricingTitle} /><p className="mr-body mt-6">{copy.home.pricingBody}</p><ul className="mr-body mt-6 space-y-2">{copy.home.pricingIncluded.map((item) => <li key={item} className="flex gap-3"><span aria-hidden="true" className="text-mr-bordeaux">—</span>{item}</li>)}</ul><div className="mt-8"><FineBinderySignupCta locale={locale} size="compact" /></div></div>
   </div></section>;
 }
 

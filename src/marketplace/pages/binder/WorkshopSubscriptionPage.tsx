@@ -53,7 +53,7 @@ export function WorkshopSubscriptionPage() {
           {s.legacy_free
             ? "Votre atelier bénéficie de la gratuité. Aucun prélèvement sans votre accord explicite."
             : trial.active
-              ? `Essai gratuit de 15 jours : il vous reste ${trial.daysLeft} jour${trial.daysLeft > 1 ? "s" : ""}, jusqu’au ${new Date(trial.endsAt as string).toLocaleDateString("fr-FR")}. Aucune carte bancaire n’est demandée et aucun prélèvement n’a lieu sans votre accord explicite.`
+              ? `Essai gratuit de 14 jours : il vous reste ${trial.daysLeft} jour${trial.daysLeft > 1 ? "s" : ""}, jusqu’au ${new Date(trial.endsAt as string).toLocaleDateString("fr-FR")}. Aucune carte bancaire n’est demandée et aucun prélèvement n’a lieu sans votre accord explicite.`
               : !settings.subscription_open
               ? "Votre accès est disponible pendant la préparation de l’offre payante. Aucun prélèvement sans votre accord."
               : canCreate

@@ -1,8 +1,8 @@
 export const WORKSHOP_SUBSCRIPTION_TERMS = "oppe-workshop-2026-10-07-v2";
 export const WORKSHOP_PRICE_LOOKUP_KEY = "oppe_workshop_monthly_15_eur_v1";
 
-/** Essai gratuit offert à l'inscription d'un atelier, sans carte bancaire (pivot du 22 novembre 2026). */
-export const WORKSHOP_TRIAL_DAYS = 15;
+/** Essai gratuit de 14 jours offert à l'inscription d'un atelier, sans carte bancaire (pivot du 22 novembre 2026). */
+export const WORKSHOP_TRIAL_DAYS = 14;
 
 type TrialSubscription = { legacy_free: boolean; trial_ends_at?: string | null };
 

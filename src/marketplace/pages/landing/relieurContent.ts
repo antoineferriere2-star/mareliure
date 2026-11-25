@@ -2,8 +2,8 @@
  * Le texte de l'accueil Ma Reliure, depuis le pivot du 22 novembre 2026 : le logiciel
  * de devis et factures des relieurs et des ateliers de restauration.
  *
- * Aucun montant publié pour les tarifs (le consentement à payer se valide avec le
- * premier cercle d'ateliers). Le bloc « en pratique » illustre un principe,
+ * Tarif unique publié le 25 novembre 2026 : un abonnement, sans palier lié au nombre de
+ * personnes dans l'atelier (ne jamais l'appeler « Solo »). Le bloc « en pratique » illustre un principe,
  * il ne reproduit ni un document réel ni un tarif.
  */
 export const RELIEUR_HERO = {
@@ -72,8 +72,14 @@ export const RELIEUR_FEATURES = [
 
 export const RELIEUR_PRICING = {
   eyebrow: "Tarifs",
-  title: "Les tarifs arrivent bientôt.",
-  body: "Votre compte atelier s’ouvre avec un essai gratuit de quinze jours, sans carte bancaire. Les tarifs, nous les fixons avec le premier cercle d’ateliers qui utilise l’outil.",
+  title: "Un seul abonnement : 19,90 € HT par mois.",
+  body: "Essai gratuit de 14 jours, sans carte bancaire. Sans engagement : vous pouvez résilier à tout moment.",
+  included: [
+    "Devis et factures illimités",
+    "CRM simple : clients, projets, historique",
+    "Un lien de prise de projet à partager avec vos clients",
+    "Export PDF",
+  ],
 } as const;
 
 export const RELIEUR_FAQ = [
