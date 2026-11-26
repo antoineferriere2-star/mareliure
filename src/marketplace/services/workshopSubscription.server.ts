@@ -19,7 +19,6 @@ import { notifyWorkshop } from "@/marketplace/notifications/workshopNotices.serv
 import { findWorkshopCustomerAccount } from "@/marketplace/stripe/workshopAccountRecovery.server";
 import { frenchWorkshopTaxEligibility, isFrenchSubscriptionTaxRate, WORKSHOP_TAX_DECISION } from "@/marketplace/billing/workshopTax";
 import { MARELIURE_PUBLISHER, MARELIURE_CONTACT_EMAIL } from "@/marketplace/legal/legalEntity";
-import { WORKSHOP_OFFER } from "@/marketplace/offer/workshopOffer";
 
 export async function workshopBillingOwner(sb: Supa, userId: string) {
   const member = await findActiveBinderMembership(sb, userId);
@@ -73,7 +72,7 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   if (
     prices.length !== 1 ||
     price.currency !== "eur" ||
-    price.unit_amount !== WORKSHOP_OFFER.subscriptionHtCents ||
+    price.unit_amount !== 1500 ||
     price.tax_behavior !== "exclusive" ||
     price.recurring?.interval !== "month" ||
     price.recurring.interval_count !== 1
@@ -271,7 +270,7 @@ export async function syncWorkshopSubscriptionEvent(
     item.price.lookup_key !== WORKSHOP_PRICE_LOOKUP_KEY ||
     item.quantity !== 1 ||
     item.price.currency !== "eur" ||
-    item.price.unit_amount !== WORKSHOP_OFFER.subscriptionHtCents ||
+    item.price.unit_amount !== 1500 ||
     item.price.tax_behavior !== "exclusive" ||
     item.price.recurring?.interval !== "month" ||
     item.price.recurring.interval_count !== 1

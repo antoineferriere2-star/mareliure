@@ -38,7 +38,7 @@ beforeEach(() => {
           current_period_end: 2000000000,
           price: {
             lookup_key: "oppe_workshop_monthly_15_eur_v1",
-            unit_amount: 1990,
+            unit_amount: 1500,
             currency: "eur",
             tax_behavior: "exclusive",
             recurring: { interval: "month", interval_count: 1 },
