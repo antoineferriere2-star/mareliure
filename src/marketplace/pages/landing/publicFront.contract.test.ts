@@ -37,8 +37,9 @@ describe("la page introuvable et la page d'erreur", () => {
     expect(PAGES).not.toMatch(/Page not found|Go home|Try again/);
   });
 
-  it("offrent les sorties utiles : présenter son livre, les tarifs, l'accueil", () => {
-    expect(PAGES).toContain("<IntakeCta />");
+  it("offrent les sorties utiles : créer son compte atelier, les tarifs, l'accueil", () => {
+    expect(PAGES).toContain("WORKSHOP_SIGNUP_HREF");
+    expect(PAGES).not.toContain("IntakeCta");
     expect(PAGES).toContain('href="/tarifs"');
     expect(PAGES).toContain('href="/"');
   });
