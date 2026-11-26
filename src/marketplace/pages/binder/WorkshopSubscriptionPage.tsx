@@ -82,7 +82,7 @@ export function WorkshopSubscriptionPage() {
                 <span>
                   Je confirme agir exclusivement pour mon activité professionnelle et être établi en France
                   métropolitaine à l’adresse de mon profil de facturation. J’accepte de souscrire à
-                  15 € HT + 3 € de TVA à 20 %, soit 18 € TTC par mois, avec
+                  19,90 € HT + 3,98 € de TVA à 20 %, soit 23,88 € TTC par mois, avec
                   renouvellement mensuel et résiliation pour la fin de la période en cours.
                   J’accepte les{" "}
                   <a

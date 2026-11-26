@@ -38,7 +38,7 @@ beforeEach(() => {
           current_period_end: 2000000000,
           price: {
             lookup_key: "oppe_workshop_monthly_15_eur_v1",
-            unit_amount: 1500,
+            unit_amount: 1990,
             currency: "eur",
             tax_behavior: "exclusive",
             recurring: { interval: "month", interval_count: 1 },
@@ -52,9 +52,9 @@ beforeEach(() => {
     customer_account: "acct_buyer",
     status: "paid",
     currency: "eur",
-    subtotal_excluding_tax: 1500,
-    total: 1800,
-    amount_paid: 1800,
+    subtotal_excluding_tax: 1990,
+    total: 2388,
+    amount_paid: 2388,
     amount_paid_off_stripe: 0,
     created: 100,
     parent: { subscription_details: { subscription: "sub_1" } },
@@ -68,13 +68,13 @@ beforeEach(() => {
 });
 describe("abonnement B : droits et factures issus de preuves Stripe", () => {
   it("refuse les droits de la nouvelle offre si la facture ne collecte pas exactement 20 %", async () => {
-    subscription.metadata.tax_decision = "oppe-workshop-tax-2026-10-07";
-    invoice.total = 1500; invoice.amount_paid = 1500;
+    subscription.metadata.tax_decision = "oppe-workshop-tax-2026-11-26";
+    invoice.total = 1990; invoice.amount_paid = 1990;
     await expect(syncWorkshopSubscriptionEvent(sb,event())).rejects.toThrow("workshop_subscription_vat_mismatch");
     expect(h.rpc).not.toHaveBeenCalled();
   });
   it("refuse une double taxation automatique sur la nouvelle offre manuelle", async () => {
-    subscription.metadata.tax_decision = "oppe-workshop-tax-2026-10-07";
+    subscription.metadata.tax_decision = "oppe-workshop-tax-2026-11-26";
     invoice.automatic_tax = { enabled: true } as Stripe.Invoice.AutomaticTax;
     await expect(syncWorkshopSubscriptionEvent(sb,event())).rejects.toThrow("workshop_subscription_vat_mismatch");
     expect(h.rpc).not.toHaveBeenCalled();
@@ -89,7 +89,7 @@ describe("abonnement B : droits et factures issus de preuves Stripe", () => {
       }),
     );
     expect(h.document).toHaveBeenCalledWith(
-      expect.objectContaining({ stripe_invoice_id: "in_1", paid_cents: 1800 }),
+      expect.objectContaining({ stripe_invoice_id: "in_1", paid_cents: 2388 }),
     );
     expect(h.notify).toHaveBeenCalledWith(
       sb,
