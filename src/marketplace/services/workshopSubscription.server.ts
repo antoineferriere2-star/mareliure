@@ -72,7 +72,7 @@ export async function createWorkshopCheckout(sb: Supa, userId: string, accepted:
   if (
     prices.length !== 1 ||
     price.currency !== "eur" ||
-    price.unit_amount !== 1500 ||
+    price.unit_amount !== WORKSHOP_TAX_DECISION.subscriptionNetCents ||
     price.tax_behavior !== "exclusive" ||
     price.recurring?.interval !== "month" ||
     price.recurring.interval_count !== 1
@@ -232,7 +232,7 @@ function currentWorkshopCheckout(session: Stripe.Checkout.Session, rateId: strin
     session.metadata?.tax_decision === WORKSHOP_TAX_DECISION.id &&
     session.metadata?.manual_tax_rate_id === rateId &&
     session.name_collection?.business?.enabled === true &&
-    !session.automatic_tax?.enabled && session.amount_total === 1800 &&
+    !session.automatic_tax?.enabled && session.amount_total === WORKSHOP_TAX_DECISION.subscriptionGrossCents &&
     session.total_details?.amount_tax === 300;
 }
 
@@ -270,7 +270,7 @@ export async function syncWorkshopSubscriptionEvent(
     item.price.lookup_key !== WORKSHOP_PRICE_LOOKUP_KEY ||
     item.quantity !== 1 ||
     item.price.currency !== "eur" ||
-    item.price.unit_amount !== 1500 ||
+    item.price.unit_amount !== WORKSHOP_TAX_DECISION.subscriptionNetCents ||
     item.price.tax_behavior !== "exclusive" ||
     item.price.recurring?.interval !== "month" ||
     item.price.recurring.interval_count !== 1
@@ -309,16 +309,16 @@ export async function syncWorkshopSubscriptionEvent(
       invoiceCustomer !== customer ||
       (typeof invoiceSub === "string" ? invoiceSub : invoiceSub?.id) !== subscription.id ||
       checkedInvoice.currency !== "eur" ||
-      (checkedInvoice.subtotal_excluding_tax ?? checkedInvoice.subtotal) !== 1500 ||
+      (checkedInvoice.subtotal_excluding_tax ?? checkedInvoice.subtotal) !== WORKSHOP_TAX_DECISION.subscriptionNetCents ||
       (checkedInvoice.status === "paid" &&
-        (checkedInvoice.total < 1500 ||
+        (checkedInvoice.total < WORKSHOP_TAX_DECISION.subscriptionNetCents ||
           checkedInvoice.amount_paid !== checkedInvoice.total ||
           (checkedInvoice.amount_paid_off_stripe ?? 0) > 0))
     )
       throw new Error("workshop_subscription_invoice_mismatch");
     if (subscription.metadata.tax_decision === WORKSHOP_TAX_DECISION.id &&
-        (checkedInvoice.total !== 1800 || checkedInvoice.automatic_tax?.enabled ||
-         checkedInvoice.total - checkedInvoice.subtotal_excluding_tax! !== 300))
+        (checkedInvoice.total !== WORKSHOP_TAX_DECISION.subscriptionGrossCents || checkedInvoice.automatic_tax?.enabled ||
+         checkedInvoice.total - checkedInvoice.subtotal_excluding_tax! !== WORKSHOP_TAX_DECISION.subscriptionVatCents))
       throw new Error("workshop_subscription_vat_mismatch");
   }
   if (

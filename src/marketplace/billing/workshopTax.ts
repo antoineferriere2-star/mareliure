@@ -2,9 +2,9 @@
  * OPPE est redevable et collecte la TVA (confirmation directe). Aucun avis professionnel présumé.
  */
 export const WORKSHOP_TAX_DECISION = {
-  id: "oppe-workshop-tax-2026-10-07", approvedOn: "2026-10-07",
-  subscriptionNetCents: 1500, vatRateBps: 2000, subscriptionVatCents: 300,
-  subscriptionGrossCents: 1800, feeBps: 300, feeVatIncluded: true,
+  id: "oppe-workshop-tax-2026-11-26", approvedOn: "2026-11-26",
+  subscriptionNetCents: 1990, vatRateBps: 2000, subscriptionVatCents: 398,
+  subscriptionGrossCents: 2388, feeBps: 300, feeVatIncluded: true,
   accountantValidated: false, legallyValidated: false,
 } as const;
 

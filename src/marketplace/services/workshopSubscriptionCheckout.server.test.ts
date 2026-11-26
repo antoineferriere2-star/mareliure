@@ -20,7 +20,7 @@ beforeEach(() => {
   vi.stubEnv("WORKSHOP_SUBSCRIPTION_TAX_APPROVED", "true");
   vi.stubEnv("WORKSHOP_SUBSCRIPTION_VAT_RATE_ID", "txr_manual_test");
   vi.stubEnv("WORKSHOP_SUBSCRIPTION_TERMS_READY", WORKSHOP_SUBSCRIPTION_TERMS);
-  h.prices.mockResolvedValue({ data: [{ id: "price_existing", unit_amount: 1500, currency: "eur", tax_behavior: "exclusive", recurring: { interval: "month", interval_count: 1 } }] });
+  h.prices.mockResolvedValue({ data: [{ id: "price_existing", unit_amount: 1990, currency: "eur", tax_behavior: "exclusive", recurring: { interval: "month", interval_count: 1 } }] });
   h.rate.mockResolvedValue({ id: "txr_manual_test", percentage: 20, active: true, inclusive: false, country: "FR", tax_type: "vat" });
   h.rpc.mockResolvedValue({ error: null, data: { stripe_customer_id: "cus_test", checkout_session_id: null, checkout_expires_at: "2027-01-01T12:00:00Z" } });
   h.checkout.mockResolvedValue({ id: "cs_test", url: "https://checkout.stripe.com/test" });
@@ -34,7 +34,7 @@ describe("Checkout B : taux manuel unique et gratuité historique", () => {
       automatic_tax: { enabled: false },
       name_collection: { business: { enabled: true, optional: false } },
       tax_id_collection: { enabled: false },
-      subscription_data: { metadata: expect.objectContaining({ tax_decision: "oppe-workshop-tax-2026-10-07", customer_vat_regime: "FRANCHISE", professional_customer: "true" }) },
+      subscription_data: { metadata: expect.objectContaining({ tax_decision: "oppe-workshop-tax-2026-11-26", customer_vat_regime: "FRANCHISE", professional_customer: "true" }) },
     }), expect.anything());
     expect(h.rpc).toHaveBeenCalledWith("marketplace_reserve_workshop_checkout", expect.objectContaining({ p_terms_version: WORKSHOP_SUBSCRIPTION_TERMS }));
     expect(h.customer).toHaveBeenCalledWith("cus_test", { invoice_settings: expect.objectContaining({ footer: expect.stringContaining("TVA FR55 943 317 610") }) });
@@ -54,7 +54,7 @@ describe("Checkout B : taux manuel unique et gratuité historique", () => {
     expect(h.rpc).not.toHaveBeenCalled();
   });
   it("refuse un prix différent des 15 euros HT approuvés", async () => {
-    h.prices.mockResolvedValue({ data: [{ currency: "eur", unit_amount: 1800, tax_behavior: "exclusive", recurring: { interval: "month", interval_count: 1 } }] });
+    h.prices.mockResolvedValue({ data: [{ currency: "eur", unit_amount: 2388, tax_behavior: "exclusive", recurring: { interval: "month", interval_count: 1 } }] });
     await expect(createWorkshopCheckout(db(), "owner", true)).rejects.toThrow();
     expect(h.rpc).not.toHaveBeenCalled();
   });
