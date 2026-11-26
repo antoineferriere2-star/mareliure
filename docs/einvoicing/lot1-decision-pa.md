@@ -1,8 +1,8 @@
-# Facturation électronique — Lot 1 : décision de plateforme agréée et cadrage comptable
+# Facturation électronique — Lot 1 : décision de plateforme agréée et cadrage fiscal
 
-Document du 26 novembre 2026. **Aucune décision n'est prise ici** : il prépare la décision d'Antoine et la validation de l'expert-comptable. Aucun contrat n'est signé, aucun compte n'est créé, aucune donnée n'est transmise.
+Document du 26 novembre 2026. **Aucune décision n'est prise ici** : il prépare la décision d'Antoine. Le régime de TVA est choisi par chaque atelier (décision d'Antoine du 26 novembre 2026) : aucune validation d'un expert-comptable d'Oppe n'est requise. Aucun contrat n'est signé, aucun compte n'est créé, aucune donnée n'est transmise.
 
-Ce que ce lot produit : (1) le comparatif à compléter par devis, (2) la matrice des cas à couvrir, (3) la note de cadrage pour l'expert-comptable, (4) les demandes de devis, (5) la fiche de décision à signer. Il s'appuie sur le rapport de revue de Codex du 26 novembre et sur `docs/factur-x-feasibility.md`.
+Ce que ce lot produit : (1) le comparatif à compléter par devis, (2) la matrice des cas à couvrir, (3) le partage des responsabilités fiscales et les questions techniques à poser à la plateforme, (4) les demandes de devis, (5) la fiche de décision à signer. Il s'appuie sur le rapport de revue de Codex du 26 novembre et sur `docs/factur-x-feasibility.md`.
 
 ## 1. Rappel : où nous en sommes
 
@@ -43,15 +43,15 @@ Les statuts et les tarifs ci-dessous viennent du rapport de Codex et de sites ti
 
 ### Proposition (à confirmer)
 
-Qualifier **Super PDP en premier** (travail réutilisable), le comparer à **IOPOLE**. Garder Invopop et Storecove en réserve pour Fine Bindery, si des ateliers étrangers sont réellement visés. Ne rien signer avant d'avoir les réponses aux demandes de devis (§5) et l'avis de l'expert-comptable (§4).
+Qualifier **Super PDP en premier** (travail réutilisable), le comparer à **IOPOLE**. Garder Invopop et Storecove en réserve pour Fine Bindery, si des ateliers étrangers sont réellement visés. Ne rien signer avant d'avoir les réponses aux demandes de devis (§5) et la confirmation écrite de la plateforme sur les cas techniques du §4.
 
-## 3. Matrice des cas à couvrir (traitement proposé, à valider)
+## 3. Matrice des cas à couvrir (traitement proposé, à valider avec la plateforme)
 
 | Cas | Facture électronique | E-reporting | Remarque |
 |---|---|---|---|
 | Client entreprise française assujettie | Oui, par la PA | Paiement selon l'exigibilité de la TVA | Cas nominal |
 | Client particulier | Non (facture remise au client) | Oui : transaction, et paiement selon l'exigibilité | Cas majoritaire d'un relieur |
-| Atelier en franchise de TVA | À confirmer | À confirmer | Hypothèse du prototype : identifiant SIREN, code d'exonération |
+| Atelier en franchise de TVA | À confirmer avec la plateforme | À confirmer avec la plateforme | Hypothèse du prototype : identifiant SIREN, code d'exonération. Régime choisi par l'atelier |
 | Avoir | Oui, rattaché à la facture d'origine | Correction du e-reporting | Avoirs partiels existants dans l'outil |
 | Acompte | À confirmer (refusé dans le prototype) | Paiement partiel | Limite ouverte de la PR #185 |
 | TVA sur les débits | À confirmer (refusée dans le prototype) | À confirmer | |
@@ -60,17 +60,20 @@ Qualifier **Super PDP en premier** (travail réutilisable), le comparer à **IOP
 | Client du secteur public | Chorus Pro : hors périmètre à ce stade | | Refusé dans le prototype |
 | Devise étrangère | Hors périmètre à ce stade | | Refusée dans le prototype |
 
-## 4. Note de cadrage pour l'expert-comptable
+## 4. Responsabilité fiscale de l'atelier, et questions techniques à la plateforme
 
-Contexte à lui donner : l'atelier est seul vendeur ; Oppe fournit un outil de devis et de facturation et n'encaisse aucun paiement client ; l'atelier reste émetteur et responsable des informations déclarées ; une plateforme agréée tiers transmettrait les factures et les données de e-reporting. Questions :
+**Principe.** Chaque atelier choisit son régime de TVA (franchise en base, assujetti, option éventuelle pour les débits) et en est seul responsable, avec son propre conseil. Ma Reliure reproduit ce choix sur la facture, sans le décider ni le conseiller. Les conditions d'abonnement le disent expressément (brouillons juridiques, §1 article 2 et §4 « Responsabilité de l'Atelier »). Aucun avis d'expert-comptable n'est demandé par Oppe.
 
-1. **Franchise en base de TVA.** Un atelier en franchise est-il tenu d'émettre en facture électronique et de faire du e-reporting ? Quels identifiants et codes d'exonération faut-il porter ?
-2. **Ventes aux particuliers.** Quelles données de transaction faut-il transmettre, à quelle fréquence, avec quelle ventilation par taux ? Comment traiter avoirs et corrections sans double déclaration ?
-3. **Paiements.** Quand faut-il déclarer le paiement (encaissement, option pour les débits) ? Comment traiter acompte, paiement partiel et remboursement, sachant que les règlements sont déclarés par l'atelier et non par un prestataire de paiement ?
-4. **Qualification des opérations.** Une reliure avec étui est-elle un service unique ou une opération mixte ? Quels taux, quelle présentation sur la facture ?
-5. **Responsabilités et mandat.** Que doit mandater l'atelier à la plateforme ? Quelles opérations Oppe peut-elle exécuter pour lui ? Comment traiter à part les propres factures d'abonnement d'Oppe ?
-6. **Ateliers hors de France.** Quelles obligations françaises s'appliquent selon l'établissement et l'opération ?
-7. **Réception.** Chaque atelier doit-il déjà avoir une plateforme et une adresse de réception ? Que faire des factures de fournisseurs reçues avant raccordement ?
+**Ce qui reste à valider n'est pas un choix fiscal mais un choix technique** : comment la plateforme attend que chaque cas soit représenté dans le format structuré, et ce qu'elle accepte ou rejette. Ces points se traitent avec la plateforme, dans son environnement de recette, et non par un conseil comptable. Questions à poser à la plateforme (à ajouter aux demandes de devis, §5) :
+
+1. **Atelier en franchise de TVA :** quels identifiants et quel code d'exonération attend-elle ? Un atelier en franchise est-il traité comme les autres pour la transmission et le e-reporting ?
+2. **Ventes aux particuliers :** quelles données de transaction transmettre, à quelle fréquence, avec quelle ventilation par taux ? Comment les avoirs et corrections sont-ils représentés sans double déclaration ?
+3. **Paiements :** quelle représentation pour l'exigibilité de la TVA (encaissement ou option pour les débits), l'acompte, le paiement partiel et le remboursement ? Les règlements sont déclarés par l'atelier, non par un prestataire de paiement.
+4. **Facture mêlant bien et service** (reliure avec étui) : quelle présentation est attendue, et quels taux sont acceptés par ligne ?
+5. **Mandat :** que doit confier chaque atelier à la plateforme, et quelles opérations Oppe exécute-t-elle pour lui ? Les factures d'abonnement d'Oppe sont traitées séparément.
+6. **Ateliers hors de France :** quels cas la plateforme couvre-t-elle ?
+
+**Conséquence sur le produit.** Les refus de la traduction (acompte, TVA sur les débits, vente mixte à un particulier) ne sont plus « en attente d'une décision comptable » : ils sont en attente d'une **validation du format avec la plateforme**. Dès que la plateforme confirme la représentation attendue, ils pourront être traités sans autre prérequis. Les obligations légales elles-mêmes (qui doit émettre ou déclarer) s'imposent à l'atelier, qui en reste responsable.
 
 ## 5. Demandes de devis (brouillons, non envoyés)
 
@@ -99,7 +102,7 @@ Contexte à lui donner : l'atelier est seul vendeur ; Oppe fournit un outil de d
 | Date de vérification du statut DGFiP | |
 | Cas couverts au lancement | |
 | Cas exclus et traitement manuel | |
-| Avis de l'expert-comptable | |
+| Confirmation écrite de la plateforme sur les cas techniques (§4) | |
 | Décision d'Antoine, date | |
 
 ## 7. Ce qui ne dépend pas de la décision
