@@ -3,17 +3,19 @@
  *
  * Une pièce que la traduction ne sait pas rendre fidèlement est refusée, jamais approchée. Ce
  * catalogue rend ces refus lisibles par l'atelier et distingue ce qui se corrige (une donnée à
- * compléter) de ce qui attend une décision comptable ou sort du périmètre transmis. Aucune règle
- * fiscale n'est décidée ici : les cas « décision comptable » restent refusés tant que l'expert-comptable
- * ne les a pas arrêtés (docs/einvoicing/lot1-decision-pa.md, §3 et §4).
+ * compléter) de ce qui attend la validation du format avec la plateforme agréée ou sort du périmètre
+ * transmis. Le régime de TVA est choisi et assumé par chaque atelier : aucune règle fiscale n'est décidée
+ * ici et aucun avis d'expert-comptable n'est requis. Les cas « validation du format » restent refusés tant
+ * que la plateforme n'a pas confirmé comment elle attend qu'ils soient représentés
+ * (docs/einvoicing/lot1-decision-pa.md, §4).
  */
 import type { EnInvoiceBlocker } from "./enInvoice";
 
 export type EnInvoiceBlockerKind =
   /** L'atelier peut corriger lui-même : une information manque ou est incohérente. */
   | "atelier_data"
-  /** Traitement fiscal à arrêter avec l'expert-comptable avant tout envoi. */
-  | "accounting_decision"
+  /** Représentation à valider avec la plateforme agréée avant tout envoi (le choix fiscal reste celui de l'atelier). */
+  | "format_validation"
   /** Pas de facture transmise par la plateforme : déclaration de la vente seulement (e-reporting). */
   | "reporting_only"
   /** Circuit non couvert à ce stade : à traiter hors plateforme. */
@@ -35,10 +37,10 @@ export const EN_INVOICE_BLOCKERS: Record<EnInvoiceBlocker, EnInvoiceBlockerInfo>
   missing_buyer_identity: { kind: "atelier_data", message: "Le SIREN de votre client entreprise est nécessaire pour lui adresser la facture." },
   missing_buyer_address: { kind: "atelier_data", message: "L'adresse e-mail de votre client particulier est nécessaire pour compléter la facture." },
   zero_rate_without_reason: { kind: "atelier_data", message: "Une ligne à 0 % de TVA exige un motif d'exonération : corrigez le taux ou précisez le motif." },
-  vat_on_debits_not_mapped: { kind: "accounting_decision", message: "Les ateliers qui ont opté pour la TVA sur les débits ne sont pas encore pris en charge : le traitement attend la validation de votre expert-comptable." },
-  deposit_not_mapped: { kind: "accounting_decision", message: "Une facture comportant un acompte, demandé ou reçu, n'est pas encore prise en charge : le traitement attend la validation de votre expert-comptable." },
-  unsupported_vat_regime: { kind: "accounting_decision", message: "Ce régime de TVA n'est pas encore pris en charge pour la transmission." },
-  b2c_mixed: { kind: "accounting_decision", message: "Une vente à un particulier mêlant bien et service n'est pas encore prise en charge : sa qualification attend votre expert-comptable." },
+  vat_on_debits_not_mapped: { kind: "format_validation", message: "Les ateliers qui ont opté pour la TVA sur les débits ne sont pas encore pris en charge : la représentation attendue par la plateforme doit d'abord être validée." },
+  deposit_not_mapped: { kind: "format_validation", message: "Une facture comportant un acompte, demandé ou reçu, n'est pas encore prise en charge : la représentation attendue par la plateforme doit d'abord être validée." },
+  unsupported_vat_regime: { kind: "format_validation", message: "Ce régime de TVA n'est pas encore pris en charge pour la transmission." },
+  b2c_mixed: { kind: "format_validation", message: "Une vente à un particulier mêlant bien et service n'est pas encore prise en charge : sa représentation attendue par la plateforme doit d'abord être validée." },
   international_reporting_only: { kind: "reporting_only", message: "Une vente à un client étranger ne s'envoie pas comme facture par la plateforme : elle se déclare par les données de transaction." },
   unsupported_public_entity: { kind: "out_of_scope", message: "Les factures à une entité publique passent par un circuit spécifique, non couvert à ce stade." },
   unsupported_currency: { kind: "out_of_scope", message: "Seules les factures en euros sont prises en charge à ce stade." },
@@ -50,7 +52,7 @@ export function describeEnInvoiceBlockers(blockers: readonly EnInvoiceBlocker[])
   return blockers.map((blocker) => ({ kind: EN_INVOICE_BLOCKERS[blocker].kind, blocker, message: EN_INVOICE_BLOCKERS[blocker].message }));
 }
 
-/** Vrai quand l'atelier peut tout régler lui-même : aucune décision comptable ni exclusion en jeu. */
+/** Vrai quand l'atelier peut tout régler lui-même : aucune validation de format ni exclusion en jeu. */
 export function blockersFixedByAtelier(blockers: readonly EnInvoiceBlocker[]): boolean {
   return blockers.every((blocker) => EN_INVOICE_BLOCKERS[blocker].kind === "atelier_data");
 }

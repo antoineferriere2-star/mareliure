@@ -18,7 +18,7 @@ describe("catalogue des refus de la traduction EN 16931", () => {
   it("donne à chaque refus une phrase pour l'atelier et un type valide", () => {
     for (const [name, info] of Object.entries(EN_INVOICE_BLOCKERS)) {
       expect(info.message.length, name).toBeGreaterThan(20);
-      expect(["atelier_data", "accounting_decision", "reporting_only", "out_of_scope", "integrity"]).toContain(info.kind);
+      expect(["atelier_data", "format_validation", "reporting_only", "out_of_scope", "integrity"]).toContain(info.kind);
     }
   });
 
@@ -27,9 +27,9 @@ describe("catalogue des refus de la traduction EN 16931", () => {
     expect(text).not.toMatch(/formulaire|questionnaire|\blead\b|utilisateur|prompt/i);
   });
 
-  it("garde en attente d'une décision comptable les cas fiscaux, sans les trancher", () => {
+  it("garde en attente de la validation du format les cas fiscaux, sans les trancher", () => {
     for (const name of ["vat_on_debits_not_mapped", "deposit_not_mapped", "b2c_mixed"] as const) {
-      expect(EN_INVOICE_BLOCKERS[name].kind).toBe("accounting_decision");
+      expect(EN_INVOICE_BLOCKERS[name].kind).toBe("format_validation");
     }
     expect(EN_INVOICE_BLOCKERS.international_reporting_only.kind).toBe("reporting_only");
   });
@@ -37,6 +37,6 @@ describe("catalogue des refus de la traduction EN 16931", () => {
   it("dit si l'atelier peut tout corriger lui-même", () => {
     expect(blockersFixedByAtelier(["missing_buyer_identity", "missing_client_type"])).toBe(true);
     expect(blockersFixedByAtelier(["missing_buyer_identity", "deposit_not_mapped"])).toBe(false);
-    expect(describeEnInvoiceBlockers(["deposit_not_mapped"])[0]).toMatchObject({ kind: "accounting_decision" });
+    expect(describeEnInvoiceBlockers(["deposit_not_mapped"])[0]).toMatchObject({ kind: "format_validation" });
   });
 });
