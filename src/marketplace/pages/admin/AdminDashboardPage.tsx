@@ -167,7 +167,7 @@ function Dashboard({ data, unread, periodLabel }: { data: AdminDashboard; unread
             detail={<>{payments.a.openDisputes} litige(s) ouvert(s){payments.a.disputedCents ? ` · ${formatEuros(payments.a.disputedCents)} contestés` : ""}</>} />
           <Stat label="Circuit C : encaissé par les ateliers" value={formatEuros(payments.c.grossCents)}
             detail={<>{payments.c.count} paiement(s) · remboursé {formatEuros(payments.c.refundedCents)}</>} />
-          <Stat label="Circuit C : retenue OPPE 3 % TTC" value={formatEuros(payments.c.platformFeeCents)}
+          <Stat label="Circuit C (avant le 22 novembre) : retenue OPPE 3 % TTC" value={formatEuros(payments.c.platformFeeCents)}
             detail={<>nette des frais remboursés · frais Stripe atelier {formatEuros(payments.c.stripeFeeCents)}{allBrands ? ` · ${payments.c.openDisputes} litige(s)` : ""}</>} />
         </div>
         <div className={CARD}>

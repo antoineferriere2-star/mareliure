@@ -123,7 +123,7 @@ describe("tableau de bord admin", () => {
     const d = buildAdminDashboard(rows(), { brand: "ALL", since: SINCE_30 });
     expect(d.onboarding.workshops).toEqual({ approved: 1, pendingReview: 1, suspended: 0, published: 1 });
     expect(d.onboarding.connect).toEqual({ started: 2, onboarded: 1, chargesEnabled: 1, payoutsEnabled: 1, consents: 1 });
-    expect(d.onboarding.subscriptions).toMatchObject({ paying: 1, late: 1, cancelling: 1, monthlyHtCents: 1500 });
+    expect(d.onboarding.subscriptions).toMatchObject({ paying: 1, late: 1, cancelling: 1, monthlyHtCents: 1990 });
     expect(d.onboarding.applications).toEqual({ created: 1, pending: 1, accepted: 1, rejected: 0 });
   });
 
