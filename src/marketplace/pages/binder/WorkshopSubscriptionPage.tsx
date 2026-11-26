@@ -11,6 +11,7 @@ import {
 import { BinderPageHeader, BinderLoading } from "./BinderPageUi";
 import { CARD, ErrorNote, PRIMARY_BUTTON } from "./quotes/quoteUi";
 import { SUBSCRIPTION_LABEL } from "@/marketplace/offer/workshopOffer";
+import { workshopTrial } from "@/marketplace/billing/workshopSubscription";
 import { downloadPdf, euros } from "@/marketplace/quotes/quoteFormat";
 
 export function WorkshopSubscriptionPage() {
@@ -34,6 +35,7 @@ export function WorkshopSubscriptionPage() {
   if (query.isPending) return <BinderLoading label="Chargement de votre abonnement…" />;
   if (!query.data) return <ErrorNote>L’abonnement n’a pas pu être chargé.</ErrorNote>;
   const { subscription: s, settings, canCreate, isOwner } = query.data;
+  const trial = workshopTrial(s);
   return (
     <div className="space-y-6">
       <BinderPageHeader
@@ -43,14 +45,16 @@ export function WorkshopSubscriptionPage() {
       />
       <section className={CARD}>
         <h2 className="font-serif text-xl">{SUBSCRIPTION_LABEL}</h2>
-        <p className="mt-3">France métropolitaine : TVA 20 % (3 €), soit 18 € TTC par mois, vitrine incluse.
-          Cette TVA est collectée par OPPE même si votre atelier est en franchise en base.
+        <p className="mt-3">Vitrine incluse, TVA en sus lorsqu’elle s’applique. Oppe n’encaisse aucun paiement de vos clients
+          et ne prélève aucun frais sur vos ventes : l’abonnement est son seul revenu.
           Renseignez votre identité professionnelle et votre adresse d’établissement dans les paramètres de facturation.
           Pour les autres territoires, contactez Oppe pour une qualification individuelle.</p>
         <p className="mt-3">
           {s.legacy_free
             ? "Votre atelier bénéficie de la gratuité. Aucun prélèvement sans votre accord explicite."
-            : !settings.subscription_open
+            : trial.active
+              ? `Essai gratuit de 14 jours : il vous reste ${trial.daysLeft} jour${trial.daysLeft > 1 ? "s" : ""}, jusqu’au ${new Date(trial.endsAt as string).toLocaleDateString("fr-FR")}. Aucune carte bancaire n’est demandée et aucun prélèvement n’a lieu sans votre accord explicite.`
+              : !settings.subscription_open
               ? "Votre accès est disponible pendant la préparation de l’offre payante. Aucun prélèvement sans votre accord."
               : canCreate
                 ? "Votre abonnement est actif."
@@ -78,7 +82,7 @@ export function WorkshopSubscriptionPage() {
                 <span>
                   Je confirme agir exclusivement pour mon activité professionnelle et être établi en France
                   métropolitaine à l’adresse de mon profil de facturation. J’accepte de souscrire à
-                  15 € HT + 3 € de TVA à 20 %, soit 18 € TTC par mois, avec
+                  19,90 € HT + 3,98 € de TVA à 20 %, soit 23,88 € TTC par mois, avec
                   renouvellement mensuel et résiliation pour la fin de la période en cours.
                   J’accepte les{" "}
                   <a
@@ -190,7 +194,7 @@ export function WorkshopSubscriptionPage() {
           </ul>
         </section>
       )}
-      <WorkshopConnectPanel open={settings.online_payment_open} onboardingOpen={settings.connect_onboarding_open} isOwner={isOwner} />
+      <WorkshopConnectPanel />
     </div>
   );
 }

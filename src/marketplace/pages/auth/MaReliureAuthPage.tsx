@@ -16,9 +16,9 @@
  *   passe reste possible en repli, replié sous « Vous préférez un mot de
  *   passe ? » — jamais la méthode par défaut, mais jamais bloqué non plus
  *   pour qui ne veut plus repasser par sa boîte mail à chaque connexion ;
- * - **Atelier partenaire** : un lien et un code de connexion créent aussi le
- *   compte à la première utilisation. L'atelier est créé en attente de
- *   validation ; seul l'admin l'autorise ensuite à recevoir des projets.
+ * - **Atelier** : un lien et un code de connexion créent aussi le
+ *   compte à la première utilisation. L'espace atelier s'ouvre immédiatement ;
+ *   les outils (devis, ouvrages, clients) ne dépendent d'aucune validation.
  *
  * Fine Bindery propose aussi les deux espaces, avec le même compte atelier
  * et les mêmes contrôles d'accès serveur que Ma Reliure.
@@ -110,17 +110,17 @@ interface AuthCopy {
 
 const MA_RELIURE_COPY: AuthCopy = {
   audienceLabel: "Vous êtes",
-  binderAccessNote: "Votre espace atelier est disponible dès la création du compte. Ma Reliure valide séparément l’accès aux nouveaux projets.",
+  binderAccessNote: "Votre espace atelier est disponible dès la création du compte : devis, ouvrages, clients et dossiers sont utilisables tout de suite.",
   eyebrow: "Votre espace",
   heading: "Accéder à mon espace Ma Reliure",
   showBinderTab: true,
   tabClient: "Client",
-  tabBinder: "Atelier partenaire",
+  tabBinder: "Atelier",
   leadLink:
-    "Indiquez l'adresse e-mail donnée en présentant votre livre. Nous vous envoyons un lien et un code de connexion : pas de compte à créer, pas de mot de passe à retenir.",
+    "Indiquez l'adresse e-mail donnée à votre atelier pour le suivi de votre projet. Nous vous envoyons un lien et un code de connexion : pas de compte à créer, pas de mot de passe à retenir.",
   leadPasswordSignin: "Connectez-vous avec le mot de passe de votre espace.",
   leadBinder:
-    "Indiquez votre adresse e-mail pour créer votre espace atelier ou vous reconnecter. Le lien et le code reçus vérifient cette adresse. Vous créez ensuite votre atelier ; l'accès aux projets reste soumis à la validation de Ma Reliure.",
+    "Indiquez votre adresse e-mail pour créer votre espace atelier ou vous reconnecter. Le lien et le code reçus vérifient cette adresse. Vous créez ensuite votre atelier.",
   routingStatus: "Ouverture de votre espace…",
   preferPassword: "Vous avez déjà un mot de passe ?",
   backToLink: "Revenir au lien de connexion par e-mail",
@@ -150,7 +150,7 @@ const MA_RELIURE_COPY: AuthCopy = {
 /** Textes anglais des deux espaces Fine Bindery. */
 const FINE_BINDERY_COPY_EN: AuthCopy = {
   audienceLabel: "Choose your space",
-  binderAccessNote: "Your workshop space is available as soon as your account is created. Fine Bindery approves access to new projects separately.",
+  binderAccessNote: "Your workshop space is available as soon as your account is created: quotes, books, clients and files are ready to use straight away.",
   eyebrow: "Your space",
   heading: "Access your Fine Bindery space",
   showBinderTab: true,
@@ -160,7 +160,7 @@ const FINE_BINDERY_COPY_EN: AuthCopy = {
     "Enter the email address you used to present your book. We'll send you a sign-in link and code — no account to create, no password to remember.",
   leadPasswordSignin: "Sign in with your space's password.",
   leadBinder:
-    "Enter your email address to create or reopen your workshop space. Fine Bindery verifies the address first; access to new projects is approved separately.",
+    "Enter your email address to create or reopen your workshop space. Fine Bindery verifies the address first, then you set up your workshop.",
   routingStatus: "Opening your space…",
   preferPassword: "Already have a password?",
   backToLink: "Back to the email sign-in link",
@@ -191,14 +191,14 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
   fr: {
     ...FINE_BINDERY_COPY_EN,
     audienceLabel: "Choisissez votre espace",
-    binderAccessNote: "Votre espace atelier est disponible dès la création du compte. Fine Bindery valide séparément l’accès aux nouveaux projets.",
+    binderAccessNote: "Votre espace atelier est disponible dès la création du compte : devis, ouvrages, clients et dossiers sont utilisables tout de suite.",
     eyebrow: "Votre espace",
     heading: "Accéder à votre espace Fine Bindery",
     tabClient: "Client",
     tabBinder: "Atelier",
     leadLink: "Indiquez l’adresse e-mail utilisée pour présenter votre livre. Nous vous envoyons un lien et un code de connexion.",
     leadPasswordSignin: "Connectez-vous avec le mot de passe de votre espace.",
-    leadBinder: "Indiquez votre adresse e-mail pour créer ou retrouver votre espace atelier. Fine Bindery vérifie d’abord l’adresse ; l’accès aux nouveaux projets est autorisé séparément.",
+    leadBinder: "Indiquez votre adresse e-mail pour créer ou retrouver votre espace atelier. Fine Bindery vérifie d’abord l’adresse, puis vous créez votre atelier.",
     routingStatus: "Ouverture de votre espace…",
     preferPassword: "Vous avez déjà un mot de passe ?",
     backToLink: "Revenir au lien de connexion par e-mail",
@@ -224,11 +224,11 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
   de: {
     ...FINE_BINDERY_COPY_EN,
     audienceLabel: "Bereich auswählen",
-    binderAccessNote: "Ihr Werkstattbereich steht Ihnen ab der Kontoerstellung zur Verfügung. Fine Bindery gibt den Zugang zu neuen Projekten separat frei.",
+    binderAccessNote: "Ihr Werkstattbereich steht ab der Kontoerstellung bereit: Angebote, Bücher, Kundschaft und Akten sind sofort nutzbar.",
     eyebrow: "Ihr Bereich", heading: "Fine-Bindery-Bereich öffnen", tabClient: "Kundschaft", tabBinder: "Werkstatt",
     leadLink: "Geben Sie die E-Mail-Adresse an, mit der Sie Ihr Buch vorgestellt haben. Wir senden Ihnen einen Anmeldelink und einen Code.",
     leadPasswordSignin: "Melden Sie sich mit dem Passwort Ihres Bereichs an.",
-    leadBinder: "Geben Sie Ihre E-Mail-Adresse ein, um Ihren Werkstattbereich anzulegen oder erneut zu öffnen. Fine Bindery prüft zuerst die Adresse; der Zugang zu neuen Projekten wird separat freigegeben.",
+    leadBinder: "Geben Sie Ihre E-Mail-Adresse ein, um Ihren Werkstattbereich anzulegen oder erneut zu öffnen. Fine Bindery prüft zuerst die Adresse, danach richten Sie Ihre Werkstatt ein.",
     routingStatus: "Ihr Bereich wird geöffnet…", preferPassword: "Sie haben bereits ein Passwort?", backToLink: "Zurück zum Anmeldelink per E-Mail",
     binderSignInHeading: "Werkstattbereich anlegen oder öffnen", emailLabel: "E-Mail-Adresse",
     requestButton: (sending) => sending ? "Wird gesendet…" : "Anmeldelink und Code senden", emailSentHeading: "E-Mail gesendet",
@@ -244,10 +244,10 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
   it: {
     ...FINE_BINDERY_COPY_EN,
     audienceLabel: "Scegli il tuo spazio",
-    binderAccessNote: "Lo spazio del laboratorio è disponibile appena creato l’account. Fine Bindery approva separatamente l’accesso ai nuovi progetti.",
+    binderAccessNote: "Lo spazio del laboratorio è disponibile appena creato l’account: preventivi, libri, clienti e pratiche sono subito utilizzabili.",
     eyebrow: "Il tuo spazio", heading: "Accedi al tuo spazio Fine Bindery", tabClient: "Cliente", tabBinder: "Laboratorio",
     leadLink: "Inserisci l’indirizzo e-mail usato per presentare il libro. Ti invieremo un link e un codice di accesso.", leadPasswordSignin: "Accedi con la password del tuo spazio.",
-    leadBinder: "Inserisci l’indirizzo e-mail per creare o riaprire lo spazio del laboratorio. Fine Bindery verifica prima l’indirizzo; l’accesso ai nuovi progetti viene approvato separatamente.",
+    leadBinder: "Inserisci l’indirizzo e-mail per creare o riaprire lo spazio del laboratorio. Fine Bindery verifica prima l’indirizzo, poi configuri il tuo laboratorio.",
     routingStatus: "Apertura dello spazio…", preferPassword: "Hai già una password?", backToLink: "Torna al link di accesso via e-mail", binderSignInHeading: "Crea o apri lo spazio del laboratorio",
     emailLabel: "Indirizzo e-mail", requestButton: (sending) => sending ? "Invio…" : "Invia link e codice", emailSentHeading: "E-mail inviata",
     emailSentBody: (email) => `Un link e un codice sono stati inviati a ${email}. Sono validi per un’ora. Controlla anche la cartella spam.`,
@@ -260,10 +260,10 @@ const FINE_BINDERY_COPY: Record<FineBinderyLocale, AuthCopy> = {
   es: {
     ...FINE_BINDERY_COPY_EN,
     audienceLabel: "Elige tu espacio",
-    binderAccessNote: "El espacio del taller está disponible desde la creación de la cuenta. Fine Bindery aprueba por separado el acceso a nuevos proyectos.",
+    binderAccessNote: "El espacio del taller está disponible desde la creación de la cuenta: presupuestos, libros, clientes y expedientes se pueden usar de inmediato.",
     eyebrow: "Tu espacio", heading: "Accede a tu espacio Fine Bindery", tabClient: "Cliente", tabBinder: "Taller",
     leadLink: "Introduce el correo utilizado para presentar tu libro. Te enviaremos un enlace y un código de acceso.", leadPasswordSignin: "Accede con la contraseña de tu espacio.",
-    leadBinder: "Introduce tu correo para crear o volver a abrir el espacio del taller. Fine Bindery verifica primero la dirección; el acceso a nuevos proyectos se aprueba por separado.",
+    leadBinder: "Introduce tu correo para crear o volver a abrir el espacio del taller. Fine Bindery verifica primero la dirección y después configuras tu taller.",
     routingStatus: "Abriendo tu espacio…", preferPassword: "¿Ya tienes contraseña?", backToLink: "Volver al enlace por correo", binderSignInHeading: "Crear o abrir mi espacio de taller",
     emailLabel: "Correo electrónico", requestButton: (sending) => sending ? "Enviando…" : "Enviar enlace y código", emailSentHeading: "Correo enviado",
     emailSentBody: (email) => `Se han enviado un enlace y un código a ${email}. Son válidos durante una hora. Revisa también la carpeta de spam.`,

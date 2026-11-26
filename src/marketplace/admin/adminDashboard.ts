@@ -6,6 +6,7 @@
  * Les flux (créations, encaissements) suivent la période choisie ; les stocks (états courants)
  * sont toujours l'état présent. Les montants sont en centimes d'euro.
  */
+import { WORKSHOP_OFFER } from "@/marketplace/offer/workshopOffer";
 import type { MarketplaceBrand } from "@/marketplace/brand/brandConfig";
 import type { TrafficSummary } from "./trafficSummary";
 import type { IntakeFunnel } from "./intakeFunnel";
@@ -69,8 +70,8 @@ export function caseStageLabel(status: string): string {
 const OPEN_DISPUTE = new Set(["warning_needs_response", "needs_response", "warning_under_review", "under_review"]);
 const PAYING_SUBSCRIPTION = new Set(["active", "trialing"]);
 const LATE_SUBSCRIPTION = new Set(["past_due", "unpaid", "incomplete"]);
-/** Prix B : 15 € HT + 3 € de TVA par mois (décision du 7 octobre 2026). */
-export const SUBSCRIPTION_MONTHLY_HT_CENTS = 1500;
+/** Prix B : 19,90 € HT + 3,98 € de TVA à 20 % par mois (décision du 26 novembre 2026). */
+export const SUBSCRIPTION_MONTHLY_HT_CENTS = WORKSHOP_OFFER.subscriptionHtCents;
 const STALE_CLAIM_MS = 60 * 60 * 1000;
 
 /** Derniers dossiers de la marque : référence et étape seulement, jamais le client. */

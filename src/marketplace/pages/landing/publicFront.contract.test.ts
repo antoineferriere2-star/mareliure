@@ -37,8 +37,9 @@ describe("la page introuvable et la page d'erreur", () => {
     expect(PAGES).not.toMatch(/Page not found|Go home|Try again/);
   });
 
-  it("offrent les sorties utiles : présenter son livre, les tarifs, l'accueil", () => {
-    expect(PAGES).toContain("<IntakeCta />");
+  it("offrent les sorties utiles : créer son compte atelier, les tarifs, l'accueil", () => {
+    expect(PAGES).toContain("WORKSHOP_SIGNUP_HREF");
+    expect(PAGES).not.toContain("IntakeCta");
     expect(PAGES).toContain('href="/tarifs"');
     expect(PAGES).toContain('href="/"');
   });
@@ -73,6 +74,13 @@ describe("la candidature atelier", () => {
 
   it("déclare son adresse canonique", () => {
     expect(ROUTE).toContain('{ rel: "canonical", href: `${MARELIURE_CANONICAL_HOME}candidature-atelier` }');
+  });
+
+  it("est la page « Créer mon compte atelier », sans promesse de la place de marché", () => {
+    const text = stripComments(ROUTE);
+    expect(text).toContain("WORKSHOP_SIGNUP_HREF");
+    expect(text).toContain("Créer mon compte atelier");
+    expect(text).not.toMatch(/reçoivent des projets|Ma Reliure décide|Ateliers partenaires/);
   });
 });
 
@@ -144,13 +152,23 @@ describe("refonte des sites publics — captures produit et Fine Bindery", () =>
     expect(source).not.toMatch(/#[0-9a-fA-F]{6}\b/);
   });
 
-  it.each(["en", "fr", "de", "it", "es"])("Fine Bindery (%s) dit que le réseau ouvre en France, et ne parle plus de conciergerie", async (locale) => {
+  /**
+   * Pivot du 22 novembre 2026 : l'accueil parle au relieur. Il ne promet plus
+   * de choisir l'atelier, ne parle plus de réseau ni de commission, et ne
+   * publie aucun montant de tarif.
+   */
+  it.each(["en", "fr", "de", "it", "es"])("l'accueil Fine Bindery (%s) est celui de l'outil des relieurs", async (locale) => {
     const { fineBinderyCopy } = await import("@/marketplace/i18n/fineBinderyCopy");
     const copy = fineBinderyCopy(locale as never);
-    expect(copy.home.networkNote.length).toBeGreaterThan(40);
-    expect(copy.directory.openingNote).toBe(copy.home.networkNote);
-    expect(JSON.stringify(copy)).not.toMatch(/concierge|conciergerie|Concierge|conserjer/i);
-    expect(copy.home.paths).toHaveLength(2);
+    const home = JSON.stringify({ ...copy.home, offers: undefined, offersTitle: undefined, offersEyebrow: undefined, discover: undefined, photoCredit: undefined, shippingEyebrow: undefined, shippingTitle: undefined, shippingLead: undefined });
+    expect(copy.home.steps).toHaveLength(3);
+    expect(home).not.toMatch(/concierge|conciergerie|conserjer|commission|mise en relation/i);
+    // Un seul tarif, public depuis le 25 novembre 2026 : 19,90 $ par mois, essai de 14 jours.
+    expect(copy.home.pricingTitle).toMatch(/19[.,]90/);
+    expect(copy.home.pricingBody).toMatch(/14/);
+    expect(copy.home.pricingIncluded).toHaveLength(4);
+    // Pas d'étiquette liée au nombre de personnes dans l'atelier.
+    expect(JSON.stringify(copy.home)).not.toMatch(/\bSolo\b/);
   });
 
   it("la page relieurs parle de projets Ma Reliure, jamais de « leads »", () => {
@@ -185,5 +203,23 @@ describe("le poids des pages publiques", () => {
     const route = read("src/routes/index.tsx");
     expect(route).not.toMatch(/^import \{ BuildPublicHome \}/m);
     expect(route).toContain('import("@/build/pages/public/BuildPublicHome")');
+  });
+});
+
+describe("pivot du 22 novembre 2026 — accès atelier", () => {
+  const FILES = [
+    "src/marketplace/pages/auth/MaReliureAuthPage.tsx",
+    "src/marketplace/pages/binder/dashboardCopy.ts",
+    "src/routes/_authenticated/activer-mon-atelier.tsx",
+  ];
+
+  it.each(FILES)("%s ne promet plus de validation avant d'utiliser l'espace atelier", (file) => {
+    const text = stripComments(read(file));
+    expect(text).not.toMatch(/valide séparément|validera votre atelier|autorisera séparément|soumis à la validation|approves access|approved separately|Ma Reliure valide/i);
+    expect(text).not.toMatch(/\bleads\b/i);
+  });
+
+  it("la page d'accès n'appelle plus l'atelier « partenaire »", () => {
+    expect(stripComments(read("src/marketplace/pages/auth/MaReliureAuthPage.tsx"))).not.toContain('tabBinder: "Atelier partenaire"');
   });
 });

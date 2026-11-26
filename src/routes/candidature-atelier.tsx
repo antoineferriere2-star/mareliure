@@ -1,11 +1,14 @@
 /**
- * Candidature sans compte, conservée pour les ateliers qui souhaitent d'abord
- * être recontactés. La création directe de l'espace atelier passe par /auth.
+ * « Créer mon compte atelier » depuis le pivot du 22 novembre 2026 : la page où
+ * un relieur ou un atelier de restauration ouvre son compte. La création passe
+ * par /auth?space=atelier et l'espace s'ouvre immédiatement (aucune validation
+ * manuelle à cette étape).
  *
- * Cette candidature ne crée pas de compte ni d'atelier — seulement une ligne
+ * L'URL reste /candidature-atelier (plan du site, liens existants). Le dépôt
+ * d'une demande de contact, pour qui veut d'abord être recontacté, est conservé :
+ * il ne crée ni compte ni atelier, seulement une ligne
  * `marketplace_binder_applications` que l'admin lit et traite à la main
- * (`/marketplace/binders`). La création réelle de l'atelier et son
- * invitation restent un acte humain distinct (Phase A).
+ * (`/marketplace/binders`).
  */
 import { useState, type FormEvent } from "react";
 import { createFileRoute } from "@tanstack/react-router";
@@ -19,13 +22,14 @@ import {
   type LegalEntityType,
   type RevenueBand,
 } from "@/marketplace/binders/application";
-import { LandingFooter, LandingHeader } from "@/marketplace/pages/landing/LandingChrome";
+import { LandingFooter, LandingHeader, WORKSHOP_SIGNUP_HREF, WORKSHOP_SIGNUP_LABEL } from "@/marketplace/pages/landing/LandingChrome";
+import { RELIEUR_STEPS } from "@/marketplace/pages/landing/relieurContent";
 import { MARELIURE_CANONICAL_HOME } from "@/marketplace/config";
 import { EDITORIAL_FONT_PRELOAD } from "@/marketplace/pages/landing/content";
 
-const TITLE = "Candidature atelier partenaire — Ma Reliure";
+const TITLE = "Créer mon compte atelier — Ma Reliure";
 const DESCRIPTION =
-  "Présentez votre atelier à Ma Reliure : prénom, nom, e-mail, type d'entreprise. Nous lisons chaque candidature et vous recontactons.";
+  "Ouvrez votre compte atelier Ma Reliure : partagez votre lien à vos clients, recevez une fiche prête à chiffrer et suivez chaque projet jusqu'à la livraison.";
 
 // Rendue côté serveur : la page figure au plan du site, et un moteur qui ne
 // lisait qu'un document vide ne pouvait rien en indexer.
@@ -96,7 +100,7 @@ function CandidatureAtelierPage() {
     } catch (err) {
       setProblem(
         err instanceof Error
-          ? "Votre candidature n'a pas pu être envoyée. Réessayez dans un instant."
+          ? "Votre demande n'a pas pu être envoyée. Réessayez dans un instant."
           : "Une erreur est survenue.",
       );
     } finally {
@@ -108,26 +112,37 @@ function CandidatureAtelierPage() {
     <div className="mr-site flex min-h-screen flex-col bg-mr-paper text-mr-graphite">
       <LandingHeader />
       <main id="contenu" className="mx-auto w-full max-w-[36rem] flex-1 px-5 py-14 sm:px-8 sm:py-20">
-        <p className="mr-eyebrow">Ateliers partenaires</p>
-        <h1 className="mr-title mt-4 text-mr-ink">Créer mon espace atelier</h1>
+        <p className="mr-eyebrow">Pour les relieurs et ateliers de restauration</p>
+        <h1 className="mr-title mt-4 text-mr-ink">{WORKSHOP_SIGNUP_LABEL}</h1>
         <p className="mr-lead mt-5">
-          Créez votre compte avec votre adresse e-mail, puis renseignez le nom de votre atelier.
-          Votre espace ouvre immédiatement ; Ma Reliure décide ensuite quels ateliers reçoivent des projets.
+          Créez votre compte avec votre adresse e-mail : le lien et le code reçus la vérifient, puis vous renseignez le nom de votre atelier.
+          Votre espace s'ouvre immédiatement, avec un essai gratuit de 14 jours et sans carte bancaire, puis 19,90 € HT par mois sans engagement.
         </p>
-        <a href="/auth?space=atelier" className={submitClass}>Créer mon espace atelier</a>
+        <ol className="mt-8 space-y-5 border-y border-mr-rule py-8">
+          {RELIEUR_STEPS.map((step, index) => (
+            <li key={step.title} className="flex gap-4">
+              <span aria-hidden="true" className="mr-title text-mr-bordeaux">{index + 1}</span>
+              <div>
+                <h2 className="mr-heading text-mr-ink">{step.title}</h2>
+                <p className="mr-body mt-1">{step.body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+        <a href={WORKSHOP_SIGNUP_HREF} className={submitClass}>{WORKSHOP_SIGNUP_LABEL}</a>
         <h2 className="mr-heading mt-12 border-t border-mr-rule pt-8 text-mr-ink">
-          Ou présenter mon atelier sans créer de compte
+          Vous préférez être recontacté d'abord ?
         </h2>
 
         {sent ? (
           <p role="status" className="mr-body mt-8">
-            Candidature envoyée. Nous la lisons et revenons vers vous.
+            Demande envoyée. Nous la lisons et revenons vers vous.
           </p>
         ) : (
           <>
             <p className="mr-body mt-5">
-              Cette candidature parvient à Ma Reliure sans ouvrir d'espace connecté.
-              Si vous souhaitez utiliser les outils atelier dès maintenant, choisissez « Créer mon espace atelier » ci-dessus.
+              Laissez-nous vos coordonnées : votre demande parvient à Ma Reliure sans ouvrir d'espace connecté.
+              Pour utiliser l'outil dès maintenant, choisissez « {WORKSHOP_SIGNUP_LABEL} » ci-dessus.
             </p>
 
             <form onSubmit={handleSubmit} className="mt-10 space-y-6">
@@ -277,13 +292,13 @@ function CandidatureAtelierPage() {
                   value={message}
                   onChange={(e) => setMessage(e.target.value)}
                   className={`${inputClass} resize-none`}
-                  placeholder="Savoir-faire, spécialités, ce que vous cherchez en rejoignant Ma Reliure…"
+                  placeholder="Spécialités, volume de projets, ce que vous attendez d'un logiciel de devis et factures…"
                 />
               </div>
 
               <label className="mr-small flex items-start gap-3">
                 <input type="checkbox" required checked={consent} onChange={(event) => setConsent(event.target.checked)} className="mt-0.5 h-5 w-5 accent-mr-ink" />
-                <span>J'accepte que ces informations soient utilisées par Ma Reliure pour étudier ma candidature, conformément à la <a href="/confidentialite" className="mr-link">politique de confidentialité</a>.</span>
+                <span>J'accepte que ces informations soient utilisées par Ma Reliure pour me recontacter au sujet de ma demande, conformément à la <a href="/confidentialite" className="mr-link">politique de confidentialité</a>.</span>
               </label>
 
               {problem && (
@@ -293,7 +308,7 @@ function CandidatureAtelierPage() {
               )}
 
               <button type="submit" disabled={sending} className={submitClass}>
-                {sending ? "Envoi…" : "Envoyer ma candidature"}
+                {sending ? "Envoi…" : "Envoyer ma demande"}
               </button>
             </form>
           </>

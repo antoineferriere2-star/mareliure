@@ -9,7 +9,6 @@ import {
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
 import { ConversationPanel } from "@/marketplace/pages/ConversationPanel";
 import { DecisionsPanel } from "@/marketplace/pages/DecisionsPanel";
-import { formatEuros } from "@/marketplace/pricing/money";
 import { ensureMyCaseWork } from "@/marketplace/services/binderCaseWorkspace.data.functions";
 import { getMyWork, getMyWorks } from "@/marketplace/services/binderWorks.data.functions";
 import { Button } from "@/components/ui/button";
@@ -17,6 +16,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { BinderPageHeader } from "./BinderPageUi";
+import { WorkshopOfferCard } from "./WorkshopOfferCard";
 import { WORK_KEY, WORKS_KEY } from "./works/workKeys";
 import { WorkshopReceptionPanel } from "./works/RoundTripWorkshopPanels";
 import { sourceLabel } from "@/marketplace/binders/fineBinderyProfile";
@@ -122,30 +122,7 @@ export function BinderCasePage({ caseId }: { caseId: string }) {
       <CaseBriefPanel view={data.view} />
       <aside className="space-y-6">
         {oppeOrder ? <>
-        <section className="rounded-lg border border-border bg-card p-5">
-          <h2 className="font-serif text-lg">Proposition de projet</h2>
-          {offer?.binder_payout_cents ? (
-            <>
-              <p className="mt-3 text-sm text-muted-foreground">Votre rémunération fixe (HT)</p>
-              <p className="mt-1 text-3xl font-medium">{formatEuros(offer.binder_payout_cents)}</p>
-              {offer.service_description && (
-                <p className="mt-3 text-sm leading-6"><span className="text-muted-foreground">Prestation : </span>{offer.service_description}</p>
-              )}
-              {offer.lead_time_days && (
-                <p className="mt-1 text-sm"><span className="text-muted-foreground">Votre délai : </span>{offer.lead_time_days} jours</p>
-              )}
-              <p className="mt-3 text-sm leading-6 text-muted-foreground">
-                Oppe vend ce projet au client sous sa marque et vous confie sa réalisation. Vous facturez cette rémunération à
-                Oppe ; vous n'émettez ni devis ni facture au client.
-              </p>
-            </>
-          ) : (
-            <p className="mt-3 text-sm text-muted-foreground">
-              Cette sollicitation historique ne contient pas de rémunération validée. {brandName}
-              doit la reprendre avant toute réponse.
-            </p>
-          )}
-        </section>
+        <WorkshopOfferCard payoutCents={offer?.binder_payout_cents ?? null} serviceDescription={offer?.service_description ?? null} leadTimeDays={offer?.lead_time_days ?? null} brandName={brandName} />
 
         {data.canRespond && offer?.binder_payout_cents ? (
           <section className="space-y-4 rounded-lg border border-border bg-card p-5">

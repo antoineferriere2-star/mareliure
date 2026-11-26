@@ -47,6 +47,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { CaseBriefPanel } from "@/marketplace/pages/CaseBriefPanel";
+import { WorkshopSendPreview } from "./WorkshopSendPreview";
 import { binderSkillLabel } from "@/marketplace/binders/skills";
 import { CASE_STATUS_LABELS, isCaseStatus, offerStateLabel } from "@/marketplace/cases/state";
 import { formatEuros } from "@/marketplace/pricing/money";
@@ -983,6 +984,7 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
   const [problem, setProblem] = useState<string | null>(null);
   const [sentNotice, setSentNotice] = useState<SendPriceResult | null>(null);
   const [serviceDescription, setServiceDescription] = useState("");
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const queryKey = ["marketplace", "case", caseId] as const;
   const { data, isPending, error } = useQuery({
@@ -1000,14 +1002,20 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
   }, [data]);
 
   const invite = useMutation({
-    mutationFn: () => send({ data: { caseId, binderIds: selected, serviceDescription } }),
+    mutationFn: (confirmedPayouts: Record<string, number>) =>
+      send({ data: { caseId, binderIds: selected, serviceDescription, confirmedPayouts } }),
     onSuccess: async () => {
+      setPreviewOpen(false);
       setSelected([]);
       setProblem(null);
       await queryClient.invalidateQueries({ queryKey });
       await queryClient.invalidateQueries({ queryKey: ["marketplace", "cases"] });
     },
-    onError: (err: Error) => setProblem(err.message),
+    onError: async (err: Error) => {
+      setProblem(err.message);
+      // Montant changé entre-temps : l'aperçu se relit pour montrer le nouveau.
+      await queryClient.invalidateQueries({ queryKey: [...queryKey, "workshop-preview"] });
+    },
   });
 
   const release = useMutation({
@@ -1283,13 +1291,28 @@ export function CaseMatchingPage({ caseId }: { caseId: string }) {
           <Button
             className="mt-5 w-full"
             disabled={!canInvite || invite.isPending}
-            onClick={() => invite.mutate()}
+            onClick={() => {
+              setProblem(null);
+              setPreviewOpen(true);
+            }}
           >
-            {invite.isPending ? "Envoi…" : "Envoyer le projet à ces relieurs"}
+            Vérifier puis envoyer aux relieurs
           </Button>
           <p className="mt-2 text-xs text-muted-foreground">
-            Un dossier est envoyé à trois relieurs au maximum.
+            Vous relisez le dossier tel que l'atelier le recevra avant de confirmer. Un dossier est envoyé à trois
+            relieurs au maximum.
           </p>
+          <WorkshopSendPreview
+            open={previewOpen}
+            onOpenChange={setPreviewOpen}
+            caseId={caseId}
+            binderIds={selected}
+            serviceDescription={serviceDescription}
+            brandName={data.case.brand === "FINE_BINDERY" ? "Fine Bindery" : "Ma Reliure"}
+            sending={invite.isPending}
+            problem={problem}
+            onConfirm={(confirmedPayouts) => invite.mutate(confirmedPayouts)}
+          />
         </section>
       </aside>
     </div>

@@ -279,7 +279,7 @@ function Pricing() {
               <span className="font-editorial text-[4.5rem] leading-none tracking-[-0.03em] sm:text-[5.5rem]">{formatHtPrice(WORKSHOP_OFFER.subscriptionHtCents).replace(" HT", "")}</span>
               <span className="mr-lead">HT par mois, sans engagement</span>
             </p>
-            <p className="mr-small mt-3">France métropolitaine : TVA 20 % (3 €), soit 18 € TTC par mois, vitrine incluse.
+            <p className="mr-small mt-3">France métropolitaine : TVA 20 % (3,98 €), soit 23,88 € TTC par mois, vitrine incluse.
               Même TVA si l’atelier est en franchise en base. Autres territoires : qualification individuelle.</p>
             <p className="mr-small mt-4 max-w-[28rem]">
               {WORKSHOP_OFFER.subscriptionOpen

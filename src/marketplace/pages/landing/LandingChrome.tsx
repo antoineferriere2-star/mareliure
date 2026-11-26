@@ -161,14 +161,18 @@ const LANDING_PATH = isMaReliure ? "/" : "/reliure";
  * comportent exactement comme avant ; ailleurs elles y reviennent au lieu de
  * rester inertes.
  */
+export const FEATURES_ANCHOR = "fonctionnalites";
+export const FAQ_ANCHOR = "faq";
+/** Bouton principal : on ne « démarre » plus un projet, on crée son compte atelier. */
+export const WORKSHOP_SIGNUP_LABEL = "Créer mon compte atelier";
+export const WORKSHOP_SIGNUP_HREF = "/auth?space=atelier";
+
 const NAV = [
   { href: `${LANDING_PATH}#${ANCHORS.howItWorks}`, label: "Comment ça marche" },
-  { href: `${LANDING_PATH}#${ANCHORS.crafts}`, label: "Les savoir-faire" },
+  { href: `${LANDING_PATH}#${FEATURES_ANCHOR}`, label: "Fonctionnalités" },
+  { href: "/demonstration", label: "Démonstration" },
   { href: "/tarifs", label: "Tarifs" },
-  // Vers la page de recrutement, pas l'ancre de la landing : ce lien vise un
-  // relieur, pas un propriétaire de livre — les deux publics ne lisent jamais
-  // la même page d'atterrissage.
-  { href: "/partenaires-relieurs", label: "Pour les relieurs" },
+  { href: `${LANDING_PATH}#${FAQ_ANCHOR}`, label: "FAQ" },
 ] as const;
 
 /**
@@ -254,17 +258,18 @@ export function LandingHeader({ workshop = false, cta = true }: { workshop?: boo
               Se connecter
             </a>
           </span>
-          {!cta ? null : workshop ? (
-            <a href="/auth?space=atelier" className={actionClass("primary", "compact")}>
-              Créer mon espace atelier
+          {!cta ? null : (
+            <a href={WORKSHOP_SIGNUP_HREF} className={actionClass("primary", "compact")}>
+              {WORKSHOP_SIGNUP_LABEL}
             </a>
-          ) : (
-            <IntakeCta variant="outline" size="compact" />
           )}
         </div>
       </div>
       <nav aria-label="Navigation mobile" className="border-t border-mr-rule/70 lg:hidden">
         <div className="mx-auto flex max-w-[78rem] items-center justify-between gap-6 px-5 py-1 sm:px-8">
+          <a href="/demonstration" className={HEADER_LINK}>
+            Démonstration
+          </a>
           <a href="/tarifs" className={HEADER_LINK}>
             Tarifs
           </a>
@@ -292,19 +297,11 @@ export function LandingHeader({ workshop = false, cta = true }: { workshop?: boo
  */
 const SERVICE_LINKS = [
   { href: `${LANDING_PATH}#${ANCHORS.howItWorks}`, label: "Comment ça marche" },
-  { href: `${LANDING_PATH}#${ANCHORS.crafts}`, label: "Les savoir-faire" },
+  { href: `${LANDING_PATH}#${FEATURES_ANCHOR}`, label: "Fonctionnalités" },
+  { href: "/demonstration", label: "Démonstration" },
   { href: "/tarifs", label: "Tarifs" },
-  { href: "/partenaires-relieurs", label: "Pour les relieurs" },
-] as const;
-
-/** Les pages par besoin (pages/crafts) : la liste du pied de page y mène. */
-const PRESTATIONS = [
-  { href: "/reparation-de-livres", label: "Réparation" },
-  { href: "/restauration-de-livres-anciens", label: "Restauration" },
-  { href: "/reliure-de-livres", label: "Reliure" },
-  { href: "/dorure-et-finitions", label: "Dorure et finitions" },
-  { href: "/reliure-de-creation", label: "Reliure de création" },
-  { href: "/etuis-et-boites", label: "Étuis et boîtes" },
+  { href: `${LANDING_PATH}#${FAQ_ANCHOR}`, label: "FAQ" },
+  { href: WORKSHOP_SIGNUP_HREF, label: WORKSHOP_SIGNUP_LABEL },
 ] as const;
 
 /**
@@ -330,26 +327,12 @@ export function LandingFooter() {
         <span aria-hidden="true" className="mr-filet text-mr-ink" />
       </div>
       <div className="mx-auto max-w-[80rem] px-5 py-16 sm:px-8 sm:py-20">
-        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr_1fr]">
+        <div className="grid gap-12 sm:grid-cols-2 lg:grid-cols-[1.5fr_1fr_1fr]">
           <div>
             <Wordmark />
             <p className="mr-small mt-6 max-w-[20rem] text-mr-graphite">
-              Reliure, restauration et création, confiées à des ateliers indépendants installés en
-              France.
+              Devis et factures, pour les relieurs et les ateliers de restauration.
             </p>
-          </div>
-
-          <div>
-            <p className="mr-eyebrow text-mr-graphite">Prestations</p>
-            <ul className="mr-small mt-5 space-y-3 text-mr-graphite">
-              {PRESTATIONS.map((item) => (
-                <li key={item.href}>
-                  <a href={item.href} className="mr-tap text-mr-graphite underline-offset-4 hover:text-mr-ink hover:underline">
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
           </div>
 
           <nav aria-label="Le service">
@@ -386,7 +369,7 @@ export function LandingFooter() {
         </div>
 
         <p className="mr-small mt-14 border-t border-mr-rule pt-8 text-mr-graphite">
-          {MARELIURE_BRAND} — reliure et restauration de livres, par des artisans indépendants.
+          {MARELIURE_BRAND} — le logiciel de devis et factures des relieurs et ateliers de restauration.
         </p>
       </div>
     </footer>

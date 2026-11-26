@@ -55,12 +55,6 @@ describe("les pages par besoin de Ma Reliure", () => {
     }
   });
 
-  it("sont reliées depuis l'accueil et le pied de page", () => {
-    const chrome = readFileSync(resolve(process.cwd(), "src/marketplace/pages/landing/LandingChrome.tsx"), "utf8");
-    for (const page of CRAFT_PAGES) expect(chrome).toContain(`href: "${page.path}"`);
-    expect(readFileSync(resolve(process.cwd(), "src/marketplace/pages/ReliureLanding.tsx"), "utf8")).toContain("CRAFT_PAGES[index].path");
-  });
-
   it("montrent les photos demandées par la présentation, illustrations comprises", () => {
     const page = readFileSync(resolve(process.cwd(), "src/marketplace/pages/crafts/CraftPage.tsx"), "utf8");
     expect(page).toContain("RELIURE_PHOTO_SHOTS");

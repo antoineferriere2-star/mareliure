@@ -7,6 +7,7 @@
  * Aucune de ces fonctions ne reçoit un identifiant d'atelier, une référence d'ouvrage, une
  * source ou une origine : le navigateur ne les fournit jamais.
  */
+import { IMAGE_CMYK_MESSAGE } from "@/marketplace/quotes/jpegColor";
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
@@ -30,6 +31,7 @@ const MESSAGES: Record<BinderQuotesErrorCode, string> = {
   not_found: "Introuvable.",
   conflict: "Cette action n'est plus possible.",
   invalid_input: "Les informations envoyées ne sont pas valides.",
+  image_cmyk: IMAGE_CMYK_MESSAGE,
   profile_incomplete: "Le profil de l'atelier est incomplet.",
   agreement_required: "agreement_required",
   seller_identity_completion_required: "seller_identity_completion_required",

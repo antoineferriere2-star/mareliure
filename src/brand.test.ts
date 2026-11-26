@@ -48,7 +48,7 @@ describe("la racine du document ne code aucune marque en dur", () => {
 
   it("choisit son identité selon la marque déployée", () => {
     expect(code).toContain("isMaReliure");
-    for (const champ of ["title:", "description:", "author:", "icon:", "lang:"])
+    for (const champ of ["title:", "description:", "author:", "icons:", "lang:"])
       expect(code, `${champ} n'est pas décliné par marque`).toContain(champ);
   });
 
@@ -70,7 +70,7 @@ describe("la racine du document ne code aucune marque en dur", () => {
     // Les valeurs de Métré subsistent — dans la constante qui lui revient.
     const brandBlock = code.slice(code.indexOf("const METRE_BRAND"), code.indexOf("function NotFound"));
     expect(brandBlock).toContain("metre-icon.svg");
-    expect(brandBlock).toContain("mareliure-icon.svg");
+    expect(brandBlock).toContain('brandIcons("mareliure")');
     // Mais plus rien de Métré n'apparaît dans le <head> lui-même : il ne lit
     // plus que `BRAND.*`, résolu par requête (rootBrand), jamais une marque
     // écrite en dur.
@@ -95,5 +95,42 @@ describe("la racine du document ne code aucune marque en dur", () => {
   it("porte la classe de thème qui habille le tunnel", () => {
     expect(code).toMatch(/<html[^>]*className=\{BRAND\.themeClass\}/);
     expect(code).toContain('themeClass: "brand-mareliure"');
+  });
+});
+
+/**
+ * Fine Bindery servait l'icône de Ma Reliure : les deux marques partagent le
+ * même déploiement, donc le même dossier public. Chaque marque a désormais
+ * son dossier d'icônes, et la racine déclare celui de la marque résolue.
+ */
+describe("chaque marque marketplace sert ses propres icônes", () => {
+  const root = readFileSync(resolve(process.cwd(), "src/routes/__root.tsx"), "utf8");
+  const block = (name: string) => root.slice(root.indexOf(`const ${name} = {`), root.indexOf("};", root.indexOf(`const ${name} = {`)));
+  const FILES = ["favicon.svg", "favicon.ico", "apple-touch-icon.png", "icon-192.png", "icon-512.png", "site.webmanifest"];
+
+  it("déclare le dossier de sa marque, pas celui de l'autre", () => {
+    expect(block("MARELIURE_BRAND")).toContain('brandIcons("mareliure")');
+    expect(block("FINE_BINDERY_BRAND")).toContain('brandIcons("finebindery")');
+    expect(block("FINE_BINDERY_BRAND")).not.toContain('brandIcons("mareliure")');
+    expect(block("FINE_BINDERY_BRAND")).not.toContain("mareliure-icon");
+  });
+
+  for (const brand of ["mareliure", "finebindery"]) {
+    it(`publie toutes les déclinaisons de ${brand}`, () => {
+      for (const file of FILES) {
+        const bytes = readFileSync(resolve(process.cwd(), "public/icons", brand, file));
+        expect(bytes.length, `${brand}/${file} est vide`).toBeGreaterThan(0);
+      }
+      const ico = readFileSync(resolve(process.cwd(), "public/icons", brand, "favicon.ico"));
+      // En-tête ICO : réservé 0, type 1, trois images (16, 32, 48).
+      expect([ico.readUInt16LE(0), ico.readUInt16LE(2), ico.readUInt16LE(4)]).toEqual([0, 1, 3]);
+      const manifest = JSON.parse(readFileSync(resolve(process.cwd(), "public/icons", brand, "site.webmanifest"), "utf8"));
+      for (const icon of manifest.icons) expect(icon.src).toMatch(new RegExp(`^/icons/${brand}/`));
+    });
+  }
+
+  it("dessine deux icônes différentes", () => {
+    const svg = (brand: string) => readFileSync(resolve(process.cwd(), "public/icons", brand, "favicon.svg"), "utf8");
+    expect(svg("mareliure")).not.toEqual(svg("finebindery"));
   });
 });

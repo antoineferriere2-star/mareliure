@@ -82,7 +82,7 @@ export const EMPTY_BILLING_PROFILE: BillingProfile = {
   documentAccentColor: "#7A2230",
   documentFooter: null,
   vatRegime: null,
-  defaultVatRateBps: 2000,
+  defaultVatRateBps: 550,
   vatMention: null,
   quotePrefix: "D",
   invoicePrefix: "F",

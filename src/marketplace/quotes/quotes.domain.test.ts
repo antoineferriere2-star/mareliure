@@ -18,6 +18,7 @@ import {
   isEditable,
   QUOTE_STATUSES,
 } from "./quoteStatus";
+import { EMPTY_BILLING_PROFILE } from "./quoteBuild";
 import { billingProfileInput, quoteInput } from "./quoteInput";
 
 const line = (unit: number, quantity = 1, vat = 2000): CalcLine => ({ quantity, unitPriceCents: unit, vatRateBps: vat });
@@ -66,6 +67,10 @@ describe("quantité × prix", () => {
 });
 
 describe("TVA", () => {
+  it("propose 5,5 % à un atelier qui n'a encore rien réglé", () => {
+    expect(EMPTY_BILLING_PROFILE.defaultVatRateBps).toBe(550);
+  });
+
   it("s'arrondit une fois par taux, pas ligne par ligne", () => {
     // Trois lignes de 3,33 € à 20 % : 3 × 0,67 = 2,01 € ligne par ligne, 2,00 € sur la base 9,99 €.
     const totals = computeQuote({ lines: [line(333), line(333), line(333)], vatRegime: "VAT_LIABLE" });

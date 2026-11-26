@@ -14,6 +14,17 @@ import { isMaReliure } from "@/brand";
 import { getRequestMarketplaceBrand } from "@/marketplace/brand/resolveRequestBrand.server";
 import { isFineBinderyLocale, type FineBinderyLocale } from "@/marketplace/i18n/fineBinderyLocale";
 
+/**
+ * L'onglet ouvert par défaut. Depuis le pivot du 22 novembre 2026, ceux qui se connectent
+ * à Ma Reliure sont d'abord des relieurs : l'onglet Atelier s'ouvre en premier, sauf
+ * demande contraire (?space=client). Fine Bindery garde l'onglet client par défaut.
+ */
+function defaultAudience(brand: "MA_RELIURE" | "FINE_BINDERY", space?: string): "binder" | "customer" {
+  if (space === "atelier") return "binder";
+  if (space === "client") return "customer";
+  return brand === "MA_RELIURE" ? "binder" : "customer";
+}
+
 export const Route = createFileRoute("/auth")({
   // Le composant reste rendu dans le navigateur (session Supabase locale) ; le loader, lui, tourne au
   // serveur pour que head() connaisse la marque du Host : sinon finebindery.com/auth recevait un titre
@@ -25,9 +36,9 @@ export const Route = createFileRoute("/auth")({
   // allow-list, so an attacker-crafted link cannot redirect anyone off-site.
   // The return type keeps `redirect` optional, so every other link to /auth
   // stays valid without passing a search object.
-  validateSearch: (search: Record<string, unknown>): { redirect?: string; space?: "atelier"; locale?: FineBinderyLocale } => ({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string; space?: "atelier" | "client"; locale?: FineBinderyLocale } => ({
     ...(typeof search.redirect === "string" ? { redirect: search.redirect } : {}),
-    ...(search.space === "atelier" ? { space: "atelier" as const } : {}),
+    ...(search.space === "atelier" || search.space === "client" ? { space: search.space } : {}),
     ...(isFineBinderyLocale(search.locale) ? { locale: search.locale } : {}),
   }),
   // Same seam as routes/index.tsx: only the marketplace deployment has two
@@ -51,9 +62,10 @@ export const Route = createFileRoute("/auth")({
     }
     // Arrivé par « Créer mon espace atelier » (?space=atelier), le relieur ne lit pas « Retrouver mes livres » (revues #162, #165).
     const search = match.search as { space?: string; locale?: string };
+    const titleBrand = loaderData?.brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE";
     const title = authPageTitle(
-      loaderData?.brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE",
-      search.space === "atelier" ? "binder" : "customer",
+      titleBrand,
+      defaultAudience(titleBrand, search.space),
       isFineBinderyLocale(search.locale) ? search.locale : "en",
     );
     return { meta: [{ title }, { name: "robots", content: "noindex,nofollow" }] };
@@ -100,7 +112,7 @@ function AuthPage() {
             checkAdmin: () => checkAdmin(),
             getBinderProfile: () => binderProfile(),
             getPendingBinderInvitations: () => pendingBinderInvitations(),
-          }, requestedSpace ?? space)
+          }, requestedSpace ?? (space === "client" ? undefined : space))
         : await resolvePostAuthDestination(
             {
               checkAdmin: () => checkAdmin(),
@@ -144,7 +156,7 @@ function AuthPage() {
       <MaReliureAuthPage
         brand={brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE"}
         fineBinderyLocale={locale ?? "en"}
-        initialAudience={space === "atelier" ? "binder" : "customer"}
+        initialAudience={defaultAudience(brand === "FINE_BINDERY" ? "FINE_BINDERY" : "MA_RELIURE", space)}
         accessError={accessError}
         routing={routing}
         onSignedIn={async (audience) => {

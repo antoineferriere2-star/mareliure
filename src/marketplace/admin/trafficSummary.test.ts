@@ -28,6 +28,7 @@ describe("fréquentation du pilotage", () => {
     expect(viewBrand("/tarifs?x=1")).toBe("MA_RELIURE");
     expect(viewBrand("/m/reliure-marketplace-token-000001")).toBe("MA_RELIURE");
     expect(viewBrand("/m/fine-bindery-intake-token-000001")).toBe("FINE_BINDERY");
+    expect(viewBrand("/m/ferriere-intake-token-000001")).toBe("MA_RELIURE");
     expect(viewBrand("/en")).toBe("FINE_BINDERY");
     expect(viewBrand("/it/collector-rebinding")).toBe("FINE_BINDERY");
     for (const path of ["/admin", "/auth", "/portal", "/atelier", "/marketplace/binders", "/build"]) expect(viewBrand(path), path).toBeNull();

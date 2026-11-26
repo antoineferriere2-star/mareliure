@@ -13,6 +13,7 @@
  * migration changed none of it.
  */
 import { alertCustomerSpaceOpened } from "@/marketplace/notifications/adminEventAlerts.server";
+import { notifyWorkshopOfNewRequest } from "@/marketplace/notifications/offerNotices.server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
 import type { ProjectBrief } from "@/build/schema/brief";
@@ -24,6 +25,7 @@ import { buildCaseProfile, type CaseProfile } from "@/marketplace/cases/caseProf
 import { normalizeEmail } from "@/marketplace/cases/ownership";
 import { triageCase } from "@/marketplace/cases/triage";
 import { REFERRAL_ANSWER_KEY } from "@/marketplace/binders/referral";
+import { FERRIERE_SITE_SOURCE, missionBoundWorkshopId } from "@/marketplace/binders/missionWorkshop";
 import { FINE_BINDERY_PREFERRED_LANGUAGE_KEY, FINE_BINDERY_SUBMISSION_LOCALE_KEY, PROFILE_REQUEST_SOURCE, PROFILE_SOURCE_ANSWER_KEY } from "@/marketplace/binders/fineBinderyProfile";
 import {
   projectCase,
@@ -310,6 +312,26 @@ export async function resolveApprovedBinderBySlug(
   return { binderId: data.id, displayName: data.workshop_name ?? data.display_name };
 }
 
+/**
+ * Same rule as resolveApprovedBinderBySlug, by identifier: used when the
+ * Mission itself names the workshop (missionWorkshop.ts). An unapproved or
+ * demo workshop resolves to nothing, and the case falls back to manual review.
+ */
+export async function resolveApprovedBinderById(
+  sb: Supa,
+  binderId: string,
+): Promise<{ binderId: string; displayName: string } | null> {
+  const { data } = await sb
+    .from("marketplace_binders")
+    .select("id, display_name, workshop_name")
+    .eq("id", binderId)
+    .eq("status", "approved")
+    .eq("is_demo", false)
+    .maybeSingle();
+  if (!data) return null;
+  return { binderId: data.id, displayName: data.workshop_name ?? data.display_name };
+}
+
 /** A FineBindery page can attribute a request only while it is still public. */
 export async function resolvePublishedFineBinderyBinderBySlug(
   sb: Supa,
@@ -403,7 +425,7 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
 
   const { data: pending, error } = await sb
     .from("marketplace_cases")
-    .select("id, dossier_id")
+    .select("id, dossier_id, mission_id")
     .is("triaged_at", null)
     .neq("status", "cancelled")
     .limit(200);
@@ -430,14 +452,18 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
     const referralSlug = answers[REFERRAL_ANSWER_KEY];
     const requestedFineBinderyProfile =
       answers[PROFILE_SOURCE_ANSWER_KEY] === PROFILE_REQUEST_SOURCE;
-    const referral =
-      typeof referralSlug === "string" && referralSlug.trim()
+    // A Mission that belongs to a workshop (its own website) attributes by
+    // its identifier, which the visitor cannot choose — never by a slug.
+    const boundWorkshopId = missionBoundWorkshopId(row.mission_id);
+    const referral = boundWorkshopId
+      ? await resolveApprovedBinderById(sb, boundWorkshopId)
+      : typeof referralSlug === "string" && referralSlug.trim()
         ? requestedFineBinderyProfile
           ? await resolvePublishedFineBinderyBinderBySlug(sb, referralSlug.trim())
           : await resolveApprovedBinderBySlug(sb, referralSlug.trim())
         : null;
-    const fromFineBinderyProfile = requestedFineBinderyProfile;
-    const workshopIntent = requestedFineBinderyProfile || (typeof referralSlug === "string" && !!referralSlug.trim());
+    const fromFineBinderyProfile = !boundWorkshopId && requestedFineBinderyProfile;
+    const workshopIntent = !!boundWorkshopId || requestedFineBinderyProfile || (typeof referralSlug === "string" && !!referralSlug.trim());
     const unresolvedReferral = workshopIntent && !referral;
     const supportedLanguages = new Set(["en", "fr", "de", "it", "es"]);
     const rawSubmissionLocale = answers[FINE_BINDERY_SUBMISSION_LOCALE_KEY];
@@ -483,8 +509,12 @@ export async function reconcileCaseTriage(sb: Supa): Promise<number> {
         case_id: row.id,
         binder_id: referral.binderId,
         event_type: fromFineBinderyProfile ? "finebindery_profile_request_attributed" : "binder_referral_attributed",
-        metadata: fromFineBinderyProfile ? { source: PROFILE_REQUEST_SOURCE } : {},
+        metadata: fromFineBinderyProfile
+          ? { source: PROFILE_REQUEST_SOURCE }
+          : boundWorkshopId ? { source: FERRIERE_SITE_SOURCE } : {},
       });
+      // L'atelier rattaché apprend la demande par e-mail ; n'échoue jamais le tri.
+      await notifyWorkshopOfNewRequest(sb, { caseId: row.id, binderId: referral.binderId });
     }
   }
   return triaged;

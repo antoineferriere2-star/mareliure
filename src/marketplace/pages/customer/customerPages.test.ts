@@ -303,7 +303,7 @@ describe("détail : ce que le client lit", () => {
   it("H — terminé : l'atelier est présenté sans aucun moyen de le contacter directement", () => {
     for (const brand of BRANDS) {
       const html = detail(brand, "H");
-      expect(html).toContain("Atelier Reliure Dorure Ferrière");
+      expect(html).toContain("Atelier Reliure Ferrière");
       expect(html).not.toMatch(/mailto:|tel:/);
       expect(html).not.toMatch(/Contacter l|Contact the workshop|Appeler|Call the workshop/);
     }

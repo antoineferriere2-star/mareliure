@@ -1,6 +1,7 @@
 import {workshopIntakeGuidance} from "@/marketplace/pages/customer/workshopIntakeGuidance";
 import { useMemo, type ReactNode } from "react";
 import { createFileRoute, useParams } from "@tanstack/react-router";
+import { MISSION_RELOAD_GUARD } from "@/build/runtime/missionReloadGuard";
 import { MissionRuntime } from "@/build/pages/public/MissionRuntime";
 import { MissionRuntimePending } from "@/build/pages/public/MissionRuntimeStates";
 import { FR_PUBLIC_COPY } from "@/build/pages/public/frPublicCopy";
@@ -22,7 +23,7 @@ import {
   PROFILE_SOURCE_ANSWER_KEY,
 } from "@/marketplace/binders/fineBinderyProfile";
 import { isMaReliure } from "@/brand";
-import { BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
+import { BOOKBINDING_PUBLIC_TOKEN, FERRIERE_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/constants";
 
 /**
  * Le titre de l'onglet pendant tout le parcours.
@@ -39,9 +40,9 @@ import { BOOKBINDING_PUBLIC_TOKEN, FINE_BINDERY_PUBLIC_TOKEN } from "@/build/con
  */
 function titleFor(publicToken: string): string {
   if (!isMaReliure) return "Project Intake — Métré Build";
-  return publicToken === FINE_BINDERY_PUBLIC_TOKEN
-    ? "Start your project — Fine Bindery"
-    : "Présenter mon livre — Ma Reliure";
+  if (publicToken === FINE_BINDERY_PUBLIC_TOKEN) return "Start your project — Fine Bindery";
+  if (publicToken === FERRIERE_PUBLIC_TOKEN) return "Présenter mon ouvrage — Reliure Ferrière";
+  return "Présenter mon livre — Ma Reliure";
 }
 
 export const Route = createFileRoute("/m/$publicToken")({
@@ -56,17 +57,22 @@ export const Route = createFileRoute("/m/$publicToken")({
   }),
   head: ({ params }) => ({
     meta: [{ title: titleFor(params.publicToken) }, { name: "robots", content: "noindex, nofollow" }],
+    // Page coupée en transport sous Firefox : rechargement unique (missionReloadGuard.ts).
+    scripts: [{ children: MISSION_RELOAD_GUARD }],
   }),
   pendingComponent: RuntimePending,
   component: RuntimePage,
 });
+
+/** Le parcours est chez l’atelier : ses mentions légales remplacent celles de la plateforme. */
+const FERRIERE_LEGAL_LINK = { href: "https://www.reliure-ferriere.fr/mentions-legales/", label: "Mentions légales et confidentialité" };
 
 const PREPARING = "Preparing your project intake…";
 
 /** Rendu par le serveur avant le JavaScript (route sans SSR) : la langue suit la Mission servie. */
 function RuntimePending() {
   const { publicToken } = useParams({ strict: false }) as { publicToken?: string };
-  const french = isMaReliure && publicToken === BOOKBINDING_PUBLIC_TOKEN;
+  const french = isMaReliure && (publicToken === BOOKBINDING_PUBLIC_TOKEN || publicToken === FERRIERE_PUBLIC_TOKEN);
   return <MissionRuntimePending label={french ? FR_PUBLIC_COPY[PREPARING] ?? PREPARING : PREPARING} />;
 }
 
@@ -94,6 +100,10 @@ function RuntimePage() {
     [ref, source],
   );
   const isReliureIntake = isMaReliure && publicToken === BOOKBINDING_PUBLIC_TOKEN;
+  // La Mission du site de l'atelier Ferrière : un client de l'atelier, comme
+  // celui d'un lien d'atelier — mêmes avis, sans paramètre dans l'adresse.
+  const isFerriereIntake = isMaReliure && publicToken === FERRIERE_PUBLIC_TOKEN;
+  const workshopIntake = !!ref || isFerriereIntake;
   const isFrenchFineBinderyProfileIntake =
     isMaReliure && publicToken === FINE_BINDERY_PUBLIC_TOKEN && source === PROFILE_REQUEST_SOURCE;
   // Sur Ma Reliure et Fine Bindery, la proposition de suivre son livre —
@@ -104,7 +114,7 @@ function RuntimePage() {
   const afterSubmission = isMaReliure
     ? ({ visitorEmail }: { visitorEmail: string | null }): ReactNode => (
         <>
-          {ref ? <WorkshopIntakeNotice stage="next" /> : isReliureIntake && <ReliureNextSteps />}
+          {workshopIntake ? <WorkshopIntakeNotice stage="next" embedded={isFerriereIntake} /> : isReliureIntake && <ReliureNextSteps />}
           <CustomerSpaceOffer email={visitorEmail} publicToken={publicToken} />
         </>
       )
@@ -114,8 +124,10 @@ function RuntimePage() {
       publicToken={publicToken}
       renderAfterSubmission={afterSubmission}
       seedAnswers={seedAnswers}
-      guidance={ref ? workshopIntakeGuidance() : isReliureIntake ? RELIURE_GUIDANCE : undefined}
-      initialLocale={isReliureIntake || isFrenchFineBinderyProfileIntake ? "fr-FR" : undefined}
+      homeLink={!isFerriereIntake}
+      legalLink={isFerriereIntake ? FERRIERE_LEGAL_LINK : undefined}
+      guidance={workshopIntake ? workshopIntakeGuidance("fr", { embedded: isFerriereIntake }) : isReliureIntake ? RELIURE_GUIDANCE : undefined}
+      initialLocale={isReliureIntake || isFerriereIntake || isFrenchFineBinderyProfileIntake ? "fr-FR" : undefined}
     />
   );
 }

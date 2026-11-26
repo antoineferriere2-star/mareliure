@@ -8,6 +8,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { clearMyDocumentLogo, getBillingProfile, getMyCatalog, saveMyBillingProfile, uploadMyDocumentLogo } from "@/marketplace/services/binderQuotes.data.functions";
 import { getMyPricingCatalog } from "@/marketplace/services/binderPricingCatalog.data.functions";
 import { FRANCHISE_MENTION_SUGGESTION, mentionForRegime, TAX_REGIME_CHOICES, taxRegimeChoiceOf, taxRegimeFields, type BillingProfile } from "@/marketplace/quotes/quoteBuild";
+import { imageUploadProblem } from "@/marketplace/quotes/jpegColor";
 import { bpsToPercentInput, parsePercentToBps } from "@/marketplace/quotes/quoteFormat";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CARD, ErrorNote, FIELD, Field, PRIMARY_BUTTON } from "./quoteUi";
@@ -165,7 +166,7 @@ function ProfileForm({ profile }: { profile: BillingProfile }) {
               <button type="button" className="min-h-11 border border-[#b9ad9d] bg-white px-4 text-sm font-semibold" onClick={() => logoInput.current?.click()} disabled={logoMutation.isPending}>{p.logoUrl ? "Remplacer le logo" : "Ajouter un logo"}</button>
               {p.logoStoragePath && <button type="button" className="min-h-11 px-3 text-sm font-semibold text-[#7a2230]" onClick={() => clearLogoMutation.mutate()} disabled={clearLogoMutation.isPending}>Retirer</button>}
             </div>
-            {(logoMutation.isError || clearLogoMutation.isError) && <p role="alert" className="mt-2 text-xs text-red-700">Le logo n'a pas pu être enregistré. Vérifiez le format et la taille.</p>}
+            {(logoMutation.isError || clearLogoMutation.isError) && <p role="alert" className="mt-2 text-xs text-red-700">{imageUploadProblem(logoMutation.error, "Le logo n'a pas pu être enregistré. Vérifiez le format et la taille.")}</p>}
           </div>
           <div>
             <p className="text-sm font-semibold text-[#30261d]">Couleur des documents</p>

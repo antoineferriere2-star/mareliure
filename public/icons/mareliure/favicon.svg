@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Ma Reliure">
+  <!--
+    Ma Reliure : un dos de reliure en cuir, debout, sur le papier du site —
+    ce qu'un relieur fabrique et ce qu'un client regarde quand son livre
+    revient. Les nerfs dépassent du dos comme sur une vraie reliure : c'est
+    cette silhouette, plus que la couleur, qui dit « livre » à 16 px (trois
+    barres couchées se lisaient comme l'icône « menu »). La pièce de titre
+    est d'encre, son filet de papier.
+
+    Cotes paires : à 16 px une unité vaut un demi-pixel, une cote impaire
+    étale un nerf sur deux pixels gris.
+  -->
+  <rect width="32" height="32" rx="6" fill="#f2eee5"/>
+  <rect x="8" y="4" width="16" height="24" rx="2" fill="#7a2230"/>
+  <rect x="6" y="8" width="20" height="2" rx="1" fill="#5c1823"/>
+  <rect x="6" y="18" width="20" height="2" rx="1" fill="#5c1823"/>
+  <rect x="6" y="22" width="20" height="2" rx="1" fill="#5c1823"/>
+  <rect x="10" y="12" width="12" height="4" fill="#17130f"/>
+  <rect x="12" y="13.5" width="8" height="1" fill="#e8e2d6"/>
+</svg>

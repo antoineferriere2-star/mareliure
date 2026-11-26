@@ -68,14 +68,14 @@ empêche un `revert` distrait de les réintroduire en silence.
 
 ## Registre
 
-### Atelier Reliure Dorure Ferrière — Orléans
+### Atelier Reliure Ferrière — Orléans
 
-**Propriétaire :** Reliure Dorure Ferrière (`reliure-ferriere.fr`)  
+**Propriétaire :** Reliure Ferrière (`reliure-ferriere.fr`)  
 **Autorisation :** confirmée par le titulaire des droits, oralement et par
 écrit dans le fil de développement du 8 septembre 2026.  
 **Usage autorisé :** mareliure.fr et réseaux sociaux de Ma Reliure ; étendu à
 finebindery.com le 2 octobre 2026 (voir « Extension du 2 octobre 2026 »).  
-**Crédit à afficher :** « Atelier Reliure Dorure Ferrière, Orléans ».  
+**Crédit à afficher :** « Atelier Reliure Ferrière, Orléans ».  
 **Vérification visuelle :** chaque fichier ouvert et examiné le 9 septembre 2026.
 
 Ces neuf images ont en commun ce qui manquait aux cinq autres : un éclairage
@@ -104,7 +104,7 @@ septembre 2026 que Ma Reliure pouvait utiliser les photographies publiées sur
 `reliure-ferriere.fr` pour illustrer les prestations. Cette extension couvre la
 page publique `/tarifs`, les six savoir-faire de l'accueil Ma Reliure et les
 quatre familles d'intervention de l'accueil FineBindery dans ses cinq langues.
-Les pages portent le crédit « Atelier Reliure Dorure Ferrière, Orléans » ; la
+Les pages portent le crédit « Atelier Reliure Ferrière, Orléans » ; la
 grille complète renvoie aussi vers chaque photographie source numérotée.
 
 Les variantes `-320.webp` et `-640.webp` de chaque ligne sont des dérivés WebP
@@ -263,7 +263,7 @@ snapshot de document peut encore le référencer.
 
 ### Usage par défaut dans l’espace atelier — 25 septembre 2026
 
-À la demande explicite du propriétaire, les 45 illustrations Ferrière ci-dessus sont proposées par défaut pour les prestations de base de chaque relieur. Les photos personnelles sont prioritaires. Les copies enregistrées dans un devis conservent le crédit Atelier Reliure Dorure Ferrière, Orléans ; elles illustrent une opération et ne sont pas présentées comme une réalisation de l’atelier destinataire. Les fichiers et l’autorisation source restent ceux du registre ci-dessus.
+À la demande explicite du propriétaire, les 45 illustrations Ferrière ci-dessus sont proposées par défaut pour les prestations de base de chaque relieur. Les photos personnelles sont prioritaires. Les copies enregistrées dans un devis conservent le crédit Atelier Reliure Ferrière, Orléans ; elles illustrent une opération et ne sont pas présentées comme une réalisation de l’atelier destinataire. Les fichiers et l’autorisation source restent ceux du registre ci-dessus.
 
 ## Captures de l’outil atelier (PR #46) — retirées le 25 septembre 2026
 

@@ -31,3 +31,14 @@ export const BOOKBINDING_PUBLIC_TOKEN = "reliure-marketplace-token-000001";
  */
 export const FINE_BINDERY_MISSION_ID = "00000000-0000-4000-8000-000000000013";
 export const FINE_BINDERY_PUBLIC_TOKEN = "fine-bindery-intake-token-000001";
+
+/**
+ * La Mission de l'atelier Ferrière — même Playbook, même espace, même marque
+ * (MA_RELIURE) que « Présenter mon livre ». Elle est intégrée au site de
+ * l'atelier (reliure-ferriere.fr) et chaque demande qu'elle produit est
+ * attribuée d'office à l'atelier Ferrière, côté serveur, par son identifiant
+ * de Mission (marketplace/binders/missionWorkshop.ts). Publiée par
+ * scripts/seedFerriereMission.ts.
+ */
+export const FERRIERE_MISSION_ID = "00000000-0000-4000-8000-000000000014";
+export const FERRIERE_PUBLIC_TOKEN = "ferriere-intake-token-000001";

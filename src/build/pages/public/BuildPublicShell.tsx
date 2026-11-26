@@ -37,6 +37,12 @@ const VERTICAL_NAV_ITEMS = [
  * embedded chrome carries the business's name and nothing else but the legal
  * links Métré owes the visitor as the processor of their data.
  */
+/** Le lien légal d’une entreprise dont le parcours est intégré à son propre site. */
+export interface IntakeLegalLink {
+  href: string;
+  label: string;
+}
+
 export type PublicShellChrome = "marketing" | "embedded";
 
 export function BuildPublicShell({
@@ -45,6 +51,8 @@ export function BuildPublicShell({
   chrome = "marketing",
   businessName,
   lockedLocale,
+  homeLink = true,
+  legalLink,
 }: {
   children: ReactNode;
   /**
@@ -63,6 +71,9 @@ export function BuildPublicShell({
    * every marketing page, where the visitor chooses — see PublicLocaleProvider.
    */
   lockedLocale?: SupportedLocale | null;
+  homeLink?: boolean;
+  /** Parcours intégré : une page de l’entreprise remplace les pages légales de la plateforme. */
+  legalLink?: IntakeLegalLink;
 }) {
   return (
     <PublicLocaleProvider lockedLocale={lockedLocale}>
@@ -70,6 +81,8 @@ export function BuildPublicShell({
         showFaqLauncher={showFaqLauncher}
         chrome={chrome}
         businessName={businessName}
+        homeLink={homeLink}
+        legalLink={legalLink}
       >
         {children}
       </BuildPublicShellContent>
@@ -82,11 +95,16 @@ function BuildPublicShellContent({
   showFaqLauncher,
   chrome,
   businessName,
+  homeLink = true,
+  legalLink,
 }: {
   children: ReactNode;
   showFaqLauncher: boolean;
   chrome: PublicShellChrome;
   businessName?: string | null;
+  /** Faux quand le parcours est intégré au site de l’entreprise : le nom n’y mène nulle part. */
+  homeLink?: boolean;
+  legalLink?: IntakeLegalLink;
 }) {
   const { locale } = usePublicLocale();
   usePageViewTracking(locale);
@@ -114,7 +132,7 @@ function BuildPublicShellContent({
                 intake is a page like any other, and the name is the way back
                 to the home page — without it, leaving the intake meant the
                 browser's back button or the address bar. */}
-            {isMaReliure ? (
+            {isMaReliure && homeLink ? (
               <a
                 href="/"
                 className="intake-display truncate text-base font-semibold underline-offset-4 hover:underline"
@@ -145,6 +163,11 @@ function BuildPublicShellContent({
                 have never heard of on the one screen where they are handing
                 over something of theirs. */}
             {!isMaReliure && <span>Project intake powered by Métré Build</span>}
+            {legalLink ? (
+              <a href={legalLink.href} target="_blank" rel="noreferrer" className="hover:text-slate-900">
+                {legalLink.label}
+              </a>
+            ) : (
             <span className="flex gap-4">
               <a
                 href={isMaReliure ? "/confidentialite" : "/privacy"}
@@ -163,6 +186,7 @@ function BuildPublicShellContent({
                 {t(locale, "footer.terms")}
               </a>
             </span>
+            )}
           </div>
         </footer>
       </div>

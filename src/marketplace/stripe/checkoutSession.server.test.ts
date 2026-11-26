@@ -22,6 +22,8 @@ const h = vi.hoisted(() => ({
   recorded: [] as string[],
   events: [] as unknown[],
   testCase: false,
+  // Dossier engagé avant le pivot du 22 novembre 2026 : il se termine aux conditions d'origine.
+  caseCreatedAt: "2026-09-19T10:00:00.000Z",
 }));
 
 vi.mock("@tanstack/react-start", () => {
@@ -36,6 +38,7 @@ vi.mock("@/integrations/supabase/auth-middleware", () => ({ requireSupabaseAuth:
 vi.mock("@/build/services/adminAuth.server", () => ({ admin: vi.fn() }));
 vi.mock("@/marketplace/services/caseRepository.server", () => ({
   loadCaseContext: vi.fn(async () => ({
+    row: { created_at: h.caseCreatedAt },
     customerUserId: "user-1",
     invitedBinderIds: [],
     selectedBinderId: null,
@@ -109,6 +112,7 @@ beforeEach(() => {
   h.proposal = null;
   h.payment = null;
   h.testCase = false;
+  h.caseCreatedAt = "2026-09-19T10:00:00.000Z";
   h.recorded = [];
   h.events = [];
   h.stripe.create.mockReset().mockResolvedValue({ id: "cs_new", url: "https://checkout.stripe.test/cs_new", status: "open" });
@@ -251,6 +255,14 @@ describe("ce qui ne doit jamais atteindre Stripe", () => {
     h.payment = { paidAt: "2026-09-19T11:00:00.000Z", stripeCheckoutSessionId: "cs_done" };
     expect(await codeOf(run())).toBe(409);
     expect(h.stripe.create).not.toHaveBeenCalled();
+  });
+
+  it("dossier créé après le pivot du 22 novembre 2026 → 409, aucun appel Stripe", async () => {
+    h.caseCreatedAt = "2026-11-23T09:00:00.000Z";
+    h.proposal = acceptedProposal(amountInput(50_000, 0, 2000));
+    expect(await codeOf(run())).toBe(409);
+    expect(h.stripe.create).not.toHaveBeenCalled();
+    expect(h.stripe.assertAccount).not.toHaveBeenCalled();
   });
 
   it("aucune proposition acceptée → 409", async () => {

@@ -43,7 +43,7 @@ import {
   type SessionAuth,
 } from "./publicSessionStorage";
 import { VisitorProjectSummaryView } from "./VisitorProjectSummaryView";
-import { BuildPublicShell } from "./BuildPublicShell";
+import { BuildPublicShell, type IntakeLegalLink } from "./BuildPublicShell";
 import { ProjectCanvas, ProjectCanvasMobileSheet } from "./ProjectCanvas";
 import { projectCanvasItemsFromRuntime } from "./ProjectCanvasProjection";
 import { EMPTY_BRANDING, type PublicBranding } from "@/build/branding/missionBranding";
@@ -243,8 +243,14 @@ export function MissionRuntime({
   guidance,
   initialLocale,
   routeLocaleWins = false,
+  homeLink = true,
+  legalLink,
 }: {
   publicToken: string;
+  /** Faux pour un parcours intégré au site de l’entreprise : le nom de l’en-tête n’est pas un lien. */
+  homeLink?: boolean;
+  /** Parcours intégré : lien légal de l’entreprise à la place des pages de la plateforme. */
+  legalLink?: IntakeLegalLink;
   renderAfterSubmission?: RenderAfterSubmission;
   /**
    * What the deployment wants said around the questions — a promise up front,
@@ -290,6 +296,8 @@ export function MissionRuntime({
       showFaqLauncher={false}
       chrome="embedded"
       businessName={businessName}
+      homeLink={homeLink}
+      legalLink={legalLink}
       lockedLocale={routeLocaleWins ? (initialLocale ?? missionLocale) : (missionLocale ?? initialLocale ?? null)}
     >
       <MissionRuntimeContent

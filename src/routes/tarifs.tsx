@@ -20,9 +20,9 @@ import { breadcrumbSchema, jsonLdScript, MARELIURE_SITE_URL } from "@/lib/struct
  * pour la même raison : annoncer un prix à un moteur de recherche est un
  * engagement, pas une optimisation.
  */
-const TITLE = "Prix et devis de reliure ou de restauration de livre — Ma Reliure";
+const TITLE = "Tarifs — Ma Reliure";
 const DESCRIPTION =
-  "Ce qui fait le prix d’une reliure ou d’une restauration de livre, et comment obtenir un devis. Présenter votre livre est gratuit et sans engagement.";
+  "Ma Reliure, le logiciel de devis et factures des relieurs et ateliers de restauration : un seul abonnement à 19,90 € HT par mois, essai gratuit de 14 jours sans carte bancaire, sans engagement.";
 
 export const Route = createFileRoute("/tarifs")({
   head: () => ({

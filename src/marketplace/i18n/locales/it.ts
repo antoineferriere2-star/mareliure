@@ -1,36 +1,15 @@
 import type { FineBinderyPublicCopy } from "./types";
+import { FINE_BINDERY_HOME } from "./homeCopy";
+import { FINE_BINDERY_DISCIPLINE_COPY } from "./disciplineCopy";
 import { itSeo, itHomeFaq, itProjectStart, itDirectoryLabel, itProfileNotFound } from "./itHead";
 
 
 export const it: FineBinderyPublicCopy = {
   seo: itSeo,
-  nav: { how: "Come funziona", services: "Competenze", workshops: itDirectoryLabel, faq: "Domande", signIn: "Accedi", language: "Lingua", menu: "Menu" },
-  common: { start: itProjectStart, project: "Progetto", france: "Francia", skills: "Competenze", languages: "Lingue", techniques: "Tecniche e materiali", originalText: "Testo del laboratorio nella lingua originale." },
-  footer: { summary: "La rete europea della legatoria e del restauro del libro.", information: "Informazioni", legal: "Note legali", privacy: "Privacy", terms: "Condizioni d’uso", sales: "Condizioni di vendita", closing: "Legatoria, conservazione e doratura, da laboratori indipendenti." },
-  home: {
-    eyebrow: "Legatoria · Conservazione · Doratura",
-    title: "La rete europea della legatoria e del restauro del libro.",
-    lead: "Scopri legatori e restauratori esperti. Presenta il tuo progetto. Lavora con il laboratorio giusto.",
-    discover: "Scopri i laboratori",
-    proof: "Laboratori indipendenti, verificati prima della pubblicazione · Un progetto, un interlocutore · Apertura in Francia",
-    offersEyebrow: "Competenze", offersTitle: "Il lavoro della rete.", photoCredit: "Fotografie", offers: [
-      { title: "Legatoria d’arte", body: "Legature tradizionali e contemporanee in pelle, tela e carte scelte." },
-      { title: "Restauro e conservazione", body: "Un lavoro attento su libri antichi, preziosi o cari, nel rispetto della loro storia." },
-      { title: "Legatura da collezione", body: "Un’edizione amata o ricercata, trasformata in un pezzo unico." },
-      { title: "Creazioni su misura", body: "Legature uniche, libri di famiglia, copie di presentazione, scatole e custodie." },
-    ],
-    pathsEyebrow: "Due modi per iniziare", pathsTitle: "Scegli il tuo laboratorio — o lascia che lo troviamo noi.", paths: [
-      { title: "Scegli un laboratorio", body: "Scopri i laboratori pubblicati, i loro lavori, le tecniche e le lingue che parlano. Un progetto presentato dalla pagina di un laboratorio arriva direttamente a quel laboratorio.", cta: "Sfoglia i laboratori" },
-      { title: "Presenta il tuo progetto", body: "Descrivi il tuo libro una sola volta. Fine Bindery studia il lavoro, lo affida al laboratorio con le competenze adatte e segue il progetto fino al ritorno del libro.", cta: "Presenta il tuo progetto" },
-    ],
-    howEyebrow: "Come si svolge un progetto", howTitle: "Dalla prima fotografia al ritorno del libro.", steps: ["Presenta il tuo libro", "Ricevi una proposta", "Il laboratorio giusto conferma", "Il libro raggiunge il laboratorio", "Segui il lavoro", "Il libro torna a casa"],
-    workshopsEyebrow: "Dietro ogni libro, un laboratorio", workshopsTitle: "Legatori, restauratori e doratori indipendenti.", workshopsLead: "Ogni laboratorio viene verificato prima della pubblicazione della sua pagina: competenze, esperienza e lavori che desidera ricevere.", selected: "Verificato e pubblicato da Fine Bindery.", discoverWorkshops: "Scopri i laboratori pubblicati",
-    networkNote: "La rete apre con laboratori in Francia e accoglierà legatori e restauratori di tutta Europa.",
-    trustEyebrow: "Il tuo libro viaggia", trustTitle: "Il tuo libro viaggia. La sua storia non si perde.", trust: ["Stato documentato", "Un solo interlocutore", "Laboratori verificati", "Un viaggio accompagnato"],
-    shippingEyebrow: "Spedizione", shippingTitle: "Un viaggio adatto al libro.", shippingLead: "Il viaggio è organizzato secondo la natura e il valore del libro, e preventivato a parte rispetto al lavoro.",
-    faqEyebrow: "Le tue domande", faqTitle: "Prima di iniziare.", faq: itHomeFaq,
-    finalTitle: "Il tuo libro merita le mani giuste.", finalLead: "Sfoglia i laboratori della rete, oppure presenta il tuo progetto e lascia che troviamo quello giusto.", established: "dal",
-  },
+  nav: { features: "Funzionalità", pricing: "Prezzi", how: "Come funziona", services: "Competenze", workshops: itDirectoryLabel, faq: "Domande", signIn: "Accedi", language: "Lingua", menu: "Menu" },
+  common: { signup: "Crea il mio account laboratorio", start: itProjectStart, project: "Progetto", france: "Francia", skills: "Competenze", languages: "Lingue", techniques: "Tecniche e materiali", originalText: "Testo del laboratorio nella lingua originale." },
+  footer: { summary: "Il software per preventivi e fatture di legatori e laboratori di restauro.", information: "Informazioni", legal: "Note legali", privacy: "Privacy", terms: "Condizioni d’uso", sales: "Condizioni di vendita", closing: "Scheda, preventivo e monitoraggio per legatori e restauratori." },
+  home: { ...FINE_BINDERY_HOME.it, ...FINE_BINDERY_DISCIPLINE_COPY.it },
   directory: {
     eyebrow: "La rete", title: "Legatori e restauratori, scelti per il loro mestiere.",
     lead: "Sfoglia i laboratori pubblicati. Un progetto presentato dalla pagina di un laboratorio arriva direttamente a quel laboratorio.",

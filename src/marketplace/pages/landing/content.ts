@@ -75,7 +75,7 @@ export const STEPS: readonly LandingStep[] = [
  * Déclaré ici plutôt qu'à côté des restaurations, parce que les univers s'en
  * servent aussi — et qu'une constante lue avant sa déclaration ne compile pas.
  */
-const FERRIERE = "Atelier Reliure Dorure Ferrière, Orléans";
+const FERRIERE = "Atelier Reliure Ferrière, Orléans";
 
 export interface Proof {
   title: string;
@@ -313,7 +313,7 @@ export interface ArtisanProfile {
 /**
  * Les ateliers référencés.
  *
- * Un seul pour l'instant, et il est réel : Reliure Dorure Ferrière, à Orléans.
+ * Un seul pour l'instant, et il est réel : Reliure Ferrière, à Orléans.
  * Tout ce qui est affiché ici — la ville, l'année, les savoir-faire, les
  * pièces photographiées — vient de l'atelier lui-même, qui a autorisé l'usage
  * de ses images. Rien n'est estimé, rien n'est arrondi, et il n'y a ni note ni
@@ -326,7 +326,7 @@ export interface ArtisanProfile {
 export const ARTISANS: readonly ArtisanProfile[] = [
   {
     id: "reliure-dorure-ferriere",
-    name: "Reliure Dorure Ferrière",
+    name: "Reliure Ferrière",
     artisan: "François Ferrière",
     city: "Orléans",
     since: 1982,

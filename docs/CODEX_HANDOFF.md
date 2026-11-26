@@ -3769,3 +3769,111 @@ Codex — **21 octobre 2026**, brief n° 9, chantier 1. Branche fix/binder-appli
 Rapport docs/BINDER_APPLICATION_VALIDATION_20261021.md et deux captures locales. Validation locale : 38 tests ciblés ; suite complète 316 fichiers / 3 889 tests ; typecheck réussi ; lint sans erreur (19 avertissements existants) ; build node scripts/buildMaReliure.mjs réussi ; candidature simulée 2/2 bureau/mobile 375 ; recette client existante FR/EN 4/4 bureau/iframe 375. Tests serveur : refus avant admin/insert/e-mail, tous services simulés. Premiers essais navigateur et synchronisation d’une route découpée expliqués dans le rapport. Serveurs Vite des deux recettes arrêtés après vérification fraîche du processus, runners sortis avec code 0. Aucun consentement persisté nouveau, aucune migration, candidature réelle, écriture de production, compte, achat, paiement, e-mail, fusion de PR ou déploiement. La CI rejoue les deux suites navigateur.
 
 Complément du même chantier, **21 octobre 2026** : deux cas URL ajoutés et passés, soit **40/40 tests ciblés** (34 validation + 6 point d’entrée). Le préfixe HTTP(S) complet est exigé, conformément au message, y compris face à https:atelier.fr et http:/atelier.fr. Le premier passage local complet reste le relevé historique de 3 889 tests ; la CI du dernier commit relance la suite avec les deux cas supplémentaires. Aucun autre comportement ni périmètre changé.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 22 novembre 2026, `feat/pivot-vitrines-relieurs` (PR 1 du pivot « outil pour relieurs »).
+
+- Texte seul, sans photographie : accueils Ma Reliure (FR) et Fine Bindery (EN, FR, DE, IT, ES) réécrits pour le relieur — hero, exemple avant/après (illustratif), 3 étapes, fonctionnalités, tarifs en emplacement « bientôt disponible » (aucun montant), FAQ. Bouton principal : « Créer mon compte atelier » / « Try Fine Bindery » vers `/auth?space=atelier` (la page d'inscription renommée est la PR 2).
+- En-têtes et pieds de page : plus de « savoir-faire », « Pour les relieurs » ni annuaire. `/tarifs` devient un emplacement. Annuaire Fine Bindery supprimé : `/$locale/professionals` et `/professionnels` redirigent en 301 vers l'accueil de la langue, retirés du plan du site.
+- Hors périmètre, à décider à part : pages par besoin Ma Reliure (réparation, restauration…) et pages de savoir-faire Fine Bindery (leur texte est conservé dans `locales/disciplineCopy.ts`), pages de profil d'atelier, `partenaires-relieurs`, `candidature-atelier`, parcours client, pages légales (liste des clauses : `pivot-relieurs-plan-2026-11-22.md`).
+- Vérifié : typecheck sans nouvelle erreur (erreurs préexistantes : pglite, pdf-lib, standardwebhooks, Stripe absents de `node_modules`) ; 435 tests ciblés verts sauf `auth-email-hook.test.ts` (préexistant). Rendu navigateur non vérifié.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 22 novembre 2026, `feat/pivot-compte-atelier` (PR 2 du pivot « outil pour relieurs », empilée sur `feat/pivot-vitrines-relieurs`).
+
+- `/candidature-atelier` devient la page « Créer mon compte atelier » (URL, plan du site et canonique inchangés) : promesse de l'outil, trois étapes, bouton vers `/auth?space=atelier`. L'espace s'ouvre immédiatement, comme avant : aucune validation manuelle ajoutée.
+- La demande de contact (sans compte) est conservée, reformulée en « Vous préférez être recontacté d'abord ? » ; logique d'envoi, serveur et table inchangés.
+- Retirées de la page : « Ateliers partenaires » et « Ma Reliure décide ensuite quels ateliers reçoivent des projets ».
+- Non traité, PR 4+ : la page d'accès `/auth` et les e-mails disent encore que Ma Reliure valide l'accès aux nouveaux projets (comportement réel tant que le basculement technique n'est pas fait) ; `partenaires-relieurs` ; pages légales.
+- Vérifié : 327 tests ciblés verts sauf `auth-email-hook.test.ts` (préexistant, module absent). Rendu navigateur non vérifié pour cette page.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 22 novembre 2026, `feat/pivot-lot-paiements` (PR 4, lot 1 « paiements » du pivot « outil pour relieurs »).
+
+- Fin des NOUVEAUX encaissements par la plateforme, sans migration ni écriture en base. Nouveau `src/marketplace/commercial/paymentPivot.ts` : date de bascule `PAYMENT_PIVOT_AT` (22/11/2026), `createdAfterPaymentPivot` (fail closed sur date illisible), interrupteur `WORKSHOP_ONLINE_PAYMENT_OPENING_RETIRED`.
+- Checkout de proposition (revente Oppe) : `createCheckoutForCase` répond 409 pour un dossier créé à partir de la bascule ; un dossier antérieur se termine aux conditions d'origine.
+- Frais de 3 % / Stripe Connect : `startMyWorkshopConnect`, `resumeMyWorkshopConnect` refusés ; `createMyInvoicePaymentLink` refusé sauf lien déjà ouvert (retrouver le lien). `OnlineInvoicePaymentPanel` n'apparaît plus que pour une facture ayant déjà un paiement ; `WorkshopConnectPanel` devient une note sans configuration Stripe.
+- NON fait (lots suivants) : retrait du code et des tables (own_client, legacy_resale, frais, prix gérés), `/conditions-ateliers`, `partnersContent`, tableau de bord admin (mentionnent encore 3 %), e-mails, Sendcloud, flags `online_payment_open` / `connect_onboarding_open` en base (à fermer après les derniers paiements engagés). Vérifier en prod, avant de retirer le code, combien de liens de paiement ouverts restent à terminer.
+- Vérifié : 695 tests ciblés verts (commercial, stripe, pages, services) ; 16 fichiers ne se chargent pas (pglite/pdf-lib absents de `node_modules`, préexistant, 7 d'entre eux déjà avant ce lot dans le périmètre commercial/stripe/pages) ; aucun nouveau type d'erreur dans les fichiers touchés. Rendu navigateur non vérifié.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 22 novembre 2026, `feat/pivot-lot-auth-emails` (PR 4, lot 2 « accès atelier » du pivot « outil pour relieurs »).
+
+- Constat vérifié dans le code : seul `requireLeadApprovedBinderId` exige un atelier `approved` (accès aux projets transmis par la plateforme) ; devis, ouvrages, clients et dossiers fonctionnent dès la création de l'espace. Les textes qui parlaient d'une validation avant usage étaient donc faux pour le relieur.
+- Réécrits : page d'accès `MaReliureAuthPage` (Ma Reliure FR ; Fine Bindery EN, FR, DE, IT, ES — mot d'accueil et chapô), `/activer-mon-atelier` (plus de « leads », plus de « à valider »), ligne « Accès aux demandes » du tableau de bord atelier en 5 langues (facultatif ; les clients passent par le lien du relieur), onglet « Atelier partenaire » → « Atelier », eyebrow de l'invitation.
+- Inchangé : e-mails d'authentification et d'invitation (aucune promesse de validation), logique d'approbation côté serveur (l'approbation reste utile pour les projets transmis tant que le rapprochement n'est pas retiré), vues admin.
+- Vérifié : 384 tests ciblés verts (pages, auth, routes) hors `auth-email-hook.test.ts` (module absent, préexistant) ; nouveau test de contrat sur les trois fichiers. Rendu navigateur non vérifié.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 22 novembre 2026, `feat/accueil-devis-facture` (accueil Ma Reliure : « logiciel de devis et factures »).
+
+- Demande d'Antoine : Ma Reliure doit se lire comme un simple logiciel de devis et factures ; l'accueil parlait surtout d'un parcours de prise de projet.
+- Accueil Ma Reliure (FR) réécrit : titre « Le logiciel de devis et factures des relieurs et ateliers de restauration », bloc « du devis au règlement » (devis, facture, avoir, règlement, client), trois étapes devis / facture / règlements, fonctionnalités, FAQ (« Ma Reliure encaisse-t-il les paiements ? » Non). La demande client par lien reste présentée comme une fonctionnalité parmi d'autres, plus comme le cœur.
+- Titre et description SEO de la racine, `/tarifs`, pied de page, page « Créer mon compte atelier » alignés. Plus aucun montant sur la page (l'exemple 250–400 € disparaît).
+- NON fait : Fine Bindery (EN, FR, DE, IT, ES) garde l'ancien discours « devis et suivi » ; pages par besoin et légales inchangées.
+- Vérifié : 332 tests ciblés verts hors `auth-email-hook.test.ts` (préexistant) ; rendu local de l'accueil contrôlé (titre, sections, absence de l'ancien texte).
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 24 novembre 2026, `feat/accueil-fb-devis-facture` (accueil Fine Bindery : « logiciel de devis et factures », 5 langues).
+
+- Même réécriture que l'accueil Ma Reliure (#209) : hero, bloc « en pratique » (devis, facture, avoir, règlement, client), trois étapes devis / facture / règlements, quatre fonctionnalités, FAQ (« Fine Bindery encaisse-t-il les paiements ? » Non), appel final. EN, FR, DE, IT, ES ; l'anglais est la référence.
+- Titres et descriptions SEO (`enHead` … `esHead`, fallback de `src/routes/index.tsx`) et résumés de pied de page alignés. Plus aucun montant sur la page.
+- Traductions DE, IT, ES rédigées par Claude : relecture par un natif conseillée.
+- Non traité : pages de savoir-faire par discipline Fine Bindery, pages légales.
+- Vérifié : 375 tests ciblés verts (i18n, pages, brand, routes) hors `auth-email-hook.test.ts` (préexistant) ; rendu local des cinq accueils (titre, titre de page).
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 24 novembre 2026, `feat/essai-15-jours` (essai gratuit de 15 jours à l'inscription d'un atelier).
+
+- Décision d'Antoine : 15 jours d'essai gratuit après l'inscription ; en fin d'essai, lecture seule (consultation et téléchargement gardés, plus de création de devis, de facture ni de publication de vitrine) ; aucune carte demandée. Les ateliers déjà inscrits restent gratuits.
+- **Migration `20261124100000_workshop_trial_15_days.sql`, NON APPLIQUÉE** (à poser par Codex après relecture) : colonne `trial_ends_at` ; les lignes sans abonnement Stripe passent `legacy_free = true` (premier cercle, Ferrière comprise) ; le trigger d'initialisation donne `now() + 15 jours` à tout nouvel atelier ; `marketplace_workshop_can_create` compte l'essai. Vérifiée sur un schéma réduit sous PGlite : atelier existant gratuit, abonné Stripe intact, nouvel atelier à 15 jours, droit de créer vrai pendant l'essai, faux après sa fin quand `subscription_open` est ouvert.
+- **Aucun blocage aujourd'hui** : tant que `subscription_open` est faux, tout le monde peut créer. La fin d'essai ne s'applique qu'à l'ouverture de l'abonnement payant (prix, TVA et conditions Stripe restent à valider : `WORKSHOP_SUBSCRIPTION_TAX_APPROVED`, `WORKSHOP_SUBSCRIPTION_TERMS_READY`). Ne pas ouvrir l'abonnement avant d'avoir de quoi payer.
+- Code : `workshopTrial` et `WORKSHOP_TRIAL_DAYS` dans `billing/workshopSubscription.ts`, `workshopCanCreate` accepte `trial_ends_at` ; page « Abonnement » de l'atelier affiche les jours restants ; types Supabase mis à jour à la main (`trial_ends_at`).
+- Textes publics (« essai gratuit de quinze jours, sans carte ») : tarifs de l'accueil Ma Reliure, Fine Bindery EN/FR/DE/IT/ES, page « Créer mon compte atelier ». Écrit en lettres pour respecter le test « aucun chiffre dans le bloc tarifs ».
+- Non fait : e-mail de rappel avant la fin de l'essai ; bandeau du compte à rebours dans les autres pages de l'espace atelier ; prix publié.
+- Vérifié : 364 tests ciblés verts (billing, pages, i18n, routes) ; 3 fichiers de migration PGlite et `auth-email-hook` ne se chargent pas (modules absents, préexistant). Rendu navigateur non vérifié.
+
+## Latest handoff
+
+**Agent :** Claude (Sonnet 5.5) — 25 novembre 2026, `feat/tarifs-publics` (tarifs publics et essai ramené à 14 jours, d'après le brief « Tarifs et stratégie marketing » d'Antoine).
+
+- Tarif unique publié : Ma Reliure **19,90 € HT / mois** ; Fine Bindery **19,90 $ / mois** (cinq langues). Essai gratuit **14 jours**, sans carte, sans engagement. Contenu : devis et factures illimités, CRM simple (clients, projets, historique), lien de prise de projet partageable, export PDF. Aucun palier lié au nombre de personnes (ne jamais nommer le plan « Solo »).
+- Essai ramené de 15 à 14 jours : `WORKSHOP_TRIAL_DAYS`, texte de la page Abonnement, tests, et **migration renommée `20261124100000_workshop_trial_14_days.sql`** (intervalle 14 jours). Elle n'avait pas encore été appliquée en production : à poser par Codex sous son nouveau nom.
+- Pages : `/tarifs` et bloc tarifs de l'accueil Ma Reliure (liste des inclus), bloc tarifs Fine Bindery (`pricingIncluded`), page « Créer mon compte atelier », méta de `/tarifs`.
+- **Incohérence connue, à traiter dans la PR de paiement** : l'espace atelier (page Abonnement, FAQ d'offre, `workshopTax` = 1800 centimes, contrôle Stripe `unit_amount !== 1500`, devise EUR uniquement) décrit encore l'ancien prix de 15 € HT / 18 € TTC. Rien ne peut être souscrit tant que `subscription_open` est faux. Fine Bindery en dollars demande un prix Stripe en USD et la levée du contrôle EUR.
+- Hors périmètre : stratégie marketing du brief (contact direct, offre de lancement aux ateliers existants, salons), clauses légales, Sendcloud (toujours non tranché).
+- Vérifié : 364 tests ciblés verts (billing, pages, i18n, routes) ; fichiers de migration PGlite et `auth-email-hook` non chargeables ici (préexistant). Rendu navigateur non vérifié.
+
+## Latest handoff — retrait de l'apport d'affaires (25 novembre 2026, PR fix/retrait-apport-affaires)
+
+- Parcours générique `/m/reliure-marketplace-token-000001` sans `?ref=` : 301 vers `/` (wwwRedirect.ts). Les liens d'atelier (`/a/:slug` → `?ref=`), Fine Bindery et Ferrière ne changent pas.
+- `/partenaires-relieurs` et les 6 pages savoir-faire : 301 vers `/`, retirées du plan du site (brandPages.ts). Fichiers de routes laissés en place (inatteignables), à supprimer dans un lot de nettoyage.
+- CGV : notes de travail « LEGAL REVIEW REQUIRED » / « BLOCKED — MEDIATOR » retirées de la page publique (sections Garanties, Responsabilité, Médiation retirées avec elles).
+- /auth : l'onglet Atelier s'ouvre en premier sur Ma Reliure (`?space=client` ouvre Client) ; texte client « donnée à votre atelier ».
+- Titre/description par défaut (404, routes inconnues) : logiciel de devis et factures pour relieurs.
+- NON fait (juriste / décision) : CGA, accord de traitement, politique de confidentialité en deux volets, conditions d'utilisation, représentant légal des mentions légales, page démonstration.
+
+## Latest handoff — page Démonstration (25 novembre 2026, PR feat/demonstration-parcours)
+
+- Nouvelle page publique `/demonstration` (Ma Reliure seulement) : parcours du client d'un atelier (étapes reprises du Playbook Reliure), fiche d'exemple fictive reçue par l'atelier, devis (captures réelles `atelier-devis` et `devis-pdf`). Aucun montant.
+- Contenu : `landing/demonstrationContent.ts` ; rendu : `pages/DemonstrationPage.tsx` ; test : `landing/demonstration.test.ts`.
+- Lien « Démonstration » ajouté à l'en-tête, au menu mobile et au pied de page ; entrée au plan du site.
+- Pas de capture réelle de l'écran client (le parcours est décrit, pas capturé) : à ajouter quand une capture fictive existera.
+
+## Latest handoff — e-mail à l'atelier pour une nouvelle demande (25 novembre 2026, PR feat/notification-atelier-demande)
+
+- Au tri initial d'un dossier (`reconcileCaseTriage`, une seule fois par dossier), l'atelier rattaché reçoit « Nouvelle demande reçue par votre site » (`notifyWorkshopOfNewRequest`, offerNotices.server.ts) : une demande = un e-mail (id `request-<dossier>-<atelier>`), jamais bloquant, sans coordonnées du client. L'alerte équipe Oppe reste.
+- Ne marche que si le compte de l'atelier a la bonne adresse : contrôle en lecture seule à confier à Codex (codex-brief-mareliure-20261125-adresse-atelier-ferriere.md). Aucune écriture en base ici.
+
+## Latest handoff — copie de la demande à l'adresse de contact Ferrière (25 novembre 2026, PR feat/copie-demande-ferriere)
+
+- Pour l'atelier Ferrière (`FERRIERE_WORKSHOP_ID`), l'e-mail « Nouvelle demande reçue par votre site » est aussi envoyé à `FERRIERE_NEW_REQUEST_COPY_EMAIL` (contact@reliure-ferriere.fr, config.ts) : une copie par demande, échec journalisé sans rien bloquer.
+- Constat en production (lecture seule, 25/11) : le compte de l'atelier Ferrière est celui de sa gérante ; l'espace de travail « Ma Reliure » n'a aucun membre, donc la notification « nouveau dossier » ne part à personne.
+- Test de la PR 216 corrigé : `fineBinderyGermanRequest.server.test.ts` échouait depuis la PR 216 (sa fausse base enregistrait l'upsert de la notification comme un rattachement). Échecs restants sans lien : `admin/trafficSummary.test.ts` (3 tests liés à la date, déjà rouges avant la PR 216).

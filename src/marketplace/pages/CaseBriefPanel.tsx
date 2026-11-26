@@ -16,6 +16,7 @@
  */
 import type { BriefLine } from "@/build/schema/brief";
 import type { CaseView, CaseViewLine } from "@/marketplace/cases/dossierProjection";
+import { CasePhotoGallery } from "./CasePhotoViewer";
 
 type Locale = "fr-FR" | "en-US";
 
@@ -70,6 +71,8 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export function CaseBriefPanel({ view, locale = "fr-FR" }: { view: CaseView; locale?: Locale }) {
   const en = locale === "en-US";
+  // Le compteur suit les vignettes réellement affichées : une signature échouée n'en ajoute pas.
+  const signedPhotos = view.photos.filter((photo) => photo.url).length;
   return (
     <div className="rounded-2xl border border-[#3b2a1d]/15 bg-[#fdfaf3] p-6 sm:p-8">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -90,25 +93,9 @@ export function CaseBriefPanel({ view, locale = "fr-FR" }: { view: CaseView; loc
         </p>
       )}
 
-      {view.photos.length > 0 && (
-        <Section title={en ? `Photos (${view.photos.length})` : `Photos (${view.photos.length})`}>
-          <ul className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-            {view.photos.map((photo, index) =>
-              photo.url ? (
-                <li
-                  key={photo.url}
-                  className="overflow-hidden rounded-lg border border-[#3b2a1d]/15"
-                >
-                  <img
-                    src={photo.url}
-                    alt={photo.caption ?? (en ? `Photo ${index + 1} of the book` : `Photo ${index + 1} de l'ouvrage`)}
-                    className="aspect-square w-full object-cover"
-                    loading="lazy"
-                  />
-                </li>
-              ) : null,
-            )}
-          </ul>
+      {signedPhotos > 0 && (
+        <Section title={`Photos (${signedPhotos})`}>
+          <CasePhotoGallery photos={view.photos} locale={locale} />
         </Section>
       )}
 

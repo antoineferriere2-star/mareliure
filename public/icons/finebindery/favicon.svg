@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="Fine Bindery">
+  <!--
+    Fine Bindery : l'initiale du nom, souligné du filet cognac qui accompagne
+    le nom dans l'entête du site. Une capitale à empattements dessinée au
+    trait — fûts épais, barres fines, comme la Fraunces des titres — plutôt
+    qu'un texte : aucune police n'est chargée par un onglet.
+
+    Cotes paires pour tomber sur des pixels entiers à 16 px (voir l'icône de
+    Ma Reliure) : le fût fait 2 px, chaque barre et le filet 1 px.
+  -->
+  <rect width="32" height="32" rx="6" fill="#2d241d"/>
+  <path fill="#f6f2ea" d="M8 4H24V10H22.5L21.5 6H14V12H18L18.5 10H20V16H18.5L18 14H14V20H16V22H8V20H10V6H8Z"/>
+  <rect x="12" y="24" width="8" height="2" fill="#b98457"/>
+</svg>

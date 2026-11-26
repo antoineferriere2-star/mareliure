@@ -248,6 +248,7 @@ export type Database = {
           terms_version: string | null
           transition_accepted_at: string | null
           transition_accepted_by: string | null
+          trial_ends_at: string | null
           updated_at: string
         }
         Insert: {
@@ -264,6 +265,7 @@ export type Database = {
           terms_version?: string | null
           transition_accepted_at?: string | null
           transition_accepted_by?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Update: {
@@ -280,6 +282,7 @@ export type Database = {
           terms_version?: string | null
           transition_accepted_at?: string | null
           transition_accepted_by?: string | null
+          trial_ends_at?: string | null
           updated_at?: string
         }
         Relationships: []

@@ -19,6 +19,7 @@ import { Route as ConditionsGeneralesDeVenteRouteImport } from './routes/conditi
 import { Route as ConfidentialiteRouteImport } from './routes/confidentialite'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as DeckBuildersRouteImport } from './routes/deck-builders'
+import { Route as DemonstrationRouteImport } from './routes/demonstration'
 import { Route as DorureEtFinitionsRouteImport } from './routes/dorure-et-finitions'
 import { Route as EtuisEtBoitesRouteImport } from './routes/etuis-et-boites'
 import { Route as ExampleProjectBriefRouteImport } from './routes/example-project-brief'
@@ -195,6 +196,11 @@ const ContactRoute = ContactRouteImport.update({
 const DeckBuildersRoute = DeckBuildersRouteImport.update({
   id: '/deck-builders',
   path: '/deck-builders',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemonstrationRoute = DemonstrationRouteImport.update({
+  id: '/demonstration',
+  path: '/demonstration',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DorureEtFinitionsRoute = DorureEtFinitionsRouteImport.update({
@@ -921,6 +927,7 @@ export interface FileRoutesByFullPath {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
+  '/demonstration': typeof DemonstrationRoute
   '/dorure-et-finitions': typeof DorureEtFinitionsRoute
   '/etuis-et-boites': typeof EtuisEtBoitesRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
@@ -1059,6 +1066,7 @@ export interface FileRoutesByTo {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
+  '/demonstration': typeof DemonstrationRoute
   '/dorure-et-finitions': typeof DorureEtFinitionsRoute
   '/etuis-et-boites': typeof EtuisEtBoitesRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
@@ -1192,6 +1200,7 @@ export interface FileRoutesById {
   '/confidentialite': typeof ConfidentialiteRoute
   '/contact': typeof ContactRoute
   '/deck-builders': typeof DeckBuildersRoute
+  '/demonstration': typeof DemonstrationRoute
   '/dorure-et-finitions': typeof DorureEtFinitionsRoute
   '/etuis-et-boites': typeof EtuisEtBoitesRoute
   '/example-project-brief': typeof ExampleProjectBriefRoute
@@ -1332,6 +1341,7 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
+    | '/demonstration'
     | '/dorure-et-finitions'
     | '/etuis-et-boites'
     | '/example-project-brief'
@@ -1470,6 +1480,7 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
+    | '/demonstration'
     | '/dorure-et-finitions'
     | '/etuis-et-boites'
     | '/example-project-brief'
@@ -1602,6 +1613,7 @@ export interface FileRouteTypes {
     | '/confidentialite'
     | '/contact'
     | '/deck-builders'
+    | '/demonstration'
     | '/dorure-et-finitions'
     | '/etuis-et-boites'
     | '/example-project-brief'
@@ -1742,6 +1754,7 @@ export interface RootRouteChildren {
   ConfidentialiteRoute: typeof ConfidentialiteRoute
   ContactRoute: typeof ContactRoute
   DeckBuildersRoute: typeof DeckBuildersRoute
+  DemonstrationRoute: typeof DemonstrationRoute
   DorureEtFinitionsRoute: typeof DorureEtFinitionsRoute
   EtuisEtBoitesRoute: typeof EtuisEtBoitesRoute
   ExampleProjectBriefRoute: typeof ExampleProjectBriefRoute
@@ -1872,6 +1885,13 @@ declare module '@tanstack/react-router' {
       path: '/deck-builders'
       fullPath: '/deck-builders'
       preLoaderRoute: typeof DeckBuildersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demonstration': {
+      id: '/demonstration'
+      path: '/demonstration'
+      fullPath: '/demonstration'
+      preLoaderRoute: typeof DemonstrationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dorure-et-finitions': {
@@ -3057,6 +3077,7 @@ const rootRouteChildren: RootRouteChildren = {
   ConfidentialiteRoute: ConfidentialiteRoute,
   ContactRoute: ContactRoute,
   DeckBuildersRoute: DeckBuildersRoute,
+  DemonstrationRoute: DemonstrationRoute,
   DorureEtFinitionsRoute: DorureEtFinitionsRoute,
   EtuisEtBoitesRoute: EtuisEtBoitesRoute,
   ExampleProjectBriefRoute: ExampleProjectBriefRoute,

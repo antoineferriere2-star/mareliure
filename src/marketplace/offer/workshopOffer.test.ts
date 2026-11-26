@@ -1,34 +1,30 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
-import { HOW_IT_WORKS_STEPS, PARTNER_FAQ } from "@/marketplace/pages/landing/partnersContent";
-import { PLATFORM_FEE_LABEL, SUBSCRIPTION_LABEL, WORKSHOP_OFFER, formatHtPrice } from "./workshopOffer";
+import { PARTNER_FAQ } from "@/marketplace/pages/landing/partnersContent";
+import { SUBSCRIPTION_LABEL, WORKSHOP_OFFER, formatHtPrice } from "./workshopOffer";
 
 const read = (path: string) => readFileSync(resolve(process.cwd(), path), "utf8");
 
 describe("l'offre atelier", () => {
-  it("fixe les montants du modèle : 15 € HT par mois, 3 % du TTC encaissé, règlement sous 30 jours", () => {
-    expect(formatHtPrice(1500)).toBe("15 € HT");
-    expect(SUBSCRIPTION_LABEL).toBe("15 € HT par mois");
-    expect(PLATFORM_FEE_LABEL).toBe("3 %");
-    expect(WORKSHOP_OFFER.workshopPaymentDays).toBe(30);
+  it("fixe le seul revenu d'Oppe : 19,90 € HT par mois, et aucun paiement en ligne ouvert", () => {
+    expect(formatHtPrice(1990)).toBe("19,90 € HT");
+    expect(SUBSCRIPTION_LABEL).toBe("19,90 € HT par mois");
+    expect(WORKSHOP_OFFER.onlinePaymentOpen).toBe(false);
   });
 
-  it("ouvre B et C après recette et conserve les gratuités historiques", () => {
+  it("annonce l'essai de 14 jours et conserve les gratuités historiques, sans ancien prix", () => {
     const faq = PARTNER_FAQ.map((item) => item.answer).join(" ");
-    expect(WORKSHOP_OFFER.subscriptionOpen).toBe(true);
-    expect(WORKSHOP_OFFER.onlinePaymentOpen).toBe(true);
-    expect(faq).toContain("18 € TTC");
-    expect(faq).not.toContain("n'est pas encore ouvert");
+    expect(faq).toContain("19,90 € HT");
+    expect(faq).toContain("Essai gratuit de 14 jours");
+    expect(faq).not.toMatch(/18 € TTC|15 € HT/);
     expect(faq).toContain("gardent la gratuité tant qu'ils n'ont pas accepté expressément");
   });
 
-  it("dit qui vend, qui facture, qui choisit l'atelier, qui règle", () => {
+  it("dit que l'atelier vend et que le client le règle directement, sans frais Oppe", () => {
     const faq = PARTNER_FAQ.map((item) => item.answer).join(" ");
-    expect(faq).toMatch(/Oppe vend la prestation au client/);
-    expect(faq).toMatch(/vous facturez Oppe/);
-    expect(faq).toMatch(/sous 30 jours/);
-    expect(HOW_IT_WORKS_STEPS.map((s) => s.title).join(" ")).toMatch(/facturez Oppe/);
+    expect(faq).toMatch(/Oppe n'encaisse aucun paiement et ne prélève aucun frais/);
+    expect(faq).not.toMatch(/Oppe prélève|2,50 € HT/);
   });
 
   it("ne garde aucune formulation contradictoire dans les contenus publics", () => {

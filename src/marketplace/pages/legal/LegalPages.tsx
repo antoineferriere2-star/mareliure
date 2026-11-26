@@ -28,13 +28,9 @@ import {
 } from "@/marketplace/pages/fineBindery/FineBinderyChrome";
 import {
   formatLegalPagesUpdatedAt,
-  LEGAL_REVIEW_NOTE_EN,
-  LEGAL_REVIEW_NOTE_FR,
   MARELIURE_CONTACT_EMAIL,
   MARELIURE_PROVIDERS,
   MARELIURE_PUBLISHER,
-  MEDIATOR_PENDING_NOTE_EN,
-  MEDIATOR_PENDING_NOTE_FR,
   SUMMARY_LINK_VALIDITY_DAYS,
 } from "@/marketplace/legal/legalEntity";
 
@@ -287,7 +283,7 @@ const TERMS_SECTIONS: LegalSection[] = [
   {
     heading: "Propriété intellectuelle",
     body: [
-      `Les textes, le nom Ma Reliure et la présentation du site appartiennent à ${MARELIURE_PUBLISHER.name}. Les photographies des réalisations sont celles de l'Atelier Reliure Dorure Ferrière, à Orléans, reproduites avec son autorisation. Toute reproduction sans accord préalable est interdite.`,
+      `Les textes, le nom Ma Reliure et la présentation du site appartiennent à ${MARELIURE_PUBLISHER.name}. Les photographies des réalisations sont celles de l'Atelier Reliure Ferrière, à Orléans, reproduites avec son autorisation. Toute reproduction sans accord préalable est interdite.`,
     ],
   },
   {
@@ -343,7 +339,7 @@ export function ConditionsPage() {
 //   OPPE), jamais inventés.
 // - Des positions juridiques (rétractation, garanties, responsabilité,
 //   médiation) : formulations usuelles du secteur, explicitement marquées
-//   LEGAL_REVIEW_NOTE_FR tant qu'un juriste ne les a pas validées pour OPPE.
+//   une mention de revue tant qu'un juriste ne les a pas validées pour OPPE.
 // ---------------------------------------------------------------------------
 
 const SALES_TERMS_SECTIONS_FR: LegalSection[] = [
@@ -385,8 +381,6 @@ const SALES_TERMS_SECTIONS_FR: LegalSection[] = [
     heading: "Droit de rétractation",
     body: [
       "En tant que consommateur, vous disposez en principe d'un délai de 14 jours pour vous rétracter d'un achat conclu à distance, sans avoir à vous justifier.",
-      LEGAL_REVIEW_NOTE_FR +
-        " En particulier : les conditions d'exercice de ce droit, ses éventuelles exceptions pour une prestation personnalisée sur votre propre livre (article L221-28 du Code de la consommation), et le formulaire type de rétractation restent à rédiger avec un juriste avant l'ouverture de toute vente réelle.",
     ],
   },
   {
@@ -402,24 +396,6 @@ const SALES_TERMS_SECTIONS_FR: LegalSection[] = [
       "Ce forfait n'inclut aucune assurance. En cas de perte ou d'avarie, seule l'indemnisation prévue par le transporteur peut s'appliquer : pour Mondial Relay, 25 € par colis au plus, port compris, sur justificatif de valeur. Pour un livre confié pour travaux, aucune indemnisation n'est garantie. Les livres anciens, rares, uniques ou de plus grande valeur ne voyagent pas par ce forfait.",
       "La livraison annoncée par le transporteur ne vaut pas réception : l'atelier confirme lui-même la réception physique et l'état du livre, photos à l'appui. En cas d'incident, nous ouvrons la réclamation auprès du transporteur dans ses délais (avarie : 3 jours ouvrés après livraison ; perte : 30 jours) et vous tenons informé dans votre espace client.",
     ],
-  },
-  {
-    heading: "Garanties",
-    body: [
-      LEGAL_REVIEW_NOTE_FR +
-        " Le rappel des garanties légales de conformité et des vices cachés, obligatoire sur tout contrat de vente à un consommateur (articles L217-3 et suivants, articles 1641 et suivants du Code civil), reste à rédiger avec un juriste avant l'ouverture de toute vente réelle.",
-    ],
-  },
-  {
-    heading: "Responsabilité",
-    body: [
-      LEGAL_REVIEW_NOTE_FR +
-        " L'étendue et les limites de la responsabilité de Ma Reliure, notamment pour un livre ancien ou de valeur, restent à définir avec un juriste avant l'ouverture de toute vente réelle.",
-    ],
-  },
-  {
-    heading: "Médiation de la consommation",
-    body: [MEDIATOR_PENDING_NOTE_FR],
   },
   {
     heading: "Données personnelles",
@@ -476,7 +452,7 @@ const NOTICE_SECTIONS: LegalSection[] = [
   },
   {
     heading: "Directeur de la publication",
-    body: [`Le représentant légal de ${MARELIURE_PUBLISHER.name}.`],
+    body: [`${MARELIURE_PUBLISHER.publicationDirector}, ${MARELIURE_PUBLISHER.publicationDirectorTitleFr} de ${MARELIURE_PUBLISHER.name}.`],
   },
   {
     heading: "Hébergement",
@@ -487,7 +463,7 @@ const NOTICE_SECTIONS: LegalSection[] = [
   },
   {
     heading: "Crédits photographiques",
-    body: ["Atelier Reliure Dorure Ferrière, Orléans."],
+    body: ["Atelier Reliure Ferrière, Orléans."],
   },
 ];
 
@@ -664,7 +640,7 @@ const TERMS_SECTIONS_EN: LegalSection[] = [
   {
     heading: "Intellectual property",
     body: [
-      `The text, the Fine Bindery name and the site's presentation belong to ${MARELIURE_PUBLISHER.name}. Photographs of finished work belong to Atelier Reliure Dorure Ferrière, in Orléans, France, reproduced with its permission. Any reproduction without prior agreement is prohibited.`,
+      `The text, the Fine Bindery name and the site's presentation belong to ${MARELIURE_PUBLISHER.name}. Photographs of finished work belong to Atelier Reliure Ferrière, in Orléans, France, reproduced with its permission. Any reproduction without prior agreement is prohibited.`,
     ],
   },
   {
@@ -719,7 +695,7 @@ export function TermsPage() {
 // page does not list, and the EU 14-day withdrawal right below only actually
 // applies to a customer buying from within the EU. That variation is exactly
 // why every position below (not the facts about who sells and who executes)
-// carries LEGAL_REVIEW_NOTE_EN rather than a single confident paragraph.
+// carries a review mention rather than a single confident paragraph.
 // ---------------------------------------------------------------------------
 
 const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
@@ -761,8 +737,6 @@ const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
     heading: "Right of withdrawal",
     body: [
       "If you are buying as a consumer within the European Union, you generally have a 14-day right to withdraw from a distance sale without giving a reason.",
-      LEGAL_REVIEW_NOTE_EN +
-        " In particular: the exact conditions for exercising this right, any exception for a service personalised to your own book, the standard withdrawal form, and what applies to a customer buying from outside the EU all remain to be drafted with a lawyer before any real sale opens.",
     ],
   },
   {
@@ -778,24 +752,6 @@ const SALES_TERMS_SECTIONS_EN: LegalSection[] = [
       "This fee includes no insurance. If the parcel is lost or damaged, only the carrier's own compensation may apply: for Mondial Relay, at most €25 per parcel including postage, against proof of value. For a book entrusted for work, no compensation is guaranteed. Antiquarian, rare, unique or more valuable books do not travel under this fee.",
       "A carrier's delivery scan is not receipt: the workshop itself confirms physical receipt and the book's condition, with photographs. If something goes wrong, we file the claim with the carrier within its deadlines (damage: 3 working days after delivery; loss: 30 days) and keep you informed in your client area.",
     ],
-  },
-  {
-    heading: "Warranties",
-    body: [
-      LEGAL_REVIEW_NOTE_EN +
-        " The statutory conformity and hidden-defect warranties that apply under French law, and how they interact with warranties a customer may separately be entitled to under their own country's law, remain to be drafted with a lawyer before any real sale opens.",
-    ],
-  },
-  {
-    heading: "Liability",
-    body: [
-      LEGAL_REVIEW_NOTE_EN +
-        " The scope and limits of Fine Bindery's liability, in particular for an antique or valuable book, remain to be defined with a lawyer before any real sale opens.",
-    ],
-  },
-  {
-    heading: "Consumer mediation",
-    body: [MEDIATOR_PENDING_NOTE_EN],
   },
   {
     heading: "Personal data",
@@ -849,7 +805,7 @@ const NOTICE_SECTIONS_EN: LegalSection[] = [
   },
   {
     heading: "Publication director",
-    body: [`The legal representative of ${MARELIURE_PUBLISHER.name}.`],
+    body: [`${MARELIURE_PUBLISHER.publicationDirector}, ${MARELIURE_PUBLISHER.publicationDirectorTitleEn} of ${MARELIURE_PUBLISHER.name}.`],
   },
   {
     heading: "Hosting",
@@ -860,7 +816,7 @@ const NOTICE_SECTIONS_EN: LegalSection[] = [
   },
   {
     heading: "Photo credits",
-    body: ["Atelier Reliure Dorure Ferrière, Orléans, France."],
+    body: ["Atelier Reliure Ferrière, Orléans, France."],
   },
 ];
 

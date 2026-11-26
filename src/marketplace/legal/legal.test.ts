@@ -107,11 +107,14 @@ describe("le tunnel et le site mènent aux pages de Ma Reliure", () => {
     expect(conditionsFr).not.toMatch(/will be governed by general terms of sale, published before/);
   });
 
-  /** §10 : jamais un médiateur inventé — la page doit dire clairement qu'il manque. */
-  it("ne prétend pas avoir un médiateur de la consommation désigné", () => {
+  /**
+   * Aucune note de travail ne s'affiche sur une page publique : ni « LEGAL REVIEW REQUIRED »,
+   * ni « BLOCKED — MEDIATOR DETAILS REQUIRED » (brief du 25 novembre 2026).
+   */
+  it("n'affiche aucune note de travail juridique sur les pages publiques", () => {
     const pages = read("src/marketplace/pages/legal/LegalPages.tsx");
-    expect(pages).toContain("MEDIATOR_PENDING_NOTE_FR");
-    expect(pages).toContain("MEDIATOR_PENDING_NOTE_EN");
+    expect(pages).not.toContain("LEGAL_REVIEW_NOTE");
+    expect(pages).not.toContain("MEDIATOR_PENDING_NOTE");
   });
 
   it("remplace, sur Ma Reliure seulement, les liens vers les pages de Métré", () => {

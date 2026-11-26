@@ -37,6 +37,7 @@ import { depositCentsFor, pricingModeFor } from "@/marketplace/pricing/pricingMo
 import { applyBrandServicePricing } from "@/marketplace/pricing/brandPricing";
 import { isMarketplaceBrand, marketplaceBrandConfig } from "@/marketplace/brand/brandConfig";
 import { resolvePayout, structuralFamily, type CommercialTerm } from "@/marketplace/pricing/commercialTerms";
+import { payoutsChangedSincePreview } from "@/marketplace/matching/payoutConfirmation";
 import { WORK_FAMILIES, type WorkFamilyKey } from "@/marketplace/pricing/catalog";
 import { loadCustomerCommerce, NO_OPPE_COMMERCE } from "@/marketplace/services/customerCommerce.server";
 import { publicCopy } from "@/build/pages/public/publicLocaleContext";
@@ -676,6 +677,62 @@ export const validateMarketplacePricing = createServerFn({ method: "POST" })
   .validator((data: unknown) => managedPriceInput.parse(data))
   .handler(async ({ context, data }) => validateMarketplacePricingCore(context, data));
 
+/**
+ * Ce que recevra chaque atelier, avant l'envoi : le dossier tel qu'il le lira (même projection
+ * que sa page `/atelier/leads/<id>`) et SA rémunération (condition commerciale comprise). Lecture
+ * seule, aucun envoi : l'admin vérifie, puis confirme avec `sendCaseToBinders`.
+ */
+export const previewCaseForBinders = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .validator((data: unknown) =>
+    z.object({ caseId: z.string().uuid(), binderIds: z.array(z.string().uuid()).min(1).max(MAX_BINDERS_PER_CASE) }).parse(data),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const sb = await admin();
+    const caseContext = await loadCaseContext(sb, data.caseId);
+    if (!caseContext) fail(404, "Dossier introuvable");
+
+    const { data: binders } = await sb
+      .from("marketplace_binders")
+      .select("id, display_name, workshop_name")
+      .in("id", data.binderIds);
+    const reference = caseContext.row.binder_payout_cents;
+    const payouts = reference
+      ? await resolvePerBinderPayouts(sb, data.binderIds, structuralFamily(caseContext.row.pricing_reason_codes), reference)
+      : new Map<string, { payoutCents: number; manualRequired: boolean }>();
+
+    // Divulgation calculée comme pour l'atelier invité lui-même : jamais plus, jamais moins.
+    const disclosureFor = (binderId: string) => {
+      const ownClient = commercialOriginOf(caseContext.row.acquisition_origin) === "workshop_client" && caseContext.row.referred_binder_id === binderId;
+      if (ownClient) return "full" as const;
+      return caseDisclosure({ role: "binder", binderId }, {
+        invitedBinderIds: [...caseContext.invitedBinderIds, binderId],
+        selectedBinderId: caseContext.selectedBinderId,
+        customerUserId: caseContext.customerUserId,
+      });
+    };
+    const disclosures = [...new Set(data.binderIds.map(disclosureFor))];
+    const views = Object.fromEntries(
+      await Promise.all(disclosures.map(async (d) => [d, await buildCaseView(sb, caseContext, d)] as const)),
+    );
+
+    return {
+      views,
+      workshops: data.binderIds.map((binderId) => {
+        const row = (binders ?? []).find((b) => b.id === binderId);
+        const payout = payouts.get(binderId);
+        return {
+          binderId,
+          name: row?.workshop_name || row?.display_name || "Atelier",
+          disclosure: disclosureFor(binderId),
+          payoutCents: payout?.payoutCents ?? null,
+          manualRequired: payout?.manualRequired ?? false,
+        };
+      }),
+    };
+  });
+
 export const sendCaseToBinders = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .validator((data: unknown) =>
@@ -685,6 +742,8 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
         binderIds: z.array(z.string().uuid()).min(1).max(MAX_BINDERS_PER_CASE),
         /** Ce que l'atelier s'engage à réaliser : figé avec sa rémunération et son délai. */
         serviceDescription: z.string().trim().min(10).max(2000),
+        /** La rémunération que l'admin a lue dans l'aperçu, par atelier : l'envoi n'en inscrit pas d'autre. */
+        confirmedPayouts: z.record(z.string().uuid(), z.number().int().positive()),
       })
       .parse(data),
   )
@@ -783,6 +842,14 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
         "Au moins un atelier sélectionné a une condition « rémunération manuelle » pour ce type de travail : fixez son montant avant d'envoyer l'offre.",
       );
     }
+    // Le montant écrit est celui que l'admin a lu dans l'aperçu, ou rien : une condition commerciale
+    // modifiée entre l'aperçu et la confirmation oblige à revérifier (revue Codex de #192).
+    if (payoutsChangedSincePreview(decision.binderIds, data.confirmedPayouts, payoutByBinder).length > 0) {
+      fail(
+        409,
+        "La rémunération d'au moins un atelier a changé depuis votre vérification. Rouvrez l'aperçu et confirmez le nouveau montant.",
+      );
+    }
 
     const offeredAt = new Date().toISOString();
     const { error } = await sb.from("marketplace_case_matches").insert(
@@ -848,7 +915,16 @@ export const sendCaseToBinders = createServerFn({ method: "POST" })
       })),
     );
 
-    return { offered: decision.binderIds.length };
+    // L'offre est enregistrée : même un module de notification introuvable ne la fait pas échouer.
+    let notified = 0;
+    try {
+      const { notifyWorkshopsOfOffer } = await import("@/marketplace/notifications/offerNotices.server");
+      notified = await notifyWorkshopsOfOffer(sb, { caseId: data.caseId, binderIds: decision.binderIds, offeredAt });
+    } catch (err) {
+      console.error("[workshop-offer-notice] module-failed", { caseId: data.caseId, err });
+    }
+
+    return { offered: decision.binderIds.length, notified };
   });
 
 export const selectBinderOffer = createServerFn({ method: "POST" })
@@ -1425,6 +1501,23 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
     const binder = await findBinderForUser(sb, context.userId);
     if (!binder) fail(403, "Aucun profil de relieur n'est associé à ce compte.");
     if (binder!.status !== "approved") fail(403, "Ma Reliure doit autoriser cet atelier avant l'accès aux projets.");
+    // La réponse est enregistrée avant l'alerte : rien dans l'alerte ne peut la faire échouer.
+    const alertAnswer = async (accepted: boolean) => {
+      try {
+        const { alertOfferAnswer } = await import("@/marketplace/notifications/offerNotices.server");
+        await alertOfferAnswer(sb, {
+          caseId: data.caseId,
+          binderId: binder!.id,
+          workshopName: binder!.workshop_name || binder!.display_name || "L'atelier",
+          accepted,
+          leadTimeDays: data.leadTimeDays,
+          reasonCode: data.reasonCode,
+          testWorkshop: Boolean(binder!.is_demo),
+        });
+      } catch (err) {
+        console.error("[offer-answer-alert] module-failed", { caseId: data.caseId, err });
+      }
+    };
     if (data.accept) {
       if (!data.leadTimeDays) fail(422, "Indiquez le délai de réalisation que vous vous engagez à tenir.");
       const { data: accepted, error: acceptError } = await sb.rpc("marketplace_accept_workshop_offer", {
@@ -1434,6 +1527,7 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
         p_actor_user_id: context.userId,
       });
       if (acceptError) fail(409, acceptError.message);
+      await alertAnswer(true);
       return accepted;
     }
     const { data: result, error } = await sb.rpc("marketplace_respond_to_offer", {
@@ -1472,6 +1566,7 @@ export const respondToBinderOffer = createServerFn({ method: "POST" })
         metadata: { minimum_required_payout_cents: data.minimumRequiredPayoutCents },
       });
     }
+    await alertAnswer(false);
     return result;
   });
 

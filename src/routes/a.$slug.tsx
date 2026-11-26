@@ -67,8 +67,8 @@ function ReferralRedirectPage() {
       <main id="contenu" className="mx-auto max-w-xl flex-1 px-5 py-20 text-center">
         <h1 className="mr-title text-mr-ink">Cet atelier est introuvable</h1>
         <p className="mr-lead mt-4">
-          Ce lien ne correspond à aucun atelier partenaire actif de Ma Reliure. Vous pouvez tout de
-          même présenter votre livre : nous vous mettrons en relation avec un atelier adapté.
+          Ce lien ne correspond à aucun atelier de Ma Reliure. Vérifiez l'adresse que l'atelier
+          vous a transmise, ou contactez-le directement.
         </p>
       </main>
       <LandingFooter />

@@ -7,6 +7,7 @@
  * clé inconnue est refusée. Les devis n'en reçoivent que des copies
  * (`attachOperationPhotoToQuoteItem`).
  */
+import { isCmykJpeg } from "@/marketplace/quotes/jpegColor";
 import type { Supa } from "@/build/services/adminAuth.server";
 import { WORK_ITEMS } from "@/marketplace/pricing/catalog";
 import {
@@ -65,6 +66,7 @@ export async function uploadOperationPhoto(sb: Supa, binderId: string, input: {
   if ((existing ?? []).length >= QUOTE_OPERATION_PHOTO_MAX_PER_LINE) throw new BinderQuotesError("invalid_input");
   const bytes = Buffer.from(input.imageBase64, "base64");
   if (bytes.length === 0 || bytes.length > QUOTE_OPERATION_PHOTO_MAX_BYTES) throw new BinderQuotesError("invalid_input");
+  if (isCmykJpeg(bytes)) throw new BinderQuotesError("image_cmyk");
   const extension = input.mimeType === "image/png" ? "png" : "jpg";
   const storagePath = `${binderId}/library/${crypto.randomUUID()}.${extension}`;
   const { error: uploadError } = await sb.storage.from(QUOTE_OPERATION_PHOTOS_BUCKET)
