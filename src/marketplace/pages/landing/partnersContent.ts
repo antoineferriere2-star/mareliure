@@ -62,7 +62,7 @@ export interface PartnerBenefit {
   body: string;
 }
 
-import { PLATFORM_FEE_LABEL, SUBSCRIPTION_LABEL, WORKSHOP_OFFER } from "@/marketplace/offer/workshopOffer";
+import { SUBSCRIPTION_LABEL, WORKSHOP_OFFER } from "@/marketplace/offer/workshopOffer";
 
 /** Le réseau : ce que Ma Reliure apporte en plus de l'outil. */
 export const BENEFITS: PartnerBenefit[] = [
@@ -116,12 +116,12 @@ export const PARTNER_FAQ: PartnerFaqItem[] = [
   {
     question: "Combien coûte l'outil ?",
     answer:
-      `Pour un nouvel atelier : ${SUBSCRIPTION_LABEL}, page vitrine incluse, sans engagement. En France métropolitaine : TVA 20 % (3 €), soit 18 € TTC par mois, même si votre atelier est en franchise en base. Autres territoires : qualification fiscale individuelle avant souscription. Devis, factures et avoirs, ouvrages, clients, prestations et messages sont inclus. ${WORKSHOP_OFFER.subscriptionOpen ? "L'abonnement est ouvert aux professionnels établis en France métropolitaine." : "L'abonnement n'est pas encore ouvert : d'ici là, l'espace reste sans frais."} Les ateliers déjà inscrits gardent la gratuité tant qu'ils n'ont pas accepté expressément le nouvel abonnement. L'abonnement ne garantit aucune commande venant du réseau Ma Reliure.`,
+      `Pour un nouvel atelier : ${SUBSCRIPTION_LABEL}, page vitrine incluse, sans engagement. Essai gratuit de 14 jours, sans carte bancaire. TVA en sus lorsqu'elle s'applique. Devis, factures et avoirs, ouvrages, clients, prestations et messages sont inclus. ${WORKSHOP_OFFER.subscriptionOpen ? "L'abonnement est ouvert aux professionnels établis en France métropolitaine." : "L'abonnement n'est pas encore ouvert : d'ici là, l'espace reste sans frais."} Les ateliers déjà inscrits gardent la gratuité tant qu'ils n'ont pas accepté expressément le nouvel abonnement. L'abonnement ne garantit aucune commande venant du réseau Ma Reliure.`,
   },
   {
-    question: "Et pour le paiement en ligne de mes clients ?",
+    question: "Et pour le paiement de mes clients ?",
     answer:
-      `Facultatif : votre client règle votre devis ou votre facture par carte, vous restez le vendeur et vous facturez votre client. Oppe prélève ${PLATFORM_FEE_LABEL} du montant encaissé, TVA comprise, hors frais Stripe. En France métropolitaine, pour 100 € encaissés : 3 € TTC de frais, soit 2,50 € HT + 0,50 € de TVA à 20 %. Une facture Oppe constate les frais déjà retenus, sans second paiement. Les frais Stripe sont distincts et à votre charge. ${WORKSHOP_OFFER.onlinePaymentOpen ? "" : "Ce service n'est pas encore ouvert : sa recette complète et votre configuration Stripe doivent être terminées. "}Un paiement direct (virement, chèque, espèces) ne coûte rien.`,
+      "Vous restez le vendeur : vous facturez votre client et il vous règle directement, par virement, chèque, espèces ou le moyen de votre choix. Oppe n'encaisse aucun paiement et ne prélève aucun frais sur vos ventes.",
   },
   {
     question: "Qui vend, qui facture, qui me paie quand Ma Reliure me confie un projet ?",

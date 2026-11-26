@@ -45,8 +45,8 @@ export function WorkshopSubscriptionPage() {
       />
       <section className={CARD}>
         <h2 className="font-serif text-xl">{SUBSCRIPTION_LABEL}</h2>
-        <p className="mt-3">France métropolitaine : TVA 20 % (3 €), soit 18 € TTC par mois, vitrine incluse.
-          Cette TVA est collectée par OPPE même si votre atelier est en franchise en base.
+        <p className="mt-3">Vitrine incluse, TVA en sus lorsqu’elle s’applique. Oppe n’encaisse aucun paiement de vos clients
+          et ne prélève aucun frais sur vos ventes : l’abonnement est son seul revenu.
           Renseignez votre identité professionnelle et votre adresse d’établissement dans les paramètres de facturation.
           Pour les autres territoires, contactez Oppe pour une qualification individuelle.</p>
         <p className="mt-3">
